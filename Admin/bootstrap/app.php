@@ -11,7 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->append(\App\Modules\Shared\Middleware\ForceHttps::class);
+        $middleware->append(\App\Modules\Shared\Middleware\SecurityHeaders::class);
+        $middleware->alias([
+            'ensure2fa' => \App\Modules\Authentication\Middleware\EnsureTwoFactorEnabled::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
