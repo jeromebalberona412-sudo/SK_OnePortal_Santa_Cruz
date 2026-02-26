@@ -1,92 +1,97 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Setup Two-Factor Authentication - Admin Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-auth.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-two-factor.css') }}?v={{ time() }}">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
 
-@section('title', 'Setup Two-Factor Authentication')
-
-@section('content')
-<div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-2xl w-full space-y-8">
-        <div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Enable Two-Factor Authentication
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Two-Factor Authentication (2FA) is required for all administrators
-            </p>
-        </div>
-
-        <div class="bg-white shadow rounded-lg p-8">
-            <div class="space-y-6">
-                <!-- Instructions -->
-                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                    <h3 class="text-lg font-medium text-blue-900 mb-2">Setup Instructions</h3>
-                    <ol class="list-decimal list-inside space-y-2 text-sm text-blue-800">
-                        <li>Install an authenticator app on your phone (Google Authenticator, Authy, 1Password, etc.)</li>
-                        <li>Scan the QR code below with your authenticator app</li>
-                        <li>Enter the 6-digit code from your app to confirm</li>
-                        <li>Save your recovery codes in a secure location</li>
-                    </ol>
+    <div class="two-factor-wrapper">
+        <div class="two-factor-container" style="max-width: 600px;">
+            <div class="two-factor-header">
+                <div class="header-icon">
+                    <img src="{{ asset('modules/authentication/images/SKOneportal_logo.webp') }}" alt="SK One Portal Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                 </div>
+                <h1>Enable Two-Factor Authentication</h1>
+                <p>2FA is required for all administrators</p>
+            </div>
 
-                <!-- QR Code -->
-                <div class="text-center">
-                    <div class="inline-block p-4 bg-white border-2 border-gray-300 rounded-lg">
-                        {!! $QRCode !!}
-                    </div>
-                </div>
-
-                <!-- Manual Entry -->
-                <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
-                    <p class="text-sm font-medium text-gray-700 mb-2">Can't scan? Enter this code manually:</p>
-                    <code class="block text-center text-lg font-mono bg-white px-4 py-2 rounded border border-gray-300 select-all">
-                        {{ $secretKey }}
-                    </code>
-                </div>
-
-                <!-- Confirmation Form -->
-                <form method="POST" action="{{ route('two-factor.confirm') }}" class="space-y-4">
-                    @csrf
-
-                    @if ($errors->any())
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                        <ul class="list-disc list-inside">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-
-                    <div>
-                        <label for="code" class="block text-sm font-medium text-gray-700 mb-2">
-                            Enter the 6-digit code from your authenticator app
-                        </label>
-                        <input 
-                            id="code" 
-                            name="code" 
-                            type="text" 
-                            inputmode="numeric"
-                            pattern="[0-9]{6}"
-                            maxlength="6"
-                            required 
-                            autofocus
-                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-center text-2xl font-mono tracking-widest focus:outline-none focus:ring-blue-500 focus:border-blue-500 @error('code') border-red-500 @enderror" 
-                            placeholder="000000"
-                        >
+            <div class="two-factor-body">
+                <div class="space-y-6">
+                    <!-- Instructions -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <div style="flex: 1;">
+                            <strong style="display: block; margin-bottom: 8px;">Setup Instructions</strong>
+                            <ol style="list-style: decimal; padding-left: 20px; font-size: 13px; line-height: 1.6;">
+                                <li>Install an authenticator app (Google Authenticator, Authy, 1Password)</li>
+                                <li>Scan the QR code below with your app</li>
+                                <li>Enter the 6-digit code to confirm</li>
+                                <li>Save your recovery codes securely</li>
+                            </ol>
+                        </div>
                     </div>
 
-                    <button 
-                        type="submit" 
-                        class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        Confirm and Enable 2FA
-                    </button>
-                </form>
+                    <!-- QR Code -->
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="display: inline-block; padding: 20px; background: white; border: 2px solid #e2e8f0; border-radius: 12px;">
+                            {!! $QRCode !!}
+                        </div>
+                    </div>
+
+                    <!-- Manual Entry -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                        <p style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Can't scan? Enter this code manually:</p>
+                        <code style="display: block; text-align: center; font-size: 16px; font-family: monospace; background: white; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; user-select: all;">
+                            {{ $secretKey }}
+                        </code>
+                    </div>
+
+                    <!-- Confirmation Form -->
+                    <form method="POST" action="{{ route('two-factor.confirm') }}">
+                        @csrf
+
+                        @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ $errors->first() }}</span>
+                        </div>
+                        @endif
+
+                        <div class="form-group">
+                            <label for="code">Enter the 6-digit code from your authenticator app</label>
+                            <div class="code-input-container">
+                                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                            </div>
+                            <input type="hidden" name="code" id="fullCode">
+                        </div>
+
+                        <button type="submit" class="btn-verify" id="verifyBtn" disabled>
+                            <span>Confirm and Enable 2FA</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
-
-        <div class="text-center text-xs text-gray-500">
-            <p>Your security is our priority. 2FA adds an extra layer of protection to your account.</p>
-        </div>
     </div>
-</div>
-@endsection
+
+    <script src="{{ asset('modules/authentication/js/admin-two-factor.js') }}"></script>
+</body>
+</html>
