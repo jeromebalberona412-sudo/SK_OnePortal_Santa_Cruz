@@ -13,7 +13,7 @@
                     </div>
                 </div>
             </div>
- 
+
             <!-- Navigation Menu -->
             <div class="nav">
                 <!-- Profile Button -->
@@ -25,7 +25,7 @@
                         Profile
                     </a>
                 </div>
-                
+
                 <!-- Add SK Fed Button -->
                 <div class="nav-item">
                     <a href="{{ route('add.sk.fed') }}" class="nav-link add-sk-fed-btn">
