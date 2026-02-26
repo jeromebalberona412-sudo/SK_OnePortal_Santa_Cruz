@@ -8,4 +8,5 @@ return [
     App\Modules\Authentication\Providers\AuthenticationServiceProvider::class,
     App\Modules\AuditLog\Providers\AuditLogServiceProvider::class,
     App\Modules\Dashboard\Providers\DashboardServiceProvider::class,
+    App\Modules\Add_Account\Providers\AddAccountServiceProvider::class,
 ];

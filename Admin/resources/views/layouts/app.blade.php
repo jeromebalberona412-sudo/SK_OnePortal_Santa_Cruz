@@ -7,40 +7,38 @@
 
     <title>@yield('title', config('app.name', 'SK OnePortal Admin'))</title>
 
-    <!-- Tailwind CSS -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="min-h-screen flex flex-col">
-        <!-- Header -->
-        @auth
-        <header class="bg-white shadow">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800">{{ config('app.name', 'SK OnePortal Admin') }}</h1>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">{{ auth()->user()->email }}</span>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="text-sm text-red-600 hover:text-red-800">Logout</button>
-                    </form>
-                </div>
-            </div>
-        </header>
-        @endauth
+    <!-- Head Section for additional CSS -->
+    @yield('head')
 
+    <!-- Tailwind CSS + Dashboard Assets via Vite -->
+    @vite([
+        'resources/css/app.css', 
+        'resources/js/app.js',
+        'app/Modules/Dashboard/assets/css/dashboard.css',
+        'app/Modules/Dashboard/assets/js/dashboard.js',
+        'app/Modules/Dashboard/assets/css/layout/sidebar.css',
+        'app/Modules/Dashboard/assets/css/layout/header.css',
+        'app/Modules/Dashboard/assets/js/layout/sidebar.js',
+        'app/Modules/Dashboard/assets/js/layout/header.js',
+        'app/Modules/Add_Account/assets/css/add_sk_fed.css',
+        'app/Modules/Add_Account/assets/js/add_sk_fed.js'
+    ])
+</head>
+<body class="min-h-screen">
+    <div class="min-h-screen flex flex-col">
         <!-- Flash Messages -->
         @if (session('message'))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline">{{ session('message') }}</span>
+            <div class="flash-success-modern px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline pr-8">{{ session('message') }}</span>
             </div>
         </div>
         @endif
 
         @if (session('error'))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline">{{ session('error') }}</span>
+            <div class="flash-error-modern px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline pr-8">{{ session('error') }}</span>
             </div>
         </div>
         @endif
@@ -49,13 +47,6 @@
         <main class="flex-grow">
             @yield('content')
         </main>
-
-        <!-- Footer -->
-        <footer class="bg-white border-t border-gray-200 mt-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-gray-600">
-                &copy; {{ date('Y') }} SK OnePortal. All rights reserved.
-            </div>
-        </footer>
     </div>
 </body>
 </html>
