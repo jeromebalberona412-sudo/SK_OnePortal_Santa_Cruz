@@ -3,8 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Modules\Add_Account\Controllers\AddAccountController;
 
+// Redirect root to login
 Route::get('/', function () {
-    return redirect('/login');
+    return redirect()->route('login');
 });
 
 // Add SK Federation routes
