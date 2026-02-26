@@ -11,9 +11,9 @@
             <div class="logo-container">
                 <img src="{{ asset('Images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
                 <h1 class="brand-title">SK Federations</h1>
-                <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
+                <p class="brand-subtitle">Santa Cruz Youth Leadership Portazl</p>
             </div>
-            
+
             <div class="login-form-container">
                 <div class="form-header">
                     <h2>Welcome Back</h2>
@@ -32,13 +32,13 @@
                     @csrf
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
                             class="form-control"
-                            value="{{ old('email') }}" 
-                            required 
+                            value="{{ old('email') }}"
+                            required
                             autocomplete="email"
                             autofocus
                             placeholder="Enter your email"
@@ -48,12 +48,12 @@
                     <div class="form-group">
                         <label for="password">Password</label>
                         <div class="password-input-container">
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
                                 class="form-control"
-                                required 
+                                required
                                 autocomplete="current-password"
                                 placeholder="Enter your password"
                             >
