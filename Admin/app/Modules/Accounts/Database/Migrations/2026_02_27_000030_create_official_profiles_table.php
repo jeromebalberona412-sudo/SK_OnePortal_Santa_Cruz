@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('middle_initial', 5)->nullable();
+            $table->string('middle_name', 100)->nullable();
             $table->string('suffix', 20)->nullable();
             $table->enum('position', ['Chairman', 'Councilor', 'Kagawad', 'Treasurer', 'Secretary', 'Auditor', 'PIO']);
             $table->string('municipality')->default('Santa Cruz');

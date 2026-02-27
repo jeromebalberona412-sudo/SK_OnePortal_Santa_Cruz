@@ -18,16 +18,18 @@ class AccountService
 
     public function createAccount(array $data, User $admin): User
     {
-        return DB::transaction(function () use ($data, $admin) {
-            $user = $this->createUser($data, $admin);
-            $this->assignRole($user, $data['role']);
-            $this->assignBarangay($user, (int) $data['barangay_id']);
+        $normalizedData = $this->withNormalizedMiddleName($data);
 
-            $profile = $this->createOfficialProfile($user, $data);
+        return DB::transaction(function () use ($normalizedData, $admin) {
+            $user = $this->createUser($normalizedData, $admin);
+            $this->assignRole($user, $normalizedData['role']);
+            $this->assignBarangay($user, (int) $normalizedData['barangay_id']);
+
+            $profile = $this->createOfficialProfile($user, $normalizedData);
             $this->createTermRecord($profile, [
-                'term_start' => $data['term_start'],
-                'term_end' => $data['term_end'],
-                'status' => $data['term_status'],
+                'term_start' => $normalizedData['term_start'],
+                'term_end' => $normalizedData['term_end'],
+                'status' => $normalizedData['term_status'],
             ]);
 
             $this->logAuditAction(
@@ -35,7 +37,7 @@ class AccountService
                 'account_created',
                 'users',
                 (string) $user->id,
-                ['role' => $data['role'], 'email' => $user->email]
+                ['role' => $normalizedData['role'], 'email' => $user->email]
             );
 
             return $user;
@@ -46,24 +48,27 @@ class AccountService
     {
         $this->assertSameTenant($account->tenant_id, $admin->tenant_id, 'Target account is outside your tenant scope.');
 
-        return DB::transaction(function () use ($account, $data, $admin) {
+        $normalizedData = $this->withNormalizedMiddleName($data);
+
+        return DB::transaction(function () use ($account, $normalizedData, $admin) {
             $account->forceFill([
-                'email' => $data['email'],
-                'status' => $data['status'],
+                'name' => $this->buildFullName($normalizedData),
+                'email' => $normalizedData['email'],
+                'status' => $normalizedData['status'],
             ])->save();
 
-            $this->assignBarangay($account, (int) $data['barangay_id']);
+            $this->assignBarangay($account, (int) $normalizedData['barangay_id']);
 
             $profile = $account->officialProfile;
             if (! $profile) {
-                $profile = $this->createOfficialProfile($account, $data);
+                $profile = $this->createOfficialProfile($account, $normalizedData);
             } else {
                 $profile->update([
-                    'first_name' => $data['first_name'],
-                    'last_name' => $data['last_name'],
-                    'middle_initial' => $data['middle_initial'] ?? null,
-                    'suffix' => $data['suffix'] ?? null,
-                    'position' => $data['position'],
+                    'first_name' => $normalizedData['first_name'],
+                    'last_name' => $normalizedData['last_name'],
+                    'middle_name' => $normalizedData['middle_name'] ?? null,
+                    'suffix' => $normalizedData['suffix'] ?? null,
+                    'position' => $normalizedData['position'],
                     'municipality' => 'Santa Cruz',
                     'province' => 'Laguna',
                     'region' => 'IV-A CALABARZON',
@@ -71,11 +76,32 @@ class AccountService
             }
 
             $latestTerm = $profile->terms()->latest('term_end')->first();
-            if (! $latestTerm || $latestTerm->term_start->toDateString() !== $data['term_start'] || $latestTerm->term_end->toDateString() !== $data['term_end']) {
+            $hasNewTermRange = ! $latestTerm
+                || $latestTerm->term_start->toDateString() !== $normalizedData['term_start']
+                || $latestTerm->term_end->toDateString() !== $normalizedData['term_end'];
+
+            if ($hasNewTermRange) {
+                if ($normalizedData['term_status'] === OfficialTerm::STATUS_ACTIVE) {
+                    $profile->terms()
+                        ->where('status', OfficialTerm::STATUS_ACTIVE)
+                        ->update(['status' => OfficialTerm::STATUS_INACTIVE]);
+                }
+
                 $this->createTermRecord($profile, [
-                    'term_start' => $data['term_start'],
-                    'term_end' => $data['term_end'],
-                    'status' => $data['term_status'],
+                    'term_start' => $normalizedData['term_start'],
+                    'term_end' => $normalizedData['term_end'],
+                    'status' => $normalizedData['term_status'],
+                ]);
+            } elseif ($latestTerm->status !== $normalizedData['term_status']) {
+                if ($normalizedData['term_status'] === OfficialTerm::STATUS_ACTIVE) {
+                    $profile->terms()
+                        ->where('id', '!=', $latestTerm->id)
+                        ->where('status', OfficialTerm::STATUS_ACTIVE)
+                        ->update(['status' => OfficialTerm::STATUS_INACTIVE]);
+                }
+
+                $latestTerm->update([
+                    'status' => $normalizedData['term_status'],
                 ]);
             }
 
@@ -93,12 +119,7 @@ class AccountService
 
     public function createUser(array $data, User $admin): User
     {
-        $fullName = trim(implode(' ', array_filter([
-            $data['first_name'],
-            $data['middle_initial'] ?? null,
-            $data['last_name'],
-            $data['suffix'] ?? null,
-        ])));
+        $fullName = $this->buildFullName($data);
 
         return User::create([
             'tenant_id' => $admin->tenant_id,
@@ -123,7 +144,7 @@ class AccountService
             'user_id' => $user->id,
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
-            'middle_initial' => $data['middle_initial'] ?? null,
+            'middle_name' => $data['middle_name'] ?? null,
             'suffix' => $data['suffix'] ?? null,
             'position' => $data['position'],
             'municipality' => 'Santa Cruz',
@@ -256,5 +277,52 @@ class AccountService
                 'tenant' => $message,
             ]);
         }
+    }
+
+    protected function buildFullName(array $data): string
+    {
+        $middleInitial = $this->deriveMiddleInitial(
+            $this->normalizeMiddleName($data['middle_name'] ?? null)
+        );
+
+        return trim(implode(' ', array_filter([
+            $data['first_name'] ?? null,
+            $middleInitial,
+            $data['last_name'] ?? null,
+            $data['suffix'] ?? null,
+        ])));
+    }
+
+    protected function withNormalizedMiddleName(array $data): array
+    {
+        $middleName = $this->normalizeMiddleName($data['middle_name'] ?? ($data['middle_initial'] ?? null));
+        $data['middle_name'] = $middleName;
+        unset($data['middle_initial']);
+
+        return $data;
+    }
+
+    protected function normalizeMiddleName(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $middleName = trim($value);
+
+        return $middleName === '' ? null : $middleName;
+    }
+
+    protected function deriveMiddleInitial(?string $middleName): ?string
+    {
+        if ($middleName === null) {
+            return null;
+        }
+
+        if (! preg_match('/[A-Za-z]/', $middleName, $matches)) {
+            return null;
+        }
+
+        return strtoupper($matches[0]).'.';
     }
 }

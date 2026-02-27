@@ -21,8 +21,8 @@ class UpdateAccountRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
-            'middle_initial' => ['nullable', 'string', 'max:5'],
-            'suffix' => ['nullable', 'string', 'max:20'],
+            'middle_name' => ['nullable', 'string', 'max:100'],
+            'suffix' => ['nullable', Rule::in(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'])],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'status' => ['required', Rule::in([
                 User::STATUS_ACTIVE,

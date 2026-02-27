@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Modules\Accounts\Policies\AccountPolicy;
+use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Shared\Models\User;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -26,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(User::class, AccountPolicy::class);
+        Gate::policy(OfficialProfile::class, AccountPolicy::class);
         Gate::define('manage-accounts', fn (User $user) => $user->isAdmin());
 
         // Configure rate limiting for login attempts

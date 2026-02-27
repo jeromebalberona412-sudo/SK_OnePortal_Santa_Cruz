@@ -10,12 +10,11 @@ use App\Modules\Accounts\Requests\UpdateAccountRequest;
 use App\Modules\Accounts\Services\AccountService;
 use App\Modules\Shared\Controllers\Controller;
 use App\Modules\Shared\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
 class AdminAccountController extends Controller
@@ -37,7 +36,13 @@ class AdminAccountController extends Controller
         if ($search = $request->string('search')->toString()) {
             $query->where(function ($builder) use ($search) {
                 $builder->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('officialProfile', function ($profileQuery) use ($search) {
+                        $profileQuery->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('middle_name', 'like', "%{$search}%")
+                            ->orWhere('suffix', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -50,10 +55,14 @@ class AdminAccountController extends Controller
         }
 
         $accounts = $query->paginate(10)->withQueryString();
+        $barangays = Barangay::query()
+            ->where('tenant_id', $request->user()->tenant_id)
+            ->orderBy('name')
+            ->get();
 
         $accountType = 'sk_federation';
 
-        return view('accounts::manage_account', compact('accounts', 'accountType'));
+        return view('accounts::manage_account', compact('accounts', 'accountType', 'barangays'));
     }
 
     public function indexOfficials(Request $request): View
@@ -69,7 +78,13 @@ class AdminAccountController extends Controller
         if ($search = $request->string('search')->toString()) {
             $query->where(function ($builder) use ($search) {
                 $builder->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('officialProfile', function ($profileQuery) use ($search) {
+                        $profileQuery->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('middle_name', 'like', "%{$search}%")
+                            ->orWhere('suffix', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -82,10 +97,14 @@ class AdminAccountController extends Controller
         }
 
         $accounts = $query->paginate(10)->withQueryString();
+        $barangays = Barangay::query()
+            ->where('tenant_id', $request->user()->tenant_id)
+            ->orderBy('name')
+            ->get();
 
         $accountType = 'sk_officials';
 
-        return view('accounts::manage_account', compact('accounts', 'accountType'));
+        return view('accounts::manage_account', compact('accounts', 'accountType', 'barangays'));
     }
 
     public function create(): View
@@ -113,118 +132,25 @@ class AdminAccountController extends Controller
             ->with('status', 'Account created successfully.');
     }
 
-    public function storeLegacy(Request $request): Response
+    public function update(UpdateAccountRequest $request, User $user): RedirectResponse|JsonResponse
     {
-        $this->authorize('create', User::class);
-
-        $validator = Validator::make($request->all(), [
-            'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
-            'middle_initial' => ['nullable', 'string', 'max:5'],
-            'suffix' => ['nullable', 'string', 'max:20'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->where(fn ($query) => $query->where('tenant_id', $request->user()->tenant_id))],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'barangay' => ['required', 'string', 'max:255'],
-            'position' => ['required', 'string'],
-            'term_start' => ['required', 'date'],
-            'term_end' => ['required', 'date', 'after:term_start'],
-            'status' => ['required', 'string'],
-        ]);
-
-        if ($validator->fails()) {
-            return response([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $positionMap = [
-            'sk_chairman' => 'Chairman',
-            'sk_councilor' => 'Councilor',
-            'sk_kagawad' => 'Kagawad',
-            'sk_treasurer' => 'Treasurer',
-            'sk_secretary' => 'Secretary',
-            'sk_auditor' => 'Auditor',
-            'sk_pio' => 'PIO',
-        ];
-
-        $statusMap = [
-            'active' => User::STATUS_ACTIVE,
-            'inactive' => User::STATUS_INACTIVE,
-            'pending_approval' => User::STATUS_PENDING_APPROVAL,
-            'suspended' => User::STATUS_SUSPENDED,
-        ];
-
-        $barangay = Barangay::query()
-            ->where('tenant_id', $request->user()->tenant_id)
-            ->where('name', trim((string) $request->input('barangay')))
-            ->first();
-
-        if (! $barangay) {
-            return response([
-                'success' => false,
-                'errors' => ['barangay' => ['Selected barangay is not valid.']],
-            ], 422);
-        }
-
-        $payload = [
-            'first_name' => trim((string) $request->input('first_name')),
-            'last_name' => trim((string) $request->input('last_name')),
-            'middle_initial' => $request->filled('middle_initial') ? trim((string) $request->input('middle_initial')) : null,
-            'suffix' => $request->filled('suffix') ? trim((string) $request->input('suffix')) : null,
-            'email' => (string) $request->input('email'),
-            'password' => (string) $request->input('password'),
-            'role' => User::ROLE_SK_FED,
-            'status' => $statusMap[strtolower((string) $request->input('status'))] ?? User::STATUS_PENDING_APPROVAL,
-            'barangay_id' => $barangay->id,
-            'position' => $positionMap[(string) $request->input('position')] ?? 'Councilor',
-            'term_start' => (string) $request->input('term_start'),
-            'term_end' => (string) $request->input('term_end'),
-            'term_status' => $statusMap[strtolower((string) $request->input('status'))] ?? 'ACTIVE',
-        ];
-
-        $account = $this->accountService->createAccount($payload, $request->user());
-
-        return response([
-            'success' => true,
-            'message' => 'Account created successfully.',
-            'data' => ['id' => $account->id],
-        ]);
-    }
-
-    public function edit(User $user): View
-    {
-        $this->authorize('update', User::class);
-
-        if ($user->tenant_id !== request()->user()->tenant_id) {
-            abort(404);
-        }
-
-        $user->load(['officialProfile.latestTerm', 'barangay']);
-
-        return view('accounts::edit_sk_fed', compact('user'));
-    }
-
-    public function update(UpdateAccountRequest $request, User $user): RedirectResponse
-    {
-        $this->authorize('update', User::class);
-
-        if ($user->tenant_id !== $request->user()->tenant_id) {
-            abort(404);
-        }
+        $this->authorize('update', $user);
 
         $this->accountService->updateAccount($user, $request->validated(), $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Account updated successfully.',
+            ]);
+        }
 
         return back()->with('status', 'Account updated successfully.');
     }
 
     public function deactivate(Request $request, User $user): RedirectResponse
     {
-        $this->authorize('deactivate', User::class);
-
-        if ($user->tenant_id !== $request->user()->tenant_id) {
-            abort(404);
-        }
+        $this->authorize('deactivate', $user);
 
         $this->accountService->deactivate($user, $request->user());
 
@@ -233,11 +159,7 @@ class AdminAccountController extends Controller
 
     public function resetPassword(Request $request, User $user): RedirectResponse
     {
-        $this->authorize('update', User::class);
-
-        if ($user->tenant_id !== $request->user()->tenant_id) {
-            abort(404);
-        }
+        $this->authorize('resetPassword', $user);
 
         $payload = $request->validate([
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
@@ -251,11 +173,7 @@ class AdminAccountController extends Controller
 
     public function extendTerm(ExtendTermRequest $request, OfficialProfile $officialProfile): RedirectResponse
     {
-        $this->authorize('extendTerm', User::class);
-
-        if ($officialProfile->tenant_id !== $request->user()->tenant_id) {
-            abort(404);
-        }
+        $this->authorize('extendTerm', $officialProfile);
 
         $this->accountService->extendTerm($officialProfile, $request->validated(), $request->user());
 

@@ -99,9 +99,11 @@
                             @php
                                 $profile = $account->officialProfile;
                                 $term = $profile?->latestTerm;
+                                $middleName = trim((string) ($profile?->middle_name ?? ''));
+                                $middleInitial = $middleName !== '' ? strtoupper(substr($middleName, 0, 1)).'.' : null;
                                 $fullName = trim(collect([
                                     $profile?->first_name,
-                                    $profile?->middle_initial,
+                                    $middleInitial,
                                     $profile?->last_name,
                                     $profile?->suffix,
                                 ])->filter()->implode(' '));
@@ -120,7 +122,24 @@
                                         <span class="status-badge {{ strtolower($account->status) }}">{{ $account->status }}</span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('accounts.edit', $account) }}" class="btn-edit-modern">Edit</a>
+                                        <button
+                                            type="button"
+                                            class="btn-edit-modern btn-edit-account"
+                                            data-account-id="{{ $account->id }}"
+                                            data-first-name="{{ $profile?->first_name ?? '' }}"
+                                            data-last-name="{{ $profile?->last_name ?? '' }}"
+                                            data-middle-name="{{ $profile?->middle_name ?? '' }}"
+                                            data-suffix="{{ $profile?->suffix ?? '' }}"
+                                            data-email="{{ $account->email ?? '' }}"
+                                            data-position="{{ $profile?->position ?? '' }}"
+                                            data-barangay-id="{{ $account->barangay_id ?? '' }}"
+                                            data-status="{{ $account->status ?? '' }}"
+                                            data-term-status="{{ $term?->status ?? 'ACTIVE' }}"
+                                            data-term-start="{{ $term?->term_start?->toDateString() ?? '' }}"
+                                            data-term-end="{{ $term?->term_end?->toDateString() ?? '' }}"
+                                        >
+                                            Edit
+                                        </button>
                                     </td>
                                 @else
                                     <td>{{ $displayName }}</td>
@@ -136,7 +155,24 @@
                                         <span class="status-badge {{ strtolower($account->status) }}">{{ $account->status }}</span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('accounts.edit', $account) }}" class="btn-edit-modern">Edit</a>
+                                        <button
+                                            type="button"
+                                            class="btn-edit-modern btn-edit-account"
+                                            data-account-id="{{ $account->id }}"
+                                            data-first-name="{{ $profile?->first_name ?? '' }}"
+                                            data-last-name="{{ $profile?->last_name ?? '' }}"
+                                            data-middle-name="{{ $profile?->middle_name ?? '' }}"
+                                            data-suffix="{{ $profile?->suffix ?? '' }}"
+                                            data-email="{{ $account->email ?? '' }}"
+                                            data-position="{{ $profile?->position ?? '' }}"
+                                            data-barangay-id="{{ $account->barangay_id ?? '' }}"
+                                            data-status="{{ $account->status ?? '' }}"
+                                            data-term-status="{{ $term?->status ?? 'ACTIVE' }}"
+                                            data-term-start="{{ $term?->term_start?->toDateString() ?? '' }}"
+                                            data-term-end="{{ $term?->term_end?->toDateString() ?? '' }}"
+                                        >
+                                            Edit
+                                        </button>
                                     </td>
                                 @endif
                             </tr>
@@ -168,6 +204,6 @@
 
 @section('scripts')
     @vite([
-        'app/Modules/Manage_Account/assets/js/manage_account.js'
+        'app/Modules/Accounts/assets/js/manage_account.js'
     ])
 @endsection

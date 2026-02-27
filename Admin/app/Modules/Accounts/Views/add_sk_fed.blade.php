@@ -12,6 +12,8 @@
         <div class="modal-body">
             <form id="addSkFedForm" class="sk-fed-form">
                 @csrf
+                <input type="hidden" name="role" value="sk_fed">
+                <input type="hidden" name="term_status" value="ACTIVE">
                 <div class="form-section">
                     <h4 class="section-title">Personal Information</h4>
                     <div class="row">
@@ -39,10 +41,10 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="middle_initial" class="form-label-modern">
-                                    Middle Initial
+                                <label for="middle_name" class="form-label-modern">
+                                    Middle Name / Initial
                                 </label>
-                                <input type="text" id="middle_initial" name="middle_initial" class="form-input-modern" maxlength="5">
+                                <input type="text" id="middle_name" name="middle_name" class="form-input-modern" maxlength="100" placeholder="e.g., Marie">
                                 <span class="form-error"></span>
                             </div>
                         </div>
@@ -52,7 +54,15 @@
                                 <label for="suffix" class="form-label-modern">
                                     Suffix
                                 </label>
-                                <input type="text" id="suffix" name="suffix" class="form-input-modern" maxlength="20">
+                                <select id="suffix" name="suffix" class="form-input-modern">
+                                    <option value="">Select Suffix</option>
+                                    <option value="Jr.">Jr.</option>
+                                    <option value="Sr.">Sr.</option>
+                                    <option value="II">II</option>
+                                    <option value="III">III</option>
+                                    <option value="IV">IV</option>
+                                    <option value="V">V</option>
+                                </select>
                                 <span class="form-error"></span>
                             </div>
                         </div>
@@ -98,37 +108,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="barangay" class="form-label-modern required">
+                                <label for="barangay_id" class="form-label-modern required">
                                     Barangay
                                 </label>
-                                <select id="barangay" name="barangay" class="form-input-modern" required>
+                                <select id="barangay_id" name="barangay_id" class="form-input-modern" required>
                                     <option value="">Select Barangay</option>
-                                    <option value="Alipit">Alipit</option>
-                                    <option value="Bagumbayan">Bagumbayan</option>
-                                    <option value="Bubukal">Bubukal</option>
-                                    <option value="Calios">Calios</option>
-                                    <option value="Duhat">Duhat</option>
-                                    <option value="Gatid">Gatid</option>
-                                    <option value="Jasaan">Jasaan</option>
-                                    <option value="Labuin">Labuin</option>
-                                    <option value="Malinao">Malinao</option>
-                                    <option value="Oogong">Oogong</option>
-                                    <option value="Pagsawitan">Pagsawitan</option>
-                                    <option value="Palasan">Palasan</option>
-                                    <option value="Patimbao">Patimbao</option>
-                                    <option value="Poblacion I">Poblacion I</option>
-                                    <option value="Poblacion II">Poblacion II</option>
-                                    <option value="Poblacion III">Poblacion III</option>
-                                    <option value="Poblacion IV">Poblacion IV</option>
-                                    <option value="Poblacion V">Poblacion V</option>
-                                    <option value="San Jose">San Jose</option>
-                                    <option value="San Juan">San Juan</option>
-                                    <option value="San Pablo Norte">San Pablo Norte</option>
-                                    <option value="San Pablo Sur">San Pablo Sur</option>
-                                    <option value="Santisima Cruz">Santisima Cruz</option>
-                                    <option value="Santo Angel Central">Santo Angel Central</option>
-                                    <option value="Santo Angel Norte">Santo Angel Norte</option>
-                                    <option value="Santo Angel Sur">Santo Angel Sur</option>
+                                    @foreach($barangays as $barangay)
+                                        <option value="{{ $barangay->id }}">{{ $barangay->name }}</option>
+                                    @endforeach
                                 </select>
                                 <span class="form-error"></span>
                             </div>
@@ -139,7 +126,7 @@
                                 <label for="municipality" class="form-label-modern required">
                                     Municipality
                                 </label>
-                                <input type="text" id="municipality" name="municipality" class="form-input-modern" value="Sta. Cruz" readonly required>
+                                <input type="text" id="municipality" name="municipality" class="form-input-modern" value="Santa Cruz" readonly required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
@@ -178,13 +165,13 @@
                                 </label>
                                 <select id="position" name="position" class="form-input-modern" required>
                                     <option value="">Select Position</option>
-                                    <option value="sk_chairman">SK Chairman</option>
-                                    <option value="sk_councilor">SK Councilor</option>
-                                    <option value="sk_kagawad">SK Kagawad</option>
-                                    <option value="sk_treasurer">SK Treasurer</option>
-                                    <option value="sk_secretary">SK Secretary</option>
-                                    <option value="sk_auditor">SK Auditor</option>
-                                    <option value="sk_pio">SK PIO</option>
+                                    <option value="Chairman">SK Chairman</option>
+                                    <option value="Councilor">SK Councilor</option>
+                                    <option value="Kagawad">SK Kagawad</option>
+                                    <option value="Treasurer">SK Treasurer</option>
+                                    <option value="Secretary">SK Secretary</option>
+                                    <option value="Auditor">SK Auditor</option>
+                                    <option value="PIO">SK PIO</option>
                                 </select>
                                 <span class="form-error"></span>
                             </div>
@@ -219,8 +206,8 @@
                                 </label>
                                 <select id="status" name="status" class="form-input-modern" required>
                                     <option value="">Select Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE">Inactive</option>
                                 </select>
                                 <span class="form-error"></span>
                             </div>

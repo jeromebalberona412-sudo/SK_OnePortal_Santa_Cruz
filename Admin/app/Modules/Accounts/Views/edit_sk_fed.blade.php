@@ -1,9 +1,9 @@
-<!-- Edit Account Modal -->
-<link rel="stylesheet" href="{{ asset('admin/modules/manage_account/assets/css/edit_sk_fed.css') }}">
+<!-- Edit SK Federation Modal -->
+@vite(['app/Modules/Accounts/assets/css/edit_sk_fed.css'])
 <div id="editAccountModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-large">
         <div class="modal-header">
-            <h3 class="modal-title">Edit Account</h3>
+            <h3 class="modal-title">Edit SK Federation Account</h3>
             <button type="button" class="modal-close-btn" onclick="closeEditModal()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 6L6 18M6 6l12 12"/>
@@ -11,70 +11,59 @@
             </button>
         </div>
         <div class="modal-body">
-            <form id="editAccountForm" class="sk-fed-form" onsubmit="handleEditAccountSubmit(event)">
+            <form id="editAccountForm" class="sk-fed-form" data-account-id="">
                 @csrf
+                <input type="hidden" name="term_status" id="edit_term_status" value="ACTIVE">
+
                 <div class="form-section">
                     <h4 class="section-title">Personal Information</h4>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_full_name" class="form-label-modern required">
-                                    Full Name
-                                </label>
-                                <input type="text" id="edit_full_name" name="full_name" class="form-input-modern" required>
+                                <label for="edit_first_name" class="form-label-modern required">First Name</label>
+                                <input type="text" id="edit_first_name" name="first_name" class="form-input-modern" required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
-                        
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_email" class="form-label-modern required">
-                                    Email Address
-                                </label>
-                                <input type="email" id="edit_email" name="email" class="form-input-modern" required>
+                                <label for="edit_last_name" class="form-label-modern required">Last Name</label>
+                                <input type="text" id="edit_last_name" name="last_name" class="form-input-modern" required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="row" id="edit_password_row">
+
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_password" class="form-label-modern">
-                                    Password (Leave blank to keep current)
-                                </label>
-                                <input type="password" id="edit_password" name="password" class="form-input-modern">
+                                <label for="edit_middle_name" class="form-label-modern">Middle Name / Initial</label>
+                                <input type="text" id="edit_middle_name" name="middle_name" class="form-input-modern" maxlength="100" placeholder="e.g., Marie">
                                 <span class="form-error"></span>
                             </div>
                         </div>
-                        
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_password_confirmation" class="form-label-modern">
-                                    Confirm Password
-                                </label>
-                                <input type="password" id="edit_password_confirmation" name="password_confirmation" class="form-input-modern">
-                                <span class="form-error"></span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row" id="edit_sk_role_row" style="display: none;">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_sk_role" class="form-label-modern required">
-                                    SK Role
-                                </label>
-                                <select id="edit_sk_role" name="sk_role" class="form-input-modern" required>
-                                    <option value="">Select SK Role</option>
-                                    <option value="sk_chairman">SK Chairman</option>
-                                    <option value="sk_councilor">SK Councilor</option>
-                                    <option value="sk_kagawad">SK Kagawad</option>
-                                    <option value="sk_treasurer">SK Treasurer</option>
-                                    <option value="sk_secretary">SK Secretary</option>
-                                    <option value="sk_auditor">SK Auditor</option>
-                                    <option value="sk_pio">SK PIO</option>
+                                <label for="edit_suffix" class="form-label-modern">Suffix</label>
+                                <select id="edit_suffix" name="suffix" class="form-input-modern">
+                                    <option value="">Select Suffix</option>
+                                    <option value="Jr.">Jr.</option>
+                                    <option value="Sr.">Sr.</option>
+                                    <option value="II">II</option>
+                                    <option value="III">III</option>
+                                    <option value="IV">IV</option>
+                                    <option value="V">V</option>
                                 </select>
+                                <span class="form-error"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-modern">
+                                <label for="edit_email" class="form-label-modern required">Email Address</label>
+                                <input type="email" id="edit_email" name="email" class="form-input-modern" required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
@@ -86,42 +75,39 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_barangay" class="form-label-modern required">
-                                    Barangay
-                                </label>
-                                <input type="text" id="edit_barangay" name="barangay" class="form-input-modern" required>
+                                <label for="edit_barangay_id" class="form-label-modern required">Barangay</label>
+                                <select id="edit_barangay_id" name="barangay_id" class="form-input-modern" required>
+                                    <option value="">Select Barangay</option>
+                                    @foreach($barangays as $barangay)
+                                        <option value="{{ $barangay->id }}">{{ $barangay->name }}</option>
+                                    @endforeach
+                                </select>
                                 <span class="form-error"></span>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_municipality" class="form-label-modern required">
-                                    Municipality
-                                </label>
-                                <input type="text" id="edit_municipality" name="municipality" class="form-input-modern" required>
+                                <label for="edit_municipality" class="form-label-modern required">Municipality</label>
+                                <input type="text" id="edit_municipality" class="form-input-modern" value="Santa Cruz" readonly required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="row" id="edit_province_region_row">
+
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_province" class="form-label-modern required">
-                                    Province
-                                </label>
-                                <input type="text" id="edit_province" name="province" class="form-input-modern" required>
+                                <label for="edit_province" class="form-label-modern required">Province</label>
+                                <input type="text" id="edit_province" class="form-input-modern" value="Laguna" readonly required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_region" class="form-label-modern required">
-                                    Region
-                                </label>
-                                <input type="text" id="edit_region" name="region" class="form-input-modern" required>
+                                <label for="edit_region" class="form-label-modern required">Region</label>
+                                <input type="text" id="edit_region" class="form-input-modern" value="IV-A CALABARZON" readonly required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
@@ -133,54 +119,46 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_position" class="form-label-modern required" id="edit_position_label">
-                                    Position (SK Role)
-                                </label>
+                                <label for="edit_position" class="form-label-modern required">Position (SK Role)</label>
                                 <select id="edit_position" name="position" class="form-input-modern" required>
                                     <option value="">Select Position</option>
-                                    <option value="sk_chairman">SK Chairman</option>
-                                    <option value="sk_councilor">SK Councilor</option>
-                                    <option value="sk_kagawad">SK Kagawad</option>
-                                    <option value="sk_treasurer">SK Treasurer</option>
-                                    <option value="sk_secretary">SK Secretary</option>
-                                    <option value="sk_auditor">SK Auditor</option>
-                                    <option value="sk_pio">SK PIO</option>
+                                    <option value="Chairman">SK Chairman</option>
+                                    <option value="Councilor">SK Councilor</option>
+                                    <option value="Kagawad">SK Kagawad</option>
+                                    <option value="Treasurer">SK Treasurer</option>
+                                    <option value="Secretary">SK Secretary</option>
+                                    <option value="Auditor">SK Auditor</option>
+                                    <option value="PIO">SK PIO</option>
                                 </select>
                                 <span class="form-error"></span>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_term_start" class="form-label-modern required">
-                                    Term Start
-                                </label>
+                                <label for="edit_term_start" class="form-label-modern required">Term Start</label>
                                 <input type="date" id="edit_term_start" name="term_start" class="form-input-modern" required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_term_end" class="form-label-modern required">
-                                    Term End
-                                </label>
+                                <label for="edit_term_end" class="form-label-modern required">Term End</label>
                                 <input type="date" id="edit_term_end" name="term_end" class="form-input-modern" required>
                                 <span class="form-error"></span>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_status" class="form-label-modern required">
-                                    Status
-                                </label>
+                                <label for="edit_status" class="form-label-modern required">Status</label>
                                 <select id="edit_status" name="status" class="form-input-modern" required>
                                     <option value="">Select Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE">Inactive</option>
                                 </select>
                                 <span class="form-error"></span>
                             </div>
@@ -202,7 +180,6 @@
     </div>
 </div>
 
-<!-- Edit Success Modal -->
 <div id="editSuccessModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
