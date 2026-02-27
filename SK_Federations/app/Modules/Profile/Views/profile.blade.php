@@ -6,7 +6,7 @@
     <title>Dashboard - SK Federation</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
 </head>
 <body>
     <!-- Navbar -->
@@ -237,6 +237,6 @@
         </div>
     </main>
 
-    <script src="{{ asset('js/dashboard.js') }}"></script>
+    <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
 </body>
 </html>

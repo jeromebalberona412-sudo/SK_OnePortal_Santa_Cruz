@@ -3,13 +3,13 @@
 <head>
     <title>SK FederationsLogin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="login-container">
         <div class="background-section">
             <div class="logo-container">
-                <img src="{{ asset('Images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
+                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
                 <h1 class="brand-title">SK Federations</h1>
                 <p class="brand-subtitle">Santa Cruz Youth Leadership Portazl</p>
             </div>
@@ -91,6 +91,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ asset('js/script.js') }}"></script>
+    <script src="{{ url('/modules/authentication/js/script.js') }}"></script>
 </body>
 </html>
