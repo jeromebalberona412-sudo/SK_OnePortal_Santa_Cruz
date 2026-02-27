@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Modules\Shared\Middleware\SecurityHeaders::class);
         $middleware->alias([
             'ensure2fa' => \App\Modules\Authentication\Middleware\EnsureTwoFactorEnabled::class,
+            'role' => \App\Modules\Shared\Middleware\EnsureRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

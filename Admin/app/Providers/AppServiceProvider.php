@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Modules\Accounts\Policies\AccountPolicy;
+use App\Modules\Shared\Models\User;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(User::class, AccountPolicy::class);
+        Gate::define('manage-accounts', fn (User $user) => $user->isAdmin());
+
         // Configure rate limiting for login attempts
         RateLimiter::for('login', function (Request $request) {
             $email = $request->input('email', '');

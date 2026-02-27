@@ -2,7 +2,13 @@
 
 namespace App\Modules\Shared\Models;
 
+use App\Modules\Accounts\Models\Barangay;
+use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Shared\Models\Tenant;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
@@ -11,6 +17,16 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_SK_FED = 'sk_fed';
+    public const ROLE_SK_OFFICIAL = 'sk_official';
+    public const ROLE_USER = 'user';
+
+    public const STATUS_ACTIVE = 'ACTIVE';
+    public const STATUS_INACTIVE = 'INACTIVE';
+    public const STATUS_PENDING_APPROVAL = 'PENDING_APPROVAL';
+    public const STATUS_SUSPENDED = 'SUSPENDED';
 
     /**
      * Cached list of available table columns.
@@ -28,7 +44,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'is_admin',
+        'tenant_id',
+        'role',
+        'status',
+        'barangay_id',
+        'must_change_password',
     ];
 
     /**
@@ -56,8 +76,39 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'lockout_until' => 'datetime',
             'last_login_at' => 'datetime',
-            'is_admin' => 'boolean',
+            'must_change_password' => 'boolean',
+            'deleted_at' => 'datetime',
         ];
+    }
+
+    public function barangay(): BelongsTo
+    {
+        return $this->belongsTo(Barangay::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function officialProfile(): HasOne
+    {
+        return $this->hasOne(OfficialProfile::class);
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        if (! $this->hasTableColumn('role')) {
+            return false;
+        }
+
+        return in_array($this->role, $roles, true);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasTableColumn('role')
+            && $this->role === self::ROLE_ADMIN;
     }
 
     /**
@@ -162,5 +213,10 @@ class User extends Authenticatable
         }
 
         return in_array($column, static::$columnCache, true);
+    }
+
+    protected static function newFactory(): UserFactory
+    {
+        return UserFactory::new();
     }
 }
