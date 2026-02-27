@@ -25,3 +25,12 @@ Thumbs.db
 /composer.lock
 /package-lock.json
 /package.json
+
+# Laravel Boost / AI assistant workspace files
+/.claude/
+/.codex/
+/.github/
+/.mcp.json
+/AGENTS.md
+/CLAUDE.md
+/boost.json
