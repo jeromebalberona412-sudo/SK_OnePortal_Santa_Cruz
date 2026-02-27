@@ -10,18 +10,18 @@
     <!-- Head Section for additional CSS -->
     @yield('head')
 
-    <!-- Tailwind CSS + Dashboard Assets via Vite -->
+    <!-- Tailwind CSS + Profile Assets via Vite -->
     @vite([
         'resources/css/app.css', 
         'resources/js/app.js',
-        'app/Modules/Dashboard/assets/css/dashboard.css',
-        'app/Modules/Dashboard/assets/js/dashboard.js',
-        'app/Modules/Dashboard/assets/css/layout/sidebar.css',
-        'app/Modules/Dashboard/assets/css/layout/header.css',
-        'app/Modules/Dashboard/assets/js/layout/sidebar.js',
-        'app/Modules/Dashboard/assets/js/layout/header.js',
-        'app/Modules/Add_Account/assets/css/add_sk_fed.css',
-        'app/Modules/Add_Account/assets/js/add_sk_fed.js'
+        'app/Modules/Profile/assets/css/profile.css',
+        'app/Modules/Profile/assets/js/profile.js',
+        'app/Modules/Layout/assets/css/layout/sidebar.css',
+        'app/Modules/Layout/assets/css/layout/header.css',
+        'app/Modules/Layout/assets/js/layout/sidebar.js',
+        'app/Modules/Layout/assets/js/layout/header.js',
+        'app/Modules/Manage_Account/assets/css/manage_account.css',
+        'app/Modules/Manage_Account/assets/js/manage_account.js'
     ])
 </head>
 <body class="min-h-screen">

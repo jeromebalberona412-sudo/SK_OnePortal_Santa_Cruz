@@ -1,18 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Modules\Add_Account\Controllers\AddAccountController;
+use App\Modules\Manage_Account\Controllers\AddAccountController;
 
 // Redirect root to login
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Add SK Federation routes
-Route::get('/admin/add-sk-fed', [AddAccountController::class, 'createSkFed'])->name('add.sk.fed');
-Route::post('/admin/add-sk-fed', [AddAccountController::class, 'storeSkFed'])->name('add.sk.fed.store');
+// Manage Account routes
+Route::get('/manage-account', [AddAccountController::class, 'createSkFed'])->name('manage.account');
+Route::post('/manage-account', [AddAccountController::class, 'storeSkFed'])->name('manage.account.store');
 
 // Note: Module routes are loaded by their respective service providers:
 // - Authentication module: /login, /logout, /user/two-factor-*
-// - Dashboard module: /dashboard
+// - Profile module: /profile (primary), /dashboard (backward compatibility)
 // - Fortify automatically registers: POST /login, GET & POST /two-factor-challenge

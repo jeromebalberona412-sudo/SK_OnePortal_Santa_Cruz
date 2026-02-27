@@ -5,8 +5,10 @@ return [
     Laravel\Fortify\FortifyServiceProvider::class,
     App\Providers\FortifyServiceProvider::class,
     App\Modules\Shared\Providers\SharedServiceProvider::class,
+    App\Modules\Layout\Providers\LayoutServiceProvider::class,
     App\Modules\Authentication\Providers\AuthenticationServiceProvider::class,
     App\Modules\AuditLog\Providers\AuditLogServiceProvider::class,
     App\Modules\Dashboard\Providers\DashboardServiceProvider::class,
-    App\Modules\Add_Account\Providers\AddAccountServiceProvider::class,
+    App\Modules\Profile\Providers\ProfileServiceProvider::class,
+    App\Modules\Manage_Account\Providers\AddAccountServiceProvider::class,
 ];
