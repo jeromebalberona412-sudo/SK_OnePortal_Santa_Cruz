@@ -13,7 +13,7 @@
                     </div>
                 </div>
             </div>
- 
+
             <!-- Navigation Menu -->
             <div class="nav">
                 <!-- Dashboard Button -->
@@ -38,7 +38,7 @@
                         Profile
                     </a>
                 </div>
-                
+
                 <!-- Add SK Fed Button -->
                 <div class="nav-item">
                     <a href="{{ route('manage.account') }}" class="nav-link manage-account-btn">

@@ -24,8 +24,12 @@ Route::post('/password/email', function () {
 })->name('password.email');
 
 Route::get('/dashboard', function () {
-    return 'Welcome to Dashboard!';
+    return view('dashboard.dashboard');
 })->name('dashboard');
+
+Route::get('/profile', function () {
+    return view('dashboard.profile');
+})->name('profile');
 
 Route::post('/logout', function () {
     return redirect('/login');
