@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>SK FederationsLogin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SK Federations Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
 </head>
@@ -17,18 +19,30 @@
             <div class="login-form-container">
                 <div class="form-header">
                     <h2>Welcome Back</h2>
-                    <p>Login your account</p>
+                    <p>Sign in to SK Federation</p>
                 </div>
 
+                @if (session('status'))
+                    <div class="alert alert-info" role="alert">
+                        {{ session('status') }}
+                    </div>
+                @endif
+
+                @if (session('device_email'))
+                    <div class="alert alert-warning" role="alert">
+                        New device detected. <a href="{{ route('device.verify.notice', ['email' => session('device_email')]) }}">Open device verification notice</a>.
+                    </div>
+                @endif
+
                 @if ($errors->any())
-                    <div class="error-messages">
+                    <div class="alert alert-danger" role="alert">
                         @foreach ($errors->all() as $error)
-                            <div class="error-item">{{ $error }}</div>
+                            <div>{{ $error }}</div>
                         @endforeach
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login') }}" class="login-form">
+                <form method="POST" action="{{ route('login') }}" class="login-form" novalidate>
                     @csrf
                     <div class="form-group">
                         <label for="email">Email Address</label>
@@ -71,20 +85,22 @@
                     </div>
 
                     <div class="form-options">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
+                            <label class="form-check-label" for="remember">Remember this device</label>
+                        </div>
                         <div class="forgot-password-container">
-                            <a href="" class="forgot-password">
-                                Forgot Password?
-                            </a>
+                            <a href="{{ route('skfed.verification.notice') }}" class="forgot-password">Verify Email</a>
                         </div>
                     </div>
 
                     <button type="submit" class="login-btn btn btn-primary w-100">
-                        Login
+                        Sign In
                     </button>
                 </form>
 
                 <div class="form-footer">
-                    <p>Don't have an account? <a href="">Contact Admin</a></p>
+                    <p>Accounts are provisioned by Admin only.</p>
                 </div>
             </div>
         </div>
@@ -93,4 +109,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url('/modules/authentication/js/script.js') }}"></script>
 </body>
+@if (session('verification_wait') && session()->has('sk_fed_email_verification_pending'))
+    <script>
+        window.location.replace("{{ route('skfed.verification.wait') }}");
+    </script>
+@endif
 </html>

@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'sk_fed.access' => \App\Modules\Authentication\Middleware\EnsureSkFedAccess::class,
+            'trusted.device' => \App\Modules\Authentication\Middleware\EnsureTrustedDevice::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
