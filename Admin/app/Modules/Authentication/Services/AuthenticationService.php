@@ -43,8 +43,7 @@ class AuthenticationService
             return null;
         }
 
-        $isAdmin = $user->getRawOriginal('is_admin');
-        if ($isAdmin !== null && ! (bool) $isAdmin) {
+        if (! $user->isAdmin() || $user->status !== User::STATUS_ACTIVE || ! $user->tenant_id) {
             $this->loginSecurityService->recordFailedAttempt($email, $ip, $userAgent);
             $this->auditService->logLoginFailed($email);
             return null;

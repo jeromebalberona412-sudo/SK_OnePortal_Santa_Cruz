@@ -14,8 +14,10 @@ export default defineConfig({
                 'app/Modules/Layout/assets/css/layout/header.css',
                 'app/Modules/Layout/assets/js/layout/sidebar.js',
                 'app/Modules/Layout/assets/js/layout/header.js',
-                'app/Modules/Manage_Account/assets/css/manage_account.css',
-                'app/Modules/Manage_Account/assets/js/manage_account.js'
+                'app/Modules/Accounts/assets/css/manage_account.css',
+                'app/Modules/Accounts/assets/css/edit_sk_fed.css',
+                'app/Modules/Accounts/assets/css/edit_sk_officials.css',
+                'app/Modules/Accounts/assets/js/manage_account.js'
             ],
             refresh: true,
         }),

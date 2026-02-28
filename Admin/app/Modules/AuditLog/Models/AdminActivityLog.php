@@ -2,6 +2,7 @@
 
 namespace App\Modules\AuditLog\Models;
 
+use App\Modules\Shared\Models\Tenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Modules\Shared\Models\User;
@@ -29,8 +30,12 @@ class AdminActivityLog extends Model
      * @var array<string>
      */
     protected $fillable = [
+        'tenant_id',
         'user_id',
         'event_type',
+        'action',
+        'entity_type',
+        'entity_id',
         'ip_address',
         'user_agent',
         'metadata',
@@ -80,6 +85,11 @@ class AdminActivityLog extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     /**

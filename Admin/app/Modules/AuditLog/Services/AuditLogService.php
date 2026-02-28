@@ -24,9 +24,17 @@ class AuditLogService implements AuditLogInterface
         $userAgent = request()->userAgent() ?? 'unknown';
 
         try {
+            $action = is_string($metadata['action'] ?? null) ? $metadata['action'] : null;
+            $entityType = is_string($metadata['entity_type'] ?? null) ? $metadata['entity_type'] : null;
+            $entityId = isset($metadata['entity_id']) ? (string) $metadata['entity_id'] : null;
+
             AdminActivityLog::create([
+                'tenant_id' => $user?->tenant_id,
                 'user_id' => $user?->id,
                 'event_type' => $eventType,
+                'action' => $action,
+                'entity_type' => $entityType,
+                'entity_id' => $entityId,
                 'ip_address' => $ipAddress,
                 'user_agent' => $userAgent,
                 'metadata' => $metadata,
