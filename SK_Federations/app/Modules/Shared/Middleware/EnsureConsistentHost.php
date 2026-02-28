@@ -38,11 +38,10 @@ class EnsureConsistentHost
             ], 409);
         }
 
-        return new RedirectResponse(
-            $request->getSchemeAndHttpHost().'/login',
-            302,
-            ['Cache-Control' => 'no-store, no-cache, must-revalidate']
-        )->with('status', $message);
+        return redirect()
+    ->to($request->getSchemeAndHttpHost().'/login')
+    ->with('status', $message)
+    ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     private function authorityFromRequest(Request $request): string
