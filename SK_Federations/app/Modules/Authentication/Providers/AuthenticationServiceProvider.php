@@ -5,7 +5,6 @@ namespace App\Modules\Authentication\Providers;
 use App\Modules\Authentication\Services\AuthAuditLogService;
 use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\DeviceFingerprintService;
-use App\Modules\Authentication\Services\DeviceVerificationService;
 use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\FeatureFlagService;
 use App\Modules\Authentication\Services\LoginSecurityService;
@@ -25,7 +24,6 @@ class AuthenticationServiceProvider extends ServiceProvider
         $this->app->singleton(DeviceFingerprintService::class);
         $this->app->singleton(EmailVerificationDeviceService::class);
         $this->app->singleton(TrustedDeviceService::class);
-        $this->app->singleton(DeviceVerificationService::class);
         $this->app->singleton(LoginSecurityService::class);
         $this->app->singleton(SuspiciousLoginService::class);
         $this->app->singleton(AuthenticationService::class);

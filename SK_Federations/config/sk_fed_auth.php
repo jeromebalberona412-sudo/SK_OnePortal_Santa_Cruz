@@ -6,7 +6,6 @@ return [
 
     'trusted_device' => [
         'expiration_days' => (int) env('SK_FED_TRUSTED_DEVICE_EXPIRATION_DAYS', 30),
-        'token_expiration_minutes' => (int) env('SK_FED_DEVICE_TOKEN_EXPIRATION_MINUTES', 20),
         'enforce_every_request' => (bool) env('SK_FED_ENFORCE_TRUSTED_DEVICE', true),
     ],
 

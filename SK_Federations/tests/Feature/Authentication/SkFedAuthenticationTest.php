@@ -1,16 +1,13 @@
 <?php
 
-use App\Modules\Authentication\Models\DeviceVerificationToken;
 use App\Modules\Authentication\Models\EmailVerifiedDevice;
 use App\Modules\Authentication\Models\FeatureFlag;
 use App\Modules\Authentication\Models\TrustedDevice;
-use App\Modules\Authentication\Notifications\DeviceVerificationNotification;
 use App\Modules\Authentication\Notifications\SkFedVerifyEmailNotification;
 use App\Modules\Shared\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\URL;
 
 use function Pest\Laravel\assertAuthenticatedAs;
 use function Pest\Laravel\assertGuest;
@@ -68,9 +65,7 @@ it('blocks unverified user and sends verification email', function () {
     Notification::assertSentTo($user, SkFedVerifyEmailNotification::class);
 });
 
-it('challenges untrusted device and sends device verification notification', function () {
-    Notification::fake();
-
+it('registers the current device as trusted when device verification feature is enabled', function () {
     $tenantId = (int) DB::table('tenants')->where('code', config('sk_fed_auth.tenant_code'))->value('id');
 
     $user = User::factory()->create([
@@ -85,41 +80,6 @@ it('challenges untrusted device and sends device verification notification', fun
         'email' => $user->email,
         'password' => 'Password123!',
     ]);
-
-    $response->assertRedirect('/login');
-    assertGuest();
-
-    Notification::assertSentTo($user, DeviceVerificationNotification::class);
-});
-
-it('verifies device token and authenticates user', function () {
-    $tenantId = (int) DB::table('tenants')->where('code', config('sk_fed_auth.tenant_code'))->value('id');
-
-    $user = User::factory()->create([
-        'email' => 'tokenverify@example.com',
-        'password' => 'Password123!',
-        'tenant_id' => $tenantId,
-        'role' => 'sk_fed',
-        'email_verified_at' => now(),
-    ]);
-
-    $plainToken = 'device-token-123';
-
-    DeviceVerificationToken::query()->create([
-        'user_id' => $user->id,
-        'token_hash' => hash('sha256', $plainToken),
-        'fingerprint' => hash('sha256', 'fingerprint'),
-        'ip_address' => '127.0.0.1',
-        'user_agent' => 'Pest Test Agent',
-        'expires_at' => now()->addMinutes(10),
-    ]);
-
-    $signedUrl = URL::temporarySignedRoute('device.verify', now()->addMinutes(10), [
-        'user' => $user->id,
-        'token' => $plainToken,
-    ]);
-
-    $response = get($signedUrl);
 
     $response->assertRedirect('/dashboard');
     assertAuthenticatedAs($user);

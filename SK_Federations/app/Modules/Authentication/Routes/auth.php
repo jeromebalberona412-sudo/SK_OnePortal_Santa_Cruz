@@ -36,9 +36,4 @@ Route::middleware('guest')->group(function () {
         ->middleware(['signed', 'throttle:6,1'])
         ->name('skfed.verification.verify');
     Route::get('/email/verified-success', [AuthController::class, 'showVerificationSuccess'])->name('skfed.verification.success');
-
-    Route::get('/device/verify/notice', [AuthController::class, 'showDeviceVerificationNotice'])->name('device.verify.notice');
-    Route::get('/device/verify', [AuthController::class, 'verifyDevice'])
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('device.verify');
 });

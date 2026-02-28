@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Modules\Authentication\Models\AuthAuditLog;
-use App\Modules\Authentication\Models\DeviceVerificationToken;
 use App\Modules\Authentication\Models\LoginAttempt;
 use App\Modules\Authentication\Models\TrustedDevice;
 use Illuminate\Console\Command;
@@ -17,12 +16,6 @@ class PruneSkFedAuthData extends Command
 
     public function handle(): int
     {
-        $expiredTokens = DeviceVerificationToken::query()
-            ->where(function ($query) {
-                $query->whereNotNull('used_at')->orWhere('expires_at', '<=', now());
-            })
-            ->delete();
-
         $expiredDevices = TrustedDevice::query()
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now())
@@ -45,7 +38,6 @@ class PruneSkFedAuthData extends Command
             ->delete();
 
         $this->info('Pruned SK FED auth data.');
-        $this->line("Expired tokens: {$expiredTokens}");
         $this->line("Expired devices: {$expiredDevices}");
         $this->line("Old attempts: {$oldAttempts}");
         $this->line("Old audit logs: {$oldAudit}");

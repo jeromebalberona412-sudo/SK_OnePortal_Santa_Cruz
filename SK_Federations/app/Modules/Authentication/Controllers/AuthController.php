@@ -2,7 +2,6 @@
 
 namespace App\Modules\Authentication\Controllers;
 
-use App\Modules\Authentication\Services\DeviceVerificationService;
 use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\TenantContextService;
 use App\Modules\Shared\Controllers\Controller;
@@ -14,14 +13,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthController extends Controller
 {
     public function __construct(
         protected TenantContextService $tenantContextService,
-        protected DeviceVerificationService $deviceVerificationService,
         protected EmailVerificationDeviceService $emailVerificationDeviceService,
     ) {}
 
@@ -183,39 +180,6 @@ class AuthController extends Controller
         event(new Verified($user));
 
         return redirect()->route('skfed.verification.success');
-    }
-
-    public function showDeviceVerificationNotice(Request $request): View
-    {
-        return view('authentication::device-verify-notice', [
-            'email' => $request->query('email'),
-        ]);
-    }
-
-    public function verifyDevice(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'user' => ['required', 'integer'],
-            'token' => ['required', 'string'],
-        ]);
-
-        $result = $this->deviceVerificationService->verifyToken(
-            userId: (int) $validated['user'],
-            plainTextToken: $validated['token'],
-            request: $request,
-        );
-
-        if (! $result->verified || $result->user === null) {
-            throw ValidationException::withMessages([
-                'verification' => 'The device verification link is invalid or expired.',
-            ]);
-        }
-
-        Auth::login($result->user);
-        $request->session()->regenerate();
-
-        return redirect()->route('dashboard')
-            ->with('status', 'Device verified successfully.');
     }
 
     public function logout(): RedirectResponse

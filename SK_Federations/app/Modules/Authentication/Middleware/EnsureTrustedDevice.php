@@ -2,14 +2,12 @@
 
 namespace App\Modules\Authentication\Middleware;
 
-use App\Modules\Authentication\Services\DeviceVerificationService;
 use App\Modules\Authentication\Services\FeatureFlagService;
 use App\Modules\Authentication\Services\TrustedDeviceService;
 use App\Modules\Shared\Models\User;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureTrustedDevice
@@ -17,7 +15,6 @@ class EnsureTrustedDevice
     public function __construct(
         protected FeatureFlagService $featureFlagService,
         protected TrustedDeviceService $trustedDeviceService,
-        protected DeviceVerificationService $deviceVerificationService,
     ) {}
 
     public function handle(Request $request, Closure $next): Response|RedirectResponse
@@ -43,13 +40,8 @@ class EnsureTrustedDevice
             return $next($request);
         }
 
-        $this->deviceVerificationService->issueToken($user, $request);
+        $this->trustedDeviceService->trust($user, $request);
 
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('device.verify.notice', ['email' => $user->email])
-            ->with('status', 'Device verification is required before access is granted.');
+        return $next($request);
     }
 }

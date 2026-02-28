@@ -28,12 +28,6 @@
                     </div>
                 @endif
 
-                @if (session('device_email'))
-                    <div class="alert alert-warning" role="alert">
-                        New device detected. <a href="{{ route('device.verify.notice', ['email' => session('device_email')]) }}">Open device verification notice</a>.
-                    </div>
-                @endif
-
                 @if ($errors->any())
                     <div class="alert alert-danger" role="alert">
                         @foreach ($errors->all() as $error)

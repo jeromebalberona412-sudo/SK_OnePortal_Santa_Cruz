@@ -58,4 +58,33 @@ class TrustedDeviceService
                 'user_agent' => $request->userAgent(),
             ]);
     }
+
+    /**
+     * @param  array<string, mixed>|null  $metadata
+     */
+    public function trustFingerprint(
+        User $user,
+        string $fingerprint,
+        ?string $ipAddress,
+        ?string $userAgent,
+        ?array $metadata = null,
+    ): TrustedDevice {
+        $expirationDays = (int) config('sk_fed_auth.trusted_device.expiration_days', 30);
+
+        return TrustedDevice::query()->updateOrCreate(
+            [
+                'user_id' => $user->getKey(),
+                'fingerprint' => $fingerprint,
+            ],
+            [
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+                'last_used_at' => now(),
+                'expires_at' => now()->addDays($expirationDays),
+                'metadata' => $metadata ?? [
+                    'session_cookie' => config('session.cookie'),
+                ],
+            ]
+        );
+    }
 }

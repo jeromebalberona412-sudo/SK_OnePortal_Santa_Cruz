@@ -16,7 +16,6 @@ class AuthenticationService
         protected LoginSecurityService $loginSecurityService,
         protected EmailVerificationDeviceService $emailVerificationDeviceService,
         protected TrustedDeviceService $trustedDeviceService,
-        protected DeviceVerificationService $deviceVerificationService,
         protected SuspiciousLoginService $suspiciousLoginService,
         protected AuthAuditLogService $auditLogService,
     ) {}
@@ -85,16 +84,8 @@ class AuthenticationService
             $this->featureFlagService->enabled('features.device_verification')
             && ! $this->trustedDeviceService->isTrusted($user, $request)
         ) {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            $this->deviceVerificationService->issueToken($user, $request);
-            $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => 'untrusted_device']);
-            $this->auditLogService->log('login_challenged_device', $user, $request);
-            $request->session()->flash('status', 'Device verification is required before access is granted.');
-            $request->session()->flash('device_email', $user->email);
-
-            return null;
+            $this->trustedDeviceService->trust($user, $request);
+            $this->auditLogService->log('login_trusted_device_registered', $user, $request);
         }
 
         $suspicious = ['is_suspicious' => false, 'signals' => []];
