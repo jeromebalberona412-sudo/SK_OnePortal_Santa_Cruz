@@ -36,4 +36,12 @@ Route::middleware('guest')->group(function () {
         ->middleware(['signed', 'throttle:6,1'])
         ->name('skfed.verification.verify');
     Route::get('/email/verified-success', [AuthController::class, 'showVerificationSuccess'])->name('skfed.verification.success');
+
+    Route::get('/session/takeover/wait', [AuthController::class, 'showTakeoverWait'])->name('skfed.takeover.wait');
+    Route::post('/session/takeover/send-otp', [AuthController::class, 'sendTakeoverOtp'])->name('skfed.takeover.send');
+    Route::post('/session/takeover/verify-otp', [AuthController::class, 'verifyTakeoverOtp'])->name('skfed.takeover.verify');
+});
+
+Route::middleware(['auth', 'single.session'])->group(function () {
+    Route::post('/heartbeat', [AuthController::class, 'heartbeat'])->name('skfed.heartbeat');
 });

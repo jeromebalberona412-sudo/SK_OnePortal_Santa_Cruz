@@ -3,13 +3,20 @@
 namespace App\Modules\Authentication\Services;
 
 use App\Modules\Authentication\Notifications\NewLocationLoginNotification;
+use App\Modules\Authentication\Notifications\SessionTakeoverOtpNotification;
 use App\Modules\Shared\Models\User;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthenticationService
 {
+    public const TAKEOVER_PENDING_SESSION_KEY = 'sk_fed_takeover_pending';
+
     public function __construct(
         protected TenantContextService $tenantContextService,
         protected FeatureFlagService $featureFlagService,
@@ -80,6 +87,12 @@ class AuthenticationService
             return null;
         }
 
+        if ($this->hasActiveSessionConflict($user, $request)) {
+            $this->startTakeoverWait($user, $email, $request);
+
+            return null;
+        }
+
         if (
             $this->featureFlagService->enabled('features.device_verification')
             && ! $this->trustedDeviceService->isTrusted($user, $request)
@@ -108,8 +121,290 @@ class AuthenticationService
         $this->auditLogService->log('login_success', $user, $request, ['suspicious' => $suspicious]);
         $user->recordLogin((string) $request->ip());
         $this->emailVerificationDeviceService->upsertCurrentDevice($user, $request);
+        $user->forceFill([
+            'active_device' => $this->userAgent($request),
+            'last_ip' => (string) $request->ip(),
+        ])->save();
 
         return $user;
+    }
+
+    public function claimCurrentSession(User $user, Request $request): void
+    {
+        $user->forceFill([
+            'active_session_id' => $request->session()->getId(),
+            'last_seen' => now(),
+            'active_device' => $this->userAgent($request),
+            'last_ip' => (string) $request->ip(),
+        ])->save();
+    }
+
+    public function recordHeartbeat(Request $request): void
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        if ($user === null) {
+            throw new AuthenticationException;
+        }
+
+        $currentSessionId = $request->session()->getId();
+        $activeSessionId = (string) ($user->active_session_id ?? '');
+
+        if ($activeSessionId === '') {
+            $this->claimCurrentSession($user, $request);
+
+            return;
+        }
+
+        if ($activeSessionId !== $currentSessionId) {
+            throw new AuthenticationException;
+        }
+
+        $user->forceFill([
+            'last_seen' => now(),
+            'last_ip' => (string) $request->ip(),
+        ])->save();
+    }
+
+    public function showTakeoverWaitData(Request $request): array|RedirectResponse
+    {
+        $pending = $request->session()->get(self::TAKEOVER_PENDING_SESSION_KEY);
+
+        if (! is_array($pending)) {
+            return redirect()->route('login')->withErrors([
+                'auth' => 'No secure takeover session is currently pending.',
+            ]);
+        }
+
+        $expiresAt = Carbon::parse((string) ($pending['expires_at'] ?? now()->toIso8601String()));
+
+        if ($expiresAt->isPast()) {
+            $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
+
+            return redirect()->route('login')->withErrors([
+                'auth' => 'Secure takeover session expired. Please sign in again.',
+            ]);
+        }
+
+        $user = User::query()->find((int) ($pending['user_id'] ?? 0));
+        $cooldownSeconds = $this->resendCooldownSecondsRemaining($user);
+
+        return [
+            'email' => (string) ($pending['email'] ?? ''),
+            'resendLocked' => $cooldownSeconds > 0,
+            'cooldownSeconds' => $cooldownSeconds,
+        ];
+    }
+
+    public function sendTakeoverOtp(Request $request): RedirectResponse
+    {
+        $pending = $request->session()->get(self::TAKEOVER_PENDING_SESSION_KEY);
+
+        if (! is_array($pending)) {
+            return redirect()->route('login')->withErrors([
+                'auth' => 'No secure takeover session is currently pending.',
+            ]);
+        }
+
+        $user = User::query()->find((int) ($pending['user_id'] ?? 0));
+
+        if ($user === null || $user->email !== ($pending['email'] ?? null)) {
+            $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
+
+            return redirect()->route('login')->withErrors([
+                'auth' => 'Secure takeover session is no longer valid.',
+            ]);
+        }
+
+        $cooldownSeconds = $this->resendCooldownSecondsRemaining($user);
+
+        if ($cooldownSeconds > 0) {
+            return redirect()->route('skfed.takeover.wait')->withErrors([
+                'auth' => "Please wait {$cooldownSeconds} seconds before requesting another code.",
+            ]);
+        }
+
+        $otpCode = $this->generateOtpCode();
+        $expiresAt = now()->addMinutes((int) config('sk_fed_auth.single_session.otp_expiration_minutes', 5));
+
+        $user->forceFill([
+            'otp_code' => Hash::make($otpCode),
+            'otp_expires_at' => $expiresAt,
+            'otp_attempts' => 0,
+            'otp_last_sent_at' => now(),
+        ])->save();
+
+        $user->notify(new SessionTakeoverOtpNotification($otpCode));
+        $this->auditLogService->log('session_takeover_otp_sent', $user, $request);
+
+        return redirect()->route('skfed.takeover.wait')->with('status', 'Verification code sent to your email.');
+    }
+
+    public function verifyTakeoverOtp(Request $request, string $otpCode): RedirectResponse
+    {
+        $pending = $request->session()->get(self::TAKEOVER_PENDING_SESSION_KEY);
+
+        if (! is_array($pending)) {
+            return redirect()->route('login')->withErrors([
+                'auth' => 'No secure takeover session is currently pending.',
+            ]);
+        }
+
+        $userId = (int) ($pending['user_id'] ?? 0);
+        $takeoverApproved = false;
+
+        DB::transaction(function () use ($userId, $otpCode, $request, &$takeoverApproved): void {
+            $user = User::query()->lockForUpdate()->find($userId);
+
+            if ($user === null) {
+                return;
+            }
+
+            $maxAttempts = (int) config('sk_fed_auth.single_session.otp_max_attempts', 5);
+
+            if ((int) ($user->otp_attempts ?? 0) >= $maxAttempts) {
+                return;
+            }
+
+            if ($user->otp_expires_at === null || $user->otp_expires_at->isPast() || empty($user->otp_code)) {
+                return;
+            }
+
+            if (! Hash::check($otpCode, (string) $user->otp_code)) {
+                $user->forceFill([
+                    'otp_attempts' => ((int) ($user->otp_attempts ?? 0)) + 1,
+                ])->save();
+
+                $this->auditLogService->log('session_takeover_otp_invalid', $user, $request);
+
+                return;
+            }
+
+            $this->deleteSessionById((string) ($user->active_session_id ?? ''));
+
+            $user->forceFill([
+                'active_session_id' => null,
+                'last_seen' => null,
+                'otp_code' => null,
+                'otp_expires_at' => null,
+                'otp_attempts' => 0,
+                'otp_last_sent_at' => null,
+            ])->save();
+
+            $takeoverApproved = true;
+        });
+
+        if (! $takeoverApproved) {
+            return redirect()->route('skfed.takeover.wait')->withErrors([
+                'auth' => 'Invalid or expired verification code. Request a new one and try again.',
+            ]);
+        }
+
+        $user = User::query()->find($userId);
+
+        if ($user === null) {
+            $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
+
+            return redirect()->route('login')->withErrors([
+                'auth' => 'Unable to complete secure takeover.',
+            ]);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+        $this->claimCurrentSession($user, $request);
+        $this->loginSecurityService->clearAfterSuccess($user);
+        $this->auditLogService->log('session_takeover_approved', $user, $request);
+        $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
+
+        return redirect()->route('dashboard');
+    }
+
+    public function clearSessionOwnershipOnLogout(User $user, Request $request): void
+    {
+        $currentSessionId = $request->session()->getId();
+        $this->deleteSessionById($currentSessionId);
+
+        if ((string) ($user->active_session_id ?? '') !== (string) $currentSessionId) {
+            return;
+        }
+
+        $user->forceFill([
+            'active_session_id' => null,
+            'last_seen' => null,
+            'active_device' => null,
+            'last_ip' => null,
+        ])->save();
+    }
+
+    public function isSessionActive(User $user): bool
+    {
+        if (empty($user->active_session_id) || $user->last_seen === null) {
+            return false;
+        }
+
+        $timeoutSeconds = (int) config('sk_fed_auth.single_session.heartbeat_timeout_seconds', 120);
+
+        if ($user->last_seen->copy()->addSeconds($timeoutSeconds)->isPast()) {
+            return false;
+        }
+
+        if ((string) config('session.driver') !== 'database') {
+            return true;
+        }
+
+        return DB::table('sessions')
+            ->where('id', (string) $user->active_session_id)
+            ->where('user_id', $user->getKey())
+            ->where('last_activity', '>=', now()->subSeconds($timeoutSeconds)->timestamp)
+            ->exists();
+    }
+
+    protected function hasActiveSessionConflict(User $user, Request $request): bool
+    {
+        $activeSessionId = (string) ($user->active_session_id ?? '');
+
+        if ($activeSessionId === '') {
+            return false;
+        }
+
+        if ($activeSessionId === $request->session()->getId()) {
+            return false;
+        }
+
+        if ($this->isSessionActive($user)) {
+            return true;
+        }
+
+        $this->deleteSessionById($activeSessionId);
+        $user->forceFill([
+            'active_session_id' => null,
+            'last_seen' => null,
+            'active_device' => null,
+            'last_ip' => null,
+        ])->save();
+
+        return false;
+    }
+
+    protected function startTakeoverWait(User $user, string $email, Request $request): void
+    {
+        $waitMinutes = (int) config('sk_fed_auth.verification.wait_minutes', 15);
+
+        $request->session()->put(self::TAKEOVER_PENDING_SESSION_KEY, [
+            'user_id' => $user->getKey(),
+            'email' => $user->email,
+            'started_at' => now()->toIso8601String(),
+            'expires_at' => now()->addMinutes($waitMinutes)->toIso8601String(),
+            'ip' => (string) $request->ip(),
+            'user_agent' => $this->userAgent($request),
+        ]);
+
+        $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => 'single_session_conflict']);
+        $this->auditLogService->log('login_blocked_single_session_conflict', $user, $request);
+        $request->session()->flash('status', 'Account currently active on another device. Verify ownership to continue.');
+        $request->session()->flash('takeover_wait', true);
     }
 
     protected function startEmailVerificationWait(
@@ -139,5 +434,36 @@ class AuthenticationService
         $this->auditLogService->log('login_blocked_'.$reason, $user, $request);
         $request->session()->flash('status', $message);
         $request->session()->flash('verification_wait', true);
+    }
+
+    protected function generateOtpCode(): string
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    protected function resendCooldownSecondsRemaining(?User $user): int
+    {
+        if ($user === null || $user->otp_last_sent_at === null) {
+            return 0;
+        }
+
+        $cooldownSeconds = (int) config('sk_fed_auth.single_session.otp_resend_cooldown_seconds', 60);
+        $availableAt = $user->otp_last_sent_at->copy()->addSeconds($cooldownSeconds);
+
+        return max(0, now()->diffInSeconds($availableAt, false));
+    }
+
+    protected function userAgent(Request $request): string
+    {
+        return substr((string) ($request->userAgent() ?? 'unknown'), 0, 255);
+    }
+
+    protected function deleteSessionById(string $sessionId): void
+    {
+        if ($sessionId === '' || (string) config('session.driver') !== 'database') {
+            return;
+        }
+
+        DB::table('sessions')->where('id', $sessionId)->delete();
     }
 }

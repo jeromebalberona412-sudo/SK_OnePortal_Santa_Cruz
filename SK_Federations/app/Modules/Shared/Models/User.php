@@ -46,6 +46,14 @@ class User extends Authenticatable implements MustVerifyEmail
         'lockout_until',
         'last_login_at',
         'last_login_ip',
+        'active_session_id',
+        'last_seen',
+        'active_device',
+        'last_ip',
+        'otp_code',
+        'otp_expires_at',
+        'otp_attempts',
+        'otp_last_sent_at',
     ];
 
     /**
@@ -70,6 +78,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'lockout_until' => 'datetime',
             'last_login_at' => 'datetime',
+            'last_seen' => 'datetime',
+            'otp_expires_at' => 'datetime',
+            'otp_last_sent_at' => 'datetime',
         ];
     }
 

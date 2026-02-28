@@ -2,6 +2,7 @@
 
 namespace App\Modules\Authentication\Controllers;
 
+use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\TenantContextService;
 use App\Modules\Shared\Controllers\Controller;
@@ -18,6 +19,7 @@ use Illuminate\View\View;
 class AuthController extends Controller
 {
     public function __construct(
+        protected AuthenticationService $authenticationService,
         protected TenantContextService $tenantContextService,
         protected EmailVerificationDeviceService $emailVerificationDeviceService,
     ) {}
@@ -112,12 +114,52 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+        $this->authenticationService->claimCurrentSession($user, $request);
         $this->emailVerificationDeviceService->markVerifiedDeviceFromPending($user, $pending);
         $request->session()->forget('sk_fed_email_verification_pending');
 
         return response()->json([
             'state' => 'verified',
             'redirect' => route('dashboard'),
+        ]);
+    }
+
+    public function showTakeoverWait(Request $request): View|RedirectResponse
+    {
+        $takeoverData = $this->authenticationService->showTakeoverWaitData($request);
+
+        if ($takeoverData instanceof RedirectResponse) {
+            return $takeoverData;
+        }
+
+        return view('authentication::takeover-wait', [
+            'email' => (string) ($takeoverData['email'] ?? ''),
+            'resendLocked' => (bool) ($takeoverData['resendLocked'] ?? false),
+            'cooldownSeconds' => (int) ($takeoverData['cooldownSeconds'] ?? 0),
+        ]);
+    }
+
+    public function sendTakeoverOtp(Request $request): RedirectResponse
+    {
+        return $this->authenticationService->sendTakeoverOtp($request);
+    }
+
+    public function verifyTakeoverOtp(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'otp_code' => ['required', 'digits:6'],
+        ]);
+
+        return $this->authenticationService->verifyTakeoverOtp($request, (string) $validated['otp_code']);
+    }
+
+    public function heartbeat(Request $request): JsonResponse
+    {
+        $this->authenticationService->recordHeartbeat($request);
+
+        return response()->json([
+            'ok' => true,
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -184,6 +226,13 @@ class AuthController extends Controller
 
     public function logout(): RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if ($user !== null) {
+            $this->authenticationService->clearSessionOwnershipOnLogout($user, request());
+        }
+
         Auth::logout();
 
         request()->session()->invalidate();

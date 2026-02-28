@@ -28,6 +28,16 @@
                     </div>
                 @endif
 
+                @if (session()->has('sk_fed_takeover_pending'))
+                    <div class="alert alert-warning" role="alert">
+                        <div>Account currently active on another device. Verify ownership to continue.</div>
+                        <form method="POST" action="{{ route('skfed.takeover.send') }}" class="mt-2">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-dark">Send Email Verification Code</button>
+                        </form>
+                    </div>
+                @endif
+
                 @if ($errors->any())
                     <div class="alert alert-danger" role="alert">
                         @foreach ($errors->all() as $error)
@@ -106,6 +116,11 @@
 @if (session('verification_wait') && session()->has('sk_fed_email_verification_pending'))
     <script>
         window.location.replace("{{ route('skfed.verification.wait') }}");
+    </script>
+@endif
+@if (session('takeover_wait') && session()->has('sk_fed_takeover_pending'))
+    <script>
+        window.location.replace("{{ route('skfed.takeover.wait') }}");
     </script>
 @endif
 </html>
