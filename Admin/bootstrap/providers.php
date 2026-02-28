@@ -11,6 +11,7 @@ App\Modules\Authentication\Providers\AuthenticationServiceProvider::class,
 App\Modules\AuditLog\Providers\AuditLogServiceProvider::class,
 App\Modules\Dashboard\Providers\DashboardServiceProvider::class,
 App\Modules\Profile\Providers\ProfileServiceProvider::class,
-App\Modules\Manage_Account\Providers\AddAccountServiceProvider::class,
+
+App\Modules\Accounts\Providers\AccountsServiceProvider::class,
 
 ];
