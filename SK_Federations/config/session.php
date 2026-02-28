@@ -127,10 +127,7 @@ return [
     |
     */
 
-    'cookie' => env(
-        'SESSION_COOKIE',
-        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
-    ),
+    'cookie' => env('SESSION_COOKIE', 'sk_federations_session'),
 
     /*
     |--------------------------------------------------------------------------
@@ -156,7 +153,21 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => (static function (): ?string {
+        $domain = env('SESSION_DOMAIN');
+
+        if ($domain === null) {
+            return null;
+        }
+
+        $normalized = trim((string) $domain);
+
+        if ($normalized === '' || strtolower($normalized) === 'null') {
+            return null;
+        }
+
+        return $normalized;
+    })(),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +180,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', true),
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------

@@ -29,7 +29,7 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('skfed.verification.resend') }}" class="d-grid gap-3">
+                        <form method="POST" action="{{ route('skfed.verification.resend', [], false) }}" class="d-grid gap-3">
                             @csrf
                             <div>
                                 <label for="email" class="form-label">Email Address</label>
@@ -38,7 +38,7 @@
                             <button type="submit" class="btn btn-primary">Resend Verification Email</button>
                         </form>
 
-                        <a href="{{ route('login') }}" class="btn btn-link px-0 mt-3">Back to login</a>
+                        <a href="{{ route('login', [], false) }}" class="btn btn-link px-0 mt-3">Back to login</a>
                     </div>
                 </div>
             </div>

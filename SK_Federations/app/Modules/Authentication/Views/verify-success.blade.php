@@ -43,7 +43,7 @@
                         </div>
                         <h1 class="h4 mb-2">Email Verified Successfully</h1>
                         <p class="text-muted mb-4">Your SK Federation account is now verified. You may continue to sign in securely.</p>
-                        <a class="btn btn-success" href="{{ route('login') }}">Proceed to Login</a>
+                        <a class="btn btn-success" href="{{ route('login', [], false) }}">Proceed to Login</a>
                     </div>
                 </div>
             </div>

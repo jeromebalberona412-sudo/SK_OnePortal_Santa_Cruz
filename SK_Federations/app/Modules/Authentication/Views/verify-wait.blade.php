@@ -26,11 +26,11 @@
                             Verification window: {{ $waitMinutes }} minutes.
                         </p>
 
-                        <form method="POST" action="{{ route('skfed.verification.resend') }}" class="d-grid gap-2">
+                        <form method="POST" action="{{ route('skfed.verification.resend', [], false) }}" class="d-grid gap-2">
                             @csrf
                             <input type="hidden" name="email" value="{{ $email }}">
                             <button type="submit" class="btn btn-outline-primary">Resend Verification Email</button>
-                            <a href="{{ route('login') }}" class="btn btn-link">Back to login</a>
+                            <a href="{{ route('login', [], false) }}" class="btn btn-link">Back to login</a>
                         </form>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
 
     <script>
         (() => {
-            const statusUrl = "{{ route('skfed.verification.wait.status') }}";
+            const statusUrl = "{{ route('skfed.verification.wait.status', [], false) }}";
             const expiresAt = new Date("{{ $expiresAtIso }}");
             const stateElement = document.getElementById('verification-state');
             const countdownElement = document.getElementById('countdown');
