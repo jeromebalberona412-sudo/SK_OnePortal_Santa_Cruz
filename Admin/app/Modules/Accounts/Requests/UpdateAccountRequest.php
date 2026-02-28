@@ -17,12 +17,19 @@ class UpdateAccountRequest extends FormRequest
     public function rules(): array
     {
         $userId = $this->route('user')?->id;
+        $requiresDemographics = in_array($this->route('user')?->role, [
+            User::ROLE_SK_FED,
+            User::ROLE_SK_OFFICIAL,
+        ], true);
 
         return [
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
             'suffix' => ['nullable', Rule::in(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'])],
+            'date_of_birth' => [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'],
+            'age' => [$requiresDemographics ? 'required' : 'nullable', 'integer', 'min:0', 'max:150'],
+            'contact_number' => [$requiresDemographics ? 'required' : 'nullable', 'string', 'max:20'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'status' => ['required', Rule::in([
                 User::STATUS_ACTIVE,

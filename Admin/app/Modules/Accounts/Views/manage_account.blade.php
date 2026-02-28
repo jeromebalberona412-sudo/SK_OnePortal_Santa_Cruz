@@ -63,7 +63,7 @@
                                 <th colspan="2" class="table-group-header">Location Information</th>
                                 <th colspan="4" class="table-group-header">Term Information</th>
                             @else
-                                <th colspan="2" class="table-group-header">Personal Information</th>
+                                <th colspan="3" class="table-group-header">Personal Information</th>
                                 <th colspan="4" class="table-group-header">Location Information</th>
                                 <th colspan="5" class="table-group-header">Term Information</th>
                             @endif
@@ -82,6 +82,7 @@
                             @else
                                 <th>Full Name</th>
                                 <th>Email Address</th>
+                                <th>Email Verification</th>
                                 <th>Barangay</th>
                                 <th>Municipality</th>
                                 <th>Province</th>
@@ -130,6 +131,9 @@
                                             data-last-name="{{ $profile?->last_name ?? '' }}"
                                             data-middle-name="{{ $profile?->middle_name ?? '' }}"
                                             data-suffix="{{ $profile?->suffix ?? '' }}"
+                                            data-date-of-birth="{{ $profile?->date_of_birth?->toDateString() ?? '' }}"
+                                            data-age="{{ $profile?->age ?? '' }}"
+                                            data-contact-number="{{ $profile?->contact_number ?? '' }}"
                                             data-email="{{ $account->email ?? '' }}"
                                             data-position="{{ $profile?->position ?? '' }}"
                                             data-barangay-id="{{ $account->barangay_id ?? '' }}"
@@ -144,6 +148,13 @@
                                 @else
                                     <td>{{ $displayName }}</td>
                                     <td>{{ $account->email }}</td>
+                                    <td>
+                                        @if ($account->email_verified_at)
+                                            Verified: {{ $account->email_verified_at->format('m/d/Y h:i A') }}
+                                        @else
+                                            Not Verified
+                                        @endif
+                                    </td>
                                     <td>{{ $account->barangay?->name ?? '-' }}</td>
                                     <td>{{ $profile?->municipality ?? '-' }}</td>
                                     <td>{{ $profile?->province ?? '-' }}</td>
@@ -163,6 +174,9 @@
                                             data-last-name="{{ $profile?->last_name ?? '' }}"
                                             data-middle-name="{{ $profile?->middle_name ?? '' }}"
                                             data-suffix="{{ $profile?->suffix ?? '' }}"
+                                            data-date-of-birth="{{ $profile?->date_of_birth?->toDateString() ?? '' }}"
+                                            data-age="{{ $profile?->age ?? '' }}"
+                                            data-contact-number="{{ $profile?->contact_number ?? '' }}"
                                             data-email="{{ $account->email ?? '' }}"
                                             data-position="{{ $profile?->position ?? '' }}"
                                             data-barangay-id="{{ $account->barangay_id ?? '' }}"
@@ -178,7 +192,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $isOfficials ? 9 : 11 }}" class="text-center">No accounts found.</td>
+                                <td colspan="{{ $isOfficials ? 9 : 12 }}" class="text-center">No accounts found.</td>
                             </tr>
                         @endforelse
                     </tbody>

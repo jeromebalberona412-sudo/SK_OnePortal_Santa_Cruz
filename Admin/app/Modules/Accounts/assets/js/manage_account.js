@@ -109,6 +109,11 @@ document.addEventListener('DOMContentLoaded', function () {
     attachSubmitHandler(federationForm);
     attachSubmitHandler(officialsForm);
 
+    attachDobAgeAutoFill(federationForm, 'date_of_birth', 'age');
+    attachDobAgeAutoFill(federationEditForm, 'date_of_birth', 'age');
+    attachDobAgeAutoFill(officialsForm, 'date_of_birth', 'age');
+    attachDobAgeAutoFill(officialsEditForm, 'date_of_birth', 'age');
+
     const attachEditSubmitHandler = function (form) {
         if (!form) {
             return;
@@ -186,6 +191,9 @@ document.addEventListener('DOMContentLoaded', function () {
         setFormFieldValue(form, 'last_name', data.lastName || '');
         setFormFieldValue(form, 'middle_name', data.middleName || '');
         setFormFieldValue(form, 'suffix', data.suffix || '');
+        setFormFieldValue(form, 'date_of_birth', data.dateOfBirth || '');
+        setFormFieldValue(form, 'age', data.age || '');
+        setFormFieldValue(form, 'contact_number', data.contactNumber || '');
         setFormFieldValue(form, 'email', data.email || '');
         setFormFieldValue(form, 'position', data.position || '');
         setFormFieldValue(form, 'barangay_id', data.barangayId || '');
@@ -228,6 +236,50 @@ function setFormFieldValue(form, name, value) {
     }
 
     field.value = value;
+}
+
+function attachDobAgeAutoFill(form, dobFieldName, ageFieldName) {
+    if (!form) {
+        return;
+    }
+
+    const dobField = form.querySelector(`[name="${dobFieldName}"]`);
+    const ageField = form.querySelector(`[name="${ageFieldName}"]`);
+
+    if (!dobField || !ageField) {
+        return;
+    }
+
+    const updateAge = function () {
+        ageField.value = calculateAge(dobField.value);
+    };
+
+    dobField.addEventListener('change', updateAge);
+    dobField.addEventListener('input', updateAge);
+
+    updateAge();
+}
+
+function calculateAge(dateOfBirthValue) {
+    if (!dateOfBirthValue) {
+        return '';
+    }
+
+    const dob = new Date(dateOfBirthValue);
+    if (Number.isNaN(dob.getTime())) {
+        return '';
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+
+    const monthDiff = today.getMonth() - dob.getMonth();
+    const dayDiff = today.getDate() - dob.getDate();
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age -= 1;
+    }
+
+    return age >= 0 ? String(age) : '';
 }
 
 function getCurrentAccountType() {

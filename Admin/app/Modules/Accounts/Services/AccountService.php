@@ -7,6 +7,7 @@ use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Models\OfficialTerm;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Shared\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -68,6 +69,9 @@ class AccountService
                     'last_name' => $normalizedData['last_name'],
                     'middle_name' => $normalizedData['middle_name'] ?? null,
                     'suffix' => $normalizedData['suffix'] ?? null,
+                    'date_of_birth' => $normalizedData['date_of_birth'] ?? null,
+                    'age' => $this->deriveAge($normalizedData['date_of_birth'] ?? null),
+                    'contact_number' => $normalizedData['contact_number'] ?? null,
                     'position' => $normalizedData['position'],
                     'municipality' => 'Santa Cruz',
                     'province' => 'Laguna',
@@ -146,6 +150,9 @@ class AccountService
             'last_name' => $data['last_name'],
             'middle_name' => $data['middle_name'] ?? null,
             'suffix' => $data['suffix'] ?? null,
+            'date_of_birth' => $data['date_of_birth'] ?? null,
+            'age' => $this->deriveAge($data['date_of_birth'] ?? null),
+            'contact_number' => $data['contact_number'] ?? null,
             'position' => $data['position'],
             'municipality' => 'Santa Cruz',
             'province' => 'Laguna',
@@ -324,5 +331,14 @@ class AccountService
         }
 
         return strtoupper($matches[0]).'.';
+    }
+
+    protected function deriveAge(?string $dateOfBirth): ?int
+    {
+        if (! $dateOfBirth) {
+            return null;
+        }
+
+        return Carbon::parse($dateOfBirth)->age;
     }
 }

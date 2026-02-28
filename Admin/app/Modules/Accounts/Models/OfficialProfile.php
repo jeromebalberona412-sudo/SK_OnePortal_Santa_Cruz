@@ -39,10 +39,18 @@ class OfficialProfile extends Model
         'last_name',
         'middle_name',
         'suffix',
+        'date_of_birth',
+        'age',
+        'contact_number',
         'position',
         'municipality',
         'province',
         'region',
+    ];
+
+    protected $casts = [
+        'date_of_birth' => 'date',
+        'age' => 'integer',
     ];
 
     public function user(): BelongsTo

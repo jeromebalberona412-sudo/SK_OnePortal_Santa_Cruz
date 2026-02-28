@@ -67,6 +67,32 @@
                                 <span class="form-error"></span>
                             </div>
                         </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group-modern">
+                                <label for="edit_contact_number" class="form-label-modern required">Contact Number</label>
+                                <input type="text" id="edit_contact_number" name="contact_number" class="form-input-modern" maxlength="20" placeholder="e.g., 09171234567" required>
+                                <span class="form-error"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-modern">
+                                <label for="edit_date_of_birth" class="form-label-modern required">Date of Birth</label>
+                                <input type="date" id="edit_date_of_birth" name="date_of_birth" class="form-input-modern" required>
+                                <span class="form-error"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group-modern">
+                                <label for="edit_age" class="form-label-modern required">Age</label>
+                                <input type="number" id="edit_age" name="age" class="form-input-modern" min="0" max="150" readonly required>
+                                <span class="form-error"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
