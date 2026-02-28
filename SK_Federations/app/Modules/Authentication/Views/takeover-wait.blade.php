@@ -30,7 +30,7 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('skfed.takeover.send') }}" class="d-grid gap-2 mb-3">
+                        <form method="POST" action="{{ route('skfed.takeover.send', [], false) }}" class="d-grid gap-2 mb-3">
                             @csrf
                             <button
                                 type="submit"
@@ -47,7 +47,7 @@
                             </p>
                         @endif
 
-                        <form method="POST" action="{{ route('skfed.takeover.verify') }}" class="d-grid gap-2">
+                        <form method="POST" action="{{ route('skfed.takeover.verify', [], false) }}" class="d-grid gap-2">
                             @csrf
                             <label for="otp_code" class="form-label">Verification Code</label>
                             <input
@@ -62,7 +62,7 @@
                                 autofocus
                             >
                             <button type="submit" class="btn btn-primary">Verify and Continue</button>
-                            <a href="{{ route('login') }}" class="btn btn-link">Back to login</a>
+                            <a href="{{ route('login', [], false) }}" class="btn btn-link">Back to login</a>
                         </form>
                     </div>
                 </div>

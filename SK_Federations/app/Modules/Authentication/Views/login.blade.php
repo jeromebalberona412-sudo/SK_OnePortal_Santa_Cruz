@@ -31,7 +31,7 @@
                 @if (session()->has('sk_fed_takeover_pending'))
                     <div class="alert alert-warning" role="alert">
                         <div>Account currently active on another device. Verify ownership to continue.</div>
-                        <form method="POST" action="{{ route('skfed.takeover.send') }}" class="mt-2">
+                        <form method="POST" action="{{ route('skfed.takeover.send', [], false) }}" class="mt-2">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-outline-dark">Send Email Verification Code</button>
                         </form>
@@ -46,7 +46,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login') }}" class="login-form" novalidate>
+                <form method="POST" action="{{ route('login', [], false) }}" class="login-form" novalidate>
                     @csrf
                     <div class="form-group">
                         <label for="email">Email Address</label>
@@ -94,7 +94,7 @@
                             <label class="form-check-label" for="remember">Remember this device</label>
                         </div>
                         <div class="forgot-password-container">
-                            <a href="{{ route('skfed.verification.notice') }}" class="forgot-password">Verify Email</a>
+                            <a href="{{ route('skfed.verification.notice', [], false) }}" class="forgot-password">Verify Email</a>
                         </div>
                     </div>
 
@@ -115,12 +115,12 @@
 </body>
 @if (session('verification_wait') && session()->has('sk_fed_email_verification_pending'))
     <script>
-        window.location.replace("{{ route('skfed.verification.wait') }}");
+        window.location.replace("{{ route('skfed.verification.wait', [], false) }}");
     </script>
 @endif
 @if (session('takeover_wait') && session()->has('sk_fed_takeover_pending'))
     <script>
-        window.location.replace("{{ route('skfed.takeover.wait') }}");
+        window.location.replace("{{ route('skfed.takeover.wait', [], false) }}");
     </script>
 @endif
 </html>
