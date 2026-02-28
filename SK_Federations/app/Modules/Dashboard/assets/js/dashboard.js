@@ -9,7 +9,7 @@ function toggleSidebar() {
 }
 
 // Tab Switching
-function switchTab(tabName) {
+function switchTab(tabName, triggerButton = null) {
     // Hide all tab contents
     const tabContents = document.querySelectorAll('.tab-content');
     tabContents.forEach(content => {
@@ -23,10 +23,19 @@ function switchTab(tabName) {
     });
     
     // Show selected tab content
-    document.getElementById(tabName).classList.add('active');
-    
-    // Add active class to clicked button
-    event.target.classList.add('active');
+    const selectedTab = document.getElementById(tabName);
+    if (selectedTab) {
+        selectedTab.classList.add('active');
+    }
+
+    // Add active class to clicked/target button
+    const button = triggerButton
+        ?? document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`)
+        ?? (typeof event !== 'undefined' ? event.target : null);
+
+    if (button) {
+        button.classList.add('active');
+    }
 }
 
 // Avatar Upload Preview

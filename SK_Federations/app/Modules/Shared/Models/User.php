@@ -54,6 +54,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'otp_expires_at',
         'otp_attempts',
         'otp_last_sent_at',
+        'barangay_id',
     ];
 
     /**
