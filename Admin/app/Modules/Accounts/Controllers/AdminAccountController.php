@@ -2,6 +2,7 @@
 
 namespace App\Modules\Accounts\Controllers;
 
+use App\Modules\Accounts\Database\Seeders\BarangaySeeder;
 use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Requests\ExtendTermRequest;
@@ -9,6 +10,7 @@ use App\Modules\Accounts\Requests\StoreAccountRequest;
 use App\Modules\Accounts\Requests\UpdateAccountRequest;
 use App\Modules\Accounts\Services\AccountService;
 use App\Modules\Shared\Controllers\Controller;
+use App\Modules\Shared\Models\Tenant;
 use App\Modules\Shared\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -27,9 +29,12 @@ class AdminAccountController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
+        $tenantId = $this->resolveTenantId($request->user());
+        $this->ensureTenantBarangays($tenantId);
+
         $query = User::query()
             ->with(['barangay', 'officialProfile.latestTerm'])
-            ->where('tenant_id', $request->user()->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->where('role', User::ROLE_SK_FED)
             ->orderByDesc('created_at');
 
@@ -56,7 +61,7 @@ class AdminAccountController extends Controller
 
         $accounts = $query->paginate(10)->withQueryString();
         $barangays = Barangay::query()
-            ->where('tenant_id', $request->user()->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->orderBy('name')
             ->get();
 
@@ -69,9 +74,12 @@ class AdminAccountController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
+        $tenantId = $this->resolveTenantId($request->user());
+        $this->ensureTenantBarangays($tenantId);
+
         $query = User::query()
             ->with(['barangay', 'officialProfile.latestTerm'])
-            ->where('tenant_id', $request->user()->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->where('role', User::ROLE_SK_OFFICIAL)
             ->orderByDesc('created_at');
 
@@ -98,7 +106,7 @@ class AdminAccountController extends Controller
 
         $accounts = $query->paginate(10)->withQueryString();
         $barangays = Barangay::query()
-            ->where('tenant_id', $request->user()->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->orderBy('name')
             ->get();
 
@@ -118,6 +126,9 @@ class AdminAccountController extends Controller
     {
         $this->authorize('create', User::class);
 
+        $tenantId = $this->resolveTenantId($request->user());
+        $this->ensureTenantBarangays($tenantId);
+
         $account = $this->accountService->createAccount($request->validated(), $request->user());
 
         if ($request->expectsJson()) {
@@ -134,6 +145,8 @@ class AdminAccountController extends Controller
 
     public function update(UpdateAccountRequest $request, User $user): RedirectResponse|JsonResponse
     {
+        $this->resolveTenantId($request->user());
+
         $this->authorize('update', $user);
 
         $this->accountService->updateAccount($user, $request->validated(), $request->user());
@@ -150,6 +163,8 @@ class AdminAccountController extends Controller
 
     public function deactivate(Request $request, User $user): RedirectResponse
     {
+        $this->resolveTenantId($request->user());
+
         $this->authorize('deactivate', $user);
 
         $this->accountService->deactivate($user, $request->user());
@@ -159,6 +174,8 @@ class AdminAccountController extends Controller
 
     public function resetPassword(Request $request, User $user): RedirectResponse
     {
+        $this->resolveTenantId($request->user());
+
         $this->authorize('resetPassword', $user);
 
         $payload = $request->validate([
@@ -173,10 +190,49 @@ class AdminAccountController extends Controller
 
     public function extendTerm(ExtendTermRequest $request, OfficialProfile $officialProfile): RedirectResponse
     {
+        $this->resolveTenantId($request->user());
+
         $this->authorize('extendTerm', $officialProfile);
 
         $this->accountService->extendTerm($officialProfile, $request->validated(), $request->user());
 
         return back()->with('status', 'Term extended successfully.');
+    }
+
+    private function resolveTenantId(User $admin): int
+    {
+        if ($admin->tenant_id !== null) {
+            return $admin->tenant_id;
+        }
+
+        $tenant = Tenant::query()->firstOrCreate(
+            ['code' => 'santa_cruz'],
+            [
+                'name' => 'Santa Cruz Federation',
+                'municipality' => 'Santa Cruz',
+                'province' => 'Laguna',
+                'region' => 'IV-A CALABARZON',
+                'is_active' => true,
+            ]
+        );
+
+        $admin->forceFill(['tenant_id' => $tenant->id])->save();
+
+        return $tenant->id;
+    }
+
+    private function ensureTenantBarangays(int $tenantId): void
+    {
+        $tenant = Tenant::query()->find($tenantId);
+
+        if (! $tenant) {
+            return;
+        }
+
+        if (Barangay::query()->where('tenant_id', $tenantId)->exists()) {
+            return;
+        }
+
+        BarangaySeeder::seedTenant($tenant);
     }
 }

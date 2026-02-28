@@ -16,7 +16,31 @@ class BarangaySeeder extends Seeder
             return;
         }
 
-        $barangays = [
+        self::seedTenant($tenant);
+    }
+
+    public static function seedTenant(Tenant $tenant): void
+    {
+        $barangays = self::defaultBarangays();
+
+        foreach ($barangays as $name) {
+            Barangay::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'name' => $name,
+                ],
+                [
+                    'municipality' => 'Santa Cruz',
+                    'province' => 'Laguna',
+                    'region' => 'IV-A CALABARZON',
+                ]
+            );
+        }
+    }
+
+    public static function defaultBarangays(): array
+    {
+        return [
             'Alipit',
             'Bagumbayan',
             'Bubukal',
@@ -44,19 +68,5 @@ class BarangaySeeder extends Seeder
             'Santo Angel Norte',
             'Santo Angel Sur',
         ];
-
-        foreach ($barangays as $name) {
-            Barangay::updateOrCreate(
-                [
-                    'tenant_id' => $tenant->id,
-                    'name' => $name,
-                ],
-                [
-                    'municipality' => 'Santa Cruz',
-                    'province' => 'Laguna',
-                    'region' => 'IV-A CALABARZON',
-                ]
-            );
-        }
     }
 }
