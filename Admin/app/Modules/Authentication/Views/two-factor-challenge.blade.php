@@ -9,20 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-auth.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-two-factor.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('modules/authentication/css/preloader.css') }}?v={{ time() }}">
 </head>
 <body>
-    <!-- Simple Preloader -->
-    <div id="preloader" class="preloader">
-        <div class="preloader-content">
-            <div class="spinner-logo">
-                <img src="{{ asset('modules/authentication/images/SKOneportal_logo.webp') }}" alt="SK Logo">
-            </div>
-            <h2>SK OnePortal</h2>
-            <p>Loading...</p>
-        </div>
-    </div>
-
     <div class="background-animation">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
@@ -33,7 +21,7 @@
         <div class="two-factor-container">
             <div class="two-factor-header">
                 <div class="header-icon">
-                    <img src="{{ asset('modules/authentication/images/SKOneportal_logo.webp') }}" alt="SK One Portal Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    <img src="{{ asset('modules/authentication/images/SKOneportal_logo.webp') }}" alt="SK One Portal Logo" style="width: 90%; height: 90%; object-fit: cover; border-radius: 50%;">
                 </div>
                 <h1>Two-Factor Authentication</h1>
                 <p>Enter your authentication code to continue</p>
@@ -103,12 +91,10 @@
                             id="recovery_code" 
                             name="recovery_code" 
                             class="form-control" 
-                            placeholder="XXXXXXXXXX"
-                            style="text-align: center; font-family: monospace; letter-spacing: 2px;"
+                            placeholder="Enter one of your recovery codes"
+                            style="text-align: center;"
                         >
-                        <div class="helper-text">
-                            Enter one of your recovery codes
-                        </div>
+
                     </div>
 
                     <button type="submit" class="btn-verify">
@@ -131,65 +117,8 @@
         </div>
     </div>
 
-    <script src="{{ asset('modules/authentication/js/admin-two-factor.js') }}"></script>
-    <script>
-    function toggleRecoveryCode(event) {
-        event.preventDefault();
-        const twoFactorForm = document.getElementById('twoFactorForm');
-        const recoveryForm = document.getElementById('recoveryForm');
-        
-        if (twoFactorForm.style.display === 'none') {
-            twoFactorForm.style.display = 'block';
-            recoveryForm.style.display = 'none';
-        } else {
-            twoFactorForm.style.display = 'none';
-            recoveryForm.style.display = 'block';
-            document.getElementById('recovery_code').focus();
-        }
-    }
-
-    // 10-minute countdown timer
-    (function() {
-        const timerElement = document.getElementById('sessionTimer');
-        let timeLeft = 10 * 60; // 10 minutes in seconds
-
-        function updateTimer() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            
-            const display = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            timerElement.innerHTML = `Session expires in: <strong style="color: ${timeLeft < 60 ? '#ef4444' : '#10b981'}">${display}</strong>`;
-            
-            if (timeLeft <= 0) {
-                // Session expired
-                timerElement.innerHTML = '<strong style="color: #ef4444">Session expired!</strong>';
-                
-                // Disable forms
-                document.getElementById('twoFactorForm').querySelectorAll('input, button').forEach(el => el.disabled = true);
-                document.getElementById('recoveryForm').querySelectorAll('input, button').forEach(el => el.disabled = true);
-                
-                // Show alert and redirect
-                setTimeout(() => {
-                    alert('Your session has expired. Please login again.');
-                    window.location.href = '{{ route('login') }}';
-                }, 1000);
-                
-                return;
-            }
-            
-            timeLeft--;
-            setTimeout(updateTimer, 1000);
-        }
-        
-        updateTimer();
-    })();
-
-    // Simple Preloader
-    window.addEventListener('load', function() {
-        setTimeout(() => {
-            document.getElementById('preloader').classList.add('fade-out');
-        }, 800);
-    });
-    </script>
+    <script src="{{ asset('modules/authentication/js/admin-two-factor-auth.js') }}"></script>
+    <script src="{{ asset('modules/authentication/js/admin-two-factor-recovery.js') }}"></script>
+    <script src="{{ asset('modules/authentication/js/admin-two-factor-timer.js') }}"></script>
 </body>
 </html>

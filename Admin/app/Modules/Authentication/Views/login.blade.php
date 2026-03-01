@@ -8,20 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-auth.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('modules/authentication/css/preloader.css') }}?v={{ time() }}">
 </head>
 <body>
-    <!-- Simple Preloader -->
-    <div id="preloader" class="preloader">
-        <div class="preloader-content">
-            <div class="spinner-logo">
-                <img src="{{ asset('modules/authentication/images/SKOneportal_logo.webp') }}" alt="SK Logo">
-            </div>
-            <h2>SK OnePortal</h2>
-            <p>Loading...</p>
-        </div>
-    </div>
-
     <div class="background-animation">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
@@ -41,48 +29,19 @@
                     <p class="brand-subtitle">SK OnePortal Administration</p>
                 </div>
 
-                <div class="features">
-                    <div class="feature-item">
-                        <i class="fas fa-lock"></i>
-                        <span>Bank-level Security</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Real-time Analytics</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-users-gear"></i>
-                        <span>User Management</span>
-                    </div>
-                </div>
-
-                <div class="testimonial">
-                    <p>"Isang Sistema. Isang Layunin. Para sa Mas Maayos na Pamamahalang Pangkabataan."</p>
-                    <div class="testimonial-author">
-                        <strong>Paula Talabis</strong>
-                        <span>SK OnePortal, Admin</span>
-                    </div>
-                </div>
             </div>
 
             <div class="login-right">
                 <div class="login-form-container">
                     <div class="form-header">
                         <h2>Welcome Back</h2>
-                        <p>Please enter your credentials to access the dashboard</p>
+                        <p>Securely sign in to access the administration dashboard.</p>
                     </div>
 
                     @if(session('success'))
                         <div class="alert alert-success">
                             <i class="fas fa-check-circle"></i>
                             <span>{{ session('success') }}</span>
-                        </div>
-                    @endif
-
-                    @if($errors->any())
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span>{{ $errors->first() }}</span>
                         </div>
                     @endif
 
@@ -100,7 +59,7 @@
                                     id="email"
                                     name="email"
                                     class="form-control has-left-icon @error('email') is-invalid @enderror"
-                                    placeholder="admin@example.com"
+                                    placeholder="Enter your Email"
                                     value="{{ old('email') }}"
                                     required
                                     autofocus
@@ -114,12 +73,15 @@
                         <div class="form-group">
                             <label for="password">Password</label>
                             <div class="input-wrapper">
+                                <svg class="input-icon-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="#1e293b">
+                                    <path d="M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z"/>
+                                </svg>
                                 <input
                                     type="password"
                                     id="password"
                                     name="password"
-                                    class="form-control has-right-icon @error('password') is-invalid @enderror"
-                                    placeholder="Enter your password"
+                                    class="form-control has-left-icon has-right-icon @error('password') is-invalid @enderror"
+                                    placeholder="Enter your Password"
                                     required
                                 >
                                 <button type="button" class="toggle-password" onclick="togglePassword()">
@@ -139,31 +101,34 @@
                                 <span class="checkmark"></span>
                                 <span class="checkbox-label">Remember me</span>
                             </label>
-                            <a href="#" class="forgot-link">Forgot Password?</a>
+                            <a href="{{ route('password.request') }}" class="forgot-link">Forgot Password?</a>
                         </div>
 
-                        <button type="submit" class="btn-login">
-                            <span>Sign In</span>
-                            <i class="fas fa-arrow-right"></i>
+                        <button type="submit" class="btn-login" id="loginBtn">
+                            <span class="btn-text">
+                                <span>Sign In</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                            <div class="spinner"></div>
                         </button>
                     </form>
-
-                    <div class="form-footer">
-                        <p>Don't have an account? <a href="#">Request Access</a></p>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-message">Signing in...</p>
+        </div>
+    </div>
+
     <script src="{{ asset('modules/authentication/js/admin-login.js') }}"></script>
-    <script>
-        // Simple Preloader
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                document.getElementById('preloader').classList.add('fade-out');
-            }, 800);
-        });
-    </script>
 </body>
 </html>
+
+
+
+

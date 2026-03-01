@@ -58,41 +58,16 @@
                 <table class="accounts-table">
                     <thead>
                         <tr>
-                            @if ($isOfficials)
-                                <th colspan="2" class="table-group-header">Personal Information</th>
-                                <th colspan="2" class="table-group-header">Location Information</th>
-                                <th colspan="4" class="table-group-header">Term Information</th>
-                            @else
-                                <th colspan="3" class="table-group-header">Personal Information</th>
-                                <th colspan="4" class="table-group-header">Location Information</th>
-                                <th colspan="5" class="table-group-header">Term Information</th>
-                            @endif
-                        </tr>
-                        <tr>
-                            @if ($isOfficials)
-                                <th>Full Name</th>
-                                <th>Email</th>
-                                <th>SK Role</th>
-                                <th>Barangay</th>
-                                <th>Municipality</th>
-                                <th>Term Start</th>
-                                <th>Term End</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            @else
-                                <th>Full Name</th>
-                                <th>Email Address</th>
-                                <th>Email Verification</th>
-                                <th>Barangay</th>
-                                <th>Municipality</th>
-                                <th>Province</th>
-                                <th>Region</th>
-                                <th>Position (SK Role)</th>
-                                <th>Term Start</th>
-                                <th>Term End</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            @endif
+                            <th class="full-name-header">
+                                <div class="header-main">Full Name</div>
+                                <div class="header-sub">(FN,MN LN,Suffix)</div>
+                            </th>
+                            <th>Email Address</th>
+                            <th>Barangay</th>
+                            <th>Position (SK Role)</th>
+                            <th>Term End</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -111,18 +86,42 @@
                                 $displayName = $fullName !== '' ? $fullName : ($account->name ?? 'N/A');
                             @endphp
                             <tr>
-                                @if ($isOfficials)
-                                    <td>{{ $displayName }}</td>
-                                    <td>{{ $account->email }}</td>
-                                    <td>{{ $profile?->position ?? '-' }}</td>
-                                    <td>{{ $account->barangay?->name ?? '-' }}</td>
-                                    <td>{{ $profile?->municipality ?? '-' }}</td>
-                                    <td>{{ $term?->term_start?->format('m/d/Y') ?? '-' }}</td>
-                                    <td>{{ $term?->term_end?->format('m/d/Y') ?? '-' }}</td>
-                                    <td>
-                                        <span class="status-badge {{ strtolower($account->status) }}">{{ $account->status }}</span>
-                                    </td>
-                                    <td>
+                                <td>{{ $displayName }}</td>
+                                <td>{{ $account->email }}</td>
+                                <td>{{ $account->barangay?->name ?? '-' }}</td>
+                                <td>{{ $profile?->position ?? '-' }}</td>
+                                <td>{{ $term?->term_end?->format('m/d/Y') ?? '-' }}</td>
+                                <td>
+                                    <span class="status-badge {{ strtolower($account->status) }}">{{ $account->status }}</span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons-container">
+                                        <button
+                                            type="button"
+                                            class="btn-view-modern btn-view-account"
+                                            data-account-id="{{ $account->id }}"
+                                            data-first-name="{{ $profile?->first_name ?? '' }}"
+                                            data-last-name="{{ $profile?->last_name ?? '' }}"
+                                            data-middle-name="{{ $profile?->middle_name ?? '' }}"
+                                            data-suffix="{{ $profile?->suffix ?? '' }}"
+                                            data-date-of-birth="{{ $profile?->date_of_birth?->toDateString() ?? '' }}"
+                                            data-age="{{ $profile?->age ?? '' }}"
+                                            data-contact-number="{{ $profile?->contact_number ?? '' }}"
+                                            data-email="{{ $account->email ?? '' }}"
+                                            data-position="{{ $profile?->position ?? '' }}"
+                                            data-barangay-id="{{ $account->barangay_id ?? '' }}"
+                                            data-barangay-name="{{ $account->barangay?->name ?? '' }}"
+                                            data-municipality="{{ $profile?->municipality ?? '' }}"
+                                            data-province="{{ $profile?->province ?? '' }}"
+                                            data-region="{{ $profile?->region ?? '' }}"
+                                            data-status="{{ $account->status ?? '' }}"
+                                            data-term-status="{{ $term?->status ?? 'ACTIVE' }}"
+                                            data-term-start="{{ $term?->term_start?->toDateString() ?? '' }}"
+                                            data-term-end="{{ $term?->term_end?->toDateString() ?? '' }}"
+                                            data-email-verified-at="{{ $account->email_verified_at?->format('m/d/Y h:i A') ?? '' }}"
+                                        >
+                                            View
+                                        </button>
                                         <button
                                             type="button"
                                             class="btn-edit-modern btn-edit-account"
@@ -144,63 +143,45 @@
                                         >
                                             Edit
                                         </button>
-                                    </td>
-                                @else
-                                    <td>{{ $displayName }}</td>
-                                    <td>{{ $account->email }}</td>
-                                    <td>
-                                        @if ($account->email_verified_at)
-                                            Verified: {{ $account->email_verified_at->format('m/d/Y h:i A') }}
-                                        @else
-                                            Not Verified
-                                        @endif
-                                    </td>
-                                    <td>{{ $account->barangay?->name ?? '-' }}</td>
-                                    <td>{{ $profile?->municipality ?? '-' }}</td>
-                                    <td>{{ $profile?->province ?? '-' }}</td>
-                                    <td>{{ $profile?->region ?? '-' }}</td>
-                                    <td>{{ $profile?->position ?? '-' }}</td>
-                                    <td>{{ $term?->term_start?->format('m/d/Y') ?? '-' }}</td>
-                                    <td>{{ $term?->term_end?->format('m/d/Y') ?? '-' }}</td>
-                                    <td>
-                                        <span class="status-badge {{ strtolower($account->status) }}">{{ $account->status }}</span>
-                                    </td>
-                                    <td>
-                                        <button
-                                            type="button"
-                                            class="btn-edit-modern btn-edit-account"
-                                            data-account-id="{{ $account->id }}"
-                                            data-first-name="{{ $profile?->first_name ?? '' }}"
-                                            data-last-name="{{ $profile?->last_name ?? '' }}"
-                                            data-middle-name="{{ $profile?->middle_name ?? '' }}"
-                                            data-suffix="{{ $profile?->suffix ?? '' }}"
-                                            data-date-of-birth="{{ $profile?->date_of_birth?->toDateString() ?? '' }}"
-                                            data-age="{{ $profile?->age ?? '' }}"
-                                            data-contact-number="{{ $profile?->contact_number ?? '' }}"
-                                            data-email="{{ $account->email ?? '' }}"
-                                            data-position="{{ $profile?->position ?? '' }}"
-                                            data-barangay-id="{{ $account->barangay_id ?? '' }}"
-                                            data-status="{{ $account->status ?? '' }}"
-                                            data-term-status="{{ $term?->status ?? 'ACTIVE' }}"
-                                            data-term-start="{{ $term?->term_start?->toDateString() ?? '' }}"
-                                            data-term-end="{{ $term?->term_end?->toDateString() ?? '' }}"
-                                        >
-                                            Edit
-                                        </button>
-                                    </td>
-                                @endif
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $isOfficials ? 9 : 12 }}" class="text-center">No accounts found.</td>
+                                <td colspan="7" class="text-center">No accounts found.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <div class="p-3">
-                {{ $accounts->links() }}
+            <!-- Custom Pagination -->
+            <div class="pagination-container">
+                <div class="pagination-wrapper">
+                    <nav class="pagination-nav" aria-label="Table pagination">
+                        <button type="button" class="pagination-btn pagination-btn-prev" id="prevBtn" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 18l-6-6 6-6"/>
+                            </svg>
+                            Previous
+                        </button>
+                        
+                        <div class="pagination-numbers" id="paginationNumbers">
+                            <!-- Page numbers will be dynamically generated here -->
+                        </div>
+                        
+                        <button type="button" class="pagination-btn pagination-btn-next" id="nextBtn">
+                            Next
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </button>
+                    </nav>
+                    
+                    <div class="pagination-info">
+                        <span class="pagination-text" id="paginationInfo">Showing <strong>1-10</strong> of <strong>0</strong> accounts</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -214,6 +195,8 @@
 @include('accounts::edit_sk_fed')
 <!-- Include Edit SK Officials Modal -->
 @include('accounts::edit_sk_officials')
+<!-- Include View Account Modal -->
+@include('accounts::view_account')
 @endsection
 
 @section('scripts')

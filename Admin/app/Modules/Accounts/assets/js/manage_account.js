@@ -5,6 +5,146 @@ document.addEventListener('DOMContentLoaded', function () {
     const federationEditForm = document.getElementById('editAccountForm');
     const officialsEditForm = document.getElementById('editSkOfficialsForm');
     const editButtons = document.querySelectorAll('.btn-edit-account');
+    const viewButtons = document.querySelectorAll('.btn-view-account');
+
+    // Pagination System
+    const recordsPerPage = 10;
+    let currentPage = 1;
+    let allAccounts = [];
+    let filteredAccounts = [];
+
+    // Pagination Elements
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const paginationNumbers = document.getElementById('paginationNumbers');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const tableBody = document.querySelector('.accounts-table tbody');
+
+    // Initialize pagination
+    function initializePagination() {
+        // Get all account rows from the table
+        const accountRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
+        
+        allAccounts = accountRows.map((row, index) => ({
+            element: row,
+            index: index
+        }));
+
+        filteredAccounts = [...allAccounts];
+        
+        if (allAccounts.length > 0) {
+            updatePagination();
+        }
+    }
+
+    // Update pagination display
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredAccounts.length / recordsPerPage);
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = Math.min(startIndex + recordsPerPage, filteredAccounts.length);
+
+        // Hide all rows first
+        allAccounts.forEach(account => {
+            account.element.style.display = 'none';
+        });
+
+        // Show only current page rows
+        for (let i = startIndex; i < endIndex; i++) {
+            if (filteredAccounts[i]) {
+                filteredAccounts[i].element.style.display = '';
+            }
+        }
+
+        // Update pagination info
+        const showingStart = filteredAccounts.length > 0 ? startIndex + 1 : 0;
+        const showingEnd = endIndex;
+        paginationInfo.innerHTML = `Showing <strong>${showingStart}-${showingEnd}</strong> of <strong>${filteredAccounts.length}</strong> accounts`;
+
+        // Update page numbers
+        updatePageNumbers(totalPages);
+
+        // Update navigation buttons
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+    }
+
+    // Update page number buttons
+    function updatePageNumbers(totalPages) {
+        paginationNumbers.innerHTML = '';
+
+        if (totalPages === 0) return;
+
+        // Show page numbers with ellipsis for large page counts
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        // Always show first page if not in range
+        if (startPage > 1) {
+            addPageButton(1);
+            if (startPage > 2) {
+                addEllipsis();
+            }
+        }
+
+        // Show page range
+        for (let i = startPage; i <= endPage; i++) {
+            addPageButton(i);
+        }
+
+        // Always show last page if not in range
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                addEllipsis();
+            }
+            addPageButton(totalPages);
+        }
+    }
+
+    // Add page button
+    function addPageButton(pageNum) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `pagination-btn pagination-number ${pageNum === currentPage ? 'active' : ''}`;
+        button.textContent = pageNum;
+        button.setAttribute('aria-current', pageNum === currentPage ? 'page' : 'false');
+        
+        button.addEventListener('click', () => {
+            currentPage = pageNum;
+            updatePagination();
+        });
+
+        paginationNumbers.appendChild(button);
+    }
+
+    // Add ellipsis
+    function addEllipsis() {
+        const ellipsis = document.createElement('span');
+        ellipsis.className = 'pagination-ellipsis';
+        ellipsis.textContent = '...';
+        ellipsis.style.cssText = 'padding: 0 0.5rem; color: var(--gray-400); font-weight: 500;';
+        paginationNumbers.appendChild(ellipsis);
+    }
+
+    // Navigation button event listeners
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePagination();
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredAccounts.length / recordsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            updatePagination();
+        }
+    });
+
+    // Initialize pagination when page loads
+    if (tableBody) {
+        initializePagination();
+    }
 
     if (accountTypeFilter) {
         accountTypeFilter.addEventListener('change', function () {
@@ -222,6 +362,13 @@ document.addEventListener('DOMContentLoaded', function () {
     editButtons.forEach((button) => {
         button.addEventListener('click', function () {
             openEditModalWithData(button);
+        });
+    });
+
+    // View button event listeners
+    viewButtons.forEach((button) => {
+        button.addEventListener('click', function () {
+            openViewModalWithData(button);
         });
     });
 
@@ -455,3 +602,75 @@ function hideLoadingOverlay() {
     overlay.style.display = 'none';
     document.body.style.overflow = '';
 }
+
+// View Modal Functions
+function openViewModalWithData(button) {
+    const data = button.dataset;
+    const isOfficials = getCurrentAccountType() === 'sk_officials';
+
+    // Populate personal information
+    const fullName = [data.firstName, data.middleName, data.lastName, data.suffix]
+        .filter(val => val && val.trim() !== '')
+        .join(' ');
+    
+    document.getElementById('viewFullName').textContent = fullName || '-';
+    document.getElementById('viewEmail').textContent = data.email || '-';
+    document.getElementById('viewDateOfBirth').textContent = data.dateOfBirth ? formatDate(data.dateOfBirth) : '-';
+    document.getElementById('viewAge').textContent = data.age || '-';
+    document.getElementById('viewContactNumber').textContent = data.contactNumber || '-';
+    document.getElementById('viewEmailVerification').textContent = data.emailVerifiedAt || 'Not Verified';
+
+    // Populate location information
+    document.getElementById('viewBarangay').textContent = data.barangayName || '-';
+    document.getElementById('viewMunicipality').textContent = data.municipality || '-';
+
+    // Show/hide province and region for SK Federation
+    const provinceContainer = document.getElementById('viewProvinceContainer');
+    const regionContainer = document.getElementById('viewRegionContainer');
+    
+    if (!isOfficials) {
+        provinceContainer.style.display = 'flex';
+        regionContainer.style.display = 'flex';
+        document.getElementById('viewProvince').textContent = data.province || '-';
+        document.getElementById('viewRegion').textContent = data.region || '-';
+    } else {
+        provinceContainer.style.display = 'none';
+        regionContainer.style.display = 'none';
+    }
+
+    // Populate term information
+    document.getElementById('viewPosition').textContent = data.position || '-';
+    document.getElementById('viewTermStart').textContent = data.termStart ? formatDate(data.termStart) : '-';
+    document.getElementById('viewTermEnd').textContent = data.termEnd ? formatDate(data.termEnd) : '-';
+    
+    // Update status badges
+    const accountStatusEl = document.getElementById('viewAccountStatus');
+    const termStatusEl = document.getElementById('viewTermStatus');
+    
+    accountStatusEl.textContent = data.status || '-';
+    accountStatusEl.className = `status-badge ${data.status ? data.status.toLowerCase() : ''}`;
+    
+    termStatusEl.textContent = data.termStatus || 'ACTIVE';
+    termStatusEl.className = `status-badge ${data.termStatus ? data.termStatus.toLowerCase() : 'active'}`;
+
+    openViewModal();
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+}
+
+window.openViewModal = function () {
+    toggleModal('viewAccountModal', true);
+};
+
+window.closeViewModal = function () {
+    toggleModal('viewAccountModal', false);
+};

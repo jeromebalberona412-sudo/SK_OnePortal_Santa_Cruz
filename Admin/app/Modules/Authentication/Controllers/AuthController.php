@@ -52,6 +52,14 @@ class AuthController extends Controller
                 // Logout temporarily until 2FA is verified
                 Auth::logout();
                 
+                // Handle AJAX request for 2FA
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'redirect' => route('two-factor.login')
+                    ]);
+                }
+                
                 // Redirect to 2FA challenge
                 return redirect()->route('two-factor.login');
             }
@@ -61,8 +69,25 @@ class AuthController extends Controller
             $this->auditService->logLoginSuccess($user);
             $user->recordLogin($request->ip());
 
+            // Handle AJAX request for successful login
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('dashboard'),
+                    'message' => 'Welcome back, ' . $user->name . '!'
+                ]);
+            }
+
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Welcome back, ' . $user->name . '!');
+        }
+
+        // Handle AJAX request for failed login
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The provided credentials do not match our records.'
+            ], 422);
         }
 
         throw ValidationException::withMessages([
@@ -83,5 +108,52 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/login')->with('message', 'You have been logged out successfully.');
+    }
+
+    /**
+     * Show the forgot password form
+     */
+    public function showForgotPassword()
+    {
+        return view('authentication::forgot-password');
+    }
+
+    /**
+     * Send password reset link
+     */
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ], [
+            'email.exists' => 'We cannot find a user with that email address.',
+        ]);
+
+        // For now, just show a success message (UI-only implementation)
+        return back()->with('status', 'Password reset link has been sent to your email address.');
+    }
+
+    /**
+     * Show the password reset form
+     */
+    public function showResetPassword($token)
+    {
+        // For now, just show a simple message (UI-only implementation)
+        return view('authentication::reset-password', ['token' => $token]);
+    }
+
+    /**
+     * Handle password reset
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // For now, just show a success message (UI-only implementation)
+        return redirect('/login')->with('status', 'Your password has been reset successfully.');
     }
 }
