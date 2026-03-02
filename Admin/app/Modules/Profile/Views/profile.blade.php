@@ -129,16 +129,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Security Information -->
-    <div class="security-info-modern">
-        <h3 class="security-title-modern">Security Information</h3>
-        <p class="security-text-modern">
-            Your session will expire after 45 minutes of inactivity. All administrative actions are logged and monitored for security purposes. 
-            Please ensure you log out when finished to maintain account security.
-        </p>
-    </div>
-</div>
 </div>
 @endsection
 

@@ -16,6 +16,34 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Mobile Close Button */
+.sidebar-close-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.sidebar-close-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+    border-color: #adb5bd;
+}
+
+.sidebar-close-btn:active {
+    transform: scale(0.95);
+}
+
 /* Sidebar Styles */
 .sb-sidenav {
     position: fixed;

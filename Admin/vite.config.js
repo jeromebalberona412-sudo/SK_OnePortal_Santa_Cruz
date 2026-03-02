@@ -17,7 +17,9 @@ export default defineConfig({
                 'app/Modules/Accounts/assets/css/manage_account.css',
                 'app/Modules/Accounts/assets/css/edit_sk_fed.css',
                 'app/Modules/Accounts/assets/css/edit_sk_officials.css',
-                'app/Modules/Accounts/assets/js/manage_account.js'
+                'app/Modules/Accounts/assets/js/manage_account.js',
+                'app/Modules/AuditLog/assets/css/auditlogs.css',
+                'app/Modules/AuditLog/assets/js/auditlogs.js'
             ],
             refresh: true,
         }),
