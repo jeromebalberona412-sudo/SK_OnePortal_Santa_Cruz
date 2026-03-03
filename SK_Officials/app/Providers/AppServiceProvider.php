@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,62 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Load module routes
+        $this->loadModuleRoutes();
+        
+        // Load module views
+        $this->loadModuleViews();
+    }
+    
+    /**
+     * Load routes from all modules
+     */
+    private function loadModuleRoutes(): void
+    {
+        $modulesPath = app_path('modules');
+        
+        if (is_dir($modulesPath)) {
+            $modules = scandir($modulesPath);
+            
+            foreach ($modules as $module) {
+                if ($module === '.' || $module === '..') {
+                    continue;
+                }
+                
+                $routesPath = $modulesPath . '/' . $module . '/routes';
+                
+                if (is_dir($routesPath)) {
+                    $routeFiles = glob($routesPath . '/*.php');
+                    
+                    foreach ($routeFiles as $routeFile) {
+                        require $routeFile;
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Load views from all modules
+     */
+    private function loadModuleViews(): void
+    {
+        $modulesPath = app_path('modules');
+        
+        if (is_dir($modulesPath)) {
+            $modules = scandir($modulesPath);
+            
+            foreach ($modules as $module) {
+                if ($module === '.' || $module === '..') {
+                    continue;
+                }
+                
+                $viewsPath = $modulesPath . '/' . $module . '/views';
+                
+                if (is_dir($viewsPath)) {
+                    $this->loadViewsFrom($viewsPath, $module);
+                }
+            }
+        }
     }
 }
