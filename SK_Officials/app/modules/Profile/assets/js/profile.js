@@ -4,134 +4,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeProfile() {
-    // Initialize sidebar functionality
-    initializeSidebar();
-    
-    // Initialize header functionality
-    initializeHeader();
-    
-    // Initialize profile-specific functionality
+    // Initialize profile-specific functionality only
+    // Header functionality is handled by header.js
+    // Sidebar functionality is handled by sidebar.js
     initializeProfileFeatures();
-}
-
-function initializeSidebar() {
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('mainSidebar');
-    const sidebarClose = document.getElementById('sidebarClose');
-    const overlay = document.querySelector('.sidebar-overlay');
-
-    // Toggle sidebar
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', toggleSidebar);
-    }
-
-    // Close sidebar
-    if (sidebarClose) {
-        sidebarClose.addEventListener('click', closeSidebar);
-    }
-
-    // Close on overlay click
-    if (overlay) {
-        overlay.addEventListener('click', closeSidebar);
-    }
-
-    // Handle window resize
-    window.addEventListener('resize', handleResize);
-}
-
-function toggleSidebar() {
-    const sidebar = document.getElementById('mainSidebar');
-    const mainContent = document.querySelector('.main-content');
-    const overlay = document.querySelector('.sidebar-overlay');
-
-    if (sidebar) {
-        sidebar.classList.toggle('open');
-        mainContent.classList.toggle('sidebar-collapsed');
-        
-        // Handle overlay for mobile
-        if (window.innerWidth <= 768) {
-            if (!overlay) {
-                createOverlay();
-            } else {
-                overlay.classList.toggle('show');
-            }
-        }
-    }
-}
-
-function closeSidebar() {
-    const sidebar = document.getElementById('mainSidebar');
-    const mainContent = document.querySelector('.main-content');
-    const overlay = document.querySelector('.sidebar-overlay');
-
-    if (sidebar) {
-        sidebar.classList.remove('open');
-        mainContent.classList.remove('sidebar-collapsed');
-        
-        if (overlay) {
-            overlay.classList.remove('show');
-        }
-    }
-}
-
-function createOverlay() {
-    const overlay = document.createElement('div');
-    overlay.className = 'sidebar-overlay';
-    overlay.addEventListener('click', closeSidebar);
-    document.body.appendChild(overlay);
-}
-
-function handleResize() {
-    const sidebar = document.getElementById('mainSidebar');
-    const mainContent = document.querySelector('.main-content');
-    const overlay = document.querySelector('.sidebar-overlay');
-
-    if (window.innerWidth > 768) {
-        // Desktop view - remove mobile overlay
-        if (overlay) {
-            overlay.classList.remove('show');
-        }
-        
-        // Reset sidebar state for desktop
-        if (sidebar) {
-            sidebar.classList.remove('open');
-            mainContent.classList.remove('sidebar-collapsed');
-        }
-    }
-}
-
-function initializeHeader() {
-    const userMenuToggle = document.getElementById('userMenuToggle');
-    const userDropdown = document.getElementById('userDropdown');
-
-    // User menu dropdown functionality
-    if (userMenuToggle && userDropdown) {
-        userMenuToggle.addEventListener('click', toggleUserDropdown);
-    }
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', handleOutsideClick);
-}
-
-function toggleUserDropdown(event) {
-    event.stopPropagation();
-    const userDropdown = document.getElementById('userDropdown');
-    
-    if (userDropdown) {
-        userDropdown.classList.toggle('show');
-    }
-}
-
-function handleOutsideClick(event) {
-    const userMenuToggle = document.getElementById('userMenuToggle');
-    const userDropdown = document.getElementById('userDropdown');
-    
-    // Close user dropdown if clicking outside
-    if (userDropdown && userMenuToggle) {
-        if (!userMenuToggle.contains(event.target) && !userDropdown.contains(event.target)) {
-            userDropdown.classList.remove('show');
-        }
-    }
 }
 
 function initializeProfileFeatures() {
@@ -156,27 +32,16 @@ function handleAvatarChange() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
-    fileInput.style.display = 'none';
     
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            // Validate file type and size
-            if (file.type.startsWith('image/')) {
-                if (file.size <= 5 * 1024 * 1024) { // 5MB limit
-                    uploadAvatar(file);
-                } else {
-                    showNotification('File size must be less than 5MB', 'error');
-                }
-            } else {
-                showNotification('Please select an image file', 'error');
-            }
+            // Handle avatar upload
+            uploadAvatar(file);
         }
     });
     
-    document.body.appendChild(fileInput);
     fileInput.click();
-    document.body.removeChild(fileInput);
 }
 
 function uploadAvatar(file) {
@@ -185,116 +50,84 @@ function uploadAvatar(file) {
     formData.append('avatar', file);
     
     // Show loading state
-    const changeAvatarBtn = document.querySelector('.change-avatar-btn');
-    const originalText = changeAvatarBtn.innerHTML;
-    changeAvatarBtn.innerHTML = '<span class="loading-icon">&#128259;</span> Uploading...';
-    changeAvatarBtn.disabled = true;
+    showNotification('Uploading avatar...', 'info');
     
-    // Simulate upload (replace with actual AJAX call)
+    // Simulate upload (replace with actual API call)
     setTimeout(() => {
-        // Update avatar preview
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const profileAvatar = document.querySelector('.profile-avatar');
-            if (profileAvatar) {
-                profileAvatar.src = e.target.result;
-            }
-        };
-        reader.readAsDataURL(file);
-        
-        // Reset button
-        changeAvatarBtn.innerHTML = originalText;
-        changeAvatarBtn.disabled = false;
-        
-        showNotification('Profile photo updated successfully!', 'success');
+        // Update avatar display
+        const avatarImg = document.querySelector('.admin-avatar img, .profile-avatar img');
+        if (avatarImg) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarImg.src = e.target.result;
+                showNotification('Avatar updated successfully!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
     }, 1500);
 }
 
 function handleEditSection(event) {
-    const editBtn = event.currentTarget;
-    const section = editBtn.closest('.profile-section');
-    const sectionTitle = section.querySelector('.section-title').textContent.trim();
+    const button = event.target.closest('.edit-btn');
+    const section = button.closest('.barangay-info-section, .sk-chairman-section, .sk-kagawad-section, .sk-secretary-section, .sk-treasurer-section');
     
-    // Show edit modal or inline editing
-    showEditModal(sectionTitle, section);
+    if (section) {
+        // Toggle edit mode
+        const isEditing = section.classList.contains('editing');
+        
+        if (isEditing) {
+            // Save changes
+            saveSectionChanges(section);
+            section.classList.remove('editing');
+            button.innerHTML = '<i class="fa-solid fa-edit"></i> Edit';
+            button.classList.remove('save-mode');
+        } else {
+            // Enter edit mode
+            section.classList.add('editing');
+            button.innerHTML = '<i class="fa-solid fa-save"></i> Save';
+            button.classList.add('save-mode');
+            makeSectionEditable(section);
+        }
+    }
 }
 
-function showEditModal(sectionTitle, section) {
-    // Create modal overlay
-    const modalOverlay = document.createElement('div');
-    modalOverlay.className = 'edit-modal-overlay';
-    modalOverlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(5px);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    `;
+function makeSectionEditable(section) {
+    const infoItems = section.querySelectorAll('.info-item p, .detail-item p');
     
-    // Create modal content
-    const modalContent = document.createElement('div');
-    modalContent.className = 'edit-modal-content';
-    modalContent.style.cssText = `
-        background: white;
-        border-radius: 15px;
-        padding: 30px;
-        max-width: 500px;
-        width: 90%;
-        max-height: 80vh;
-        overflow-y: auto;
-        animation: modalSlideIn 0.3s ease-out;
-    `;
-    
-    modalContent.innerHTML = `
-        <h3 style="margin-bottom: 20px; color: #333;">Edit ${sectionTitle}</h3>
-        <p style="color: #666; margin-bottom: 25px;">Update your ${sectionTitle.toLowerCase()} information below.</p>
+    infoItems.forEach(item => {
+        const currentText = item.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentText;
+        input.className = 'edit-input';
         
-        <div class="edit-form">
-            <!-- Form fields will be populated based on section -->
-        </div>
+        // Replace p with input
+        item.parentNode.replaceChild(input, item);
         
-        <div class="modal-actions" style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 25px;">
-            <button class="btn-cancel" style="padding: 10px 20px; border: 1px solid #dee2e6; background: #f8f9fa; color: #6c757d; border-radius: 8px; cursor: pointer;">Cancel</button>
-            <button class="btn-save" style="padding: 10px 20px; border: none; background: #667eea; color: white; border-radius: 8px; cursor: pointer;">Save Changes</button>
-        </div>
-    `;
-    
-    // Add modal to page
-    modalOverlay.appendChild(modalContent);
-    document.body.appendChild(modalOverlay);
-    
-    // Add event listeners
-    const cancelBtn = modalContent.querySelector('.btn-cancel');
-    const saveBtn = modalContent.querySelector('.btn-save');
-    
-    cancelBtn.addEventListener('click', () => {
-        document.body.removeChild(modalOverlay);
-    });
-    
-    saveBtn.addEventListener('click', () => {
-        // Save changes (implement actual save logic)
-        showNotification(`${sectionTitle} updated successfully!`, 'success');
-        document.body.removeChild(modalOverlay);
-    });
-    
-    // Close on overlay click
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) {
-            document.body.removeChild(modalOverlay);
+        // Focus on first input
+        if (infoItems[0] === item) {
+            input.focus();
         }
     });
 }
 
+function saveSectionChanges(section) {
+    const inputs = section.querySelectorAll('.edit-input');
+    
+    inputs.forEach(input => {
+        const p = document.createElement('p');
+        p.textContent = input.value;
+        input.parentNode.replaceChild(p, input);
+    });
+    
+    showNotification('Changes saved successfully!', 'success');
+}
+
 function initializeTooltips() {
-    // Add tooltips for interactive elements
-    const tooltips = document.querySelectorAll('[data-tooltip]');
-    tooltips.forEach(element => {
+    // Add tooltip functionality to interactive elements
+    const tooltipElements = document.querySelectorAll('[title], [data-tooltip]');
+    
+    tooltipElements.forEach(element => {
         element.addEventListener('mouseenter', showTooltip);
         element.addEventListener('mouseleave', hideTooltip);
     });
@@ -302,18 +135,18 @@ function initializeTooltips() {
 
 function showTooltip(event) {
     const element = event.target;
-    const tooltipText = element.getAttribute('data-tooltip');
+    const text = element.getAttribute('title') || element.getAttribute('data-tooltip');
     
-    if (tooltipText) {
+    if (text) {
         const tooltip = document.createElement('div');
         tooltip.className = 'tooltip';
-        tooltip.textContent = tooltipText;
+        tooltip.textContent = text;
         tooltip.style.cssText = `
             position: absolute;
             background: #333;
             color: white;
             padding: 5px 10px;
-            border-radius: 5px;
+            border-radius: 4px;
             font-size: 12px;
             z-index: 10000;
             pointer-events: none;
@@ -333,13 +166,19 @@ function showTooltip(event) {
 function hideTooltip(event) {
     const element = event.target;
     if (element.tooltip) {
-        document.body.removeChild(element.tooltip);
+        element.tooltip.remove();
         element.tooltip = null;
     }
 }
 
 function showNotification(message, type = 'info') {
-    // Create notification element
+    // Use notification system from header.js if available
+    if (typeof window.HeaderFunctions !== 'undefined' && window.HeaderFunctions.showNotification) {
+        window.HeaderFunctions.showNotification(message, type);
+        return;
+    }
+    
+    // Fallback notification system
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.style.cssText = `
@@ -387,48 +226,8 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes modalSlideIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9) translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-    }
-    
-    @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translateX(100%);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    @keyframes slideOutRight {
-        from {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        to {
-            opacity: 0;
-            transform: translateX(100%);
-        }
-    }
-`;
-document.head.appendChild(style);
-
 // Export functions for external use
 window.ProfileFunctions = {
-    toggleSidebar: toggleSidebar,
-    closeSidebar: closeSidebar,
     handleAvatarChange: handleAvatarChange,
     showNotification: showNotification
 };

@@ -40,7 +40,7 @@
                 </form>
                 
                 <div class="back-link">
-                    <a href="/login" class="back-btn">← Back to Login</a>
+                    <a href="/login" class="back-btn">Back to Login</a>
                 </div>
             </div>
         </div>

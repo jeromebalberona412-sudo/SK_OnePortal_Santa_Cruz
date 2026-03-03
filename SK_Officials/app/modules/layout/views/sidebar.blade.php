@@ -13,10 +13,6 @@
                 <span class="admin-role">Calios</span>
             </div>
 
-            <button class="sidebar-close" id="sidebarClose">
-                <span>&#10005;</span>
-            </button>
-
         </div>
 
         <nav class="sidebar-nav">

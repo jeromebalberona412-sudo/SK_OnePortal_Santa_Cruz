@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SK Officials Profile - SK Officials Portal</title>
+    
+    <!-- Font Awesome (Neutral Default Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     @vite([
         'app/modules/layout/css/header.css',
@@ -26,7 +29,10 @@
         <!-- 1️⃣ BARANGAY INFORMATION SECTION -->
         <section class="barangay-info-section">
             <div class="section-header">
-                <h2 class="section-title">🏢 Barangay Information</h2>
+                <h2 class="section-title">
+                    <span class="icon"><i class="fa-solid fa-building"></i></span>
+                    Barangay Information
+                </h2>
             </div>
             
             <div class="barangay-card">
@@ -42,31 +48,52 @@
                 
                 <div class="barangay-info-grid">
                     <div class="info-item">
-                        <label class="info-label">📍 Address</label>
+                        <label class="info-label">
+                            <span class="icon"><i class="fa-solid fa-location-dot"></i></span>
+                            Address
+                        </label>
                         <p class="info-value">123 Rizal Street, Poblacion</p>
                     </div>
                     <div class="info-item">
-                        <label class="info-label">🏘️ Municipality</label>
+                        <label class="info-label">
+                            <span class="icon"><i class="fa-solid fa-city"></i></span>
+                            Municipality
+                        </label>
                         <p class="info-value">Santa Cruz</p>
                     </div>
                     <div class="info-item">
-                        <label class="info-label">🌎 Province</label>
+                        <label class="info-label">
+                            <span class="icon"><i class="fa-solid fa-earth-asia"></i></span>
+                            Province
+                        </label>
                         <p class="info-value">Laguna</p>
                     </div>
                     <div class="info-item">
-                        <label class="info-label">🗺️ Region</label>
+                        <label class="info-label">
+                            <span class="icon"><i class="fa-solid fa-map"></i></span>
+                            Region
+                        </label>
                         <p class="info-value">CALABARZON (Region IV-A)</p>
                     </div>
                     <div class="info-item">
-                        <label class="info-label">📮 ZIP Code</label>
+                        <label class="info-label">
+                            <span class="icon"><i class="fa-solid fa-envelope"></i></span>
+                            ZIP Code
+                        </label>
                         <p class="info-value">4026</p>
                     </div>
                     <div class="info-item">
-                        <label class="info-label">📞 Contact Number</label>
+                        <label class="info-label">
+                            <span class="icon"><i class="fa-solid fa-phone"></i></span>
+                            Contact Number
+                        </label>
                         <p class="info-value">(049) 545-1234</p>
                     </div>
                     <div class="info-item">
-                        <label class="info-label">📧 Email Address</label>
+                        <label class="info-label">
+                            <span class="icon"><i class="fa-solid fa-envelope"></i></span>
+                            Email Address
+                        </label>
                         <p class="info-value">santacruz.laguna@gmail.com</p>
                     </div>
                 </div>
@@ -76,22 +103,36 @@
         <!-- 2️⃣ SK CHAIRMAN SECTION -->
         <section class="sk-chairman-section">
             <div class="section-header">
-                <h2 class="section-title">👑 SK Chairman</h2>
+                <h2 class="section-title">
+                    <span class="icon"><i class="fa-solid fa-user-tie"></i></span>
+                    SK Chairman
+                </h2>
             </div>
             
-            <div class="official-card chairman-card">
+            <div class="official-card">
                 <div class="official-header">
                     <div class="official-photo">
-                        <img src="{{ asset('images/default-avatar.png') }}" alt="SK Chairman" class="profile-image">
+                        <div class="profile-icon">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
                         <span class="status-badge active">Active</span>
                     </div>
                     <div class="official-info">
-                        <h3 class="official-name">Jerome Balberona</h3>
+                        <h3>Jerome Balberona</h3>
                         <p class="official-position">SK Chairman</p>
                         <div class="official-meta">
-                            <span class="meta-item">👨 Male</span>
-                            <span class="meta-item">🎂 January 15, 1995</span>
-                            <span class="meta-item">📅 29 years old</span>
+                            <span class="meta-item">
+                                <i class="fa-solid fa-mars"></i>
+                                Male
+                            </span>
+                            <span class="meta-item">
+                                <i class="fa-solid fa-cake-candles"></i>
+                                25 years old
+                            </span>
+                            <span class="meta-item">
+                                <i class="fa-solid fa-ring"></i>
+                                Single
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -99,53 +140,59 @@
                 <div class="official-details">
                     <div class="detail-row">
                         <div class="detail-item">
-                            <label>💍 Civil Status</label>
+                            <label><i class="fa-solid fa-user"></i> Full Name</label>
+                            <p>Jerome Balberona</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-cake-candles"></i> Date of Birth</label>
+                            <p>March 15, 1999</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar"></i> Age</label>
+                            <p>25 years old</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-ring"></i> Civil Status</label>
                             <p>Single</p>
                         </div>
                         <div class="detail-item">
-                            <label>🏠 Address</label>
-                            <p>123 Rizal Street, Poblacion, Santa Cruz, Laguna</p>
+                            <label><i class="fa-solid fa-location-dot"></i> Address</label>
+                            <p>456 Mabini Street, Poblacion</p>
                         </div>
-                    </div>
-                    
-                    <div class="detail-row">
                         <div class="detail-item">
-                            <label>📱 Contact</label>
+                            <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
                             <p>0912-345-6789</p>
                         </div>
                         <div class="detail-item">
-                            <label>📧 Email</label>
-                            <p>jerome.balberona@gmail.com</p>
-                        </div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-item">
-                            <label>📅 Term Start</label>
-                            <p>June 30, 2023</p>
+                            <label><i class="fa-solid fa-envelope"></i> Email</label>
+                            <p>jerome.balberona@email.com</p>
                         </div>
                         <div class="detail-item">
-                            <label>📅 Term End</label>
-                            <p>June 30, 2026</p>
+                            <label><i class="fa-solid fa-calendar"></i> Term Start</label>
+                            <p>January 1, 2023</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar"></i> Term End</label>
+                            <p>December 31, 2025</p>
                         </div>
                     </div>
                     
                     <div class="education-section">
-                        <h4>🎓 Educational Background</h4>
+                        <h4><i class="fa-solid fa-graduation-cap"></i> Educational Background</h4>
                         <ul class="education-list">
-                            <li>Bachelor of Science in Computer Science - Laguna State University</li>
-                            <li>Senior High School - Santa Cruz National High School</li>
-                            <li>Junior High School - Santa Cruz Central School</li>
+                            <li>Bachelor of Science in Computer Science - Laguna State University (2021)</li>
+                            <li>Secondary Education - Santa Cruz National High School (2017)</li>
+                            <li>Primary Education - Santa Cruz Elementary School (2013)</li>
                         </ul>
                     </div>
                     
                     <div class="committee-section">
-                        <h4>📋 Committee Assignments</h4>
+                        <h4><i class="fa-solid fa-clipboard-list"></i> Committee Assignments</h4>
                         <div class="committee-tags">
                             <span class="committee-tag">Youth Development</span>
                             <span class="committee-tag">Sports & Recreation</span>
                             <span class="committee-tag">Education</span>
-                            <span class="committee-tag">Health & Wellness</span>
+                            <span class="committee-tag">Technology</span>
                         </div>
                     </div>
                 </div>
@@ -155,204 +202,315 @@
         <!-- 3️⃣ SK KAGAWAD SECTION -->
         <section class="sk-kagawad-section">
             <div class="section-header">
-                <h2 class="section-title">👥 SK Kagawad (Council Members)</h2>
+                <h2 class="section-title">
+                    <span class="icon"><i class="fa-solid fa-users"></i></span>
+                    SK Kagawad Members
+                </h2>
             </div>
             
             <div class="kagawad-grid">
                 <!-- Kagawad 1 -->
-                <div class="official-card kagawad-card">
+                <div class="official-card">
                     <div class="official-header">
                         <div class="official-photo">
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="SK Kagawad" class="profile-image">
+                            <div class="profile-icon">
+                                <i class="fa-regular fa-circle-user"></i>
+                            </div>
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3 class="official-name">Maria Santos</h3>
+                            <h3>Maria Santos</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
-                                <span class="meta-item">👩 Female</span>
-                                <span class="meta-item">🎂 March 22, 1996</span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-venus"></i>
+                                    Female
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    23 years old
+                                </span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="official-details">
-                        <div class="detail-item">
-                            <label>📱 Contact</label>
-                            <p>0917-234-5678</p>
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-cake-candles"></i> Birth Date</label>
+                                <p>May 10, 2001</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-mobile-screen"></i> Contact</label>
+                                <p>0913-456-7890</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                                <p>maria.santos@email.com</p>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>📧 Email</label>
-                            <p>maria.santos@gmail.com</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>📋 Committee</label>
-                            <p>Education & Youth Development</p>
+                        
+                        <div class="committee-section">
+                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
+                            <div class="committee-tags">
+                                <span class="committee-tag">Health & Nutrition</span>
+                                <span class="committee-tag">Women & Children</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Kagawad 2 -->
-                <div class="official-card kagawad-card">
+                <div class="official-card">
                     <div class="official-header">
                         <div class="official-photo">
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="SK Kagawad" class="profile-image">
+                            <div class="profile-icon">
+                                <i class="fa-regular fa-circle-user"></i>
+                            </div>
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3 class="official-name">John Cruz</h3>
+                            <h3>John Cruz</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
-                                <span class="meta-item">👨 Male</span>
-                                <span class="meta-item">🎂 July 10, 1997</span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-mars"></i>
+                                    Male
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    24 years old
+                                </span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="official-details">
-                        <div class="detail-item">
-                            <label>📱 Contact</label>
-                            <p>0918-345-6789</p>
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-cake-candles"></i> Birth Date</label>
+                                <p>August 22, 2000</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-mobile-screen"></i> Contact</label>
+                                <p>0914-567-8901</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                                <p>john.cruz@email.com</p>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>📧 Email</label>
-                            <p>john.cruz@gmail.com</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>📋 Committee</label>
-                            <p>Sports & Recreation</p>
+                        
+                        <div class="committee-section">
+                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
+                            <div class="committee-tags">
+                                <span class="committee-tag">Sports & Recreation</span>
+                                <span class="committee-tag">Environment</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Kagawad 3 -->
-                <div class="official-card kagawad-card">
+                <div class="official-card">
                     <div class="official-header">
                         <div class="official-photo">
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="SK Kagawad" class="profile-image">
+                            <div class="profile-icon">
+                                <i class="fa-regular fa-circle-user"></i>
+                            </div>
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3 class="official-name">Ana Reyes</h3>
+                            <h3>Ana Reyes</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
-                                <span class="meta-item">👩 Female</span>
-                                <span class="meta-item">🎂 September 5, 1996</span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-venus"></i>
+                                    Female
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    22 years old
+                                </span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="official-details">
-                        <div class="detail-item">
-                            <label>📱 Contact</label>
-                            <p>0919-456-7890</p>
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-cake-candles"></i> Birth Date</label>
+                                <p>December 5, 2002</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-mobile-screen"></i> Contact</label>
+                                <p>0915-678-9012</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                                <p>ana.reyes@email.com</p>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>📧 Email</label>
-                            <p>ana.reyes@gmail.com</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>📋 Committee</label>
-                            <p>Health & Wellness</p>
+                        
+                        <div class="committee-section">
+                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
+                            <div class="committee-tags">
+                                <span class="committee-tag">Education</span>
+                                <span class="committee-tag">Arts & Culture</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Kagawad 4 -->
-                <div class="official-card kagawad-card">
+                <div class="official-card">
                     <div class="official-header">
                         <div class="official-photo">
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="SK Kagawad" class="profile-image">
+                            <div class="profile-icon">
+                                <i class="fa-regular fa-circle-user"></i>
+                            </div>
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3 class="official-name">Mark Torres</h3>
+                            <h3>Mark Torres</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
-                                <span class="meta-item">👨 Male</span>
-                                <span class="meta-item">🎂 November 18, 1995</span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-mars"></i>
+                                    Male
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    26 years old
+                                </span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="official-details">
-                        <div class="detail-item">
-                            <label>📱 Contact</label>
-                            <p>0920-567-8901</p>
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-cake-candles"></i> Birth Date</label>
+                                <p>February 18, 1998</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-mobile-screen"></i> Contact</label>
+                                <p>0916-789-0123</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                                <p>mark.torres@email.com</p>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>📧 Email</label>
-                            <p>mark.torres@gmail.com</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>📋 Committee</label>
-                            <p>Environment & Cleanliness</p>
+                        
+                        <div class="committee-section">
+                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
+                            <div class="committee-tags">
+                                <span class="committee-tag">Peace & Order</span>
+                                <span class="committee-tag">Infrastructure</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Kagawad 5 -->
-                <div class="official-card kagawad-card">
+                <div class="official-card">
                     <div class="official-header">
                         <div class="official-photo">
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="SK Kagawad" class="profile-image">
+                            <div class="profile-icon">
+                                <i class="fa-regular fa-circle-user"></i>
+                            </div>
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3 class="official-name">Lisa Martinez</h3>
+                            <h3>Lisa Martinez</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
-                                <span class="meta-item">👩 Female</span>
-                                <span class="meta-item">🎂 February 14, 1997</span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-venus"></i>
+                                    Female
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    21 years old
+                                </span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="official-details">
-                        <div class="detail-item">
-                            <label>📱 Contact</label>
-                            <p>0921-678-9012</p>
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-cake-candles"></i> Birth Date</label>
+                                <p>July 30, 2003</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-mobile-screen"></i> Contact</label>
+                                <p>0917-890-1234</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                                <p>lisa.martinez@email.com</p>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>📧 Email</label>
-                            <p>lisa.martinez@gmail.com</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>📋 Committee</label>
-                            <p>Culture & Arts</p>
+                        
+                        <div class="committee-section">
+                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
+                            <div class="committee-tags">
+                                <span class="committee-tag">Social Services</span>
+                                <span class="committee-tag">Livelihood</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Kagawad 6 -->
-                <div class="official-card kagawad-card">
+                <div class="official-card">
                     <div class="official-header">
                         <div class="official-photo">
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="SK Kagawad" class="profile-image">
+                            <div class="profile-icon">
+                                <i class="fa-regular fa-circle-user"></i>
+                            </div>
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3 class="official-name">David Lim</h3>
+                            <h3>David Lim</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
-                                <span class="meta-item">👨 Male</span>
-                                <span class="meta-item">🎂 May 8, 1996</span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-mars"></i>
+                                    Male
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    25 years old
+                                </span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="official-details">
-                        <div class="detail-item">
-                            <label>📱 Contact</label>
-                            <p>0922-789-0123</p>
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-cake-candles"></i> Birth Date</label>
+                                <p>September 12, 1999</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-mobile-screen"></i> Contact</label>
+                                <p>0918-901-2345</p>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                                <p>david.lim@email.com</p>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>📧 Email</label>
-                            <p>david.lim@gmail.com</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>📋 Committee</label>
-                            <p>Livelihood & Employment</p>
+                        
+                        <div class="committee-section">
+                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
+                            <div class="committee-tags">
+                                <span class="committee-tag">Technology</span>
+                                <span class="committee-tag">Innovation</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -362,35 +520,58 @@
         <!-- 4️⃣ SK SECRETARY SECTION -->
         <section class="sk-secretary-section">
             <div class="section-header">
-                <h2 class="section-title">📝 SK Secretary</h2>
+                <h2 class="section-title">
+                    <span class="icon"><i class="fa-solid fa-pen-to-square"></i></span>
+                    SK Secretary
+                </h2>
             </div>
             
-            <div class="official-card secretary-card">
+            <div class="official-card">
                 <div class="official-header">
                     <div class="official-photo">
-                        <img src="{{ asset('images/default-avatar.png') }}" alt="SK Secretary" class="profile-image">
+                        <div class="profile-icon">
+                            <i class="fa-solid fa-user-pen"></i>
+                        </div>
                         <span class="status-badge active">Active</span>
                     </div>
                     <div class="official-info">
-                        <h3 class="official-name">Grace Fernandez</h3>
+                        <h3>Grace Fernandez</h3>
                         <p class="official-position">SK Secretary</p>
+                        <div class="official-meta">
+                            <span class="meta-item">
+                                <i class="fa-solid fa-venus"></i>
+                                Female
+                            </span>
+                            <span class="meta-item">
+                                <i class="fa-solid fa-cake-candles"></i>
+                                23 years old
+                            </span>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="official-details">
                     <div class="detail-row">
                         <div class="detail-item">
-                            <label>📱 Contact Number</label>
-                            <p>0923-890-1234</p>
+                            <label><i class="fa-solid fa-user"></i> Full Name</label>
+                            <p>Grace Fernandez</p>
                         </div>
                         <div class="detail-item">
-                            <label>📧 Email Address</label>
-                            <p>grace.fernandez@gmail.com</p>
+                            <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
+                            <p>0919-012-3456</p>
                         </div>
-                    </div>
-                    <div class="detail-item">
-                        <label>📅 Appointment Date</label>
-                        <p>July 1, 2023</p>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                            <p>grace.fernandez@email.com</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar"></i> Appointment Date</label>
+                            <p>January 15, 2023</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-circle-check"></i> Status</label>
+                            <p><span class="status-badge active">Active</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -399,35 +580,58 @@
         <!-- 5️⃣ SK TREASURER SECTION -->
         <section class="sk-treasurer-section">
             <div class="section-header">
-                <h2 class="section-title">💰 SK Treasurer</h2>
+                <h2 class="section-title">
+                    <span class="icon"><i class="fa-solid fa-coins"></i></span>
+                    SK Treasurer
+                </h2>
             </div>
             
-            <div class="official-card treasurer-card">
+            <div class="official-card">
                 <div class="official-header">
                     <div class="official-photo">
-                        <img src="{{ asset('images/default-avatar.png') }}" alt="SK Treasurer" class="profile-image">
+                        <div class="profile-icon">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
                         <span class="status-badge active">Active</span>
                     </div>
                     <div class="official-info">
-                        <h3 class="official-name">Robert Chen</h3>
+                        <h3>Robert Chen</h3>
                         <p class="official-position">SK Treasurer</p>
+                        <div class="official-meta">
+                            <span class="meta-item">
+                                <i class="fa-solid fa-mars"></i>
+                                Male
+                            </span>
+                            <span class="meta-item">
+                                <i class="fa-solid fa-cake-candles"></i>
+                                24 years old
+                            </span>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="official-details">
                     <div class="detail-row">
                         <div class="detail-item">
-                            <label>📱 Contact Number</label>
-                            <p>0924-901-2345</p>
+                            <label><i class="fa-solid fa-user"></i> Full Name</label>
+                            <p>Robert Chen</p>
                         </div>
                         <div class="detail-item">
-                            <label>📧 Email Address</label>
-                            <p>robert.chen@gmail.com</p>
+                            <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
+                            <p>0920-123-4567</p>
                         </div>
-                    </div>
-                    <div class="detail-item">
-                        <label>📅 Appointment Date</label>
-                        <p>July 1, 2023</p>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                            <p>robert.chen@email.com</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar"></i> Appointment Date</label>
+                            <p>January 15, 2023</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-circle-check"></i> Status</label>
+                            <p><span class="status-badge active">Active</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
