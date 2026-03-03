@@ -59,6 +59,12 @@
     background: var(--gray-50);
 }
 
+.modal-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
 .modal-title {
     font-size: 1.25rem;
     font-weight: 600;
@@ -66,7 +72,9 @@
     margin: 0;
 }
 
-.modal-close-btn {
+.modal-close-btn,
+.modal-minimize-btn,
+.modal-fullscreen-btn {
     background: none;
     border: none;
     padding: 0.5rem;
@@ -76,9 +84,76 @@
     transition: var(--transition);
 }
 
-.modal-close-btn:hover {
+.modal-close-btn:hover,
+.modal-minimize-btn:hover,
+.modal-fullscreen-btn:hover {
     background-color: var(--gray-200);
     color: var(--gray-600);
+}
+
+.modal-fullscreen-btn svg,
+.modal-minimize-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Fullscreen modal styles */
+.modal-overlay.modal-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+}
+
+.modal-overlay.modal-fullscreen .modal-content {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    margin: 0;
+}
+
+.modal-overlay.modal-fullscreen .modal-body {
+    height: calc(100vh - 120px);
+    max-height: none;
+    overflow-y: auto;
+}
+
+/* Minimized modal styles */
+.modal-overlay.modal-minimized {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.1);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.modal-overlay.modal-minimized .modal-content {
+    width: 300px;
+    max-height: 60px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-overlay.modal-minimized .modal-body,
+.modal-overlay.modal-minimized .form-section,
+.modal-overlay.modal-minimized .form-actions {
+    display: none;
+}
+
+.modal-overlay.modal-minimized .modal-header {
+    border-bottom: none;
+    cursor: pointer;
+}
+
+.modal-overlay.modal-minimized .modal-controls .modal-fullscreen-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
 .modal-body {
@@ -226,6 +301,29 @@
     outline: none;
     border-color: var(--primary-blue);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Specific styling for select dropdowns */
+.sk-fed-form select.form-input-modern {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    cursor: pointer;
+}
+
+/* Limit visible options and add scroll for select dropdowns */
+.sk-fed-form select.form-input-modern[size],
+.sk-fed-form select.form-input-modern {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+/* For browsers that support size attribute, limit to 5 visible options */
+.sk-fed-form select.form-input-modern[size="5"] {
+    size: 5;
 }
 
 .sk-fed-form .form-error {

@@ -4,22 +4,32 @@ window.toggleSidebar = function() {
     const sidebar = document.querySelector('.sb-sidenav');
     const overlay = document.getElementById('sidebarOverlay');
     const topNav = document.getElementById('topNav');
+    const toggleBtn = document.getElementById('sidebarToggle');
     
     console.log('sidebar:', sidebar);
     console.log('overlay:', overlay);
     console.log('topNav:', topNav);
+    console.log('toggleBtn:', toggleBtn);
     
     if (sidebar.classList.contains('open')) {
         // Close sidebar
         sidebar.classList.remove('open');
         overlay.classList.remove('show');
         topNav.classList.remove('stretched');
+        // Show toggle button when sidebar is closed
+        if (toggleBtn) {
+            toggleBtn.style.display = 'flex';
+        }
         console.log('Sidebar closed');
     } else {
         // Open sidebar
         sidebar.classList.add('open');
         overlay.classList.add('show');
         topNav.classList.add('stretched');
+        // Hide toggle button when sidebar is open
+        if (toggleBtn) {
+            toggleBtn.style.display = 'none';
+        }
         console.log('Sidebar opened');
     }
 }

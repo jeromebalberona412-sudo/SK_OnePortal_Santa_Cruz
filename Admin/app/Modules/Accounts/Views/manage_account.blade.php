@@ -33,6 +33,14 @@
                             <option value="sk_officials" {{ $isOfficials ? 'selected' : '' }}>SK Officials</option>
                         </select>
                     </div>
+                    <div class="filter-dropdown-container">
+                        <select id="barangayFilter" class="filter-dropdown" name="barangay_id">
+                            <option value="">All Barangays</option>
+                            @foreach($barangays as $barangay)
+                                <option value="{{ $barangay->id }}" {{ request('barangay_id') == $barangay->id ? 'selected' : '' }}>{{ $barangay->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="search-container">
                         <input type="text" id="searchInput" name="search" class="search-input" value="{{ request('search') }}" placeholder="Search accounts...">
                         <button type="submit" class="search-btn" id="searchBtn">

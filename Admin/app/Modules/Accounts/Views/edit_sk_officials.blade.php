@@ -4,11 +4,18 @@
     <div class="modal-content modal-large">
         <div class="modal-header">
             <h3 class="modal-title">Edit SK Officials Account</h3>
-            <button type="button" class="modal-close-btn" onclick="closeEditSkOfficialsModal()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-            </button>
+            <div class="modal-controls">
+                <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenEditSkOfficialsModal()" title="Fullscreen">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
+                </button>
+                <button type="button" class="modal-close-btn" onclick="closeEditSkOfficialsModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
         </div>
         <div class="modal-body">
             <form id="editSkOfficialsForm" class="sk-fed-form" data-account-id="">
@@ -203,3 +210,5 @@
         </div>
     </div>
 </div>
+
+@vite(['app/Modules/Accounts/assets/js/edit_sk_officials.js'])

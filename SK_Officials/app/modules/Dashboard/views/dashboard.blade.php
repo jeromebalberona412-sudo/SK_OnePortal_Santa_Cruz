@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SK Officials Dashboard</title>
+  <title>SK Officials Dashboard</title>
 
     @vite([
         'app/modules/layout/css/header.css',
