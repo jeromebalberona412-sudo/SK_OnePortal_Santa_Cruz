@@ -242,6 +242,30 @@ class AuthController extends Controller
     }
 
     /**
+     * Show forgot password form (Prototype - UI Only)
+     */
+    public function showForgotPassword(): View
+    {
+        return view('authentication::forgot-password');
+    }
+
+    /**
+     * Show reset password form (Prototype - UI Only)
+     */
+    public function showResetPassword(): View
+    {
+        return view('authentication::reset-password');
+    }
+
+    /**
+     * Show password reset success page (Prototype - UI Only)
+     */
+    public function showPasswordResetSuccess(): View
+    {
+        return view('authentication::password-reset-success');
+    }
+
+    /**
      * @param  array<string, mixed>  $pending
      */
     protected function requiresFreshVerification(array $pending): bool

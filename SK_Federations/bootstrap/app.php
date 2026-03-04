@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'sk_fed.access' => \App\Modules\Authentication\Middleware\EnsureSkFedAccess::class,
             'trusted.device' => \App\Modules\Authentication\Middleware\EnsureTrustedDevice::class,
             'single.session' => \App\Modules\Authentication\Middleware\EnsureSingleSession::class,
+            'prevent.back' => \App\Http\Middleware\PreventBackHistory::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

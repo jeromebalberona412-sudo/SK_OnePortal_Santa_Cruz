@@ -4,15 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Dashboard - SK Federation</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url('/modules/profile/css/profile.css') }}">
 </head>
 <body
     data-heartbeat-interval-ms="{{ (int) config('sk_fed_auth.single_session.heartbeat_interval_seconds', 30) * 1000 }}"
     data-has-password-errors="{{ $errors->has('current_password') || $errors->has('password') ? '1' : '0' }}"
 >
+    <script>
+        // Prevent back navigation after logout
+        (function() {
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
+            };
+        })();
+    </script>
     @php
         $avatar = 'https://ui-avatars.com/api/?name=' . urlencode((string) ($user->name ?? 'User')) . '&background=213F99&color=fff&size=120';
         $formattedRole = $user->role ? strtoupper(str_replace('_', ' ', (string) $user->role)) : 'N/A';
@@ -48,13 +61,10 @@
                 <span>Dashboard</span>
             </a>
             <div class="menu-divider"></div>
-            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                @csrf
-                <button type="submit" class="menu-item" style="width: 100%; text-align: left; background: none; cursor: pointer;">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </button>
-            </form>
+            <button type="button" onclick="showLogoutModal()" class="menu-item" style="width: 100%; text-align: left; background: none; cursor: pointer; border: none; color: inherit; font: inherit;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
         </nav>
     </aside>
 
@@ -90,12 +100,11 @@
                     @endif
 
                     <form onsubmit="return false;">
-
                         <div class="form-section">
                             <h3 class="form-section-title">Personal Information</h3>
 
                             <div class="form-group">
-                                <label for="name">name</label>
+                                <label for="name">Name</label>
                                 <input type="text" id="name" name="name" class="form-control" value="{{ old('name', $user->name) }}" readonly>
                                 @error('name')
                                     <small style="color: #d0242b;">{{ $message }}</small>
@@ -103,7 +112,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="email">email</label>
+                                <label for="email">Email</label>
                                 <input type="email" id="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" readonly>
                                 @error('email')
                                     <small style="color: #d0242b;">{{ $message }}</small>
@@ -112,7 +121,7 @@
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="date_of_birth">DOB</label>
+                                    <label for="date_of_birth">Date of Birth</label>
                                     <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="{{ old('date_of_birth', optional($officialProfile?->date_of_birth)->format('Y-m-d')) }}" readonly>
                                     @error('date_of_birth')
                                         <small style="color: #d0242b;">{{ $message }}</small>
@@ -148,7 +157,7 @@
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="municipality">Municipal</label>
+                                    <label for="municipality">Municipality</label>
                                     <input type="text" id="municipality" name="municipality" class="form-control" value="{{ old('municipality', $officialProfile->municipality ?? 'Santa Cruz') }}" readonly>
                                     @error('municipality')
                                         <small style="color: #d0242b;">{{ $message }}</small>
@@ -181,43 +190,29 @@
                         </div>
 
                         <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" disabled>
-                                <i class="fas fa-lock"></i>
-                                Profile Editing Disabled
+                            <button type="button" class="btn btn-primary" onclick="openEditModal()">
+                                <i class="fas fa-edit"></i>
+                                Edit Profile
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <div id="change-password" class="tab-content">
-                    @if ($errors->has('password'))
-                        <div class="success-message show">{{ $errors->first('password') }}</div>
-                    @endif
-                    @if (session('password_status'))
-                        <div class="success-message show">{{ session('password_status') }}</div>
-                    @else
-                        <div class="success-message"></div>
-                    @endif
-
-                    <div class="form-section">
-                        <h3 class="form-section-title">Change Your Password</h3>
-                        <p style="color: #64748b; font-size: 14px; margin-top: 8px;">
-                            Password change is currently disabled in this Profile feature.
-                        </p>
-                        <div class="form-actions" style="margin-top: 16px;">
-                            <button type="button" class="btn btn-secondary" disabled>
-                                <i class="fas fa-lock"></i>
-                                Password Change Disabled
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                @include('profile::change-password-form')
             </div>
         </div>
     </main>
 
+    @include('dashboard::logout-modal')
+
+    @include('profile::edit-profile-modal')
+
     <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
     <script>
+        // Set route variables for JavaScript
+        window.logoutRoute = "{{ route('logout') }}";
+        window.forgotPasswordRoute = "{{ route('password.request') }}";
+
         (() => {
             const heartbeatIntervalMs = Number(document.body.dataset.heartbeatIntervalMs || 30000);
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
@@ -255,5 +250,6 @@
 
         })();
     </script>
+    <script src="{{ url('/modules/profile/js/profile.js') }}"></script>
 </body>
 </html>

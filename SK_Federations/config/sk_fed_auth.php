@@ -28,7 +28,7 @@ return [
     ],
 
     'verification' => [
-        'wait_minutes' => (int) env('SK_FED_EMAIL_VERIFICATION_WAIT_MINUTES', 15),
+        'wait_minutes' => (int) env('SK_FED_EMAIL_VERIFICATION_WAIT_MINUTES', 10),
     ],
 
     'single_session' => [

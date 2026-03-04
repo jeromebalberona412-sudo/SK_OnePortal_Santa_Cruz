@@ -40,6 +40,11 @@ Route::middleware('guest')->group(function () {
     Route::get('/session/takeover/wait', [AuthController::class, 'showTakeoverWait'])->name('skfed.takeover.wait');
     Route::post('/session/takeover/send-otp', [AuthController::class, 'sendTakeoverOtp'])->name('skfed.takeover.send');
     Route::post('/session/takeover/verify-otp', [AuthController::class, 'verifyTakeoverOtp'])->name('skfed.takeover.verify');
+
+    // Forgot Password Routes (Prototype - UI Only)
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::get('/reset-password', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::get('/password-reset-success', [AuthController::class, 'showPasswordResetSuccess'])->name('password.reset.success');
 });
 
 Route::middleware(['auth', 'single.session'])->group(function () {

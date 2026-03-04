@@ -2,18 +2,183 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>SK Federations Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
 </head>
+
+<style>
+        /* Force hide browser password reveal icons */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        
+        /* CRITICAL: Remove ALL browser validation styling (green borders and checkmarks) */
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            background-image: none !important;
+            background-color: white !important;
+            border: 2px solid #e2e8f0 !important;
+        }
+
+        /* Remove validation styling in ALL states */
+        input[type="email"]:valid,
+        input[type="password"]:valid,
+        input[type="text"]:valid,
+        input[type="email"]:invalid,
+        input[type="password"]:invalid,
+        input[type="text"]:invalid {
+            background-image: none !important;
+            border-color: #e2e8f0 !important;
+            background-color: white !important;
+            box-shadow: none !important;
+        }
+
+        /* Focus state - blue border (not green) */
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            border-color: #213F99 !important;
+            box-shadow: 0 0 0 4px rgba(33, 63, 153, 0.1) !important;
+            background-image: none !important;
+            outline: none !important;
+        }
+
+        input[type="email"]:valid:focus,
+        input[type="password"]:valid:focus,
+        input[type="text"]:valid:focus {
+            border-color: #213F99 !important;
+            box-shadow: 0 0 0 4px rgba(33, 63, 153, 0.1) !important;
+            background-image: none !important;
+        }
+
+        /* Remove browser autofill green styling */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active,
+        input:-webkit-autofill:valid {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #1e293b !important;
+            border: 2px solid #e2e8f0 !important;
+            transition: background-color 5000s ease-in-out 0s !important;
+            background-image: none !important;
+        }
+
+        input:-webkit-autofill:focus {
+            border-color: #213F99 !important;
+            -webkit-box-shadow: 0 0 0 4px rgba(33, 63, 153, 0.1), 0 0 0 30px white inset !important;
+        }
+
+        /* Error state - red border (highest priority) */
+        input.is-invalid,
+        input.is-invalid:hover,
+        input.is-invalid:active,
+        input.is-invalid:valid,
+        input.is-invalid:-webkit-autofill,
+        input.is-invalid:-webkit-autofill:hover,
+        input.is-invalid:-webkit-autofill:focus,
+        input.is-invalid:-webkit-autofill:active {
+            border-color: #dc3545 !important;
+            background-image: none !important;
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+        }
+
+        input.is-invalid:focus,
+        input.is-invalid:-webkit-autofill:focus {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1), 0 0 0 30px white inset !important;
+            -webkit-box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1), 0 0 0 30px white inset !important;
+        }
+
+        /* Disable browser form validation UI completely */
+        .login-form {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .form-control {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        /* Override Bootstrap checkbox alignment */
+        .form-options {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-left: 0 !important;
+            padding-left: 0 !important;
+        }
+        
+        .form-check {
+            padding-left: 0 !important;
+            margin-bottom: 0 !important;
+            margin-left: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+        
+        .form-check-input {
+            margin-left: 0 !important;
+            margin-top: 0 !important;
+            float: none !important;
+        }
+        
+        .form-check-label {
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+            color: #1e293b !important;
+        }
+
+        .forgot-password {
+            font-size: 14px;
+            color: #213F99;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .forgot-password:hover {
+            color: #d0242b;
+        }
+    </style>
+
 <body>
+    <script>
+        // Prevent back navigation to login page when already logged in
+        (function() {
+            // Check if user is authenticated by checking if we can access dashboard
+            @auth
+                // If authenticated and on login page, redirect to dashboard
+                window.location.replace("{{ route('dashboard') }}");
+            @endauth
+            
+            // Prevent back button navigation
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
+            };
+        })();
+    </script>
     <div class="login-container">
         <div class="background-section">
             <div class="logo-container">
                 <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
                 <h1 class="brand-title">SK Federations</h1>
-                <p class="brand-subtitle">Santa Cruz Youth Leadership Portazl</p>
+                <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
             </div>
 
             <div class="login-form-container">
@@ -38,14 +203,6 @@
                     </div>
                 @endif
 
-                @if ($errors->any())
-                    <div class="alert alert-danger" role="alert">
-                        @foreach ($errors->all() as $error)
-                            <div>{{ $error }}</div>
-                        @endforeach
-                    </div>
-                @endif
-
                 <form method="POST" action="{{ route('login', [], false) }}" class="login-form" novalidate>
                     @csrf
                     <div class="form-group">
@@ -54,13 +211,17 @@
                             type="email"
                             id="email"
                             name="email"
-                            class="form-control"
+                            class="form-control @error('email') is-invalid @enderror"
                             value="{{ old('email') }}"
                             required
                             autocomplete="email"
                             autofocus
                             placeholder="Enter your email"
+                            maxlength="150"
                         >
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
@@ -70,10 +231,12 @@
                                 type="password"
                                 id="password"
                                 name="password"
-                                class="form-control"
+                                class="form-control @error('password') is-invalid @enderror"
                                 required
                                 autocomplete="current-password"
                                 placeholder="Enter your password"
+                                minlength="8"
+                                maxlength="64"
                             >
                             <button type="button" class="password-toggle" onclick="togglePassword()">
                                 <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -86,6 +249,9 @@
                                 </svg>
                             </button>
                         </div>
+                        @error('password')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-options">
@@ -93,9 +259,7 @@
                             <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
                             <label class="form-check-label" for="remember">Remember this device</label>
                         </div>
-                        <div class="forgot-password-container">
-                            <a href="{{ route('skfed.verification.notice', [], false) }}" class="forgot-password">Verify Email</a>
-                        </div>
+                        <a href="{{ url('/forgot-password') }}" class="forgot-password">Forgot Password?</a>
                     </div>
 
                     <button type="submit" class="login-btn btn btn-primary w-100">

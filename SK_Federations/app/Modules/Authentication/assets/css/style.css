@@ -201,6 +201,18 @@ body::after {
     padding-right: 50px;
 }
 
+/* Hide browser default password reveal icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-contacts-auto-fill-button {
+    visibility: hidden !important;
+    display: none !important;
+}
+
 .password-toggle {
     position: absolute;
     right: 12px;
@@ -215,16 +227,41 @@ body::after {
     align-items: center;
     justify-content: center;
     transition: color 0.3s ease;
+    z-index: 10;
 }
 
 .password-toggle:hover {
     color: #213F99;
 }
 
+.password-toggle svg {
+    pointer-events: none;
+}
+
 .form-options {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    align-items: center;
     margin-bottom: 24px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.form-check-input {
+    margin: 0 !important;
+    cursor: pointer;
+}
+
+.form-check-label {
+    margin: 0 !important;
+    cursor: pointer;
+    font-size: 14px;
+    color: #1e293b;
 }
 
 .forgot-password {
@@ -284,23 +321,42 @@ body::after {
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+    .background-section {
+        gap: 40px;
+    }
+
+    .large-logo {
+        width: 200px;
+        height: 200px;
+    }
+
+    .brand-title {
+        font-size: 40px;
+    }
+}
+
 @media (max-width: 968px) {
     body {
-        padding: 10px;
+        padding: 15px;
+        overflow-y: auto;
     }
 
     .background-section {
         flex-direction: column;
         gap: 30px;
+        padding: 20px 0;
     }
 
     .large-logo {
         width: 150px;
         height: 150px;
+        margin-bottom: 20px;
     }
 
     .brand-title {
-        font-size: 36px;
+        font-size: 32px;
+        letter-spacing: 1px;
     }
 
     .brand-subtitle {
@@ -308,37 +364,238 @@ body::after {
     }
 
     .login-form-container {
-        padding: 40px 30px;
-    }
-}
-
-@media (max-width: 480px) {
-    body {
-        padding: 20px 10px;
-    }
-
-    .background-section {
-        gap: 20px;
-    }
-
-    .large-logo {
-        width: 120px;
-        height: 120px;
-    }
-
-    .brand-title {
-        font-size: 28px;
-    }
-
-    .brand-subtitle {
-        font-size: 13px;
+        padding: 35px 30px;
+        max-width: 100%;
     }
 
     .form-header h2 {
         font-size: 24px;
     }
 
+    .form-header p {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 640px) {
+    body {
+        padding: 10px;
+        min-height: 100vh;
+        align-items: flex-start;
+        padding-top: 20px;
+    }
+
+    body::before,
+    body::after {
+        display: none;
+    }
+
+    .login-container {
+        width: 100%;
+    }
+
+    .background-section {
+        gap: 20px;
+        padding: 10px 0;
+    }
+
+    .large-logo {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 15px;
+    }
+
+    .brand-title {
+        font-size: 24px;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .brand-subtitle {
+        font-size: 12px;
+    }
+
     .login-form-container {
-        padding: 30px 20px;
+        padding: 25px 20px;
+        border-radius: 12px;
+    }
+
+    .form-header {
+        margin-bottom: 24px;
+    }
+
+    .form-header h2 {
+        font-size: 20px;
+        margin-bottom: 4px;
+    }
+
+    .form-header p {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+
+    .password-input-container .form-control {
+        padding-right: 45px;
+    }
+
+    .password-toggle {
+        right: 10px;
+        padding: 6px;
+    }
+
+    .password-toggle svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .form-check-label {
+        font-size: 13px;
+    }
+
+    .login-btn {
+        padding: 14px;
+        font-size: 15px;
+    }
+
+    .form-footer p,
+    .form-footer a {
+        font-size: 13px;
+    }
+
+    .alert {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+
+    /* Success modal responsive */
+    .check-wrap {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 24px;
+    }
+
+    .checkmark {
+        width: 30px;
+        height: 60px;
+        border-right: 6px solid white;
+        border-bottom: 6px solid white;
+    }
+
+    .success-container h2 {
+        font-size: 22px;
+    }
+
+    .success-container p {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px 8px;
+    }
+
+    .login-form-container {
+        padding: 20px 16px;
+    }
+
+    .form-header h2 {
+        font-size: 18px;
+    }
+
+    .form-header p {
+        font-size: 12px;
+    }
+
+    .large-logo {
+        width: 80px;
+        height: 80px;
+    }
+
+    .brand-title {
+        font-size: 20px;
+    }
+
+    .brand-subtitle {
+        font-size: 11px;
+    }
+}
+
+/* Prevent zoom on input focus for iOS */
+@media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Inline Error Messages */
+
+.password-input-container .form-control.is-invalid {
+    padding-right: 50px;
+}
+
+/* Red border for invalid inputs */
+.form-control.is-invalid,
+.form-control.is-invalid:hover,
+.form-control.is-invalid:active,
+.form-control.is-invalid:focus {
+    border-color: #dc3545 !important;
+}
+
+.form-control.is-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
+}
+
+.invalid-feedback {
+    display: block;
+    font-size: 13px;
+    color: #dc3545;
+    margin-top: 6px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Auto-dismiss animation for inline errors */
+.invalid-feedback.fade-out {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-5px);
     }
 }

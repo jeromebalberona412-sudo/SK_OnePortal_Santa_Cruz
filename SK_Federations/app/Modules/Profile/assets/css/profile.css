@@ -1,0 +1,385 @@
+/* Password Input Wrapper */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper .password-input {
+    padding-right: 45px;
+}
+
+/* Hide browser's default password reveal button */
+.password-input::-ms-reveal,
+.password-input::-ms-clear {
+    display: none;
+}
+
+.password-input::-webkit-credentials-auto-fill-button,
+.password-input::-webkit-contacts-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    z-index: 10;
+}
+
+.password-toggle-btn:hover {
+    color: #213F99;
+}
+
+.password-toggle-btn i {
+    font-size: 16px;
+}
+
+/* Success Modal Styles */
+.success-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.success-modal.show {
+    opacity: 1;
+}
+
+.success-modal.hide {
+    opacity: 0;
+}
+
+.success-modal-content {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    transform: translateY(30px);
+    transition: transform 0.3s ease-out;
+}
+
+.success-modal.show .success-modal-content {
+    transform: translateY(0);
+}
+
+.success-modal.hide .success-modal-content {
+    transform: translateY(30px);
+}
+
+.success-icon {
+    font-size: 64px;
+    color: #22c55e;
+    margin-bottom: 20px;
+    animation: scaleIn 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.success-modal-content h2 {
+    margin: 0 0 12px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.success-modal-content p {
+    margin: 0;
+    font-size: 16px;
+    color: #64748b;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 700px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.modal-body {
+    padding: 28px;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 28px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #213F99 0%, #1a3278 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 63, 153, 0.3);
+}
+
+.btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+    .modal-content {
+        max-width: 95%;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-header,
+    .modal-footer {
+        padding: 16px 20px;
+    }
+}
+
+/* Forgot Password Modal Styles */
+.forgot-password-modal-content {
+    max-width: 480px;
+    border-radius: 16px;
+    position: relative;
+}
+
+.modal-close-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+    z-index: 10;
+}
+
+.modal-close-icon:hover {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.warning-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 8px 24px rgba(251, 191, 36, 0.25);
+    animation: scaleIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.warning-icon-wrapper i {
+    font-size: 36px;
+    color: #f59e0b;
+}
+
+.btn-cancel-modern {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 120px;
+}
+
+.btn-cancel-modern:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.btn-continue-modern {
+    background: linear-gradient(135deg, #213F99 0%, #1a3278 100%);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(33, 63, 153, 0.3);
+    min-width: 160px;
+    justify-content: center;
+}
+
+.btn-continue-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 63, 153, 0.4);
+}
+
+.btn-continue-modern i {
+    transition: transform 0.3s ease;
+}
+
+.btn-continue-modern:hover i {
+    transform: translateX(3px);
+}
+
+@media (max-width: 640px) {
+    .forgot-password-modal-content {
+        max-width: 95%;
+    }
+
+    .forgot-password-modal-content .modal-body {
+        padding: 40px 24px !important;
+    }
+
+    .warning-icon-wrapper {
+        width: 70px;
+        height: 70px;
+    }
+
+    .warning-icon-wrapper i {
+        font-size: 32px;
+    }
+
+    .btn-cancel-modern,
+    .btn-continue-modern {
+        padding: 12px 24px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+
+    .btn-continue-modern {
+        min-width: 140px;
+    }
+}
