@@ -685,7 +685,6 @@
                                 <label for="language">Preferred Language</label>
                                 <select id="language" name="language">
                                     <option value="en" selected>English</option>
-                                    <option value="fil">Filipino</option>
                                 </select>
                             </div>
                             <div class="form-group">
