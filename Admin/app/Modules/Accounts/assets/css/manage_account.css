@@ -228,13 +228,13 @@
 }
 
 .accounts-table thead th {
-  background: var(--gray-50);
+  background-color: #1e5fae;
   font-weight: 700;
   padding: 0.75rem 1rem;
   text-align: center;
   border-bottom: 2px solid #000;
   border-right: 1px solid var(--gray-300);
-  color: var(--gray-800);
+  color: #ffffff;
 }
 
 .accounts-table thead th:last-child {
@@ -250,14 +250,14 @@
 .header-main {
   font-size: 14px;
   font-weight: 700;
-  color: var(--gray-800);
+  color: white;
   text-align: center;
 }
 
 .header-sub {
   font-size: 11px;
   font-weight: 400;
-  color: var(--gray-600);
+  color: rgba(255, 255, 255, 0.8);
   margin-top: 2px;
   text-align: center;
 }

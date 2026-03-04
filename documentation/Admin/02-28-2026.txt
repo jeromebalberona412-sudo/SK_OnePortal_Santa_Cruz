@@ -1,2 +1,9 @@
- backend Pagination in manage account 
+backend Pagination in manage account 
 session sa logout next time na wag muna lagyan 
+check validation in add account front end palang na validation plus konting backend sa js.
+theme color 
+ Deep Blue: #1e5fae
+ Blue-Teal: #1f7a8c
+ Green: #2e8b57
+ in two factor authentication na dedelete pa yung number na na input during process pero oks naman napasok naman even i remove.
+ then 

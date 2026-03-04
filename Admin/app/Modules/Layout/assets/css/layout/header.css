@@ -5,7 +5,7 @@
     right: 0;
     left: 0; /* Full width when sidebar is closed */
     height: 60px;
-    background-color: #0066CC; /* Blue color */
+    background: linear-gradient(135deg, #1e5fae 0%, #1f7a8c 50%, #2e8b57 100%);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -25,7 +25,7 @@
     left: 230px; /* 220px sidebar + 10px spacing */
     top: 15px;
     z-index: 1100;
-    background: #0066CC; /* Blue to match header */
+    background: linear-gradient(135deg, #1e5fae 0%, #1f7a8c 50%, #2e8b57 100%);
     border-radius: 0 0 10px 10px;
     padding: 0.5rem 1rem;
     color: #fff;
@@ -110,4 +110,30 @@
 .modal-header h5.modal-title {
     width: 100%;
     text-align: center;
+}
+
+/* Modern Logout Button */
+.btn-logout-modern {
+    background: #dc3545;
+    border: 1px solid #dc3545;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-logout-modern:hover {
+    background: #c82333;
+    border-color: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-logout-modern:active {
+    transform: translateY(0);
 }
