@@ -143,20 +143,50 @@
     background: var(--gray-50);
 }
 
+/* Date range - same look as search input and filter dropdown */
 .date-range-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    background: var(--white);
+    transition: var(--transition);
+    min-width: 150px;
+}
+
+.date-range-container:focus-within {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.date-field-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.date-range-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-700);
 }
 
 .date-input {
     flex: 1;
-    padding: 12px 16px;
-    border: 2px solid var(--gray-300);
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-300);
     border-radius: var(--border-radius);
     font-size: 14px;
+    color: var(--gray-700);
     transition: var(--transition);
     background: var(--white);
+    min-width: 140px;
+    outline: none;
 }
 
 .date-input:hover {
@@ -167,12 +197,12 @@
     outline: none;
     border-color: var(--primary-blue);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    transform: translateY(-1px);
 }
 
 .date-separator {
     color: var(--gray-500);
     font-size: 14px;
+    font-weight: 500;
 }
 
 /* Export Section Styles */
@@ -678,11 +708,17 @@
     
     .date-range-container {
         flex-direction: column;
-        gap: 12px;
+        align-items: stretch;
+        gap: 0.75rem;
     }
-    
+
+    .date-range-label {
+        display: block;
+    }
+
     .date-separator {
-        display: none;
+        display: block;
+        text-align: center;
     }
     
     .table-responsive {

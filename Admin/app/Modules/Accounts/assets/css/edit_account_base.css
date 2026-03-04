@@ -1,10 +1,18 @@
 :root {
+    /* Theme colors */
+    --theme-deep-blue: #1e5fae;
+    --theme-deep-blue-hover: #1a5499;
+    --theme-blue-teal: #1f7a8c;
+    --theme-blue-teal-hover: #1a6b7a;
+    --theme-green: #2e8b57;
+    --theme-green-hover: #267a4a;
     --primary-blue: #2563eb;
     --primary-blue-hover: #1d4ed8;
     --accent-yellow: #fbbf24;
     --success-green: #16a34a;
     --success-green-hover: #15803d;
     --white: #ffffff;
+    --black: #000000;
     --gray-50: #f9fafb;
     --gray-200: #e5e7eb;
     --gray-300: #d1d5db;
@@ -57,6 +65,52 @@
     padding: 1.5rem;
     border-bottom: 1px solid var(--gray-200);
     background: var(--gray-50);
+}
+
+/* Themed modal headers - white text for visibility */
+.modal-header.modal-header-deep-blue {
+    background: var(--theme-deep-blue);
+    border-bottom-color: rgba(255, 255, 255, 0.25);
+}
+.modal-header.modal-header-deep-blue .modal-title,
+.modal-header.modal-header-deep-blue .modal-close-btn,
+.modal-header.modal-header-deep-blue .modal-fullscreen-btn {
+    color: #ffffff !important;
+}
+.modal-header.modal-header-deep-blue .modal-close-btn:hover,
+.modal-header.modal-header-deep-blue .modal-fullscreen-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff !important;
+}
+
+.modal-header.modal-header-teal {
+    background: var(--theme-blue-teal);
+    border-bottom-color: rgba(255, 255, 255, 0.25);
+}
+.modal-header.modal-header-teal .modal-title,
+.modal-header.modal-header-teal .modal-close-btn,
+.modal-header.modal-header-teal .modal-fullscreen-btn {
+    color: #ffffff !important;
+}
+.modal-header.modal-header-teal .modal-close-btn:hover,
+.modal-header.modal-header-teal .modal-fullscreen-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff !important;
+}
+
+.modal-header.modal-header-green {
+    background: var(--theme-green);
+    border-bottom-color: rgba(255, 255, 255, 0.25);
+}
+.modal-header.modal-header-green .modal-title,
+.modal-header.modal-header-green .modal-close-btn,
+.modal-header.modal-header-green .modal-fullscreen-btn {
+    color: #ffffff !important;
+}
+.modal-header.modal-header-green .modal-close-btn:hover,
+.modal-header.modal-header-green .modal-fullscreen-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff !important;
 }
 
 .modal-controls {
@@ -160,6 +214,42 @@
     padding: 1.5rem;
     max-height: 60vh;
     overflow-y: auto;
+    color: #000000;
+}
+
+/* Themed modal body - ensure text visibility (black on light) */
+.modal-content.modal-themed .modal-body {
+    background: #ffffff;
+    color: #000000;
+}
+.modal-content.modal-themed .modal-body .form-label-modern,
+.modal-content.modal-themed .modal-body .section-title,
+.modal-content.modal-themed .modal-body p {
+    color: #1f2937;
+}
+.modal-content.modal-themed .modal-body .section-title {
+    color: var(--gray-800);
+    border-bottom-color: var(--theme-blue-teal);
+}
+.modal-content.modal-themed .modal-body .section-title::before {
+    background: var(--theme-deep-blue);
+}
+.modal-content.modal-themed .modal-footer {
+    background: var(--gray-50);
+    border-top-color: var(--gray-200);
+}
+.modal-content.modal-themed .modal-footer .btn-secondary-modern {
+    color: #1f2937;
+}
+.modal-content.modal-themed .form-input-modern,
+.modal-content.modal-themed .sk-fed-form input,
+.modal-content.modal-themed .sk-fed-form select {
+    color: #1f2937;
+    background: #ffffff;
+}
+.modal-content.modal-themed .sk-fed-form select option {
+    color: #1f2937;
+    background: #ffffff;
 }
 
 .modal-footer {
@@ -200,18 +290,37 @@
 }
 
 .btn-primary-modern.btn-blue {
-    background: var(--primary-blue);
-    border-color: var(--primary-blue);
+    background: var(--theme-deep-blue);
+    border-color: var(--theme-deep-blue);
+    color: #ffffff;
+}
+.btn-primary-modern.btn-blue:hover {
+    background: var(--theme-deep-blue-hover);
+    border-color: var(--theme-deep-blue-hover);
+    color: #ffffff;
+}
+
+.btn-primary-modern.btn-teal {
+    background: var(--theme-blue-teal);
+    border-color: var(--theme-blue-teal);
+    color: #ffffff;
+}
+.btn-primary-modern.btn-teal:hover {
+    background: var(--theme-blue-teal-hover);
+    border-color: var(--theme-blue-teal-hover);
+    color: #ffffff;
 }
 
 .btn-primary-modern.btn-green {
-    background: var(--success-green);
-    border-color: var(--success-green);
+    background: var(--theme-green);
+    border-color: var(--theme-green);
+    color: #ffffff;
 }
 
 .btn-primary-modern.btn-green:hover {
-    background: var(--success-green-hover);
-    border-color: var(--success-green-hover);
+    background: var(--theme-green-hover);
+    border-color: var(--theme-green-hover);
+    color: #ffffff;
 }
 
 .btn-secondary-modern {
@@ -229,8 +338,10 @@
 
 .sk-fed-form .form-section {
     margin-bottom: 2rem;
+    padding: 1.25rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
 }
 
 .sk-fed-form .form-section:last-child {
@@ -238,13 +349,27 @@
     margin-bottom: 0;
 }
 
+/* Themed form sections - light background with theme accent */
+.modal-content.modal-themed .sk-fed-form .form-section:nth-child(3n+1) {
+    background: rgba(30, 95, 174, 0.06);
+    border-left: 4px solid var(--theme-deep-blue);
+}
+.modal-content.modal-themed .sk-fed-form .form-section:nth-child(3n+2) {
+    background: rgba(31, 122, 140, 0.06);
+    border-left: 4px solid var(--theme-blue-teal);
+}
+.modal-content.modal-themed .sk-fed-form .form-section:nth-child(3n+3) {
+    background: rgba(46, 139, 87, 0.06);
+    border-left: 4px solid var(--theme-green);
+}
+
 .sk-fed-form .section-title {
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--primary-blue);
+    color: var(--gray-800);
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--accent-yellow);
+    border-bottom: 2px solid var(--theme-blue-teal);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -254,7 +379,7 @@
     content: '';
     width: 4px;
     height: 24px;
-    background: var(--accent-yellow);
+    background: var(--theme-deep-blue);
     border-radius: 2px;
 }
 

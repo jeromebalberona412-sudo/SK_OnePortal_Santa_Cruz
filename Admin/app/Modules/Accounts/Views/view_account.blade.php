@@ -6,8 +6,8 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: var(--success-green, #16a34a);
-    color: var(--white, #ffffff);
+    background: #2e8b57;
+    color: #ffffff;
     border: none;
     border-radius: var(--border-radius, 8px);
     font-size: 14px;
@@ -20,7 +20,7 @@
 }
 
 .btn-view-modern:hover {
-    background: var(--success-green-hover, #15803d);
+    background: #267a4a;
     transform: translateY(-1px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
@@ -58,6 +58,22 @@
     padding: 1.5rem;
     border-bottom: 1px solid #e5e7eb;
     background: #f9fafb;
+}
+
+/* View modal - green header */
+#viewAccountModal .modal-header.modal-header-green {
+    background: #2e8b57;
+    border-bottom-color: rgba(255, 255, 255, 0.25);
+}
+#viewAccountModal .modal-header.modal-header-green .modal-title,
+#viewAccountModal .modal-header.modal-header-green .modal-close-btn,
+#viewAccountModal .modal-header.modal-header-green .modal-fullscreen-btn {
+    color: #ffffff !important;
+}
+#viewAccountModal .modal-header.modal-header-green .modal-close-btn:hover,
+#viewAccountModal .modal-header.modal-header-green .modal-fullscreen-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff !important;
 }
 
 .modal-controls {
@@ -180,16 +196,16 @@
     padding: 1.5rem;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    border-left: 4px solid #3b82f6;
+    border-left: 4px solid #2e8b57;
 }
 
 .section-title {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #000000;
+    color: #1f2937;
     margin: 0 0 1.5rem 0;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid #000000;
+    border-bottom: 2px solid #2e8b57;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     display: flex;
@@ -201,7 +217,7 @@
     content: '';
     width: 8px;
     height: 8px;
-    background: #000000;
+    background: #2e8b57;
     border-radius: 50%;
     display: inline-block;
 }
@@ -292,7 +308,7 @@
 
 <div id="viewAccountModal" class="modal-overlay" style="display: none;">
     <div class="modal-content view-modal-container">
-        <div class="modal-header">
+        <div class="modal-header modal-header-green">
             <h3 class="modal-title">Account Details</h3>
             <div class="modal-controls">
                 <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenViewModal()" title="Fullscreen">

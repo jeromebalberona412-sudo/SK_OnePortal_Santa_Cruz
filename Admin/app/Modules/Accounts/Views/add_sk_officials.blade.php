@@ -1,8 +1,8 @@
 <!-- Add SK Officials Modal -->
 @vite(['app/Modules/Accounts/assets/css/add_sk_officials.css'])
 <div id="addSkOfficialsModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
+    <div class="modal-content modal-large modal-themed">
+        <div class="modal-header modal-header-green">
             <h3 class="modal-title">Add SK Official Account</h3>
             <div class="modal-controls">
                 <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenAddSkOfficialsModal()" title="Fullscreen">
@@ -289,12 +289,12 @@
 
 <!-- SK Officials Success Modal -->
 <div id="skOfficialsSuccessModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
+    <div class="modal-content modal-themed">
+        <div class="modal-header modal-header-deep-blue">
             <h3 class="modal-title">Success</h3>
         </div>
         <div class="modal-body">
-            <p>SK Officials account successfully created!</p>
+            <p style="color: #1f2937;">SK Officials account successfully created!</p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn-primary-modern btn-blue" onclick="closeSkOfficialsSuccessModal()">OK</button>

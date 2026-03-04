@@ -1,8 +1,8 @@
 <!-- Add SK Federation Modal -->
 @vite(['app/Modules/Accounts/assets/css/add_sk_fed.css'])
 <div id="addAccountModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
+    <div class="modal-content modal-large modal-themed">
+        <div class="modal-header modal-header-deep-blue">
             <h3 class="modal-title">Add SK Federation Account</h3>
             <div class="modal-controls">
                 <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenAddAccountModal()" title="Fullscreen">
@@ -289,15 +289,15 @@
 
 <!-- Success Modal -->
 <div id="addSuccessModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
+    <div class="modal-content modal-themed">
+        <div class="modal-header modal-header-teal">
             <h3 class="modal-title">Success</h3>
         </div>
         <div class="modal-body">
-            <p>Account successfully created!</p>
+            <p style="color: #1f2937;">Account successfully created!</p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn-primary-modern btn-blue" onclick="closeAddSuccessModal()">OK</button>
+            <button type="button" class="btn-primary-modern btn-teal" onclick="closeAddSuccessModal()">OK</button>
         </div>
     </div>
 </div>

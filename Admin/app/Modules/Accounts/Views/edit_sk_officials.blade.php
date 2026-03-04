@@ -1,8 +1,8 @@
 <!-- Edit SK Officials Modal -->
 @vite(['app/Modules/Accounts/assets/css/edit_sk_officials.css'])
 <div id="editSkOfficialsModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
+    <div class="modal-content modal-large modal-themed">
+        <div class="modal-header modal-header-deep-blue">
             <h3 class="modal-title">Edit SK Officials Account</h3>
             <div class="modal-controls">
                 <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenEditSkOfficialsModal()" title="Fullscreen">
@@ -186,7 +186,7 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn-secondary-modern" onclick="closeEditSkOfficialsModal()">Cancel</button>
-            <button type="submit" form="editSkOfficialsForm" class="btn-primary-modern btn-blue">
+            <button type="submit" form="editSkOfficialsForm" class="btn-primary-modern btn-teal">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
