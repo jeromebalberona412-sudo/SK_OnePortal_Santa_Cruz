@@ -26,81 +26,7 @@
 <main class="main-content">
     <div class="profile-container">
         
-        <!-- 1️⃣ BARANGAY INFORMATION SECTION -->
-        <section class="barangay-info-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="icon"><i class="fa-solid fa-building"></i></span>
-                    Barangay Information
-                </h2>
-            </div>
-            
-            <div class="barangay-card">
-                <div class="barangay-header">
-                    <div class="barangay-logo">
-                        <img src="{{ asset('images/default-avatar.png') }}" alt="Barangay Seal" class="seal-image">
-                    </div>
-                    <div class="barangay-details">
-                        <h1 class="barangay-name">Barangay Santa Cruz</h1>
-                        <p class="barangay-captain">Barangay Captain: Juan Dela Cruz</p>
-                    </div>
-                </div>
-                
-                <div class="barangay-info-grid">
-                    <div class="info-item">
-                        <label class="info-label">
-                            <span class="icon"><i class="fa-solid fa-location-dot"></i></span>
-                            Address
-                        </label>
-                        <p class="info-value">123 Rizal Street, Poblacion</p>
-                    </div>
-                    <div class="info-item">
-                        <label class="info-label">
-                            <span class="icon"><i class="fa-solid fa-city"></i></span>
-                            Municipality
-                        </label>
-                        <p class="info-value">Santa Cruz</p>
-                    </div>
-                    <div class="info-item">
-                        <label class="info-label">
-                            <span class="icon"><i class="fa-solid fa-earth-asia"></i></span>
-                            Province
-                        </label>
-                        <p class="info-value">Laguna</p>
-                    </div>
-                    <div class="info-item">
-                        <label class="info-label">
-                            <span class="icon"><i class="fa-solid fa-map"></i></span>
-                            Region
-                        </label>
-                        <p class="info-value">CALABARZON (Region IV-A)</p>
-                    </div>
-                    <div class="info-item">
-                        <label class="info-label">
-                            <span class="icon"><i class="fa-solid fa-envelope"></i></span>
-                            ZIP Code
-                        </label>
-                        <p class="info-value">4026</p>
-                    </div>
-                    <div class="info-item">
-                        <label class="info-label">
-                            <span class="icon"><i class="fa-solid fa-phone"></i></span>
-                            Contact Number
-                        </label>
-                        <p class="info-value">(049) 545-1234</p>
-                    </div>
-                    <div class="info-item">
-                        <label class="info-label">
-                            <span class="icon"><i class="fa-solid fa-envelope"></i></span>
-                            Email Address
-                        </label>
-                        <p class="info-value">santacruz.laguna@gmail.com</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 2️⃣ SK CHAIRMAN SECTION -->
+        <!-- 1️⃣ SK CHAIRMAN SECTION -->
         <section class="sk-chairman-section">
             <div class="section-header">
                 <h2 class="section-title">
@@ -118,20 +44,16 @@
                         <span class="status-badge active">Active</span>
                     </div>
                     <div class="official-info">
-                        <h3>Jerome Balberona</h3>
+                        <h3>Paula A Talais</h3>
                         <p class="official-position">SK Chairman</p>
                         <div class="official-meta">
                             <span class="meta-item">
-                                <i class="fa-solid fa-mars"></i>
-                                Male
+                                <i class="fa-solid fa-venus"></i>
+                                Female
                             </span>
                             <span class="meta-item">
                                 <i class="fa-solid fa-cake-candles"></i>
-                                25 years old
-                            </span>
-                            <span class="meta-item">
-                                <i class="fa-solid fa-ring"></i>
-                                Single
+                                20 years old
                             </span>
                         </div>
                     </div>
@@ -140,59 +62,53 @@
                 <div class="official-details">
                     <div class="detail-row">
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-user"></i> Full Name</label>
-                            <p>Jerome Balberona</p>
+                            <label><i class="fa-solid fa-user"></i> Full Name (FN, MN LN, Suffix)</label>
+                            <p>Paula A Talais</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-cake-candles"></i> Date of Birth</label>
-                            <p>March 15, 1999</p>
+                            <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                            <p>kianpaula4@gmail.com</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-calendar"></i> Age</label>
-                            <p>25 years old</p>
+                            <label><i class="fa-solid fa-location-dot"></i> Barangay</label>
+                            <p>Palasan</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-ring"></i> Civil Status</label>
-                            <p>Single</p>
+                            <label><i class="fa-solid fa-city"></i> Municipality</label>
+                            <p>Santa Cruz</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-location-dot"></i> Address</label>
-                            <p>456 Mabini Street, Poblacion</p>
+                            <label><i class="fa-solid fa-briefcase"></i> Position (SK Role)</label>
+                            <p>Chairman</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar-day"></i> Date of Birth</label>
+                            <p>Apr 2, 2005</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-person"></i> Age</label>
+                            <p>20</p>
                         </div>
                         <div class="detail-item">
                             <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
-                            <p>0912-345-6789</p>
+                            <p>09169064515</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-envelope"></i> Email</label>
-                            <p>jerome.balberona@email.com</p>
+                            <label><i class="fa-solid fa-envelope-circle-check"></i> Email Verification</label>
+                            <p>03/03/2026 04:04 PM</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-calendar"></i> Term Start</label>
-                            <p>January 1, 2023</p>
+                            <label><i class="fa-solid fa-calendar-check"></i> Term Start</label>
+                            <p>Feb 28, 2026</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-calendar"></i> Term End</label>
-                            <p>December 31, 2025</p>
+                            <label><i class="fa-solid fa-calendar-xmark"></i> Term End</label>
+                            <p>Jan 7, 2030</p>
                         </div>
-                    </div>
-                    
-                    <div class="education-section">
-                        <h4><i class="fa-solid fa-graduation-cap"></i> Educational Background</h4>
-                        <ul class="education-list">
-                            <li>Bachelor of Science in Computer Science - Laguna State University (2021)</li>
-                            <li>Secondary Education - Santa Cruz National High School (2017)</li>
-                            <li>Primary Education - Santa Cruz Elementary School (2013)</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="committee-section">
-                        <h4><i class="fa-solid fa-clipboard-list"></i> Committee Assignments</h4>
-                        <div class="committee-tags">
-                            <span class="committee-tag">Youth Development</span>
-                            <span class="committee-tag">Sports & Recreation</span>
-                            <span class="committee-tag">Education</span>
-                            <span class="committee-tag">Technology</span>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-circle-check"></i> Status</label>
+                            <p>Account Status: ACTIVE</p>
+                            <p>Term Status: ACTIVE</p>
                         </div>
                     </div>
                 </div>

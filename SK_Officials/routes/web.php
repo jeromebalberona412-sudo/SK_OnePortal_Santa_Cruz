@@ -49,6 +49,20 @@ Route::middleware(['web'])->group(function () {
         return view('Profile::profile');
     })->name('profile');
 
+    Route::get('/calendar', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Calendar::calendar');
+    })->name('calendar');
+
+    Route::get('/announcements', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Announcement::announcement');
+    })->name('announcements');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 });

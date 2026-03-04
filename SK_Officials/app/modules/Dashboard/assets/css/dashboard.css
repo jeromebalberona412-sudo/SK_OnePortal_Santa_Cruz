@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
     min-height: 100vh;
 }
 
@@ -38,7 +38,7 @@ body {
     font-size: 36px;
     font-weight: 700;
     margin-bottom: 10px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

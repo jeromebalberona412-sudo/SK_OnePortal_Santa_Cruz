@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <title>SK Officials Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     @vite([
         'app/modules/layout/css/header.css',
@@ -21,8 +23,8 @@
 <main class="main-content">
     <div class="dashboard-container">
         <div class="welcome-section">
-            <h2>Hello World</h2>
-            <p>Welcome to the SK Officials Dashboard</p>
+            <h2 class="welcome-title">Hello World</h2>
+            <p class="welcome-subtitle">Welcome to the SK Officials Dashboard</p>
         </div>
     </div>
 </main>

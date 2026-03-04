@@ -1,0 +1,232 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
+    min-height: 100vh;
+}
+
+.main-content {
+    margin-left: 280px;
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
+    transition: margin-left 0.3s ease;
+    padding: 20px;
+}
+
+.announcement-page-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.announcement-header-section {
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+
+.announcement-title {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.announcement-subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.announcement-form-section,
+.announcement-list-section {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    margin-bottom: 16px;
+}
+
+.section-heading {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #1f3c6d;
+}
+
+.announcement-form .form-group {
+    margin-bottom: 16px;
+}
+
+.announcement-form label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #111827;
+}
+
+.required {
+    color: #dc2626;
+}
+
+.announcement-form input[type="text"],
+.announcement-form textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.announcement-form input[type="text"]:focus,
+.announcement-form textarea:focus {
+    outline: none;
+    border-color: #1f3c6d;
+    box-shadow: 0 0 0 3px rgba(31, 60, 109, 0.2);
+}
+
+.announcement-form textarea {
+    resize: vertical;
+}
+
+.error-message {
+    font-size: 12px;
+    color: #dc2626;
+    margin-top: 4px;
+    display: none;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.btn-primary {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #22c55e;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn-secondary {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    color: #374151;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.is-hidden {
+    display: none;
+}
+
+.announcement-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}
+
+.announcement-actions button {
+    border: none;
+    background: transparent;
+    color: #1f3c6d;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.announcement-actions button:hover {
+    text-decoration: underline;
+}
+
+.announcement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.announcement-card {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 12px 14px;
+    background: #f9fafb;
+}
+
+.announcement-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.announcement-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.announcement-card-meta {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.announcement-card-body {
+    font-size: 14px;
+    color: #374151;
+    white-space: pre-wrap;
+}
+
+.announcement-empty {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 260px;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        margin-top: 60px;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+        margin-top: 55px;
+    }
+
+    .announcement-title {
+        font-size: 24px;
+    }
+}
+
+@media (min-width: 769px) {
+    .main-content.sidebar-collapsed {
+        margin-left: 80px;
+    }
+}
+

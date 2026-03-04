@@ -11,7 +11,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .login-container {
@@ -185,6 +185,10 @@ body {
 
 .toggle-password:hover .eye-icon {
     color: #1e3c72;
+}
+
+.eye-icon.is-visible {
+    color: #64748b;
 }
 
 .form-group input:focus {
@@ -365,6 +369,9 @@ body {
         flex-direction: column;
         height: auto;
         min-height: 100vh;
+        justify-content: flex-start;
+        padding-top: 40px;
+        padding-bottom: 40px;
     }
     
     .logo-section {
@@ -394,6 +401,7 @@ body {
 @media (max-width: 480px) {
     .login-container {
         padding: 15px;
+        padding-bottom: 40px;
     }
     
     .logo-section {

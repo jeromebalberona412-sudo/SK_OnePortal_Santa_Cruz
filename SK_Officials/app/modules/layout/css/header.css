@@ -1,6 +1,6 @@
 /* Header Styles */
 .main-header {
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
     color: white;
     position: fixed;
     top: 0;
@@ -40,7 +40,8 @@
 }
 
 .sidebar-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #ffe680;
+    color: #1f3c6d;
 }
 
 .hamburger-line {
@@ -116,7 +117,8 @@
 }
 
 .search-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #ffe680;
+    color: #1f3c6d;
 }
 
 .search-icon {
@@ -148,7 +150,8 @@
 }
 
 .notification-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #ffe680;
+    color: #1f3c6d;
 }
 
 .notification-icon {
@@ -188,7 +191,8 @@
 }
 
 .user-menu-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #ffe680;
+    color: #1f3c6d;
 }
 
 .user-avatar {
@@ -247,7 +251,7 @@
 }
 
 .dropdown-item:hover {
-    background-color: #f8f9fa;
+    background-color: #fff4bf;
 }
 
 .dropdown-icon {

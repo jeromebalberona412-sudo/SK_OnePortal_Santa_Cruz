@@ -9,7 +9,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
     min-height: 100vh;
     line-height: 1.6;
 }
@@ -88,7 +88,7 @@ body {
 .section-title {
     font-size: 20px;
     font-weight: 600;
-    color: #1e3c72;
+    color: #000000;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -103,7 +103,7 @@ body {
 }
 
 .barangay-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    background: linear-gradient(135deg, #f4c20d 0%, #1f3c6d 100%);
     color: white;
     padding: 25px;
     display: flex;
@@ -121,6 +121,26 @@ body {
     border-radius: 50%;
     border: 3px solid rgba(255, 255, 255, 0.3);
     object-fit: cover;
+}
+
+.barangay-user-icon {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f4c20d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.barangay-user-icon i {
+    color: #1f3c6d;
+    font-size: 14px;
 }
 
 .barangay-details h1 {
@@ -190,10 +210,21 @@ body {
 
 .official-header {
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: #1f3c6d;
     display: flex;
     align-items: center;
     gap: 15px;
+}
+
+.official-header .official-info h3 {
+    color: #ffffff;
+}
+
+.official-header .official-position,
+.official-header .official-meta,
+.official-header .official-meta .meta-item,
+.official-header .official-meta .meta-item i {
+    color: #f5f7fa;
 }
 
 .official-photo {
@@ -309,7 +340,7 @@ body {
 .detail-item p {
     font-size: 14px;
     color: #333;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .education-section, .committee-section {
@@ -345,7 +376,7 @@ body {
 
 .education-list li:before {
     content: "•";
-    color: #1e3c72;
+    color: #f4c20d;
     font-weight: bold;
     margin-top: 2px;
 }
@@ -357,8 +388,8 @@ body {
 }
 
 .committee-tag {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: white;
+    background: #ffe680;
+    color: #1f3c6d;
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
@@ -368,7 +399,7 @@ body {
 
 .committee-tag:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(30, 60, 114, 0.2);
+    box-shadow: 0 4px 8px rgba(244, 194, 13, 0.4);
 }
 
 /* Kagawad Grid */

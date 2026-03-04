@@ -32,7 +32,7 @@ function initializeHeader() {
 
     if (sidebarToggle) {
 
-        sidebarToggle.addEventListener('click', toggleSidebar);
+        sidebarToggle.addEventListener('click', responsiveToggleSidebar);
 
     }
 
@@ -113,6 +113,87 @@ function toggleSidebar() {
                 overlay.classList.toggle('show');
 
             }
+
+        }
+
+    }
+
+}
+
+
+
+function responsiveToggleSidebar() {
+
+    const sidebar = document.getElementById('mainSidebar');
+
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    const overlay = document.querySelector('.sidebar-overlay');
+
+
+
+    if (!sidebar) {
+
+        return;
+
+    }
+
+
+
+    // Mobile behavior: slide-in sidebar with dark overlay
+    if (window.innerWidth <= 768) {
+
+        const isOpening = !sidebar.classList.contains('open');
+
+        sidebar.classList.toggle('open');
+
+        if (sidebarToggle) {
+
+            sidebarToggle.classList.toggle('active');
+
+        }
+
+        let mobileOverlay = overlay;
+
+        if (!mobileOverlay) {
+
+            mobileOverlay = createOverlay();
+
+        }
+
+        if (isOpening) {
+
+            mobileOverlay.classList.add('show');
+
+        } else {
+
+            mobileOverlay.classList.remove('show');
+
+        }
+
+    } else {
+
+        // Desktop behavior: collapse / expand sidebar width
+        sidebar.classList.toggle('collapsed');
+
+        if (sidebarToggle) {
+
+            sidebarToggle.classList.toggle('active');
+
+        }
+
+        const mainContent = document.querySelector('.main-content');
+
+        if (mainContent) {
+
+            mainContent.classList.toggle('sidebar-collapsed');
+
+        }
+
+        // Ensure overlay is never shown on desktop
+        if (overlay) {
+
+            overlay.classList.remove('show');
 
         }
 
@@ -364,17 +445,23 @@ function createOverlay() {
 
             sidebar.classList.remove('open');
 
+        }
+
+        if (sidebarToggle) {
+
             sidebarToggle.classList.remove('active');
 
-            overlay.classList.remove('show');
-
         }
+
+        overlay.classList.remove('show');
 
     });
 
     
 
     document.body.appendChild(overlay);
+
+    return overlay;
 
 }
 
