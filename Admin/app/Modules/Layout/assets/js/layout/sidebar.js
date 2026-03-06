@@ -58,7 +58,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.sb-sidenav-menu .nav-link');
     
     navLinks.forEach(link => {
-        if (link.getAttribute('href') === currentPath || 
+        let linkPath = '';
+        try {
+            linkPath = new URL(link.href).pathname;
+        } catch (e) {
+            linkPath = link.getAttribute('href') || '';
+        }
+
+        if (linkPath === currentPath ||
             (currentPath === '/dashboard' && link.textContent.includes('Dashboard'))) {
             link.classList.add('active');
         }

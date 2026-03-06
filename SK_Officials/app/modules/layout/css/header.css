@@ -33,15 +33,36 @@
     cursor: pointer;
     padding: 8px;
     border-radius: 6px;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
     display: flex;
-    flex-direction: column;
-    gap: 3px;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
 .sidebar-toggle:hover {
     background-color: #ffe680;
     color: #1f3c6d;
+}
+
+.hamburger-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.x-icon {
+    display: none;
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar-toggle.active .hamburger-icon {
+    display: none;
+}
+
+.sidebar-toggle.active .x-icon {
+    display: block;
 }
 
 .hamburger-line {
@@ -306,6 +327,10 @@
         padding: 10px;
     }
     
+    .sidebar-toggle.active {
+        padding: 10px;
+    }
+    
     .hamburger-line {
         width: 22px;
         height: 3px;
@@ -336,6 +361,10 @@
     }
     
     .sidebar-toggle {
+        padding: 8px;
+    }
+    
+    .sidebar-toggle.active {
         padding: 8px;
     }
     
@@ -389,6 +418,10 @@
     }
     
     .sidebar-toggle {
+        padding: 6px;
+    }
+    
+    .sidebar-toggle.active {
         padding: 6px;
     }
     
@@ -526,15 +559,18 @@
     }
 }
 
-/* Mobile Sidebar Toggle Active State */
-.sidebar-toggle.active .hamburger-line:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px);
+/* Sidebar Toggle X State - same size as burger, same light yellow background */
+.sidebar-toggle.active {
+    background-color: #ffe680 !important;
+    color: #1f3c6d !important;
+    padding: 8px;
 }
 
-.sidebar-toggle.active .hamburger-line:nth-child(2) {
-    opacity: 0;
+.sidebar-toggle.active:hover {
+    background-color: #ffed99 !important;
+    color: #1f3c6d !important;
 }
 
-.sidebar-toggle.active .hamburger-line:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -6px);
+.sidebar-toggle.active .x-icon {
+    stroke: #1f3c6d;
 }

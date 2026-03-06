@@ -473,20 +473,45 @@
                             <p>Grace Fernandez</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
-                            <p>0919-012-3456</p>
-                        </div>
-                        <div class="detail-item">
                             <label><i class="fa-solid fa-envelope"></i> Email Address</label>
                             <p>grace.fernandez@email.com</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-calendar"></i> Appointment Date</label>
-                            <p>January 15, 2023</p>
+                            <label><i class="fa-solid fa-location-dot"></i> Barangay</label>
+                            <p>Palasan</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-city"></i> Municipality</label>
+                            <p>Santa Cruz</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-briefcase"></i> Position (SK Role)</label>
+                            <p>Secretary</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar-day"></i> Date of Birth</label>
+                            <p>March 15, 2002</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-person"></i> Age</label>
+                            <p>23</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
+                            <p>0919-012-3456</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar-check"></i> Term Start</label>
+                            <p>Feb 28, 2026</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar-xmark"></i> Term End</label>
+                            <p>Jan 7, 2030</p>
                         </div>
                         <div class="detail-item">
                             <label><i class="fa-solid fa-circle-check"></i> Status</label>
-                            <p><span class="status-badge active">Active</span></p>
+                            <p>Account Status: ACTIVE</p>
+                            <p>Term Status: ACTIVE</p>
                         </div>
                     </div>
                 </div>
@@ -533,20 +558,45 @@
                             <p>Robert Chen</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
-                            <p>0920-123-4567</p>
-                        </div>
-                        <div class="detail-item">
                             <label><i class="fa-solid fa-envelope"></i> Email Address</label>
                             <p>robert.chen@email.com</p>
                         </div>
                         <div class="detail-item">
-                            <label><i class="fa-solid fa-calendar"></i> Appointment Date</label>
-                            <p>January 15, 2023</p>
+                            <label><i class="fa-solid fa-location-dot"></i> Barangay</label>
+                            <p>Palasan</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-city"></i> Municipality</label>
+                            <p>Santa Cruz</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-briefcase"></i> Position (SK Role)</label>
+                            <p>Treasurer</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar-day"></i> Date of Birth</label>
+                            <p>June 10, 2001</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-person"></i> Age</label>
+                            <p>24</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
+                            <p>0920-123-4567</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar-check"></i> Term Start</label>
+                            <p>Feb 28, 2026</p>
+                        </div>
+                        <div class="detail-item">
+                            <label><i class="fa-solid fa-calendar-xmark"></i> Term End</label>
+                            <p>Jan 7, 2030</p>
                         </div>
                         <div class="detail-item">
                             <label><i class="fa-solid fa-circle-check"></i> Status</label>
-                            <p><span class="status-badge active">Active</span></p>
+                            <p>Account Status: ACTIVE</p>
+                            <p>Term Status: ACTIVE</p>
                         </div>
                     </div>
                 </div>

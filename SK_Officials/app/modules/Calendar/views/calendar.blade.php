@@ -28,9 +28,10 @@
                 <p class="calendar-subtitle">View and annotate your monthly schedule.</p>
             </div>
             <div class="calendar-header-right">
-                <button class="calendar-nav-btn" data-direction="prev">&laquo; Previous</button>
-                <div class="calendar-current-month" id="calendarCurrentMonth">March 2026</div>
-                <button class="calendar-nav-btn" data-direction="next">Next &raquo;</button>
+                <span id="calendarMonthLabel" class="calendar-current-date"></span>
+                <button type="button" id="calendarPrevBtn" class="calendar-nav-btn" aria-label="Previous">&laquo; Prev</button>
+                <button type="button" id="calendarNextBtn" class="calendar-nav-btn" aria-label="Next">Next &raquo;</button>
+                <button type="button" id="calendarJumpBtn" class="calendar-jump-btn" aria-label="Jump to date">Jump to date</button>
             </div>
         </section>
 

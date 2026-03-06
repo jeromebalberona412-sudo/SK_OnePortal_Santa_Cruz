@@ -329,8 +329,8 @@ body {
 
 .detail-item label {
     font-size: 12px;
-    font-weight: 600;
-    color: #666;
+    font-weight: 700;
+    color: #111827;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     display: flex;

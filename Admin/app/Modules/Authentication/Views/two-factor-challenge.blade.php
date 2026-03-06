@@ -9,6 +9,51 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-auth.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-two-factor.css') }}?v={{ time() }}">
+    <style>
+        :root {
+            --theme-deep-blue: #1e5fae;
+            --theme-deep-blue-hover: #1a5499;
+            --theme-blue-teal: #1f7a8c;
+            --theme-green: #2e8b57;
+        }
+
+        body {
+            background: #0b1220;
+        }
+
+        .shape-1 {
+            background: linear-gradient(135deg, var(--theme-deep-blue) 0%, var(--theme-blue-teal) 100%);
+        }
+        .shape-2 {
+            background: linear-gradient(135deg, var(--theme-green) 0%, var(--theme-blue-teal) 100%);
+        }
+        .shape-3 {
+            background: linear-gradient(135deg, rgba(30, 95, 174, 0.9) 0%, rgba(31, 122, 140, 0.9) 60%, rgba(46, 139, 87, 0.9) 100%);
+        }
+
+        .two-factor-header {
+            background: linear-gradient(135deg, var(--theme-deep-blue) 0%, var(--theme-blue-teal) 60%, var(--theme-green) 100%);
+        }
+
+        .code-input:focus {
+            border-color: var(--theme-deep-blue) !important;
+            box-shadow: 0 0 0 4px rgba(30, 95, 174, 0.12) !important;
+        }
+
+        .btn-verify {
+            background: linear-gradient(135deg, var(--theme-deep-blue) 0%, var(--theme-blue-teal) 55%, var(--theme-green) 100%) !important;
+        }
+        .btn-verify:hover {
+            box-shadow: 0 12px 30px rgba(30, 95, 174, 0.28) !important;
+        }
+
+        .recovery-link a {
+            color: var(--theme-deep-blue) !important;
+        }
+        .recovery-link a:hover {
+            color: var(--theme-green) !important;
+        }
+    </style>
 </head>
 <body>
     <div class="background-animation">
@@ -46,12 +91,12 @@
                     <div class="form-group">
                         <label for="code">Authentication Code</label>
                         <div class="code-input-container">
-                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
-                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
-                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
-                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
-                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
-                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" required>
+                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" required>
+                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" required>
+                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" required>
+                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" required>
+                            <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" required>
                         </div>
                         <input type="hidden" name="code" id="fullCode">
                         <div class="helper-text">
@@ -93,6 +138,7 @@
                             class="form-control" 
                             placeholder="Enter one of your recovery codes"
                             style="text-align: center;"
+                            required
                         >
 
                     </div>

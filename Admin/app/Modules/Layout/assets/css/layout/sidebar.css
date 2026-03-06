@@ -170,15 +170,38 @@
 }
 
 .sb-sidenav-menu .nav-link:hover {
-    background-color: #d4edda;
-    color: #155724;
+    background-color: rgba(30, 95, 174, 0.10);
+    color: #1e5fae;
+    border-left-color: rgba(30, 95, 174, 0.45);
 }
 
 .sb-sidenav-menu .nav-link.active {
-    background-color: #e9ecef;
-    color: #000000;
-    border-left-color: #0066CC;
-    font-weight: 600;
+    background: #1e5fae;
+    color: #ffffff;
+    border-left-color: #1e5fae;
+    font-weight: 700;
+}
+
+.sb-sidenav-menu .nav-link.active:hover {
+    background: #1a5499;
+    color: #ffffff;
+    border-left-color: #1a5499;
+}
+
+.sb-sidenav-menu .nav-link svg {
+    flex: none;
+    margin-right: 12px;
+    width: 20px;
+    height: 20px;
+}
+
+.sb-sidenav-menu .nav-link:hover svg,
+.sb-sidenav-menu .nav-link:hover svg {
+    color: #1e5fae;
+}
+
+.sb-sidenav-menu .nav-link.active svg {
+    color: #ffffff;
 }
 
 .sb-sidenav-menu .nav-link i {

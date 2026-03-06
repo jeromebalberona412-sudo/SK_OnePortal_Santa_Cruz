@@ -36,6 +36,10 @@ function initializeHeader() {
 
     }
 
+    // Sync toggle state on load (desktop: X when sidebar open, burger when collapsed)
+
+    syncToggleState();
+
 
 
     // User menu dropdown functionality
@@ -82,123 +86,55 @@ function initializeHeader() {
 
 
 
-function toggleSidebar() {
-
-    const sidebar = document.getElementById('mainSidebar');
-
-    const sidebarToggle = document.getElementById('sidebarToggle');
-
-    const overlay = document.querySelector('.sidebar-overlay');
-
-
-
-    if (sidebar) {
-
-        sidebar.classList.toggle('open');
-
-        sidebarToggle.classList.toggle('active');
-
-        
-
-        // Handle overlay for mobile
-
-        if (window.innerWidth <= 768) {
-
-            if (!overlay) {
-
-                createOverlay();
-
-            } else {
-
-                overlay.classList.toggle('show');
-
-            }
-
-        }
-
-    }
-
-}
-
-
-
 function responsiveToggleSidebar() {
-
     const sidebar = document.getElementById('mainSidebar');
-
     const sidebarToggle = document.getElementById('sidebarToggle');
+    let overlay = document.querySelector('.sidebar-overlay');
 
-    const overlay = document.querySelector('.sidebar-overlay');
+    if (!sidebar || !sidebarToggle) return;
 
+    const isOpen = sidebar.classList.contains('open');
 
-
-    if (!sidebar) {
-
-        return;
-
-    }
-
-
-
-    // Mobile behavior: slide-in sidebar with dark overlay
+    // ===== MOBILE =====
     if (window.innerWidth <= 768) {
-
-        const isOpening = !sidebar.classList.contains('open');
-
-        sidebar.classList.toggle('open');
-
-        if (sidebarToggle) {
-
-            sidebarToggle.classList.toggle('active');
-
-        }
-
-        let mobileOverlay = overlay;
-
-        if (!mobileOverlay) {
-
-            mobileOverlay = createOverlay();
-
-        }
-
-        if (isOpening) {
-
-            mobileOverlay.classList.add('show');
-
+        if (isOpen) {
+            sidebar.classList.remove('open');
+            sidebarToggle.classList.remove('active');
+            if (overlay) overlay.classList.remove('show');
         } else {
-
-            mobileOverlay.classList.remove('show');
-
+            sidebar.classList.add('open');
+            sidebarToggle.classList.add('active');
+            if (!overlay) overlay = createOverlay();
+            overlay.classList.add('show');
         }
-
     } else {
-
-        // Desktop behavior: collapse / expand sidebar width
+        // ===== DESKTOP (per reference) =====
         sidebar.classList.toggle('collapsed');
 
-        if (sidebarToggle) {
-
-            sidebarToggle.classList.toggle('active');
-
-        }
-
         const mainContent = document.querySelector('.main-content');
-
         if (mainContent) {
-
             mainContent.classList.toggle('sidebar-collapsed');
-
         }
+        if (overlay) overlay.classList.remove('show');
 
-        // Ensure overlay is never shown on desktop
-        if (overlay) {
+        syncToggleState();
+    }
+}
 
-            overlay.classList.remove('show');
+function syncToggleState() {
+    const sidebar = document.getElementById('mainSidebar');
+    const toggle = document.getElementById('sidebarToggle');
+    if (!sidebar || !toggle) return;
 
-        }
-
+    if (window.innerWidth <= 768) {
+        return;
     }
 
+    if (!sidebar.classList.contains('collapsed')) {
+        toggle.classList.add('active');
+    } else {
+        toggle.classList.remove('active');
+    }
 }
 
 
@@ -433,28 +369,13 @@ function createOverlay() {
 
     overlay.className = 'sidebar-overlay';
 
-    overlay.addEventListener('click', function() {
-
+    overlay.addEventListener('click', function () {
         const sidebar = document.getElementById('mainSidebar');
-
         const sidebarToggle = document.getElementById('sidebarToggle');
 
-        
-
-        if (sidebar) {
-
-            sidebar.classList.remove('open');
-
-        }
-
-        if (sidebarToggle) {
-
-            sidebarToggle.classList.remove('active');
-
-        }
-
+        if (sidebar) sidebar.classList.remove('open');
+        if (sidebarToggle) sidebarToggle.classList.remove('active');
         overlay.classList.remove('show');
-
     });
 
     
@@ -625,25 +546,11 @@ function handleResize() {
 
     if (window.innerWidth > 768) {
 
-        // Desktop view - remove mobile overlay
+        if (overlay) overlay.classList.remove('show');
 
-        if (overlay) {
+        if (sidebar) sidebar.classList.remove('open');
 
-            overlay.classList.remove('show');
-
-        }
-
-        
-
-        // Reset sidebar state for desktop
-
-        if (sidebar) {
-
-            sidebar.classList.remove('open');
-
-            sidebarToggle.classList.remove('active');
-
-        }
+        syncToggleState();
 
     }
 
@@ -695,7 +602,7 @@ document.addEventListener('keydown', function(e) {
 
 window.HeaderFunctions = {
 
-    toggleSidebar: toggleSidebar,
+    toggleSidebar: responsiveToggleSidebar,
 
     toggleUserDropdown: toggleUserDropdown,
 

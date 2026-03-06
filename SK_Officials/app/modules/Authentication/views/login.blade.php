@@ -41,10 +41,11 @@
                                 <path d="M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z"/>
                             </svg>
                             <input type="password" id="password" name="password" class="has-left-icon has-right-icon" required placeholder="Enter your password">
-                            <button type="button" class="toggle-password" onclick="togglePassword()">
-                                <svg id="toggleIcon" class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="#1e293b">
-                                    <!-- Default: eye -->
-                                    <path id="togglePath" d="M572.52 241.4C518.9 135.5 417.41 64 288 64 158.6 64 57.1 135.5 3.48 241.4a48.35 48.35 0 000 45.2C57.1 376.5 158.6 448 288 448c129.41 0 230.9-71.5 284.52-161.4a48.35 48.35 0 000-45.2zM288 400c-97.05 0-177.19-48.7-223.37-128C110.81 192.7 190.95 144 288 144s177.19 48.7 223.37 128C465.19 351.3 385.05 400 288 400zm0-208a80 80 0 1080 80 80.09 80.09 0 00-80-80zm0 128a48 48 0 1148-48 48.05 48.05 0 01-48 48z"/>
+                            <button type="button" class="toggle-password eye-btn" onclick="togglePassword()">
+                                <svg id="eyeIcon" class="eye-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    <line id="slashLine" x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2"/>
                                 </svg>
                             </button>
                         </div>
@@ -69,21 +70,15 @@
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');
-            const path = document.getElementById('togglePath');
-            const icon = document.getElementById('toggleIcon');
-            
-            if (!passwordInput || !path || !icon) return;
+            const slashLine = document.getElementById('slashLine');
+            if (!passwordInput || !slashLine) return;
 
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                // Eye-slash icon path (same viewBox)
-                path.setAttribute('d', 'M320 192a64 64 0 0 0-64-64 63.12 63.12 0 0 0-25.37 5.29l84.08 84.08A63.12 63.12 0 0 0 320 192zm252.71 278.63-110.55-110.6C498.67 322.4 527.44 287 540.52 264.6a47.78 47.78 0 0 0 0-45.2C486.9 113.5 385.41 42 256 42A306.36 306.36 0 0 0 131.79 72.16L45.25 9.37A16 16 0 0 0 22.63 12l-20 25.3A16 16 0 0 0 5 60.92l86.66 69.53C57.61 173.87 32.82 209.08 19.48 235.4a47.78 47.78 0 0 0 0 45.2C73.1 386.5 174.59 458 304 458a317.5 317.5 0 0 0 147.27-37.46l83.46 67.51a16 16 0 0 0 22.62-2.66l20-25.3a16 16 0 0 0-4.64-22.46zM256 146a110.93 110.93 0 0 1 110.77 110.77 108.53 108.53 0 0 1-5.15 32.84l-45.42-36.74A63.83 63.83 0 0 0 320 192a64 64 0 0 0-80-62.17L213.7 113A111 111 0 0 1 256 146zM64.4 264.6C81.59 234.1 136.73 170 256 170q11.39 0 22.14 1.06l-39.62-32.07A261.39 261.39 0 0 0 256 154C161.44 154 96 209.29 64.4 247.4a16 16 0 0 0 0 18.2z');
-                icon.classList.add('is-visible');
+                slashLine.style.display = 'none';
             } else {
                 passwordInput.type = 'password';
-                // Back to eye icon
-                path.setAttribute('d', 'M572.52 241.4C518.9 135.5 417.41 64 288 64 158.6 64 57.1 135.5 3.48 241.4a48.35 48.35 0 000 45.2C57.1 376.5 158.6 448 288 448c129.41 0 230.9-71.5 284.52-161.4a48.35 48.35 0 000-45.2zM288 400c-97.05 0-177.19-48.7-223.37-128C110.81 192.7 190.95 144 288 144s177.19 48.7 223.37 128C465.19 351.3 385.05 400 288 400zm0-208a80 80 0 1080 80 80.09 80.09 0 00-80-80zm0 128a48 48 0 1148-48 48.05 48.05 0 01-48 48z');
-                icon.classList.remove('is-visible');
+                slashLine.style.display = 'block';
             }
         }
     </script>

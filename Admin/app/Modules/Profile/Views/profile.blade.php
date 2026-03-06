@@ -14,6 +14,13 @@
 
 <style>
 /* Enterprise Admin Profile Styles */
+:root {
+    --theme-deep-blue: #1e5fae;
+    --theme-deep-blue-hover: #1a5499;
+    --theme-blue-teal: #1f7a8c;
+    --theme-green: #2e8b57;
+}
+
 .admin-profile-container {
     max-width: 1200px;
     margin: 2rem auto;
@@ -21,7 +28,7 @@
 }
 
 .profile-header {
-    background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+    background: linear-gradient(135deg, var(--theme-deep-blue) 0%, var(--theme-blue-teal) 100%);
     color: white;
     padding: 2.5rem;
     border-radius: 16px 16px 0 0;
@@ -39,6 +46,18 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
     transform: translate(50px, -50px);
+}
+
+.profile-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 260px;
+    height: 260px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    transform: translate(-90px, 90px);
 }
 
 .profile-header-content {
@@ -73,7 +92,7 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    background: #10b981;
+    background: var(--theme-deep-blue);
     color: white;
     border: 3px solid white;
     border-radius: 50%;
@@ -87,7 +106,7 @@
 }
 
 .avatar-upload:hover {
-    background: #059669;
+    background: var(--theme-deep-blue-hover);
     transform: scale(1.1);
 }
 
@@ -335,50 +354,146 @@
     transform: translateX(28px);
 }
 
-/* Activity Timeline */
-.activity-timeline {
-    position: relative;
-    padding-left: 2rem;
+/* Activity & Logs tab removed */
+
+/* Discard / Two-factor modals (UI only) */
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10050;
+    padding: 16px;
+    backdrop-filter: blur(4px);
 }
 
-.activity-item {
-    position: relative;
-    padding-bottom: 1.5rem;
-    border-left: 2px solid #e5e7eb;
-    padding-left: 1.5rem;
+.confirm-modal {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
 }
 
-.activity-item:last-child {
-    border-left: none;
+.confirm-modal-header {
+    background: linear-gradient(135deg, var(--theme-deep-blue) 0%, var(--theme-blue-teal) 100%);
+    color: #ffffff;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.activity-item::before {
-    content: '';
-    position: absolute;
-    left: -6px;
-    top: 0;
-    width: 10px;
-    height: 10px;
-    background: white;
-    border: 2px solid #3b82f6;
-    border-radius: 50%;
+.confirm-modal-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
 }
 
-.activity-time {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-bottom: 0.25rem;
+.confirm-modal-close {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.activity-description {
-    color: #374151;
+.confirm-modal-body {
+    padding: 18px 20px;
+    color: #1f2937;
+}
+
+.confirm-modal-body p {
+    margin: 0;
+    color: #4b5563;
     line-height: 1.5;
 }
 
-.activity-ip {
-    font-size: 0.75rem;
-    color: #9ca3af;
-    font-family: monospace;
+.confirm-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px 20px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+.confirm-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirm-btn-secondary {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #1f2937;
+}
+
+.confirm-btn-primary {
+    background: var(--theme-deep-blue);
+    color: #ffffff;
+}
+
+.confirm-btn-primary:hover {
+    background: var(--theme-deep-blue-hover);
+}
+
+.twofactor-modal-body {
+    padding: 18px 20px;
+}
+
+.twofactor-hint {
+    margin: 0 0 14px;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.twofactor-code-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 12px 0 18px;
+}
+
+.twofactor-code-input {
+    width: 44px;
+    height: 54px;
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+    color: #1f2937;
+}
+
+.twofactor-code-input:focus {
+    outline: none;
+    border-color: var(--theme-deep-blue);
+    box-shadow: 0 0 0 4px rgba(30, 95, 174, 0.12);
+}
+
+@media (max-width: 480px) {
+    .twofactor-code-row { gap: 8px; }
+    .twofactor-code-input {
+        width: 40px;
+        height: 52px;
+        border-radius: 10px;
+        font-size: 18px;
+    }
 }
 
 /* Status Badges */
@@ -563,9 +678,6 @@
                 <button class="tab-button" onclick="switchTab('security')">
                     Security & Access
                 </button>
-                <button class="tab-button" onclick="switchTab('activity')">
-                    Activity & Logs
-                </button>
                 <button class="tab-button" onclick="switchTab('settings')">
                     Settings
                 </button>
@@ -621,61 +733,6 @@
                     </div>
                 </div>
 
-                <!-- Activity & Logs Tab -->
-                <div id="activity-tab" class="tab-pane">
-                    <div class="section-card">
-                        <h3>Recent Activity</h3>
-                        <div class="activity-timeline">
-                            <div class="activity-item">
-                                <div class="activity-time">March 03, 2026 4:29 AM</div>
-                                <div class="activity-description">Logged in to the system</div>
-                                <div class="activity-ip">IP: 127.0.0.1</div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-time">March 03, 2026 4:25 AM</div>
-                                <div class="activity-description">Updated SK Federation account settings</div>
-                                <div class="activity-ip">IP: 127.0.0.1</div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-time">March 03, 2026 3:45 PM</div>
-                                <div class="activity-description">Created new SK Officials account</div>
-                                <div class="activity-ip">IP: 127.0.0.1</div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-time">March 03, 2026 2:30 PM</div>
-                                <div class="activity-description">Modified account permissions</div>
-                                <div class="activity-ip">IP: 127.0.0.1</div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-time">March 03, 2026 1:15 PM</div>
-                                <div class="activity-description">Enabled Two-Factor Authentication</div>
-                                <div class="activity-ip">IP: 127.0.0.1</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="section-card">
-                        <h3>Login History</h3>
-                        <div class="activity-timeline">
-                            <div class="activity-item">
-                                <div class="activity-time">March 03, 2026 4:29 AM</div>
-                                <div class="activity-description">Successful login</div>
-                                <div class="activity-ip">IP: 127.0.0.1</div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-time">March 02, 2026 5:45 PM</div>
-                                <div class="activity-description">Successful login</div>
-                                <div class="activity-ip">IP: 127.0.0.1</div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-time">March 02, 2026 5:40 PM</div>
-                                <div class="activity-description">Failed login attempt - Invalid password</div>
-                                <div class="activity-ip">IP: 192.168.1.100</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Settings Tab -->
                 <div id="settings-tab" class="tab-pane">
                     <div class="section-card">
@@ -717,6 +774,54 @@
     </div>
 </div>
 
+<!-- Discard Changes Modal -->
+<div id="discardChangesModal" class="confirm-modal-overlay" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="discardTitle">
+        <div class="confirm-modal-header">
+            <h3 class="confirm-modal-title" id="discardTitle">Discard changes?</h3>
+            <button type="button" class="confirm-modal-close" onclick="closeDiscardModal()" aria-label="Close">
+                ✕
+            </button>
+        </div>
+        <div class="confirm-modal-body">
+            <p>Are you sure you want to discard your changes? Any edits you made will be lost.</p>
+        </div>
+        <div class="confirm-modal-actions">
+            <button type="button" class="confirm-btn confirm-btn-secondary" onclick="closeDiscardModal()">Keep editing</button>
+            <button type="button" class="confirm-btn confirm-btn-primary" onclick="confirmDiscardChanges()">Discard</button>
+        </div>
+    </div>
+</div>
+
+<!-- Two-Factor Modal (UI only, before saving) -->
+<div id="twoFactorModal" class="confirm-modal-overlay" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="twoFactorTitle">
+        <div class="confirm-modal-header">
+            <h3 class="confirm-modal-title" id="twoFactorTitle">Two-Factor Authentication</h3>
+            <button type="button" class="confirm-modal-close" onclick="closeTwoFactorModal()" aria-label="Close">
+                ✕
+            </button>
+        </div>
+        <div class="twofactor-modal-body">
+            <p class="twofactor-hint">Enter your 6-digit authentication code to continue.</p>
+            <form id="twoFactorInlineForm" onsubmit="return verifyTwoFactorAndSave(event)">
+                <div class="twofactor-code-row" aria-label="6 digit code">
+                    <input class="twofactor-code-input" inputmode="numeric" pattern="[0-9]" maxlength="1" required>
+                    <input class="twofactor-code-input" inputmode="numeric" pattern="[0-9]" maxlength="1" required>
+                    <input class="twofactor-code-input" inputmode="numeric" pattern="[0-9]" maxlength="1" required>
+                    <input class="twofactor-code-input" inputmode="numeric" pattern="[0-9]" maxlength="1" required>
+                    <input class="twofactor-code-input" inputmode="numeric" pattern="[0-9]" maxlength="1" required>
+                    <input class="twofactor-code-input" inputmode="numeric" pattern="[0-9]" maxlength="1" required>
+                </div>
+                <div class="confirm-modal-actions" style="padding: 0; background: transparent; border-top: none;">
+                    <button type="button" class="confirm-btn confirm-btn-secondary" onclick="closeTwoFactorModal()">Cancel</button>
+                    <button type="submit" class="confirm-btn confirm-btn-primary" id="twoFactorVerifyBtn">Verify & Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 // Check for saved dark mode preference
 document.addEventListener('DOMContentLoaded', function() {
@@ -727,16 +832,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // All fields are editable by default - no read-only setup needed
+
+    // Close modals on overlay click
+    const discardOverlay = document.getElementById('discardChangesModal');
+    if (discardOverlay) {
+        discardOverlay.addEventListener('click', (e) => {
+            if (e.target === discardOverlay) closeDiscardModal();
+        });
+    }
+
+    const twoFactorOverlay = document.getElementById('twoFactorModal');
+    if (twoFactorOverlay) {
+        twoFactorOverlay.addEventListener('click', (e) => {
+            if (e.target === twoFactorOverlay) closeTwoFactorModal();
+        });
+    }
+});
+
+// Escape key closes any open modal
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const discardOverlay = document.getElementById('discardChangesModal');
+    if (discardOverlay && discardOverlay.style.display === 'flex') {
+        closeDiscardModal();
+        return;
+    }
+    const twoFactorOverlay = document.getElementById('twoFactorModal');
+    if (twoFactorOverlay && twoFactorOverlay.style.display === 'flex') {
+        closeTwoFactorModal();
+    }
 });
 
 // Tab switching
-function switchTab(tabName) {
+function switchTab(tabName, e) {
     // Remove active class from all tabs and panes
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
     
     // Add active class to selected tab and pane
-    event.target.classList.add('active');
+    const evt = e || window.event;
+    if (evt && evt.target) {
+        evt.target.classList.add('active');
+    }
     document.getElementById(tabName + '-tab').classList.add('active');
 }
 
@@ -749,37 +886,94 @@ function enableEdit() {
 
 // Cancel edit
 function cancelEdit() {
-    if (confirm('Are you sure you want to discard your changes?')) {
-        // Reset form to original values
-        document.getElementById('fullName').value = 'Admin Three';
-        document.getElementById('email').value = 'admin3@oneportal.local';
-        document.getElementById('phone').value = '';
-        document.getElementById('password').value = '';
-        document.getElementById('confirmPassword').value = '';
-        document.getElementById('language').value = 'en';
-        
-        document.getElementById('editButton').style.display = 'inline-flex';
-        document.getElementById('saveButton').style.display = 'none';
-        document.getElementById('cancelButton').style.display = 'none';
-        showToast('Changes discarded');
-    }
+    openDiscardModal();
 }
 
 // Save profile
 function saveProfile() {
-    const button = event.target;
-    button.classList.add('loading');
-    button.disabled = true;
-    
-    // Simulate API call
+    openTwoFactorModal();
+}
+
+function openDiscardModal() {
+    const modal = document.getElementById('discardChangesModal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDiscardModal() {
+    const modal = document.getElementById('discardChangesModal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+function confirmDiscardChanges() {
+    // Reset form to original values (UI-only placeholders)
+    document.getElementById('fullName').value = 'Admin Three';
+    document.getElementById('email').value = 'admin3@oneportal.local';
+    document.getElementById('phone').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('confirmPassword').value = '';
+    document.getElementById('language').value = 'en';
+
+    document.getElementById('editButton').style.display = 'inline-flex';
+    document.getElementById('saveButton').style.display = 'none';
+    document.getElementById('cancelButton').style.display = 'none';
+    closeDiscardModal();
+    showToast('Changes discarded');
+}
+
+function openTwoFactorModal() {
+    const modal = document.getElementById('twoFactorModal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    // Clear previous code
+    const inputs = modal.querySelectorAll('.twofactor-code-input');
+    inputs.forEach(i => (i.value = ''));
+    if (inputs[0]) inputs[0].focus();
+
+    // Auto-advance UX
+    inputs.forEach((input, idx) => {
+        input.oninput = () => {
+            input.value = (input.value || '').replace(/[^0-9]/g, '').slice(0, 1);
+            if (input.value && inputs[idx + 1]) inputs[idx + 1].focus();
+        };
+        input.onkeydown = (ev) => {
+            if (ev.key === 'Backspace' && !input.value && inputs[idx - 1]) inputs[idx - 1].focus();
+        };
+    });
+}
+
+function closeTwoFactorModal() {
+    const modal = document.getElementById('twoFactorModal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+function verifyTwoFactorAndSave(e) {
+    e.preventDefault();
+
+    const saveBtn = document.getElementById('saveButton');
+    saveBtn.classList.add('loading');
+    saveBtn.disabled = true;
+
+    // UI-only: simulate verification + save
     setTimeout(() => {
-        button.classList.remove('loading');
-        button.disabled = false;
+        saveBtn.classList.remove('loading');
+        saveBtn.disabled = false;
+        closeTwoFactorModal();
+
         document.getElementById('editButton').style.display = 'inline-flex';
         document.getElementById('saveButton').style.display = 'none';
         document.getElementById('cancelButton').style.display = 'none';
         showModal('Profile updated successfully!', 'success');
-    }, 2000);
+    }, 1200);
+
+    return false;
 }
 
 // Toggle dark mode
@@ -1019,17 +1213,7 @@ style.textContent = `
         color: #60a5fa;
     }
     
-    body.dark-mode .activity-time {
-        color: #9ca3af;
-    }
-    
-    body.dark-mode .activity-description {
-        color: #e5e7eb;
-    }
-    
-    body.dark-mode .activity-ip {
-        color: #6b7280;
-    }
+    /* removed: activity & logs dark mode styles */
     
     body.dark-mode .toggle-slider {
         background-color: #6b7280;

@@ -173,13 +173,16 @@ function closeDetailsModal() {
 }
 
 // Close modal when clicking outside
-document.getElementById('detailsModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        const modal = document.getElementById('detailsModal');
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-});
+const detailsModalEl = document.getElementById('detailsModal');
+if (detailsModalEl) {
+    detailsModalEl.addEventListener('click', function(e) {
+        if (e.target === this) {
+            const modal = document.getElementById('detailsModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+}
 
 // Close modal with Escape key
 document.addEventListener('keydown', function(e) {
