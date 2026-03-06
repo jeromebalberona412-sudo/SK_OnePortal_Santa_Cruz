@@ -9,6 +9,7 @@
     <title>Password Reset Successful</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .check-wrap {
             width: 120px;
@@ -257,10 +258,23 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
+        // Show loading on back to login button click
+        document.querySelector('.back-to-login-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 500);
+        });
+
         // Auto-redirect to login after 5 seconds
         setTimeout(function() {
-            window.location.href = "{{ route('login', [], false) }}";
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = "{{ route('login', [], false) }}";
+            }, 500);
         }, 5000);
     </script>
 </body>

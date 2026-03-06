@@ -243,6 +243,11 @@ function closeForgotPasswordModal() {
 
 // Proceed to forgot password - logout and redirect
 async function proceedToForgotPassword() {
+    // Show loading screen
+    if (typeof LoadingScreen !== 'undefined') {
+        LoadingScreen.show('Redirecting', 'Logging out and redirecting to password reset...');
+    }
+    
     try {
         // Perform logout via fetch
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');

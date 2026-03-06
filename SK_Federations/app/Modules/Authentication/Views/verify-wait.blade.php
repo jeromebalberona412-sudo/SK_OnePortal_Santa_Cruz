@@ -6,6 +6,7 @@
     <title>Waiting for Email Verification</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .countdown-text {
             font-size: 14px;
@@ -329,6 +330,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
         (() => {
             const statusUrl = "{{ route('skfed.verification.wait.status', [], false) }}";
@@ -434,11 +436,14 @@
                         const successModal = document.getElementById('success-modal');
                         successModal.classList.add('show');
                         
-                        // Wait 3 seconds, then fade out and redirect
+                        // Wait 3 seconds, then show loading screen and redirect
                         setTimeout(() => {
                             successModal.classList.add('fade-out');
                             setTimeout(() => {
-                                window.location.replace(payload.redirect);
+                                LoadingScreen.show('Redirecting', 'Taking you to dashboard...');
+                                setTimeout(() => {
+                                    window.location.replace(payload.redirect);
+                                }, 500);
                             }, 300);
                         }, 3000);
                         return;
@@ -473,6 +478,15 @@
 
             // Update resend button every second
             setInterval(updateResendButton, 1000);
+
+            // Show loading on back to login
+            document.querySelector('.form-footer a').addEventListener('click', function(e) {
+                e.preventDefault();
+                LoadingScreen.show('Redirecting', 'Taking you to login...');
+                setTimeout(() => {
+                    window.location.href = this.href;
+                }, 300);
+            });
         })();
     </script>
 </body>

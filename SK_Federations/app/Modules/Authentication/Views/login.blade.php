@@ -9,6 +9,7 @@
     <title>SK Federations Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 
 <style>
@@ -42,30 +43,30 @@
             box-shadow: none !important;
         }
 
-        /* Focus state - blue border (not green) */
-        input[type="email"]:focus,
-        input[type="password"]:focus,
-        input[type="text"]:focus {
+        /* Focus state - blue border (not green) - LOWER PRIORITY THAN ERROR */
+        input[type="email"]:not(.is-invalid):focus,
+        input[type="password"]:not(.is-invalid):focus,
+        input[type="text"]:not(.is-invalid):focus {
             border-color: #213F99 !important;
             box-shadow: 0 0 0 4px rgba(33, 63, 153, 0.1) !important;
             background-image: none !important;
             outline: none !important;
         }
 
-        input[type="email"]:valid:focus,
-        input[type="password"]:valid:focus,
-        input[type="text"]:valid:focus {
+        input[type="email"]:valid:not(.is-invalid):focus,
+        input[type="password"]:valid:not(.is-invalid):focus,
+        input[type="text"]:valid:not(.is-invalid):focus {
             border-color: #213F99 !important;
             box-shadow: 0 0 0 4px rgba(33, 63, 153, 0.1) !important;
             background-image: none !important;
         }
 
         /* Remove browser autofill green styling */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover,
-        input:-webkit-autofill:focus,
-        input:-webkit-autofill:active,
-        input:-webkit-autofill:valid {
+        input:-webkit-autofill:not(.is-invalid),
+        input:-webkit-autofill:hover:not(.is-invalid),
+        input:-webkit-autofill:focus:not(.is-invalid),
+        input:-webkit-autofill:active:not(.is-invalid),
+        input:-webkit-autofill:valid:not(.is-invalid) {
             -webkit-box-shadow: 0 0 0 30px white inset !important;
             -webkit-text-fill-color: #1e293b !important;
             border: 2px solid #e2e8f0 !important;
@@ -73,16 +74,18 @@
             background-image: none !important;
         }
 
-        input:-webkit-autofill:focus {
+        input:-webkit-autofill:focus:not(.is-invalid) {
             border-color: #213F99 !important;
             -webkit-box-shadow: 0 0 0 4px rgba(33, 63, 153, 0.1), 0 0 0 30px white inset !important;
         }
 
-        /* Error state - red border (highest priority) */
+        /* Error state - red border (HIGHEST PRIORITY) */
         input.is-invalid,
         input.is-invalid:hover,
         input.is-invalid:active,
+        input.is-invalid:focus,
         input.is-invalid:valid,
+        input.is-invalid:invalid,
         input.is-invalid:-webkit-autofill,
         input.is-invalid:-webkit-autofill:hover,
         input.is-invalid:-webkit-autofill:focus,
@@ -90,13 +93,15 @@
             border-color: #dc3545 !important;
             background-image: none !important;
             -webkit-box-shadow: 0 0 0 30px white inset !important;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
         }
 
-        input.is-invalid:focus,
-        input.is-invalid:-webkit-autofill:focus {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1), 0 0 0 30px white inset !important;
-            -webkit-box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1), 0 0 0 30px white inset !important;
+        /* Error message styling */
+        .invalid-feedback {
+            display: block !important;
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 8px;
         }
 
         /* Disable browser form validation UI completely */
@@ -187,22 +192,6 @@
                     <p>Sign in to SK Federation</p>
                 </div>
 
-                @if (session('status'))
-                    <div class="alert alert-info" role="alert">
-                        {{ session('status') }}
-                    </div>
-                @endif
-
-                @if (session()->has('sk_fed_takeover_pending'))
-                    <div class="alert alert-warning" role="alert">
-                        <div>Account currently active on another device. Verify ownership to continue.</div>
-                        <form method="POST" action="{{ route('skfed.takeover.send', [], false) }}" class="mt-2">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-dark">Send Email Verification Code</button>
-                        </form>
-                    </div>
-                @endif
-
                 <form method="POST" action="{{ route('login', [], false) }}" class="login-form" novalidate>
                     @csrf
                     <div class="form-group">
@@ -275,7 +264,131 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/authentication/js/script.js') }}"></script>
+    <script>
+        // Form validation
+        const loginForm = document.querySelector('.login-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+
+        // Email validation function
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Show error function
+        function showError(input, message) {
+            input.classList.add('is-invalid');
+            
+            // Determine where to insert error message
+            let insertTarget;
+            if (input.id === 'password') {
+                // For password, insert after the password-input-container
+                insertTarget = input.closest('.password-input-container').parentElement;
+            } else {
+                // For email, insert after the input
+                insertTarget = input.parentElement;
+            }
+            
+            // Remove existing client-side error message if any
+            const existingError = insertTarget.querySelector('.invalid-feedback:not([data-server-error])');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Add new error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback d-block';
+            errorDiv.textContent = message;
+            insertTarget.appendChild(errorDiv);
+        }
+
+        // Clear error function
+        function clearError(input) {
+            input.classList.remove('is-invalid');
+            
+            // Determine where to find error message
+            let searchTarget;
+            if (input.id === 'password') {
+                searchTarget = input.closest('.password-input-container').parentElement;
+            } else {
+                searchTarget = input.parentElement;
+            }
+            
+            // Only remove client-side errors, keep server-side errors
+            const errorDiv = searchTarget.querySelector('.invalid-feedback:not([data-server-error])');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+
+        // Email validation on input
+        emailInput.addEventListener('input', function() {
+            clearError(this);
+        });
+
+        // Password validation on input
+        passwordInput.addEventListener('input', function() {
+            clearError(this);
+        });
+
+        // Form submit validation
+        loginForm.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Clear all previous client-side errors
+            clearError(emailInput);
+            clearError(passwordInput);
+
+            // Validate email
+            if (!emailInput.value.trim()) {
+                showError(emailInput, 'Email address is required.');
+                isValid = false;
+            } else if (!validateEmail(emailInput.value.trim())) {
+                showError(emailInput, 'Please enter a valid email address.');
+                isValid = false;
+            }
+
+            // Validate password
+            if (!passwordInput.value) {
+                showError(passwordInput, 'Password is required.');
+                isValid = false;
+            } else if (passwordInput.value.length < 8) {
+                showError(passwordInput, 'Password must be at least 8 characters long.');
+                isValid = false;
+            } else if (passwordInput.value.length > 64) {
+                showError(passwordInput, 'Password must not exceed 64 characters.');
+                isValid = false;
+            }
+
+            // Prevent form submission if validation fails
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Show loading screen only if validation passes
+            LoadingScreen.show('Signing In', 'Verifying your credentials...');
+        });
+
+        // Show loading on forgot password click
+        document.querySelector('.forgot-password').addEventListener('click', function(e) {
+            e.preventDefault();
+            LoadingScreen.show('Loading', 'Redirecting to password reset...');
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 300);
+        });
+
+        // Mark server-side errors so they don't get removed on input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.invalid-feedback').forEach(function(errorDiv) {
+                errorDiv.setAttribute('data-server-error', 'true');
+            });
+        });
+    </script>
 </body>
 @if (session('verification_wait') && session()->has('sk_fed_email_verification_pending'))
     <script>

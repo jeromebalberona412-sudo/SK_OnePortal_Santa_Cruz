@@ -180,7 +180,7 @@ class AuthController extends Controller
             $user->sendEmailVerificationNotification();
         }
 
-        return back()->with('status', 'If your account is eligible, a verification email has been sent.');
+        return back();
     }
 
     public function showVerificationSuccess(): View

@@ -9,6 +9,27 @@
         </div>
         <form id="editProfileForm">
             <div class="modal-body">
+                <!-- Profile Picture Upload Section -->
+                <div class="profile-picture-upload-section">
+                    <div class="upload-avatar-container">
+                        <img src="{{ $avatar }}" alt="Profile Picture" class="upload-avatar-preview" id="avatarPreview">
+                        <div class="upload-avatar-overlay">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                    </div>
+                    <div class="upload-avatar-info">
+                        <h4>Profile Picture</h4>
+                        <p>Click the camera icon to upload a new photo</p>
+                        <input type="file" id="profilePictureInput" accept="image/*" style="display: none;" disabled>
+                        <button type="button" class="btn-upload-avatar" onclick="document.getElementById('profilePictureInput').click()">
+                            <i class="fas fa-upload"></i>
+                            Choose Photo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-divider"></div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="edit_last_name">Last Name <span style="color: #d0242b;">*</span></label>

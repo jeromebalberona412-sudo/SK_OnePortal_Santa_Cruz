@@ -9,6 +9,7 @@
     <title>Create New Password</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         /* Remove browser validation styling */
         input[type="password"] {
@@ -150,6 +151,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
         function togglePasswordField(inputId, eyeIconId, eyeOffIconId) {
             const input = document.getElementById(inputId);
@@ -205,8 +207,10 @@
             }
 
             if (isValid) {
-                // Prototype: Redirect to success page
-                window.location.href = "{{ url('/password-reset-success') }}";
+                LoadingScreen.show('Resetting Password', 'Please wait...');
+                setTimeout(() => {
+                    window.location.href = "{{ url('/password-reset-success') }}";
+                }, 1000);
             }
         });
 
@@ -219,6 +223,15 @@
         document.getElementById('confirm-password').addEventListener('input', function() {
             this.classList.remove('is-invalid');
             this.parentElement.nextElementSibling.style.display = 'none';
+        });
+
+        // Show loading on back to login
+        document.querySelector('.form-footer a').addEventListener('click', function(e) {
+            e.preventDefault();
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 300);
         });
     </script>
 </body>

@@ -9,6 +9,7 @@
     <title>Reset Your Password</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         /* Remove browser validation styling */
         input[type="email"] {
@@ -103,6 +104,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
         document.getElementById('forgot-password-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -131,15 +133,29 @@
                 return;
             }
 
+            // Show loading
+            LoadingScreen.show('Sending Reset Link', 'Please wait...');
+
             // Prototype: If validation passes, redirect to reset password page
             // Note: In real implementation, server would check if email exists
-            window.location.href = "{{ url('/reset-password') }}";
+            setTimeout(() => {
+                window.location.href = "{{ url('/reset-password') }}";
+            }, 1000);
         });
 
         // Remove error on input
         document.getElementById('email').addEventListener('input', function() {
             this.classList.remove('is-invalid');
             this.nextElementSibling.style.display = 'none';
+        });
+
+        // Show loading on back to login
+        document.querySelector('.form-footer a').addEventListener('click', function(e) {
+            e.preventDefault();
+            LoadingScreen.show('Loading', 'Redirecting to login...');
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 300);
         });
     </script>
 </body>

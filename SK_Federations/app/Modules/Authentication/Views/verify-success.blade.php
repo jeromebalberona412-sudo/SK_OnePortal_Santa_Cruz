@@ -218,7 +218,9 @@
     </div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
         // Show modal immediately
         window.addEventListener('DOMContentLoaded', function() {
@@ -226,13 +228,16 @@
             modal.style.display = 'flex';
             modal.classList.add('show');
             
-            // Hide modal and redirect after 3 seconds
+            // Hide modal and show loading screen before redirect
             setTimeout(function() {
                 modal.classList.remove('show');
                 modal.classList.add('hide');
                 
                 setTimeout(function() {
-                    window.location.href = "{{ route('dashboard', [], false) }}";
+                    LoadingScreen.show('Redirecting', 'Taking you to dashboard...');
+                    setTimeout(function() {
+                        window.location.href = "{{ route('dashboard', [], false) }}";
+                    }, 500);
                 }, 300);
             }, 3000);
         });

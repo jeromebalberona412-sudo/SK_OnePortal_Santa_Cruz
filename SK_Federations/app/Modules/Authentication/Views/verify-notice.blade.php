@@ -6,6 +6,7 @@
     <title>Email Verification Required</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
     <div class="login-container">
@@ -54,6 +55,22 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/authentication/js/script.js') }}"></script>
+    <script>
+        // Show loading on form submit
+        document.querySelector('form').addEventListener('submit', function(e) {
+            LoadingScreen.show('Sending Verification', 'Please wait...');
+        });
+
+        // Show loading on back to login
+        document.querySelector('.form-footer a').addEventListener('click', function(e) {
+            e.preventDefault();
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 300);
+        });
+    </script>
 </body>
 </html>

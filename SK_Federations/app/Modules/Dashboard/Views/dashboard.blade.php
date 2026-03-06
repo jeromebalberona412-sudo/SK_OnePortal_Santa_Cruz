@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
     <script>
@@ -82,7 +83,20 @@
 
     @include('dashboard::logout-modal')
 
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
+    <script>
+        // Show loading when navigating to profile (both sidebar and navbar)
+        document.querySelectorAll('a[href="{{ route('profile') }}"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                LoadingScreen.show('Loading Profile', 'Please wait...');
+                setTimeout(() => {
+                    window.location.href = this.href;
+                }, 300);
+            });
+        });
+    </script>
     <style>
         /* Modal Base Styles */
         .modal {

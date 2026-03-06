@@ -21,5 +21,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, $request) {
+            $errorMessage = $e->getMessage();
+            
+            // Check if it's a connection error
+            if (
+                str_contains($errorMessage, 'could not translate host name') ||
+                str_contains($errorMessage, 'Connection refused') ||
+                str_contains($errorMessage, 'Connection timed out') ||
+                str_contains($errorMessage, 'No route to host') ||
+                str_contains($errorMessage, 'Network is unreachable') ||
+                str_contains($errorMessage, 'SQLSTATE[08006]') ||
+                str_contains($errorMessage, 'SQLSTATE[HY000]')
+            ) {
+                return response()->view('errors.network-error', [], 503);
+            }
+        });
     })->create();
