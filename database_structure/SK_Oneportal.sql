@@ -20,6 +20,14 @@ create table public.users (
   lockout_until timestamp without time zone null,
   last_login_at timestamp without time zone null,
   last_login_ip character varying(45) null,
+  active_session_id character varying(255) null,
+  last_seen timestamp without time zone null,
+  active_device character varying(255) null,
+  last_ip character varying(45) null,
+  otp_code character varying(255) null,
+  otp_expires_at timestamp without time zone null,
+  otp_attempts smallint not null default 0,
+  otp_last_sent_at timestamp without time zone null,
   tenant_id bigint null,
   barangay_id bigint null,
   constraint users_pkey primary key (id),
@@ -112,6 +120,9 @@ create table public.official_profiles (
   last_name character varying(255) not null,
   middle_name character varying(100) null,
   suffix character varying(20) null,
+  date_of_birth date null,
+  age smallint null,
+  contact_number character varying(20) null,
   position character varying(255) not null,
   municipality character varying(255) not null default 'Santa Cruz'::character varying,
   province character varying(255) not null default 'Laguna'::character varying,
@@ -225,3 +236,84 @@ create table public.cache_locks (
 ) TABLESPACE pg_default;
 
 create index IF not exists cache_locks_expiration_index on public.cache_locks using btree (expiration) TABLESPACE pg_default;
+
+create table public.sk_fed_trusted_devices (
+  id bigserial not null,
+  user_id bigint not null,
+  fingerprint character varying(128) not null,
+  ip_address character varying(45) null,
+  user_agent text null,
+  last_used_at timestamp without time zone null,
+  expires_at timestamp without time zone null,
+  metadata json null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint sk_fed_trusted_devices_pkey primary key (id),
+  constraint sk_fed_trusted_devices_user_id_foreign foreign KEY (user_id) references users (id) on delete CASCADE,
+  constraint sk_fed_trusted_device_unique unique (user_id, fingerprint)
+) TABLESPACE pg_default;
+
+create index IF not exists sk_fed_trusted_device_exp_idx on public.sk_fed_trusted_devices using btree (user_id, expires_at) TABLESPACE pg_default;
+
+create table public.sk_fed_login_attempts (
+  id bigserial not null,
+  user_id bigint null,
+  email character varying(255) not null,
+  ip_address character varying(45) not null,
+  successful boolean not null default false,
+  user_agent text null,
+  attempted_at timestamp without time zone not null default CURRENT_TIMESTAMP,
+  metadata json null,
+  constraint sk_fed_login_attempts_pkey primary key (id),
+  constraint sk_fed_login_attempts_user_id_foreign foreign KEY (user_id) references users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists sk_fed_login_attempts_email_index on public.sk_fed_login_attempts using btree (email) TABLESPACE pg_default;
+create index IF not exists sk_fed_login_attempts_ip_address_index on public.sk_fed_login_attempts using btree (ip_address) TABLESPACE pg_default;
+create index IF not exists sk_fed_login_attempt_email_idx on public.sk_fed_login_attempts using btree (email, successful, attempted_at) TABLESPACE pg_default;
+create index IF not exists sk_fed_login_attempt_ip_idx on public.sk_fed_login_attempts using btree (ip_address, successful, attempted_at) TABLESPACE pg_default;
+
+create table public.sk_fed_auth_audit_logs (
+  id bigserial not null,
+  user_id bigint null,
+  event character varying(120) not null,
+  ip_address character varying(45) null,
+  user_agent text null,
+  metadata json null,
+  created_at timestamp without time zone not null default CURRENT_TIMESTAMP,
+  constraint sk_fed_auth_audit_logs_pkey primary key (id),
+  constraint sk_fed_auth_audit_logs_user_id_foreign foreign KEY (user_id) references users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists sk_fed_auth_audit_event_idx on public.sk_fed_auth_audit_logs using btree (event, created_at) TABLESPACE pg_default;
+create index IF not exists sk_fed_auth_audit_user_idx on public.sk_fed_auth_audit_logs using btree (user_id, created_at) TABLESPACE pg_default;
+
+create table public.sk_fed_feature_flags (
+  id bigserial not null,
+  flag_key character varying(190) not null,
+  enabled boolean not null default false,
+  description character varying(255) null,
+  rollout_percentage smallint null,
+  metadata json null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint sk_fed_feature_flags_pkey primary key (id),
+  constraint sk_fed_feature_flags_flag_key_unique unique (flag_key)
+) TABLESPACE pg_default;
+
+create table public.sk_fed_email_verified_devices (
+  id bigserial not null,
+  user_id bigint not null,
+  fingerprint character varying(128) not null,
+  verified_at timestamp without time zone null,
+  ip_address character varying(45) null,
+  user_agent text null,
+  metadata json null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint sk_fed_email_verified_devices_pkey primary key (id),
+  constraint sk_fed_email_verified_devices_user_id_unique unique (user_id),
+  constraint sk_fed_email_verified_devices_user_id_foreign foreign KEY (user_id) references users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists sk_fed_verified_device_verified_at_idx on public.sk_fed_email_verified_devices using btree (verified_at) TABLESPACE pg_default;

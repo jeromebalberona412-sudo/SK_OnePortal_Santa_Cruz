@@ -1,0 +1,158 @@
+SK_ONEPORTAL: Main Context (Current + Future)
+
+PROJECT OVERVIEW
+- Product: SK_ONEPORTAL (Web App ecosystem for Santa Cruz SK governance)
+- Architecture: Modular Monolith, split into role-based Laravel apps
+- Collaboration: Trunk-Based Development; each app keeps its own Laravel/composer setup
+- Data model: Multi-tenant (tenant-scoped users and role data)
+
+TARGET USER SCALE
+- Admin: 4 users
+- SK-Federations: 12 users
+- SK-Officials: 12 officials x 26 barangays = 312 users
+- Kabataan: age 13-30, 10k+ expected users across barangays
+
+TECH STACK
+- Backend: Laravel
+- Frontend: Blade, HTML, CSS, JS
+- Database: Supabase (centralized)
+- Cache: Redis
+
+SYSTEM VISION
+SK_ONEPORTAL combines multiple systems in one platform:
+1) Social network
+2) Document/reporting system
+3) Identity registry
+4) Governance workflow system
+5) Notification + engagement layer
+6) Chatbot assistant
+
+CURRENT IMPLEMENTED FEATURES (AS OF NOW)
+
+Admin (Implemented)
+- Authentication: custom login/logout, remember-me, 2FA challenge/setup/recovery flows
+- Access control: role-based route protection with auth + 2FA middleware
+- Dashboard: authenticated dashboard page
+- Profile: authenticated profile page
+- Account management for SK-Federations and SK-Officials:
+	- List by role with search, barangay filter, and status filter
+	- Create account + assign role + create official profile + assign term + barangay
+	- Update account/profile/term details
+	- Deactivate account (soft delete)
+	- Reset password (forces change on next login)
+	- Extend official term
+- Audit logging: login/logout and account governance actions
+- Tenant bootstrap support: resolves tenant context and seeds barangays when missing
+
+SK-Federations (Implemented)
+- Authentication entry and login UI (Fortify handles login post)
+- Security controls:
+	- Role + tenant scope enforcement
+	- Email verification wait/notice/success flow with resend and signed links
+	- Re-verification for changed/new device fingerprints
+	- Single-session enforcement with heartbeat
+	- Session takeover flow via OTP send/verify
+	- Login attempts, lockout handling, trusted-device registration,
+		suspicious-login detection, auth audit logs
+- Dashboard: protected dashboard page
+- Profile: protected profile view page
+- Profile update/password endpoints exist but are currently disabled
+
+SK-Officials (Current Status)
+- Base Laravel scaffold only
+- Default welcome route present
+- No role-specific module routes/features implemented yet
+
+Kabataan (Current Status)
+- Base Laravel scaffold only
+- Default welcome route present
+- No role-specific module routes/features implemented yet
+
+FUTURE FEATURES BY ROLE (PRODUCT ROADMAP)
+
+Admin Web App (Planned)
+- Login: email/password, forgot password
+- Dashboard metrics: total users, role counts, platform health
+- Account governance: add/edit/manage SK-Fed and SK-Officials accounts
+- Audit log center for governance actions
+- System maintenance panel (feature flags, config, scheduled jobs)
+
+SK-Federations Web App (Planned)
+- Login: email/password, forgot password, email verification
+- Dashboard:
+	- Total Kabataan list
+	- Total programs per year
+	- Total Kabataan users
+- Profile management
+- Social feed:
+	- SK barangay posts across barangays
+	- Ongoing programs, participants, budget amount, uploaded annual budget
+- Barangay requests/compliance:
+	- SK barangay complaints
+	- SK barangay requests
+- SK-Fed post and settings modules
+
+SK-Officials Web App (Planned)
+- Login: admin-provided credentials, forgot password,
+	one-time email verification per device change
+- Shared barangay dashboard for 12 officials:
+	- Total Kabataan in barangay
+	- Total programs per year
+	- Total accomplishments
+	- Total barangay users
+	- Upcoming programs list
+	- Calendar
+- Social feed and real-time posting
+- Program posting sectors:
+	- Education, Agriculture, Health, Sports, GAD,
+		Anti-Drugs, Disaster, Others
+- Common posting flow:
+	- Title, description, image upload
+	- Printable reporting button
+	- Download as DOCX/PDF with pre-configured report format
+- Education special case:
+	- Scholarship flow with and without assessment
+
+Kabataan Web App (Planned)
+- Registration:
+	- First/last/middle/suffix
+	- DOB, address, contact number, email
+	- Password + confirm password
+	- Email verification
+	- One government valid ID upload
+- Login: email/password, forgot password,
+	one-time email verification per device change
+- Dashboard:
+	- Social feed
+	- Barangay announcements from SK officials
+	- View-only SK posts from other barangays
+- Programs view:
+	- Education, Agriculture, Health, Anti-Drugs,
+		Disaster, Sports, GAD, Others
+- Profile, activity history, built-in chatbot
+
+CROSS-CUTTING COMPLEXITY & RISKS
+- Main project risk is scope/complexity, not core technology
+- Hidden complexity areas:
+	- Notifications across channels: email, realtime, in-app
+	- Multi-role authorization and tenant boundaries
+	- Large-scale file/document management
+	- Reporting automation for LGU workflows
+
+FILE STORAGE STRATEGY (DECISION)
+- Do not store uploaded files on Laravel server disk
+- Store IDs, images, reports, PDFs, DOCX in external object storage:
+	- Preferred: Supabase Storage
+	- Alternative: Cloudinary or S3
+
+REPORTING ENGINE (HIGH PRIORITY)
+- Build this early; this can be the strongest differentiator
+- Required capabilities:
+	- DOCX template engine
+	- Auto-generated accomplishment reports
+	- Yearly analytics and printable compliance outputs
+
+EARLY FOUNDATION RECOMMENDATIONS
+- Create Notification module early
+- Standardize report templates and export pipeline early
+- Define role/tenant permission matrix before social + posting rollout
