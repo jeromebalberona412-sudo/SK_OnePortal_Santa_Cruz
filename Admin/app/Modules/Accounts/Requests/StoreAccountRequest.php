@@ -30,7 +30,7 @@ class StoreAccountRequest extends FormRequest
             'age' => [$requiresDemographics ? 'required' : 'nullable', 'integer', 'min:0', 'max:150'],
             'contact_number' => [$requiresDemographics ? 'required' : 'nullable', 'string', 'max:20'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'confirmed'],
             'role' => ['required', Rule::in([
                 User::ROLE_SK_FED,
                 User::ROLE_SK_OFFICIAL,

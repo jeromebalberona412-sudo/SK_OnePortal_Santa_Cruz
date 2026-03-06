@@ -113,6 +113,21 @@
     color: #ffffff !important;
 }
 
+.modal-header.modal-header-yellow {
+    background: var(--accent-yellow);
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+.modal-header.modal-header-yellow .modal-title,
+.modal-header.modal-header-yellow .modal-close-btn,
+.modal-header.modal-header-yellow .modal-fullscreen-btn {
+    color: #000000 !important;
+}
+.modal-header.modal-header-yellow .modal-close-btn:hover,
+.modal-header.modal-header-yellow .modal-fullscreen-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #000000 !important;
+}
+
 .modal-controls {
     display: flex;
     gap: 0.5rem;
@@ -349,18 +364,15 @@
     margin-bottom: 0;
 }
 
-/* Themed form sections - light background with theme accent */
+/* Themed form sections - light background only */
 .modal-content.modal-themed .sk-fed-form .form-section:nth-child(3n+1) {
     background: rgba(30, 95, 174, 0.06);
-    border-left: 4px solid var(--theme-deep-blue);
 }
 .modal-content.modal-themed .sk-fed-form .form-section:nth-child(3n+2) {
     background: rgba(31, 122, 140, 0.06);
-    border-left: 4px solid var(--theme-blue-teal);
 }
 .modal-content.modal-themed .sk-fed-form .form-section:nth-child(3n+3) {
     background: rgba(46, 139, 87, 0.06);
-    border-left: 4px solid var(--theme-green);
 }
 
 .sk-fed-form .section-title {

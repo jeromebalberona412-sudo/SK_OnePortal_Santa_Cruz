@@ -2,7 +2,7 @@
 @vite(['app/Modules/Accounts/assets/css/edit_sk_officials.css'])
 <div id="editSkOfficialsModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-large modal-themed">
-        <div class="modal-header modal-header-deep-blue">
+        <div class="modal-header modal-header-yellow">
             <h3 class="modal-title">Edit SK Officials Account</h3>
             <div class="modal-controls">
                 <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenEditSkOfficialsModal()" title="Fullscreen">

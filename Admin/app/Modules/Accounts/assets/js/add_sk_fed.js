@@ -138,9 +138,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorMessage = 'Contact number must not exceed 20 digits';
             }
         } else if (input.id === 'password' && value) {
-            if (value.length < 8) {
+            // Password validation - no minimum length requirement
+            if (value.length === 0) {
                 isValid = false;
-                errorMessage = 'Password must be at least 8 characters';
+                errorMessage = 'Password is required';
             }
         }
 

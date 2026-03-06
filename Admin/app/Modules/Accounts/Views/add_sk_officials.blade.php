@@ -290,7 +290,7 @@
 <!-- SK Officials Success Modal -->
 <div id="skOfficialsSuccessModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-themed">
-        <div class="modal-header modal-header-deep-blue">
+        <div class="modal-header modal-header-green">
             <h3 class="modal-title">Success</h3>
         </div>
         <div class="modal-body">

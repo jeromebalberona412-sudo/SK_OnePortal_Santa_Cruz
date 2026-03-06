@@ -2,7 +2,7 @@
 @vite(['app/Modules/Accounts/assets/css/add_sk_fed.css'])
 <div id="addAccountModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-large modal-themed">
-        <div class="modal-header modal-header-deep-blue">
+        <div class="modal-header modal-header-green">
             <h3 class="modal-title">Add SK Federation Account</h3>
             <div class="modal-controls">
                 <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenAddAccountModal()" title="Fullscreen">
