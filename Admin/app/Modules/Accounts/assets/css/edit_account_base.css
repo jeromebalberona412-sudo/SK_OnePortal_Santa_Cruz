@@ -338,6 +338,18 @@
     color: #ffffff;
 }
 
+.btn-primary-modern.btn-yellow {
+    background: var(--accent-yellow);
+    border-color: var(--accent-yellow);
+    color: #000000;
+}
+
+.btn-primary-modern.btn-yellow:hover {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #000000;
+}
+
 .btn-secondary-modern {
     background: var(--white);
     color: var(--gray-700);
