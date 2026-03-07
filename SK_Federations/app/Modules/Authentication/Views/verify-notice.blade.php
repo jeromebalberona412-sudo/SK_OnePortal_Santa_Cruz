@@ -2,47 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Email Verification Required</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="bg-light">
-    <main class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-6 col-md-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <h1 class="h4 mb-3">Verify Your Email</h1>
-                        <p class="text-muted mb-3">
-                            Your SK Federation account requires email verification before secure access can continue.
-                        </p>
+<body>
+    <div class="login-container">
+        <div class="background-section">
+            <div class="logo-container">
+                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
+                <h1 class="brand-title">SK Federations</h1>
+                <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
+            </div>
 
-                        @if (session('status'))
-                            <div class="alert alert-info" role="alert">{{ session('status') }}</div>
-                        @endif
+            <div class="login-form-container">
+                <div class="form-header">
+                    <h2>Verify Your Email</h2>
+                    <p>Your SK Federation account requires email verification before secure access can continue.</p>
+                </div>
 
-                        @if ($errors->any())
-                            <div class="alert alert-danger" role="alert">
-                                @foreach ($errors->all() as $error)
-                                    <div>{{ $error }}</div>
-                                @endforeach
-                            </div>
-                        @endif
+                @if (session('status'))
+                    <div class="alert alert-info" role="alert">{{ session('status') }}</div>
+                @endif
 
-                        <form method="POST" action="{{ route('skfed.verification.resend', [], false) }}" class="d-grid gap-3">
-                            @csrf
-                            <div>
-                                <label for="email" class="form-label">Email Address</label>
-                                <input id="email" type="email" name="email" class="form-control" value="{{ old('email', $email) }}" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Resend Verification Email</button>
-                        </form>
-
-                        <a href="{{ route('login', [], false) }}" class="btn btn-link px-0 mt-3">Back to login</a>
+                <form method="POST" action="{{ route('skfed.verification.resend', [], false) }}" class="login-form">
+                    @csrf
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            class="form-control @error('email') is-invalid @enderror"
+                            value="{{ old('email', $email) }}"
+                            required
+                            placeholder="Enter your email"
+                        >
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
+                    <button type="submit" class="login-btn btn btn-primary w-100">Resend Verification Email</button>
+                </form>
+
+                <div class="form-footer">
+                    <a href="{{ route('login', [], false) }}">Back to login</a>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
+    <script src="{{ url('/modules/authentication/js/script.js') }}"></script>
+    <script>
+        // Show loading on form submit
+        document.querySelector('form').addEventListener('submit', function(e) {
+            LoadingScreen.show('Sending Verification', 'Please wait...');
+        });
+
+        // Show loading on back to login
+        document.querySelector('.form-footer a').addEventListener('click', function(e) {
+            e.preventDefault();
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 300);
+        });
+    </script>
 </body>
 </html>

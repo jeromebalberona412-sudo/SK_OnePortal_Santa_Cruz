@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Email Verified</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Password Reset Successful</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .check-wrap {
             width: 120px;
@@ -119,20 +123,43 @@
             }
         }
 
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
+        .back-to-login-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #213F99 0%, #d0242b 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(33, 63, 153, 0.3);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            animation: fadeIn 0.6s 0.6s ease-in backwards;
         }
 
-        .fade-out-animation {
-            animation: fadeOut 1s ease-out forwards;
+        .back-to-login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(33, 63, 153, 0.4);
+            color: white;
         }
 
-        /* Responsive Design for Success Page */
+        .back-to-login-btn svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-to-login-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* Responsive Design */
         @media (max-width: 640px) {
             .check-wrap {
                 width: 100px;
@@ -156,6 +183,11 @@
             .success-container p {
                 font-size: 14px;
                 margin-bottom: 24px;
+            }
+
+            .back-to-login-btn {
+                padding: 14px;
+                font-size: 15px;
             }
         }
 
@@ -186,7 +218,20 @@
     </style>
 </head>
 <body>
-    <div class="login-container" id="success-container">
+    <script>
+        // Prevent back navigation and redirect if authenticated
+        (function() {
+            @auth
+                window.location.replace("{{ route('dashboard') }}");
+            @endauth
+            
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
+            };
+        })();
+    </script>
+    <div class="login-container">
         <div class="background-section">
             <div class="logo-container">
                 <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
@@ -199,121 +244,38 @@
                     <div class="check-wrap" aria-hidden="true">
                         <span class="checkmark"></span>
                     </div>
-                    <h2>Verified successfully</h2>
-                    <p>Your SK Federation account is now verified. Redirecting to dashboard...</p>
+                    <h2>Success!</h2>
+                    <p>Your password has been reset successfully. You can now log in with your new password.</p>
+                    <a href="{{ route('login', [], false) }}" class="back-to-login-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        <span>Back to Login</span>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div id="successModal" class="success-modal">
-        <div class="success-modal-content">
-            <div class="success-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <h2>Verified Successfully!</h2>
-            <p>Your account has been verified. Redirecting to dashboard...</p>
-        </div>
-    </div>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
-        // Show modal immediately
-        window.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('successModal');
-            modal.style.display = 'flex';
-            modal.classList.add('show');
-            
-            // Hide modal and show loading screen before redirect
-            setTimeout(function() {
-                modal.classList.remove('show');
-                modal.classList.add('hide');
-                
-                setTimeout(function() {
-                    LoadingScreen.show('Redirecting', 'Taking you to dashboard...');
-                    setTimeout(function() {
-                        window.location.href = "{{ route('dashboard', [], false) }}";
-                    }, 500);
-                }, 300);
-            }, 3000);
+        // Show loading on back to login button click
+        document.querySelector('.back-to-login-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 500);
         });
+
+        // Auto-redirect to login after 5 seconds
+        setTimeout(function() {
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = "{{ route('login', [], false) }}";
+            }, 500);
+        }, 5000);
     </script>
-    <style>
-        /* Success Modal Styles */
-        .success-modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .success-modal.show {
-            opacity: 1;
-        }
-
-        .success-modal.hide {
-            opacity: 0;
-        }
-
-        .success-modal-content {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
-            max-width: 400px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            transform: translateY(30px);
-            transition: transform 0.3s ease-out;
-        }
-
-        .success-modal.show .success-modal-content {
-            transform: translateY(0);
-        }
-
-        .success-modal.hide .success-modal-content {
-            transform: translateY(30px);
-        }
-
-        .success-icon {
-            font-size: 64px;
-            color: #22c55e;
-            margin-bottom: 20px;
-            animation: scaleIn 0.4s ease-out;
-        }
-
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-
-        .success-modal-content h2 {
-            margin: 0 0 12px 0;
-            font-size: 24px;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .success-modal-content p {
-            margin: 0;
-            font-size: 16px;
-            color: #64748b;
-        }
-    </style>
 </body>
 </html>

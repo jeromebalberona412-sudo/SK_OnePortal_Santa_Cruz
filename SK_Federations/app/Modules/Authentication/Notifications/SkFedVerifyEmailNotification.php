@@ -14,7 +14,7 @@ class SkFedVerifyEmailNotification extends VerifyEmail
     {
         return URL::temporarySignedRoute(
             'skfed.verification.verify',
-            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
+            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 10)),
             [
                 'id' => $notifiable->getKey(),
                 'hash' => sha1($notifiable->getEmailForVerification()),

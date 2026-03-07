@@ -181,6 +181,38 @@ function changePassword(event) {
     document.querySelector('.password-hint').textContent = '';
 }
 
+// Logout Modal Functions
+function showLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+}
+
+function closeLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+}
+
+function confirmLogout() {
+    // Show loading screen
+    if (typeof LoadingScreen !== 'undefined') {
+        LoadingScreen.show('Logging Out', 'Please wait...');
+    }
+    
+    // Submit logout form
+    const logoutForm = document.getElementById('logout-form');
+    if (logoutForm) {
+        logoutForm.submit();
+    } else if (window.logoutRoute) {
+        window.location.href = window.logoutRoute;
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Set first tab as active

@@ -180,7 +180,7 @@ class AuthController extends Controller
             $user->sendEmailVerificationNotification();
         }
 
-        return back()->with('status', 'If your account is eligible, a verification email has been sent.');
+        return back();
     }
 
     public function showVerificationSuccess(): View
@@ -239,6 +239,30 @@ class AuthController extends Controller
         request()->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    /**
+     * Show forgot password form (Prototype - UI Only)
+     */
+    public function showForgotPassword(): View
+    {
+        return view('authentication::forgot-password');
+    }
+
+    /**
+     * Show reset password form (Prototype - UI Only)
+     */
+    public function showResetPassword(): View
+    {
+        return view('authentication::reset-password');
+    }
+
+    /**
+     * Show password reset success page (Prototype - UI Only)
+     */
+    public function showPasswordResetSuccess(): View
+    {
+        return view('authentication::password-reset-success');
     }
 
     /**

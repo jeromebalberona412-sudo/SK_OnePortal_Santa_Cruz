@@ -20,7 +20,17 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::verifyEmailView(fn () => view('authentication::verify-notice'));
 
         Fortify::authenticateUsing(function (Request $request) {
-            return app(AuthenticationService::class)->authenticate($request);
+            $user = app(AuthenticationService::class)->authenticate($request);
+            
+            // If authentication fails, throw validation exception with proper error messages
+            if ($user === null) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => ['Invalid Email or Password'],
+                    'password' => ['Invalid Email or Password'],
+                ]);
+            }
+            
+            return $user;
         });
 
         Event::listen(Logout::class, function (Logout $event): void {
