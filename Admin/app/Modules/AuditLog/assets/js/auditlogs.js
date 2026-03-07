@@ -10,4 +10,11 @@ document.addEventListener('DOMContentLoaded', function () {
             eventFilter.form.submit();
         });
     }
+
+    const outcomeFilter = document.getElementById('outcomeFilter');
+    if (outcomeFilter && outcomeFilter.form) {
+        outcomeFilter.addEventListener('change', function () {
+            outcomeFilter.form.submit();
+        });
+    }
 });

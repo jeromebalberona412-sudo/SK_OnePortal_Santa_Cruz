@@ -29,6 +29,16 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="filter-dropdown-container">
+                        <select id="outcomeFilter" class="filter-dropdown" name="outcome">
+                            <option value="">All Outcomes</option>
+                            @foreach(($outcomes ?? collect()) as $outcomeOption)
+                                <option value="{{ $outcomeOption }}" {{ ($filters['outcome'] ?? '') === $outcomeOption ? 'selected' : '' }}>
+                                    {{ strtoupper($outcomeOption) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="date-range-container">
                         <div class="date-field-wrapper">
                             <label for="dateFrom" class="date-range-label">From</label>
@@ -53,7 +63,7 @@
                         </div>
                     </div>
                     <div class="search-container">
-                        <input type="text" id="searchInput" name="search" class="search-input" value="{{ $filters['search'] ?? '' }}" placeholder="Search by user ID, event, IP, or user agent...">
+                        <input type="text" id="searchInput" name="search" class="search-input" value="{{ $filters['search'] ?? '' }}" placeholder="Search by actor, event, resource, IP, or user agent...">
                         <button type="submit" class="search-btn" id="searchBtn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -71,12 +81,12 @@
                 <table class="accounts-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Event</th>
-                            <th>IP Address</th>
-                            <th>User Agent</th>
-                            <th>Metadata</th>
-                            <th>Created At</th>
+                            <th>Timestamp (UTC)</th>
+                            <th>Actor / User</th>
+                            <th>Action / Event</th>
+                            <th>Affected Resource</th>
+                            <th>Outcome</th>
+                            <th>Source</th>
                         </tr>
                     </thead>
                     <tbody id="auditlogsTableBody">
@@ -85,20 +95,40 @@
                                 $eventName = (string) $log->event;
                                 $eventClass = str_contains($eventName, 'logout')
                                     ? 'logout'
-                                    : (str_contains($eventName, 'login') ? 'login' : 'view');
+                                    : (str_contains($eventName, 'blocked')
+                                        ? 'blocked'
+                                        : ((str_contains($eventName, 'failed') || str_contains($eventName, 'invalid'))
+                                            ? 'failed'
+                                            : (str_contains($eventName, 'login') || str_contains($eventName, 'session') ? 'login' : 'view')));
 
-                                $metadataText = '-';
-                                if (is_array($log->metadata) && $log->metadata !== []) {
-                                    $metadataText = json_encode($log->metadata, JSON_UNESCAPED_SLASHES);
+                                $actorLabel = $log->actor_email
+                                    ?: ($log->user?->email ?: ($log->user_id ? 'User #'.$log->user_id : 'System'));
+
+                                $resourceType = $log->resource_type ?: '-';
+
+                                $outcomeName = strtolower((string) ($log->outcome ?? ''));
+                                if ($outcomeName === '') {
+                                    $outcomeName = str_contains($eventName, 'blocked')
+                                        ? 'blocked'
+                                        : ((str_contains($eventName, 'failed') || str_contains($eventName, 'invalid')) ? 'failed' : 'success');
+                                }
+
+                                if (! in_array($outcomeName, ['success', 'failed', 'blocked'], true)) {
+                                    $outcomeName = 'unknown';
                                 }
                             @endphp
                             <tr>
-                                <td>{{ $log->id ?? '-' }}</td>
+                                <td>{{ optional($log->created_at)->timezone('UTC')->format('Y-m-d H:i:s') ?? '-' }}</td>
+                                <td>{{ $actorLabel }}</td>
                                 <td><span class="event-badge {{ $eventClass }}">{{ $eventName }}</span></td>
-                                <td>{{ $log->ip_address ?: '-' }}</td>
-                                <td>{{ $log->user_agent ?: '-' }}</td>
-                                <td>{{ $metadataText }}</td>
-                                <td>{{ optional($log->created_at)->format('Y-m-d H:i:s') ?? '-' }}</td>
+                                <td>
+                                    <div class="resource-label">{{ $resourceType }}</div>
+                                </td>
+                                <td><span class="outcome-badge {{ $outcomeName }}">{{ strtoupper($outcomeName) }}</span></td>
+                                <td>
+                                    <div class="source-ip">{{ $log->ip_address ?: '-' }}</div>
+                                    <div class="source-agent">{{ $log->user_agent ?: '-' }}</div>
+                                </td>
                             </tr>
                         @empty
                             <tr>

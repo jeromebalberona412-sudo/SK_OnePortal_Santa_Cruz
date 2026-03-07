@@ -37,14 +37,29 @@ class AuthenticationService
         if ($user === null || ! Hash::check($password, (string) $user->password)) {
             $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => 'invalid_credentials']);
             $this->loginSecurityService->applyFailureLockout($user, $email, $request);
-            $this->auditLogService->log('login_failed', $user, $request, ['reason' => 'invalid_credentials']);
+            $this->auditLogService->log(
+                event: 'login_failed',
+                user: $user,
+                request: $request,
+                metadata: ['reason' => 'invalid_credentials'],
+                outcome: AuthAuditLogService::OUTCOME_FAILED,
+                resourceType: 'authentication',
+                resourceId: $user?->getKey(),
+            );
 
             return null;
         }
 
         if ($this->loginSecurityService->isLocked($user)) {
             $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => 'lockout_active']);
-            $this->auditLogService->log('login_blocked_lockout', $user, $request);
+            $this->auditLogService->log(
+                event: 'login_blocked_lockout',
+                user: $user,
+                request: $request,
+                outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+                resourceType: 'authentication',
+                resourceId: $user?->getKey(),
+            );
 
             return null;
         }
@@ -58,7 +73,14 @@ class AuthenticationService
             || (int) ($user->tenant_id ?? 0) !== $tenantId
         ) {
             $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => 'role_or_tenant_mismatch']);
-            $this->auditLogService->log('login_blocked_scope', $user, $request);
+            $this->auditLogService->log(
+                event: 'login_blocked_scope',
+                user: $user,
+                request: $request,
+                outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+                resourceType: 'authentication',
+                resourceId: $user?->getKey(),
+            );
 
             return null;
         }
@@ -98,7 +120,15 @@ class AuthenticationService
             && ! $this->trustedDeviceService->isTrusted($user, $request)
         ) {
             $this->trustedDeviceService->trust($user, $request);
-            $this->auditLogService->log('login_trusted_device_registered', $user, $request);
+            $this->auditLogService->log(
+                event: 'login_trusted_device_registered',
+                user: $user,
+                request: $request,
+                metadata: ['fingerprint' => $deviceFingerprint],
+                outcome: AuthAuditLogService::OUTCOME_SUCCESS,
+                resourceType: 'trusted_device',
+                resourceId: $deviceFingerprint,
+            );
         }
 
         $suspicious = ['is_suspicious' => false, 'signals' => []];
@@ -118,7 +148,15 @@ class AuthenticationService
         $this->trustedDeviceService->touch($user, $request);
         $this->loginSecurityService->clearAfterSuccess($user);
         $this->loginSecurityService->recordAttempt($user, $email, true, $request, ['reason' => 'success']);
-        $this->auditLogService->log('login_success', $user, $request, ['suspicious' => $suspicious]);
+        $this->auditLogService->log(
+            event: 'login_success',
+            user: $user,
+            request: $request,
+            metadata: ['suspicious' => $suspicious],
+            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
+            resourceType: 'authentication',
+            resourceId: $user->getKey(),
+        );
         $user->recordLogin((string) $request->ip());
         $this->emailVerificationDeviceService->upsertCurrentDevice($user, $request);
         $user->forceFill([
@@ -236,7 +274,14 @@ class AuthenticationService
         ])->save();
 
         $user->notify(new SessionTakeoverOtpNotification($otpCode));
-        $this->auditLogService->log('session_takeover_otp_sent', $user, $request);
+        $this->auditLogService->log(
+            event: 'session_takeover_otp_sent',
+            user: $user,
+            request: $request,
+            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
+            resourceType: 'session_takeover',
+            resourceId: $user->getKey(),
+        );
 
         return redirect()->route('skfed.takeover.wait')->with('status', 'Verification code sent to your email.');
     }
@@ -276,7 +321,18 @@ class AuthenticationService
                     'otp_attempts' => ((int) ($user->otp_attempts ?? 0)) + 1,
                 ])->save();
 
-                $this->auditLogService->log('session_takeover_otp_invalid', $user, $request);
+                $this->auditLogService->log(
+                    event: 'session_takeover_otp_invalid',
+                    user: $user,
+                    request: $request,
+                    metadata: [
+                        'otp_attempts' => (int) ($user->otp_attempts ?? 0),
+                        'max_attempts' => $maxAttempts,
+                    ],
+                    outcome: AuthAuditLogService::OUTCOME_FAILED,
+                    resourceType: 'session_takeover',
+                    resourceId: $user->getKey(),
+                );
 
                 return;
             }
@@ -315,7 +371,14 @@ class AuthenticationService
         $request->session()->regenerate();
         $this->claimCurrentSession($user, $request);
         $this->loginSecurityService->clearAfterSuccess($user);
-        $this->auditLogService->log('session_takeover_approved', $user, $request);
+        $this->auditLogService->log(
+            event: 'session_takeover_approved',
+            user: $user,
+            request: $request,
+            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
+            resourceType: 'session_takeover',
+            resourceId: $user->getKey(),
+        );
         $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
 
         return redirect()->route('dashboard');
@@ -323,7 +386,14 @@ class AuthenticationService
 
     public function clearSessionOwnershipOnLogout(User $user, Request $request): void
     {
-        $this->auditLogService->log('logout', $user, $request);
+        $this->auditLogService->log(
+            event: 'logout',
+            user: $user,
+            request: $request,
+            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
+            resourceType: 'session',
+            resourceId: $request->session()->getId(),
+        );
 
         $currentSessionId = $request->session()->getId();
         $this->deleteSessionById($currentSessionId);
@@ -404,7 +474,17 @@ class AuthenticationService
         ]);
 
         $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => 'single_session_conflict']);
-        $this->auditLogService->log('login_blocked_single_session_conflict', $user, $request);
+        $this->auditLogService->log(
+            event: 'login_blocked_single_session_conflict',
+            user: $user,
+            request: $request,
+            outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+            resourceType: 'authentication',
+            resourceId: $user->getKey(),
+            metadata: [
+                'active_session_id' => $user->active_session_id,
+            ],
+        );
         $request->session()->flash('status', 'Account currently active on another device. Verify ownership to continue.');
         $request->session()->flash('takeover_wait', true);
     }
@@ -433,7 +513,17 @@ class AuthenticationService
 
         $user->sendEmailVerificationNotification();
         $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => $reason]);
-        $this->auditLogService->log('login_blocked_'.$reason, $user, $request);
+        $this->auditLogService->log(
+            event: 'login_blocked_'.$reason,
+            user: $user,
+            request: $request,
+            outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+            resourceType: 'authentication',
+            resourceId: $user->getKey(),
+            metadata: [
+                'reason' => $reason,
+            ],
+        );
         $request->session()->flash('status', $message);
         $request->session()->flash('verification_wait', true);
     }

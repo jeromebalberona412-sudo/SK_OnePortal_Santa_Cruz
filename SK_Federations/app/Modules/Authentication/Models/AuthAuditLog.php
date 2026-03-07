@@ -2,7 +2,9 @@
 
 namespace App\Modules\Authentication\Models;
 
+use App\Modules\Shared\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AuthAuditLog extends Model
 {
@@ -11,8 +13,13 @@ class AuthAuditLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'tenant_id',
         'user_id',
+        'actor_email',
         'event',
+        'outcome',
+        'resource_type',
+        'resource_id',
         'ip_address',
         'user_agent',
         'metadata',
@@ -25,5 +32,10 @@ class AuthAuditLog extends Model
             'metadata' => 'array',
             'created_at' => 'datetime',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
