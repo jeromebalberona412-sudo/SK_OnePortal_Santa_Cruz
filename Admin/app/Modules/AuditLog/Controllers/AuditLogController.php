@@ -4,33 +4,55 @@ namespace App\Modules\AuditLog\Controllers;
 
 use App\Modules\Shared\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Modules\AuditLog\Services\AuditLogService;
+use App\Modules\AuditLog\Models\SkFedAuthAuditLog;
 
 class AuditLogController extends Controller
 {
-    protected $auditLogService;
-
-    public function __construct(AuditLogService $auditLogService)
-    {
-        $this->auditLogService = $auditLogService;
-    }
-
     public function index(Request $request)
     {
-        // Get pagination parameters
-        $page = $request->get('page', 1);
-        $perPage = $request->get('per_page', 10);
-        
-        // Get filter parameters
-        $search = $request->get('search', '');
-        $event = $request->get('event', '');
-        $dateFrom = $request->get('date_from', '');
-        $dateTo = $request->get('date_to', '');
+        $perPage = max(5, min(100, (int) $request->get('per_page', 7)));
+        $search = trim((string) $request->get('search', ''));
+        $event = trim((string) $request->get('event', ''));
+        $dateFrom = trim((string) $request->get('date_from', ''));
+        $dateTo = trim((string) $request->get('date_to', ''));
 
-        // For now, return the view with sample data
-        // In a real implementation, you would fetch data from the service
+        $logsQuery = SkFedAuthAuditLog::query()->orderByDesc('created_at');
+
+        if ($search !== '') {
+            $logsQuery->where(function ($query) use ($search) {
+                $query->where('event', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhere('user_agent', 'like', "%{$search}%");
+
+                if (ctype_digit($search)) {
+                    $query->orWhere('id', (int) $search)
+                        ->orWhere('user_id', (int) $search);
+                }
+            });
+        }
+
+        if ($event !== '') {
+            $logsQuery->where('event', $event);
+        }
+
+        if ($dateFrom !== '') {
+            $logsQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo !== '') {
+            $logsQuery->whereDate('created_at', '<=', $dateTo);
+        }
+
+        $logs = $logsQuery->paginate($perPage)->withQueryString();
+        $events = SkFedAuthAuditLog::query()
+            ->select('event')
+            ->distinct()
+            ->orderBy('event')
+            ->pluck('event');
+
         return view('auditlogs::auditlogs', [
-            'currentPage' => $page,
+            'logs' => $logs,
+            'events' => $events,
             'perPage' => $perPage,
             'filters' => [
                 'search' => $search,

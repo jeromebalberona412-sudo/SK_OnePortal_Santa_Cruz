@@ -323,6 +323,8 @@ class AuthenticationService
 
     public function clearSessionOwnershipOnLogout(User $user, Request $request): void
     {
+        $this->auditLogService->log('logout', $user, $request);
+
         $currentSessionId = $request->session()->getId();
         $this->deleteSessionById($currentSessionId);
 
