@@ -50,13 +50,14 @@
     </style>
 </head>
 <body>
+    @auth
+        <script>
+            window.location.replace("{{ route('dashboard') }}");
+        </script>
+    @endauth
     <script>
         // Prevent back navigation and redirect if authenticated
         (function() {
-            @auth
-                window.location.replace("{{ route('dashboard') }}");
-            @endauth
-            
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
                 window.history.pushState(null, "", window.location.href);
@@ -74,22 +75,33 @@
             <div class="login-form-container">
                 <div class="form-header">
                     <h2>Create New Password</h2>
-                    <p>Your new password must be different from previously used passwords.</p>
+                    <p>Use at least 12 characters with letters, numbers, and symbols.</p>
                 </div>
 
-                <form id="reset-password-form" class="login-form" novalidate>
+                @if ($errors->has('email') || $errors->has('reset'))
+                    <div class="alert alert-danger" role="alert" style="margin-bottom: 20px; border-radius: 12px;">
+                        {{ $errors->first('email') ?: $errors->first('reset') }}
+                    </div>
+                @endif
+
+                <form id="reset-password-form" class="login-form" method="POST" action="{{ route('password.update', [], false) }}" data-password-min-length="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 12) }}" data-password-max-length="{{ (int) config('sk_fed_auth.password_reset.password.max_length', 64) }}" novalidate>
+                    @csrf
+                    <input type="hidden" name="token" value="{{ old('token', $token) }}">
+                    <input type="hidden" name="email" value="{{ old('email', $email) }}">
+
                     <div class="form-group">
                         <label for="new-password">New Password</label>
                         <div class="password-input-container">
                             <input
                                 type="password"
                                 id="new-password"
-                                name="new_password"
+                                name="password"
                                 class="form-control"
                                 required
                                 placeholder="Enter new password"
-                                minlength="8"
-                                maxlength="25"
+                                minlength="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 12) }}"
+                                maxlength="{{ (int) config('sk_fed_auth.password_reset.password.max_length', 64) }}"
+                                autocomplete="new-password"
                             >
                             <button type="button" class="password-toggle" onclick="togglePasswordField('new-password', 'new-eye-icon', 'new-eye-off-icon')">
                                 <svg id="new-eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -102,8 +114,8 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="password-requirements"></div>
-                        <div class="invalid-feedback" style="display: none;"></div>
+                        <div class="password-requirements">Minimum 12 characters with letters, numbers, and symbols.</div>
+                        <div class="invalid-feedback" id="new-password-error" @if (! $errors->has('password')) hidden @endif>{{ $errors->first('password') }}</div>
                     </div>
 
                     <div class="form-group">
@@ -112,12 +124,13 @@
                             <input
                                 type="password"
                                 id="confirm-password"
-                                name="confirm_password"
+                                name="password_confirmation"
                                 class="form-control"
                                 required
                                 placeholder="Confirm new password"
-                                minlength="8"
-                                maxlength="25"
+                                minlength="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 12) }}"
+                                maxlength="{{ (int) config('sk_fed_auth.password_reset.password.max_length', 64) }}"
+                                autocomplete="new-password"
                             >
                             <button type="button" class="password-toggle" onclick="togglePasswordField('confirm-password', 'confirm-eye-icon', 'confirm-eye-off-icon')">
                                 <svg id="confirm-eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -130,7 +143,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="invalid-feedback" style="display: none;"></div>
+                        <div class="invalid-feedback" id="confirm-password-error" @if (! $errors->has('password_confirmation')) hidden @endif>{{ $errors->first('password_confirmation') }}</div>
                     </div>
 
                     <button type="submit" class="login-btn btn btn-primary w-100">
@@ -169,60 +182,71 @@
             }
         }
 
-        document.getElementById('reset-password-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
+        const resetPasswordForm = document.getElementById('reset-password-form');
+
+        resetPasswordForm.addEventListener('submit', function(e) {
             const newPassword = document.getElementById('new-password');
             const confirmPassword = document.getElementById('confirm-password');
-            const newPasswordError = newPassword.parentElement.nextElementSibling.nextElementSibling;
-            const confirmPasswordError = confirmPassword.parentElement.nextElementSibling;
+            const newPasswordError = document.getElementById('new-password-error');
+            const confirmPasswordError = document.getElementById('confirm-password-error');
+            const minLength = Number.parseInt(resetPasswordForm.dataset.passwordMinLength || '12', 10);
+            const maxLength = Number.parseInt(resetPasswordForm.dataset.passwordMaxLength || '64', 10);
+            const hasLetters = /[A-Za-z]/.test(newPassword.value);
+            const hasNumbers = /\d/.test(newPassword.value);
+            const hasSymbols = /[^A-Za-z0-9]/.test(newPassword.value);
             
             let isValid = true;
 
             // Reset errors
             newPassword.classList.remove('is-invalid');
             confirmPassword.classList.remove('is-invalid');
-            newPasswordError.style.display = 'none';
-            confirmPasswordError.style.display = 'none';
+            newPasswordError.hidden = true;
+            confirmPasswordError.hidden = true;
 
             // Validate new password
-            if (newPassword.value.length < 8) {
+            if (newPassword.value.length < minLength) {
+                e.preventDefault();
                 newPassword.classList.add('is-invalid');
-                newPasswordError.textContent = 'Password must be at least 8 characters.';
-                newPasswordError.style.display = 'block';
+                newPasswordError.textContent = `Password must be at least ${minLength} characters.`;
+                newPasswordError.hidden = false;
                 isValid = false;
-            } else if (newPassword.value.length > 25) {
+            } else if (newPassword.value.length > maxLength) {
+                e.preventDefault();
                 newPassword.classList.add('is-invalid');
-                newPasswordError.textContent = 'Password must not exceed 25 characters.';
-                newPasswordError.style.display = 'block';
+                newPasswordError.textContent = `Password must not exceed ${maxLength} characters.`;
+                newPasswordError.hidden = false;
+                isValid = false;
+            } else if (!(hasLetters && hasNumbers && hasSymbols)) {
+                e.preventDefault();
+                newPassword.classList.add('is-invalid');
+                newPasswordError.textContent = 'Password must include letters, numbers, and symbols.';
+                newPasswordError.hidden = false;
                 isValid = false;
             }
 
             // Validate confirm password
             if (confirmPassword.value !== newPassword.value) {
+                e.preventDefault();
                 confirmPassword.classList.add('is-invalid');
                 confirmPasswordError.textContent = 'Passwords do not match.';
-                confirmPasswordError.style.display = 'block';
+                confirmPasswordError.hidden = false;
                 isValid = false;
             }
 
             if (isValid) {
                 LoadingScreen.show('Resetting Password', 'Please wait...');
-                setTimeout(() => {
-                    window.location.href = "{{ url('/password-reset-success') }}";
-                }, 1000);
             }
         });
 
         // Remove error on input
         document.getElementById('new-password').addEventListener('input', function() {
             this.classList.remove('is-invalid');
-            this.parentElement.nextElementSibling.nextElementSibling.style.display = 'none';
+            document.getElementById('new-password-error').hidden = true;
         });
 
         document.getElementById('confirm-password').addEventListener('input', function() {
             this.classList.remove('is-invalid');
-            this.parentElement.nextElementSibling.style.display = 'none';
+            document.getElementById('confirm-password-error').hidden = true;
         });
 
         // Show loading on back to login

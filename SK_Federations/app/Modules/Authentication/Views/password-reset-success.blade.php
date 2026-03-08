@@ -218,13 +218,14 @@
     </style>
 </head>
 <body>
+    @auth
+        <script>
+            window.location.replace("{{ route('dashboard') }}");
+        </script>
+    @endauth
     <script>
         // Prevent back navigation and redirect if authenticated
         (function() {
-            @auth
-                window.location.replace("{{ route('dashboard') }}");
-            @endauth
-            
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
                 window.history.pushState(null, "", window.location.href);
@@ -245,7 +246,7 @@
                         <span class="checkmark"></span>
                     </div>
                     <h2>Success!</h2>
-                    <p>Your password has been reset successfully. You can now log in with your new password.</p>
+                    <p>Your password has been updated successfully. Please log in again.</p>
                     <a href="{{ route('login', [], false) }}" class="back-to-login-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>

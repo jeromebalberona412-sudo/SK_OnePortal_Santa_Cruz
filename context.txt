@@ -1,10 +1,13 @@
 SK_ONEPORTAL: Main Context (Current + Future)
 
+LAST UPDATED
+- March 8, 2026
+
 PROJECT OVERVIEW
-- Product: SK_ONEPORTAL (Web App ecosystem for Santa Cruz SK governance)
-- Architecture: Modular Monolith, split into role-based Laravel apps
-- Collaboration: Trunk-Based Development; each app keeps its own Laravel/composer setup
-- Data model: Multi-tenant (tenant-scoped users and role data)
+- Product: SK_ONEPORTAL (web app ecosystem for Santa Cruz SK governance)
+- Architecture: Modular monolith split into role-based Laravel apps
+- Collaboration: Trunk-based development; each app keeps its own Laravel/composer setup
+- Data model direction: Multi-tenant (tenant-scoped users and role data)
 
 TARGET USER SCALE
 - Admin: 4 users
@@ -14,7 +17,7 @@ TARGET USER SCALE
 
 TECH STACK
 - Backend: Laravel
-- Frontend: Blade, HTML, CSS, JS
+- Frontend: Blade, HTML, CSS, JavaScript
 - Database: Supabase (centralized)
 - Cache: Redis
 
@@ -27,63 +30,95 @@ SK_ONEPORTAL combines multiple systems in one platform:
 5) Notification + engagement layer
 6) Chatbot assistant
 
-CURRENT IMPLEMENTED FEATURES (AS OF NOW)
+CURRENT IMPLEMENTED FEATURES (AS OF MARCH 8, 2026)
 
-Admin (Implemented)
-- Authentication: custom login/logout, remember-me, 2FA challenge/setup/recovery flows
-- Access control: role-based route protection with auth + 2FA middleware
-- Dashboard: authenticated dashboard page
-- Profile: authenticated profile page
-- Account management for SK-Federations and SK-Officials:
-	- List by role with search, barangay filter, and status filter
-	- Create account + assign role + create official profile + assign term + barangay
+Admin (Implemented, with some placeholders)
+- Authentication:
+	- Custom login/logout UI and flow
+	- Fortify integration via custom authentication service
+	- Two-factor setup/challenge/recovery flows
+- Access control:
+	- `auth`, `ensure2fa`, and role-based middleware for protected modules
+- Core pages:
+	- Authenticated dashboard and profile pages
+- Account governance module (SK-Federations and SK-Officials accounts):
+	- List by role with search, barangay filter, status filter, and pagination
+	- Create account + assign role + create official profile + assign term/barangay
 	- Update account/profile/term details
-	- Deactivate account (soft delete)
-	- Reset password (forces change on next login)
+	- Deactivate account
+	- Reset password (admin-triggered)
 	- Extend official term
-- Audit logging: login/logout and account governance actions
-- Tenant bootstrap support: resolves tenant context and seeds barangays when missing
+- Tenant bootstrap support:
+	- Resolves tenant context and seeds barangays when missing
+- Audit/security:
+	- Login/logout and governance audit events
+	- Login attempt and lockout support in auth services
+- Password reset status in Admin app:
+	- Forgot/reset routes and views exist
+	- Controller logic is still placeholder/UI-level and not fully production-grade reset workflow
 
-SK-Federations (Implemented)
-- Authentication entry and login UI (Fortify handles login post)
+SK-Federations (Most complete security implementation so far)
+- Authentication and login:
+	- Login entry UI
+	- Fortify authenticateUsing bound to custom authentication service
 - Security controls:
 	- Role + tenant scope enforcement
 	- Email verification wait/notice/success flow with resend and signed links
-	- Re-verification for changed/new device fingerprints
-	- Single-session enforcement with heartbeat
-	- Session takeover flow via OTP send/verify
-	- Login attempts, lockout handling, trusted-device registration,
-		suspicious-login detection, auth audit logs
-- Dashboard: protected dashboard page
-- Profile: protected profile view page
-- Profile update/password endpoints exist but are currently disabled
+	- Re-verification on changed/new device fingerprint
+	- Single-session enforcement with heartbeat checks
+	- Session takeover flow with OTP send/verify
+	- Login attempt tracking, lockout handling, trusted-device registration,
+		suspicious-login detection, and auth audit logging
+- Password reset (implemented end-to-end):
+	- Forgot password form and reset form/success views
+	- Password broker link sending and token validation
+	- Tenant/role checks for reset eligibility
+	- Password complexity and confirmation validation
+	- Password reuse blocking
+	- Session invalidation after successful reset
+	- Turnstile middleware and configurable rate limiting
+	- Custom SK-Federations reset notification email
+- Protected modules:
+	- Dashboard route protected by `auth`, `verified`, `single.session`,
+		`sk_fed.access`, `trusted.device`, and `prevent.back`
+	- Profile page available under same protection
+- Profile editing status:
+	- Profile update and password update endpoints currently return disabled messages
+- UX/reliability additions:
+	- Shared loading screen assets (`/shared/css/loading.css`, `/shared/js/loading.js`)
+	- Network error page and DB/network exception mapping in bootstrap exception handling
 
-SK-Officials (Current Status)
+SK-Officials (Prototype stage; no longer scaffold-only)
+- Has custom routes and screens for:
+	- Login/forgot-password entry
+	- Dashboard
+	- Profile
+	- Calendar
+	- Announcements
+- Current auth behavior is demo-level:
+	- Uses simple session flag and hardcoded credentials in controller
+	- Not yet connected to production-grade role/tenant/auth security stack
+
+Kabataan (Current status)
 - Base Laravel scaffold only
 - Default welcome route present
-- No role-specific module routes/features implemented yet
-
-Kabataan (Current Status)
-- Base Laravel scaffold only
-- Default welcome route present
-- No role-specific module routes/features implemented yet
+- No production feature modules implemented yet
 
 FUTURE FEATURES BY ROLE (PRODUCT ROADMAP)
 
 Admin Web App (Planned)
-- Login: email/password, forgot password
+- Login: email/password, forgot password hardening
 - Dashboard metrics: total users, role counts, platform health
 - Account governance: add/edit/manage SK-Fed and SK-Officials accounts
 - Audit log center for governance actions
 - System maintenance panel (feature flags, config, scheduled jobs)
 
 SK-Federations Web App (Planned)
-- Login: email/password, forgot password, email verification
-- Dashboard:
+- Dashboard expansion:
 	- Total Kabataan list
 	- Total programs per year
 	- Total Kabataan users
-- Profile management
+- Profile management full enablement
 - Social feed:
 	- SK barangay posts across barangays
 	- Ongoing programs, participants, budget amount, uploaded annual budget
@@ -93,8 +128,10 @@ SK-Federations Web App (Planned)
 - SK-Fed post and settings modules
 
 SK-Officials Web App (Planned)
-- Login: admin-provided credentials, forgot password,
-	one-time email verification per device change
+- Production login flow:
+	- Admin-provided credentials
+	- Forgot password
+	- One-time email verification per device change
 - Shared barangay dashboard for 12 officials:
 	- Total Kabataan in barangay
 	- Total programs per year
@@ -131,7 +168,7 @@ Kabataan Web App (Planned)
 		Disaster, Sports, GAD, Others
 - Profile, activity history, built-in chatbot
 
-CROSS-CUTTING COMPLEXITY & RISKS
+CROSS-CUTTING COMPLEXITY AND RISKS
 - Main project risk is scope/complexity, not core technology
 - Hidden complexity areas:
 	- Notifications across channels: email, realtime, in-app
@@ -146,13 +183,13 @@ FILE STORAGE STRATEGY (DECISION)
 	- Alternative: Cloudinary or S3
 
 REPORTING ENGINE (HIGH PRIORITY)
-- Build this early; this can be the strongest differentiator
+- Build this early; this can be a strong differentiator
 - Required capabilities:
 	- DOCX template engine
 	- Auto-generated accomplishment reports
 	- Yearly analytics and printable compliance outputs
 
 EARLY FOUNDATION RECOMMENDATIONS
-- Create Notification module early
+- Create a notification module early
 - Standardize report templates and export pipeline early
 - Define role/tenant permission matrix before social + posting rollout

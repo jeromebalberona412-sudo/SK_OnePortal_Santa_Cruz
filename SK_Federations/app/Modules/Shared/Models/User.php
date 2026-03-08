@@ -2,6 +2,7 @@
 
 namespace App\Modules\Shared\Models;
 
+use App\Modules\Authentication\Notifications\SkFedResetPasswordNotification;
 use App\Modules\Authentication\Notifications\SkFedVerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -147,6 +148,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new SkFedVerifyEmailNotification);
+    }
+
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new SkFedResetPasswordNotification($token));
     }
 
     protected function hasTableColumn(string $column): bool

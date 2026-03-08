@@ -276,17 +276,26 @@ create index IF not exists sk_fed_login_attempt_ip_idx on public.sk_fed_login_at
 create table public.sk_fed_auth_audit_logs (
   id bigserial not null,
   user_id bigint null,
+  tenant_id bigint null,
+  actor_email character varying(255) null,
   event character varying(120) not null,
+  outcome character varying(20) null,
+  resource_type character varying(120) null,
+  resource_id character varying(120) null,
   ip_address character varying(45) null,
   user_agent text null,
   metadata json null,
   created_at timestamp without time zone not null default CURRENT_TIMESTAMP,
   constraint sk_fed_auth_audit_logs_pkey primary key (id),
+  constraint sk_fed_auth_audit_logs_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete set null,
   constraint sk_fed_auth_audit_logs_user_id_foreign foreign KEY (user_id) references users (id) on delete set null
 ) TABLESPACE pg_default;
 
 create index IF not exists sk_fed_auth_audit_event_idx on public.sk_fed_auth_audit_logs using btree (event, created_at) TABLESPACE pg_default;
 create index IF not exists sk_fed_auth_audit_user_idx on public.sk_fed_auth_audit_logs using btree (user_id, created_at) TABLESPACE pg_default;
+create index IF not exists sk_fed_auth_audit_tenant_idx on public.sk_fed_auth_audit_logs using btree (tenant_id, created_at) TABLESPACE pg_default;
+create index IF not exists sk_fed_auth_audit_outcome_idx on public.sk_fed_auth_audit_logs using btree (outcome, created_at) TABLESPACE pg_default;
+create index IF not exists sk_fed_auth_resource_idx on public.sk_fed_auth_audit_logs using btree (resource_type, resource_id) TABLESPACE pg_default;
 
 create table public.sk_fed_feature_flags (
   id bigserial not null,
