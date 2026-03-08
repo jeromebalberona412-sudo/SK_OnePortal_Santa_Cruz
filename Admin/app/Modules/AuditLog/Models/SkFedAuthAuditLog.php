@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Modules\Authentication\Models;
+namespace App\Modules\AuditLog\Models;
 
 use App\Modules\Shared\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AuthAuditLog extends Model
+class SkFedAuthAuditLog extends Model
 {
     protected $table = 'sk_fed_auth_audit_logs';
 

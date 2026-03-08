@@ -64,6 +64,8 @@ class AuthController extends Controller
                 return redirect()->route('two-factor.login');
             }
             
+            +
+            
             // No 2FA, proceed with normal login
             $request->session()->regenerate();
             $this->auditService->logLoginSuccess($user);
