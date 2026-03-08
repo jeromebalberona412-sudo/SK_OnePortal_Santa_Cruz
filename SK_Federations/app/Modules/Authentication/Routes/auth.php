@@ -47,6 +47,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/password-reset-success', [AuthController::class, 'showPasswordResetSuccess'])->name('password.reset.success');
 });
 
+// Compatibility fallback: if a stale client hits GET /logout, avoid 405 and perform logout safely.
+Route::middleware('auth')->get('/logout', [AuthController::class, 'logout'])->name('logout.fallback');
+
 Route::middleware(['auth', 'single.session'])->group(function () {
     Route::post('/heartbeat', [AuthController::class, 'heartbeat'])->name('skfed.heartbeat');
 });

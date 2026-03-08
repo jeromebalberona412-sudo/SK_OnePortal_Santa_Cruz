@@ -3,7 +3,6 @@
 namespace App\Modules\Authentication\Controllers;
 
 use App\Modules\Authentication\Services\AuthenticationService;
-use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\TenantContextService;
 use App\Modules\Shared\Controllers\Controller;
 use App\Modules\Shared\Models\User;
@@ -21,7 +20,6 @@ class AuthController extends Controller
     public function __construct(
         protected AuthenticationService $authenticationService,
         protected TenantContextService $tenantContextService,
-        protected EmailVerificationDeviceService $emailVerificationDeviceService,
     ) {}
 
     public function showLogin(): View
@@ -112,10 +110,7 @@ class AuthController extends Controller
             ]);
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
-        $this->authenticationService->claimCurrentSession($user, $request);
-        $this->emailVerificationDeviceService->markVerifiedDeviceFromPending($user, $pending);
+        $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
         $request->session()->forget('sk_fed_email_verification_pending');
 
         return response()->json([

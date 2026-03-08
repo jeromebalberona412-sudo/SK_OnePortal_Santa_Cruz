@@ -203,14 +203,38 @@ function confirmLogout() {
     if (typeof LoadingScreen !== 'undefined') {
         LoadingScreen.show('Logging Out', 'Please wait...');
     }
-    
-    // Submit logout form
-    const logoutForm = document.getElementById('logout-form');
-    if (logoutForm) {
-        logoutForm.submit();
-    } else if (window.logoutRoute) {
-        window.location.href = window.logoutRoute;
-    }
+
+    const logoutUrl = window.logoutRoute || '/logout';
+    const loginUrl = window.loginRoute || '/login';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    // Prefer a direct POST so logout never triggers GET /logout method errors.
+    fetch(logoutUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken || '',
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+    }).then(() => {
+        window.location.replace(loginUrl);
+    }).catch(() => {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = logoutUrl;
+
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    });
 }
 
 // Initialize on page load

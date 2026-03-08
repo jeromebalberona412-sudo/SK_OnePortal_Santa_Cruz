@@ -108,6 +108,27 @@
             animation: fadeIn 0.6s 0.5s ease-in backwards;
         }
 
+        .success-actions {
+            animation: fadeIn 0.6s 0.6s ease-in backwards;
+        }
+
+        .return-login-btn {
+            display: inline-block;
+            background: linear-gradient(90deg, #213F99 0%, #1E6ED8 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .return-login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(30, 110, 216, 0.2);
+            color: #ffffff;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -200,120 +221,14 @@
                         <span class="checkmark"></span>
                     </div>
                     <h2>Verified successfully</h2>
-                    <p>Your SK Federation account is now verified. Redirecting to dashboard...</p>
+                    <p>Your SK Federation account is now verified. Return to sign in on your device.</p>
+                    <div class="success-actions">
+                        <a href="{{ route('login', [], false) }}" class="return-login-btn">Go to Sign In</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Success Modal -->
-    <div id="successModal" class="success-modal">
-        <div class="success-modal-content">
-            <div class="success-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <h2>Verified Successfully!</h2>
-            <p>Your account has been verified. Redirecting to dashboard...</p>
-        </div>
-    </div>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
-    <script>
-        // Show modal immediately
-        window.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('successModal');
-            modal.style.display = 'flex';
-            modal.classList.add('show');
-            
-            // Hide modal and show loading screen before redirect
-            setTimeout(function() {
-                modal.classList.remove('show');
-                modal.classList.add('hide');
-                
-                setTimeout(function() {
-                    LoadingScreen.show('Redirecting', 'Taking you to dashboard...');
-                    setTimeout(function() {
-                        window.location.href = "{{ route('dashboard', [], false) }}";
-                    }, 500);
-                }, 300);
-            }, 3000);
-        });
-    </script>
-    <style>
-        /* Success Modal Styles */
-        .success-modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .success-modal.show {
-            opacity: 1;
-        }
-
-        .success-modal.hide {
-            opacity: 0;
-        }
-
-        .success-modal-content {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
-            max-width: 400px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            transform: translateY(30px);
-            transition: transform 0.3s ease-out;
-        }
-
-        .success-modal.show .success-modal-content {
-            transform: translateY(0);
-        }
-
-        .success-modal.hide .success-modal-content {
-            transform: translateY(30px);
-        }
-
-        .success-icon {
-            font-size: 64px;
-            color: #22c55e;
-            margin-bottom: 20px;
-            animation: scaleIn 0.4s ease-out;
-        }
-
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-
-        .success-modal-content h2 {
-            margin: 0 0 12px 0;
-            font-size: 24px;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .success-modal-content p {
-            margin: 0;
-            font-size: 16px;
-            color: #64748b;
-        }
-    </style>
 </body>
 </html>

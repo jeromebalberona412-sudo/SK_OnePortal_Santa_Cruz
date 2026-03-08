@@ -177,6 +177,42 @@ class AuthenticationService
         ])->save();
     }
 
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    public function completeEmailVerificationLogin(User $user, Request $request, array $pending): void
+    {
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $this->claimCurrentSession($user, $request);
+        $this->emailVerificationDeviceService->markVerifiedDeviceFromPending($user, $pending);
+
+        $this->loginSecurityService->clearAfterSuccess($user);
+        $this->loginSecurityService->recordAttempt(
+            $user,
+            (string) $user->email,
+            true,
+            $request,
+            ['reason' => 'email_verification_completed']
+        );
+
+        $this->auditLogService->log(
+            event: 'login_success_email_verified',
+            user: $user,
+            request: $request,
+            metadata: [
+                'verification_flow' => 'email_link',
+                'requires_fresh_verification' => (bool) ($pending['requires_fresh_verification'] ?? false),
+            ],
+            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
+            resourceType: 'authentication',
+            resourceId: $user->getKey(),
+        );
+
+        $user->recordLogin((string) $request->ip());
+    }
+
     public function recordHeartbeat(Request $request): void
     {
         /** @var User|null $user */

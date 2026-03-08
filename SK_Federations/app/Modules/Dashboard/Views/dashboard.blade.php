@@ -86,6 +86,9 @@
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
     <script>
+        window.logoutRoute = "{{ route('logout') }}";
+        window.loginRoute = "{{ route('login') }}";
+
         // Show loading when navigating to profile (both sidebar and navbar)
         document.querySelectorAll('a[href="{{ route('profile') }}"]').forEach(link => {
             link.addEventListener('click', function(e) {
