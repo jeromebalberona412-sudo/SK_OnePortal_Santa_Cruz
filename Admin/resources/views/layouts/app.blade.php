@@ -9,18 +9,16 @@
 
     <!-- Head Section for additional CSS -->
     @yield('head')
+    @stack('styles')
 
-    <!-- Tailwind CSS + Profile Assets via Vite -->
+    <!-- Core shared assets via Vite -->
     @vite([
         'resources/css/app.css', 
         'resources/js/app.js',
-        'app/Modules/Profile/assets/css/profile.css',
-        'app/Modules/Profile/assets/js/profile.js',
         'app/Modules/Layout/assets/css/layout/sidebar.css',
         'app/Modules/Layout/assets/css/layout/header.css',
         'app/Modules/Layout/assets/js/layout/sidebar.js',
-        'app/Modules/Layout/assets/js/layout/header.js',
-        'app/Modules/Accounts/assets/css/manage_account.css'
+        'app/Modules/Layout/assets/js/layout/logout.js'
     ])
 </head>
 <body class="min-h-screen">
@@ -47,6 +45,7 @@
             @yield('content')
         </main>
 
+        @stack('scripts')
         @yield('scripts')
     </div>
 </body>

@@ -3,18 +3,89 @@
 @section('title', 'Dashboard')
 
 @section('head')
+<style>
+	.dashboard-bg-layer,
+	.dashboard-bg-tint,
+	.dashboard-bg-vignette,
+	.dashboard-bg-scanline {
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.dashboard-bg-layer {
+		z-index: 1;
+		background-image: url("{{ Vite::asset('app/Modules/Authentication/assets/Flag_of_Santa_Cruz__Laguna-removebg-preview.png') }}");
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: cover;
+		opacity: 0.2;
+		filter: grayscale(0.98) brightness(0.2) saturate(0.35) contrast(1.05);
+	}
+
+	.dashboard-bg-tint {
+		z-index: 2;
+		background:
+			linear-gradient(180deg, rgba(1, 7, 17, 0.74) 0%, rgba(2, 11, 24, 0.9) 52%, rgba(1, 5, 12, 0.96) 100%),
+			linear-gradient(120deg, rgba(9, 29, 61, 0.42) 0%, rgba(2, 8, 18, 0.1) 50%, rgba(6, 22, 46, 0.36) 100%);
+	}
+
+	.dashboard-bg-vignette {
+		z-index: 2;
+		box-shadow: inset 0 0 190px rgba(0, 0, 0, 0.72);
+	}
+
+	.dashboard-bg-scanline {
+		z-index: 3;
+		background: repeating-linear-gradient(
+			to bottom,
+			rgba(126, 175, 255, 0.05) 0,
+			rgba(126, 175, 255, 0.05) 1px,
+			transparent 1px,
+			transparent 4px
+		);
+		opacity: 0.2;
+	}
+
+	.dashboard-bg-scanline::before {
+		content: '';
+		position: absolute;
+		inset-inline: 0;
+		top: -130px;
+		height: 110px;
+		background: linear-gradient(
+			to bottom,
+			transparent,
+			rgba(149, 197, 255, 0.14),
+			transparent
+		);
+		animation: dashboard-scanline-shift 7s linear infinite;
+	}
+
+	#mainContent {
+		position: relative;
+		z-index: 4;
+	}
+
+	@keyframes dashboard-scanline-shift {
+		0% {
+			transform: translateY(-140px);
+		}
+		100% {
+			transform: translateY(calc(100vh + 140px));
+		}
+	}
+</style>
 @endsection
 
 @section('content')
-<!-- Include Header -->
 @include('layout::layouts.header')
-
-<!-- Include Sidebar -->
 @include('layout::layouts.sidebar')
 
-<div class="main-content-modern" id="mainContent">
-    <div style="padding: 20px;">
-        <h1>Hello World</h1>
-    </div>
-</div>
+<div class="dashboard-bg-layer" aria-hidden="true"></div>
+<div class="dashboard-bg-tint" aria-hidden="true"></div>
+<div class="dashboard-bg-vignette" aria-hidden="true"></div>
+<div class="dashboard-bg-scanline" aria-hidden="true"></div>
+
+<div id="mainContent" aria-label="Dashboard content"></div>
 @endsection

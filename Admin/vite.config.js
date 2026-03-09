@@ -14,6 +14,7 @@ export default defineConfig({
                 'app/Modules/Layout/assets/css/layout/header.css',
                 'app/Modules/Layout/assets/js/layout/sidebar.js',
                 'app/Modules/Layout/assets/js/layout/header.js',
+                'app/Modules/Layout/assets/js/layout/logout.js',
                 'app/Modules/Accounts/assets/css/manage_account.css',
                 'app/Modules/Accounts/assets/css/add_sk_fed.css',
                 'app/Modules/Accounts/assets/css/add_sk_officials.css',
