@@ -4,87 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Forgot Password - Admin Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-auth.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-two-factor.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('modules/authentication/css/admin-forgot-password.css') }}?v={{ time() }}">
+    <title>Password Recovery Portal</title>
+    @vite([
+        'app/Modules/Authentication/assets/css/gov-auth.css',
+        'app/Modules/Authentication/assets/js/gov-auth.js',
+    ])
 </head>
-<body>
-    <div class="background-animation">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-    </div>
+<body class="gov-auth-page">
+    <div class="gov-auth-bg" aria-hidden="true"></div>
+    <div class="gov-auth-tint" aria-hidden="true"></div>
+    <div class="gov-auth-vignette" aria-hidden="true"></div>
+    <div class="scanline-overlay" aria-hidden="true"></div>
 
-    <div class="two-factor-wrapper">
-        <div class="two-factor-container">
-            <div class="two-factor-header">
-                <div class="header-icon">
-                    <img src="{{ asset('modules/authentication/images/SKOneportal_logo.webp') }}" alt="SK One Portal Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+    <main class="gov-auth-shell">
+        <section class="gov-auth-panel" aria-labelledby="portal-heading">
+            <header class="auth-header">
+                <img
+                    class="auth-logo"
+                    src="{{ Vite::asset('app/Modules/Authentication/assets/Oneportal_logo-removebg-preview.png') }}"
+                    alt="OnePortal emblem"
+                >
+                <p class="auth-kicker">Municipality of Santa Cruz, Laguna</p>
+                <h1 id="portal-heading" class="auth-title">Password Recovery</h1>
+                <p class="auth-subtitle">Santa Cruz, Laguna - Integrated Government Services</p>
+            </header>
+
+            <p class="inline-note">Submit your registered government email to receive password reset instructions.</p>
+
+            @if ($errors->any())
+                <p class="auth-alert error">{{ $errors->first() }}</p>
+            @endif
+
+            @if (session('status'))
+                <p class="auth-alert success">{{ session('status') }}</p>
+            @endif
+
+            <form class="auth-form" method="POST" action="{{ route('password.email') }}">
+                @csrf
+
+                <div class="auth-form-row">
+                    <label for="email">User ID</label>
+                    <div class="field-wrap">
+                        <input
+                            class="auth-input"
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ old('email') }}"
+                            required
+                            autocomplete="email"
+                            autofocus
+                            placeholder="user@sccl.gov.ph"
+                        >
+                    </div>
                 </div>
-                <h1>Forgot Password</h1>
-                <p>Enter your admin email address to reset your password</p>
-            </div>
 
-            <div class="two-factor-body">
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>{{ $errors->first() }}</span>
-                    </div>
-                @endif
+                <div class="auth-actions">
+                    <button class="auth-button" type="submit">Send Reset Link</button>
+                </div>
 
-                @if (session('status'))
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <span>{{ session('status') }}</span>
-                    </div>
-                @endif
+                <div class="auth-links">
+                    <a class="auth-link" href="{{ route('login') }}">Back to login</a>
+                </div>
+            </form>
+        </section>
+    </main>
 
-                <form class="forgot-password-form" method="POST" action="{{ route('password.email') }}">
-                    @csrf
-                    
-                    <div class="form-group">
-                        <label for="email">
-                            <i class="fas fa-envelope"></i>
-                            Email Address
-                        </label>
-                        <div class="code-input-container" style="justify-content: stretch;">
-                            <input 
-                                type="email" 
-                                id="email" 
-                                name="email" 
-                                class="code-input" 
-                                style="width: 100%; max-width: 100%;"
-                                placeholder="Enter your admin email address"
-                                required
-                                autocomplete="email"
-                                autofocus
-                            >
-                        </div>
-                        <div class="helper-text">
-                            We'll send password reset instructions to this email
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-verify" id="sendResetBtn">
-                        <span>Send Reset Link</span>
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-
-                    <div class="back-to-login">
-                        <a href="{{ route('login') }}">
-                            <i class="fas fa-arrow-left"></i>
-                            <span>Back to Login</span>
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script src="{{ asset('modules/authentication/js/admin-forgot-password.js') }}"></script>
+    <footer class="gov-auth-warning">
+        You are accessing an official information system of the Municipality of Santa Cruz, Laguna.
+        Unauthorized access is prohibited. All activities are monitored and logged.
+        Use of this system constitutes consent to monitoring and auditing.
+    </footer>
 </body>
 </html>

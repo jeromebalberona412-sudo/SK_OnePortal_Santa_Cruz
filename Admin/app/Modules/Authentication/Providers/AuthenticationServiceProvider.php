@@ -2,8 +2,8 @@
 
 namespace App\Modules\Authentication\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
 use App\Modules\Authentication\Services\LoginSecurityService;
 use App\Modules\Authentication\Services\AuthenticationService;
 
@@ -20,11 +20,6 @@ class AuthenticationServiceProvider extends ServiceProvider
         $this->loadRoutes();
         $this->loadViewsFrom(__DIR__ . '/../Views', 'authentication');
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
-        
-        // Create symlinks for assets
-        $this->publishes([
-            __DIR__ . '/../assets' => public_path('modules/authentication'),
-        ], 'auth-assets');
     }
 
     protected function loadRoutes(): void
