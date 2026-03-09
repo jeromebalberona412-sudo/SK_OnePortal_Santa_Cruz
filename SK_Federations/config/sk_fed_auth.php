@@ -15,6 +15,18 @@ return [
         'max_lock_minutes' => (int) env('SK_FED_LOGIN_MAX_LOCK_MINUTES', 60),
     ],
 
+    'password_reset' => [
+        'rate_limit' => [
+            'ip_per_minute' => (int) env('SK_FED_PASSWORD_RESET_IP_PER_MINUTE', 5),
+            'email_per_hour' => (int) env('SK_FED_PASSWORD_RESET_EMAIL_PER_HOUR', 10),
+            'reset_form_per_minute' => (int) env('SK_FED_PASSWORD_RESET_FORM_PER_MINUTE', 20),
+        ],
+        'password' => [
+            'min_length' => (int) env('SK_FED_PASSWORD_RESET_MIN_LENGTH', 12),
+            'max_length' => (int) env('SK_FED_PASSWORD_RESET_MAX_LENGTH', 64),
+        ],
+    ],
+
     'suspicious' => [
         'failure_threshold' => (int) env('SK_FED_SUSPICIOUS_FAILURE_THRESHOLD', 3),
         'night_start_hour' => (int) env('SK_FED_SUSPICIOUS_NIGHT_START', 0),

@@ -179,6 +179,7 @@
     <script>
         // Set route variables for JavaScript
         window.logoutRoute = "{{ route('logout') }}";
+        window.loginRoute = "{{ route('login') }}";
         window.forgotPasswordRoute = "{{ route('password.request') }}";
 
         // Show loading when navigating to dashboard

@@ -3,7 +3,7 @@
 namespace App\Modules\Authentication\Controllers;
 
 use App\Modules\Authentication\Services\AuthenticationService;
-use App\Modules\Authentication\Services\EmailVerificationDeviceService;
+use App\Modules\Authentication\Services\PasswordResetService;
 use App\Modules\Authentication\Services\TenantContextService;
 use App\Modules\Shared\Controllers\Controller;
 use App\Modules\Shared\Models\User;
@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -21,7 +23,7 @@ class AuthController extends Controller
     public function __construct(
         protected AuthenticationService $authenticationService,
         protected TenantContextService $tenantContextService,
-        protected EmailVerificationDeviceService $emailVerificationDeviceService,
+        protected PasswordResetService $passwordResetService,
     ) {}
 
     public function showLogin(): View
@@ -112,10 +114,7 @@ class AuthController extends Controller
             ]);
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
-        $this->authenticationService->claimCurrentSession($user, $request);
-        $this->emailVerificationDeviceService->markVerifiedDeviceFromPending($user, $pending);
+        $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
         $request->session()->forget('sk_fed_email_verification_pending');
 
         return response()->json([
@@ -241,25 +240,72 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    /**
-     * Show forgot password form (Prototype - UI Only)
-     */
     public function showForgotPassword(): View
     {
         return view('authentication::forgot-password');
     }
 
-    /**
-     * Show reset password form (Prototype - UI Only)
-     */
-    public function showResetPassword(): View
+    public function sendPasswordResetLink(Request $request): RedirectResponse
     {
-        return view('authentication::reset-password');
+        if (config('fortify.lowercase_usernames') && $request->has('email')) {
+            $request->merge([
+                'email' => Str::lower((string) $request->input('email')),
+            ]);
+        }
+
+        $validated = $request->validate([
+            'email' => ['required', 'string', 'email', 'max:100'],
+        ]);
+
+        $this->passwordResetService->sendResetLink($request, (string) $validated['email']);
+
+        return back()->with('status', 'A password reset link has been sent');
     }
 
-    /**
-     * Show password reset success page (Prototype - UI Only)
-     */
+    public function showResetPassword(Request $request, string $token): View|RedirectResponse
+    {
+        $email = Str::lower((string) $request->query('email', ''));
+
+        if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->route('password.request')->withErrors([
+                'email' => 'The password reset link is invalid or incomplete.',
+            ]);
+        }
+
+        return view('authentication::reset-password', [
+            'token' => $token,
+            'email' => $email,
+        ]);
+    }
+
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        if (config('fortify.lowercase_usernames') && $request->has('email')) {
+            $request->merge([
+                'email' => Str::lower((string) $request->input('email')),
+            ]);
+        }
+
+        $validated = $request->validate([
+            'token' => ['required', 'string'],
+            'email' => ['required', 'string', 'email', 'max:100'],
+            'password' => [
+                'required',
+                'string',
+                'max:'.(int) config('sk_fed_auth.password_reset.password.max_length', 64),
+                'confirmed',
+                PasswordRule::min((int) config('sk_fed_auth.password_reset.password.min_length', 12))
+                    ->letters()
+                    ->numbers()
+                    ->symbols(),
+            ],
+        ]);
+
+        $this->passwordResetService->resetPassword($request, $validated);
+
+        return redirect()->route('password.reset.success')->with('status', 'Your password has been updated successfully. Please log in again.');
+    }
+
     public function showPasswordResetSuccess(): View
     {
         return view('authentication::password-reset-success');

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Confirm Access</title>
+    <title>Reset Password</title>
     @vite([
         'app/Modules/Authentication/assets/css/gov-auth.css',
         'app/Modules/Authentication/assets/js/gov-auth.js',
@@ -25,18 +25,36 @@
                     alt="OnePortal emblem"
                 >
                 <p class="auth-kicker">Municipality of Santa Cruz, Laguna</p>
-                <h1 id="portal-heading" class="auth-title">Confirm Access</h1>
+                <h1 id="portal-heading" class="auth-title">Reset Password</h1>
                 <p class="auth-subtitle">Santa Cruz, Laguna - Integrated Government Services</p>
             </header>
 
-            <p class="inline-note">For security verification, re-enter your current password.</p>
+            <p class="inline-note">Provide your account email and create a new secure password.</p>
 
             @if ($errors->any())
                 <p class="auth-alert error">{{ $errors->first() }}</p>
             @endif
 
-            <form class="auth-form" method="POST" action="{{ route('password.confirm.store') }}">
+            <form class="auth-form" method="POST" action="{{ route('password.update') }}">
                 @csrf
+                <input type="hidden" name="token" value="{{ $token }}">
+
+                <div class="auth-form-row">
+                    <label for="email">User ID</label>
+                    <div class="field-wrap">
+                        <input
+                            class="auth-input"
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ old('email', request('email')) }}"
+                            required
+                            autocomplete="email"
+                            autofocus
+                            placeholder="user@sccl.gov.ph"
+                        >
+                    </div>
+                </div>
 
                 <div class="auth-form-row password-row">
                     <label for="password">Password</label>
@@ -47,15 +65,29 @@
                             id="password"
                             name="password"
                             required
-                            autofocus
-                            autocomplete="current-password"
-                            placeholder="Enter secure password"
+                            autocomplete="new-password"
+                            placeholder="Enter new password"
+                        >
+                    </div>
+                </div>
+
+                <div class="auth-form-row password-row">
+                    <label for="password_confirmation">Confirm</label>
+                    <div class="field-wrap">
+                        <input
+                            class="auth-input"
+                            type="password"
+                            id="password_confirmation"
+                            name="password_confirmation"
+                            required
+                            autocomplete="new-password"
+                            placeholder="Confirm new password"
                         >
                     </div>
                 </div>
 
                 <div class="auth-actions">
-                    <button class="auth-button" type="submit">Confirm Identity</button>
+                    <button class="auth-button" type="submit">Update Password</button>
                 </div>
 
                 <div class="auth-links">

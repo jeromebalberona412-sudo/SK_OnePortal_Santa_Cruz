@@ -44,13 +44,14 @@
     </style>
 </head>
 <body>
+    @auth
+        <script>
+            window.location.replace("{{ route('dashboard') }}");
+        </script>
+    @endauth
     <script>
         // Prevent back navigation and redirect if authenticated
         (function() {
-            @auth
-                window.location.replace("{{ route('dashboard') }}");
-            @endauth
-            
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
                 window.history.pushState(null, "", window.location.href);
@@ -71,7 +72,14 @@
                     <p>Enter your email address and we'll send you a link to reset your password.</p>
                 </div>
 
-                <form id="forgot-password-form" class="login-form" novalidate>
+                @if (session('status'))
+                    <div class="alert alert-info" role="alert" style="margin-bottom: 20px; border-radius: 12px;">
+                        {{ session('status') }}
+                    </div>
+                @endif
+
+                <form id="forgot-password-form" class="login-form" method="POST" action="{{ route('password.email', [], false) }}" data-turnstile-enabled="{{ config('services.turnstile.enabled', true) ? '1' : '0' }}" novalidate>
+                    @csrf
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <input
@@ -82,9 +90,13 @@
                             required
                             placeholder="Enter your email"
                             maxlength="100"
+                            autocomplete="email"
+                            value="{{ old('email') }}"
                         >
-                        <div class="invalid-feedback" style="display: none;"></div>
+                        <div class="invalid-feedback" id="email-error" @if (! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
                     </div>
+
+                    @include('authentication::components.turnstile')
 
                     <button type="submit" class="login-btn btn btn-primary w-100">
                         Send Reset Link
@@ -106,47 +118,62 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
-        document.getElementById('forgot-password-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            const emailInput = document.getElementById('email');
-            const errorMsg = emailInput.nextElementSibling;
+        const forgotPasswordForm = document.getElementById('forgot-password-form');
+        const turnstileEnabled = forgotPasswordForm.dataset.turnstileEnabled === '1';
+        const forgotPasswordEmail = document.getElementById('email');
+        const forgotPasswordError = document.getElementById('email-error');
+
+        forgotPasswordForm.addEventListener('submit', function(e) {
+            const email = forgotPasswordEmail.value.trim();
+            const turnstileTokenField = document.querySelector('input[name="cf-turnstile-response"]');
+            const turnstileError = document.getElementById('turnstile-error');
 
             // Reset error state
-            emailInput.classList.remove('is-invalid');
-            errorMsg.style.display = 'none';
+            forgotPasswordEmail.classList.remove('is-invalid');
+            forgotPasswordError.hidden = true;
+
+            if (turnstileError) {
+                turnstileError.style.display = 'none';
+            }
 
             // Validate email format
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             
             if (!email) {
-                emailInput.classList.add('is-invalid');
-                errorMsg.textContent = 'Please enter your email address.';
-                errorMsg.style.display = 'block';
+                e.preventDefault();
+                forgotPasswordEmail.classList.add('is-invalid');
+                forgotPasswordError.textContent = 'Please enter your email address.';
+                forgotPasswordError.hidden = false;
                 return;
             }
 
             if (!emailRegex.test(email)) {
-                emailInput.classList.add('is-invalid');
-                errorMsg.textContent = 'Please enter a valid email address.';
-                errorMsg.style.display = 'block';
+                e.preventDefault();
+                forgotPasswordEmail.classList.add('is-invalid');
+                forgotPasswordError.textContent = 'Please enter a valid email address.';
+                forgotPasswordError.hidden = false;
+                return;
+            }
+
+            if (turnstileEnabled && (!turnstileTokenField || !turnstileTokenField.value)) {
+                e.preventDefault();
+
+                if (turnstileError) {
+                    turnstileError.textContent = 'Bot verification failed.';
+                    turnstileError.style.display = 'block';
+                }
+
                 return;
             }
 
             // Show loading
             LoadingScreen.show('Sending Reset Link', 'Please wait...');
-
-            // Prototype: If validation passes, redirect to reset password page
-            // Note: In real implementation, server would check if email exists
-            setTimeout(() => {
-                window.location.href = "{{ url('/reset-password') }}";
-            }, 1000);
         });
 
         // Remove error on input
-        document.getElementById('email').addEventListener('input', function() {
+        forgotPasswordEmail.addEventListener('input', function() {
             this.classList.remove('is-invalid');
-            this.nextElementSibling.style.display = 'none';
+            forgotPasswordError.hidden = true;
         });
 
         // Show loading on back to login

@@ -41,11 +41,22 @@ Route::middleware('guest')->group(function () {
     Route::post('/session/takeover/send-otp', [AuthController::class, 'sendTakeoverOtp'])->name('skfed.takeover.send');
     Route::post('/session/takeover/verify-otp', [AuthController::class, 'verifyTakeoverOtp'])->name('skfed.takeover.verify');
 
-    // Forgot Password Routes (Prototype - UI Only)
+    // Forgot Password Routes
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::get('/reset-password', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])
+        ->middleware(['turnstile', 'throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email'])
+        ->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])
+        ->middleware(['throttle:skfed-password-reset-form'])
+        ->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+        ->middleware(['throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email'])
+        ->name('password.update');
     Route::get('/password-reset-success', [AuthController::class, 'showPasswordResetSuccess'])->name('password.reset.success');
 });
+
+// Compatibility fallback: if a stale client hits GET /logout, avoid 405 and perform logout safely.
+Route::middleware('auth')->get('/logout', [AuthController::class, 'logout'])->name('logout.fallback');
 
 Route::middleware(['auth', 'single.session'])->group(function () {
     Route::post('/heartbeat', [AuthController::class, 'heartbeat'])->name('skfed.heartbeat');
