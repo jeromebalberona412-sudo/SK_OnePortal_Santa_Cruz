@@ -1,79 +1,105 @@
 <!-- Sidebar Navigation -->
-<div id="layoutSidenav_nav">
-    <nav class="sb-sidenav" id="sidenavAccordion">
+@auth
+@php
+    $displayName = auth()->user()?->name ?? 'Admin Name';
+    $nameParts = preg_split('/\s+/', trim($displayName)) ?: [];
+    $initials = '';
+    foreach (array_slice($nameParts, 0, 2) as $part) {
+        $initials .= strtoupper(substr($part, 0, 1));
+    }
+    if ($initials === '') {
+        $initials = 'AN';
+    }
+@endphp
+<aside id="layoutSidenav_nav" aria-label="Sidebar navigation">
+    <nav class="sb-sidenav" id="sidenavAccordion" aria-label="Primary navigation">
         <div class="sb-sidenav-menu">
-            <!-- Mobile Close Button -->
-            <button class="sidebar-close-btn" id="sidebarCloseBtn" onclick="toggleSidebar()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="sidebar-brand-wrap">
+                <span class="sidebar-brand-full">
+                    <img src="{{ asset('Images/image.png') }}" alt="OnePortal" class="sidebar-brand-logo">
+                    <span class="sidebar-brand-text">ONEPORTAL</span>
+                </span>
+                <span class="sidebar-brand-mini" aria-hidden="true">
+                    <img src="{{ asset('Images/image.png') }}" alt="" class="sidebar-brand-logo-mini">
+                </span>
+            </div>
+
+            <button class="sidebar-close-btn" id="sidebarCloseBtn" onclick="toggleSidebar()" aria-label="Close sidebar">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
-            
-            <!-- Profile Section -->
-            <div class="sidebar-profile-container">
-                <div class="sidebar-profile">
-                    <div class="admin-profile-avatar">
-                        <img src="{{ asset('Images/logo.png') }}" alt="SK OnePortal Logo" class="logo-circle" style="border: 2px solid blue; border-radius: 50%;">
-                    </div>
-                    <div class="admin-profile-info">
-                        <div class="admin-name">{{ $user->name ?? '' }}</div>
-                    </div>
+
+            <div class="sidebar-user-card">
+                <span class="sidebar-user-avatar" aria-hidden="true">{{ $initials }}</span>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name">{{ $displayName }}</div>
+                    <div class="sidebar-user-role">Admin Member</div>
                 </div>
+                <button type="button" class="sidebar-kebab-btn" aria-label="Open user options">...</button>
             </div>
- 
-            <!-- Navigation Menu -->
-            <div class="nav">
-                <!-- Dashboard Button -->
-                <div class="nav-item">
-                    <a href="{{ route('dashboard') }}" class="nav-link dashboard-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7"/>
-                            <rect x="14" y="3" width="7" height="7"/>
-                            <rect x="14" y="14" width="7" height="7"/>
-                            <rect x="3" y="14" width="7" height="7"/>
-                        </svg>
-                        Dashboard
+
+            <div class="sidebar-section-label">Navigation</div>
+
+            <ul class="sidebar-nav-list">
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}" class="nav-link dashboard-btn" data-nav-key="dashboard" data-tooltip="Dashboard" aria-label="Dashboard">
+                        <span class="nav-icon-circle icon-dashboard" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="8"></circle>
+                                <path d="M12 8v5l3 2"></path>
+                            </svg>
+                        </span>
+                        <span class="nav-label">Dashboard</span>
                     </a>
-                </div>
-                
-                <!-- Profile Button -->
-                <div class="nav-item">
-                    <a href="{{ route('profile') }}" class="nav-link profile-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
-                        </svg>
-                        Profile
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('accounts.manage') }}" class="nav-link manage-account-btn" data-nav-key="manage-account" data-tooltip="Accounts" aria-label="Accounts">
+                        <span class="nav-icon-circle icon-manage" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="8" r="3"></circle>
+                                <path d="M5 19c1.2-3 3.7-5 7-5s5.8 2 7 5"></path>
+                            </svg>
+                        </span>
+                        <span class="nav-label">Accounts</span>
                     </a>
-                </div>
-                
-                <!-- Add SK Fed Button -->
-                <div class="nav-item">
-                    <a href="{{ route('accounts.manage') }}" class="nav-link manage-account-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Manage Account
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('auditlogs.index') }}" class="nav-link auditlogs-btn" data-nav-key="audit-logs" data-tooltip="Audit Log" aria-label="Audit Log">
+                        <span class="nav-icon-circle icon-audit" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14,3 14,8 19,8"></polyline>
+                                <line x1="9" y1="13" x2="15" y2="13"></line>
+                                <line x1="9" y1="17" x2="15" y2="17"></line>
+                            </svg>
+                        </span>
+                        <span class="nav-label">Audit Log</span>
                     </a>
-                </div>
-                
-                <!-- Audit Logs Button -->
-                <div class="nav-item">
-                    <a href="{{ route('auditlogs.index') }}" class="nav-link auditlogs-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14,2 14,8 20,8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10,9 9,9 8,9"/>
-                        </svg>
-                        Audit Logs
-                    </a>
-                </div>
-            </div>
+                </li>
+
+                <li class="nav-item nav-item-logout">
+                    <form method="POST" action="{{ route('logout') }}" class="logout-nav-form">
+                        @csrf
+                        <button type="submit" class="nav-link logout-btn" data-tooltip="Logout" aria-label="Logout">
+                            <span class="nav-icon-circle icon-logout" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M9 6V4h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9v-2"></path>
+                                    <polyline points="12,8 8,12 12,16"></polyline>
+                                    <line x1="8" y1="12" x2="20" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Logout</span>
+                        </button>
+                    </form>
+                </li>
+            </ul>
         </div>
     </nav>
-</div>
+</aside>
 
-<!-- Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+@endauth

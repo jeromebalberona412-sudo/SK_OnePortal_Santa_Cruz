@@ -11,6 +11,10 @@
     $addLabel = $isOfficials ? 'Add SK Officials' : 'Add SK Federation';
 @endphp
 
+@section('head')
+    @vite(['app/Modules/Accounts/assets/css/manage_account.css'])
+@endsection
+
 @section('content')
 <!-- Include Header -->
 @include('layout::layouts.header')

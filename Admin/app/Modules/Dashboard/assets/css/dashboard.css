@@ -1,0 +1,432 @@
+.gov-dashboard {
+    position: relative;
+    z-index: 4;
+    margin-left: 280px;
+    padding: 5.75rem 1.2rem 1.25rem;
+    color: #dbe6f3;
+    font-family: 'JetBrains Mono', 'IBM Plex Mono', 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dashboard-shell {
+    max-width: 1560px;
+}
+
+.dashboard-row {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.dashboard-row--stats {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.dashboard-row--governance,
+.dashboard-row--analytics {
+    grid-template-columns: 1fr 1fr;
+}
+
+.dashboard-row--operations {
+    grid-template-columns: 2fr 1fr 1fr;
+}
+
+.gov-card {
+    border: 1px solid rgba(148, 173, 214, 0.24);
+    border-radius: 12px;
+    background: rgba(8, 20, 36, 0.82);
+    backdrop-filter: blur(4px);
+    padding: 0.72rem;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.gov-card__title {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #f5f8ff;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.gov-card__subtitle {
+    margin: 0.2rem 0 0;
+    font-size: 0.7rem;
+    color: #8da5c7;
+}
+
+.stat-card {
+    min-height: 112px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.stat-card__label {
+    margin: 0;
+    font-size: 0.68rem;
+    color: #c4d3ea;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-card__value {
+    margin: 0.45rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f8fbff;
+    line-height: 1;
+}
+
+.stat-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.68rem;
+    color: #bdd0eb;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    display: inline-block;
+}
+
+.status-dot--healthy {
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+}
+
+.status-dot--warning {
+    background: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16);
+}
+
+.status-dot--critical {
+    background: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.stat-card--healthy {
+    background: linear-gradient(145deg, rgba(13, 48, 36, 0.62), rgba(8, 24, 40, 0.82));
+}
+
+.stat-card--warning {
+    background: linear-gradient(145deg, rgba(64, 45, 9, 0.56), rgba(8, 24, 40, 0.82));
+}
+
+.stat-card--critical {
+    background: linear-gradient(145deg, rgba(73, 20, 20, 0.58), rgba(8, 24, 40, 0.82));
+}
+
+.panel {
+    min-height: 224px;
+}
+
+.panel__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin-bottom: 0.65rem;
+}
+
+.range-toggle {
+    border: 1px solid rgba(143, 169, 211, 0.35);
+    background: rgba(14, 31, 53, 0.9);
+    color: #9eb6d8;
+    font-family: inherit;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    cursor: pointer;
+}
+
+.range-toggle.is-active {
+    background: #0f4f7d;
+    color: #f3f8ff;
+    border-color: #57a7ef;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.metric-item {
+    border: 1px solid rgba(139, 163, 204, 0.2);
+    border-radius: 8px;
+    padding: 0.48rem;
+    background: rgba(10, 23, 38, 0.82);
+}
+
+.metric-item__label {
+    display: block;
+    font-size: 0.66rem;
+    color: #9cb5d7;
+    text-transform: uppercase;
+}
+
+.metric-item__value {
+    margin-top: 0.28rem;
+    display: block;
+    color: #f8fbff;
+    font-size: 1.14rem;
+}
+
+.alert-list,
+.health-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.alert-item,
+.health-item {
+    border: 1px solid rgba(136, 161, 201, 0.26);
+    border-left-width: 4px;
+    border-radius: 8px;
+    padding: 0.45rem 0.55rem;
+    background: rgba(10, 20, 36, 0.76);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.74rem;
+}
+
+.alert-item__label,
+.health-item__label {
+    color: #ccdaf0;
+}
+
+.alert-item__value,
+.health-item__status {
+    font-weight: 700;
+}
+
+.severity-healthy,
+.status-healthy {
+    border-left-color: #10b981;
+}
+
+.severity-warning,
+.status-warning {
+    border-left-color: #f59e0b;
+}
+
+.severity-critical,
+.status-failure {
+    border-left-color: #ef4444;
+}
+
+.severity-healthy .alert-item__value,
+.status-healthy .health-item__status {
+    color: #10b981;
+}
+
+.severity-warning .alert-item__value,
+.status-warning .health-item__status {
+    color: #f59e0b;
+}
+
+.severity-critical .alert-item__value,
+.status-failure .health-item__status {
+    color: #ef4444;
+}
+
+.audit-table-wrap {
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid rgba(137, 163, 201, 0.25);
+    background: rgba(9, 20, 35, 0.85);
+}
+
+.audit-table-wrap .dataTables_wrapper {
+    padding: 0.4rem;
+}
+
+#auditActivityTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.7rem;
+}
+
+#auditActivityTable thead th {
+    position: sticky;
+    top: 0;
+    background: rgba(11, 27, 44, 0.98);
+    color: #c9d9f2;
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+#auditActivityTable tbody td {
+    color: #dce7f6;
+    padding: 0.42rem 0.45rem;
+}
+
+.audit-outcome {
+    border-radius: 9999px;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.65rem;
+    border: 1px solid transparent;
+}
+
+.audit-outcome--success {
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.4);
+    background: rgba(34, 197, 94, 0.12);
+}
+
+.audit-outcome--failure {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.12);
+}
+
+.audit-action-link {
+    color: #7fc1ff;
+    text-decoration: none;
+    font-size: 0.66rem;
+}
+
+.audit-action-link:hover {
+    text-decoration: underline;
+}
+
+.quick-actions {
+    display: grid;
+    gap: 0.42rem;
+}
+
+.quick-action-btn {
+    width: 100%;
+    border: 1px solid rgba(127, 193, 255, 0.33);
+    background: rgba(12, 38, 66, 0.82);
+    border-radius: 8px;
+    color: #e2f2ff;
+    font-family: inherit;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.quick-action-btn:hover {
+    border-color: rgba(127, 193, 255, 0.7);
+    background: rgba(18, 54, 88, 0.95);
+}
+
+.chart-shell {
+    height: 290px;
+}
+
+.chart-shell canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.table-scroll {
+    max-height: 290px;
+    overflow: auto;
+    border: 1px solid rgba(134, 160, 196, 0.23);
+    border-radius: 8px;
+}
+
+.table-compact {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+}
+
+.table-compact th,
+.table-compact td {
+    padding: 0.38rem 0.45rem;
+    border-bottom: 1px solid rgba(126, 154, 194, 0.18);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.table-compact thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: rgba(11, 27, 44, 0.97);
+    color: #cad9f1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pill {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    font-size: 0.65rem;
+}
+
+.pill--healthy {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.12);
+}
+
+.pill--critical {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.42);
+    background: rgba(239, 68, 68, 0.14);
+}
+
+.gap-flag {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.gap-flag--healthy {
+    color: #10b981;
+}
+
+.gap-flag--critical {
+    color: #ef4444;
+}
+
+@media (max-width: 1480px) {
+    .dashboard-row--stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1280px) {
+    .gov-dashboard {
+        margin-left: 0;
+        padding-top: 5.1rem;
+    }
+
+    .dashboard-row--operations {
+        grid-template-columns: 1.5fr 1fr;
+    }
+
+    .dashboard-row--operations .platform-health-panel {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 980px) {
+    .dashboard-row--governance,
+    .dashboard-row--analytics,
+    .dashboard-row--operations,
+    .dashboard-row--stats {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-row--operations .platform-health-panel {
+        grid-column: auto;
+    }
+}

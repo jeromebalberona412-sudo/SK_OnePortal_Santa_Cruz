@@ -2,6 +2,10 @@
 
 @section('title', 'Audit Logs')
 
+@section('head')
+    @vite(['app/Modules/AuditLog/assets/css/auditlogs.css'])
+@endsection
+
 @section('content')
 <!-- Include Header -->
 @include('layout::layouts.header')
@@ -219,10 +223,6 @@
 </div>
 @endsection
 
-@push('styles')
-<link rel="stylesheet" href="{{ Vite::asset('app/Modules/AuditLog/assets/css/auditlogs.css') }}">
-@endpush
-
-@push('scripts')
-<script src="{{ Vite::asset('app/Modules/AuditLog/assets/js/auditlogs.js') }}"></script>
-@endpush
+@section('scripts')
+    @vite(['app/Modules/AuditLog/assets/js/auditlogs.js'])
+@endsection
