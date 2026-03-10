@@ -3,6 +3,8 @@
 @section('title', 'Dashboard')
 
 @section('head')
+@vite(['app/Modules/Dashboard/assets/css/dashboard.css'])
+@vite(['app/Modules/Dashboard/assets/js/dashboard.js'])
 <style>
 	.dashboard-bg-layer,
 	.dashboard-bg-tint,
@@ -82,10 +84,45 @@
 @include('layout::layouts.header')
 @include('layout::layouts.sidebar')
 
+@php
+	$statCards = [
+		['label' => 'Total managed users', 'metricKey' => 'totalManagedUsers', 'tone' => 'healthy'],
+		['label' => 'SKFederation accounts', 'metricKey' => 'skFederationAccounts', 'tone' => 'healthy'],
+		['label' => 'SKOfficial accounts', 'metricKey' => 'skOfficialAccounts', 'tone' => 'healthy'],
+		['label' => 'Active accounts', 'metricKey' => 'activeAccounts', 'tone' => 'healthy'],
+		['label' => 'Inactive accounts', 'metricKey' => 'inactiveAccounts', 'tone' => 'warning'],
+		['label' => 'Pending accounts', 'metricKey' => 'pendingAccounts', 'tone' => 'warning'],
+		['label' => 'Suspended accounts', 'metricKey' => 'suspendedAccounts', 'tone' => 'critical'],
+		['label' => 'Unassigned accounts', 'metricKey' => 'unassignedAccounts', 'tone' => 'critical'],
+	];
+@endphp
+
 <div class="dashboard-bg-layer" aria-hidden="true"></div>
 <div class="dashboard-bg-tint" aria-hidden="true"></div>
 <div class="dashboard-bg-vignette" aria-hidden="true"></div>
 <div class="dashboard-bg-scanline" aria-hidden="true"></div>
 
-<div id="mainContent" aria-label="Dashboard content"></div>
+<div id="mainContent" class="gov-dashboard dashboard-shell" x-data="dashboardConsole()" aria-label="Dashboard content">
+	<section class="dashboard-row dashboard-row--stats">
+		@foreach ($statCards as $card)
+			@include('dashboard::components.statcard', $card)
+		@endforeach
+	</section>
+
+	<section class="dashboard-row dashboard-row--governance">
+		@include('dashboard::components.securitymetrics')
+		@include('dashboard::components.governancealerts')
+	</section>
+
+	<section class="dashboard-row dashboard-row--operations">
+		@include('dashboard::components.audittable')
+		@include('dashboard::components.quickactions')
+		@include('dashboard::components.platformhealth')
+	</section>
+
+	<section class="dashboard-row dashboard-row--analytics">
+		@include('dashboard::components.trendchart')
+		@include('dashboard::components.barangaydistribution')
+	</section>
+</div>
 @endsection

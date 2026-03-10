@@ -28,6 +28,8 @@ export default defineConfig({
                 'app/Modules/Accounts/assets/js/view_account.js',
                 'app/Modules/AuditLog/assets/css/auditlogs.css',
                 'app/Modules/AuditLog/assets/js/auditlogs.js',
+                'app/Modules/Dashboard/assets/css/dashboard.css',
+                'app/Modules/Dashboard/assets/js/dashboard.js',
                 'app/Modules/Authentication/assets/css/gov-auth.css',
                 'app/Modules/Authentication/assets/js/gov-auth.js',
                 'app/Modules/Authentication/assets/Oneportal_logo-removebg-preview.png',
