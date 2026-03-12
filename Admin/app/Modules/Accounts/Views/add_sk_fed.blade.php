@@ -1,5 +1,4 @@
 <!-- Add SK Federation Modal -->
-@vite(['app/Modules/Accounts/assets/css/add_sk_fed.css'])
 <div id="addAccountModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-large modal-themed">
         <div class="modal-header modal-header-green">
@@ -274,7 +273,7 @@
                 
                 <!-- Form Action Buttons -->
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary-modern" onclick="closeAddAccountModal()" style="text-align: center;">Cancel</button>
+                    <button type="button" class="btn-secondary-modern" onclick="closeAddAccountModal()">Cancel</button>
                     <button type="submit" form="addSkFedForm" class="btn-primary-modern btn-green">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 4v16m8-8H4"/>
@@ -294,7 +293,7 @@
             <h3 class="modal-title">Success</h3>
         </div>
         <div class="modal-body">
-            <p style="color: #1f2937;">Account successfully created!</p>
+            <p>Account successfully created!</p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn-primary-modern btn-teal" onclick="closeAddSuccessModal()">OK</button>

@@ -1,5 +1,4 @@
 <!-- Edit SK Federation Modal -->
-@vite(['app/Modules/Accounts/assets/css/edit_sk_fed.css'])
 <div id="editAccountModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-large modal-themed">
         <div class="modal-header modal-header-yellow">
@@ -201,7 +200,7 @@
                 
                 <!-- Form Action Buttons -->
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary-modern" onclick="closeEditModal()" style="text-align: center;">Cancel</button>
+                    <button type="button" class="btn-secondary-modern" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" form="editAccountForm" class="btn-primary-modern btn-yellow">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -221,7 +220,7 @@
             <h3 class="modal-title">Success</h3>
         </div>
         <div class="modal-body">
-            <p style="color: #1f2937;">Account has been updated successfully.</p>
+            <p>Account has been updated successfully.</p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn-primary-modern btn-green" onclick="closeEditSuccessModal()">OK</button>

@@ -1,64 +1,39 @@
 import 'datatables.net-dt/css/dataTables.dataTables.css';
 
 const dashboardMetrics = {
-    totalManagedUsers: { value: 328, status: 'Stable load', severity: 'healthy' },
-    skFederationAccounts: { value: 12, status: 'All assigned', severity: 'healthy' },
-    skOfficialAccounts: { value: 312, status: '4 pending onboard', severity: 'warning' },
-    activeAccounts: { value: 289, status: 'Within target', severity: 'healthy' },
-    inactiveAccounts: { value: 21, status: 'Review needed', severity: 'warning' },
-    pendingAccounts: { value: 8, status: 'Needs action', severity: 'warning' },
-    suspendedAccounts: { value: 6, status: 'Open incidents', severity: 'critical' },
-    unassignedAccounts: { value: 3, status: 'Role gap', severity: 'critical' },
+    totalUsers: { value: '1,245', status: 'System Stable', delta: '+2.7%', statusTone: 'healthy' },
+    federationAccounts: { value: '310', status: 'Within Quota', delta: '+1.2%', statusTone: 'healthy' },
+    officialAccounts: { value: '886', status: 'Active Review', delta: '+3.1%', statusTone: 'warning' },
+    currentActiveAccounts: { value: '1,131', status: 'Online Now', delta: '+5.4%', statusTone: 'healthy' },
 };
 
-const securityMetrics = {
-    '24h': {
-        loginSuccess: 486,
-        loginFailure: 19,
-        lockedAccounts: 3,
-        twoFactorEnabled: 4,
-        passwordResetRequests: 11,
-    },
-    '7d': {
-        loginSuccess: 3329,
-        loginFailure: 146,
-        lockedAccounts: 12,
-        twoFactorEnabled: 4,
-        passwordResetRequests: 58,
-    },
-};
-
-const governanceAlerts = [
-    { key: 'terms30', label: 'Terms expiring in 30 days', value: 4, severity: 'critical' },
-    { key: 'terms60', label: 'Terms expiring in 60 days', value: 11, severity: 'warning' },
-    { key: 'pwdChange', label: 'Accounts requiring password change', value: 9, severity: 'warning' },
-    { key: 'inactiveRoles', label: 'Inactive accounts with assigned roles', value: 2, severity: 'critical' },
-    { key: 'missingBarangay', label: 'Missing barangay assignments', value: 3, severity: 'critical' },
-    { key: 'cleanBarangay', label: 'Barangay records healthy', value: 23, severity: 'healthy' },
-];
+const usersActiveLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'];
+const activeFederationSeries = [184, 201, 218, 242, 266, 281];
+const activeOfficialSeries = [622, 648, 671, 698, 724, 748];
+const activeKabataanSeries = [312, 338, 360, 385, 409, 428];
 
 const auditEvents = [
     {
-        timestamp: '2026-03-10 08:14:22',
+        timestamp: '2026-03-12 08:14:22',
         actor: 'admin.roxas',
-        event: 'Reset SKOfficial password',
+        event: 'Reset official password',
         outcome: 'success',
         ipAddress: '10.40.2.18',
         device: 'Chrome / Linux',
         actionLabel: 'Open',
     },
     {
-        timestamp: '2026-03-10 08:02:01',
+        timestamp: '2026-03-12 08:02:01',
         actor: 'admin.roxas',
-        event: 'Suspended account',
+        event: 'Federation account sync',
         outcome: 'success',
         ipAddress: '10.40.2.18',
         device: 'Chrome / Linux',
         actionLabel: 'Open',
     },
     {
-        timestamp: '2026-03-10 07:38:19',
-        actor: 'admin.dela.cruz',
+        timestamp: '2026-03-12 07:38:19',
+        actor: 'admin.delacruz',
         event: 'Failed role assignment',
         outcome: 'failure',
         ipAddress: '10.40.2.23',
@@ -66,43 +41,25 @@ const auditEvents = [
         actionLabel: 'Open',
     },
     {
-        timestamp: '2026-03-10 07:11:54',
+        timestamp: '2026-03-12 07:11:54',
         actor: 'admin.reyes',
-        event: 'Created SKFederation account',
+        event: 'Created federation account',
         outcome: 'success',
         ipAddress: '10.40.2.9',
         device: 'Firefox / Linux',
         actionLabel: 'Open',
     },
     {
-        timestamp: '2026-03-09 22:48:40',
-        actor: 'admin.reyes',
-        event: 'Updated term assignment',
-        outcome: 'success',
-        ipAddress: '10.40.2.9',
-        device: 'Firefox / Linux',
-        actionLabel: 'Open',
-    },
-    {
-        timestamp: '2026-03-09 21:26:33',
+        timestamp: '2026-03-12 06:48:40',
         actor: 'admin.klein',
-        event: '2FA challenge failed',
-        outcome: 'failure',
+        event: 'Audit export requested',
+        outcome: 'warning',
         ipAddress: '10.40.2.31',
         device: 'Safari / macOS',
         actionLabel: 'Open',
     },
     {
-        timestamp: '2026-03-09 21:03:09',
-        actor: 'admin.klein',
-        event: 'Unlocked account',
-        outcome: 'success',
-        ipAddress: '10.40.2.31',
-        device: 'Safari / macOS',
-        actionLabel: 'Open',
-    },
-    {
-        timestamp: '2026-03-09 20:41:17',
+        timestamp: '2026-03-12 06:12:03',
         actor: 'admin.santos',
         event: 'Bulk status update',
         outcome: 'success',
@@ -111,16 +68,7 @@ const auditEvents = [
         actionLabel: 'Open',
     },
     {
-        timestamp: '2026-03-09 20:22:43',
-        actor: 'admin.santos',
-        event: 'Forced password rotation',
-        outcome: 'success',
-        ipAddress: '10.40.2.42',
-        device: 'Chrome / Windows',
-        actionLabel: 'Open',
-    },
-    {
-        timestamp: '2026-03-09 19:57:02',
+        timestamp: '2026-03-11 23:57:02',
         actor: 'admin.romero',
         event: 'Account import validation error',
         outcome: 'failure',
@@ -130,23 +78,12 @@ const auditEvents = [
     },
 ];
 
-const platformHealth = [
-    { key: 'supabase', label: 'Supabase database connection', status: 'healthy' },
-    { key: 'redis', label: 'Redis cache', status: 'warning' },
-    { key: 'failedJobs', label: 'Failed jobs queue', status: 'failure' },
-    { key: 'scheduler', label: 'Scheduler heartbeat', status: 'healthy' },
-];
-
-const trendLabels = Array.from({ length: 30 }, (_, idx) => `Day ${idx + 1}`);
-const createdSeries = [6, 8, 11, 7, 10, 9, 13, 12, 11, 14, 10, 15, 16, 14, 12, 11, 13, 12, 15, 16, 14, 12, 11, 13, 10, 9, 12, 14, 13, 11];
-const deactivatedSeries = [1, 2, 1, 3, 2, 1, 2, 1, 2, 3, 2, 2, 1, 3, 2, 2, 3, 2, 1, 2, 3, 2, 1, 2, 3, 2, 2, 1, 2, 3];
-
 const barangayDistribution = [
     { barangay: 'Aplaya', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 48 },
     { barangay: 'Alipit', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 45 },
     { barangay: 'Bagumbayan', skFederationAssigned: true, skOfficialsAssigned: 10, accountCount: 43 },
     { barangay: 'Bubukal', skFederationAssigned: false, skOfficialsAssigned: 8, accountCount: 31 },
-    { barangay: 'Calios', skFederationAssigned: true, skOfficialsAssigned: 0, accountCount: 24 },
+    { barangay: 'Calios', skFederationAssigned: true, skOfficialsAssigned: 9, accountCount: 38 },
     { barangay: 'Duhat', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 44 },
     { barangay: 'Gatid', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 46 },
     { barangay: 'Labuin', skFederationAssigned: false, skOfficialsAssigned: 0, accountCount: 19 },
@@ -156,27 +93,30 @@ const barangayDistribution = [
     { barangay: 'San Pablo Norte', skFederationAssigned: true, skOfficialsAssigned: 9, accountCount: 38 },
 ];
 
+const pulseBaseData = [94, 95, 96, 97, 96, 98, 97, 99, 98, 97, 98, 99];
+const pulseLabels = ['-55s', '-50s', '-45s', '-40s', '-35s', '-30s', '-25s', '-20s', '-15s', '-10s', '-5s', 'Now'];
+
+const platformHealthTelemetry = {
+    score: 97,
+    statusLabel: 'Live: Healthy',
+    statusTone: 'healthy',
+    metrics: [
+        { key: 'uptime', label: 'Uptime', value: '99.93%' },
+        { key: 'latency', label: 'Latency', value: '116 ms' },
+        { key: 'jobs', label: 'Queue Success', value: '98.7%' },
+    ],
+};
+
 window.dashboardMetrics = dashboardMetrics;
-window.securityMetrics = securityMetrics;
 window.auditEvents = auditEvents;
 window.barangayDistribution = barangayDistribution;
+window.platformHealthTelemetry = platformHealthTelemetry;
 
 window.dashboardConsole = function dashboardConsole() {
     return {
         dashboardMetrics,
-        securityMetrics,
-        governanceAlerts,
-        platformHealth,
+        platformHealthTelemetry,
         barangayDistribution,
-        securityRange: '24h',
-
-        get activeSecurityMetrics() {
-            return this.securityMetrics[this.securityRange];
-        },
-
-        setSecurityRange(range) {
-            this.securityRange = range;
-        },
 
         federationBadge(row) {
             return row.skFederationAssigned ? 'pill--healthy' : 'pill--critical';
@@ -189,10 +129,31 @@ window.dashboardConsole = function dashboardConsole() {
         overallGap(row) {
             return row.skFederationAssigned && row.skOfficialsAssigned > 0;
         },
+
+        refreshHealthTelemetry() {
+            if (typeof window.skRefreshPlatformHealth === 'function') {
+                window.skRefreshPlatformHealth();
+            }
+        },
     };
 };
 
-let accountsTrendChart;
+let usersActiveChart;
+let platformHealthGaugeChart;
+let platformHealthPulseChart;
+let healthPulseIntervalId;
+
+function computeHealthTone(score) {
+    if (score >= 96) {
+        return { tone: 'healthy', label: 'Live: Healthy' };
+    }
+
+    if (score >= 90) {
+        return { tone: 'warning', label: 'Live: Degraded' };
+    }
+
+    return { tone: 'critical', label: 'Live: Critical' };
+}
 
 function renderAuditRows(tableElement) {
     const body = tableElement.querySelector('tbody');
@@ -202,17 +163,23 @@ function renderAuditRows(tableElement) {
 
     body.innerHTML = auditEvents
         .map((event) => {
-            const outcomeClass = event.outcome === 'success' ? 'audit-outcome--success' : 'audit-outcome--failure';
-            const outcomeLabel = event.outcome.toUpperCase();
+            const outcomeClassByState = {
+                success: 'audit-outcome--success',
+                warning: 'audit-outcome--warning',
+                failure: 'audit-outcome--failure',
+            };
+
+            const outcomeClass = outcomeClassByState[event.outcome] || 'audit-outcome--warning';
+            const channelLabel = event.device.split('/')[0].trim();
 
             return `
                 <tr>
                     <td>${event.timestamp}</td>
                     <td>${event.actor}</td>
                     <td>${event.event}</td>
-                    <td><span class="audit-outcome ${outcomeClass}">${outcomeLabel}</span></td>
+                    <td><span class="audit-outcome ${outcomeClass}">${event.outcome.toUpperCase()}</span></td>
                     <td>${event.ipAddress}</td>
-                    <td>${event.device}</td>
+                    <td>${channelLabel}</td>
                     <td><a class="audit-action-link" href="#">${event.actionLabel}</a></td>
                 </tr>
             `;
@@ -239,46 +206,62 @@ function initAuditDataTable() {
         info: false,
         order: [[0, 'desc']],
         pagingType: 'simple_numbers',
-        columnDefs: [
-            { orderable: false, targets: 6 },
-        ],
+        columnDefs: [{ orderable: false, targets: 6 }],
     });
 
     tableElement.dataset.enhanced = 'true';
 }
 
-function initTrendChart() {
-    const canvas = document.getElementById('accountsTrendChart');
+function initUsersActiveChart() {
+    const canvas = document.getElementById('usersActiveChart');
     if (!canvas || !window.Chart) {
         return;
     }
 
-    if (accountsTrendChart) {
-        accountsTrendChart.destroy();
+    if (usersActiveChart) {
+        usersActiveChart.destroy();
     }
 
-    accountsTrendChart = new window.Chart(canvas, {
+    usersActiveChart = new window.Chart(canvas, {
         type: 'line',
         data: {
-            labels: trendLabels,
+            labels: usersActiveLabels,
             datasets: [
                 {
-                    label: 'Created accounts',
-                    data: createdSeries,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+                    label: 'Federation Active Users',
+                    data: activeFederationSeries,
+                    borderColor: '#4dc5ff',
+                    backgroundColor: 'rgba(77, 197, 255, 0.16)',
+                    pointBackgroundColor: '#4dc5ff',
+                    pointBorderColor: '#4dc5ff',
                     borderWidth: 2,
-                    tension: 0.2,
-                    pointRadius: 1.7,
+                    pointRadius: 2,
+                    tension: 0.34,
+                    fill: true,
                 },
                 {
-                    label: 'Deactivated accounts',
-                    data: deactivatedSeries,
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.16)',
+                    label: 'Official Active Users',
+                    data: activeOfficialSeries,
+                    borderColor: '#9d8bff',
+                    backgroundColor: 'rgba(157, 139, 255, 0.14)',
+                    pointBackgroundColor: '#9d8bff',
+                    pointBorderColor: '#9d8bff',
                     borderWidth: 2,
-                    tension: 0.2,
-                    pointRadius: 1.7,
+                    pointRadius: 2,
+                    tension: 0.34,
+                    fill: true,
+                },
+                {
+                    label: 'Kabataan Active Users',
+                    data: activeKabataanSeries,
+                    borderColor: '#2de2ce',
+                    backgroundColor: 'rgba(45, 226, 206, 0.12)',
+                    pointBackgroundColor: '#2de2ce',
+                    pointBorderColor: '#2de2ce',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    tension: 0.34,
+                    fill: true,
                 },
             ],
         },
@@ -287,31 +270,207 @@ function initTrendChart() {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    labels: {
-                        color: '#d7e5f8',
-                        boxWidth: 14,
-                        font: { family: 'JetBrains Mono, IBM Plex Mono, monospace', size: 11 },
-                    },
+                    display: false,
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 17, 34, 0.96)',
+                    borderColor: 'rgba(88, 130, 222, 0.7)',
+                    borderWidth: 1,
+                    titleColor: '#e8f1ff',
+                    bodyColor: '#d8e6ff',
                 },
             },
             scales: {
                 x: {
-                    ticks: { color: '#9fb4d3', maxTicksLimit: 10 },
-                    grid: { color: 'rgba(130, 157, 198, 0.16)' },
+                    ticks: {
+                        color: '#9eb7df',
+                        maxTicksLimit: 6,
+                    },
+                    grid: {
+                        color: 'rgba(95, 131, 211, 0.2)',
+                    },
                 },
                 y: {
                     beginAtZero: true,
-                    ticks: { color: '#9fb4d3' },
-                    grid: { color: 'rgba(130, 157, 198, 0.16)' },
+                    ticks: {
+                        color: '#9eb7df',
+                    },
+                    grid: {
+                        color: 'rgba(95, 131, 211, 0.2)',
+                    },
                 },
             },
         },
     });
 }
 
+function syncHealthScore(score) {
+    const rounded = Math.max(0, Math.min(100, Math.round(score)));
+    const tone = computeHealthTone(rounded);
+
+    platformHealthTelemetry.score = rounded;
+    platformHealthTelemetry.statusTone = tone.tone;
+    platformHealthTelemetry.statusLabel = tone.label;
+    platformHealthTelemetry.metrics = [
+        { key: 'uptime', label: 'Uptime', value: `${(99 + rounded / 100).toFixed(2)}%` },
+        { key: 'latency', label: 'Latency', value: `${Math.round(180 - rounded)} ms` },
+        { key: 'jobs', label: 'Queue Success', value: `${Math.min(99.9, 92 + rounded / 12).toFixed(1)}%` },
+    ];
+
+    if (platformHealthGaugeChart) {
+        platformHealthGaugeChart.data.datasets[0].data = [rounded, 100 - rounded];
+        platformHealthGaugeChart.data.datasets[0].backgroundColor = [
+            rounded >= 96 ? '#23cf88' : rounded >= 90 ? '#f4b429' : '#ff5669',
+            'rgba(70, 95, 150, 0.2)',
+        ];
+        platformHealthGaugeChart.update('none');
+    }
+}
+
+function initPlatformHealthCharts() {
+    const gaugeCanvas = document.getElementById('platformHealthGaugeChart');
+    const pulseCanvas = document.getElementById('platformHealthPulseChart');
+
+    if (!gaugeCanvas || !pulseCanvas || !window.Chart) {
+        return;
+    }
+
+    if (platformHealthGaugeChart) {
+        platformHealthGaugeChart.destroy();
+    }
+
+    if (platformHealthPulseChart) {
+        platformHealthPulseChart.destroy();
+    }
+
+    platformHealthGaugeChart = new window.Chart(gaugeCanvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Health Score', 'Remaining'],
+            datasets: [{
+                data: [platformHealthTelemetry.score, 100 - platformHealthTelemetry.score],
+                backgroundColor: ['#23cf88', 'rgba(70, 95, 150, 0.2)'],
+                borderColor: ['rgba(35, 207, 136, 0.25)', 'rgba(70, 95, 150, 0)'],
+                borderWidth: 2,
+                circumference: 220,
+                rotation: 250,
+                cutout: '75%',
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    enabled: false,
+                },
+            },
+        },
+    });
+
+    platformHealthPulseChart = new window.Chart(pulseCanvas, {
+        type: 'line',
+        data: {
+            labels: pulseLabels,
+            datasets: [{
+                label: 'Health Pulse',
+                data: [...pulseBaseData],
+                borderColor: '#4fb3ff',
+                backgroundColor: 'rgba(79, 179, 255, 0.2)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.32,
+                fill: true,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 17, 34, 0.96)',
+                    borderColor: 'rgba(88, 130, 222, 0.7)',
+                    borderWidth: 1,
+                    titleColor: '#e8f1ff',
+                    bodyColor: '#d8e6ff',
+                },
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#9eb7df',
+                        maxTicksLimit: 4,
+                    },
+                    grid: {
+                        color: 'rgba(95, 131, 211, 0.18)',
+                    },
+                },
+                y: {
+                    min: 82,
+                    max: 100,
+                    ticks: {
+                        color: '#9eb7df',
+                    },
+                    grid: {
+                        color: 'rgba(95, 131, 211, 0.18)',
+                    },
+                },
+            },
+        },
+    });
+
+    syncHealthScore(platformHealthTelemetry.score);
+}
+
+function mutateHealthPulse() {
+    if (!platformHealthPulseChart) {
+        return;
+    }
+
+    const dataset = platformHealthPulseChart.data.datasets[0];
+    const prior = dataset.data[dataset.data.length - 1] || 96;
+    const jitter = (Math.random() - 0.5) * 3.5;
+    const nextPoint = Math.max(84, Math.min(100, Number(prior) + jitter));
+
+    dataset.data.push(Number(nextPoint.toFixed(1)));
+    dataset.data.shift();
+
+    const labels = platformHealthPulseChart.data.labels;
+    const stamp = new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' });
+    labels.push(stamp);
+    labels.shift();
+
+    platformHealthPulseChart.update('none');
+
+    const average = dataset.data.reduce((sum, point) => sum + Number(point), 0) / dataset.data.length;
+    syncHealthScore(average);
+}
+
+function startHealthTelemetryLoop() {
+    if (healthPulseIntervalId) {
+        window.clearInterval(healthPulseIntervalId);
+    }
+
+    healthPulseIntervalId = window.setInterval(() => {
+        mutateHealthPulse();
+    }, 2500);
+}
+
+window.skRefreshPlatformHealth = function skRefreshPlatformHealth() {
+    mutateHealthPulse();
+};
+
 function bootDashboardWidgets() {
     initAuditDataTable();
-    initTrendChart();
+    initUsersActiveChart();
+    initPlatformHealthCharts();
+    startHealthTelemetryLoop();
 
     window.skDashboardRuntime = {
         alpineReady: typeof window.Alpine !== 'undefined',

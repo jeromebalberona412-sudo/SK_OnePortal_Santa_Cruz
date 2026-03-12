@@ -2,18 +2,20 @@
     <header class="panel__header">
         <div>
             <h2 class="gov-card__title">Barangay Distribution</h2>
-            <p class="gov-card__subtitle">Assignment coverage and gap detection</p>
+            <p class="gov-card__subtitle">Federation and official account spread across Santa Cruz barangays</p>
         </div>
+
+        <button type="button" class="panel-action-btn">Export</button>
     </header>
 
     <div class="table-scroll">
         <table class="table-compact" aria-label="Barangay account distribution">
             <thead>
                 <tr>
-                    <th>Barangay name</th>
-                    <th>SKFederation assigned</th>
-                    <th>SKOfficials assigned</th>
-                    <th>Account count</th>
+                    <th>Barangay Name</th>
+                    <th>Federation Assigned</th>
+                    <th>Official Accounts</th>
+                    <th>Total Accounts</th>
                     <th>Status</th>
                 </tr>
             </thead>

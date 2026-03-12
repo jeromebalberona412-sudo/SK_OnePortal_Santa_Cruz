@@ -12,7 +12,6 @@
 @endphp
 
 @section('head')
-    @vite(['app/Modules/Accounts/assets/css/manage_account.css'])
 @endsection
 
 @section('content')
