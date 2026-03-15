@@ -63,6 +63,41 @@ Route::middleware(['web'])->group(function () {
         return view('Announcement::announcement');
     })->name('announcements');
 
+    /*
+    |--------------------------------------------------------------------------
+    | SK Officials Modules: Committees, Programs, Events (UI Only)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/committees', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Committees::committees');
+    })->name('committees');
+
+    Route::get('/programs', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Programs::programs');
+    })->name('programs');
+
+    Route::get('/events', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Events::events');
+    })->name('events');
+
+    // KK Profiling Requests (UI-only, auth-protected via simple session check)
+    Route::get('/kk-profiling-requests', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('KKProfilingRequests::kkprofiling-requests');
+    })->name('kk-profiling-requests');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 });
@@ -76,4 +111,3 @@ Route::middleware(['web'])->group(function () {
 Route::get('/', function () {
     return redirect()->route('login');
 });
-

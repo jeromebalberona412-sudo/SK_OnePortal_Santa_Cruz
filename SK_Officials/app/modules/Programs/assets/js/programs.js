@@ -1,0 +1,203 @@
+document.addEventListener('DOMContentLoaded', () => {
+    initializeProgramsUI();
+});
+
+function initializeProgramsUI() {
+    const tbody = document.getElementById('programTableBody');
+    const searchInput = document.getElementById('programSearch');
+    const committeeFilter = document.getElementById('programCommitteeFilter');
+    const statusFilter = document.getElementById('programStatusFilter');
+
+    const addBtn = document.getElementById('addProgramBtn');
+    const modal = document.getElementById('programModal');
+    const titleInput = document.getElementById('programTitleInput');
+    const committeeInput = document.getElementById('programCommitteeInput');
+    const budgetInput = document.getElementById('programBudgetInput');
+    const startInput = document.getElementById('programStartInput');
+    const endInput = document.getElementById('programEndInput');
+    const statusInput = document.getElementById('programStatusInput');
+    const saveBtn = document.getElementById('programSaveBtn');
+
+    const summaryTotal = document.getElementById('summaryTotalPrograms');
+    const summaryPlanned = document.getElementById('summaryPlanned');
+    const summaryOngoing = document.getElementById('summaryOngoing');
+    const summaryCompleted = document.getElementById('summaryCompleted');
+
+    if (!tbody) return;
+
+    // Start empty; programs appear only after "Add Program"
+    const programs = [];
+
+    let currentQuery = '';
+    let currentCommittee = '';
+    let currentStatus = '';
+
+    function formatBudget(value) {
+        return '₱ ' + value.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDuration(start, end) {
+        const opts = { month: 'short', day: '2-digit', year: 'numeric' };
+        const s = new Date(start).toLocaleDateString(undefined, opts);
+        const e = new Date(end).toLocaleDateString(undefined, opts);
+        return `${s} – ${e}`;
+    }
+
+    function render() {
+        tbody.innerHTML = '';
+
+        const filtered = programs.filter((p) => {
+            const matchesSearch =
+                !currentQuery ||
+                p.title.toLowerCase().includes(currentQuery) ||
+                p.committee.toLowerCase().includes(currentQuery);
+
+            const matchesCommittee =
+                !currentCommittee ||
+                p.committee.toLowerCase().includes(currentCommittee);
+
+            const matchesStatus =
+                !currentStatus || p.status === currentStatus;
+
+            return matchesSearch && matchesCommittee && matchesStatus;
+        });
+
+        if (filtered.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 5;
+            td.textContent = 'No programs added yet. Use "+ Add Program" to register your first program (UI only).';
+            td.style.textAlign = 'center';
+            td.style.fontSize = '13px';
+            td.style.color = '#6b7280';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        } else {
+            filtered.forEach((p) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="program-title-cell">${p.title}</td>
+                    <td>${p.committee}</td>
+                    <td class="program-budget">${formatBudget(p.budget)}</td>
+                    <td class="program-duration">${formatDuration(p.startDate, p.endDate)}</td>
+                    <td>
+                        <span class="status-pill ${p.status}">
+                            ${p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        updateSummary(programs);
+    }
+
+    function updateSummary(list) {
+        if (!summaryTotal) return;
+
+        const total = list.length;
+        const planned = list.filter((p) => p.status === 'planned').length;
+        const ongoing = list.filter((p) => p.status === 'ongoing').length;
+        const completed = list.filter((p) => p.status === 'completed').length;
+
+        summaryTotal.textContent = total;
+        if (summaryPlanned) summaryPlanned.textContent = planned;
+        if (summaryOngoing) summaryOngoing.textContent = ongoing;
+        if (summaryCompleted) summaryCompleted.textContent = completed;
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            currentQuery = searchInput.value.trim().toLowerCase();
+            render();
+        });
+    }
+
+    if (committeeFilter) {
+        committeeFilter.addEventListener('change', () => {
+            currentCommittee = committeeFilter.value;
+            render();
+        });
+    }
+
+    if (statusFilter) {
+        statusFilter.addEventListener('change', () => {
+            currentStatus = statusFilter.value;
+            render();
+        });
+    }
+
+    // Modal helpers
+    function openModal() {
+        if (!modal) return;
+        modal.style.display = 'flex';
+        if (titleInput) titleInput.focus();
+    }
+
+    function closeModal() {
+        if (!modal) return;
+        modal.style.display = 'none';
+        if (titleInput) titleInput.value = '';
+        if (committeeInput) committeeInput.value = '';
+        if (budgetInput) budgetInput.value = '';
+        if (startInput) startInput.value = '';
+        if (endInput) endInput.value = '';
+        if (statusInput) statusInput.value = 'planned';
+    }
+
+    if (addBtn) {
+        addBtn.addEventListener('click', openModal);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal || e.target.hasAttribute('data-modal-close') || e.target.hasAttribute('data-modal-cancel')) {
+                closeModal();
+            }
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const title = (titleInput?.value || '').trim();
+            const committee = (committeeInput?.value || '').trim();
+            const budgetVal = (budgetInput?.value || '').trim();
+            const startDate = (startInput?.value || '').trim();
+            const endDate = (endInput?.value || '').trim();
+            const status = (statusInput?.value || 'planned').trim();
+
+            if (!title || !committee || !budgetVal || !startDate || !endDate) {
+                alert('Please complete the required fields (title, committee, budget, dates). UI only.');
+                return;
+            }
+
+            const budget = Number(budgetVal) || 0;
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            // Simulated AJAX
+            setTimeout(() => {
+                programs.push({
+                    title,
+                    committee,
+                    budget,
+                    startDate,
+                    endDate,
+                    status: status || 'planned',
+                });
+
+                closeModal();
+                render();
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save';
+
+                alert('Program successfully added (UI only, no backend yet).');
+            }, 600);
+        });
+    }
+
+    render();
+}
+

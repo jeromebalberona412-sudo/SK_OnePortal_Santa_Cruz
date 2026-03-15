@@ -559,18 +559,22 @@
     }
 }
 
-/* Sidebar Toggle X State - same size as burger, same light yellow background */
+/* Sidebar Toggle X State - no background, clean appearance */
 .sidebar-toggle.active {
-    background-color: #ffe680 !important;
-    color: #1f3c6d !important;
+    background: none !important;
+    color: white !important;
     padding: 8px;
 }
 
 .sidebar-toggle.active:hover {
-    background-color: #ffed99 !important;
+    background-color: #ffe680 !important;
     color: #1f3c6d !important;
 }
 
 .sidebar-toggle.active .x-icon {
+    stroke: white;
+}
+
+.sidebar-toggle.active:hover .x-icon {
     stroke: #1f3c6d;
 }

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Committees - SK Officials Portal</title>
+
+    @vite([
+        'app/modules/layout/css/header.css',
+        'app/modules/layout/css/sidebar.css',
+        'app/modules/Committees/assets/css/committees.css'
+    ])
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+@include('layout::header')
+
+<!-- ================= SIDEBAR ================= -->
+@include('layout::sidebar')
+
+<!-- ================= MAIN CONTENT ================= -->
+<main class="main-content">
+    <div class="page-container committees-page">
+
+        <section class="page-header-section">
+            <div class="page-header-left">
+                <h1 class="page-title">Committees</h1>
+                <p class="page-subtitle">
+                    View the official SK committee structure and member assignments.
+                </p>
+            </div>
+            <div class="page-header-right">
+                <button type="button" class="btn primary-btn" id="addCommitteeBtn">
+                    + Add Committee
+                </button>
+            </div>
+        </section>
+
+        <section class="page-filters-section">
+            <div class="filters-row">
+                <div class="filter-item">
+                    <label for="committeeSearch" class="filter-label">Search committee</label>
+                    <div class="filter-input-wrapper">
+                        <input type="text" id="committeeSearch" class="filter-input" placeholder="Search by name or member">
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label for="committeeHeadFilter" class="filter-label">Committee head</label>
+                    <select id="committeeHeadFilter" class="filter-select">
+                        <option value="">All heads</option>
+                        <option value="chairman">SK Chairman</option>
+                        <option value="kagawad">SK Kagawad</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section class="page-content-section">
+            <div class="section-heading-row">
+                <h2 class="section-title">Committee Directory</h2>
+                <p class="section-description">
+                    Each committee represents a core area of youth development in the barangay.
+                </p>
+            </div>
+
+            <div id="committeeGrid" class="committee-grid">
+                <!-- Committees will be rendered by committees.js (UI-only, mock data) -->
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- Committees Modal (UI-only, handled by committees.js) -->
+<div class="modal-backdrop" id="committeeModal" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 class="modal-title">Add Committee</h2>
+            <button type="button" class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field">
+                <label for="committeeNameInput">Committee Name</label>
+                <input type="text" id="committeeNameInput" placeholder="e.g. Education">
+            </div>
+            <div class="modal-field">
+                <label for="committeeHeadInput">Committee Head</label>
+                <input type="text" id="committeeHeadInput" placeholder="e.g. Ana Reyes">
+            </div>
+            <div class="modal-field">
+                <label for="committeeMembersInput">Members (comma-separated)</label>
+                <input type="text" id="committeeMembersInput" placeholder="e.g. Member 1, Member 2">
+            </div>
+            <div class="modal-field">
+                <label for="committeeDescriptionInput">Description</label>
+                <textarea id="committeeDescriptionInput" rows="3" placeholder="Short description of the committee"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn" data-modal-cancel>Cancel</button>
+            <button type="button" class="btn primary-btn" id="committeeSaveBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+@vite([
+    'app/modules/layout/js/header.js',
+    'app/modules/layout/js/sidebar.js',
+    'app/modules/Committees/assets/js/committees.js'
+])
+
+</body>
+</html>
+

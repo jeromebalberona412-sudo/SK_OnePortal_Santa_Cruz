@@ -130,10 +130,11 @@ function syncToggleState() {
         return;
     }
 
-    if (!sidebar.classList.contains('collapsed')) {
-        toggle.classList.add('active');
-    } else {
+    // Hide X when sidebar is collapsed/closed, show X when sidebar is open
+    if (sidebar.classList.contains('collapsed')) {
         toggle.classList.remove('active');
+    } else {
+        toggle.classList.add('active');
     }
 }
 

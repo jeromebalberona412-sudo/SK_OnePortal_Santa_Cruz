@@ -304,15 +304,15 @@ body {
     margin: -20px -20px 0 -20px;
     padding: 14px 20px;
     flex-shrink: 0;
-    background: linear-gradient(135deg, #f4c20d 0%, #d4a80a 100%);
+    background: #1f3c6d;
     border-radius: 16px 16px 0 0;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.15);
 }
 
 .calendar-modal-title {
     font-size: 18px;
     font-weight: 700;
-    color: #1f3c6d;
+    color: #ffffff;
     flex: 1;
 }
 
@@ -329,14 +329,15 @@ body {
     font-size: 18px;
     font-weight: 700;
     cursor: pointer;
-    color: #000;
+    color: #ffffff;
     padding: 4px 8px;
     line-height: 1;
 }
 
 .modal-toggle-btn:hover,
 .calendar-modal-close:hover {
-    color: #333;
+    color: #ffffff;
+    opacity: 0.85;
 }
 
 .calendar-modal-body {

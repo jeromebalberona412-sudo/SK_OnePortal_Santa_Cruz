@@ -110,19 +110,16 @@
 .nav-link:hover {
     background: #ffe680;
     color: #1f3c6d;
-    transform: translateX(5px);
     box-shadow: 0 4px 12px rgba(244, 194, 13, 0.3);
 }
 
 .nav-link:hover .nav-icon {
     color: #1f3c6d;
-    transform: scale(1.1);
 }
 
 .nav-link.active {
     background: #f4c20d;
     color: #1f3c6d;
-    transform: translateX(5px);
     box-shadow: 0 4px 12px rgba(244, 194, 13, 0.5);
 }
 
@@ -470,8 +467,8 @@
     }
     
     .main-sidebar.collapsed .nav-icon {
-        font-size: 20px;
-        width: auto;
+        font-size: 18px;
+        width: 20px;
     }
     
     .main-sidebar.collapsed .nav-divider {
