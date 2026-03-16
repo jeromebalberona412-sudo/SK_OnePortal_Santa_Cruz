@@ -136,16 +136,28 @@ function initializeKabataanUI() {
     });
 
     const kabataan = [
-        { ...defaultRecord(), firstName: 'Juan', middleName: 'Dela', lastName: 'Cruz', suffix: 'Jr.', age: 21, sex: 'Male', barangay: 'Purok 3', highestEducation: 'College', workStatus: 'Student', contactNumber: '09171234567' },
-        { ...defaultRecord(), firstName: 'Maria', middleName: 'M.', lastName: 'Santos', age: 19, sex: 'Female', barangay: 'Purok 2', highestEducation: 'High School', workStatus: 'Student', contactNumber: '09187654321' },
-        { ...defaultRecord(), firstName: 'Kevin', middleName: 'R.', lastName: 'Cruz', age: 23, sex: 'Male', barangay: 'Purok 1', highestEducation: 'College', workStatus: '', contactNumber: '09201234567' },
-        { ...defaultRecord(), firstName: 'Angelica', middleName: 'L.', lastName: 'Reyes', suffix: '', age: 20, sex: 'Female', barangay: 'Purok 4', highestEducation: 'College', workStatus: 'Student', contactNumber: '09169876543' },
+        { ...defaultRecord(), firstName: 'Juan', middleName: 'Miguel', lastName: 'Reyes', suffix: 'Jr.', age: 21, sex: 'Male', barangay: 'Purok 1', highestEducation: 'College Level', workStatus: 'Student', contactNumber: '09123456789', email: 'juan.reyes@email.com' },
+        { ...defaultRecord(), firstName: 'Maria', middleName: 'Beatriz', lastName: 'Cruz', age: 19, sex: 'Female', barangay: 'Sitio 2', highestEducation: 'High School Graduate', workStatus: 'Student', contactNumber: '09123456790', email: 'maria.cruz@email.com' },
+        { ...defaultRecord(), firstName: 'Antonio', middleName: 'Carlos', lastName: 'Garcia', age: 23, sex: 'Male', barangay: 'Villa Gracias', highestEducation: 'College Graduate', workStatus: 'Employed', contactNumber: '09123456791', email: 'antonio.garcia@email.com' },
+        { ...defaultRecord(), firstName: 'Angelica', middleName: 'Sofia', lastName: 'Santillan', suffix: '', age: 20, sex: 'Female', barangay: 'Bayside Calios', highestEducation: 'College Level', workStatus: 'Student', contactNumber: '09123456792', email: 'angelica.santillan@email.com' },
+        { ...defaultRecord(), firstName: 'Carlos', middleName: 'Domingo', lastName: 'Mendoza', suffix: 'Sr.', age: 22, sex: 'Male', barangay: 'Purok 3', highestEducation: 'College Level', workStatus: 'Student', contactNumber: '09123456793', email: 'carlos.mendoza@email.com' },
+        { ...defaultRecord(), firstName: 'Patricia', middleName: 'Rosa', lastName: 'Del Rosario', age: 18, sex: 'Female', barangay: 'Sitio 1', highestEducation: 'High School', workStatus: 'Student', contactNumber: '09123456794', email: 'patricia.rosario@email.com' },
+        { ...defaultRecord(), firstName: 'Miguel', middleName: 'Antonio', lastName: 'Fernandez', suffix: 'III', age: 24, sex: 'Male', barangay: 'Purok 4', highestEducation: 'College Graduate', workStatus: 'Employed', contactNumber: '09123456795', email: 'miguel.fernandez@email.com' },
+        { ...defaultRecord(), firstName: 'Sofia', middleName: 'Isabel', lastName: 'Castillo', age: 17, sex: 'Female', barangay: 'Sitio 3', highestEducation: 'High School', workStatus: 'Student', contactNumber: '09123456796', email: 'sofia.castillo@email.com' },
+        { ...defaultRecord(), firstName: 'Jose', middleName: 'Luis', lastName: 'Rivera', age: 20, sex: 'Male', barangay: 'Purok 5', highestEducation: 'College Level', workStatus: 'NEET', contactNumber: '09123456797', email: 'jose.rivera@email.com' },
+        { ...defaultRecord(), firstName: 'Ana', middleName: 'Katrina', lastName: 'Villanueva', age: 19, sex: 'Female', barangay: 'Sitio 4', highestEducation: 'College Level', workStatus: 'Student', contactNumber: '09123456798', email: 'ana.villanueva@email.com' },
+        { ...defaultRecord(), firstName: 'Roberto', middleName: 'Francisco', lastName: 'Santos', age: 21, sex: 'Male', barangay: 'Purok 6', highestEducation: 'College Level', workStatus: 'Employed', contactNumber: '09123456799', email: 'roberto.santos@email.com' },
+        { ...defaultRecord(), firstName: 'Catherine', middleName: 'Mae', lastName: 'Lopez', age: 18, sex: 'Female', barangay: 'Sitio 5', highestEducation: 'High School', workStatus: 'Student', contactNumber: '09123456800', email: 'catherine.lopez@email.com' }
     ];
 
     let currentQuery = '';
     let currentGender = '';
     let currentPurok = '';
     let editingIndex = null;
+
+    // Pagination variables
+    let currentPage = 1;
+    const recordsPerPage = 10;
 
     function render() {
         tbody.innerHTML = '';
@@ -159,26 +171,31 @@ function initializeKabataanUI() {
             return matchSearch && matchGender && matchPurok;
         });
 
-        if (filtered.length === 0) {
+        // Calculate pagination
+        const totalPages = Math.ceil(filtered.length / recordsPerPage);
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = Math.min(startIndex + recordsPerPage, filtered.length);
+        const paginatedData = filtered.slice(startIndex, endIndex);
+
+        if (paginatedData.length === 0) {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
             td.colSpan = 6;
-            td.textContent = 'No kabataan match the current filters.';
+            td.textContent = 'No kabataan match current filters.';
             tr.appendChild(td);
             tbody.appendChild(tr);
+            updatePaginationInfo(0, 0, 1);
             return;
         }
 
-        filtered.forEach((k) => {
+        paginatedData.forEach((k) => {
             const index = kabataan.indexOf(k);
             const full = fullNameFrom(k);
-            const subText = `FN, MN, LN, ${k.suffix || 'None'}`;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="kabataan-fullname-cell">
                     <span class="kabataan-fullname">${full}</span>
-                    <small class="kabataan-fullname-sub">${subText}</small>
                 </td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
@@ -193,11 +210,79 @@ function initializeKabataanUI() {
             `;
             tbody.appendChild(tr);
         });
+
+        updatePaginationInfo(startIndex + 1, endIndex, currentPage, totalPages);
+        updatePaginationControls(currentPage, totalPages);
     }
 
-    if (searchInput) searchInput.addEventListener('input', () => { currentQuery = searchInput.value.trim().toLowerCase(); render(); });
-    if (genderFilter) genderFilter.addEventListener('change', () => { currentGender = genderFilter.value; render(); });
-    if (purokFilter) purokFilter.addEventListener('change', () => { currentPurok = purokFilter.value; render(); });
+    function updatePaginationInfo(start, end, page, totalPages) {
+        const info = document.getElementById('kabataanPaginationInfo');
+        if (info) {
+            const total = kabataan.filter((k) => {
+                const q = currentQuery;
+                const full = fullNameFrom(k).toLowerCase();
+                const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (k.highestEducation && k.highestEducation.toLowerCase().includes(q));
+                const matchGender = !currentGender || k.sex === currentGender;
+                const matchPurok = !currentPurok || k.barangay === currentPurok;
+                return matchSearch && matchGender && matchPurok;
+            }).length;
+
+            info.textContent = total === 0 ? 'No records found' : `Showing ${start}-${end} of ${total} records`;
+        }
+    }
+
+    function updatePaginationControls(page, totalPages) {
+        const prevBtn = document.getElementById('kabataanPrevBtn');
+        const nextBtn = document.getElementById('kabataanNextBtn');
+        const pageNumbers = document.getElementById('kabataanPageNumbers');
+
+        if (prevBtn) prevBtn.disabled = page === 1;
+        if (nextBtn) nextBtn.disabled = page === totalPages;
+
+        if (pageNumbers) {
+            pageNumbers.innerHTML = '';
+
+            // Show max 5 page numbers
+            let startPage = Math.max(1, page - 2);
+            let endPage = Math.min(totalPages, page + 2);
+
+            // Adjust if we're near the beginning
+            if (endPage - startPage < 5) {
+                endPage = Math.min(5, totalPages);
+                startPage = 1;
+            }
+
+            // Adjust if we're near the end
+            if (endPage - startPage < 5 && page > totalPages - 2) {
+                startPage = Math.max(1, totalPages - 4);
+                endPage = totalPages;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-number ${i === page ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => goToPage(i);
+                pageNumbers.appendChild(pageBtn);
+            }
+        }
+    }
+
+    function goToPage(page) {
+        const totalPages = Math.ceil(kabataan.filter((k) => {
+            const q = currentQuery;
+            const full = fullNameFrom(k).toLowerCase();
+            const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (k.highestEducation && k.highestEducation.toLowerCase().includes(q));
+            const matchGender = !currentGender || k.sex === currentGender;
+            const matchPurok = !currentPurok || k.barangay === currentPurok;
+            return matchSearch && matchGender && matchPurok;
+        }).length / recordsPerPage);
+
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            render();
+        }
+    }
 
     function populateViewRows(k) {
         if (!viewColumnLeft || !viewColumnRight) return;
@@ -289,6 +374,13 @@ function initializeKabataanUI() {
     }
 
     if (addBtn) addBtn.addEventListener('click', () => openModal('add', null));
+
+    // Pagination event listeners
+    const prevBtn = document.getElementById('kabataanPrevBtn');
+    const nextBtn = document.getElementById('kabataanNextBtn');
+
+    if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
 
     if (modal) {
         modal.addEventListener('click', (e) => {

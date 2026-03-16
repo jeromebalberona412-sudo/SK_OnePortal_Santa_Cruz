@@ -13,85 +13,113 @@ function initializeKKProfilingRequestsUI() {
 
     if (!tbody) return;
 
-    // Sample UI-only data for KK Profiling Requests (no xxx in contact; suffix None when none)
+    // Sample UI-only data for KK Profiling Requests from Barangay Calios, Santa Cruz, Laguna
     const requests = [
         {
             id: 1,
-            firstName: 'Juan',
-            middleName: 'D.',
-            lastName: 'Cruz',
+            firstName: 'Miguel',
+            middleName: 'Santos',
+            lastName: 'Reyes',
             suffix: 'Jr.',
-            age: 17,
-            purok: '3',
-            contact: '09171234567',
+            age: 18,
+            purok: 'Purok 1',
+            contact: '09123456789',
             status: 'Pending',
             rejectionReason: '',
         },
         {
             id: 2,
-            firstName: 'Ana',
-            middleName: 'M.',
-            lastName: 'Santos',
+            firstName: 'Angelica',
+            middleName: 'Lorenzo',
+            lastName: 'Cruz',
             suffix: 'None',
-            age: 18,
-            purok: '2',
-            contact: '09187654321',
+            age: 19,
+            purok: 'Sitio 2',
+            contact: '09123456790',
             status: 'Approved',
             rejectionReason: '',
         },
         {
             id: 3,
-            firstName: 'Luis',
-            middleName: 'P.',
-            lastName: 'Reyes',
+            firstName: 'Jose',
+            middleName: 'Antonio',
+            lastName: 'Garcia',
             suffix: 'None',
-            age: 19,
-            purok: '1',
-            contact: '09198765432',
+            age: 17,
+            purok: 'Villa Gracias',
+            contact: '09123456791',
             status: 'Rejected',
-            rejectionReason: 'Incomplete information provided',
+            rejectionReason: 'Invalid birthdate / age mismatch',
         },
         {
             id: 4,
             firstName: 'Maria',
-            middleName: 'C.',
-            lastName: 'Garcia',
+            middleName: 'Beatriz',
+            lastName: 'Santillan',
             suffix: 'None',
             age: 20,
-            purok: '4',
-            contact: '09165432109',
+            purok: 'Bayside Calios',
+            contact: '09123456792',
             status: 'Pending',
             rejectionReason: '',
         },
         {
             id: 5,
-            firstName: 'Jose',
-            middleName: 'A.',
-            lastName: 'Martinez',
+            firstName: 'Carlos',
+            middleName: 'Domingo',
+            lastName: 'Mendoza',
             suffix: 'Sr.',
             age: 21,
-            purok: '5',
-            contact: '09154321098',
+            purok: 'Purok 3',
+            contact: '09123456793',
             status: 'Approved',
             rejectionReason: '',
         },
         {
             id: 6,
-            firstName: 'Carlos',
-            middleName: 'R.',
-            lastName: 'Reyes',
-            suffix: 'III',
+            firstName: 'Patricia',
+            middleName: 'Rosa',
+            lastName: 'Del Rosario',
+            suffix: 'None',
             age: 16,
-            purok: '1',
-            contact: '09201234567',
+            purok: 'Sitio 1',
+            contact: '09123456794',
             status: 'Rejected',
-            rejectionReason: 'Duplicate submission',
+            rejectionReason: 'Incomplete information provided',
+        },
+        {
+            id: 7,
+            firstName: 'Antonio',
+            middleName: 'Miguel',
+            lastName: 'Fernandez',
+            suffix: 'III',
+            age: 22,
+            purok: 'Purok 4',
+            contact: '09123456795',
+            status: 'Pending',
+            rejectionReason: '',
+        },
+        {
+            id: 8,
+            firstName: 'Sofia',
+            middleName: 'Isabel',
+            lastName: 'Castillo',
+            suffix: 'None',
+            age: 18,
+            purok: 'Sitio 3',
+            contact: '09123456796',
+            status: 'Approved',
+            rejectionReason: '',
         }
     ];
 
     let currentFilterStatus = 'All';
     let currentSearchQuery = '';
     let activeRequestId = null;
+
+    // Pagination variables
+    let currentPage = 1;
+    const recordsPerPage = 10;
 
     function renderTable() {
         tbody.innerHTML = '';
@@ -107,7 +135,13 @@ function initializeKKProfilingRequestsUI() {
             return true;
         });
 
-        if (filtered.length === 0) {
+        // Calculate pagination
+        const totalPages = Math.ceil(filtered.length / recordsPerPage);
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = Math.min(startIndex + recordsPerPage, filtered.length);
+        const paginatedData = filtered.slice(startIndex, endIndex);
+
+        if (paginatedData.length === 0) {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
@@ -115,10 +149,11 @@ function initializeKKProfilingRequestsUI() {
             td.textContent = 'No KK Profiling requests for this status.';
             tr.appendChild(td);
             tbody.appendChild(tr);
+            updatePaginationInfo(0, 0, 1);
             return;
         }
 
-        filtered.forEach((r) => {
+        paginatedData.forEach((r) => {
             const tr = document.createElement('tr');
             const statusClass =
                 r.status === 'Pending'
@@ -127,7 +162,6 @@ function initializeKKProfilingRequestsUI() {
                         ? 'approved'
                         : 'rejected';
             const fullName = [r.firstName, r.middleName, r.lastName].filter(Boolean).join(' ') || '-';
-            const subText = `FN, MN, LN, ${r.suffix || 'None'}`;
 
             let actionsHtml = `
                 <button type="button" class="kk-btn-view" data-action="view" data-id="${r.id}">View</button>
@@ -136,7 +170,6 @@ function initializeKKProfilingRequestsUI() {
             tr.innerHTML = `
                 <td class="kk-fullname-cell">
                     <span class="kk-fullname">${fullName}</span>
-                    <small class="kk-fullname-sub">${subText}</small>
                 </td>
                 <td>${r.age}</td>
                 <td>${r.purok}</td>
@@ -147,10 +180,87 @@ function initializeKKProfilingRequestsUI() {
 
             tbody.appendChild(tr);
         });
+
+        updatePaginationInfo(startIndex + 1, endIndex, currentPage, totalPages);
+        updatePaginationControls(currentPage, totalPages);
+    }
+
+    function updatePaginationInfo(start, end, page, totalPages) {
+        const info = document.getElementById('kkPaginationInfo');
+        if (info) {
+            const total = requests.filter((r) => {
+                if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
+                if (currentSearchQuery) {
+                    const q = currentSearchQuery.toLowerCase();
+                    const fullName = `${r.firstName} ${r.middleName} ${r.lastName}`.toLowerCase();
+                    const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
+                    if (!match) return false;
+                }
+                return true;
+            }).length;
+
+            info.textContent = total === 0 ? 'No records found' : `Showing ${start}-${end} of ${total} records`;
+        }
+    }
+
+    function updatePaginationControls(page, totalPages) {
+        const prevBtn = document.getElementById('kkPrevBtn');
+        const nextBtn = document.getElementById('kkNextBtn');
+        const pageNumbers = document.getElementById('kkPageNumbers');
+
+        if (prevBtn) prevBtn.disabled = page === 1;
+        if (nextBtn) nextBtn.disabled = page === totalPages;
+
+        if (pageNumbers) {
+            pageNumbers.innerHTML = '';
+
+            // Show max 5 page numbers
+            let startPage = Math.max(1, page - 2);
+            let endPage = Math.min(totalPages, page + 2);
+
+            // Adjust if we're near the beginning
+            if (endPage - startPage < 5) {
+                endPage = Math.min(5, totalPages);
+                startPage = 1;
+            }
+
+            // Adjust if we're near the end
+            if (endPage - startPage < 5 && page > totalPages - 2) {
+                startPage = Math.max(1, totalPages - 4);
+                endPage = totalPages;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-number ${i === page ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => goToPage(i);
+                pageNumbers.appendChild(pageBtn);
+            }
+        }
+    }
+
+    function goToPage(page) {
+        const totalPages = Math.ceil(requests.filter((r) => {
+            if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
+            if (currentSearchQuery) {
+                const q = currentSearchQuery.toLowerCase();
+                const fullName = `${r.firstName} ${r.middleName} ${r.lastName}`.toLowerCase();
+                const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
+                if (!match) return false;
+            }
+            return true;
+        }).length / recordsPerPage);
+
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            renderTable();
+        }
     }
 
     function setStatusFilter(status) {
         currentFilterStatus = status;
+        currentPage = 1; // Reset to first page when filter changes
         if (!statusTabsContainer) return;
 
         const tabs = statusTabsContainer.querySelectorAll('.status-tab');
@@ -212,9 +322,17 @@ function initializeKKProfilingRequestsUI() {
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             currentSearchQuery = searchInput.value.trim();
+            currentPage = 1;
             renderTable();
         });
     }
+
+    // Pagination event listeners
+    const prevBtn = document.getElementById('kkPrevBtn');
+    const nextBtn = document.getElementById('kkNextBtn');
+
+    if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
 
     // Status tab events
     if (statusTabsContainer) {

@@ -49,7 +49,10 @@
                     <table class="kk-table">
                         <thead>
                             <tr>
-                                <th class="col-fullname">FN, MN, LN, Jr.</th>
+                                <th class="col-fullname">
+                                    FULLNAME
+                                    <div class="column-hint">FN, MN, LN, Suffix</div>
+                                </th>
                                 <th class="col-age">Age</th>
                                 <th class="col-purok">Purok / Sitio</th>
                                 <th class="col-contact">Contact</th>
@@ -65,6 +68,18 @@
         </section>
     </div>
 </main>
+
+<!-- Pagination Controls -->
+<div class="pagination-container">
+    <div class="pagination-info">
+        <span id="kkPaginationInfo">Showing 1-8 of 8 records</span>
+    </div>
+    <div class="pagination-controls">
+        <button type="button" id="kkPrevBtn" class="pagination-btn" disabled>Previous</button>
+        <div class="pagination-numbers" id="kkPageNumbers"></div>
+        <button type="button" id="kkNextBtn" class="pagination-btn">Next</button>
+    </div>
+</div>
 
 <!-- View Details Modal -->
 <div class="modal-backdrop kk-modal-backdrop" id="kkViewModal" style="display:none;">

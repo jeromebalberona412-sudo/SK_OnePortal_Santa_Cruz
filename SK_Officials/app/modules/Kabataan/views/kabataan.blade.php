@@ -79,7 +79,10 @@
                     <table class="kabataan-table">
                         <thead>
                             <tr>
-                                <th>Full Name</th>
+                                <th>
+                                    Full Name
+                                    <div class="column-hint">FN, MN, LN, Suffix</div>
+                                </th>
                                 <th>Age</th>
                                 <th>Sex</th>
                                 <th>Purok / Sitio</th>
@@ -90,6 +93,18 @@
                         <tbody id="kabataanTableBody">
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- Pagination Controls -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span id="kabataanPaginationInfo">Showing 1-10 of 12 records</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button type="button" id="kabataanPrevBtn" class="pagination-btn" disabled>Previous</button>
+                        <div class="pagination-numbers" id="kabataanPageNumbers"></div>
+                        <button type="button" id="kabataanNextBtn" class="pagination-btn">Next</button>
+                    </div>
                 </div>
             </div>
         </section>
