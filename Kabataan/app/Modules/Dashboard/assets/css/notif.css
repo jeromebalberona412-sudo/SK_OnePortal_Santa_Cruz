@@ -1,0 +1,155 @@
+/* =============================================
+   NOTIFICATION POPOVER — Dashboard / Profile
+   ============================================= */
+
+.notif-nav-wrapper {
+    position: relative;
+}
+
+.notif-popover {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: -8px;
+    width: 340px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(2, 42, 84, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    z-index: 9999;
+    transform: scale(0.94) translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.22s cubic-bezier(0.34,1.4,0.64,1), opacity 0.18s ease;
+    transform-origin: top right;
+}
+
+/* Caret arrow pointing up */
+.notif-popover::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: var(--np-arrow-right, 16px);
+    width: 16px;
+    height: 8px;
+    background: linear-gradient(135deg, #022a54 0%, #0450a8 100%);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    z-index: 1;
+}
+
+.notif-popover.open {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    pointer-events: all;
+}
+
+.np-inner {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 16px;
+}
+
+/* Header */
+.np-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 12px;
+    background: linear-gradient(135deg, #022a54 0%, #0450a8 100%);
+    flex-shrink: 0;
+}
+
+.np-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.np-close-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.np-close-btn:hover { background: rgba(255,255,255,0.3); }
+.np-close-btn svg { width: 14px; height: 14px; }
+
+/* Body */
+.np-body {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 360px;
+}
+
+/* Empty state */
+.np-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px 36px;
+    text-align: center;
+    gap: 10px;
+}
+
+.np-empty svg {
+    opacity: 0.7;
+    margin-bottom: 4px;
+}
+
+.np-empty-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #334155;
+    margin: 0;
+}
+
+.np-empty-sub {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.55;
+    margin: 0;
+}
+
+/* Responsive — Tablet (481px–768px) */
+@media (max-width: 768px) {
+    .notif-popover {
+        width: 300px;
+        right: 0;
+    }
+}
+
+/* Responsive — Mobile (≤480px): keep arrow, clamp to viewport */
+@media (max-width: 480px) {
+    .notif-nav-wrapper {
+        position: static;
+    }
+
+    .notif-popover {
+        position: fixed;
+        top: 68px;
+        right: 8px;
+        left: auto;
+        width: calc(100vw - 16px);
+        max-width: 340px;
+        transform-origin: top right;
+    }
+
+    /* Arrow stays visible, JS sets --np-arrow-right to align with button */
+    .notif-popover::before {
+        top: -8px;
+        display: block;
+    }
+}
+
