@@ -3,6 +3,7 @@
 @section('title', 'Profile')
 
 @section('head')
+@vite(['app/Modules/Profile/assets/css/profile.css'])
 @endsection
 
 @section('content')
@@ -12,105 +13,118 @@
 <!-- Include Sidebar -->
 @include('layout::layouts.sidebar')
 
-<div id="mainContent">
+<div id="mainContent" class="profile-page">
     <input type="hidden" id="defaultFullName" value="{{ $user->name ?? 'Admin' }}">
     <input type="hidden" id="defaultEmail" value="{{ $user->email ?? '' }}">
 
-    <h1>Profile</h1>
-
-    <div>
-        <div>
-            <img src="{{ asset('Images/logo.png') }}" alt="Admin Avatar" id="avatarImage" width="96" height="96">
-            <button type="button" onclick="document.getElementById('avatarInput').click()">Change Avatar</button>
-            <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="handleAvatarChange(event)">
-        </div>
-        <div>
-            <h2>{{ $user->name ?? 'Admin' }}</h2>
-            <p>{{ $user->email ?? '' }}</p>
-            <p>Admin</p>
-        </div>
-    </div>
-
-    <hr>
-
-    <div>
-        <button type="button" class="tab-button active" data-tab="personal" onclick="switchTab('personal', event)">
-            Personal Information
-        </button>
-        <button type="button" class="tab-button" data-tab="security" onclick="switchTab('security', event)">
-            Security and Access
-        </button>
-        <button type="button" class="tab-button" data-tab="settings" onclick="switchTab('settings', event)">
-            Settings
-        </button>
-    </div>
-
-    <div>
-        <div id="personal-tab" class="tab-pane active">
-            <h3>Basic Information</h3>
-            <form id="personalForm">
-                <div>
-                    <label for="fullName">Full Name *</label>
-                    <input type="text" id="fullName" name="fullName" value="{{ $user->name ?? 'Admin' }}" required>
+    <div class="profile-shell">
+        <header class="profile-hero">
+            <div class="profile-hero__avatar-wrap">
+                <div class="profile-avatar-frame" aria-hidden="true">
+                    <img src="{{ asset('Images/logo.png') }}" alt="Admin Avatar" id="avatarImage" width="96" height="96">
+                    <span class="profile-avatar-fallback" id="avatarFallback">{{ strtoupper(substr(($user->name ?? 'Admin'), 0, 1)) }}</span>
                 </div>
-                <div>
-                    <label for="email">Email Address *</label>
-                    <input type="email" id="email" name="email" value="{{ $user->email ?? '' }}" required>
+                <button type="button" class="profile-avatar-btn" id="avatarChangeButton" onclick="document.getElementById('avatarInput').click()">Change Avatar</button>
+                <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="handleAvatarChange(event)">
+            </div>
+            <div class="profile-hero__identity">
+                <p class="profile-eyebrow">System User</p>
+                <h1 class="profile-title">{{ $user->name ?? 'Admin' }}</h1>
+                <p class="profile-subtitle">{{ $user->email ?? '' }}</p>
+                <p class="profile-role-badge">Administrator</p>
+            </div>
+        </header>
+
+        <section class="profile-panel">
+            <div class="profile-tabs" role="tablist" aria-label="Profile Sections">
+                <button type="button" class="tab-button active" data-tab="personal" onclick="switchTab('personal', event)">
+                    Personal Information
+                </button>
+                <button type="button" class="tab-button" data-tab="security" onclick="switchTab('security', event)">
+                    Security and Access
+                </button>
+                <button type="button" class="tab-button" data-tab="settings" onclick="switchTab('settings', event)">
+                    Settings
+                </button>
+            </div>
+
+            <div class="profile-panel__body">
+                <div id="personal-tab" class="tab-pane active profile-pane">
+                    <h3>Basic Information</h3>
+                    <form id="personalForm" class="form-grid">
+                        <div class="field-group">
+                            <label for="fullName">Full Name *</label>
+                            <input type="text" id="fullName" name="fullName" value="{{ $user->name ?? 'Admin' }}" required>
+                        </div>
+                        <div class="field-group">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" name="email" value="{{ $user->email ?? '' }}" required>
+                        </div>
+                        <div class="field-group field-group--full">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" placeholder="Enter your phone number">
+                        </div>
+                    </form>
                 </div>
-                <div>
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" placeholder="Enter Your Phone Number">
+
+                <div id="security-tab" class="tab-pane profile-pane" hidden>
+                    <h3>Account Security</h3>
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label for="lastLogin">Last Login</label>
+                            <input type="text" id="lastLogin" name="lastLogin" value="March 03, 2026 4:29 AM" readonly>
+                        </div>
+                        <div class="field-group">
+                            <label for="lastLoginIP">Last Login IP</label>
+                            <input type="text" id="lastLoginIP" name="lastLoginIP" value="127.0.0.1" readonly>
+                        </div>
+                        <div class="field-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" placeholder="Enter new password">
+                        </div>
+                        <div class="field-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                        </div>
+                    </div>
                 </div>
-            </form>
-        </div>
 
-        <div id="security-tab" class="tab-pane" hidden>
-            <h3>Account Security</h3>
-            <div>
-                <label for="lastLogin">Last Login</label>
-                <input type="text" id="lastLogin" name="lastLogin" value="March 03, 2026 4:29 AM" readonly>
+                <div id="settings-tab" class="tab-pane profile-pane" hidden>
+                    <h3>Preferences</h3>
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label for="language">Preferred Language</label>
+                            <select id="language" name="language">
+                                <option value="en" selected>English</option>
+                            </select>
+                        </div>
+                        <div class="field-group field-group--toggle">
+                            <label for="darkModeToggle">Theme Mode</label>
+                            <label class="profile-switch" for="darkModeToggle">
+                                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                                <span class="profile-switch-slider"></span>
+                                <span class="profile-switch-label">Enable dark mode</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="lastLoginIP">Last Login IP</label>
-                <input type="text" id="lastLoginIP" name="lastLoginIP" value="127.0.0.1" readonly>
-            </div>
-            <div>
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter new password">
-            </div>
-            <div>
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
-            </div>
-        </div>
+        </section>
 
-        <div id="settings-tab" class="tab-pane" hidden>
-            <h3>Preferences</h3>
-            <div>
-                <label for="language">Preferred Language</label>
-                <select id="language" name="language">
-                    <option value="en" selected>English</option>
-                </select>
+        <section class="profile-actions">
+            <p class="profile-actions__status" id="profileEditStatus">View mode: click Edit Profile to make changes.</p>
+            <div class="profile-actions__buttons">
+                <button type="button" class="btn btn-primary" id="saveButton" style="display: none;" onclick="saveProfile()">
+                    <span class="button-text">Save Changes</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancelButton" style="display: none;" onclick="cancelEdit()">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="editButton" onclick="enableEdit()">
+                    Edit Profile
+                </button>
             </div>
-            <div>
-                <label for="darkModeToggle">Theme Mode</label>
-                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div>
-        <button type="button" class="btn btn-primary" id="saveButton" style="display: none;" onclick="saveProfile()">
-            <span class="button-text">Save Changes</span>
-        </button>
-        <button type="button" class="btn btn-secondary" id="cancelButton" style="display: none;" onclick="cancelEdit()">
-            Cancel
-        </button>
-        <button type="button" class="btn btn-primary" id="editButton" onclick="enableEdit()">
-            Edit Profile
-        </button>
+        </section>
     </div>
 </div>
 
@@ -163,8 +177,57 @@ const profileDefaults = {
     name: document.getElementById('defaultFullName') ? document.getElementById('defaultFullName').value : 'Admin',
     email: document.getElementById('defaultEmail') ? document.getElementById('defaultEmail').value : '',
     phone: '',
-    language: 'en'
+    language: 'en',
+    darkMode: localStorage.getItem('darkMode') === 'enabled'
 };
+
+const editableFieldIds = ['fullName', 'email', 'phone', 'password', 'confirmPassword', 'language', 'darkModeToggle'];
+
+function setEditingState(isEditing) {
+    const shell = document.querySelector('.profile-shell');
+    if (shell) {
+        shell.classList.toggle('is-editing', isEditing);
+    }
+
+    editableFieldIds.forEach(function(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.disabled = !isEditing;
+        }
+    });
+
+    const status = document.getElementById('profileEditStatus');
+    if (status) {
+        status.textContent = isEditing
+            ? 'Editing mode: update your details and save when ready.'
+            : 'View mode: click Edit Profile to make changes.';
+    }
+}
+
+function initializeAvatarFallback() {
+    const avatarImage = document.getElementById('avatarImage');
+    const avatarFallback = document.getElementById('avatarFallback');
+    if (!avatarImage || !avatarFallback) return;
+
+    function showFallback() {
+        avatarImage.classList.add('avatar-hidden');
+        avatarFallback.style.display = 'grid';
+    }
+
+    function hideFallback() {
+        avatarImage.classList.remove('avatar-hidden');
+        avatarFallback.style.display = 'none';
+    }
+
+    avatarImage.addEventListener('error', showFallback);
+    avatarImage.addEventListener('load', hideFallback);
+
+    if (avatarImage.complete && avatarImage.naturalWidth === 0) {
+        showFallback();
+    } else {
+        hideFallback();
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const darkMode = localStorage.getItem('darkMode');
@@ -187,6 +250,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target === twoFactorOverlay) closeTwoFactorModal();
         });
     }
+
+    initializeAvatarFallback();
+    setEditingState(false);
 });
 
 document.addEventListener('keydown', function(e) {
@@ -231,8 +297,9 @@ function switchTab(tabName, e) {
 
 function enableEdit() {
     document.getElementById('editButton').style.display = 'none';
-    document.getElementById('saveButton').style.display = 'inline-block';
-    document.getElementById('cancelButton').style.display = 'inline-block';
+    document.getElementById('saveButton').style.display = 'inline-flex';
+    document.getElementById('cancelButton').style.display = 'inline-flex';
+    setEditingState(true);
 }
 
 function cancelEdit() {
@@ -263,9 +330,23 @@ function confirmDiscardChanges() {
     document.getElementById('confirmPassword').value = '';
     document.getElementById('language').value = profileDefaults.language;
 
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+        darkModeToggle.checked = profileDefaults.darkMode;
+    }
+
+    if (profileDefaults.darkMode) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('darkMode', 'enabled');
+    } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('darkMode', 'disabled');
+    }
+
     document.getElementById('editButton').style.display = 'inline-block';
     document.getElementById('saveButton').style.display = 'none';
     document.getElementById('cancelButton').style.display = 'none';
+    setEditingState(false);
 
     closeDiscardModal();
     showToast('Changes discarded');
@@ -329,6 +410,7 @@ function verifyTwoFactorAndSave(e) {
         document.getElementById('editButton').style.display = 'inline-block';
         document.getElementById('saveButton').style.display = 'none';
         document.getElementById('cancelButton').style.display = 'none';
+        setEditingState(false);
 
         showModal('Profile updated successfully!', 'success');
     }, 1200);
@@ -360,7 +442,18 @@ function handleAvatarChange(event) {
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById('avatarImage').src = e.target.result;
+        const avatarImage = document.getElementById('avatarImage');
+        const avatarFallback = document.getElementById('avatarFallback');
+
+        if (avatarImage) {
+            avatarImage.src = e.target.result;
+            avatarImage.classList.remove('avatar-hidden');
+        }
+
+        if (avatarFallback) {
+            avatarFallback.style.display = 'none';
+        }
+
         showModal('Profile image updated successfully!', 'success');
     };
     reader.readAsDataURL(file);
