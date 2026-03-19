@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SK OnePortal - Home</title>
+    <title>Home</title>
     @vite([
         'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Dashboard/assets/js/dashboard.js',

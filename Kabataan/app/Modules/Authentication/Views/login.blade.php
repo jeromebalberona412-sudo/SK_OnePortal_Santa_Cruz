@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SK OnePortal - Kabataan Login</title>
+    <title>OnePortal Youth Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
         'app/Modules/Authentication/assets/js/youth-login.js',
