@@ -112,8 +112,18 @@
                 @endif
                 
                 <div class="feed-header">
-                    <h1>SK Community Feed</h1>
-                    <p>See the latest posts, events, and programs from SK officials.</p>
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div>
+                            <h1>SK Community Feed</h1>
+                            <p>See the latest posts, events, and programs from SK officials.</p>
+                        </div>
+                        <a href="http://192.168.100.241:8000/community-feed" class="view-details-btn" style="font-size:13px;padding:8px 16px;text-decoration:none;">
+                            <svg viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;">
+                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                            View Full Feed
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Sample Post 1 - Activity -->

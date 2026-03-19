@@ -153,7 +153,6 @@
             animation: fadeOut 1s ease-out forwards;
         }
 
-        /* Responsive Design for Success Page */
         @media (max-width: 640px) {
             .check-wrap {
                 width: 100px;
@@ -207,28 +206,46 @@
     </style>
 </head>
 <body>
-    <div class="login-container" id="success-container">
-        <div class="background-section">
+    <div class="login-page">
+        {{-- Background --}}
+        <div class="bg-wrapper">
+            <div class="bg-image"></div>
+            <div class="gradient-overlay"></div>
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+        </div>
+
+        <div class="login-container">
+            {{-- LEFT: Logo --}}
             <div class="logo-container">
-                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
-                <h1 class="brand-title">SK Federations</h1>
+                <div class="logo-glow-wrapper">
+                    <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
+                </div>
+                <h1 class="brand-title">SK Federation</h1>
                 <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
             </div>
 
+            {{-- RIGHT: Content Card --}}
             <div class="login-form-container">
-                <div class="success-container">
-                    <div class="check-wrap" aria-hidden="true">
-                        <span class="checkmark"></span>
-                    </div>
-                    <h2>Verified successfully</h2>
-                    <p>Your SK Federation account is now verified. Return to sign in on your device.</p>
-                    <div class="success-actions">
-                        <a href="{{ route('login', [], false) }}" class="return-login-btn">Go to Sign In</a>
+                <div class="login-card-inner">
+                    <div class="success-container">
+                        <div class="check-wrap" aria-hidden="true">
+                            <span class="checkmark"></span>
+                        </div>
+                        <h2>Verified successfully</h2>
+                        <p>Your SK Federation account is now verified. Return to sign in on your device.</p>
+                        <div class="success-actions">
+                            <a href="{{ route('login', [], false) }}" class="return-login-btn">Go to Sign In</a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

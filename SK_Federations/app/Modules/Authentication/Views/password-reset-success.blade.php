@@ -159,7 +159,6 @@
             transform: translateX(-3px);
         }
 
-        /* Responsive Design */
         @media (max-width: 640px) {
             .check-wrap {
                 width: 100px;
@@ -224,7 +223,6 @@
         </script>
     @endauth
     <script>
-        // Prevent back navigation and redirect if authenticated
         (function() {
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
@@ -232,27 +230,45 @@
             };
         })();
     </script>
-    <div class="login-container">
-        <div class="background-section">
+
+    <div class="login-page">
+        {{-- Background --}}
+        <div class="bg-wrapper">
+            <div class="bg-image"></div>
+            <div class="gradient-overlay"></div>
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+        </div>
+
+        <div class="login-container">
+            {{-- LEFT: Logo --}}
             <div class="logo-container">
-                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
-                <h1 class="brand-title">SK Federations</h1>
+                <div class="logo-glow-wrapper">
+                    <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
+                </div>
+                <h1 class="brand-title">SK Federation</h1>
                 <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
             </div>
 
+            {{-- RIGHT: Content Card --}}
             <div class="login-form-container">
-                <div class="success-container">
-                    <div class="check-wrap" aria-hidden="true">
-                        <span class="checkmark"></span>
+                <div class="login-card-inner">
+                    <div class="success-container">
+                        <div class="check-wrap" aria-hidden="true">
+                            <span class="checkmark"></span>
+                        </div>
+                        <h2>Success!</h2>
+                        <p>Your password has been updated successfully. Please log in again.</p>
+                        <a href="{{ route('login', [], false) }}" class="back-to-login-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            <span>Back to Login</span>
+                        </a>
                     </div>
-                    <h2>Success!</h2>
-                    <p>Your password has been updated successfully. Please log in again.</p>
-                    <a href="{{ route('login', [], false) }}" class="back-to-login-btn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 12H5M12 19l-7-7 7-7"/>
-                        </svg>
-                        <span>Back to Login</span>
-                    </a>
                 </div>
             </div>
         </div>
