@@ -4,16 +4,18 @@ namespace App\Modules\Authentication\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     /**
      * Show the login form
      */
-    public function showLogin()
+    public function showLogin(Request $request)
     {
+        if ($request->session()->has('prototype_authenticated')) {
+            return redirect()->route('dashboard');
+        }
+
         return view('authentication::login');
     }
 
@@ -27,16 +29,22 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $remember = $request->boolean('remember');
+        // PROTOTYPE MODE: create a local session and go straight to dashboard.
+        $name = explode('@', $credentials['email'])[0] ?? 'Youth User';
 
-        // PROTOTYPE MODE: Skip actual authentication, just redirect to verification
-        // Store email in session for verification page
+        $request->session()->regenerate();
         $request->session()->put('verification_email', $credentials['email']);
-        $request->session()->put('prototype_user_name', explode('@', $credentials['email'])[0]);
-        
-        // Redirect to email verification page
-        return redirect()->route('verification.notice')
-            ->with('info', 'Please verify your email to continue.');
+        $request->session()->put('prototype_user_name', $name);
+        $request->session()->put('prototype_authenticated', true);
+        $request->session()->put('prototype_user', [
+            'id' => 1,
+            'name' => ucfirst($name),
+            'email' => $credentials['email'],
+            'barangay' => 'Barangay 1',
+        ]);
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Welcome back!');
 
         /* PRODUCTION CODE (commented for prototype):
         if (Auth::attempt($credentials, $remember)) {
@@ -58,14 +66,14 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        // PROTOTYPE MODE: Clear prototype session
-        $request->session()->forget(['prototype_authenticated', 'prototype_user', 'verification_email', 'prototype_user_name']);
-        
-        /* PRODUCTION CODE (commented for prototype):
-        Auth::guard('web')->logout();
+        $request->session()->forget([
+            'prototype_authenticated',
+            'prototype_user',
+            'verification_email',
+            'prototype_user_name'
+        ]);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        */
         
         return redirect('/login')->with('message', 'You have been logged out successfully.');
     }

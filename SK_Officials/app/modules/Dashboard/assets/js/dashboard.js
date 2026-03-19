@@ -1,24 +1,5 @@
-// DOM elements
-const userEmailElement = document.getElementById('userEmail');
-
-// Check authentication on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Verify user is logged in
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    const userEmail = sessionStorage.getItem('userEmail');
-    
-    if (!isLoggedIn || isLoggedIn !== 'true' || !userEmail) {
-        // Redirect to login if not authenticated
-        window.location.href = '/login';
-        return;
-    }
-    
-    // Display user email
-    if (userEmailElement) {
-        userEmailElement.textContent = userEmail;
-    }
-    
-    // Initialize dashboard features
+// Dashboard route protection is handled server-side in Laravel.
+document.addEventListener('DOMContentLoaded', function () {
     initializeDashboard();
 });
 

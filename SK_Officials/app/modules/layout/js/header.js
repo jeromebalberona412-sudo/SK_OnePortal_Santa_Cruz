@@ -449,23 +449,11 @@ function initializeLogout() {
 
         confirmLogout.addEventListener('click', function () {
 
-            // Use the global logout function from login.js
-
-            if (typeof window.logout === 'function') {
-
-                window.logout();
-
-            } else {
-
-                // Fallback: clear session and redirect
-
-                sessionStorage.removeItem('isLoggedIn');
-
-                sessionStorage.removeItem('userEmail');
-
-                window.location.href = '/login';
-
+            if (logoutModal) {
+                logoutModal.style.display = 'none';
             }
+
+            handleLogout();
 
         });
 

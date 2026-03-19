@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 showInputError(emailInput, 'Invalid Email or Password');
             }
             
-            // Password validation - minimum 8 characters
-            if (passwordInput && passwordInput.value.length < 8) {
+            // Password validation for prototype login
+            if (passwordInput && passwordInput.value.trim().length === 0) {
                 isValid = false;
                 showInputError(passwordInput, 'Invalid Email or Password');
             }
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (passwordInput) {
             passwordInput.addEventListener('blur', function() {
-                if (this.value && this.value.length < 8) {
+                if (this.value.trim().length === 0) {
                     showInputError(this, 'Invalid Email or Password');
                 }
             });

@@ -44,4 +44,4 @@ Route::get('/test-email-verification', [AuthController::class, 'showTestEmailVer
 // Logout route
 Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout')
-    ->middleware('auth');
+    ->middleware('web');
