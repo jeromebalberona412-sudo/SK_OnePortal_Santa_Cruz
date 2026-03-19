@@ -1,3 +1,42 @@
+/* Page Header Card */
+.profile-page-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: white;
+    border-radius: 14px;
+    padding: 18px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    border-left: 4px solid #213F99;
+}
+
+.profile-page-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #213F99 0%, #d0242b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.profile-page-header-text h1 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 2px 0;
+}
+
+.profile-page-header-text p {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+}
+
 /* Modern Profile Styles - Social Profile Design */
 .profile-card {
     background: #ffffff;
@@ -11,6 +50,7 @@
     padding: 40px 32px;
     text-align: center;
     position: relative;
+    overflow: hidden;
 }
 
 .profile-avatar-large {
@@ -19,6 +59,8 @@
     border-radius: 50%;
     border: 4px solid #ffffff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    position: relative;
+    z-index: 1;
 }
 
 .profile-name {
@@ -26,12 +68,21 @@
     font-size: 24px;
     font-weight: 700;
     color: #ffffff;
+    position: relative;
+    z-index: 1;
 }
 
 .profile-email {
     margin: 0;
     font-size: 14px;
     color: rgba(255, 255, 255, 0.85);
+    position: relative;
+    z-index: 1;
+}
+
+.profile-avatar-container {
+    position: relative;
+    z-index: 1;
 }
 
 .profile-tabs {

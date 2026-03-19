@@ -46,7 +46,6 @@
             cursor: not-allowed;
         }
 
-        /* Responsive Design */
         @media (max-width: 640px) {
             .email-highlight {
                 display: inline-block;
@@ -72,65 +71,82 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="background-section">
+    <div class="login-page">
+        {{-- Background --}}
+        <div class="bg-wrapper">
+            <div class="bg-image"></div>
+            <div class="gradient-overlay"></div>
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+        </div>
+
+        <div class="login-container">
+            {{-- LEFT: Logo --}}
             <div class="logo-container">
-                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
-                <h1 class="brand-title">SK Federations</h1>
+                <div class="logo-glow-wrapper">
+                    <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
+                </div>
+                <h1 class="brand-title">SK Federation</h1>
                 <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
             </div>
 
+            {{-- RIGHT: Content Card --}}
             <div class="login-form-container">
-                <div class="form-header">
-                    <h2>Account Currently Active</h2>
-                    <p>Verify ownership to continue. We can send a one-time code to <span class="email-highlight">{{ $email }}</span> and securely end the old session.</p>
-                </div>
-
-                @if (session('status'))
-                    <div class="alert alert-info" role="alert">{{ session('status') }}</div>
-                @endif
-
-                <form method="POST" action="{{ route('skfed.takeover.send', [], false) }}">
-                    @csrf
-                    <button
-                        type="submit"
-                        class="btn-outline-custom"
-                        @if ($resendLocked) disabled @endif
-                    >
-                        Send Email Verification Code
-                    </button>
-                </form>
-
-                @if ($cooldownSeconds > 0)
-                    <p class="cooldown-text">
-                        You can request another code in {{ $cooldownSeconds }} seconds.
-                    </p>
-                @endif
-
-                <form method="POST" action="{{ route('skfed.takeover.verify', [], false) }}" class="login-form">
-                    @csrf
-                    <div class="form-group">
-                        <label for="otp_code">Verification Code</label>
-                        <input
-                            id="otp_code"
-                            name="otp_code"
-                            type="text"
-                            inputmode="numeric"
-                            maxlength="6"
-                            class="form-control @error('otp_code') is-invalid @enderror"
-                            placeholder="Enter 6-digit code"
-                            required
-                            autofocus
-                        >
-                        @error('otp_code')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                <div class="login-card-inner">
+                    <div class="form-header">
+                        <h2>Account Currently Active</h2>
+                        <p>Verify ownership to continue. We can send a one-time code to <span class="email-highlight">{{ $email }}</span> and securely end the old session.</p>
                     </div>
-                    <button type="submit" class="login-btn btn btn-primary w-100">Verify and Continue</button>
-                </form>
 
-                <div class="form-footer">
-                    <a href="{{ route('login', [], false) }}">Back to login</a>
+                    @if (session('status'))
+                        <div class="alert alert-info" role="alert">{{ session('status') }}</div>
+                    @endif
+
+                    <form method="POST" action="{{ route('skfed.takeover.send', [], false) }}">
+                        @csrf
+                        <button
+                            type="submit"
+                            class="btn-outline-custom"
+                            @if ($resendLocked) disabled @endif
+                        >
+                            Send Email Verification Code
+                        </button>
+                    </form>
+
+                    @if ($cooldownSeconds > 0)
+                        <p class="cooldown-text">
+                            You can request another code in {{ $cooldownSeconds }} seconds.
+                        </p>
+                    @endif
+
+                    <form method="POST" action="{{ route('skfed.takeover.verify', [], false) }}" class="login-form">
+                        @csrf
+                        <div class="form-group">
+                            <label for="otp_code">Verification Code</label>
+                            <input
+                                id="otp_code"
+                                name="otp_code"
+                                type="text"
+                                inputmode="numeric"
+                                maxlength="6"
+                                class="form-control @error('otp_code') is-invalid @enderror"
+                                placeholder="Enter 6-digit code"
+                                required
+                                autofocus
+                            >
+                            @error('otp_code')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <button type="submit" class="login-btn btn btn-primary w-100">Verify and Continue</button>
+                    </form>
+
+                    <div class="form-footer">
+                        <a href="{{ route('login', [], false) }}">Back to login</a>
+                    </div>
                 </div>
             </div>
         </div>

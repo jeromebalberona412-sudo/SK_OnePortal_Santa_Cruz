@@ -195,7 +195,6 @@
             animation: fadeOut 0.3s ease forwards;
         }
 
-        /* Responsive Design */
         @media (max-width: 640px) {
             .countdown-text {
                 font-size: 13px;
@@ -274,58 +273,75 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="background-section">
+    <div class="login-page">
+        {{-- Background --}}
+        <div class="bg-wrapper">
+            <div class="bg-image"></div>
+            <div class="gradient-overlay"></div>
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+        </div>
+
+        <div class="login-container">
+            {{-- LEFT: Logo --}}
             <div class="logo-container">
-                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
-                <h1 class="brand-title">SK Federations</h1>
+                <div class="logo-glow-wrapper">
+                    <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
+                </div>
+                <h1 class="brand-title">SK Federation</h1>
                 <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
             </div>
 
+            {{-- RIGHT: Content Card --}}
             <div class="login-form-container">
-                <div class="form-header">
-                    <h2>Verify Your Email to Continue</h2>
-                    <p>We sent a verification email to <span class="email-highlight">{{ $email }}</span>. You can verify on any device. This page will continue automatically when verification is complete.</p>
-                </div>
+                <div class="login-card-inner">
+                    <div class="form-header">
+                        <h2>Verify Your Email to Continue</h2>
+                        <p>We sent a verification email to <span class="email-highlight">{{ $email }}</span>. You can verify on any device. This page will continue automatically when verification is complete.</p>
+                    </div>
 
-                <div class="alert alert-info" role="alert" id="verification-state">
-                    Waiting for verification...
-                </div>
-                <div id="inline-error-container"></div>
+                    <div class="alert alert-info" role="alert" id="verification-state">
+                        Waiting for verification...
+                    </div>
+                    <div id="inline-error-container"></div>
 
-                <p class="countdown-text" id="countdown">
-                    Email verification expires in: 10:00
-                </p>
+                    <p class="countdown-text" id="countdown">
+                        Email verification expires in: 10:00
+                    </p>
 
-                <form method="POST" action="{{ route('skfed.verification.resend', [], false) }}" class="login-form" id="resend-form">
-                    @csrf
-                    <input type="hidden" name="email" value="{{ $email }}">
-                    <button type="submit" class="login-btn btn btn-primary w-100 mb-3 btn-resend" id="resend-btn">
-                        Resend Verification Email
-                    </button>
-                </form>
-                <div class="resend-cooldown" id="resend-cooldown" style="display: none;"></div>
+                    <form method="POST" action="{{ route('skfed.verification.resend', [], false) }}" class="login-form" id="resend-form">
+                        @csrf
+                        <input type="hidden" name="email" value="{{ $email }}">
+                        <button type="submit" class="login-btn btn btn-primary w-100 mb-3 btn-resend" id="resend-btn">
+                            Resend Verification Email
+                        </button>
+                    </form>
+                    <div class="resend-cooldown" id="resend-cooldown" style="display: none;"></div>
 
-                <div class="form-footer">
-                    <a href="{{ route('login', [], false) }}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
-                            <path d="M19 12H5M12 19l-7-7 7-7"/>
-                        </svg>
-                        Back to login
-                    </a>
+                    <div class="form-footer">
+                        <a href="{{ route('login', [], false) }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            Back to login
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Success Modal -->
-    <div class="success-modal-overlay" id="success-modal">
-        <div class="success-modal">
-            <div class="check-wrap" aria-hidden="true">
-                <span class="checkmark"></span>
+        {{-- Success Modal (outside card, inside login-page) --}}
+        <div class="success-modal-overlay" id="success-modal">
+            <div class="success-modal">
+                <div class="check-wrap" aria-hidden="true">
+                    <span class="checkmark"></span>
+                </div>
+                <h2>Verified Successfully!</h2>
+                <p>Redirecting to dashboard...</p>
             </div>
-            <h2>Verified Successfully!</h2>
-            <p>Redirecting to dashboard...</p>
         </div>
     </div>
 
@@ -431,11 +447,11 @@
                         stateElement.className = 'alert alert-success';
                         stateElement.textContent = 'Email verified. Redirecting...';
                         clearResendCooldown();
-                        
+
                         // Show success modal
                         const successModal = document.getElementById('success-modal');
                         successModal.classList.add('show');
-                        
+
                         // Wait 3 seconds, then show loading screen and redirect
                         setTimeout(() => {
                             successModal.classList.add('fade-out');

@@ -10,38 +10,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
-    <style>
-        /* Remove browser validation styling */
-        input[type="email"] {
-            background-image: none !important;
-            background-color: white !important;
-            border: 2px solid #e2e8f0 !important;
-        }
-
-        input[type="email"]:valid,
-        input[type="email"]:invalid {
-            background-image: none !important;
-            border-color: #e2e8f0 !important;
-            background-color: white !important;
-            box-shadow: none !important;
-        }
-
-        input[type="email"]:focus {
-            border-color: #213F99 !important;
-            box-shadow: 0 0 0 4px rgba(33, 63, 153, 0.1) !important;
-            background-image: none !important;
-            outline: none !important;
-        }
-
-        input[type="email"].is-invalid {
-            border-color: #dc3545 !important;
-        }
-
-        input[type="email"].is-invalid:focus {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
-        }
-    </style>
 </head>
 <body>
     @auth
@@ -50,7 +18,6 @@
         </script>
     @endauth
     <script>
-        // Prevent back navigation and redirect if authenticated
         (function() {
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
@@ -58,58 +25,76 @@
             };
         })();
     </script>
-    <div class="login-container">
-        <div class="background-section">
+
+    <div class="login-page">
+        {{-- Background --}}
+        <div class="bg-wrapper">
+            <div class="bg-image"></div>
+            <div class="gradient-overlay"></div>
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+        </div>
+
+        <div class="login-container">
+            {{-- LEFT: Logo --}}
             <div class="logo-container">
-                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
-                <h1 class="brand-title">SK Federations</h1>
+                <div class="logo-glow-wrapper">
+                    <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
+                </div>
+                <h1 class="brand-title">SK Federation</h1>
                 <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
             </div>
 
+            {{-- RIGHT: Content Card --}}
             <div class="login-form-container">
-                <div class="form-header">
-                    <h2>Reset Your Password</h2>
-                    <p>Enter your email address and we'll send you a link to reset your password.</p>
-                </div>
-
-                @if (session('status'))
-                    <div class="alert alert-info" role="alert" style="margin-bottom: 20px; border-radius: 12px;">
-                        {{ session('status') }}
-                    </div>
-                @endif
-
-                <form id="forgot-password-form" class="login-form" method="POST" action="{{ route('password.email', [], false) }}" data-turnstile-enabled="{{ config('services.turnstile.enabled', true) ? '1' : '0' }}" novalidate>
-                    @csrf
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            class="form-control"
-                            required
-                            placeholder="Enter your email"
-                            maxlength="100"
-                            autocomplete="email"
-                            value="{{ old('email') }}"
-                        >
-                        <div class="invalid-feedback" id="email-error" @if (! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
+                <div class="login-card-inner">
+                    <div class="form-header">
+                        <h2>Reset Your Password</h2>
+                        <p>Enter your email address and we'll send you a link to reset your password.</p>
                     </div>
 
-                    @include('authentication::components.turnstile')
+                    @if (session('status'))
+                        <div class="alert alert-info" role="alert" style="margin-bottom: 20px; border-radius: 12px;">
+                            {{ session('status') }}
+                        </div>
+                    @endif
 
-                    <button type="submit" class="login-btn btn btn-primary w-100">
-                        Send Reset Link
-                    </button>
-                </form>
+                    <form id="forgot-password-form" class="login-form" method="POST" action="{{ route('password.email', [], false) }}" data-turnstile-enabled="{{ config('services.turnstile.enabled', true) ? '1' : '0' }}" novalidate>
+                        @csrf
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="form-control"
+                                required
+                                placeholder="Enter your email"
+                                maxlength="100"
+                                autocomplete="email"
+                                value="{{ old('email') }}"
+                            >
+                            <div class="invalid-feedback" id="email-error" @if (! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
+                        </div>
 
-                <div class="form-footer">
-                    <a href="{{ route('login', [], false) }}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
-                            <path d="M19 12H5M12 19l-7-7 7-7"/>
-                        </svg>
-                        Back to login
-                    </a>
+                        @include('authentication::components.turnstile')
+
+                        <button type="submit" class="login-btn btn btn-primary w-100">
+                            Send Reset Link
+                        </button>
+                    </form>
+
+                    <div class="form-footer">
+                        <a href="{{ route('login', [], false) }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            Back to login
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -138,7 +123,7 @@
 
             // Validate email format
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            
+
             if (!email) {
                 e.preventDefault();
                 forgotPasswordEmail.classList.add('is-invalid');
