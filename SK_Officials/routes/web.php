@@ -14,12 +14,20 @@ use App\Http\Controllers\AuthController;
 Route::middleware('guest')->group(function () {
 
     Route::get('/login', function () {
+        if (session('authenticated')) {
+            return redirect()->route('dashboard');
+        }
+
         return view('Authentication::login');
     })->name('login');
 
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
     Route::get('/forgot-password', function () {
+        if (session('authenticated')) {
+            return redirect()->route('dashboard');
+        }
+
         return view('Authentication::forgot-password');
     })->name('forgot-password');
 

@@ -5,18 +5,9 @@ const submitBtn = document.getElementById('submitBtn');
 const errorMessage = document.getElementById('errorMessage');
 const successMessage = document.getElementById('successMessage');
 
-// Check if user is already logged in
+// Initialize forgot-password page behavior
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for existing session
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    const userEmail = sessionStorage.getItem('userEmail');
-    
-    if (isLoggedIn === 'true' && userEmail) {
-        // Redirect to dashboard if already logged in
-        window.location.href = '/dashboard';
-        return;
-    }
-    
+
     // Pre-fill email if it exists in session
     if (sessionStorage.getItem('rememberedEmail')) {
         emailInput.value = sessionStorage.getItem('rememberedEmail');
