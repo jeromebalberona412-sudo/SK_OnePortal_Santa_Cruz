@@ -1,5 +1,4 @@
 <!-- Edit SK Officials Modal -->
-@vite(['app/Modules/Accounts/assets/css/edit_sk_officials.css'])
 <div id="editSkOfficialsModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-large modal-themed">
         <div class="modal-header modal-header-yellow">
@@ -185,7 +184,7 @@
                 
                 <!-- Form Action Buttons -->
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary-modern" onclick="closeEditSkOfficialsModal()" style="text-align: center;">Cancel</button>
+                    <button type="button" class="btn-secondary-modern" onclick="closeEditSkOfficialsModal()">Cancel</button>
                     <button type="submit" form="editSkOfficialsForm" class="btn-primary-modern btn-yellow">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
