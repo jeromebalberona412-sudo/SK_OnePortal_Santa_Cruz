@@ -268,7 +268,7 @@ body {
     pointer-events: none;
 }
 
-.programs-summary-card > * {
+.programs-summary-card>* {
     position: relative;
     z-index: 1;
 }
@@ -460,4 +460,3 @@ body {
         margin-left: 80px;
     }
 }
-

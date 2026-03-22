@@ -306,7 +306,7 @@ body {
     flex-shrink: 0;
     background: #1f3c6d;
     border-radius: 16px 16px 0 0;
-    border-bottom: 1px solid rgba(255,255,255,0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .calendar-modal-title {
@@ -778,9 +778,11 @@ body {
         transform: translateX(0) translateY(-100px);
         width: auto;
     }
+
     .app-toast.app-toast-show {
         transform: translateX(0) translateY(0);
     }
+
     .app-toast.app-toast-hide {
         transform: translateX(0) translateY(-100px);
     }
@@ -791,9 +793,9 @@ body {
         opacity: 0;
         transform: scale(0.95) translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
     }
 }
-

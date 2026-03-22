@@ -9,7 +9,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     min-height: 100vh;
     line-height: 1.6;
 }
@@ -343,13 +343,15 @@ body {
     font-weight: 400;
 }
 
-.education-section, .committee-section {
+.education-section,
+.committee-section {
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid #e9ecef;
 }
 
-.education-section h4, .committee-section h4 {
+.education-section h4,
+.committee-section h4 {
     font-size: 16px;
     font-weight: 600;
     color: #333;
@@ -410,7 +412,8 @@ body {
 }
 
 /* Secretary and Treasurer Sections */
-.secretary-card, .treasurer-card {
+.secretary-card,
+.treasurer-card {
     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
 
@@ -420,7 +423,7 @@ body {
         margin-left: 260px;
         padding: 15px;
     }
-    
+
     .barangay-info-section,
     .sk-chairman-section,
     .sk-kagawad-section,
@@ -428,13 +431,13 @@ body {
     .sk-treasurer-section {
         padding: 20px;
     }
-    
+
     .barangay-info-grid {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 15px;
         padding: 20px;
     }
-    
+
     .kagawad-grid {
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 15px;
@@ -447,7 +450,7 @@ body {
         margin-top: 60px;
         padding: 15px;
     }
-    
+
     .barangay-info-section,
     .sk-chairman-section,
     .sk-kagawad-section,
@@ -456,71 +459,71 @@ body {
         padding: 15px;
         margin-bottom: 20px;
     }
-    
+
     .section-title {
         font-size: 18px;
     }
-    
+
     .barangay-header {
         padding: 20px;
         flex-direction: column;
         text-align: center;
         gap: 15px;
     }
-    
+
     .seal-image {
         width: 70px;
         height: 70px;
     }
-    
+
     .barangay-details h1 {
         font-size: 20px;
     }
-    
+
     .barangay-info-grid {
         grid-template-columns: 1fr;
         gap: 12px;
         padding: 15px;
     }
-    
+
     .info-item {
         padding: 12px;
     }
-    
+
     .official-header {
         padding: 15px;
         flex-direction: column;
         text-align: center;
         gap: 12px;
     }
-    
+
     .profile-image {
         width: 50px;
         height: 50px;
     }
-    
+
     .official-info {
         text-align: center;
     }
-    
+
     .official-info h3 {
         font-size: 16px;
     }
-    
+
     .official-meta {
         justify-content: center;
         gap: 10px;
     }
-    
+
     .official-details {
         padding: 15px;
     }
-    
+
     .detail-row {
         grid-template-columns: 1fr;
         gap: 12px;
     }
-    
+
     .kagawad-grid {
         grid-template-columns: 1fr;
         gap: 15px;
@@ -532,7 +535,7 @@ body {
         padding: 10px;
         margin-top: 55px;
     }
-    
+
     .barangay-info-section,
     .sk-chairman-section,
     .sk-kagawad-section,
@@ -541,93 +544,94 @@ body {
         padding: 12px;
         margin-bottom: 15px;
     }
-    
+
     .section-title {
         font-size: 16px;
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .barangay-header {
         padding: 15px;
     }
-    
+
     .seal-image {
         width: 60px;
         height: 60px;
     }
-    
+
     .barangay-details h1 {
         font-size: 18px;
     }
-    
+
     .barangay-captain {
         font-size: 13px;
     }
-    
+
     .barangay-info-grid {
         padding: 12px;
         gap: 10px;
     }
-    
+
     .info-item {
         padding: 10px;
     }
-    
+
     .info-label {
         font-size: 12px;
     }
-    
+
     .info-value {
         font-size: 14px;
     }
-    
+
     .official-header {
         padding: 12px;
     }
-    
+
     .profile-image {
         width: 45px;
         height: 45px;
     }
-    
+
     .official-info h3 {
         font-size: 15px;
     }
-    
+
     .official-position {
         font-size: 13px;
     }
-    
+
     .official-meta {
         gap: 8px;
     }
-    
+
     .meta-item {
         font-size: 11px;
     }
-    
+
     .official-details {
         padding: 12px;
     }
-    
+
     .detail-item label {
         font-size: 11px;
     }
-    
+
     .detail-item p {
         font-size: 13px;
     }
-    
-    .education-section h4, .committee-section h4 {
+
+    .education-section h4,
+    .committee-section h4 {
         font-size: 14px;
     }
-    
+
     .education-list li {
         font-size: 13px;
     }
-    
+
     .committee-tag {
         font-size: 11px;
         padding: 5px 10px;
@@ -638,7 +642,7 @@ body {
     .main-content {
         padding: 8px;
     }
-    
+
     .barangay-info-section,
     .sk-chairman-section,
     .sk-kagawad-section,
@@ -647,45 +651,45 @@ body {
         padding: 10px;
         border-radius: 10px;
     }
-    
+
     .section-title {
         font-size: 15px;
     }
-    
+
     .barangay-header {
         padding: 12px;
     }
-    
+
     .seal-image {
         width: 50px;
         height: 50px;
     }
-    
+
     .barangay-details h1 {
         font-size: 16px;
     }
-    
+
     .info-item {
         padding: 8px;
     }
-    
+
     .info-label {
         font-size: 11px;
     }
-    
+
     .info-value {
         font-size: 13px;
     }
-    
+
     .profile-image {
         width: 40px;
         height: 40px;
     }
-    
+
     .official-info h3 {
         font-size: 14px;
     }
-    
+
     .official-position {
         font-size: 12px;
     }
@@ -704,6 +708,7 @@ body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -745,7 +750,7 @@ body {
         margin-top: 0;
         padding: 0;
     }
-    
+
     .barangay-info-section,
     .sk-chairman-section,
     .sk-kagawad-section,

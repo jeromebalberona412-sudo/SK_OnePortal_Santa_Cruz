@@ -767,5 +767,304 @@ function initializeKKProfilingRequestsUI() {
 
     // Initial render
     setStatusFilter('All');
+
+    // Initialize KK Profiling Schedule
+    initializeKKProfilingSchedule();
+}
+
+function initializeKKProfilingSchedule() {
+    const scheduleBtn = document.getElementById('kkProfilingScheduleBtn');
+    const scheduleModal = document.getElementById('kkScheduleModal');
+    const calendarDays = document.getElementById('calendarDays');
+    const calendarMonthYear = document.getElementById('calendarMonthYear');
+    const calendarPrev = document.getElementById('calendarPrev');
+    const calendarNext = document.getElementById('calendarNext');
+    const clearScheduleBtn = document.getElementById('clearScheduleBtn');
+    const saveScheduleBtn = document.getElementById('saveScheduleBtn');
+
+    let currentDate = new Date();
+    let profilingDates = new Set(); // Store selected profiling dates
+    let isSelecting = false; // Track if user is in selection mode
+
+    // Load saved schedule from localStorage
+    loadSavedSchedule();
+
+    // Schedule button click handler
+    if (scheduleBtn) {
+        scheduleBtn.addEventListener('click', () => {
+            openScheduleModal();
+        });
+    }
+
+    // Calendar navigation
+    if (calendarPrev) {
+        calendarPrev.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+    }
+
+    if (calendarNext) {
+        calendarNext.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+    }
+
+    // Clear schedule button
+    if (clearScheduleBtn) {
+        clearScheduleBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all profiling schedules?')) {
+                profilingDates.clear();
+                renderCalendar();
+                showSuccessMessage('All schedules cleared!');
+            }
+        });
+    }
+
+    // Save schedule button
+    if (saveScheduleBtn) {
+        saveScheduleBtn.addEventListener('click', () => {
+            saveSchedule();
+        });
+    }
+
+    // Modal close handlers
+    const closeButtons = scheduleModal?.querySelectorAll('[data-modal-close]');
+    closeButtons?.forEach(btn => {
+        btn.addEventListener('click', closeScheduleModal);
+    });
+
+    // Close modal when clicking backdrop
+    scheduleModal?.addEventListener('click', (e) => {
+        if (e.target === scheduleModal) {
+            closeScheduleModal();
+        }
+    });
+
+    function openScheduleModal() {
+        if (scheduleModal) {
+            scheduleModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            renderCalendar();
+        }
+    }
+
+    function closeScheduleModal() {
+        if (scheduleModal) {
+            scheduleModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
+    function renderCalendar() {
+        if (!calendarDays || !calendarMonthYear) return;
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        // Update month/year display
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+        calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
+
+        // Clear existing days
+        calendarDays.innerHTML = '';
+
+        // Get first day of month and days in month
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+        // Add previous month's trailing days
+        for (let i = firstDay - 1; i >= 0; i--) {
+            const day = daysInPrevMonth - i;
+            const date = new Date(year, month - 1, day);
+            const dayElement = createDayElement(day, 'other-month', date);
+            calendarDays.appendChild(dayElement);
+        }
+
+        // Add current month's days
+        const today = new Date();
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            let className = '';
+
+            // Check if today
+            if (today.getDate() === day && today.getMonth() === month && today.getFullYear() === year) {
+                className = 'today';
+            }
+
+            // Check if in profiling period
+            if (isProfilingDate(date)) {
+                className += ' profiling-period';
+            }
+
+            const dayElement = createDayElement(day, className, date);
+            calendarDays.appendChild(dayElement);
+        }
+
+        // Add next month's leading days
+        const totalCells = calendarDays.children.length;
+        const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+        for (let day = 1; day <= remainingCells; day++) {
+            const date = new Date(year, month + 1, day);
+            const dayElement = createDayElement(day, 'other-month', date);
+            calendarDays.appendChild(dayElement);
+        }
+    }
+
+    function createDayElement(day, className, date) {
+        const dayElement = document.createElement('div');
+        dayElement.className = `calendar-day ${className}`;
+        dayElement.textContent = day;
+        dayElement.dataset.date = date.toISOString().split('T')[0];
+
+        // Add click handler for date selection
+        dayElement.addEventListener('click', () => {
+            handleDateClick(date, dayElement);
+        });
+
+        return dayElement;
+    }
+
+    function handleDateClick(date, element) {
+        const dateString = date.toISOString().split('T')[0];
+
+        if (element.classList.contains('other-month')) {
+            return; // Don't allow selection of other month dates
+        }
+
+        // Clear all existing selections first
+        profilingDates.clear();
+
+        // Add 7 consecutive days starting from the clicked date
+        for (let i = 0; i < 7; i++) {
+            const newDate = new Date(date);
+            newDate.setDate(date.getDate() + i);
+            const newDateString = newDate.toISOString().split('T')[0];
+            profilingDates.add(newDateString);
+        }
+
+        // Re-render the calendar to show the new selection
+        renderCalendar();
+    }
+
+    function isProfilingDate(date) {
+        const dateString = date.toISOString().split('T')[0];
+        return profilingDates.has(dateString);
+    }
+
+    function saveSchedule() {
+        // Save to localStorage
+        localStorage.setItem('kkProfilingSchedule', JSON.stringify(Array.from(profilingDates)));
+
+        // Validate that we have complete 1-week periods
+        if (profilingDates.size === 0) {
+            showSuccessMessage('Schedule cleared successfully!');
+            closeScheduleModal();
+            return;
+        }
+
+        // Check if the number of dates is a multiple of 7
+        if (profilingDates.size % 7 !== 0) {
+            alert('Invalid schedule detected. Please select complete 1-week periods.');
+            return;
+        }
+
+        // Group dates by week and validate they are consecutive
+        const groupedWeeks = groupDatesByWeek(Array.from(profilingDates));
+        let isValid = true;
+
+        for (const week of groupedWeeks) {
+            if (week.length !== 7) {
+                isValid = false;
+                break;
+            }
+        }
+
+        if (isValid) {
+            showSuccessMessage('Schedule saved successfully!');
+            closeScheduleModal();
+        } else {
+            alert('Invalid schedule detected. Please select complete 1-week periods.');
+        }
+    }
+
+    function loadSavedSchedule() {
+        const saved = localStorage.getItem('kkProfilingSchedule');
+        if (saved) {
+            try {
+                const dates = JSON.parse(saved);
+                profilingDates = new Set(dates);
+            } catch (e) {
+                console.error('Error loading saved schedule:', e);
+                profilingDates = new Set();
+            }
+        }
+    }
+
+    function groupDatesByWeek(dates) {
+        if (dates.length === 0) return [];
+
+        // Sort dates
+        dates.sort();
+
+        const weeks = [];
+        let currentWeek = [];
+
+        for (let i = 0; i < dates.length; i++) {
+            const date = new Date(dates[i]);
+
+            if (currentWeek.length === 0) {
+                currentWeek.push(date);
+            } else {
+                const lastDate = currentWeek[currentWeek.length - 1];
+                const daysDiff = Math.floor((date - lastDate) / (1000 * 60 * 60 * 24));
+
+                if (daysDiff === 1) {
+                    currentWeek.push(date);
+                } else {
+                    // Start new week
+                    if (currentWeek.length > 0) {
+                        weeks.push([...currentWeek]);
+                    }
+                    currentWeek = [date];
+                }
+            }
+        }
+
+        if (currentWeek.length > 0) {
+            weeks.push(currentWeek);
+        }
+
+        return weeks;
+    }
+
+    function showSuccessMessage(message) {
+        // Create a simple success notification
+        const notification = document.createElement('div');
+        notification.className = 'success-notification';
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #16a34a;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
 }
 

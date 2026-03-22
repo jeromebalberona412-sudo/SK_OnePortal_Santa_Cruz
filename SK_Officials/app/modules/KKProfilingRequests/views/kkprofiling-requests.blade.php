@@ -42,9 +42,9 @@
         <section class="page-filters-section">
             <div class="filters-row">
                 <div class="filter-item">
-                    <label for="kkBarangayFilter" class="filter-label">Barangay</label>
+                    <label for="kkBarangayFilter" class="filter-label">Purok/Sitio</label>
                     <select id="kkBarangayFilter" class="filter-select">
-                        <option value="">All Barangays</option>
+                        <option value="">Prok/Sitio</option>
                         <option value="BAYSIDE">BAYSIDE</option>
                         <option value="VILLA GRACIA">VILLA GRACIA</option>
                         <option value="IMELDA">IMELDA</option>
@@ -63,6 +63,12 @@
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
                     </select>
+                </div>
+                <div class="filter-item">
+                    <!-- KK Profiling Schedule Button -->
+                    <button type="button" id="kkProfilingScheduleBtn" class="kk-schedule-btn">
+                        KK Profiling Schedule
+                    </button>
                 </div>
             </div>
         </section>
@@ -136,7 +142,7 @@
                     <div class="kk-view-row"><span class="kk-view-label">REGION:</span><span class="kk-view-value" id="kkViewRegion"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">PROVINCE:</span><span class="kk-view-value" id="kkViewProvince"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">CITY/MUNICIPALITY:</span><span class="kk-view-value" id="kkViewCity"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">BARANGAY:</span><span class="kk-view-value" id="kkViewBarangay"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Purok/Sitio:</span><span class="kk-view-value" id="kkViewBarangay"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">HOME ADDRESS:</span><span class="kk-view-value" id="kkViewHomeAddress"></span></div>
                 </div>
                 <div class="modal-column">
@@ -231,6 +237,75 @@
 </div>
 
 <!-- Success Modal - Removed and replaced with toast notification -->
+
+<!-- KK Profiling Schedule Modal -->
+<div class="modal-backdrop kk-modal-backdrop" id="kkScheduleModal" style="display:none;">
+    <div class="modal-box kk-schedule-modal-box kk-modal-animate">
+        <div class="modal-header">
+            <h2 class="modal-title">KK Profiling Schedule</h2>
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body kk-schedule-modal-body">
+            <!-- Instructions -->
+            <div class="schedule-instructions">
+                <p class="instruction-text">
+                    <strong>Instructions:</strong> Select 1-week periods throughout the year when KK Profiling will be open. 
+                    Click on dates to mark/unmark them as profiling periods.
+                </p>
+            </div>
+            
+            <!-- Calendar Container -->
+            <div class="kk-calendar-container">
+                <div class="kk-calendar-grid">
+                    <!-- Calendar Header -->
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button type="button" class="calendar-nav-btn" id="calendarPrev">&lt;</button>
+                            <span class="calendar-month-year" id="calendarMonthYear">March 2026</span>
+                            <button type="button" class="calendar-nav-btn" id="calendarNext">&gt;</button>
+                        </div>
+                        <div class="calendar-actions">
+                            <button type="button" class="btn btn-secondary" id="clearScheduleBtn">Clear All</button>
+                            <button type="button" class="btn btn-primary" id="saveScheduleBtn">Save Schedule</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Week Days -->
+                    <div class="calendar-weekdays">
+                        <div class="calendar-weekday">Sun</div>
+                        <div class="calendar-weekday">Mon</div>
+                        <div class="calendar-weekday">Tue</div>
+                        <div class="calendar-weekday">Wed</div>
+                        <div class="calendar-weekday">Thu</div>
+                        <div class="calendar-weekday">Fri</div>
+                        <div class="calendar-weekday">Sat</div>
+                    </div>
+                    
+                    <!-- Calendar Days -->
+                    <div class="calendar-days" id="calendarDays">
+                        <!-- Days will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legend -->
+            <div class="calendar-legend">
+                <div class="legend-item">
+                    <div class="legend-color today"></div>
+                    <span>Today</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color profiling"></div>
+                    <span>Profiling Period</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color other-month"></div>
+                    <span>Other Month</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @vite([
     'app/modules/layout/js/header.js',
