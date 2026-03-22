@@ -6,7 +6,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/css/app.css',
+                'resources/css/app.css', 
                 'resources/js/app.js',
                 // Authentication module assets
                 'app/modules/Authentication/assets/css/login.css',
@@ -20,27 +20,6 @@ export default defineConfig({
                 // Profile module assets
                 'app/modules/Profile/assets/css/profile.css',
                 'app/modules/Profile/assets/js/profile.js',
-                // Calendar module assets
-                'app/modules/Calendar/assets/css/calendar.css',
-                'app/modules/Calendar/assets/js/calendar.js',
-                // Announcement module assets
-                'app/modules/Announcement/assets/css/announcement.css',
-                'app/modules/Announcement/assets/js/announcement.js',
-                // Committees module assets
-                'app/modules/Committees/assets/css/committees.css',
-                'app/modules/Committees/assets/js/committees.js',
-                // Programs module assets
-                'app/modules/Programs/assets/css/programs.css',
-                'app/modules/Programs/assets/js/programs.js',
-                // Events module assets
-                'app/modules/Events/assets/css/events.css',
-                'app/modules/Events/assets/js/events.js',
-                // Kabataan module assets
-                'app/modules/Kabataan/assets/css/kabataan.css',
-                'app/modules/Kabataan/assets/js/kabataan.js',
-                // KK Profiling Requests module assets
-                'app/modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
-                'app/modules/KKProfilingRequests/assets/js/kkprofiling-requests.js',
                 // Layout module assets
                 'app/modules/layout/css/header.css',
                 'app/modules/layout/css/sidebar.css',
