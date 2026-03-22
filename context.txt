@@ -122,9 +122,6 @@ SK-Federations Web App (Planned)
 - Social feed:
 	- SK barangay posts across barangays
 	- Ongoing programs, participants, budget amount, uploaded annual budget
-- Barangay requests/compliance:
-	- SK barangay complaints
-	- SK barangay requests
 - SK-Fed post and settings modules
 
 SK-Officials Web App (Planned)

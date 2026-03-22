@@ -304,6 +304,18 @@ body.sidebar-collapsed .menu-item span { opacity: 0; }
 .menu-item:hover { background: #f8fafc; color: var(--fed-blue); border-left-color: var(--fed-blue); }
 .menu-item.active { background: #eff6ff; color: var(--fed-blue); border-left-color: var(--fed-blue); font-weight: 600; }
 .menu-item.active i { color: var(--fed-blue); }
+.menu-item.is-disabled {
+    opacity: 0.5;
+    color: #94a3b8;
+    pointer-events: none;
+    cursor: not-allowed;
+    border-left-color: transparent;
+}
+.menu-item.is-disabled:hover {
+    background: none;
+    color: #94a3b8;
+    border-left-color: transparent;
+}
 
 body.sidebar-collapsed .menu-item::after {
     content: attr(data-tooltip);
