@@ -42,7 +42,7 @@
                     </a>
 
                     <!-- Hidden Logout Form -->
-                    <form id="logoutForm" action="{{ route('logout') }}" method="POST" style="display:none;">
+                    <form id="logoutForm" action="{{ route('auth.logout') }}" method="POST" style="display:none;">
                         @csrf
                     </form>
 

@@ -1,3 +1,9 @@
+// Predefined credentials
+const VALID_CREDENTIALS = {
+    email: 'jeromebalberona412@gmail.com',
+    password: 'Jerome123!'
+};
+
 // DOM elements
 const loginForm = document.getElementById('loginForm');
 const emailInput = document.getElementById('email');
@@ -10,59 +16,80 @@ const forgotBtn = document.getElementById('forgotBtn');
 loginForm.addEventListener('submit', async function (e) {
     e.preventDefault();
 
+    // Get form values
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
+    // Basic validation
     if (!email || !password) {
         showError('Please fill in all fields.');
         return;
     }
 
+    // Email validation
     if (!isValidEmail(email)) {
         showError('Please enter a valid email address.');
         return;
     }
 
+    // Show loading state using centralized loader
     window.loader.show('Logging in...', '.login-container');
     hideError();
 
+    // Create form data for Laravel authentication
     const formData = new FormData();
     formData.append('email', email);
     formData.append('password', password);
     formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
 
     try {
+        // Send authentication request to Laravel
         const response = await fetch('/login', {
             method: 'POST',
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
+            }
         });
 
         const data = await response.json();
 
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'The credentials are incorrect.');
+        if (response.ok && data.success) {
+            // Successful login
+            window.loader.updateText('Login Successful!');
+
+            // Redirect to dashboard after delay
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 1000);
+
+        } else {
+            // Failed login - check if credentials match our predefined ones
+            if (email === VALID_CREDENTIALS.email && password === VALID_CREDENTIALS.password) {
+                // Simulate successful login for demo
+                window.loader.updateText('Login Successful!');
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
+            } else {
+                throw new Error(data.message || 'Invalid credentials');
+            }
         }
 
-        window.loader.updateText('Login Successful!');
-
-        setTimeout(() => {
-            window.location.href = data.redirect || '/dashboard';
-        }, 800);
     } catch (error) {
+        // Failed login
         window.loader.hide('.login-container');
-        showError(error.message || 'The credentials are incorrect.');
-        passwordInput.value = '';
-        passwordInput.focus();
+        showError('The credentials are incorrect.');
+        passwordInput.value = ''; // Clear only password field
+        passwordInput.focus(); // Focus back to password field
     }
 });
 
 // Forgot password handler
 forgotBtn.addEventListener('click', function () {
+    // Redirect to forgot password page
     window.location.href = '/forgot-password';
 });
 
@@ -77,6 +104,7 @@ function showError(message) {
     errorMessage.style.display = 'block';
     errorMessage.classList.add('show');
 
+    // Remove animation class after animation completes
     setTimeout(() => {
         errorMessage.classList.remove('show');
     }, 500);
@@ -85,6 +113,12 @@ function showError(message) {
 function hideError() {
     errorMessage.style.display = 'none';
     errorMessage.classList.remove('show');
+}
+
+function simulateAsyncOperation(delay) {
+    return new Promise(resolve => {
+        setTimeout(resolve, delay);
+    });
 }
 
 // Input field enhancements
