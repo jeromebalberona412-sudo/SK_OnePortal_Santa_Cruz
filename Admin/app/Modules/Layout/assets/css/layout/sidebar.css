@@ -14,6 +14,17 @@
     --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+html,
+body {
+    background: #000000;
+    overflow-x: hidden;
+}
+
+body.admin-dark-canvas .min-h-screen,
+body.admin-dark-canvas main.flex-grow {
+    background: #000000;
+}
+
 .sr-only {
     position: absolute;
     width: 1px;
