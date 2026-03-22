@@ -6,25 +6,5 @@ theme color
  Blue-Teal: #1f7a8c
  Green: #2e8b57
  in two factor authentication na dedelete pa yung number na na input during process pero oks naman napasok naman even i remove.
- then 
- banlag pa mata sa add sk fed and officials password.
- backend validation
-
- terms start - bawal yung future dates
- terms end - bawal yung old dates future lang 
-FNAME, LNAME,MNAME
- No space in input field,special caracters, etc.
-
- EMAIL
-
-CONATCT NUMBER
- number input only (ikaw na abahala kung lalagay mo validation yung na issue non)
-
-DATE OF BIRTH and age 
-15+ years old amx of 30 years old
-
-PASSWORD
-
-terms start - bawal yung future dates
-terms end - bawal yung old dates future lang 
-SA LAHAT NA YAN ADD AND EDIT 
+ then yung bug once na ininput yung account ng sk fed or officials saadmin login napasok sa dashboard.
+ 
