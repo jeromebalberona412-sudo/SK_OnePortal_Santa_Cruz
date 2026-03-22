@@ -6,6 +6,8 @@ function initializeKKProfilingRequestsUI() {
     const tbody = document.getElementById('kkRequestsTableBody');
     const statusTabsContainer = document.getElementById('kkStatusTabs');
     const searchInput = document.getElementById('kkSearch');
+    const barangayFilter = document.getElementById('kkBarangayFilter');
+    const voterFilter = document.getElementById('kkVoterFilter');
     const viewModal = document.getElementById('kkViewModal');
     const approveModal = document.getElementById('kkApproveModal');
     const rejectModal = document.getElementById('kkRejectModal');
@@ -21,9 +23,23 @@ function initializeKKProfilingRequestsUI() {
             middleName: 'Santos',
             lastName: 'Reyes',
             suffix: 'Jr.',
-            age: 18,
-            purok: 'Purok 1',
-            contact: '09123456789',
+            age: 17,
+            dateOfBirth: '10/22/2006',
+            sex: 'Female',
+            civilStatus: 'Single',
+            region: '4A',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'Calios',
+            youthClassification: 'In School (ISY)',
+            ageGroup: '15–17',
+            highestEducation: 'College',
+            workStatus: 'N/A',
+            occupation: 'N/A',
+            registeredVoter: 'Yes',
+            votedLastElection: 'Yes',
+            activeInSK: 'Yes',
+            recordId: '1',
             status: 'Pending',
             rejectionReason: '',
         },
@@ -34,8 +50,22 @@ function initializeKKProfilingRequestsUI() {
             lastName: 'Cruz',
             suffix: 'None',
             age: 19,
-            purok: 'Sitio 2',
-            contact: '09123456790',
+            dateOfBirth: '03/15/2005',
+            sex: 'Female',
+            civilStatus: 'Single',
+            region: '4A',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'Calios',
+            youthClassification: 'In School (ISY)',
+            ageGroup: '18–21',
+            highestEducation: 'College',
+            workStatus: 'Student',
+            occupation: 'Student',
+            registeredVoter: 'Yes',
+            votedLastElection: 'No',
+            activeInSK: 'Yes',
+            recordId: '2',
             status: 'Approved',
             rejectionReason: '',
         },
@@ -46,8 +76,22 @@ function initializeKKProfilingRequestsUI() {
             lastName: 'Garcia',
             suffix: 'None',
             age: 17,
-            purok: 'Villa Gracias',
-            contact: '09123456791',
+            dateOfBirth: '07/08/2006',
+            sex: 'Male',
+            civilStatus: 'Single',
+            region: '4A',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'Calios',
+            youthClassification: 'Out of School (OSY)',
+            ageGroup: '15–17',
+            highestEducation: 'High School',
+            workStatus: 'Unemployed',
+            occupation: 'N/A',
+            registeredVoter: 'No',
+            votedLastElection: 'No',
+            activeInSK: 'No',
+            recordId: '3',
             status: 'Rejected',
             rejectionReason: 'Invalid birthdate / age mismatch',
         },
@@ -58,8 +102,22 @@ function initializeKKProfilingRequestsUI() {
             lastName: 'Santillan',
             suffix: 'None',
             age: 20,
-            purok: 'Bayside Calios',
-            contact: '09123456792',
+            dateOfBirth: '12/01/2004',
+            sex: 'Female',
+            civilStatus: 'Single',
+            region: '4A',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'Calios',
+            youthClassification: 'In School (ISY)',
+            ageGroup: '18–21',
+            highestEducation: 'College',
+            workStatus: 'Employed',
+            occupation: 'Office Worker',
+            registeredVoter: 'Yes',
+            votedLastElection: 'Yes',
+            activeInSK: 'Yes',
+            recordId: '4',
             status: 'Pending',
             rejectionReason: '',
         },
@@ -70,8 +128,22 @@ function initializeKKProfilingRequestsUI() {
             lastName: 'Mendoza',
             suffix: 'Sr.',
             age: 21,
-            purok: 'Purok 3',
-            contact: '09123456793',
+            dateOfBirth: '05/10/2003',
+            sex: 'Male',
+            civilStatus: 'Single',
+            region: '4A',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'Calios',
+            youthClassification: 'Out of School (OSY)',
+            ageGroup: '18–21',
+            highestEducation: 'College',
+            workStatus: 'Employed',
+            occupation: 'Business Owner',
+            registeredVoter: 'Yes',
+            votedLastElection: 'Yes',
+            activeInSK: 'Yes',
+            recordId: '5',
             status: 'Approved',
             rejectionReason: '',
         },
@@ -82,8 +154,22 @@ function initializeKKProfilingRequestsUI() {
             lastName: 'Del Rosario',
             suffix: 'None',
             age: 16,
-            purok: 'Sitio 1',
-            contact: '09123456794',
+            dateOfBirth: '09/18/2007',
+            sex: 'Female',
+            civilStatus: 'Single',
+            region: '4A',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'Calios',
+            youthClassification: 'In School (ISY)',
+            ageGroup: '15–17',
+            highestEducation: 'High School',
+            workStatus: 'Student',
+            occupation: 'Student',
+            registeredVoter: 'No',
+            votedLastElection: 'No',
+            activeInSK: 'No',
+            recordId: '6',
             status: 'Rejected',
             rejectionReason: 'Incomplete information provided',
         },
@@ -94,8 +180,22 @@ function initializeKKProfilingRequestsUI() {
             lastName: 'Fernandez',
             suffix: 'III',
             age: 22,
-            purok: 'Purok 4',
-            contact: '09123456795',
+            dateOfBirth: '02/14/2003',
+            sex: 'Male',
+            civilStatus: 'Single',
+            region: '4A',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'Calios',
+            youthClassification: 'Out of School (OSY)',
+            ageGroup: '22–30',
+            highestEducation: 'College',
+            workStatus: 'Employed',
+            occupation: 'Teacher',
+            registeredVoter: 'Yes',
+            votedLastElection: 'Yes',
+            activeInSK: 'Yes',
+            recordId: '7',
             status: 'Pending',
             rejectionReason: '',
         },
@@ -106,15 +206,72 @@ function initializeKKProfilingRequestsUI() {
             lastName: 'Castillo',
             suffix: 'None',
             age: 18,
-            purok: 'Sitio 3',
-            contact: '09123456796',
+            dateOfBirth: '11/25/2006',
+            sex: 'Female',
+            civilStatus: 'Single',
+            region: '4A',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'Calios',
+            youthClassification: 'In School (ISY)',
+            ageGroup: '15–17',
+            highestEducation: 'College',
+            workStatus: 'Student',
+            occupation: 'Student',
+            registeredVoter: 'Yes',
+            votedLastElection: 'No',
+            activeInSK: 'Yes',
+            recordId: '8',
             status: 'Approved',
             rejectionReason: '',
         }
     ];
 
+    // Sort requests array alphabetically by last name (professional standard)
+    function sortRequestsAlphabetically() {
+        return requests.sort((a, b) => {
+            const lastNameA = (a.lastName || '').toLowerCase();
+            const lastNameB = (b.lastName || '').toLowerCase();
+
+            if (lastNameA < lastNameB) return -1;
+            if (lastNameA > lastNameB) return 1;
+
+            // If last names are the same, sort by first name
+            const firstNameA = (a.firstName || '').toLowerCase();
+            const firstNameB = (b.firstName || '').toLowerCase();
+
+            if (firstNameA < firstNameB) return -1;
+            if (firstNameA > firstNameB) return 1;
+
+            return 0;
+        });
+    }
+
+    // Function to format name as "LN,FN,MN,Suffix"
+    function formatFullName(r) {
+        const parts = [r.firstName, r.middleName].filter(Boolean);
+        const firstMiddle = parts.length ? parts.join(',') : '';
+        const last = r.lastName || '';
+        const suffix = r.suffix ? ',' + r.suffix : '';
+
+        if (last && firstMiddle) {
+            return `${last},${firstMiddle}${suffix}`;
+        } else if (last) {
+            return `${last}${suffix}`;
+        } else if (firstMiddle) {
+            return `${firstMiddle}${suffix}`;
+        } else {
+            return '-';
+        }
+    }
+
+    // Initial sort
+    sortRequestsAlphabetically();
+
     let currentFilterStatus = 'All';
     let currentSearchQuery = '';
+    let currentBarangayFilter = '';
+    let currentVoterFilter = '';
     let activeRequestId = null;
 
     // Pagination variables
@@ -128,10 +285,12 @@ function initializeKKProfilingRequestsUI() {
             if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
-                const fullName = `${r.firstName} ${r.middleName} ${r.lastName}`.toLowerCase();
+                const fullName = formatFullName(r).toLowerCase();
                 const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
                 if (!match) return false;
             }
+            if (currentBarangayFilter && r.barangay !== currentBarangayFilter) return false;
+            if (currentVoterFilter && r.registeredVoter !== currentVoterFilter) return false;
             return true;
         });
 
@@ -161,7 +320,7 @@ function initializeKKProfilingRequestsUI() {
                     : r.status === 'Approved'
                         ? 'approved'
                         : 'rejected';
-            const fullName = [r.firstName, r.middleName, r.lastName].filter(Boolean).join(' ') || '-';
+            const fullName = formatFullName(r);
 
             let actionsHtml = `
                 <button type="button" class="kk-btn-view" data-action="view" data-id="${r.id}">View</button>
@@ -172,8 +331,8 @@ function initializeKKProfilingRequestsUI() {
                     <span class="kk-fullname">${fullName}</span>
                 </td>
                 <td>${r.age}</td>
-                <td>${r.purok}</td>
-                <td>${r.contact}</td>
+                <td>${r.barangay}</td>
+                <td>${r.registeredVoter}</td>
                 <td><span class="kk-status-pill ${statusClass}">${r.status}</span></td>
                 <td><div class="kk-actions">${actionsHtml}</div></td>
             `;
@@ -192,7 +351,7 @@ function initializeKKProfilingRequestsUI() {
                 if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
                 if (currentSearchQuery) {
                     const q = currentSearchQuery.toLowerCase();
-                    const fullName = `${r.firstName} ${r.middleName} ${r.lastName}`.toLowerCase();
+                    const fullName = formatFullName(r).toLowerCase();
                     const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
                     if (!match) return false;
                 }
@@ -245,7 +404,7 @@ function initializeKKProfilingRequestsUI() {
             if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
-                const fullName = `${r.firstName} ${r.middleName} ${r.lastName}`.toLowerCase();
+                const fullName = formatFullName(r).toLowerCase();
                 const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
                 if (!match) return false;
             }
@@ -290,21 +449,47 @@ function initializeKKProfilingRequestsUI() {
     }
 
     function populateViewModal(request) {
-        const { firstName, middleName, lastName, suffix, age, purok, contact, status, rejectionReason } = request;
+        const {
+            firstName, middleName, lastName, suffix, age, dateOfBirth, sex, civilStatus,
+            region, province, city, barangay, youthClassification, ageGroup,
+            highestEducation, workStatus, occupation, registeredVoter, votedLastElection,
+            activeInSK, recordId, status, rejectionReason
+        } = request;
 
         const setVal = (id, val) => {
             const el = document.getElementById(id);
             if (el) el.textContent = val ?? '';
         };
 
+        // Personal Information
         setVal('kkViewFirstName', firstName);
         setVal('kkViewMiddleName', middleName);
         setVal('kkViewLastName', lastName);
         setVal('kkViewSuffix', suffix || 'None');
         setVal('kkViewAge', age);
-        setVal('kkViewPurok', purok);
-        setVal('kkViewContact', contact);
-        setVal('kkViewStatus', status);
+        setVal('kkViewBirthday', dateOfBirth);
+        setVal('kkViewSexAssignedAtBirth', sex);
+        setVal('kkViewCivilStatus', civilStatus);
+
+        // Location Information
+        setVal('kkViewRegion', region);
+        setVal('kkViewProvince', province);
+        setVal('kkViewCity', city);
+        setVal('kkViewBarangay', barangay);
+        setVal('kkViewHomeAddress', barangay === 'Calios' ? 'Bay side' : barangay === 'Calios' ? 'Villa Garcia' : barangay || 'Villa Gracia'); // Transform Calios to Bay side or Villa Garcia
+
+        // Youth Information
+        setVal('kkViewYouthClassification', youthClassification);
+        setVal('kkViewYouthAgeGroup', ageGroup);
+        setVal('kkViewContactNumber', ''); // Add contact number field if available
+        setVal('kkViewHighestEducationalAttainment', highestEducation);
+        setVal('kkViewWorkStatus', workStatus || occupation || 'N/A');
+
+        // Civic Participation
+        setVal('kkViewRegisteredVoter', registeredVoter);
+        setVal('kkViewVotedLastElection', votedLastElection);
+        setVal('kkViewAttendedKKAssembly', activeInSK);
+        setVal('kkViewHowManyTimes', recordId);
 
         const rejectionWrap = document.getElementById('kkViewRejectionWrap');
         const rejectionText = document.getElementById('kkViewRejectionText');
@@ -322,6 +507,23 @@ function initializeKKProfilingRequestsUI() {
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             currentSearchQuery = searchInput.value.trim();
+            currentPage = 1;
+            renderTable();
+        });
+    }
+
+    // Filter event listeners
+    if (barangayFilter) {
+        barangayFilter.addEventListener('change', () => {
+            currentBarangayFilter = barangayFilter.value;
+            currentPage = 1;
+            renderTable();
+        });
+    }
+
+    if (voterFilter) {
+        voterFilter.addEventListener('change', () => {
+            currentVoterFilter = voterFilter.value;
             currentPage = 1;
             renderTable();
         });

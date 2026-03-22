@@ -48,22 +48,30 @@
                     <label for="kabataanPurok / SitioFilter" class="filter-label">Purok / Sitio</label>
                     <select id="kabataanPurok / SitioFilter" class="filter-select">
                         <option value="">All</option>
-                        <option value="Purok 1">Purok 1</option>
-                        <option value="Purok 2">Purok 2</option>
-                        <option value="Purok 3">Purok 3</option>
-                        <option value="Purok 4">Purok 4</option>
-                        <option value="Purok 5">Purok 5</option>
-                        <option value="Purok 6">Purok 6</option>
-                        <option value="Purok 7">Purok 7</option>
-                        <option value="Sitio 1">Sitio 1</option>
-                        <option value="Sitio 2">Sitio 2</option>
-                        <option value="Sitio 3">Sitio 3</option>
-                        <option value="Sitio 4">Sitio 4</option>
-                        <option value="Sitio 5">Sitio 5</option>
-                        <option value="Sitio 6">Sitio 6</option>
-                        <option value="Sitio 7">Sitio 7</option>
-                        <option value="Villa Gracias">Villa Gracias</option>
-                        <option value="Bayside Calios">Bayside Calios</option>
+                        <option value="BAYSIDE">BAYSIDE</option>
+                        <option value="VILLA GRACIA">VILLA GRACIA</option>
+                        <option value="IMELDA">IMELDA</option>
+                        <option value="LUPANG PANGAKO">LUPANG PANGAKO</option>
+                        <option value="DAMAYAN">DAMAYAN</option>
+                        <option value="MARCELO">MARCELO</option>
+                        <option value="BIGAYANVILLA ROSA">BIGAYANVILLA ROSA</option>
+                        <option value="PHASE3">PHASE3</option>
+                        <option value="BIGAYANSANLUIS">BIGAYANSANLUIS</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="kabataanEducationFilter" class="filter-label">Highest Education</label>
+                    <select id="kabataanEducationFilter" class="filter-select">
+                        <option value="">All</option>
+                        <option value="No Formal Education">No Formal Education</option>
+                        <option value="Elementary Level">Elementary Level</option>
+                        <option value="Elementary Graduate">Elementary Graduate</option>
+                        <option value="High School Level">High School Level</option>
+                        <option value="High School Graduate">High School Graduate</option>
+                        <option value="College Level">College Level</option>
+                        <option value="College Graduate">College Graduate</option>
+                        <option value="Vocational">Vocational</option>
+                        <option value="Postgraduate">Postgraduate</option>
                     </select>
                 </div>
             </div>
@@ -81,7 +89,7 @@
                             <tr>
                                 <th>
                                     Full Name
-                                    <div class="column-hint">FN, MN, LN, Suffix</div>
+                                    <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
                                 <th>Age</th>
                                 <th>Sex</th>
@@ -148,11 +156,45 @@
                 </div>
             </div>
 
-            <!-- View-only: label-value rows (like image) -->
+            <!-- View-only: label-value rows (like KK Profiling Requests) -->
             <div class="kabataan-view-details" id="kabataanViewDetails" style="display:none;">
-                <div class="kabataan-view-columns" id="kabataanViewColumns">
-                    <div class="kabataan-view-column-left" id="kabataanViewColumnLeft"></div>
-                    <div class="kabataan-view-column-right" id="kabataanViewColumnRight"></div>
+                <div class="kabataan-view-columns kabataan-view-columns" id="kabataanViewColumns">
+                    <div class="kabataan-view-column-left" id="kabataanViewColumnLeft">
+                        <div class="kabataan-view-section-title">Personal Information</div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">First Name:</span><span class="kabataan-view-value" id="kabataanViewFirstName"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Middle Name:</span><span class="kabataan-view-value" id="kabataanViewMiddleName"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Last Name:</span><span class="kabataan-view-value" id="kabataanViewLastName"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Suffix:</span><span class="kabataan-view-value" id="kabataanViewSuffix"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Age:</span><span class="kabataan-view-value" id="kabataanViewAge"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Date of Birth:</span><span class="kabataan-view-value" id="kabataanViewDateOfBirth"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Sex:</span><span class="kabataan-view-value" id="kabataanViewSex"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Civil Status:</span><span class="kabataan-view-value" id="kabataanViewCivilStatus"></span></div>
+                        
+                        <div class="kabataan-view-section-title">Location Information</div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Region:</span><span class="kabataan-view-value" id="kabataanViewRegion"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Province:</span><span class="kabataan-view-value" id="kabataanViewProvince"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">City/Municipality:</span><span class="kabataan-view-value" id="kabataanViewCity"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Barangay:</span><span class="kabataan-view-value" id="kabataanViewBarangay"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Purok / Sitio:</span><span class="kabataan-view-value" id="kabataanViewPurokSitio"></span></div>
+                    </div>
+                    <div class="kabataan-view-column-right" id="kabataanViewColumnRight">
+                        <div class="kabataan-view-section-title">Youth Classification / Education</div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Youth Classification (ISY/OSY/NEET):</span><span class="kabataan-view-value" id="kabataanViewYouthClassification"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Age Group:</span><span class="kabataan-view-value" id="kabataanViewAgeGroup"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Contact Number:</span><span class="kabataan-view-value" id="kabataanViewContactNumber"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Highest Educational Attainment:</span><span class="kabataan-view-value" id="kabataanViewHighestEducation"></span></div>
+                        
+                        <div class="kabataan-view-section-title">Work / Other Info</div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Work Status:</span><span class="kabataan-view-value" id="kabataanViewWorkStatus"></span></div>
+                        
+                        <div class="kabataan-view-section-title">Civic Participation</div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Registered Voter:</span><span class="kabataan-view-value" id="kabataanViewRegisteredVoter"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Voted Last Election:</span><span class="kabataan-view-value" id="kabataanViewVotedLastElection"></span></div>
+                        
+                        <div class="kabataan-view-section-title">Additional</div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">SK Participation:</span><span class="kabataan-view-value" id="kabataanViewSKParticipation"></span></div>
+                        <div class="kabataan-view-row"><span class="kabataan-view-label">Record ID:</span><span class="kabataan-view-value" id="kabataanViewRecordId"></span></div>
+                    </div>
                 </div>
             </div>
 
@@ -202,20 +244,54 @@
 <div class="modal-backdrop kabataan-modal-backdrop" id="kabataanViewModal" style="display:none;">
     <div class="modal-box kabataan-modal-box">
         <div class="modal-header">
-            <h2 class="modal-title" id="kabataanModalTitle">Kabataan Details</h2>
+            <h2 class="modal-title" id="kabataanViewModalTitle">Kabataan Details</h2>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" id="kabataanModalToggle" aria-label="Maximize">□</button>
+                <button type="button" class="modal-toggle-btn" id="kabataanViewModalToggle" aria-label="Maximize">□</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
         <div class="modal-body kabataan-modal-body">
-            <div class="kabataan-view-columns" id="kabataanViewColumns">
-                <div class="kabataan-view-column-left" id="kabataanViewColumnLeft"></div>
-                <div class="kabataan-view-column-right" id="kabataanViewColumnRight"></div>
+            <div class="kabataan-view-columns kabataan-view-columns" id="kabataanViewModalColumns">
+                <div class="kabataan-view-column-left" id="kabataanViewModalColumnLeft">
+                    <div class="kabataan-view-section-title">Personal Information</div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">First Name:</span><span class="kabataan-view-value" id="kabataanViewModalFirstName"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Middle Name:</span><span class="kabataan-view-value" id="kabataanViewModalMiddleName"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Last Name:</span><span class="kabataan-view-value" id="kabataanViewModalLastName"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Suffix:</span><span class="kabataan-view-value" id="kabataanViewModalSuffix"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Age:</span><span class="kabataan-view-value" id="kabataanViewModalAge"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Date of Birth:</span><span class="kabataan-view-value" id="kabataanViewModalDateOfBirth"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Sex:</span><span class="kabataan-view-value" id="kabataanViewModalSex"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Civil Status:</span><span class="kabataan-view-value" id="kabataanViewModalCivilStatus"></span></div>
+                    
+                    <div class="kabataan-view-section-title">Location Information</div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Region:</span><span class="kabataan-view-value" id="kabataanViewModalRegion"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Province:</span><span class="kabataan-view-value" id="kabataanViewModalProvince"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">City/Municipality:</span><span class="kabataan-view-value" id="kabataanViewModalCity"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Barangay:</span><span class="kabataan-view-value" id="kabataanViewModalBarangay"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Purok / Sitio:</span><span class="kabataan-view-value" id="kabataanViewModalPurokSitio"></span></div>
+                </div>
+                <div class="kabataan-view-column-right" id="kabataanViewModalColumnRight">
+                    <div class="kabataan-view-section-title">Youth Classification / Education</div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Youth Classification (ISY/OSY/NEET):</span><span class="kabataan-view-value" id="kabataanViewModalYouthClassification"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Age Group:</span><span class="kabataan-view-value" id="kabataanViewModalAgeGroup"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Contact Number:</span><span class="kabataan-view-value" id="kabataanViewModalContactNumber"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Highest Educational Attainment:</span><span class="kabataan-view-value" id="kabataanViewModalHighestEducation"></span></div>
+                    
+                    <div class="kabataan-view-section-title">Work / Other Info</div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Work Status:</span><span class="kabataan-view-value" id="kabataanViewModalWorkStatus"></span></div>
+                    
+                    <div class="kabataan-view-section-title">Civic Participation</div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Registered Voter:</span><span class="kabataan-view-value" id="kabataanViewModalRegisteredVoter"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Voted Last Election:</span><span class="kabataan-view-value" id="kabataanViewModalVotedLastElection"></span></div>
+                    
+                    <div class="kabataan-view-section-title">Additional</div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">SK Participation:</span><span class="kabataan-view-value" id="kabataanViewModalSKParticipation"></span></div>
+                    <div class="kabataan-view-row"><span class="kabataan-view-label">Record ID:</span><span class="kabataan-view-value" id="kabataanViewModalRecordId"></span></div>
+                </div>
             </div>
         </div>
         <div class="modal-footer kabataan-modal-footer">
-            <button type="button" class="btn primary-btn" id="kabataanSaveBtn">Save</button>
+            <button type="button" class="btn primary-btn" id="kabataanViewModalClose">Close</button>
         </div>
     </div>
 </div>

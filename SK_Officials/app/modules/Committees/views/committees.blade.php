@@ -81,7 +81,24 @@
         <div class="modal-body">
             <div class="modal-field">
                 <label for="committeeNameInput">Committee Name</label>
-                <input type="text" id="committeeNameInput" placeholder="e.g. Education">
+                <select id="committeeNameInput">
+                    <option value="">Select Committee</option>
+                    <option value="Committee on Peace and Order">Committee on Peace and Order</option>
+                    <option value="Committee on Health">Committee on Health</option>
+                    <option value="Committee on Education">Committee on Education</option>
+                    <option value="Committee on Environment">Committee on Environment</option>
+                    <option value="Committee on Social Services">Committee on Social Services</option>
+                    <option value="Committee on Livelihood / Employment">Committee on Livelihood / Employment</option>
+                    <option value="Committee on Infrastructure">Committee on Infrastructure</option>
+                    <option value="Committee on Budget and Finance">Committee on Budget and Finance</option>
+                    <option value="Committee on Women and Family">Committee on Women and Family</option>
+                    <option value="Committee on Youth and Sports Development">Committee on Youth and Sports Development</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="modal-field" id="otherCommitteeField" style="display: none;">
+                <label for="otherCommitteeInput">Specify Committee Name</label>
+                <input type="text" id="otherCommitteeInput" placeholder="Enter committee name">
             </div>
             <div class="modal-field">
                 <label for="committeeHeadInput">Committee Head</label>

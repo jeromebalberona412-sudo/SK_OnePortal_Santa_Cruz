@@ -143,8 +143,28 @@
                 <input type="text" id="programTitleInput" placeholder="e.g. Youth Leadership Training">
             </div>
             <div class="modal-field">
-                <label for="programCommitteeInput">Committee Responsible</label>
-                <input type="text" id="programCommitteeInput" placeholder="e.g. Education">
+                <label for="programCommitteeInput">Program Type</label>
+                <select id="programCommitteeInput">
+                    <option value="">Select Program Type</option>
+                    <option value="Youth Development Program">Youth Development Program</option>
+                    <option value="Education Support Program">Education Support Program</option>
+                    <option value="Sports Development Program">Sports Development Program</option>
+                    <option value="Environmental Program">Environmental Program</option>
+                    <option value="Health and Wellness Program">Health and Wellness Program</option>
+                    <option value="Livelihood and Employment Program">Livelihood and Employment Program</option>
+                    <option value="Gender and Development (GAD) Program">Gender and Development (GAD) Program</option>
+                    <option value="Peace and Order Program">Peace and Order Program</option>
+                    <option value="Culture and Arts Program">Culture and Arts Program</option>
+                    <option value="ICT and Digital Literacy Program">ICT and Digital Literacy Program</option>
+                    <option value="Disaster Risk Reduction Program">Disaster Risk Reduction Program</option>
+                    <option value="Volunteerism Program">Volunteerism Program</option>
+                    <option value="Entrepreneurship Program">Entrepreneurship Program</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="modal-field" id="otherProgramField" style="display: none;">
+                <label for="otherProgramInput">Specify Program Name</label>
+                <input type="text" id="otherProgramInput" placeholder="Enter program name">
             </div>
             <div class="modal-field">
                 <label for="programBudgetInput">Budget (₱)</label>

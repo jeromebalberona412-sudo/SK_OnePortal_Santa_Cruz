@@ -39,6 +39,34 @@
             </div>
         </section>
 
+        <section class="page-filters-section">
+            <div class="filters-row">
+                <div class="filter-item">
+                    <label for="kkBarangayFilter" class="filter-label">Barangay</label>
+                    <select id="kkBarangayFilter" class="filter-select">
+                        <option value="">All Barangays</option>
+                        <option value="BAYSIDE">BAYSIDE</option>
+                        <option value="VILLA GRACIA">VILLA GRACIA</option>
+                        <option value="IMELDA">IMELDA</option>
+                        <option value="LUPANG PANGAKO">LUPANG PANGAKO</option>
+                        <option value="DAMAYAN">DAMAYAN</option>
+                        <option value="MARCELO">MARCELO</option>
+                        <option value="BIGAYANVILLA ROSA">BIGAYANVILLA ROSA</option>
+                        <option value="PHASE3">PHASE3</option>
+                        <option value="BIGAYANSANLUIS">BIGAYANSANLUIS</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="kkVoterFilter" class="filter-label">Registered Voter</label>
+                    <select id="kkVoterFilter" class="filter-select">
+                        <option value="">All</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
         <section class="page-content-section">
             <div class="section-heading-row">
                 <h2 class="section-title">KK Profiling Requests</h2>
@@ -49,14 +77,14 @@
                     <table class="kk-table">
                         <thead>
                             <tr>
-                                <th class="col-fullname">
+                                <th>
                                     FULLNAME
-                                    <div class="column-hint">FN, MN, LN, Suffix</div>
+                                    <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
-                                <th class="col-age">Age</th>
-                                <th class="col-purok">Purok / Sitio</th>
-                                <th class="col-contact">Contact</th>
-                                <th class="col-status">Status</th>
+                                <th>Age</th>
+                                <th>Barangay</th>
+                                <th>Registered Voter</th>
+                                <th>Status</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -94,31 +122,36 @@
         <div class="modal-body kk-view-modal-body">
             <div class="modal-columns kk-view-columns">
                 <div class="modal-column">
+                    <div class="kk-view-section-title">Personal Information</div>
                     <div class="kk-view-row"><span class="kk-view-label">First Name:</span><span class="kk-view-value" id="kkViewFirstName"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">Middle Name:</span><span class="kk-view-value" id="kkViewMiddleName"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">Last Name:</span><span class="kk-view-value" id="kkViewLastName"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">Suffix:</span><span class="kk-view-value" id="kkViewSuffix"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Date of Birth:</span><span class="kk-view-value" id="kkViewDateOfBirth"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Age:</span><span class="kk-view-value" id="kkViewAge"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Sex Assigned at Birth:</span><span class="kk-view-value" id="kkViewSex"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Civil Status:</span><span class="kk-view-value" id="kkViewCivilStatus"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Region:</span><span class="kk-view-value" id="kkViewRegion"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Province:</span><span class="kk-view-value" id="kkViewProvince"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">City/Municipality:</span><span class="kk-view-value" id="kkViewCity"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Purok / Sitio:</span><span class="kk-view-value" id="kkViewPurokSitio"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">AGE:</span><span class="kk-view-value" id="kkViewAge"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">BIRTHDAY:</span><span class="kk-view-value" id="kkViewBirthday"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">SEX ASSIGNED AT BIRTH:</span><span class="kk-view-value" id="kkViewSexAssignedAtBirth"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">CIVIL STATUS:</span><span class="kk-view-value" id="kkViewCivilStatus"></span></div>
+                    
+                    <div class="kk-view-section-title">Location Information</div>
+                    <div class="kk-view-row"><span class="kk-view-label">REGION:</span><span class="kk-view-value" id="kkViewRegion"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">PROVINCE:</span><span class="kk-view-value" id="kkViewProvince"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">CITY/MUNICIPALITY:</span><span class="kk-view-value" id="kkViewCity"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">BARANGAY:</span><span class="kk-view-value" id="kkViewBarangay"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">HOME ADDRESS:</span><span class="kk-view-value" id="kkViewHomeAddress"></span></div>
                 </div>
                 <div class="modal-column">
-                    <div class="kk-view-row"><span class="kk-view-label">Address:</span><span class="kk-view-value" id="kkViewAddress"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Email:</span><span class="kk-view-value" id="kkViewEmail"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Contact Number:</span><span class="kk-view-value" id="kkViewContact"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Highest Educational Attainment:</span><span class="kk-view-value" id="kkViewHighestEducation"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Currently Studying:</span><span class="kk-view-value" id="kkViewCurrentlyStudying"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Work Status:</span><span class="kk-view-value" id="kkViewWorkStatus"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Occupation:</span><span class="kk-view-value" id="kkViewOccupation"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Registered Voter:</span><span class="kk-view-value" id="kkViewRegisteredVoter"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Voted in Last Election:</span><span class="kk-view-value" id="kkViewVotedLastElection"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Youth Classification:</span><span class="kk-view-value" id="kkViewYouthClassification"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Status:</span><span class="kk-view-value" id="kkViewStatus"></span></div>
+                    <div class="kk-view-section-title">Youth Information</div>
+                    <div class="kk-view-row"><span class="kk-view-label">YOUTH CLASSIFICATION:</span><span class="kk-view-value" id="kkViewYouthClassification"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">YOUTH AGE GROUP:</span><span class="kk-view-value" id="kkViewYouthAgeGroup"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">CONTACT NUMBER:</span><span class="kk-view-value" id="kkViewContactNumber"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">HIGHEST EDUCATIONAL ATTAINMENT:</span><span class="kk-view-value" id="kkViewHighestEducationalAttainment"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">WORK STATUS:</span><span class="kk-view-value" id="kkViewWorkStatus"></span></div>
+                    
+                    <div class="kk-view-section-title">Civic Participation</div>
+                    <div class="kk-view-row"><span class="kk-view-label">REGISTERED VOTER?:</span><span class="kk-view-value" id="kkViewRegisteredVoter"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">VOTED LAST ELECTION?:</span><span class="kk-view-value" id="kkViewVotedLastElection"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">ATTENDED KK ASSEMBLY?:</span><span class="kk-view-value" id="kkViewAttendedKKAssembly"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">IF YES, HOW MANY TIMES?:</span><span class="kk-view-value" id="kkViewHowManyTimes"></span></div>
                 </div>
             </div>
             <div class="kk-view-rejection-wrap" id="kkViewRejectionWrap" style="display:none;">
@@ -187,7 +220,7 @@
                 </label>
                 <div class="reject-reason-item other-reason kk-reject-other-wrap" id="kkRejectOtherWrap" style="display:none;">
                     <label for="kkRejectOtherReason">Specify reason:</label>
-                    <textarea id="kkRejectOtherReason" class="kk-reject-other-textarea" rows="3" placeholder="Type your reason here..."></textarea>
+                    <textarea id="kkRejectOtherReason" class="kk-reject-other-textarea" rows="3" maxlength="255" placeholder="Type your reason here..."></textarea>
                 </div>
             </div>
         </div>

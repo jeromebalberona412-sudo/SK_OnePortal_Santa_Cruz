@@ -6,7 +6,8 @@ function initializeKabataanUI() {
     const tbody = document.getElementById('kabataanTableBody');
     const searchInput = document.getElementById('kabataanSearch');
     const genderFilter = document.getElementById('kabataanGenderFilter');
-    const purokFilter = document.getElementById('kabataanPurokFilter');
+    const purokFilter = document.getElementById('kabataanPurok / SitioFilter');
+    const educationFilter = document.getElementById('kabataanEducationFilter');
 
     const addBtn = document.getElementById('addKabataanBtn');
     const modal = document.getElementById('kabataanModal');
@@ -121,8 +122,20 @@ function initializeKabataanUI() {
     }
 
     function fullNameFrom(k) {
-        const parts = [k.firstName, k.middleName, k.lastName].filter(Boolean);
-        return parts.length ? parts.join(' ') + (k.suffix ? ' ' + k.suffix : '') : '-';
+        const parts = [k.firstName, k.middleName].filter(Boolean);
+        const firstMiddle = parts.length ? parts.join(' ') : '';
+        const last = k.lastName || '';
+        const suffix = k.suffix ? ' ' + k.suffix : '';
+
+        if (last && firstMiddle) {
+            return `${last}, ${firstMiddle}${suffix}`;
+        } else if (last) {
+            return `${last}${suffix}`;
+        } else if (firstMiddle) {
+            return `${firstMiddle}${suffix}`;
+        } else {
+            return '-';
+        }
     }
 
     const defaultRecord = () => ({
@@ -150,9 +163,33 @@ function initializeKabataanUI() {
         { ...defaultRecord(), firstName: 'Catherine', middleName: 'Mae', lastName: 'Lopez', age: 18, sex: 'Female', barangay: 'Sitio 5', highestEducation: 'High School', workStatus: 'Student', contactNumber: '09123456800', email: 'catherine.lopez@email.com' }
     ];
 
+    // Sort kabataan array alphabetically by last name (professional standard)
+    function sortKabataanAlphabetically() {
+        return kabataan.sort((a, b) => {
+            const lastNameA = (a.lastName || '').toLowerCase();
+            const lastNameB = (b.lastName || '').toLowerCase();
+
+            if (lastNameA < lastNameB) return -1;
+            if (lastNameA > lastNameB) return 1;
+
+            // If last names are the same, sort by first name
+            const firstNameA = (a.firstName || '').toLowerCase();
+            const firstNameB = (b.firstName || '').toLowerCase();
+
+            if (firstNameA < firstNameB) return -1;
+            if (firstNameA > firstNameB) return 1;
+
+            return 0;
+        });
+    }
+
+    // Initial sort
+    sortKabataanAlphabetically();
+
     let currentQuery = '';
     let currentGender = '';
     let currentPurok = '';
+    let currentEducation = '';
     let editingIndex = null;
 
     // Pagination variables
@@ -168,7 +205,8 @@ function initializeKabataanUI() {
             const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (k.highestEducation && k.highestEducation.toLowerCase().includes(q));
             const matchGender = !currentGender || k.sex === currentGender;
             const matchPurok = !currentPurok || k.barangay === currentPurok;
-            return matchSearch && matchGender && matchPurok;
+            const matchEducation = !currentEducation || k.highestEducation === currentEducation;
+            return matchSearch && matchGender && matchPurok && matchEducation;
         });
 
         // Calculate pagination
@@ -287,31 +325,41 @@ function initializeKabataanUI() {
     function populateViewRows(k) {
         if (!viewColumnLeft || !viewColumnRight) return;
 
-        // Clear both columns
-        viewColumnLeft.innerHTML = '';
-        viewColumnRight.innerHTML = '';
+        // Add section titles and fields to left column
+        viewColumnLeft.innerHTML = `
+            <div class="kabataan-view-section-title">Personal Information</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">First Name:</span><span class="kabataan-view-value">${k.firstName || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Middle Name:</span><span class="kabataan-view-value">${k.middleName || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Last Name:</span><span class="kabataan-view-value">${k.lastName || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Suffix:</span><span class="kabataan-view-value">${k.suffix || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">AGE:</span><span class="kabataan-view-value">${k.age || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">BIRTHDAY:</span><span class="kabataan-view-value">${k.dob || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">SEX ASSIGNED AT BIRTH:</span><span class="kabataan-view-value">${k.sex || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">CIVIL STATUS:</span><span class="kabataan-view-value">${k.civilStatus || '-'}</span></div>
+            
+            <div class="kabataan-view-section-title">Location Information</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">REGION:</span><span class="kabataan-view-value">${k.region || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">PROVINCE:</span><span class="kabataan-view-value">${k.province || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">CITY/MUNICIPALITY:</span><span class="kabataan-view-value">${k.city || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">BARANGAY:</span><span class="kabataan-view-value">${k.barangay || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">HOME ADDRESS:</span><span class="kabataan-view-value">SAN LUIS</span></div>
+        `;
 
-        // Split the fields into two groups
-        const leftFields = viewFieldLabels.slice(0, 11); // First 11 fields
-        const rightFields = viewFieldLabels.slice(11); // Remaining fields
-
-        // Populate left column
-        leftFields.forEach(([label, key]) => {
-            const row = document.createElement('div');
-            row.className = 'kabataan-view-row';
-            const val = k[key];
-            row.innerHTML = `<span class="kabataan-view-label">${label}:</span><span class="kabataan-view-value">${val === null || val === undefined || val === '' ? '-' : val}</span>`;
-            viewColumnLeft.appendChild(row);
-        });
-
-        // Populate right column
-        rightFields.forEach(([label, key]) => {
-            const row = document.createElement('div');
-            row.className = 'kabataan-view-row';
-            const val = k[key];
-            row.innerHTML = `<span class="kabataan-view-label">${label}:</span><span class="kabataan-view-value">${val === null || val === undefined || val === '' ? '-' : val}</span>`;
-            viewColumnRight.appendChild(row);
-        });
+        // Add section titles and fields to right column
+        viewColumnRight.innerHTML = `
+            <div class="kabataan-view-section-title">Youth Information</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">YOUTH CLASSIFICATION:</span><span class="kabataan-view-value">${k.youthClassification || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">YOUTH AGE GROUP:</span><span class="kabataan-view-value">${k.age || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">CONTACT NUMBER:</span><span class="kabataan-view-value">${k.contactNumber || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">HIGHEST EDUCATIONAL ATTAINMENT:</span><span class="kabataan-view-value">${k.highestEducation || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">WORK STATUS:</span><span class="kabataan-view-value">${k.workStatus || '-'}</span></div>
+            
+            <div class="kabataan-view-section-title">Civic Participation</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">REGISTERED VOTER?:</span><span class="kabataan-view-value">${k.registeredVoter || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">VOTED LAST ELECTION?:</span><span class="kabataan-view-value">${k.votedLastElection || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">ATTENDED KK ASSEMBLY?:</span><span class="kabataan-view-value">${k.currentlyStudying || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">IF YES, HOW MANY TIMES?:</span><span class="kabataan-view-value">${k.id || '-'}</span></div>
+        `;
     }
 
     function setModalReadonly(readonly) {
@@ -382,6 +430,39 @@ function initializeKabataanUI() {
     if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
     if (nextBtn) nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
 
+    // Filter event listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            currentQuery = searchInput.value.trim().toLowerCase();
+            currentPage = 1;
+            render();
+        });
+    }
+
+    if (genderFilter) {
+        genderFilter.addEventListener('change', () => {
+            currentGender = genderFilter.value;
+            currentPage = 1;
+            render();
+        });
+    }
+
+    if (purokFilter) {
+        purokFilter.addEventListener('change', () => {
+            currentPurok = purokFilter.value;
+            currentPage = 1;
+            render();
+        });
+    }
+
+    if (educationFilter) {
+        educationFilter.addEventListener('change', () => {
+            currentEducation = educationFilter.value;
+            currentPage = 1;
+            render();
+        });
+    }
+
     if (modal) {
         modal.addEventListener('click', (e) => {
             if (e.target === modal || e.target.hasAttribute('data-modal-close')) closeModal();
@@ -440,8 +521,12 @@ function initializeKabataanUI() {
             setTimeout(() => {
                 if (editingIndex !== null && kabataan[editingIndex]) {
                     kabataan[editingIndex] = record;
+                    // Re-sort after editing to maintain alphabetical order
+                    sortKabataanAlphabetically();
                 } else {
                     kabataan.push(record);
+                    // Re-sort after adding to maintain alphabetical order
+                    sortKabataanAlphabetically();
                 }
                 closeModal();
                 render();
@@ -492,6 +577,8 @@ function initializeKabataanUI() {
             const obj = rowToKabataan(headers, rows[i]);
             if (obj.firstName) kabataan.push(obj);
         }
+        // Re-sort after importing to maintain alphabetical order
+        sortKabataanAlphabetically();
         render();
     }
 

@@ -386,6 +386,7 @@ body {
 }
 
 .modal-field input,
+.modal-field select,
 .modal-field textarea {
     width: 100%;
     border-radius: 10px;
@@ -447,4 +448,3 @@ body {
         margin-left: 80px;
     }
 }
-

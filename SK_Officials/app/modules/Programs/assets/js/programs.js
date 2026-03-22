@@ -12,6 +12,8 @@ function initializeProgramsUI() {
     const modal = document.getElementById('programModal');
     const titleInput = document.getElementById('programTitleInput');
     const committeeInput = document.getElementById('programCommitteeInput');
+    const otherProgramField = document.getElementById('otherProgramField');
+    const otherProgramInput = document.getElementById('otherProgramInput');
     const budgetInput = document.getElementById('programBudgetInput');
     const startInput = document.getElementById('programStartInput');
     const endInput = document.getElementById('programEndInput');
@@ -140,6 +142,8 @@ function initializeProgramsUI() {
         modal.style.display = 'none';
         if (titleInput) titleInput.value = '';
         if (committeeInput) committeeInput.value = '';
+        if (otherProgramInput) otherProgramInput.value = '';
+        if (otherProgramField) otherProgramField.style.display = 'none';
         if (budgetInput) budgetInput.value = '';
         if (startInput) startInput.value = '';
         if (endInput) endInput.value = '';
@@ -158,17 +162,40 @@ function initializeProgramsUI() {
         });
     }
 
+    // Committee dropdown change event
+    if (committeeInput) {
+        committeeInput.addEventListener('change', () => {
+            if (otherProgramField && otherProgramInput) {
+                if (committeeInput.value === 'Other') {
+                    otherProgramField.style.display = 'block';
+                } else {
+                    otherProgramField.style.display = 'none';
+                    otherProgramInput.value = '';
+                }
+            }
+        });
+    }
+
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
             const title = (titleInput?.value || '').trim();
-            const committee = (committeeInput?.value || '').trim();
+            let committee = (committeeInput?.value || '').trim();
+            const otherProgram = (otherProgramInput?.value || '').trim();
             const budgetVal = (budgetInput?.value || '').trim();
             const startDate = (startInput?.value || '').trim();
             const endDate = (endInput?.value || '').trim();
             const status = (statusInput?.value || 'planned').trim();
 
+            // Handle Other program option
+            if (committee === 'Other' && otherProgram) {
+                committee = otherProgram;
+            } else if (committee === 'Other') {
+                alert('Please specify program name.');
+                return;
+            }
+
             if (!title || !committee || !budgetVal || !startDate || !endDate) {
-                alert('Please complete the required fields (title, committee, budget, dates). UI only.');
+                alert('Please complete required fields (title, committee, budget, dates). UI only.');
                 return;
             }
 

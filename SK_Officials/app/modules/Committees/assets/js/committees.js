@@ -9,9 +9,12 @@ function initializeCommitteesUI() {
     const addBtn = document.getElementById('addCommitteeBtn');
     const modal = document.getElementById('committeeModal');
     const nameInput = document.getElementById('committeeNameInput');
+    const otherCommitteeField = document.getElementById('otherCommitteeField');
+    const otherCommitteeInput = document.getElementById('otherCommitteeInput');
     const headInput = document.getElementById('committeeHeadInput');
     const membersInput = document.getElementById('committeeMembersInput');
     const descInput = document.getElementById('committeeDescriptionInput');
+    const statusInput = document.getElementById('committeeStatusInput');
     const saveBtn = document.getElementById('committeeSaveBtn');
 
     if (!grid) return;
@@ -71,8 +74,8 @@ function initializeCommitteesUI() {
                 </div>
                 <div class="committee-members">
                     ${c.members
-                        .map((m) => `<span class="member-pill">${m}</span>`)
-                        .join('')}
+                    .map((m) => `<span class="member-pill">${m}</span>`)
+                    .join('')}
                 </div>
                 <footer class="committee-footer">
                     <span class="committee-hierarchy">
@@ -108,6 +111,20 @@ function initializeCommitteesUI() {
         });
     }
 
+    // Committee dropdown change event
+    if (nameInput) {
+        nameInput.addEventListener('change', () => {
+            if (otherCommitteeField && otherCommitteeInput) {
+                if (nameInput.value === 'Other') {
+                    otherCommitteeField.style.display = 'block';
+                } else {
+                    otherCommitteeField.style.display = 'none';
+                    otherCommitteeInput.value = '';
+                }
+            }
+        });
+    }
+
     // Open / close modal
     function openModal() {
         if (!modal) return;
@@ -119,9 +136,12 @@ function initializeCommitteesUI() {
         if (!modal) return;
         modal.style.display = 'none';
         if (nameInput) nameInput.value = '';
+        if (otherCommitteeInput) otherCommitteeInput.value = '';
+        if (otherCommitteeField) otherCommitteeField.style.display = 'none';
         if (headInput) headInput.value = '';
         if (membersInput) membersInput.value = '';
         if (descInput) descInput.value = '';
+        if (statusInput) statusInput.value = 'active';
     }
 
     if (addBtn) {
@@ -138,13 +158,23 @@ function initializeCommitteesUI() {
 
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
-            const name = (nameInput?.value || '').trim();
+            let name = (nameInput?.value || '').trim();
+            const otherCommittee = (otherCommitteeInput?.value || '').trim();
             const head = (headInput?.value || '').trim();
             const membersRaw = (membersInput?.value || '').trim();
-            const description = (descInput?.value || '').trim();
+            const desc = (descInput?.value || '').trim();
+            const status = (statusInput?.value || 'active').trim();
+
+            // Handle Other committee option
+            if (name === 'Other' && otherCommittee) {
+                name = otherCommittee;
+            } else if (name === 'Other') {
+                alert('Please specify committee name.');
+                return;
+            }
 
             if (!name || !head) {
-                alert('Please provide at least a Committee Name and Head (UI only).');
+                alert('Please fill in committee name and head. UI only.');
                 return;
             }
 

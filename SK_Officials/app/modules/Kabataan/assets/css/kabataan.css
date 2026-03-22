@@ -504,15 +504,17 @@ body {
 }
 
 .kabataan-view-columns {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
+    padding: 4px 0;
+    width: 100%;
 }
 
 .kabataan-view-column-left,
 .kabataan-view-column-right {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    min-width: 0;
 }
 
 .kabataan-view-rows {
@@ -523,20 +525,32 @@ body {
 .kabataan-view-row {
     display: flex;
     align-items: center;
-    padding: 10px 0;
+    padding: 3px 0;
     border-bottom: 1px solid #e5e7eb;
-    gap: 12px;
+    gap: 8px;
 }
 
 .kabataan-view-row:last-child {
     border-bottom: none;
 }
 
+.kabataan-view-section-title {
+    font-size: 12px;
+    font-weight: 900;
+    color: #1f3c6d;
+    margin: 8px 0 4px 0;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #1f3c6d;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
 .kabataan-view-label {
     font-weight: 700;
-    color: #374151;
-    min-width: 140px;
+    color: #000000;
+    min-width: 100px;
     flex-shrink: 0;
+    font-size: 12px;
 }
 
 .kabataan-view-value {

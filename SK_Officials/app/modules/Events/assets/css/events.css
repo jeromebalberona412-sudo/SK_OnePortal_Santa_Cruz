@@ -312,7 +312,7 @@ body {
     pointer-events: none;
 }
 
-.events-side-card > * {
+.events-side-card>* {
     position: relative;
     z-index: 1;
 }
@@ -436,7 +436,8 @@ body {
     margin-bottom: 4px;
 }
 
-.modal-field input {
+.modal-field input,
+.modal-field select {
     width: 100%;
     border-radius: 10px;
     border: 1px solid #d1d5db;
@@ -498,4 +499,3 @@ body {
         margin-left: 80px;
     }
 }
-
