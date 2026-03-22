@@ -12,6 +12,13 @@
 @endphp
 
 @section('head')
+    @vite([
+        'app/Modules/Accounts/assets/css/manage_account.css',
+        'app/Modules/Accounts/assets/css/edit_account_base.css',
+        'app/Modules/Accounts/assets/css/add_sk_fed.css',
+        'app/Modules/Accounts/assets/css/add_sk_officials.css',
+        'app/Modules/Accounts/assets/css/view_account.css'
+    ])
 @endsection
 
 @section('content')
@@ -20,7 +27,7 @@
 
 <!-- Include Sidebar -->
 @include('layout::layouts.sidebar')
-<div class="main-content-modern" id="mainContent">
+<div class="main-content-modern accounts-page" id="mainContent">
     <div class="manage-account-container">
         <!-- Page Header with Search and Add Account Button -->
         <div class="page-header-modern-with-button">

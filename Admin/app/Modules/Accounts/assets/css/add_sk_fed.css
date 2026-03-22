@@ -23,7 +23,7 @@
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: var(--gray-400);
+    color: #aebad0;
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 4px;
@@ -32,8 +32,8 @@
 }
 
 .password-toggle-btn:hover {
-    color: var(--gray-600);
-    background: var(--gray-100);
+    color: #e3ebfa;
+    background: rgba(170, 195, 233, 0.14);
 }
 
 .password-toggle-btn svg {
@@ -48,8 +48,8 @@
 }
 
 .form-input-modern.is-valid {
-    border-color: var(--success-green);
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+    border-color: var(--theme-green);
+    box-shadow: 0 0 0 3px rgba(45, 135, 86, 0.18);
 }
 
 /* Error message styling */
@@ -64,7 +64,7 @@
 /* Success message styling */
 .validation-success {
     display: block;
-    color: var(--success-green);
+    color: var(--theme-green);
     font-size: 12px;
     margin-top: 0.25rem;
     animation: slideIn 0.2s ease;

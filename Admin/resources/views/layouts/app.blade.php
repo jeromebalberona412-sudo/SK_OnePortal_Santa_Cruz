@@ -21,7 +21,7 @@
         'app/Modules/Layout/assets/js/layout/logout.js'
     ])
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen admin-dark-canvas">
     <div class="min-h-screen flex flex-col">
         <!-- Flash Messages -->
         @if (session('message'))
