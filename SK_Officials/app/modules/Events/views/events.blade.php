@@ -180,6 +180,16 @@
                 <input type="text" id="otherEventInput" placeholder="Enter event name">
             </div>
             <div class="modal-field">
+                <label for="eventProgramInput">Related Program</label>
+                <select id="eventProgramInput">
+                    <option value="">Select Related Program</option>
+                    <option value="Youth Leadership Training">Youth Leadership Training</option>
+                    <option value="Sports Development Program">Sports Development Program</option>
+                    <option value="Green Barangay Project">Green Barangay Project</option>
+                    <option value="Tree Planting Project">Tree Planting Project</option>
+                </select>
+            </div>
+            <div class="modal-field">
                 <label for="eventVenueInput">Venue</label>
                 <input type="text" id="eventVenueInput" placeholder="e.g. Barangay Covered Court">
             </div>
@@ -199,6 +209,22 @@
         <div class="modal-footer">
             <button type="button" class="btn" data-modal-cancel>Cancel</button>
             <button type="button" class="btn primary-btn" id="eventSaveBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-backdrop" id="eventSuccessModal" style="display:none;">
+    <div class="modal-box success-modal-box">
+        <div class="modal-header success-modal-header">
+            <h2 class="modal-title">Success</h2>
+            <button type="button" class="modal-close" data-success-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="success-modal-message" id="eventSuccessMessage">Add successful.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn primary-btn" data-success-close>OK</button>
         </div>
     </div>
 </div>

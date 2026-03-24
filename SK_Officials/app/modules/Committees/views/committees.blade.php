@@ -120,6 +120,22 @@
     </div>
 </div>
 
+<!-- Success Modal -->
+<div class="modal-backdrop" id="committeeSuccessModal" style="display:none;">
+    <div class="modal-box success-modal-box">
+        <div class="modal-header success-modal-header">
+            <h2 class="modal-title">Success</h2>
+            <button type="button" class="modal-close" data-success-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="success-modal-message" id="committeeSuccessMessage">Add successful.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn primary-btn" data-success-close>OK</button>
+        </div>
+    </div>
+</div>
+
 @vite([
     'app/modules/layout/js/header.js',
     'app/modules/layout/js/sidebar.js',

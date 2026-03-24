@@ -92,6 +92,7 @@
                                     <th>Budget</th>
                                     <th>Duration</th>
                                     <th>Status</th>
+                                    <th class="col-actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="programTableBody">
@@ -139,10 +140,6 @@
         </div>
         <div class="modal-body">
             <div class="modal-field">
-                <label for="programTitleInput">Program Title</label>
-                <input type="text" id="programTitleInput" placeholder="e.g. Youth Leadership Training">
-            </div>
-            <div class="modal-field">
                 <label for="programCommitteeInput">Program Type</label>
                 <select id="programCommitteeInput">
                     <option value="">Select Program Type</option>
@@ -161,6 +158,11 @@
                     <option value="Entrepreneurship Program">Entrepreneurship Program</option>
                     <option value="Other">Other</option>
                 </select>
+            </div>
+            
+            <div class="modal-field">
+                <label for="programTitleInput">Program Title/Theme</label>
+                <input type="text" id="programTitleInput" placeholder="e.g. Youth Leadership Training">
             </div>
             <div class="modal-field" id="otherProgramField" style="display: none;">
                 <label for="otherProgramInput">Specify Program Name</label>
@@ -190,6 +192,22 @@
         <div class="modal-footer">
             <button type="button" class="btn" data-modal-cancel>Cancel</button>
             <button type="button" class="btn primary-btn" id="programSaveBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-backdrop" id="programSuccessModal" style="display:none;">
+    <div class="modal-box success-modal-box">
+        <div class="modal-header success-modal-header">
+            <h2 class="modal-title">Success</h2>
+            <button type="button" class="modal-close" data-success-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="success-modal-message" id="programSuccessMessage">Add successful.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn primary-btn" data-success-close>OK</button>
         </div>
     </div>
 </div>

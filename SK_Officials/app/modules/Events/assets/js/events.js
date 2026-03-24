@@ -19,6 +19,10 @@ function initializeEventsUI() {
     const venueInput = document.getElementById('eventVenueInput');
     const participantsInput = document.getElementById('eventParticipantsInput');
     const saveBtn = document.getElementById('eventSaveBtn');
+    const otherEventField = document.getElementById('otherEventField');
+    const otherEventInput = document.getElementById('otherEventInput');
+    const successModal = document.getElementById('eventSuccessModal');
+    const successMessage = document.getElementById('eventSuccessMessage');
 
     if (!list) return;
 
@@ -170,10 +174,25 @@ function initializeEventsUI() {
         modal.style.display = 'none';
         if (nameInput) nameInput.value = '';
         if (programInput) programInput.value = '';
+        if (otherEventInput) otherEventInput.value = '';
+        if (otherEventField) otherEventField.style.display = 'none';
         if (dateInput) dateInput.value = '';
         if (timeInput) timeInput.value = '';
         if (venueInput) venueInput.value = '';
         if (participantsInput) participantsInput.value = '';
+    }
+
+    function openSuccessModal(message) {
+        if (!successModal) return;
+        if (successMessage) {
+            successMessage.textContent = message || 'Add successful.';
+        }
+        successModal.style.display = 'flex';
+    }
+
+    function closeSuccessModal() {
+        if (!successModal) return;
+        successModal.style.display = 'none';
     }
 
     if (addBtn) {
@@ -188,14 +207,34 @@ function initializeEventsUI() {
         });
     }
 
+    if (nameInput) {
+        nameInput.addEventListener('change', () => {
+            if (!otherEventField || !otherEventInput) return;
+            if (nameInput.value === 'Other') {
+                otherEventField.style.display = 'block';
+            } else {
+                otherEventField.style.display = 'none';
+                otherEventInput.value = '';
+            }
+        });
+    }
+
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
-            const name = (nameInput?.value || '').trim();
+            let name = (nameInput?.value || '').trim();
             const program = (programInput?.value || '').trim();
+            const otherEvent = (otherEventInput?.value || '').trim();
             const date = (dateInput?.value || '').trim();
             const time = (timeInput?.value || '').trim();
             const venue = (venueInput?.value || '').trim();
             const participantsVal = (participantsInput?.value || '').trim();
+
+            if (name === 'Other' && otherEvent) {
+                name = otherEvent;
+            } else if (name === 'Other') {
+                alert('Please specify event name.');
+                return;
+            }
 
             if (!name || !program || !date || !time) {
                 alert('Please fill in at least event name, related program, date and time. UI only.');
@@ -223,9 +262,16 @@ function initializeEventsUI() {
                 render();
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
-
-                alert('Event successfully scheduled (UI only, no backend yet).');
+                openSuccessModal('Add successful.');
             }, 600);
+        });
+    }
+
+    if (successModal) {
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal || e.target.hasAttribute('data-success-close')) {
+                closeSuccessModal();
+            }
         });
     }
 

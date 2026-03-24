@@ -1359,23 +1359,24 @@ body {
 
 /* Calendar Header */
 .calendar-header {
-    background: #f9fafb;
+    background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
     padding: 16px;
     border-bottom: 1px solid #e5e7eb;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
 }
 
 .calendar-nav {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .calendar-nav-btn {
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
     width: 32px;
     height: 32px;
@@ -1385,12 +1386,14 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 14px;
-    color: #6b7280;
+    color: #334155;
 }
 
 .calendar-nav-btn:hover {
-    background: #e5e7eb;
-    color: #374151;
+    background: #e2e8f0;
+    color: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
 }
 
 .calendar-month-year {
@@ -1399,11 +1402,6 @@ body {
     font-size: 16px;
     min-width: 120px;
     text-align: center;
-}
-
-.calendar-actions {
-    display: flex;
-    gap: 8px;
 }
 
 /* Calendar Weekdays */
@@ -1434,21 +1432,37 @@ body {
 
 .calendar-day {
     background: white;
-    padding: 12px 4px;
+    padding: 8px 4px;
     text-align: center;
     font-size: 14px;
     color: #374151;
     cursor: pointer;
     transition: all 0.2s ease;
-    min-height: 40px;
+    min-height: 58px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
+    gap: 2px;
     position: relative;
 }
 
+.calendar-day-number {
+    font-weight: 700;
+    line-height: 1;
+}
+
+.calendar-day-label {
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.1;
+    min-height: 10px;
+    color: inherit;
+}
+
 .calendar-day:hover {
-    background: #f9fafb;
+    background: #fff8dd;
+    box-shadow: inset 0 0 0 1px #f7d26f;
 }
 
 .calendar-day.other-month {
@@ -1457,19 +1471,20 @@ body {
 }
 
 .calendar-day.today {
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: #e0ecff;
+    color: #1e40af;
     font-weight: 600;
+    box-shadow: inset 0 0 0 1px #93c5fd;
 }
 
 .calendar-day.profiling-period {
-    background: #fbbf24;
+    background: linear-gradient(180deg, #fcd34d 0%, #f59e0b 100%);
     color: #78350f;
     font-weight: 600;
 }
 
 .calendar-day.profiling-period:hover {
-    background: #f59e0b;
+    background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
 }
 
 .calendar-day.selecting {
@@ -1483,10 +1498,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 24px;
-    padding: 16px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    padding: 8px 0 0;
 }
 
 .legend-item {
@@ -1519,6 +1531,128 @@ body {
     border-color: #d1d5db;
 }
 
+.schedule-bottom-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.kk-modal-backdrop.modal-maximized .kk-schedule-modal-box {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+}
+
+.kk-schedule-modal-box {
+    transition: width 0.2s ease, height 0.2s ease, max-width 0.2s ease, max-height 0.2s ease, border-radius 0.2s ease;
+}
+
+.calendar-jump-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+}
+
+.calendar-jump-overlay.show {
+    display: flex;
+}
+
+.calendar-jump-modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    min-width: 320px;
+    max-width: 95%;
+    box-shadow: 0 12px 40px rgba(244, 194, 13, 0.25);
+    border: 2px solid #f4c20d;
+}
+
+.calendar-jump-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1f3c6d;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.calendar-jump-display {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.calendar-jump-columns {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.calendar-jump-col {
+    width: 70px;
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fffef5;
+}
+
+.calendar-jump-col-inner {
+    padding: 8px 0;
+}
+
+.calendar-jump-item {
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 14px;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.calendar-jump-item:hover {
+    background: #fff9e6;
+}
+
+.calendar-jump-item.selected {
+    background: #f4c20d;
+    color: #1f3c6d;
+    font-weight: 700;
+}
+
+.calendar-jump-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.calendar-jump-cancel {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    color: #374151;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.calendar-jump-ok {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    background: #f4c20d;
+    color: #1f3c6d;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 /* Button Styles */
 .btn {
     padding: 8px 16px;
@@ -1531,24 +1665,41 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, #1f3c6d, #0f2847);
     color: white;
+    box-shadow: 0 6px 14px rgba(15, 40, 71, 0.3);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #173257, #0b2039);
     transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(15, 40, 71, 0.38);
 }
 
 .btn-secondary {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #cbd5e1;
 }
 
 .btn-secondary:hover {
-    background: #e5e7eb;
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.btn-jump-date {
+    background: linear-gradient(135deg, #f4c20d, #e29a00);
     color: #1f2937;
+    border: 1px solid #d4a80a;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(244, 194, 13, 0.3);
+}
+
+.btn-jump-date:hover {
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+    color: #111827;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(234, 179, 8, 0.34);
 }
 
 /* Responsive Design */

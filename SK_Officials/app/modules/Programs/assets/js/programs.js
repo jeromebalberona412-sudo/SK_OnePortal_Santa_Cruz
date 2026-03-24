@@ -19,6 +19,8 @@ function initializeProgramsUI() {
     const endInput = document.getElementById('programEndInput');
     const statusInput = document.getElementById('programStatusInput');
     const saveBtn = document.getElementById('programSaveBtn');
+    const successModal = document.getElementById('programSuccessModal');
+    const successMessage = document.getElementById('programSuccessMessage');
 
     const summaryTotal = document.getElementById('summaryTotalPrograms');
     const summaryPlanned = document.getElementById('summaryPlanned');
@@ -67,7 +69,7 @@ function initializeProgramsUI() {
         if (filtered.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = 5;
+            td.colSpan = 6;
             td.textContent = 'No programs added yet. Use "+ Add Program" to register your first program (UI only).';
             td.style.textAlign = 'center';
             td.style.fontSize = '13px';
@@ -86,6 +88,13 @@ function initializeProgramsUI() {
                         <span class="status-pill ${p.status}">
                             ${p.status.charAt(0).toUpperCase() + p.status.slice(1)}
                         </span>
+                    </td>
+                    <td>
+                        <div class="program-actions">
+                            <a class="program-action-btn" href="/budget-finance?program=${encodeURIComponent(
+                                p.title
+                            )}">Budget &amp; Finance</a>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -148,6 +157,19 @@ function initializeProgramsUI() {
         if (startInput) startInput.value = '';
         if (endInput) endInput.value = '';
         if (statusInput) statusInput.value = 'planned';
+    }
+
+    function openSuccessModal(message) {
+        if (!successModal) return;
+        if (successMessage) {
+            successMessage.textContent = message || 'Add successful.';
+        }
+        successModal.style.display = 'flex';
+    }
+
+    function closeSuccessModal() {
+        if (!successModal) return;
+        successModal.style.display = 'none';
     }
 
     if (addBtn) {
@@ -219,9 +241,16 @@ function initializeProgramsUI() {
                 render();
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
-
-                alert('Program successfully added (UI only, no backend yet).');
+                openSuccessModal('Add successful.');
             }, 600);
+        });
+    }
+
+    if (successModal) {
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal || e.target.hasAttribute('data-success-close')) {
+                closeSuccessModal();
+            }
         });
     }
 

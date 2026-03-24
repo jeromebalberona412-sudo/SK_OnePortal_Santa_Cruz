@@ -16,6 +16,8 @@ function initializeCommitteesUI() {
     const descInput = document.getElementById('committeeDescriptionInput');
     const statusInput = document.getElementById('committeeStatusInput');
     const saveBtn = document.getElementById('committeeSaveBtn');
+    const successModal = document.getElementById('committeeSuccessModal');
+    const successMessage = document.getElementById('committeeSuccessMessage');
 
     if (!grid) return;
 
@@ -144,6 +146,19 @@ function initializeCommitteesUI() {
         if (statusInput) statusInput.value = 'active';
     }
 
+    function openSuccessModal(message) {
+        if (!successModal) return;
+        if (successMessage) {
+            successMessage.textContent = message || 'Add successful.';
+        }
+        successModal.style.display = 'flex';
+    }
+
+    function closeSuccessModal() {
+        if (!successModal) return;
+        successModal.style.display = 'none';
+    }
+
     if (addBtn) {
         addBtn.addEventListener('click', openModal);
     }
@@ -188,7 +203,7 @@ function initializeCommitteesUI() {
                     : [];
                 committees.push({
                     name,
-                    description: description || 'No description yet.',
+                    description: desc || 'No description yet.',
                     headRole: 'SK Official',
                     head,
                     members,
@@ -199,9 +214,17 @@ function initializeCommitteesUI() {
                 render();
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
-
-                alert('Committee successfully added (UI only, no backend yet).');
+                openSuccessModal('Add successful.');
             }, 500);
+        });
+
+    }
+
+    if (successModal) {
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal || e.target.hasAttribute('data-success-close')) {
+                closeSuccessModal();
+            }
         });
     }
 

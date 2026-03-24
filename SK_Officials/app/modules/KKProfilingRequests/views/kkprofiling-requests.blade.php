@@ -243,7 +243,10 @@
     <div class="modal-box kk-schedule-modal-box kk-modal-animate">
         <div class="modal-header">
             <h2 class="modal-title">KK Profiling Schedule</h2>
-            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            <div class="modal-window-controls">
+                <button type="button" class="modal-toggle-btn" id="kkScheduleModalToggle" aria-label="Maximize">□</button>
+                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            </div>
         </div>
         <div class="modal-body kk-schedule-modal-body">
             <!-- Instructions -->
@@ -263,10 +266,7 @@
                             <button type="button" class="calendar-nav-btn" id="calendarPrev">&lt;</button>
                             <span class="calendar-month-year" id="calendarMonthYear">March 2026</span>
                             <button type="button" class="calendar-nav-btn" id="calendarNext">&gt;</button>
-                        </div>
-                        <div class="calendar-actions">
-                            <button type="button" class="btn btn-secondary" id="clearScheduleBtn">Clear All</button>
-                            <button type="button" class="btn btn-primary" id="saveScheduleBtn">Save Schedule</button>
+                            <button type="button" class="btn btn-jump-date" id="scheduleJumpBtn">Jump to date</button>
                         </div>
                     </div>
                     
@@ -291,17 +291,21 @@
             <!-- Legend -->
             <div class="calendar-legend">
                 <div class="legend-item">
-                    <div class="legend-color today"></div>
-                    <span>Today</span>
-                </div>
-                <div class="legend-item">
                     <div class="legend-color profiling"></div>
                     <span>Profiling Period</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color today"></div>
+                    <span>Today</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color other-month"></div>
                     <span>Other Month</span>
                 </div>
+            </div>
+            <div class="schedule-bottom-actions">
+                <button type="button" class="btn btn-secondary" id="clearScheduleBtn">Clear All</button>
+                <button type="button" class="btn btn-primary" id="saveScheduleBtn">Save Schedule</button>
             </div>
         </div>
     </div>

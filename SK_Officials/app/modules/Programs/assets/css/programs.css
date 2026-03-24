@@ -249,6 +249,37 @@ body {
     color: #374151;
 }
 
+.program-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.program-action-btn {
+    background: #1f3c6d;
+    color: #ffffff;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.program-action-btn:hover {
+    background: #163156;
+    transform: translateY(-1px);
+}
+
+.col-actions {
+    white-space: nowrap;
+    width: 1%;
+}
+
 .programs-summary-card {
     background: #0f172a;
     color: #e5e7eb;
@@ -416,6 +447,16 @@ body {
     justify-content: flex-end;
     gap: 10px;
     border-top: 1px solid #e5e7eb;
+}
+
+.success-modal-header {
+    background: #16a34a;
+}
+
+.success-modal-message {
+    font-size: 14px;
+    color: #166534;
+    font-weight: 700;
 }
 
 @media (max-width: 1024px) {

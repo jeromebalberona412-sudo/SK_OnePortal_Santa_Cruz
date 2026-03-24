@@ -98,6 +98,13 @@ Route::middleware(['web'])->group(function () {
         return view('Events::events');
     })->name('events');
 
+    Route::get('/budget-finance', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('BudgetFinance::budget-finance');
+    })->name('budget-finance');
+
     // KK Profiling Requests (UI-only, auth-protected via simple session check)
     Route::get('/kk-profiling-requests', function () {
         if (!session('authenticated')) {

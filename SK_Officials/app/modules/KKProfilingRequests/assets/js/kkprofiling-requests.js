@@ -781,6 +781,9 @@ function initializeKKProfilingSchedule() {
     const calendarNext = document.getElementById('calendarNext');
     const clearScheduleBtn = document.getElementById('clearScheduleBtn');
     const saveScheduleBtn = document.getElementById('saveScheduleBtn');
+    const jumpBtn = document.getElementById('scheduleJumpBtn');
+    const scheduleModalBox = scheduleModal ? scheduleModal.querySelector('.kk-schedule-modal-box') : null;
+    const scheduleToggle = document.getElementById('kkScheduleModalToggle');
 
     let currentDate = new Date();
     let profilingDates = new Set(); // Store selected profiling dates
@@ -829,6 +832,12 @@ function initializeKKProfilingSchedule() {
         });
     }
 
+    if (jumpBtn) {
+        jumpBtn.addEventListener('click', () => {
+            openJumpModal();
+        });
+    }
+
     // Modal close handlers
     const closeButtons = scheduleModal?.querySelectorAll('[data-modal-close]');
     closeButtons?.forEach(btn => {
@@ -854,6 +863,9 @@ function initializeKKProfilingSchedule() {
         if (scheduleModal) {
             scheduleModal.style.display = 'none';
             document.body.style.overflow = '';
+            scheduleModal.classList.remove('modal-maximized');
+            if (scheduleModalBox) scheduleModalBox.classList.remove('modal-maximized');
+            if (scheduleToggle) scheduleToggle.textContent = '□';
         }
     }
 
@@ -917,8 +929,16 @@ function initializeKKProfilingSchedule() {
     function createDayElement(day, className, date) {
         const dayElement = document.createElement('div');
         dayElement.className = `calendar-day ${className}`;
-        dayElement.textContent = day;
+        dayElement.innerHTML = `
+            <span class="calendar-day-number">${day}</span>
+            <span class="calendar-day-label"></span>
+        `;
         dayElement.dataset.date = date.toISOString().split('T')[0];
+
+        const labelEl = dayElement.querySelector('.calendar-day-label');
+        if (labelEl && className.includes('profiling-period')) {
+            labelEl.textContent = 'KK Profiling Open';
+        }
 
         // Add click handler for date selection
         dayElement.addEventListener('click', () => {
@@ -1065,6 +1085,128 @@ function initializeKKProfilingSchedule() {
         setTimeout(() => {
             notification.remove();
         }, 3000);
+    }
+
+    function openJumpModal() {
+        let overlay = document.getElementById('kk-schedule-jump-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'kk-schedule-jump-overlay';
+            overlay.className = 'calendar-jump-overlay';
+            overlay.innerHTML = `
+                <div class="calendar-jump-modal">
+                    <h3 class="calendar-jump-title">Jump to date</h3>
+                    <p class="calendar-jump-display"></p>
+                    <div class="calendar-jump-columns">
+                        <div class="calendar-jump-col" data-type="month"><div class="calendar-jump-col-inner"></div></div>
+                        <div class="calendar-jump-col" data-type="day"><div class="calendar-jump-col-inner"></div></div>
+                        <div class="calendar-jump-col" data-type="year"><div class="calendar-jump-col-inner"></div></div>
+                    </div>
+                    <div class="calendar-jump-actions">
+                        <button type="button" class="calendar-jump-cancel">Cancel</button>
+                        <button type="button" class="calendar-jump-ok">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const MIN_YEAR = 1991;
+
+        let selMonth = currentDate.getMonth();
+        let selDay = Math.min(currentDate.getDate(), 28);
+        let selYear = currentDate.getFullYear();
+
+        const displayEl = overlay.querySelector('.calendar-jump-display');
+        const monthCol = overlay.querySelector('.calendar-jump-col[data-type="month"] .calendar-jump-col-inner');
+        const dayCol = overlay.querySelector('.calendar-jump-col[data-type="day"] .calendar-jump-col-inner');
+        const yearCol = overlay.querySelector('.calendar-jump-col[data-type="year"] .calendar-jump-col-inner');
+
+        function clampDay() {
+            const maxDay = new Date(selYear, selMonth + 1, 0).getDate();
+            selDay = Math.min(selDay, maxDay);
+        }
+
+        function updateDisplay() {
+            const d = new Date(selYear, selMonth, selDay);
+            displayEl.textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function renderColumns() {
+            clampDay();
+            monthCol.innerHTML = '';
+            dayCol.innerHTML = '';
+            yearCol.innerHTML = '';
+
+            for (let i = 0; i < 12; i++) {
+                const item = document.createElement('div');
+                item.className = 'calendar-jump-item' + (i === selMonth ? ' selected' : '');
+                item.textContent = monthNamesShort[i];
+                item.addEventListener('click', () => {
+                    selMonth = i;
+                    renderColumns();
+                    updateDisplay();
+                });
+                monthCol.appendChild(item);
+            }
+
+            const daysInMonth = new Date(selYear, selMonth + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const item = document.createElement('div');
+                item.className = 'calendar-jump-item' + (d === selDay ? ' selected' : '');
+                item.textContent = String(d).padStart(2, '0');
+                item.addEventListener('click', () => {
+                    selDay = d;
+                    renderColumns();
+                    updateDisplay();
+                });
+                dayCol.appendChild(item);
+            }
+
+            for (let y = MIN_YEAR; y <= 2100; y++) {
+                const item = document.createElement('div');
+                item.className = 'calendar-jump-item' + (y === selYear ? ' selected' : '');
+                item.textContent = y;
+                item.addEventListener('click', () => {
+                    selYear = y;
+                    renderColumns();
+                    updateDisplay();
+                });
+                yearCol.appendChild(item);
+            }
+        }
+
+        function hide() {
+            overlay.classList.remove('show');
+            overlay.querySelector('.calendar-jump-cancel').removeEventListener('click', onCancel);
+            overlay.querySelector('.calendar-jump-ok').removeEventListener('click', onOk);
+            overlay.removeEventListener('click', onBackdrop);
+        }
+
+        function onCancel() { hide(); }
+        function onOk() {
+            currentDate = new Date(selYear, selMonth, 1);
+            renderCalendar();
+            hide();
+        }
+        function onBackdrop(e) { if (e.target === overlay) hide(); }
+
+        renderColumns();
+        updateDisplay();
+        overlay.querySelector('.calendar-jump-cancel').addEventListener('click', onCancel);
+        overlay.querySelector('.calendar-jump-ok').addEventListener('click', onOk);
+        overlay.addEventListener('click', onBackdrop);
+        overlay.classList.add('show');
+    }
+
+    if (scheduleToggle && scheduleModal && scheduleModalBox) {
+        scheduleToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isMax = scheduleModal.classList.toggle('modal-maximized');
+            scheduleModalBox.classList.toggle('modal-maximized', isMax);
+            scheduleToggle.textContent = isMax ? '⧉' : '□';
+        });
     }
 }
 

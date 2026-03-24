@@ -148,16 +148,16 @@ body {
 
 .committee-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
 }
 
 .committee-card {
-    background: #f9fafb;
-    border-radius: 14px;
-    padding: 16px 16px 14px 16px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.10);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid #dbe7ff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -178,8 +178,8 @@ body {
 
 .committee-card:hover {
     transform: translateY(-3px);
-    border-color: #f4c20d;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+    border-color: #1d4ed8;
+    box-shadow: 0 14px 30px rgba(29, 78, 216, 0.18);
 }
 
 .committee-card:hover::before {
@@ -194,9 +194,9 @@ body {
 }
 
 .committee-name {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
-    color: #111827;
+    color: #0f172a;
 }
 
 .committee-tag {
@@ -212,7 +212,8 @@ body {
 
 .committee-description {
     font-size: 13px;
-    color: #4b5563;
+    color: #475569;
+    line-height: 1.4;
 }
 
 .committee-meta {
@@ -224,7 +225,11 @@ body {
 
 .committee-meta-item {
     font-size: 12px;
-    color: #6b7280;
+    color: #334155;
+    background: #eef2ff;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    padding: 4px 9px;
 }
 
 .committee-meta-label {
@@ -237,14 +242,18 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed #dbeafe;
 }
 
 .member-pill {
-    padding: 4px 9px;
+    padding: 5px 9px;
     border-radius: 999px;
-    background: #e5e7eb;
+    background: #eff6ff;
     font-size: 11px;
-    color: #374151;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    font-weight: 700;
 }
 
 .committee-footer {
@@ -253,12 +262,12 @@ body {
     align-items: center;
     margin-top: 10px;
     padding-top: 8px;
-    border-top: 1px dashed #e5e7eb;
+    border-top: 1px dashed #dbeafe;
 }
 
 .committee-hierarchy {
     font-size: 11px;
-    color: #9ca3af;
+    color: #64748b;
 }
 
 .committee-actions {
@@ -406,6 +415,16 @@ body {
     justify-content: flex-end;
     gap: 10px;
     border-top: 1px solid #e5e7eb;
+}
+
+.success-modal-header {
+    background: #16a34a;
+}
+
+.success-modal-message {
+    font-size: 14px;
+    color: #166534;
+    font-weight: 700;
 }
 
 @media (max-width: 1024px) {

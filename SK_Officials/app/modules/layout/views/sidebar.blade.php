@@ -168,6 +168,23 @@
                     </a>
                 </li>
 
+                <!-- Budget & Finance -->
+                <li class="nav-item">
+                    <a href="{{ route('budget-finance') }}" class="nav-link {{ request()->routeIs('budget-finance') ? 'active' : '' }}">
+                        <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M12 1v22"></path>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span class="nav-text">Budget &amp; Finance</span>
+                    </a>
+                </li>
+
                 <!-- Kabataan -->
                 <li class="nav-item">
                     <a href="{{ route('kabataan') }}" class="nav-link {{ request()->routeIs('kabataan') ? 'active' : '' }}">
