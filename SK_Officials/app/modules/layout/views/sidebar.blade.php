@@ -13,10 +13,6 @@
                 <span class="admin-role">Calios</span>
             </div>
 
-            <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
-                &times;
-            </button>
-
         </div>
 
         <nav class="sidebar-nav">
