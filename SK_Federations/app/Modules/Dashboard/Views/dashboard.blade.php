@@ -107,13 +107,13 @@
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed" id="sidebar-community-feed-link">
                 <i class="fas fa-rss"></i><span>SK Community Feed</span>
             </a>
-            <a href="#" class="menu-item" data-tooltip="Barangay Monitoring">
+            <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring">
                 <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
             </a>
-            <a href="#" class="menu-item" data-tooltip="Program Monitoring">
+            <a href="#" class="menu-item is-disabled" data-tooltip="Program Monitoring (Temporarily Disabled)" aria-disabled="true" tabindex="-1" onclick="return false;">
                 <i class="fas fa-tasks"></i><span>Program Monitoring</span>
             </a>
-            <a href="#" class="menu-item" data-tooltip="Kabataan Monitoring">
+            <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
             </a>
             <a href="#" class="menu-item" data-tooltip="Reports">

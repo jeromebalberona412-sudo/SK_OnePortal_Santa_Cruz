@@ -23,6 +23,8 @@ export default defineConfig({
                 'app/Modules/Profile/assets/css/profile.css',
                 'app/Modules/Profile/assets/js/profile.js',
                 'app/Modules/Profile/assets/css/settings.css',
+                'app/Modules/Homepage/assets/css/homepage.css',
+                'app/Modules/Homepage/assets/js/homepage.js',
                 'app/Modules/Shared/assets/css/loading.css',
                 'app/Modules/Shared/assets/js/loading.js',
             ],
