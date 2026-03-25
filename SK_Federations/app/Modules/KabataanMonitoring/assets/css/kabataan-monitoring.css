@@ -1,0 +1,477 @@
+:root {
+    --km-blue: #213F99;
+    --km-red: #d0242b;
+    --km-yellow: #f7d31e;
+    --km-bg: #f3f6fb;
+    --km-text: #1f2937;
+    --km-muted: #64748b;
+    --km-border: #dbe5f2;
+    --km-card-shadow: 0 12px 32px rgba(17, 24, 39, 0.08);
+    --km-radius: 16px;
+}
+
+.km-main {
+    background: radial-gradient(circle at 10% 10%, rgba(247, 211, 30, 0.2), transparent 35%),
+                radial-gradient(circle at 88% 18%, rgba(33, 63, 153, 0.18), transparent 42%),
+                var(--km-bg);
+    min-height: calc(100vh - 64px);
+}
+
+.km-container {
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 22px;
+    display: grid;
+    gap: 18px;
+}
+
+.km-hero,
+.km-profile-hero {
+    position: relative;
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    min-height: 300px;
+    padding: 28px;
+    box-shadow: var(--km-card-shadow);
+    color: #ffffff;
+    background-image: linear-gradient(130deg, rgba(33, 63, 153, 0.88), rgba(208, 36, 43, 0.78)),
+                      url('/modules/kabataan-monitoring/images/kabataan-collage.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.km-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.25));
+}
+
+.km-hero-logo {
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+}
+
+.km-hero-copy {
+    max-width: 720px;
+    position: relative;
+    z-index: 1;
+}
+
+.km-hero-copy h1 {
+    margin: 0;
+    font-size: clamp(1.7rem, 2.7vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.km-hero-copy p {
+    margin: 10px 0 0;
+    color: rgba(255, 255, 255, 0.92);
+    max-width: 660px;
+    line-height: 1.55;
+}
+
+.km-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.km-kpi-card {
+    background: #ffffff;
+    border: 1px solid var(--km-border);
+    border-radius: var(--km-radius);
+    padding: 16px;
+    box-shadow: var(--km-card-shadow);
+}
+
+.km-kpi-label {
+    color: var(--km-muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.km-kpi-value {
+    margin-top: 8px;
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--km-blue);
+}
+
+.km-kpi-note {
+    margin-top: 6px;
+    color: #7a879c;
+    font-size: 0.82rem;
+}
+
+.km-panel {
+    background: #ffffff;
+    border: 1px solid var(--km-border);
+    border-radius: var(--km-radius);
+    box-shadow: var(--km-card-shadow);
+    padding: 18px;
+}
+
+.km-panel-head h2 {
+    margin: 0;
+    color: var(--km-text);
+    font-size: 1.22rem;
+}
+
+.km-panel-head p {
+    margin: 6px 0 0;
+    color: var(--km-muted);
+    font-size: 0.92rem;
+}
+
+.km-filter-row {
+    margin-top: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.km-chip-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.km-chip {
+    border: 1px solid #c7d5ea;
+    background: #f8fbff;
+    color: #334155;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 7px 12px;
+    cursor: pointer;
+}
+
+.km-chip.active {
+    background: linear-gradient(135deg, var(--km-blue), var(--km-red));
+    border-color: transparent;
+    color: #ffffff;
+}
+
+.km-barangay-grid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.km-barangay-card {
+    border: 1px solid #d7e2f3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff, #f9fbff);
+    padding: 14px;
+    display: grid;
+    gap: 9px;
+}
+
+.km-barangay-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.km-barangay-head h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #1e3a8a;
+}
+
+.km-barangay-count {
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: #eff6ff;
+    border: 1px solid #c7d9f7;
+    border-radius: 999px;
+    padding: 4px 9px;
+}
+
+.km-badge {
+    font-size: 0.74rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 5px 9px;
+}
+
+.km-badge.high {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.km-badge.moderate {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.km-badge.low {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.km-kabataan-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+}
+
+.km-kabataan-item {
+    border: 1px solid #dbe5f2;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.km-kabataan-main {
+    min-width: 0;
+}
+
+.km-kabataan-title-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.km-kabataan-title-row h4 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 0.96rem;
+}
+
+.km-kabataan-meta {
+    margin: 0;
+    color: #475569;
+    font-size: 0.84rem;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.km-kabataan-meta i {
+    color: #1d4ed8;
+}
+
+.km-btn {
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--km-blue), var(--km-red));
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+}
+
+.km-btn-sm {
+    white-space: nowrap;
+    padding: 7px 11px;
+    font-size: 0.82rem;
+}
+
+.km-empty {
+    margin: 16px 0 0;
+    color: #64748b;
+    text-align: center;
+    font-weight: 500;
+}
+
+.km-focus-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.km-focus-card {
+    border-radius: 14px;
+    padding: 14px;
+    border: 1px solid #d7e2f3;
+    background: linear-gradient(155deg, #ffffff, #f7faff);
+}
+
+.km-focus-card h3 {
+    margin: 0;
+    color: #1e3a8a;
+}
+
+.km-focus-card p {
+    margin: 8px 0 0;
+    color: #475569;
+    line-height: 1.45;
+}
+
+.km-profile-head {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 8px;
+    width: min(760px, 100%);
+}
+
+.km-profile-head .km-back-link {
+    color: #fef3c7;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.km-profile-head h1 {
+    margin: 0;
+    font-size: clamp(1.65rem, 2.5vw, 2.3rem);
+}
+
+.km-profile-head p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.km-profile-strip {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.km-profile-pill {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+}
+
+.km-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.km-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.km-metric-card {
+    border: 1px solid #d7e2f3;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fcfdff;
+}
+
+.km-metric-card small {
+    color: #64748b;
+}
+
+.km-metric-card strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 1.24rem;
+    color: #1e3a8a;
+}
+
+.km-list,
+.km-timeline {
+    display: grid;
+    gap: 10px;
+}
+
+.km-list-item,
+.km-time-item {
+    border: 1px solid #d7e2f3;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fcfdff;
+}
+
+.km-list-item h4,
+.km-time-item h4 {
+    margin: 0;
+    font-size: 0.98rem;
+    color: #14213d;
+}
+
+.km-list-item p,
+.km-time-item p {
+    margin: 5px 0 0;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.km-reco-list {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+}
+
+.km-reco-list li {
+    color: #334155;
+    line-height: 1.45;
+}
+
+.km-not-found {
+    text-align: center;
+}
+
+@media (max-width: 1180px) {
+    .km-kpi-grid,
+    .km-barangay-grid,
+    .km-focus-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .km-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .km-hero,
+    .km-profile-hero {
+        min-height: 260px;
+        padding: 18px;
+        gap: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .km-hero-logo {
+        width: 78px;
+        height: 78px;
+    }
+
+    .km-kpi-grid,
+    .km-barangay-grid,
+    .km-focus-grid,
+    .km-metric-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .km-kabataan-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

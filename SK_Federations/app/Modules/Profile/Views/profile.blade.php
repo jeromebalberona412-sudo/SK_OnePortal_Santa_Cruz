@@ -128,7 +128,7 @@
                 <i class="fas fa-tasks"></i>
                 <span>Program Monitoring</span>
             </a>
-            <a href="#" class="menu-item" data-tooltip="Kabataan Monitoring">
+            <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i>
                 <span>Kabataan Monitoring</span>
             </a>
