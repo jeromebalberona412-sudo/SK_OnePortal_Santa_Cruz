@@ -79,10 +79,6 @@
 
             <div class="programs-layout">
                 <div class="programs-table-card">
-                    <div class="table-header-row">
-                        <span class="table-title">All Programs</span>
-                    </div>
-
                     <div class="table-wrapper">
                         <table class="programs-table">
                             <thead>
@@ -122,9 +118,6 @@
                             <span class="summary-pill completed" id="summaryCompleted">0</span>
                         </li>
                     </ul>
-                    <p class="summary-note">
-                        This is a UI-only view. Data will later be connected to your Laravel backend and database.
-                    </p>
                 </aside>
             </div>
         </section>
@@ -136,13 +129,16 @@
     <div class="modal-box">
         <div class="modal-header">
             <h2 class="modal-title">Add Program</h2>
-            <button type="button" class="modal-close" data-modal-close>&times;</button>
+            <div class="modal-window-controls">
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
+                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            </div>
         </div>
         <div class="modal-body">
             <div class="modal-field">
                 <label for="programCommitteeInput">Program Type</label>
                 <select id="programCommitteeInput">
-                    <option value="">Select Program Type</option>
+                    <option value="" selected disabled>Select Program Type</option>
                     <option value="Youth Development Program">Youth Development Program</option>
                     <option value="Education Support Program">Education Support Program</option>
                     <option value="Sports Development Program">Sports Development Program</option>
@@ -161,16 +157,16 @@
             </div>
             
             <div class="modal-field">
+                <label for="programNameInput">Specify Program Name</label>
+                <input type="text" id="programNameInput" placeholder="Enter program name">
+            </div>
+            <div class="modal-field">
                 <label for="programTitleInput">Program Title/Theme</label>
                 <input type="text" id="programTitleInput" placeholder="e.g. Youth Leadership Training">
             </div>
-            <div class="modal-field" id="otherProgramField" style="display: none;">
-                <label for="otherProgramInput">Specify Program Name</label>
-                <input type="text" id="otherProgramInput" placeholder="Enter program name">
-            </div>
             <div class="modal-field">
                 <label for="programBudgetInput">Budget (₱)</label>
-                <input type="number" id="programBudgetInput" min="0" step="1" placeholder="e.g. 50000">
+                <input type="text" id="programBudgetInput" inputmode="numeric" placeholder="e.g. 50,000">
             </div>
             <div class="modal-field">
                 <label for="programStartInput">Start Date</label>
@@ -193,6 +189,46 @@
             <button type="button" class="btn" data-modal-cancel>Cancel</button>
             <button type="button" class="btn primary-btn" id="programSaveBtn">Save</button>
         </div>
+    </div>
+</div>
+
+<!-- Program View Modal -->
+<div class="modal-backdrop" id="programViewModal" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 class="modal-title">Program Summary</h2>
+            <div class="modal-window-controls">
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
+                <button type="button" class="modal-close" data-view-close aria-label="Close">&times;</button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field">
+                <label>Program Type</label>
+                <input type="text" id="viewProgramType" readonly>
+            </div>
+            <div class="modal-field">
+                <label>Program Name</label>
+                <input type="text" id="viewProgramName" readonly>
+            </div>
+            <div class="modal-field">
+                <label>Program Title/Theme</label>
+                <input type="text" id="viewProgramTitle" readonly>
+            </div>
+            <div class="modal-field">
+                <label>Budget</label>
+                <input type="text" id="viewProgramBudget" readonly>
+            </div>
+            <div class="modal-field">
+                <label>Duration</label>
+                <input type="text" id="viewProgramDuration" readonly>
+            </div>
+            <div class="modal-field">
+                <label>Status</label>
+                <input type="text" id="viewProgramStatus" readonly>
+            </div>
+        </div>
+        <!-- Footer intentionally removed (use top-right close button) -->
     </div>
 </div>
 

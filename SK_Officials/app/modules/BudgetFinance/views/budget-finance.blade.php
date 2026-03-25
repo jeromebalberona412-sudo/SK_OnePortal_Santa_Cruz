@@ -98,7 +98,7 @@
 
             <div class="modal-field">
                 <label for="allocatedBudgetInput">Allocated Budget</label>
-                <input type="number" id="allocatedBudgetInput" min="0" step="1" placeholder="e.g. 50000">
+                <input type="text" id="allocatedBudgetInput" inputmode="numeric" placeholder="e.g. 50,000">
             </div>
 
             <div class="modal-field">
@@ -128,7 +128,7 @@
 
             <div class="modal-field">
                 <label for="expenseAmountInput">Amount</label>
-                <input type="number" id="expenseAmountInput" min="0" step="1" placeholder="e.g. 30000">
+                <input type="text" id="expenseAmountInput" inputmode="numeric" placeholder="e.g. 30,000">
             </div>
 
             <div class="modal-field">

@@ -49,8 +49,6 @@
                     <label for="committeeHeadFilter" class="filter-label">Committee head</label>
                     <select id="committeeHeadFilter" class="filter-select">
                         <option value="">All heads</option>
-                        <option value="chairman">SK Chairman</option>
-                        <option value="kagawad">SK Kagawad</option>
                     </select>
                 </div>
             </div>
@@ -64,8 +62,19 @@
                 </p>
             </div>
 
-            <div id="committeeGrid" class="committee-grid">
-                <!-- Committees will be rendered by committees.js (UI-only, mock data) -->
+            <div class="table-wrapper">
+                <table class="committee-table">
+                    <thead>
+                        <tr>
+                            <th>Committee Name</th>
+                            <th>Head</th>
+                            <th>Members</th>
+                            <th>Description</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="committeeGrid"></tbody>
+                </table>
             </div>
         </section>
     </div>
@@ -76,7 +85,10 @@
     <div class="modal-box">
         <div class="modal-header">
             <h2 class="modal-title">Add Committee</h2>
-            <button type="button" class="modal-close" data-modal-close>&times;</button>
+            <div class="modal-window-controls">
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
+                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            </div>
         </div>
         <div class="modal-body">
             <div class="modal-field">
@@ -102,11 +114,13 @@
             </div>
             <div class="modal-field">
                 <label for="committeeHeadInput">Committee Head</label>
-                <input type="text" id="committeeHeadInput" placeholder="e.g. Ana Reyes">
+                <select id="committeeHeadInput">
+                    <option value="">Select Committee Head</option>
+                </select>
             </div>
             <div class="modal-field">
-                <label for="committeeMembersInput">Members (comma-separated)</label>
-                <input type="text" id="committeeMembersInput" placeholder="e.g. Member 1, Member 2">
+                <label class="modal-field-label-block">Members (select one or more)</label>
+                <div id="committeeMembersChecklist" class="members-checklist"></div>
             </div>
             <div class="modal-field">
                 <label for="committeeDescriptionInput">Description</label>
@@ -117,6 +131,26 @@
             <button type="button" class="btn" data-modal-cancel>Cancel</button>
             <button type="button" class="btn primary-btn" id="committeeSaveBtn">Save</button>
         </div>
+    </div>
+</div>
+
+<!-- Committee View Modal -->
+<div class="modal-backdrop" id="committeeViewModal" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 class="modal-title">Committee Summary</h2>
+            <div class="modal-window-controls">
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
+                <button type="button" class="modal-close" data-view-close aria-label="Close">&times;</button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field"><label>Committee Name</label><input type="text" id="viewCommitteeName" readonly></div>
+            <div class="modal-field"><label>Committee Head</label><input type="text" id="viewCommitteeHead" readonly></div>
+            <div class="modal-field"><label>Members</label><textarea id="viewCommitteeMembers" rows="4" readonly></textarea></div>
+            <div class="modal-field"><label>Description</label><textarea id="viewCommitteeDescription" rows="3" readonly></textarea></div>
+        </div>
+        <!-- Footer intentionally removed (use top-right close button) -->
     </div>
 </div>
 

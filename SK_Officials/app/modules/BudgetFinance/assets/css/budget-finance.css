@@ -225,14 +225,19 @@ body {
     letter-spacing: 0.05em;
 }
 
+.status-pill.Planned {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
 .status-pill.Ongoing {
-    background: rgba(22, 163, 74, 0.15);
-    color: #166534;
+    background: #fef3c7;
+    color: #92400e;
 }
 
 .status-pill.Completed {
-    background: rgba(156, 163, 175, 0.22);
-    color: #374151;
+    background: #dcfce7;
+    color: #166534;
 }
 
 .budget-actions {
@@ -458,7 +463,7 @@ body {
 
 .no-print {
     /* marker class; actual hiding is in print media query */
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 .print-only {

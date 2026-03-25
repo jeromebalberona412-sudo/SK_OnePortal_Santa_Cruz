@@ -38,61 +38,50 @@ function initializeBudgetFinanceUI() {
     const expenseViewMaximizeBtn = document.getElementById('expenseViewMaximizeBtn');
     if (!tableBody) return;
 
-    // UI-only seed data (mirrors the Programs page style/theme)
-    const seedPrograms = [
+    // Standalone sample data for Budget & Finance.
+    const budgets = [
         {
-            title: 'Youth Leadership Training',
-            allocatedBudget: 50000,
-            description: 'Training and materials for youth leadership.',
-            status: 'Ongoing',
+            title: 'Youth Development Program',
+            allocatedBudget: 120000,
+            description: 'Youth leadership and skills training',
+            status: 'Planned',
             expenses: [
-                { name: 'Snacks & Supplies', amount: 30000, date: '2026-02-10', remarks: 'Community volunteers' },
+                { name: 'Training Materials', amount: 30000, date: '2026-03-01', remarks: 'Batch 1' },
+                { name: 'Snacks', amount: 10000, date: '2026-03-02', remarks: '2-day session' },
             ],
         },
         {
-            title: 'Tree Planting Project',
-            allocatedBudget: 20000,
-            description: 'Tree seedlings and logistics.',
+            title: 'Sports Development Program',
+            allocatedBudget: 90000,
+            description: 'League and sports equipment',
+            status: 'Ongoing',
+            expenses: [
+                { name: 'Uniforms', amount: 25000, date: '2026-02-10', remarks: 'Basketball' },
+                { name: 'Referee Fees', amount: 8000, date: '2026-02-12', remarks: '' },
+            ],
+        },
+        {
+            title: 'Environmental Program',
+            allocatedBudget: 60000,
+            description: 'Tree planting and clean-up drive',
             status: 'Completed',
             expenses: [
-                { name: 'Seedlings', amount: 20000, date: '2026-01-25', remarks: 'All funds used' },
-            ],
-        },
-        {
-            title: 'Sports Program',
-            allocatedBudget: 80000,
-            description: 'Sports events, jerseys, and equipment.',
-            status: 'Ongoing',
-            expenses: [
-                { name: 'Uniforms & Equipment', amount: 30000, date: '2026-02-18', remarks: 'Partially funded' },
+                { name: 'Seedlings', amount: 15000, date: '2026-01-20', remarks: '' },
+                { name: 'Trash Bags and Gloves', amount: 5000, date: '2026-01-20', remarks: '' },
             ],
         },
     ];
-
-    // Copy seed into editable state (so UI interactions can update without backend)
-    let budgets = seedPrograms.map((p) => ({
-        title: p.title,
-        allocatedBudget: Number(p.allocatedBudget) || 0,
-        description: p.description || '',
-        status: p.status || 'Ongoing',
-        expenses: (p.expenses || []).map((e) => ({
-            name: e.name,
-            amount: Number(e.amount) || 0,
-            date: e.date,
-            remarks: e.remarks || '',
-        })),
-    }));
-
-    // Link from Programs page: ?program=Program+Title
-    const urlParams = new URLSearchParams(window.location.search);
-    let currentProgramFilter = urlParams.get('program') || '';
-    currentProgramFilter = currentProgramFilter.trim();
 
     // Internal selections for modals
     let modalExpenseProgramTitle = '';
     let modalViewProgramTitle = '';
 
-    const programTitleOptions = Array.from(new Set(budgets.map((p) => p.title)));
+    const programTitleOptions = [
+        'Youth Development Program',
+        'Education Support Program',
+        'Sports Development Program',
+        'Environmental Program',
+    ];
 
     // ---------- Helpers ----------
     function formatMoney(value) {
@@ -130,8 +119,7 @@ function initializeBudgetFinanceUI() {
     }
 
     function getDisplayedPrograms() {
-        if (!currentProgramFilter) return budgets;
-        return budgets.filter((p) => p.title === currentProgramFilter);
+        return budgets;
     }
 
     function setPrintAreaTotals(totals) {
@@ -175,21 +163,17 @@ function initializeBudgetFinanceUI() {
 
     // ---------- Populate dropdown ----------
     if (budgetProgramSelect) {
-        // Ensure the linked program is present in dropdown even if user filtered to it
-        const linkedTitle = currentProgramFilter ? currentProgramFilter : '';
-        const mergedTitles = new Set([...programTitleOptions]);
-        if (linkedTitle) mergedTitles.add(linkedTitle);
-
         budgetProgramSelect.innerHTML = '';
-        Array.from(mergedTitles).forEach((title) => {
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Select Program';
+        budgetProgramSelect.appendChild(placeholder);
+        Array.from(programTitleOptions).forEach((title) => {
             const opt = document.createElement('option');
             opt.value = title;
             opt.textContent = title;
             budgetProgramSelect.appendChild(opt);
         });
-
-        // Prefill dropdown with linked program
-        if (linkedTitle) budgetProgramSelect.value = linkedTitle;
     }
 
     // ---------- Render ----------
@@ -247,7 +231,7 @@ function initializeBudgetFinanceUI() {
         displayed.forEach((p) => {
             const { expensesTotal, remaining } = computeTotalsForProgram(p);
             const statusLabel = computeDisplayStatus(p, remaining);
-            const statusClass = statusLabel === 'Completed' ? 'Completed' : 'Ongoing';
+            const statusClass = statusLabel;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -289,11 +273,6 @@ function initializeBudgetFinanceUI() {
     // ---------- Add Budget ----------
     if (addBudgetBtn) {
         addBudgetBtn.addEventListener('click', () => {
-            // Default modal selection to current program filter if present
-            if (budgetProgramSelect && currentProgramFilter) {
-                budgetProgramSelect.value = currentProgramFilter;
-            }
-
             if (allocatedBudgetInput) allocatedBudgetInput.value = '';
             if (budgetDescriptionInput) budgetDescriptionInput.value = '';
 
@@ -304,15 +283,16 @@ function initializeBudgetFinanceUI() {
     if (budgetSaveBtn) {
         budgetSaveBtn.addEventListener('click', () => {
             const selectedProgram = (budgetProgramSelect?.value || '').trim();
-            const allocatedBudget = Number((allocatedBudgetInput?.value || '').trim()) || 0;
+            const allocatedRaw = (allocatedBudgetInput?.value || '').trim().replaceAll(',', '');
+            const allocatedBudget = Number(allocatedRaw) || 0;
             const desc = (budgetDescriptionInput?.value || '').trim();
 
             if (!selectedProgram) {
                 alert('Please select a program.');
                 return;
             }
-            if (allocatedBudget <= 0) {
-                alert('Allocated Budget must be greater than 0.');
+            if (allocatedBudget < 0) {
+                alert('Allocated Budget cannot be negative.');
                 return;
             }
 
@@ -338,17 +318,8 @@ function initializeBudgetFinanceUI() {
                 budgetSaveBtn.disabled = false;
                 budgetSaveBtn.textContent = 'Save';
 
-                // If user added a budget to the currently-filtered program, keep it visible.
-                // Otherwise, leave filter as-is.
-                if (currentProgramFilter && currentProgramFilter !== selectedProgram) {
-                    // no-op
-                } else {
-                    currentProgramFilter = selectedProgram;
-                    if (budgetProgramSelect) budgetProgramSelect.value = selectedProgram;
-                }
-
                 render();
-                alert('Budget saved (UI only, no backend yet).');
+                alert('Budget saved.');
             }, 450);
         });
     }
@@ -413,6 +384,28 @@ function initializeBudgetFinanceUI() {
         printBtn.addEventListener('click', () => {
             render(); // ensure print table is up to date
             window.print();
+        });
+    }
+
+    if (allocatedBudgetInput) {
+        allocatedBudgetInput.addEventListener('input', () => {
+            const digitsOnly = allocatedBudgetInput.value.replace(/[^\d]/g, '');
+            if (!digitsOnly) {
+                allocatedBudgetInput.value = '';
+                return;
+            }
+            allocatedBudgetInput.value = Number(digitsOnly).toLocaleString('en-PH');
+        });
+    }
+
+    if (expenseAmountInput) {
+        expenseAmountInput.addEventListener('input', () => {
+            const digitsOnly = expenseAmountInput.value.replace(/[^\d]/g, '');
+            if (!digitsOnly) {
+                expenseAmountInput.value = '';
+                return;
+            }
+            expenseAmountInput.value = Number(digitsOnly).toLocaleString('en-PH');
         });
     }
 

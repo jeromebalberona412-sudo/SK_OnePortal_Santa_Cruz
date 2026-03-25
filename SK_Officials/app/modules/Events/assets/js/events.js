@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeEventsUI() {
     const list = document.getElementById('eventList');
-    const todayContainer = document.getElementById('todayEvents');
 
     const searchInput = document.getElementById('eventSearch');
     const programFilter = document.getElementById('eventProgramFilter');
@@ -15,7 +14,9 @@ function initializeEventsUI() {
     const nameInput = document.getElementById('eventNameInput');
     const programInput = document.getElementById('eventProgramInput');
     const dateInput = document.getElementById('eventDateInput');
-    const timeInput = document.getElementById('eventTimeInput');
+    const timeHourInput = document.getElementById('eventTimeHour');
+    const timeMinuteInput = document.getElementById('eventTimeMinute');
+    const timePeriodInput = document.getElementById('eventTimePeriod');
     const venueInput = document.getElementById('eventVenueInput');
     const participantsInput = document.getElementById('eventParticipantsInput');
     const saveBtn = document.getElementById('eventSaveBtn');
@@ -23,11 +24,44 @@ function initializeEventsUI() {
     const otherEventInput = document.getElementById('otherEventInput');
     const successModal = document.getElementById('eventSuccessModal');
     const successMessage = document.getElementById('eventSuccessMessage');
+    const viewModal = document.getElementById('eventViewModal');
+    const viewEventName = document.getElementById('viewEventName');
+    const viewEventProgram = document.getElementById('viewEventProgram');
+    const viewEventDate = document.getElementById('viewEventDate');
+    const viewEventTime = document.getElementById('viewEventTime');
+    const viewEventVenue = document.getElementById('viewEventVenue');
+    const viewEventParticipants = document.getElementById('viewEventParticipants');
+
+    // Modal maximize/minimize (restore) controls
+    function resetModalMaximize(backdropEl) {
+        if (!backdropEl) return;
+        backdropEl.classList.remove('modal-maximized');
+        const box = backdropEl.querySelector('.modal-box');
+        if (box) box.classList.remove('modal-maximized');
+        const toggleBtn = backdropEl.querySelector('[data-modal-toggle]');
+        if (toggleBtn) toggleBtn.textContent = '□';
+    }
+
+    function wireModalToggle(backdropEl) {
+        if (!backdropEl) return;
+        const toggleBtn = backdropEl.querySelector('[data-modal-toggle]');
+        const box = backdropEl.querySelector('.modal-box');
+        if (!toggleBtn || !box) return;
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const willMaximize = !box.classList.contains('modal-maximized');
+            backdropEl.classList.toggle('modal-maximized', willMaximize);
+            box.classList.toggle('modal-maximized', willMaximize);
+            toggleBtn.textContent = willMaximize ? '⧉' : '□';
+        });
+    }
 
     if (!list) return;
 
     // Start empty; events appear only after "Schedule Event"
     const events = [];
+    let editingIndex = -1;
 
     let currentQuery = '';
     let currentProgram = '';
@@ -35,10 +69,88 @@ function initializeEventsUI() {
 
     function formatSchedule(date, time) {
         const opts = { month: 'short', day: '2-digit', year: 'numeric' };
-        const d = new Date(`${date}T${time}`);
+        const datePart = (date || '').trim();
+        const timePart = (time || '').trim();
+        if (!datePart) return '';
+        let isoTime = '12:00';
+        const twelve = timePart.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (twelve) {
+            let h = parseInt(twelve[1], 10);
+            const m = twelve[2];
+            const ap = twelve[3].toUpperCase();
+            if (ap === 'PM' && h !== 12) h += 12;
+            if (ap === 'AM' && h === 12) h = 0;
+            isoTime = `${String(h).padStart(2, '0')}:${m}`;
+        } else if (/^\d{1,2}:\d{2}$/.test(timePart)) {
+            isoTime = timePart.length === 5 ? timePart : timePart.padStart(5, '0');
+        }
+        const d = new Date(`${datePart}T${isoTime}`);
+        if (Number.isNaN(d.getTime())) return datePart;
         const label = d.toLocaleDateString(undefined, opts);
-        const t = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        const t = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
         return `${label} · ${t}`;
+    }
+
+    function initEventTimeSelects() {
+        if (!timeHourInput || !timeMinuteInput) return;
+        if (!timeHourInput.querySelector('option[value="1"]')) {
+            for (let h = 1; h <= 12; h += 1) {
+                const o = document.createElement('option');
+                o.value = String(h);
+                o.textContent = String(h);
+                timeHourInput.appendChild(o);
+            }
+        }
+        if (!timeMinuteInput.querySelector('option[value="00"]')) {
+            for (let m = 0; m < 60; m += 1) {
+                const o = document.createElement('option');
+                const v = String(m).padStart(2, '0');
+                o.value = v;
+                o.textContent = v;
+                timeMinuteInput.appendChild(o);
+            }
+        }
+    }
+
+    function parseTimeToParts(timeStr) {
+        const s = (timeStr || '').trim();
+        if (!s) return { hour: '', minute: '', period: '' };
+        const twelve = s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (twelve) {
+            return {
+                hour: String(parseInt(twelve[1], 10)),
+                minute: twelve[2],
+                period: twelve[3].toUpperCase(),
+            };
+        }
+        const twentyfour = s.match(/^(\d{1,2}):(\d{2})$/);
+        if (twentyfour) {
+            let h = parseInt(twentyfour[1], 10);
+            const m = twentyfour[2].padStart(2, '0');
+            const period = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 === 0 ? 12 : h % 12;
+            return { hour: String(h12), minute: m, period };
+        }
+        return { hour: '', minute: '', period: '' };
+    }
+
+    function getEventTimeFromSelects() {
+        const h = timeHourInput?.value || '';
+        const m = timeMinuteInput?.value || '';
+        const p = timePeriodInput?.value || '';
+        if (!h || !m || !p) return '';
+        return `${h}:${m} ${p}`;
+    }
+
+    function setEventTimeSelects(timeStr) {
+        const parts = parseTimeToParts(timeStr);
+        if (timeHourInput) timeHourInput.value = parts.hour || '';
+        if (timeMinuteInput) timeMinuteInput.value = parts.minute || '';
+        if (timePeriodInput) timePeriodInput.value = parts.period || '';
+    }
+
+    function clearEventTimeSelects() {
+        setEventTimeSelects('');
     }
 
     function render() {
@@ -61,70 +173,31 @@ function initializeEventsUI() {
         });
 
         if (filtered.length === 0) {
-            const empty = document.createElement('div');
-            empty.className = 'empty-state';
-            empty.innerHTML =
-                'No events scheduled yet. <br><strong>Tip:</strong> click "+ Schedule Event" to add an activity (UI only).';
+            const empty = document.createElement('tr');
+            empty.innerHTML = '<td colspan="8" class="empty-state">No events scheduled yet.</td>';
             list.appendChild(empty);
         } else {
             filtered.forEach((e) => {
-                const card = document.createElement('article');
-                card.className = 'event-card';
-                card.innerHTML = `
-                    <div>
-                        <h3 class="event-title">${e.name}</h3>
-                        <p class="event-program">Under: ${e.program}</p>
-                        <p class="event-meta"><strong>Participants:</strong> ${e.expectedParticipants} expected</p>
-                    </div>
-                    <div>
-                        <p class="event-schedule">${formatSchedule(e.date, e.time)}</p>
-                        <p class="event-venue">${e.venue}</p>
-                        <p class="event-participants">SK to coordinate logistics and safety with barangay officials.</p>
-                    </div>
-                    <div class="event-footer">
-                        <span class="status-pill ${e.status}">
-                            ${e.status.toUpperCase()}
-                        </span>
+                const sourceIndex = events.indexOf(e);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${e.name}</td>
+                    <td>${e.program}</td>
+                    <td>${e.date}</td>
+                    <td>${e.time}</td>
+                    <td>${e.venue}</td>
+                    <td>${e.expectedParticipants}</td>
+                    <td><span class="status-pill ${e.status}">${e.status.toUpperCase()}</span></td>
+                    <td>
                         <div class="event-actions">
-                            <button type="button" class="btn-outline" data-action="view">View</button>
-                            <button type="button" class="btn-outline" data-action="timeline">Timeline</button>
+                            <button type="button" class="event-action-btn event-action-view" data-action="view" data-index="${sourceIndex}">View</button>
+                            <button type="button" class="event-action-btn event-action-edit" data-action="edit" data-index="${sourceIndex}">Edit</button>
                         </div>
-                    </div>
+                    </td>
                 `;
-                list.appendChild(card);
+                list.appendChild(row);
             });
         }
-
-        renderToday(events);
-    }
-
-    function renderToday(allEvents) {
-        if (!todayContainer) return;
-
-        todayContainer.innerHTML = '';
-        const today = new Date();
-        const todayString = today.toISOString().slice(0, 10);
-
-        const todayEvents = allEvents.filter((e) => e.date === todayString);
-
-        if (todayEvents.length === 0) {
-            const p = document.createElement('p');
-            p.className = 'side-note';
-            p.textContent = 'No events scheduled today. This panel will highlight activities that match the current date.';
-            todayContainer.appendChild(p);
-            return;
-        }
-
-        todayEvents.forEach((e) => {
-            const item = document.createElement('div');
-            item.className = 'today-event-item';
-            item.innerHTML = `
-                <div class="today-event-time">${formatSchedule(e.date, e.time)}</div>
-                <div class="today-event-name">${e.name}</div>
-                <div class="today-event-program">${e.program}</div>
-            `;
-            todayContainer.appendChild(item);
-        });
     }
 
     if (searchInput) {
@@ -150,15 +223,38 @@ function initializeEventsUI() {
         });
     }
 
-    // Simple UI handlers for View / Timeline buttons (no backend)
+    // View / Edit actions
     list.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
         const action = btn.dataset.action;
+        const index = Number(btn.dataset.index);
+        if (Number.isNaN(index) || !events[index]) return;
+        const event = events[index];
         if (action === 'view') {
-            alert('View event details (UI only, backend to be connected later).');
-        } else if (action === 'timeline') {
-            alert('Event timeline view (UI only, backend to be connected later).');
+            if (viewEventName) viewEventName.value = event.name;
+            if (viewEventProgram) viewEventProgram.value = event.program;
+            if (viewEventDate) viewEventDate.value = event.date;
+            if (viewEventTime) viewEventTime.value = event.time;
+            if (viewEventVenue) viewEventVenue.value = event.venue;
+            if (viewEventParticipants) viewEventParticipants.value = String(event.expectedParticipants);
+            if (viewModal) {
+                resetModalMaximize(viewModal);
+                viewModal.style.display = 'flex';
+            }
+        } else if (action === 'edit') {
+            editingIndex = index;
+            if (nameInput) nameInput.value = event.name;
+            if (programInput) programInput.value = event.program;
+            if (dateInput) dateInput.value = event.date;
+            setEventTimeSelects(event.time);
+            if (venueInput) venueInput.value = event.venue;
+            if (participantsInput) participantsInput.value = String(event.expectedParticipants);
+            if (saveBtn) saveBtn.textContent = 'Update';
+            if (modal) {
+                resetModalMaximize(modal);
+                modal.style.display = 'flex';
+            }
         }
     });
 
@@ -166,20 +262,33 @@ function initializeEventsUI() {
     function openModal() {
         if (!modal) return;
         modal.style.display = 'flex';
+        resetModalMaximize(modal);
+        editingIndex = -1;
+        if (saveBtn) saveBtn.textContent = 'Save';
         if (nameInput) nameInput.focus();
     }
 
     function closeModal() {
         if (!modal) return;
         modal.style.display = 'none';
+        resetModalMaximize(modal);
         if (nameInput) nameInput.value = '';
         if (programInput) programInput.value = '';
         if (otherEventInput) otherEventInput.value = '';
         if (otherEventField) otherEventField.style.display = 'none';
         if (dateInput) dateInput.value = '';
-        if (timeInput) timeInput.value = '';
+        clearEventTimeSelects();
         if (venueInput) venueInput.value = '';
         if (participantsInput) participantsInput.value = '';
+    }
+
+    if (viewModal) {
+        viewModal.addEventListener('click', (e) => {
+            if (e.target === viewModal || e.target.hasAttribute('data-view-close')) {
+                resetModalMaximize(viewModal);
+                viewModal.style.display = 'none';
+            }
+        });
     }
 
     function openSuccessModal(message) {
@@ -225,7 +334,7 @@ function initializeEventsUI() {
             const program = (programInput?.value || '').trim();
             const otherEvent = (otherEventInput?.value || '').trim();
             const date = (dateInput?.value || '').trim();
-            const time = (timeInput?.value || '').trim();
+            const time = getEventTimeFromSelects().trim();
             const venue = (venueInput?.value || '').trim();
             const participantsVal = (participantsInput?.value || '').trim();
 
@@ -248,7 +357,7 @@ function initializeEventsUI() {
 
             // Simulated AJAX
             setTimeout(() => {
-                events.push({
+                const payload = {
                     name,
                     program,
                     date,
@@ -256,13 +365,19 @@ function initializeEventsUI() {
                     venue: venue || 'To be confirmed',
                     expectedParticipants,
                     status: 'upcoming',
-                });
+                };
+                if (editingIndex >= 0 && events[editingIndex]) {
+                    events[editingIndex] = payload;
+                } else {
+                    events.push(payload);
+                }
 
                 closeModal();
                 render();
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
-                openSuccessModal('Add successful.');
+                openSuccessModal(editingIndex >= 0 ? 'Update successful.' : 'Add successful.');
+                editingIndex = -1;
             }, 600);
         });
     }
@@ -275,6 +390,10 @@ function initializeEventsUI() {
         });
     }
 
+    initEventTimeSelects();
     render();
+
+    wireModalToggle(modal);
+    wireModalToggle(viewModal);
 }
 

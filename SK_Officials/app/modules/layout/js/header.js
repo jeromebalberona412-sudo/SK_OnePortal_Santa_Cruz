@@ -121,6 +121,9 @@ function responsiveToggleSidebar() {
                 mainContent.classList.remove('sidebar-collapsed');
                 mainContent.classList.remove('sidebar-hover');
             }
+
+            // Update toggle button to show X (active state)
+            sidebarToggle.classList.add('active');
         } else {
             // Collapse sidebar
             sidebar.classList.add('collapsed');
@@ -129,10 +132,12 @@ function responsiveToggleSidebar() {
             if (mainContent) {
                 mainContent.classList.add('sidebar-collapsed');
             }
+
+            // Update toggle button to show hamburger (inactive state)
+            sidebarToggle.classList.remove('active');
         }
 
         if (overlay) overlay.classList.remove('show');
-        syncToggleState();
     }
 }
 
@@ -145,10 +150,16 @@ function syncToggleState() {
         return;
     }
 
-    // Hide X when sidebar is collapsed/closed, show X when sidebar is open
-    if (sidebar.classList.contains('collapsed')) {
+    // Sync toggle button state with sidebar state
+    // Consider hover state as well
+    const isCollapsed = sidebar.classList.contains('collapsed');
+    const isHovering = sidebar.classList.contains('hovering');
+
+    if (isCollapsed && !isHovering) {
+        // Sidebar is collapsed and not hovering - show hamburger
         toggle.classList.remove('active');
     } else {
+        // Sidebar is expanded or hovering - show X
         toggle.classList.add('active');
     }
 }

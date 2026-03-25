@@ -11,9 +11,8 @@ function initializeProgramsUI() {
     const addBtn = document.getElementById('addProgramBtn');
     const modal = document.getElementById('programModal');
     const titleInput = document.getElementById('programTitleInput');
+    const programNameInput = document.getElementById('programNameInput');
     const committeeInput = document.getElementById('programCommitteeInput');
-    const otherProgramField = document.getElementById('otherProgramField');
-    const otherProgramInput = document.getElementById('otherProgramInput');
     const budgetInput = document.getElementById('programBudgetInput');
     const startInput = document.getElementById('programStartInput');
     const endInput = document.getElementById('programEndInput');
@@ -21,16 +20,49 @@ function initializeProgramsUI() {
     const saveBtn = document.getElementById('programSaveBtn');
     const successModal = document.getElementById('programSuccessModal');
     const successMessage = document.getElementById('programSuccessMessage');
+    const viewModal = document.getElementById('programViewModal');
+    const viewProgramType = document.getElementById('viewProgramType');
+    const viewProgramName = document.getElementById('viewProgramName');
+    const viewProgramTitle = document.getElementById('viewProgramTitle');
+    const viewProgramBudget = document.getElementById('viewProgramBudget');
+    const viewProgramDuration = document.getElementById('viewProgramDuration');
+    const viewProgramStatus = document.getElementById('viewProgramStatus');
 
     const summaryTotal = document.getElementById('summaryTotalPrograms');
     const summaryPlanned = document.getElementById('summaryPlanned');
     const summaryOngoing = document.getElementById('summaryOngoing');
     const summaryCompleted = document.getElementById('summaryCompleted');
 
+    // Modal maximize/minimize (restore) controls
+    function resetModalMaximize(backdropEl) {
+        if (!backdropEl) return;
+        backdropEl.classList.remove('modal-maximized');
+        const box = backdropEl.querySelector('.modal-box');
+        if (box) box.classList.remove('modal-maximized');
+        const toggleBtn = backdropEl.querySelector('[data-modal-toggle]');
+        if (toggleBtn) toggleBtn.textContent = '□';
+    }
+
+    function wireModalToggle(backdropEl) {
+        if (!backdropEl) return;
+        const toggleBtn = backdropEl.querySelector('[data-modal-toggle]');
+        const box = backdropEl.querySelector('.modal-box');
+        if (!toggleBtn || !box) return;
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const willMaximize = !box.classList.contains('modal-maximized');
+            backdropEl.classList.toggle('modal-maximized', willMaximize);
+            box.classList.toggle('modal-maximized', willMaximize);
+            toggleBtn.textContent = willMaximize ? '⧉' : '□';
+        });
+    }
+
     if (!tbody) return;
 
     // Start empty; programs appear only after "Add Program"
     const programs = [];
+    let editingIndex = -1;
 
     let currentQuery = '';
     let currentCommittee = '';
@@ -78,6 +110,7 @@ function initializeProgramsUI() {
             tbody.appendChild(tr);
         } else {
             filtered.forEach((p) => {
+                const sourceIndex = programs.indexOf(p);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="program-title-cell">${p.title}</td>
@@ -91,9 +124,12 @@ function initializeProgramsUI() {
                     </td>
                     <td>
                         <div class="program-actions">
-                            <a class="program-action-btn" href="/budget-finance?program=${encodeURIComponent(
-                                p.title
-                            )}">Budget &amp; Finance</a>
+                            <button type="button" class="program-action-btn" data-action="view" data-index="${sourceIndex}">
+                                View
+                            </button>
+                            <button type="button" class="program-action-btn edit-btn" data-action="edit" data-index="${sourceIndex}">
+                                Edit
+                            </button>
                         </div>
                     </td>
                 `;
@@ -143,16 +179,19 @@ function initializeProgramsUI() {
     function openModal() {
         if (!modal) return;
         modal.style.display = 'flex';
+        resetModalMaximize(modal);
+        editingIndex = -1;
+        if (saveBtn) saveBtn.textContent = 'Save';
         if (titleInput) titleInput.focus();
     }
 
     function closeModal() {
         if (!modal) return;
         modal.style.display = 'none';
+        resetModalMaximize(modal);
         if (titleInput) titleInput.value = '';
+        if (programNameInput) programNameInput.value = '';
         if (committeeInput) committeeInput.value = '';
-        if (otherProgramInput) otherProgramInput.value = '';
-        if (otherProgramField) otherProgramField.style.display = 'none';
         if (budgetInput) budgetInput.value = '';
         if (startInput) startInput.value = '';
         if (endInput) endInput.value = '';
@@ -184,16 +223,60 @@ function initializeProgramsUI() {
         });
     }
 
-    // Committee dropdown change event
-    if (committeeInput) {
-        committeeInput.addEventListener('change', () => {
-            if (otherProgramField && otherProgramInput) {
-                if (committeeInput.value === 'Other') {
-                    otherProgramField.style.display = 'block';
-                } else {
-                    otherProgramField.style.display = 'none';
-                    otherProgramInput.value = '';
-                }
+    if (budgetInput) {
+        budgetInput.addEventListener('input', () => {
+            const digitsOnly = budgetInput.value.replace(/[^\d]/g, '');
+            if (!digitsOnly) {
+                budgetInput.value = '';
+                return;
+            }
+            budgetInput.value = Number(digitsOnly).toLocaleString('en-PH');
+        });
+    }
+
+    if (tbody) {
+        tbody.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!(target instanceof HTMLElement)) return;
+            const action = target.getAttribute('data-action');
+            if (action !== 'view' && action !== 'edit') return;
+            const index = Number(target.getAttribute('data-index'));
+            if (Number.isNaN(index) || !programs[index]) return;
+
+            const program = programs[index];
+            if (action === 'edit') {
+                editingIndex = index;
+                resetModalMaximize(modal);
+                if (committeeInput) committeeInput.value = program.committee;
+                if (programNameInput) programNameInput.value = program.programName || '';
+                if (titleInput) titleInput.value = program.title;
+                if (budgetInput) budgetInput.value = Number(program.budget || 0).toLocaleString('en-PH');
+                if (startInput) startInput.value = program.startDate;
+                if (endInput) endInput.value = program.endDate;
+                if (statusInput) statusInput.value = program.status;
+                if (saveBtn) saveBtn.textContent = 'Update';
+                if (modal) modal.style.display = 'flex';
+                return;
+            }
+
+            if (viewProgramType) viewProgramType.value = program.committee;
+            if (viewProgramName) viewProgramName.value = program.programName || '-';
+            if (viewProgramTitle) viewProgramTitle.value = program.title;
+            if (viewProgramBudget) viewProgramBudget.value = formatBudget(program.budget);
+            if (viewProgramDuration) viewProgramDuration.value = formatDuration(program.startDate, program.endDate);
+            if (viewProgramStatus) {
+                viewProgramStatus.value = program.status.charAt(0).toUpperCase() + program.status.slice(1);
+            }
+            resetModalMaximize(viewModal);
+            if (viewModal) viewModal.style.display = 'flex';
+        });
+    }
+
+    if (viewModal) {
+        viewModal.addEventListener('click', (e) => {
+            if (e.target === viewModal || e.target.hasAttribute('data-view-close')) {
+                resetModalMaximize(viewModal);
+                viewModal.style.display = 'none';
             }
         });
     }
@@ -201,47 +284,50 @@ function initializeProgramsUI() {
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
             const title = (titleInput?.value || '').trim();
-            let committee = (committeeInput?.value || '').trim();
-            const otherProgram = (otherProgramInput?.value || '').trim();
-            const budgetVal = (budgetInput?.value || '').trim();
+            const programName = (programNameInput?.value || '').trim();
+            const committee = (committeeInput?.value || '').trim();
+            const budgetVal = (budgetInput?.value || '').trim().replaceAll(',', '');
             const startDate = (startInput?.value || '').trim();
             const endDate = (endInput?.value || '').trim();
             const status = (statusInput?.value || 'planned').trim();
 
-            // Handle Other program option
-            if (committee === 'Other' && otherProgram) {
-                committee = otherProgram;
-            } else if (committee === 'Other') {
-                alert('Please specify program name.');
-                return;
-            }
-
-            if (!title || !committee || !budgetVal || !startDate || !endDate) {
-                alert('Please complete required fields (title, committee, budget, dates). UI only.');
+            if (!title || !programName || !committee || !budgetVal || !startDate || !endDate) {
+                alert('Please complete required fields (program type, name, title, budget, dates).');
                 return;
             }
 
             const budget = Number(budgetVal) || 0;
+            if (budget < 0) {
+                alert('Budget cannot be negative.');
+                return;
+            }
 
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
 
             // Simulated AJAX
             setTimeout(() => {
-                programs.push({
+                const payload = {
                     title,
+                    programName,
                     committee,
                     budget,
                     startDate,
                     endDate,
                     status: status || 'planned',
-                });
+                };
+                if (editingIndex >= 0 && programs[editingIndex]) {
+                    programs[editingIndex] = payload;
+                } else {
+                    programs.push(payload);
+                }
 
                 closeModal();
                 render();
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
-                openSuccessModal('Add successful.');
+                openSuccessModal(editingIndex >= 0 ? 'Update successful.' : 'Add successful.');
+                editingIndex = -1;
             }, 600);
         });
     }
@@ -255,5 +341,9 @@ function initializeProgramsUI() {
     }
 
     render();
+
+    // Wire toggle buttons after modals exist in DOM
+    wireModalToggle(modal);
+    wireModalToggle(viewModal);
 }
 

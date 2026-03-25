@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function initializeSidebar() {
     const sidebar = document.getElementById('mainSidebar');
     const mainContent = document.querySelector('.main-content');
+    const sidebarToggle = document.getElementById('sidebarToggle');
 
     if (!sidebar || !mainContent) return;
 
@@ -19,6 +20,11 @@ function initializeSidebar() {
             // Desktop: start collapsed
             sidebar.classList.add('collapsed');
             mainContent.classList.add('sidebar-collapsed');
+
+            // Update toggle button to show hamburger (collapsed state)
+            if (sidebarToggle) {
+                sidebarToggle.classList.remove('active');
+            }
         } else {
             // Mobile: ensure normal state
             sidebar.classList.remove('collapsed');
@@ -40,6 +46,11 @@ function initializeSidebar() {
 
             // Add hover state class to main content
             mainContent.classList.add('sidebar-hover');
+
+            // Update toggle button to show X during hover
+            if (sidebarToggle) {
+                sidebarToggle.classList.add('active');
+            }
         }
     });
 
@@ -54,6 +65,11 @@ function initializeSidebar() {
                 if (!isHovering) {
                     sidebar.classList.remove('hovering');
                     mainContent.classList.remove('sidebar-hover');
+
+                    // Update toggle button back to hamburger when hover ends
+                    if (sidebarToggle) {
+                        sidebarToggle.classList.remove('active');
+                    }
                 }
             }, 100);
         }
