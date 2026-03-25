@@ -32,6 +32,9 @@ export default defineConfig({
                 // Programs module assets
                 'app/modules/Programs/assets/css/programs.css',
                 'app/modules/Programs/assets/js/programs.js',
+                // Budget & Finance module assets
+                'app/modules/BudgetFinance/assets/css/budget-finance.css',
+                'app/modules/BudgetFinance/assets/js/budget-finance.js',
                 // Events module assets
                 'app/modules/Events/assets/css/events.css',
                 'app/modules/Events/assets/js/events.js',

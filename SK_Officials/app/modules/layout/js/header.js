@@ -1,6 +1,6 @@
 // Header JavaScript Functionality
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
     initializeHeader();
 
@@ -109,15 +109,35 @@ function responsiveToggleSidebar() {
         }
     } else {
         // ===== DESKTOP (per reference) =====
-        sidebar.classList.toggle('collapsed');
+        const isCollapsed = sidebar.classList.contains('collapsed');
 
-        const mainContent = document.querySelector('.main-content');
-        if (mainContent) {
-            mainContent.classList.toggle('sidebar-collapsed');
+        if (isCollapsed) {
+            // Expand sidebar permanently
+            sidebar.classList.remove('collapsed');
+            sidebar.classList.remove('hovering');
+
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.classList.remove('sidebar-collapsed');
+                mainContent.classList.remove('sidebar-hover');
+            }
+
+            // Update toggle button to show X (active state)
+            sidebarToggle.classList.add('active');
+        } else {
+            // Collapse sidebar
+            sidebar.classList.add('collapsed');
+
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.classList.add('sidebar-collapsed');
+            }
+
+            // Update toggle button to show hamburger (inactive state)
+            sidebarToggle.classList.remove('active');
         }
-        if (overlay) overlay.classList.remove('show');
 
-        syncToggleState();
+        if (overlay) overlay.classList.remove('show');
     }
 }
 
@@ -130,10 +150,16 @@ function syncToggleState() {
         return;
     }
 
-    // Hide X when sidebar is collapsed/closed, show X when sidebar is open
-    if (sidebar.classList.contains('collapsed')) {
+    // Sync toggle button state with sidebar state
+    // Consider hover state as well
+    const isCollapsed = sidebar.classList.contains('collapsed');
+    const isHovering = sidebar.classList.contains('hovering');
+
+    if (isCollapsed && !isHovering) {
+        // Sidebar is collapsed and not hovering - show hamburger
         toggle.classList.remove('active');
     } else {
+        // Sidebar is expanded or hovering - show X
         toggle.classList.add('active');
     }
 }
@@ -146,7 +172,7 @@ function toggleUserDropdown(event) {
 
     const userDropdown = document.getElementById('userDropdown');
 
-    
+
 
     if (userDropdown) {
 
@@ -170,7 +196,7 @@ function initializeSearch() {
 
     if (searchInput) {
 
-        searchInput.addEventListener('keypress', function(e) {
+        searchInput.addEventListener('keypress', function (e) {
 
             if (e.key === 'Enter') {
 
@@ -186,7 +212,7 @@ function initializeSearch() {
 
         let searchTimeout;
 
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
 
             clearTimeout(searchTimeout);
 
@@ -250,7 +276,7 @@ function showSearchResults(query) {
 
     console.log('Search results for:', query);
 
-    
+
 
     // You can implement a dropdown with search results here
 
@@ -270,7 +296,7 @@ function initializeNotifications() {
 
     if (notificationBtn) {
 
-        notificationBtn.addEventListener('click', function() {
+        notificationBtn.addEventListener('click', function () {
 
             toggleNotifications();
 
@@ -298,7 +324,7 @@ function toggleNotifications() {
 
     console.log('Toggle notifications panel');
 
-    
+
 
     // Implement notification panel toggle here
 
@@ -312,13 +338,13 @@ function updateNotificationBadge() {
 
     const notificationBadge = document.querySelector('.notification-badge');
 
-    
+
 
     // Simulate getting notification count
 
     const count = Math.floor(Math.random() * 10);
 
-    
+
 
     if (notificationBadge) {
 
@@ -346,7 +372,7 @@ function handleOutsideClick(event) {
 
     const userDropdown = document.getElementById('userDropdown');
 
-    
+
 
     // Close user dropdown if clicking outside
 
@@ -379,7 +405,7 @@ function createOverlay() {
         overlay.classList.remove('show');
     });
 
-    
+
 
     document.body.appendChild(overlay);
 
@@ -515,7 +541,7 @@ function handleLogout() {
 
 // Handle window resize
 
-window.addEventListener('resize', function() {
+window.addEventListener('resize', function () {
 
     handleResize();
 
@@ -549,7 +575,7 @@ function handleResize() {
 
 // Keyboard shortcuts
 
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
 
     // Ctrl/Cmd + K for search focus
 
@@ -567,7 +593,7 @@ document.addEventListener('keydown', function(e) {
 
     }
 
-    
+
 
     // Escape to close dropdowns
 

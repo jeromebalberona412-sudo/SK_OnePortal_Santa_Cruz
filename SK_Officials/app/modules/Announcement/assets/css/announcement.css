@@ -271,6 +271,10 @@ body {
     .main-content.sidebar-collapsed {
         margin-left: 80px;
     }
+
+    .main-content.sidebar-hover {
+        margin-left: 260px !important;
+    }
 }
 
 /* Announcement modals */
@@ -305,9 +309,9 @@ body {
 .announcement-modal {
     background: #fff;
     border-radius: 16px;
-    padding: 20px;
-    max-width: 500px;
-    width: 90%;
+    padding: 24px;
+    max-width: 760px;
+    width: 95%;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -319,8 +323,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: -20px -20px 0 -20px;
-    padding: 14px 20px;
+    margin: -24px -24px 0 -24px;
+    padding: 16px 24px;
     background: #1f3c6d;
     border-radius: 16px 16px 0 0;
 }
@@ -355,7 +359,7 @@ body {
 
 .announcement-modal-body {
     flex: 1;
-    margin-top: 12px;
+    margin-top: 16px;
     display: flex;
     flex-direction: column;
 }
@@ -374,7 +378,7 @@ body {
 .announcement-modal-title-input,
 .announcement-edit-title {
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
     font-size: 14px;
@@ -383,11 +387,11 @@ body {
 .announcement-modal-content-input,
 .announcement-edit-content {
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
     font-size: 14px;
-    min-height: 120px;
+    min-height: 190px;
     resize: vertical;
 }
 
@@ -561,9 +565,11 @@ body {
         transform: translateX(0) translateY(-100px);
         width: auto;
     }
+
     .app-toast.app-toast-show {
         transform: translateX(0) translateY(0);
     }
+
     .app-toast.app-toast-hide {
         transform: translateX(0) translateY(-100px);
     }
@@ -574,9 +580,9 @@ body {
         opacity: 0;
         transform: scale(0.95) translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
     }
 }
-

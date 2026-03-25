@@ -291,15 +291,15 @@
     .header-container {
         padding: 0 15px;
     }
-    
+
     .header-center {
         margin: 0 15px;
     }
-    
+
     .logo-text {
         display: none;
     }
-    
+
     .search-input {
         font-size: 13px;
     }
@@ -310,40 +310,40 @@
         padding: 0 15px;
         height: 60px;
     }
-    
+
     .header-center {
         display: none;
     }
-    
+
     .user-name {
         display: none;
     }
-    
+
     .header-actions {
         gap: 10px;
     }
-    
+
     .sidebar-toggle {
         padding: 10px;
     }
-    
+
     .sidebar-toggle.active {
         padding: 10px;
     }
-    
+
     .hamburger-line {
         width: 22px;
         height: 3px;
     }
-    
+
     .notification-btn {
         padding: 8px;
     }
-    
+
     .notification-icon {
         font-size: 20px;
     }
-    
+
     .user-menu-btn {
         padding: 8px 10px;
     }
@@ -354,52 +354,52 @@
         padding: 0 12px;
         height: 55px;
     }
-    
+
     .logo-img {
         width: 35px;
         height: 35px;
     }
-    
+
     .sidebar-toggle {
         padding: 8px;
     }
-    
+
     .sidebar-toggle.active {
         padding: 8px;
     }
-    
+
     .hamburger-line {
         width: 20px;
         height: 2px;
     }
-    
+
     .notification-btn {
         padding: 6px;
     }
-    
+
     .notification-icon {
         font-size: 18px;
     }
-    
+
     .notification-badge {
         font-size: 9px;
         padding: 1px 4px;
         min-width: 14px;
     }
-    
+
     .user-menu-btn {
         padding: 6px 8px;
     }
-    
+
     .user-avatar {
         width: 28px;
         height: 28px;
     }
-    
+
     .user-dropdown {
         min-width: 180px;
     }
-    
+
     .dropdown-item {
         padding: 10px 12px;
         font-size: 13px;
@@ -411,33 +411,33 @@
         padding: 0 10px;
         height: 50px;
     }
-    
+
     .logo-img {
         width: 30px;
         height: 30px;
     }
-    
+
     .sidebar-toggle {
         padding: 6px;
     }
-    
+
     .sidebar-toggle.active {
         padding: 6px;
     }
-    
+
     .hamburger-line {
         width: 18px;
         height: 2px;
     }
-    
+
     .header-actions {
         gap: 8px;
     }
-    
+
     .notification-icon {
         font-size: 16px;
     }
-    
+
     .user-avatar {
         width: 26px;
         height: 26px;
@@ -499,7 +499,8 @@
     justify-content: center;
 }
 
-.btn-cancel, .btn-confirm {
+.btn-cancel,
+.btn-confirm {
     padding: 12px 30px;
     border: none;
     border-radius: 8px;
@@ -537,6 +538,7 @@
         opacity: 0;
         transform: scale(0.9) translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -549,12 +551,13 @@
         padding: 20px;
         margin: 20px;
     }
-    
+
     .logout-actions {
         flex-direction: column;
     }
-    
-    .btn-cancel, .btn-confirm {
+
+    .btn-cancel,
+    .btn-confirm {
         width: 100%;
     }
 }

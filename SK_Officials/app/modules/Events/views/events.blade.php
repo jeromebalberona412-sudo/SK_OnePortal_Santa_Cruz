@@ -71,25 +71,22 @@
                 </p>
             </div>
 
-            <div class="events-layout">
-                <div class="events-list-card">
-                    <div class="events-list-header">
-                        <span class="table-title">Event Schedule</span>
-                    </div>
-                    <div id="eventList" class="events-list">
-                        <!-- Events rendered by events.js (UI-only, mock data) -->
-                    </div>
-                </div>
-
-                <aside class="events-side-card">
-                    <h3 class="side-title">Today at a glance</h3>
-                    <div id="todayEvents" class="today-events">
-                        <!-- Highlight events happening today (from events.js) -->
-                    </div>
-                    <p class="side-note">
-                        Later, this panel can be connected to the Calendar module for a unified view.
-                    </p>
-                </aside>
+            <div class="table-wrapper">
+                <table class="events-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Program</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Venue</th>
+                            <th>Participants</th>
+                            <th>Status</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventList"></tbody>
+                </table>
             </div>
         </section>
     </div>
@@ -100,7 +97,10 @@
     <div class="modal-box">
         <div class="modal-header">
             <h2 class="modal-title">Schedule Event</h2>
-            <button type="button" class="modal-close" data-modal-close>&times;</button>
+            <div class="modal-window-controls">
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
+                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            </div>
         </div>
         <div class="modal-body">
             <div class="modal-field">
@@ -180,6 +180,16 @@
                 <input type="text" id="otherEventInput" placeholder="Enter event name">
             </div>
             <div class="modal-field">
+                <label for="eventProgramInput">Related Program</label>
+                <select id="eventProgramInput">
+                    <option value="">Select Related Program</option>
+                    <option value="Youth Leadership Training">Youth Leadership Training</option>
+                    <option value="Sports Development Program">Sports Development Program</option>
+                    <option value="Green Barangay Project">Green Barangay Project</option>
+                    <option value="Tree Planting Project">Tree Planting Project</option>
+                </select>
+            </div>
+            <div class="modal-field">
                 <label for="eventVenueInput">Venue</label>
                 <input type="text" id="eventVenueInput" placeholder="e.g. Barangay Covered Court">
             </div>
@@ -188,8 +198,20 @@
                 <input type="date" id="eventDateInput">
             </div>
             <div class="modal-field">
-                <label for="eventTimeInput">Time</label>
-                <input type="time" id="eventTimeInput">
+                <span class="modal-field-label-text" id="eventTimeLabel">Time</span>
+                <div class="event-time-picker" role="group" aria-labelledby="eventTimeLabel">
+                    <select id="eventTimeHour" class="event-time-part" aria-label="Hour">
+                        <option value="">Hour</option>
+                    </select>
+                    <select id="eventTimeMinute" class="event-time-part" aria-label="Minute">
+                        <option value="">Minute</option>
+                    </select>
+                    <select id="eventTimePeriod" class="event-time-part" aria-label="AM or PM">
+                        <option value="">AM / PM</option>
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                    </select>
+                </div>
             </div>
             <div class="modal-field">
                 <label for="eventParticipantsInput">Expected Participants</label>
@@ -199,6 +221,42 @@
         <div class="modal-footer">
             <button type="button" class="btn" data-modal-cancel>Cancel</button>
             <button type="button" class="btn primary-btn" id="eventSaveBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="eventViewModal" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 class="modal-title">Event Summary</h2>
+            <div class="modal-window-controls">
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
+                <button type="button" class="modal-close" data-view-close aria-label="Close">&times;</button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field"><label>Event</label><input type="text" id="viewEventName" readonly></div>
+            <div class="modal-field"><label>Program</label><input type="text" id="viewEventProgram" readonly></div>
+            <div class="modal-field"><label>Date</label><input type="text" id="viewEventDate" readonly></div>
+            <div class="modal-field"><label>Time</label><input type="text" id="viewEventTime" readonly></div>
+            <div class="modal-field"><label>Venue</label><input type="text" id="viewEventVenue" readonly></div>
+            <div class="modal-field"><label>Participants</label><input type="text" id="viewEventParticipants" readonly></div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-backdrop" id="eventSuccessModal" style="display:none;">
+    <div class="modal-box success-modal-box">
+        <div class="modal-header success-modal-header">
+            <h2 class="modal-title">Success</h2>
+            <button type="button" class="modal-close" data-success-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="success-modal-message" id="eventSuccessMessage">Add successful.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn primary-btn" data-success-close>OK</button>
         </div>
     </div>
 </div>

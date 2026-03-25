@@ -135,7 +135,7 @@
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3>Maria Santos</h3>
+                            <h3>Juan Dela Cruz</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
                                 <span class="meta-item">
@@ -162,7 +162,7 @@
                             </div>
                             <div class="detail-item">
                                 <label><i class="fa-solid fa-envelope"></i> Email</label>
-                                <p>maria.santos@email.com</p>
+                                <p>jerome.balberona@email.com</p>
                             </div>
                         </div>
                         
@@ -186,7 +186,7 @@
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3>John Cruz</h3>
+                            <h3>Gabriel Garcia</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
                                 <span class="meta-item">
@@ -213,7 +213,7 @@
                             </div>
                             <div class="detail-item">
                                 <label><i class="fa-solid fa-envelope"></i> Email</label>
-                                <p>john.cruz@email.com</p>
+                                <p>gabriel.garcia@email.com</p>
                             </div>
                         </div>
                         
@@ -237,7 +237,7 @@
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3>Ana Reyes</h3>
+                            <h3>Frankien Belangoy</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
                                 <span class="meta-item">
@@ -264,7 +264,7 @@
                             </div>
                             <div class="detail-item">
                                 <label><i class="fa-solid fa-envelope"></i> Email</label>
-                                <p>ana.reyes@email.com</p>
+                                <p>frankien.belangoy@email.com</p>
                             </div>
                         </div>
                         
@@ -288,7 +288,7 @@
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3>Mark Torres</h3>
+                            <h3>Jerome Balberona</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
                                 <span class="meta-item">
@@ -315,7 +315,7 @@
                             </div>
                             <div class="detail-item">
                                 <label><i class="fa-solid fa-envelope"></i> Email</label>
-                                <p>mark.torres@email.com</p>
+                                <p>juan.delacruz@email.com</p>
                             </div>
                         </div>
                         
@@ -339,7 +339,7 @@
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3>Lisa Martinez</h3>
+                            <h3>Jane Doe</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
                                 <span class="meta-item">
@@ -366,7 +366,7 @@
                             </div>
                             <div class="detail-item">
                                 <label><i class="fa-solid fa-envelope"></i> Email</label>
-                                <p>lisa.martinez@email.com</p>
+                                <p>jane.doe@email.com</p>
                             </div>
                         </div>
                         
@@ -390,7 +390,7 @@
                             <span class="status-badge active">Active</span>
                         </div>
                         <div class="official-info">
-                            <h3>David Lim</h3>
+                            <h3>Mark Anthony Reyes</h3>
                             <p class="official-position">SK Kagawad</p>
                             <div class="official-meta">
                                 <span class="meta-item">
@@ -417,7 +417,7 @@
                             </div>
                             <div class="detail-item">
                                 <label><i class="fa-solid fa-envelope"></i> Email</label>
-                                <p>david.lim@email.com</p>
+                                <p>mark.reyes@email.com</p>
                             </div>
                         </div>
                         
@@ -451,7 +451,7 @@
                         <span class="status-badge active">Active</span>
                     </div>
                     <div class="official-info">
-                        <h3>Grace Fernandez</h3>
+                        <h3>Maria Clara Santos</h3>
                         <p class="official-position">SK Secretary</p>
                         <div class="official-meta">
                             <span class="meta-item">
@@ -470,11 +470,11 @@
                     <div class="detail-row">
                         <div class="detail-item">
                             <label><i class="fa-solid fa-user"></i> Full Name</label>
-                            <p>Grace Fernandez</p>
+                            <p>Maria Clara Santos</p>
                         </div>
                         <div class="detail-item">
                             <label><i class="fa-solid fa-envelope"></i> Email Address</label>
-                            <p>grace.fernandez@email.com</p>
+                            <p>maria.santos@email.com</p>
                         </div>
                         <div class="detail-item">
                             <label><i class="fa-solid fa-location-dot"></i> Barangay</label>
@@ -536,7 +536,7 @@
                         <span class="status-badge active">Active</span>
                     </div>
                     <div class="official-info">
-                        <h3>Robert Chen</h3>
+                        <h3>Robert James Tan</h3>
                         <p class="official-position">SK Treasurer</p>
                         <div class="official-meta">
                             <span class="meta-item">
@@ -555,11 +555,11 @@
                     <div class="detail-row">
                         <div class="detail-item">
                             <label><i class="fa-solid fa-user"></i> Full Name</label>
-                            <p>Robert Chen</p>
+                            <p>Robert James Tan</p>
                         </div>
                         <div class="detail-item">
                             <label><i class="fa-solid fa-envelope"></i> Email Address</label>
-                            <p>robert.chen@email.com</p>
+                            <p>robert.tan@email.com</p>
                         </div>
                         <div class="detail-item">
                             <label><i class="fa-solid fa-location-dot"></i> Barangay</label>
