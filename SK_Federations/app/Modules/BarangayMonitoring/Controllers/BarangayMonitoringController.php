@@ -250,6 +250,28 @@ class BarangayMonitoringController extends Controller
                     'device_trust_rate' => Arr::get($row, 'status') === 'compliant' ? '98%' : '91%',
                     'top_issue' => Arr::get($row, 'status') === 'non-compliant' ? 'Late monthly report submission' : 'No critical issue flagged',
                 ],
+                // ── New program monitoring data ──
+                'program_stats' => [
+                    'total_youth_population'  => Arr::get($row, 'participation_rate', 0) + 860,
+                    'total_programs_created'  => count($basePrograms['previous_programs']) + count($basePrograms['current_programs']) + count($basePrograms['future_programs']),
+                    'total_ongoing'           => count($basePrograms['current_programs']),
+                    'total_completed'         => count($basePrograms['previous_programs']),
+                    'total_participants'      => array_sum(array_column(array_merge($basePrograms['previous_programs'], $basePrograms['current_programs']), 'participants')),
+                    'overall_performance'     => Arr::get($row, 'status') === 'compliant' ? 'Excellent' : (Arr::get($row, 'status') === 'partial' ? 'Good' : 'Needs Improvement'),
+                ],
+                'performance_summary' => [
+                    'completion_rate'         => Arr::get($row, 'status') === 'compliant' ? 85 : (Arr::get($row, 'status') === 'partial' ? 68 : 45),
+                    'attendance_rate'         => Arr::get($row, 'participation_rate', 70),
+                    'budget_efficiency'       => Arr::get($row, 'status') === 'compliant' ? 92 : 78,
+                    'most_active_sector'      => 'Sports',
+                    'most_successful_program' => 'Youth Basketball League',
+                    'low_participation_count' => Arr::get($row, 'status') === 'non-compliant' ? 3 : 1,
+                ],
+                'program_list' => array_merge(
+                    array_map(fn($p) => array_merge($p, ['budget_allocated' => '₱25,000', 'budget_used' => '₱22,500', 'start_date' => 'Nov 2025', 'end_date' => 'Dec 2025', 'reports' => ['Q4 2025 Report.pdf']]), $basePrograms['previous_programs']),
+                    array_map(fn($p) => array_merge($p, ['budget_allocated' => '₱30,000', 'budget_used' => '₱14,200', 'start_date' => 'Mar 2026', 'end_date' => 'May 2026', 'reports' => []]), $basePrograms['current_programs']),
+                    array_map(fn($p) => array_merge($p, ['budget_allocated' => '₱20,000', 'budget_used' => '₱0', 'start_date' => 'May 2026', 'end_date' => 'Jun 2026', 'reports' => []]), $basePrograms['future_programs'])
+                ),
             ];
         }
 

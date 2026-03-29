@@ -1197,3 +1197,48 @@ body.youth-dashboard {
 .alert svg {
     flex-shrink: 0;
 }
+
+/* ── Barangay Profiles ───────────────────────────────────────────────────── */
+.barangay-profiles-list { display: flex; flex-direction: column; gap: 8px; }
+
+.brgy-profile-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: #f5f7fa; border-radius: 12px;
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.brgy-profile-item:hover { background: #eef1fb; }
+
+.brgy-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+}
+
+.brgy-info { flex: 1; min-width: 0; }
+
+.brgy-name {
+    font-size: 13px; font-weight: 700; color: #1a1d25;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.brgy-chair { font-size: 11px; color: #999; margin-top: 1px; }
+
+/* Post author link */
+.post-author-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s ease;
+}
+
+.post-author-link:hover { color: #667eea; }
+
+.post-header .post-author-link img {
+    display: block;
+    transition: opacity 0.2s ease;
+}
+
+.post-header .post-author-link:hover img { opacity: 0.85; }

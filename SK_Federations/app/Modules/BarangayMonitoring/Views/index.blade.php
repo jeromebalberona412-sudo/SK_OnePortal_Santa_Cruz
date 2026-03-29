@@ -108,14 +108,8 @@
             <a href="{{ route('barangay-monitoring') }}" class="menu-item active" data-tooltip="Barangay Monitoring">
                 <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
             </a>
-            <a href="#" class="menu-item is-disabled" data-tooltip="Program Monitoring (Temporarily Disabled)" aria-disabled="true" tabindex="-1" onclick="return false;">
-                <i class="fas fa-tasks"></i><span>Program Monitoring</span>
-            </a>
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
-            </a>
-            <a href="#" class="menu-item" data-tooltip="Reports">
-                <i class="fas fa-chart-bar"></i><span>Reports</span>
             </a>
             <div class="menu-divider"></div>
             <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()">
@@ -126,23 +120,6 @@
 
     <main class="main-content bm-main">
         <div class="bm-container">
-            <section class="bm-header">
-                <div class="bm-title">
-                    <h1>Barangay Monitoring</h1>
-                    <p>Select a barangay to open its complete profile, program lifecycle, officials, and system monitoring data.</p>
-                </div>
-                <div class="bm-controls">
-                    <select class="bm-select" aria-label="Reporting period">
-                        <option>Q1 2026</option>
-                        <option>Q4 2025</option>
-                        <option>Q3 2025</option>
-                    </select>
-                    <button class="bm-btn" type="button">
-                        <i class="fas fa-download"></i> Export Snapshot
-                    </button>
-                </div>
-            </section>
-
             <section class="bm-kpi-grid" aria-label="Monitoring summary">
                 <article class="bm-kpi-card">
                     <div class="bm-kpi-label">Reporting Barangays</div>

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>My Profile - SK OnePortal</title>
     @vite([
         'app/Modules/Profile/assets/css/profile.css',
@@ -984,5 +987,11 @@
     }
     </style>
 
+    <script>
+    window.addEventListener('unload', function () {});
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) { window.location.replace('/profile'); }
+    });
+    </script>
 </body>
 </html>

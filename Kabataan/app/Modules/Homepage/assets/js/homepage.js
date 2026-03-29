@@ -1,73 +1,118 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const categoryButtons = document.querySelectorAll('[data-filter-category]');
-    const barangayButtons = document.querySelectorAll('[data-filter-barangay]');
-    const cards = document.querySelectorAll('.feed-card');
+
+    // ── Feed filter tabs ──────────────────────────────────────────────────────
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const posts      = document.querySelectorAll('.post-card');
     const emptyState = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
 
-    let activeCategory = 'all';
-    let activeBarangay = 'all';
-
-    const normalize = (value) => String(value || '').trim().toLowerCase();
+    let activeFilter = 'all';
+    let searchQuery  = '';
 
     const applyFilters = () => {
-        let visibleCount = 0;
+        let visible = 0;
 
-        cards.forEach((card) => {
-            const cardCategory = normalize(card.getAttribute('data-item-category'));
-            const cardBarangay = normalize(card.getAttribute('data-item-barangay'));
+        posts.forEach((card) => {
+            const type     = (card.dataset.postType     || '').toLowerCase();
+            const category = (card.dataset.postCategory || '').toLowerCase();
+            const text     = card.innerText.toLowerCase();
 
-            const categoryMatch = activeCategory === 'all' || cardCategory === activeCategory;
-            const barangayMatch = activeBarangay === 'all' || cardBarangay === activeBarangay;
+            const typeMatch   = activeFilter === 'all' || type === activeFilter;
+            const searchMatch = searchQuery === '' || text.includes(searchQuery);
 
-            const show = categoryMatch && barangayMatch;
+            const show = typeMatch && searchMatch;
             card.hidden = !show;
-
-            if (show) {
-                visibleCount += 1;
-            }
+            if (show) visible++;
         });
 
-        if (emptyState) {
-            emptyState.hidden = visibleCount !== 0;
-        }
+        if (emptyState) emptyState.hidden = visible > 0;
     };
 
-    categoryButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            categoryButtons.forEach((chip) => chip.classList.remove('active'));
-            button.classList.add('active');
-            activeCategory = normalize(button.getAttribute('data-filter-category'));
+    filterTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            filterTabs.forEach((t) => t.classList.remove('active'));
+            tab.classList.add('active');
+            activeFilter = tab.dataset.filter;
             applyFilters();
         });
     });
 
-    barangayButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            barangayButtons.forEach((chip) => chip.classList.remove('active'));
-            button.classList.add('active');
-            activeBarangay = normalize(button.getAttribute('data-filter-barangay'));
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            searchQuery = searchInput.value.trim().toLowerCase();
             applyFilters();
+        });
+    }
+
+    // ── Helper: open / close modal ────────────────────────────────────────────
+    const openModal  = (id) => document.getElementById(id)?.classList.add('active');
+    const closeModal = (id) => document.getElementById(id)?.classList.remove('active');
+
+    const bindClose = (modalId, closeBtnId, overlayId) => {
+        document.getElementById(closeBtnId)?.addEventListener('click', () => closeModal(modalId));
+        document.getElementById(overlayId)?.addEventListener('click', () => closeModal(modalId));
+    };
+
+    bindClose('loginRequiredModal', 'loginRequiredClose', 'loginRequiredOverlay');
+    bindClose('actionLoginModal',   'actionLoginClose',   'actionLoginOverlay');
+    bindClose('programApplyModal',  'programApplyClose',  'programApplyOverlay');
+
+    // ── Program category sidebar ──────────────────────────────────────────────
+    document.querySelectorAll('.program-category').forEach((cat) => {
+        cat.addEventListener('click', () => {
+            const label    = cat.querySelector('.category-content h3')?.textContent || 'this';
+            const titleEl  = document.getElementById('loginRequiredTitle');
+            const catEl    = document.getElementById('loginRequiredCategory');
+
+            if (titleEl) titleEl.textContent = label + ' Programs';
+            if (catEl)   catEl.textContent   = label;
+
+            openModal('loginRequiredModal');
         });
     });
 
-    document.querySelectorAll('[data-details-toggle]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const cardBody = button.closest('.feed-card-body');
-            const detailsText = cardBody ? cardBody.querySelector('[data-details-text]') : null;
-
-            if (!detailsText) {
-                return;
-            }
-
-            const isHidden = detailsText.hasAttribute('hidden');
-            if (isHidden) {
-                detailsText.removeAttribute('hidden');
-                button.textContent = 'Hide Full Details';
-            } else {
-                detailsText.setAttribute('hidden', 'hidden');
-                button.textContent = 'View Full Details';
-            }
+    // ── Program apply buttons ─────────────────────────────────────────────────
+    document.querySelectorAll('.program-apply-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const name = btn.dataset.programName || 'this program';
+            const nameEl = document.getElementById('programApplyName');
+            if (nameEl) nameEl.textContent = name;
+            openModal('programApplyModal');
         });
+    });
+
+    // ── Like / Comment buttons ────────────────────────────────────────────────
+    document.querySelectorAll('.like-btn, .comment-btn').forEach((btn) => {
+        btn.addEventListener('click', () => openModal('actionLoginModal'));
+    });
+
+    // ── ESC key closes any open modal ─────────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            ['loginRequiredModal', 'actionLoginModal', 'programApplyModal', 'barangayProfileModal']
+                .forEach((id) => closeModal(id));
+        }
+    });
+
+    // ── Barangay profile — login required on homepage ────────────────────────
+    document.querySelectorAll('.brgy-profile-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            const name   = item.dataset.brgyName;
+            const titleEl = document.getElementById('loginRequiredTitle');
+            const catEl   = document.getElementById('loginRequiredCategory');
+            if (titleEl) titleEl.textContent = 'Barangay ' + name;
+            if (catEl)   catEl.textContent   = name;
+            openModal('loginRequiredModal');
+        });
+    });
+
+    // ── Navbar Login / Sign Up → open join community modal ───────────────────
+    document.getElementById('navLoginBtn')?.addEventListener('click', () => {
+        const titleEl = document.getElementById('loginRequiredTitle');
+        const catEl   = document.getElementById('loginRequiredCategory');
+        if (titleEl) titleEl.textContent = 'the Community';
+        if (catEl)   catEl.textContent   = 'the community';
+        openModal('loginRequiredModal');
     });
 
     applyFilters();
