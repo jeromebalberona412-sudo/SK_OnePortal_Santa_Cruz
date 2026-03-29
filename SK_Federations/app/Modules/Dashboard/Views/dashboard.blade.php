@@ -110,14 +110,8 @@
             <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring">
                 <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
             </a>
-            <a href="#" class="menu-item is-disabled" data-tooltip="Program Monitoring (Temporarily Disabled)" aria-disabled="true" tabindex="-1" onclick="return false;">
-                <i class="fas fa-tasks"></i><span>Program Monitoring</span>
-            </a>
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
-            </a>
-            <a href="#" class="menu-item" data-tooltip="Reports">
-                <i class="fas fa-chart-bar"></i><span>Reports</span>
             </a>
             <div class="menu-divider"></div>
             <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()">

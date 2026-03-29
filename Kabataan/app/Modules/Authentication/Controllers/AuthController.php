@@ -43,8 +43,7 @@ class AuthController extends Controller
             'barangay' => 'Barangay 1',
         ]);
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Welcome back!');
+        return redirect()->route('dashboard');
 
         /* PRODUCTION CODE (commented for prototype):
         if (Auth::attempt($credentials, $remember)) {
@@ -74,8 +73,13 @@ class AuthController extends Controller
         ]);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
-        return redirect('/login')->with('message', 'You have been logged out successfully.');
+
+        return redirect()->route('homepage')
+            ->withHeaders([
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma'        => 'no-cache',
+                'Expires'       => 'Sat, 01 Jan 2000 00:00:00 GMT',
+            ]);
     }
 
     /**
