@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     min-height: 100vh;
 }
 
@@ -28,41 +28,47 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    color: #ffffff;
+    color: #1f3c6d;
 }
 
 .announcement-add-btn {
     padding: 10px 20px;
     border-radius: 10px;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    background: #22c55e;
+    border: 2px solid #1f3c6d;
+    background: #1f3c6d;
     color: #fff;
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .announcement-add-btn:hover {
-    background: #16a34a;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    background: #2a4a8f;
+    border-color: #2a4a8f;
+    box-shadow: 0 4px 12px rgba(31, 60, 109, 0.3);
+    transform: translateY(-1px);
 }
 
 .announcement-title {
     font-size: 28px;
     font-weight: 700;
+    color: #1f3c6d;
 }
 
 .announcement-subtitle {
     font-size: 14px;
-    opacity: 0.9;
+    color: #6b7280;
+    opacity: 1;
 }
 
 .announcement-list-section {
     background: #ffffff;
     border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(31, 60, 109, 0.1);
     margin-bottom: 16px;
+    border: 1px solid #e5e7eb;
 }
 
 .section-heading {
@@ -131,6 +137,7 @@ body {
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
 }
 
 .btn-secondary {
@@ -146,7 +153,7 @@ body {
 .btn-primary:hover,
 .btn-secondary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.45);
 }
 
 .is-hidden {
@@ -169,13 +176,13 @@ body {
 }
 
 .announcement-btn-view {
-    background: #22c55e;
+    background: #1d4ed8;
     color: #fff;
-    border-color: #16a34a;
+    border-color: #1e40af;
 }
 
 .announcement-btn-view:hover {
-    background: #16a34a;
+    background: #1e40af;
 }
 
 .announcement-btn-edit {
@@ -207,8 +214,9 @@ body {
 .announcement-card {
     border-radius: 12px;
     border: 1px solid #e5e7eb;
-    padding: 12px 14px;
-    background: #f9fafb;
+    padding: 16px 18px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
 }
 
 .announcement-card-header {
@@ -235,9 +243,21 @@ body {
     white-space: pre-wrap;
 }
 
+.announcement-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(31, 60, 109, 0.1);
+    border-color: #d1d5db;
+}
+
 .announcement-empty {
-    font-size: 14px;
+    font-size: 16px;
     color: #6b7280;
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #d1d5db;
+    margin: 20px 0;
 }
 
 /* Responsive */

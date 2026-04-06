@@ -22,10 +22,7 @@
 <!-- ================= MAIN CONTENT ================= -->
 <main class="main-content">
     <div class="dashboard-container">
-        <div class="welcome-section">
-            <h2 class="welcome-title">Hello World</h2>
-            <p class="welcome-subtitle">Welcome to the SK Officials Dashboard</p>
-        </div>
+        <!-- Dashboard content will be added here -->
     </div>
 </main>
 

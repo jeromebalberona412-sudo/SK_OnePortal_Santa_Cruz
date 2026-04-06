@@ -42,7 +42,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #fffef5 0%, #f4c20d 50%, #1f3c6d 100%);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     min-height: 100vh;
 }
 
@@ -91,7 +91,7 @@ body {
 .budget-finance-page .primary-btn:hover {
     background: #16a34a;
     transform: translateY(-1px);
-    box-shadow: 0 10px 25px rgba(34, 197, 94, 0.45);
+    box-shadow: 0 10px 25px rgba(22, 163, 74, 0.45);
 }
 
 .budget-finance-page .page-header-section {
@@ -249,7 +249,7 @@ body {
 }
 
 .budget-view-btn {
-    background: #16a34a;
+    background: #1d4ed8;
     color: #ffffff;
     padding: 6px 10px;
     border-radius: 999px;
@@ -262,7 +262,7 @@ body {
 }
 
 .budget-view-btn:hover {
-    background: #0f766e;
+    background: #1e40af;
     transform: translateY(-1px);
 }
 

@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #fffef5 0%, #f4c20d 50%, #fff9e6 100%);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     min-height: 100vh;
 }
 
@@ -426,15 +426,17 @@ body {
     padding: 8px 16px;
     border-radius: 8px;
     border: none;
-    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
+    background: #22c55e;
     color: #ffffff;
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
 }
 
 .btn-primary:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    background: #16a34a;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.45);
     transform: translateY(-1px);
 }
 

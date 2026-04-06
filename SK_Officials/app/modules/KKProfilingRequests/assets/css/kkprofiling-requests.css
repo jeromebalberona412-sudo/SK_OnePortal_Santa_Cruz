@@ -8,7 +8,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #fffef5 0%, #f4c20d 50%, #1f3c6d 100%);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     min-height: 100vh;
 }
 
@@ -392,9 +392,9 @@ body {
     box-shadow: 0 12px 26px rgba(22, 163, 74, 0.55);
 }
 
-/* KK action buttons: View = green, Approve = green, Reject = red */
+/* KK action buttons: View = blue, Approve = green, Reject = red */
 .kk-btn-view {
-    background: #16a34a;
+    background: #1d4ed8;
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -402,11 +402,11 @@ body {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
 }
 
 .kk-btn-view:hover {
-    background: #15803d;
+    background: #1e40af;
 }
 
 .kk-btn-approve {
