@@ -44,6 +44,9 @@ export default defineConfig({
                 // KK Profiling Requests module assets
                 'app/modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
                 'app/modules/KKProfilingRequests/assets/js/kkprofiling-requests.js',
+                // ABYIP module assets
+                'app/modules/ABYIP/assets/css/abyip.css',
+                'app/modules/ABYIP/assets/js/abyip.js',
                 // Layout module assets
                 'app/modules/layout/css/header.css',
                 'app/modules/layout/css/sidebar.css',

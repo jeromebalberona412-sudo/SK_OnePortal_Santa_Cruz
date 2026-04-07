@@ -113,6 +113,14 @@ Route::middleware(['web'])->group(function () {
         return view('KKProfilingRequests::kkprofiling-requests');
     })->name('kk-profiling-requests');
 
+    // ABYIP (Annual Barangay Youth Investment Program)
+    Route::get('/abyip', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('ABYIP::abyip');
+    })->name('abyip.index');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 });
@@ -122,3 +130,7 @@ Route::middleware(['web'])->group(function () {
 | Default Route
 |--------------------------------------------------------------------------
 */
+
+Route::get('/', function () {
+    return redirect()->route('login');
+});

@@ -157,7 +157,7 @@ class Loader {
         }
 
         // Determine which container to blur
-        const container = containerSelector 
+        const container = containerSelector
             ? document.querySelector(containerSelector)
             : document.body;
 
@@ -187,7 +187,7 @@ class Loader {
         if (!this.isActive) return;
 
         // Determine which container to unblur
-        const container = containerSelector 
+        const container = containerSelector
             ? document.querySelector(containerSelector)
             : document.body;
 

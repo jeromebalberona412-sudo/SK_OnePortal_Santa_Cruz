@@ -451,7 +451,7 @@ body {
 
 .modal-action-btn.edit {
     background: #fbbf24;
-    color: #000;
+    color: #ffffff;
 }
 
 .modal-action-btn.edit:hover {
@@ -565,6 +565,7 @@ body {
 .calendar-confirm-modal .calendar-confirm-body,
 .calendar-confirm-modal .calendar-confirm-actions {
     padding: 16px 20px;
+    border: none;
 }
 
 .calendar-confirm-modal .calendar-confirm-header {
@@ -583,13 +584,13 @@ body {
     display: flex;
     justify-content: center;
     gap: 12px;
-    border-top: 1px solid #e5e7eb;
+    border: none;
 }
 
 .calendar-confirm-cancel {
     padding: 10px 20px;
     border-radius: 8px;
-    border: 1px solid #d1d5db;
+    border: none;
     background: #fff;
     color: #374151;
     font-weight: 700;

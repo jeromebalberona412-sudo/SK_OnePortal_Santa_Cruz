@@ -12,6 +12,11 @@ const loginBtn = document.getElementById('loginBtn');
 const errorMessage = document.getElementById('errorMessage');
 const forgotBtn = document.getElementById('forgotBtn');
 
+// Check if already logged in
+if (sessionStorage.getItem('isLoggedIn') === 'true') {
+    window.location.href = '/dashboard';
+}
+
 // Form submission handler
 loginForm.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -55,27 +60,21 @@ loginForm.addEventListener('submit', async function (e) {
 
         const data = await response.json();
 
-        if (response.ok && data.success) {
-            // Successful login
+        // Check if login is successful (either Laravel auth or predefined credentials)
+        if ((response.ok && data.success) || (email === VALID_CREDENTIALS.email && password === VALID_CREDENTIALS.password)) {
+            // Single successful login - store session and redirect
             window.loader.updateText('Login Successful!');
 
-            // Redirect to dashboard after delay
+            // Store session info
+            sessionStorage.setItem('isLoggedIn', 'true');
+            sessionStorage.setItem('userEmail', email);
+
+            // Single redirect to dashboard
             setTimeout(() => {
                 window.location.href = '/dashboard';
             }, 1000);
-
         } else {
-            // Failed login - check if credentials match our predefined ones
-            if (email === VALID_CREDENTIALS.email && password === VALID_CREDENTIALS.password) {
-                // Simulate successful login for demo
-                window.loader.updateText('Login Successful!');
-
-                setTimeout(() => {
-                    window.location.href = '/dashboard';
-                }, 1000);
-            } else {
-                throw new Error(data.message || 'Invalid credentials');
-            }
+            throw new Error(data.message || 'Invalid credentials');
         }
 
     } catch (error) {

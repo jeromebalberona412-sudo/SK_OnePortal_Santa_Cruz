@@ -529,6 +529,10 @@ function handleLogout() {
 
     const logoutForm = document.getElementById('logoutForm');
 
+    // Clear sessionStorage
+    sessionStorage.removeItem('isLoggedIn');
+    sessionStorage.removeItem('userEmail');
+
     if (logoutForm) {
 
         logoutForm.submit();
