@@ -1,37 +1,29 @@
-/* ABYIP Document Styles - Works with existing layout system */
-body {
-    font-family: 'Times New Roman', Times, serif;
-    font-size: 12px;
-    line-height: 1.4;
-    background-color: #ffffff;
-    color: #000;
+/* ABYIP Styles - Based on Kabataan module styling */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-/* Main content responsive to sidebar state */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    min-height: 100vh;
+}
+
 .main-content {
+    margin-left: 280px;
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
     transition: margin-left 0.3s ease;
-}
-
-.main-content.sidebar-open {
-    margin-left: 240px;
-}
-
-.main-content.sidebar-closed {
-    margin-left: 70px;
+    padding: 20px;
 }
 
 .document-container {
-    max-width: none;
-    width: calc(100% - 80px);
-    margin: 30px 40px;
-    background: #ffffff;
-    padding: 40px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    min-height: calc(100vh - 200px);
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* Table wrapper for responsive scrolling */
@@ -41,41 +33,72 @@ body {
     padding: 0 10px;
 }
 
-/* Header Styles */
-.document-header {
-    text-align: center;
-    margin-bottom: 30px;
+/* Page Header Styles - Based on Kabataan module */
+.page-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
 }
 
-.government-header p {
-    font-size: 11px;
-    margin: 2px 0;
-    font-weight: normal;
+.page-header-left {
+    flex: 1;
 }
 
-.sk-header p {
-    font-size: 12px;
-    font-weight: bold;
-    margin: 8px 0;
+.page-header-right {
+    flex-shrink: 0;
 }
 
-.document-title h1 {
-    font-size: 16px;
-    font-weight: bold;
-    margin: 15px 0 5px 0;
-    text-transform: uppercase;
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
 }
 
-.document-title h2 {
+.page-subtitle {
     font-size: 14px;
-    font-weight: bold;
-    margin: 5px 0;
+    color: #6b7280;
+    margin-bottom: 16px;
 }
 
 .budget-info {
-    text-align: left;
-    margin: 5px 0;
-    font-weight: bold;
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.budget-info p {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #374151;
+    font-weight: 600;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.primary-btn {
+    background: #22c55e;
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.45);
+}
+
+.primary-btn:hover {
+    background: #16a34a;
+    box-shadow: 0 12px 26px rgba(22, 163, 74, 0.55);
 }
 
 /* Table Styles */
@@ -95,6 +118,7 @@ body {
     vertical-align: top;
     text-align: left;
     word-wrap: break-word;
+    color: #000000;
 }
 
 .abyip-table th {
@@ -102,10 +126,12 @@ body {
     font-weight: bold;
     text-align: center;
     font-size: 14px;
+    color: #000000;
 }
 
 .abyip-table th[colspan] {
     background-color: #e0e0e0;
+    color: #000000;
 }
 
 /* Section Headers */
@@ -115,6 +141,7 @@ body {
     text-align: center;
     font-size: 14px;
     padding: 8px 5px;
+    color: #000000 !important;
 }
 
 .subsection-header td {
@@ -123,6 +150,7 @@ body {
     text-align: center;
     font-size: 14px;
     padding: 6px 5px;
+    color: #000000 !important;
 }
 
 .category-header td {
@@ -131,26 +159,31 @@ body {
     text-align: left;
     font-size: 14px;
     padding: 6px 5px;
+    color: #000000 !important;
 }
 
 /* Number Alignment */
 .number {
     text-align: right !important;
     font-family: 'Courier New', monospace;
+    color: #000000 !important;
 }
 
 /* Editable Fields */
 [contenteditable="true"] {
     outline: none;
     position: relative;
+    color: #000000;
 }
 
 [contenteditable="true"]:hover {
     background-color: #ffffcc;
+    color: #000000;
 }
 
 [contenteditable="true"]:focus {
     background-color: #ffff99;
+    color: #000000;
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
 
@@ -158,11 +191,13 @@ body {
 .total-row td {
     background-color: #d0d0d0 !important;
     font-weight: bold;
+    color: #000000 !important;
 }
 
 .total-row .number {
     font-weight: bold;
     font-size: 14px;
+    color: #000000 !important;
 }
 
 /* Footer Styles */
@@ -235,35 +270,70 @@ body {
 }
 
 /* Responsive Design */
-@media screen and (max-width: 1200px) {
-    .main-content.sidebar-open {
-        margin-left: 240px;
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 260px;
+        padding: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        margin-top: 60px;
+        padding: 14px;
     }
 
-    .main-content.sidebar-closed {
-        margin-left: 70px;
+    .page-header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
     }
 
-    .document-container {
-        margin: 20px 15px;
-        padding: 30px;
-        width: calc(100% - 30px);
+    .page-header-right {
+        width: 100%;
+    }
+
+    .primary-btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .abyip-table {
-        font-size: 13px;
-        min-width: 800px;
+        min-width: 600px;
     }
 
-    .abyip-table th,
-    .abyip-table td {
-        padding: 6px 4px;
+    .action-buttons-cell {
+        flex-direction: column;
+        gap: 4px;
     }
 
-    .action-buttons button {
-        font-size: 13px;
-        padding: 10px 18px;
-        margin: 5px;
+    .btn-action-view,
+    .btn-action-edit,
+    .btn-action-delete {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+        margin-top: 55px;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
+}
+
+@media (min-width: 769px) {
+    .main-content.sidebar-collapsed {
+        margin-left: 80px;
+    }
+
+    .main-content.sidebar-hover {
+        margin-left: 260px !important;
     }
 }
 
@@ -505,3 +575,840 @@ body {
 }
 
 /* Person Responsible */
+.abyip-table th:nth-child(11),
+.abyip-table td:nth-child(11) {
+    width: 10%;
+}
+
+/* Document Summary */
+.document-summary {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.document-summary p {
+    font-size: 16px;
+    color: #6c757d;
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+.document-summary p:first-child {
+    font-weight: bold;
+    color: #495057;
+    font-size: 18px;
+}
+
+/* Header with Button */
+.header-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.create-abyip-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.create-abyip-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.create-abyip-btn:active {
+    transform: translateY(0);
+}
+
+/* Page Summary Section */
+.page-summary-section {
+    margin-bottom: 20px;
+}
+
+.summary-content {
+    background: #f8f9fa;
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.summary-content p {
+    margin: 6px 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.summary-content p:first-child {
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Page Content Section - Based on Kabataan module */
+.page-content-section {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+    border: 1px solid rgba(148, 163, 184, 0.45);
+}
+
+.section-heading-row {
+    margin-bottom: 16px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.table-card {
+    background: #f9fafb;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+}
+
+.table-wrapper {
+    overflow: visible;
+}
+
+/* ABYIP Table Styles - Based on Kabataan table */
+.abyip-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    border: none !important;
+}
+
+.abyip-table thead {
+    background: #1d4ed8 !important;
+}
+
+.abyip-table thead th {
+    color: #ffffff !important;
+    padding: 10px 12px;
+    text-align: center;
+    border: none !important;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.abyip-table th:nth-last-child(1) {
+    border: none !important;
+    width: 120px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.abyip-table td {
+    padding: 10px 12px;
+    text-align: center;
+    border: none !important;
+}
+
+.abyip-table td:nth-last-child(1) {
+    border: none !important;
+}
+
+.abyip-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.abyip-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.abyip-table tbody tr:hover {
+    background: #fef9c3;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-draft {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+/* Action Buttons - Enhanced styling */
+.action-buttons-cell {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    min-height: 32px;
+}
+
+.btn-action-view {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.btn-action-view:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(29, 78, 216, 0.4);
+}
+
+.btn-action-edit {
+    background: linear-gradient(135deg, #eab308 0%, #d97706 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.btn-action-edit:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(217, 119, 6, 0.5);
+}
+
+.btn-action-delete {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.btn-action-delete:hover {
+    background: linear-gradient(135deg, #c82333 0%, #a02622 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(192, 38, 50, 0.5);
+}
+
+/* Modal Styles */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-backdrop.active {
+    display: flex;
+}
+
+.modal-box {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    width: 90%;
+    max-width: 500px;
+    transform: translateY(-50px);
+    transition: all 0.3s ease-out;
+    opacity: 0;
+}
+
+.modal-backdrop.active .modal-box {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Delete Confirmation Modal Centering */
+#deleteConfirmModal .modal-box {
+    transform: translate(-50%, -50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.active .modal-container {
+    transform: scale(1);
+}
+
+.modal-container.maximized {
+    width: 95%;
+    max-width: 95%;
+    height: 95vh;
+    max-height: 95vh;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e9ecef;
+    background: #28a745;
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header.edit-mode {
+    background: #ffc107;
+    color: #212529;
+}
+
+.modal-header.view-mode {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    color: #ffffff;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.modal-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.modal-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.modal-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #ffffff;
+    padding: 4px 8px;
+    line-height: 1;
+}
+
+.modal-btn:hover {
+    color: #ffffff;
+    opacity: 0.85;
+}
+
+/* ABYIP modal maximize functionality */
+.modal-overlay.modal-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.modal-overlay.modal-maximized .modal-container {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+}
+
+.modal-container {
+    transition: width 0.2s ease, height 0.2s ease, max-width 0.2s ease, max-height 0.2s ease, border-radius 0.2s ease;
+}
+
+.modal-overlay.modal-maximized .modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-body {
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+    background: white;
+}
+
+.modal-document-header {
+    text-align: center;
+    padding: 20px;
+    border-bottom: 2px solid #333;
+}
+
+.modal-document-header .government-header p {
+    margin: 2px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.modal-document-header .sk-header {
+    margin: 15px 0;
+}
+
+.modal-document-header .sk-header p {
+    font-size: 16px;
+    font-weight: bold;
+    color: #000000;
+    margin: 5px 0;
+}
+
+.modal-document-header .document-title h1 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000000;
+    margin: 10px 0 5px 0;
+}
+
+.modal-document-header .document-title h2 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #000000;
+    margin: 5px 0;
+}
+
+.modal-document-header .budget-info p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #000000;
+}
+
+.modal-document-footer {
+    padding: 20px;
+    border-top: 2px solid #333;
+    margin-top: 20px;
+}
+
+.modal-document-footer .signature-blocks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.modal-document-footer .signature-left,
+.modal-document-footer .signature-right {
+    text-align: center;
+    width: 45%;
+}
+
+.modal-document-footer .signature-name {
+    font-weight: bold;
+    margin: 30px 0 5px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 2px;
+    min-height: 30px;
+    display: inline-block;
+    width: 200px;
+}
+
+/* Delete Confirmation Modal Styles */
+.confirmation-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.confirmation-icon {
+    font-size: 48px;
+    color: #dc3545;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.confirmation-message {
+    flex: 1;
+}
+
+.confirmation-message h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.confirmation-message p {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.modal-footer .btn-cancel {
+    background: #6c757d;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-footer .btn-cancel:hover {
+    background: #5a6268;
+}
+
+.modal-footer .btn-delete {
+    background: #dc3545;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 10px;
+}
+
+.modal-footer .btn-delete:hover {
+    background: #c82333;
+}
+
+.modal-document-footer .signature-title {
+    font-size: 12px;
+    margin: 5px 0;
+}
+
+.modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: white;
+    border-radius: 0 0 12px 12px;
+}
+
+.btn-cancel,
+.btn-save {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+.btn-save {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-save:hover {
+    background-color: #218838;
+}
+
+/* Minimized Modal Bar */
+.minimized-modal-bar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 999;
+    animation: slideUp 0.3s ease;
+}
+
+.minimized-modal-bar button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s ease;
+}
+
+.minimized-modal-bar button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Modal Table Styles */
+.modal-body .abyip-table {
+    font-size: 12px;
+    min-width: 800px;
+    margin: 0;
+}
+
+.modal-body .abyip-table th,
+.modal-body .abyip-table td {
+    padding: 6px 4px;
+    font-size: 11px;
+    color: #000000;
+}
+
+.modal-body .abyip-table th {
+    background-color: #f0f0f0;
+    color: #000000 !important;
+    font-weight: bold;
+}
+
+.modal-body .abyip-table th[colspan] {
+    background-color: #e0e0e0;
+    color: #000000 !important;
+}
+
+.modal-body .section-header td,
+.modal-body .subsection-header td,
+.modal-body .category-header td {
+    color: #000000 !important;
+}
+
+.modal-body .table-wrapper {
+    margin: 0;
+    padding: 20px;
+}
+
+/* Print Records Button */
+.print-records-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.print-records-btn:hover {
+    background: #218838;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+/* Responsive for Records Table */
+@media screen and (max-width: 768px) {
+    .header-with-button {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .create-abyip-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .records-table {
+        font-size: 12px;
+    }
+
+    .records-table th,
+    .records-table td {
+        padding: 8px 6px;
+    }
+
+    .action-buttons-cell {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .action-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .modal-container {
+        width: 95%;
+        margin: 10px;
+    }
+
+    .modal-header {
+        padding: 15px 20px;
+    }
+
+    .modal-body {
+        padding: 15px;
+    }
+
+    .modal-footer {
+        padding: 15px 20px;
+        flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-save {
+        width: 100%;
+    }
+
+    .modal-document-header .government-header p {
+        font-size: 12px;
+    }
+
+    .modal-document-header .sk-header p {
+        font-size: 14px;
+    }
+
+    .modal-document-header .document-title h1 {
+        font-size: 16px;
+    }
+
+    .modal-document-header .document-title h2 {
+        font-size: 14px;
+    }
+
+    .modal-document-header .budget-info p {
+        font-size: 12px;
+    }
+
+    .modal-document-footer .signature-blocks {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .modal-document-footer .signature-left,
+    .modal-document-footer .signature-right {
+        width: 100%;
+    }
+
+    .modal-document-footer .signature-name {
+        width: 150px;
+        font-size: 12px;
+    }
+}
