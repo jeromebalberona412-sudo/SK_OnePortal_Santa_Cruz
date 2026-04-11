@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: #f0f1f5;
     min-height: 100vh;
 }
 
@@ -30,7 +30,27 @@ body {
     padding: 40px 20px;
     background: white;
     border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid #f5c518;
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #f5c518 0%, #e6a800 50%, #f7d04a 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
 
 .welcome-title {
@@ -38,7 +58,7 @@ body {
     font-size: 36px;
     font-weight: 700;
     margin-bottom: 10px;
-    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
+    background: linear-gradient(135deg, #b88600, #e6a800, #f5c518);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -60,17 +80,19 @@ body {
     background: white;
     padding: 30px;
     border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 4px solid #f5c518;
 }
 
 .content-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 30px rgba(245, 197, 24, 0.20);
+    border-left-color: #e6a800;
 }
 
 .content-card h3 {
-    color: #333;
+    color: #1a1a2e;
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 15px;

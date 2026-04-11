@@ -46,22 +46,28 @@
                          alt="SK Federations Logo"
                          class="large-logo">
                 </div>
-                <h1 class="brand-title">SK Federations</h1>
-                <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
+                <h1 class="brand-title">SK OnePortal</h1>
+                <p class="brand-subtitle">SK Federation Portal – Santa Cruz, Laguna</p>
             </div>
 
             {{-- RIGHT: Login Card --}}
             <div class="login-form-container">
                 <div class="login-card-inner">
                     <div class="form-header">
-                        <h2 class="nowrap">Welcome, SK Federation <span class="wave-emoji">👋</span></h2>
+                        <h2 class="nowrap">Welcome Back! <span class="wave-emoji">👋</span></h2>
                         <p>Sign in to your account</p>
                     </div>
 
                     <form method="POST" action="{{ route('login', [], false) }}" class="login-form" novalidate>
                         @csrf
                         <div class="form-group">
-                            <label for="email">Email Address</label>
+                            <label for="email">
+                                <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                                </svg>
+                                Email Address
+                            </label>
                             <input
                                 type="email"
                                 id="email"
@@ -80,7 +86,12 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="password">Password</label>
+                            <label for="password">
+                                <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Password
+                            </label>
                             <div class="password-input-container">
                                 <input
                                     type="password"
@@ -112,7 +123,7 @@
                         <div class="form-options">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
-                                <label class="form-check-label" for="remember">Remember this device</label>
+                                <label class="form-check-label" for="remember">Remember me</label>
                             </div>
                             <a href="{{ url('/forgot-password') }}" class="forgot-password">Forgot Password?</a>
                         </div>
@@ -122,9 +133,7 @@
                         </button>
                     </form>
 
-                    <div class="form-footer">
-                        <p>Accounts are provisioned by Admin only.</p>
-                    </div>
+
                 </div>
             </div>
 

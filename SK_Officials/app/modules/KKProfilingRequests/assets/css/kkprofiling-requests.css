@@ -8,7 +8,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: #f0f1f5;
     min-height: 100vh;
 }
 
@@ -69,8 +69,8 @@ body {
 
 .filter-input:focus {
     outline: none;
-    border-color: #1f3c6d;
-    box-shadow: 0 0 0 3px rgba(31, 60, 109, 0.2);
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
 }
 
 .filter-select {
@@ -99,8 +99,8 @@ body {
 
 .filter-select:focus {
     outline: none;
-    border-color: #1f3c6d;
-    box-shadow: 0 0 0 3px rgba(31, 60, 109, 0.2);
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
     background-color: #ffffff;
 }
 
@@ -179,13 +179,13 @@ body {
 
 .status-tab:hover:not(.active) {
     background: #bfdbfe;
-    color: #1e40af;
+    color: #2c2c3e;
 }
 
 .status-tab.active {
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
-    box-shadow: 0 6px 16px rgba(31, 60, 109, 0.45);
+    box-shadow: 0 6px 16px rgba(44, 44, 62, 0.45);
 }
 
 .page-content-section {
@@ -239,7 +239,7 @@ body {
 }
 
 .kk-table thead {
-    background: #1f3c6d;
+    background: #2c2c3e;
 }
 
 .kk-table thead th {
@@ -304,7 +304,7 @@ body {
 }
 
 .kk-table tbody tr:hover {
-    background: #fef9c3;
+    background: rgba(245, 197, 24, 0.10);
 }
 
 .kk-view-columns {
@@ -394,7 +394,7 @@ body {
 
 /* KK action buttons: View = blue, Approve = green, Reject = red */
 .kk-btn-view {
-    background: #1d4ed8;
+    background: #3a3a4a;
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -406,7 +406,7 @@ body {
 }
 
 .kk-btn-view:hover {
-    background: #1e40af;
+    background: #2c2c3e;
 }
 
 .kk-btn-approve {
@@ -592,7 +592,7 @@ body {
 
 .modal-header {
     padding: 12px 16px;
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -689,10 +689,10 @@ body {
 .kk-view-section-title {
     font-size: 12px;
     font-weight: 900;
-    color: #1f3c6d;
+    color: #2c2c3e;
     margin: 8px 0 4px 0;
     padding-bottom: 2px;
-    border-bottom: 1px solid #1f3c6d;
+    border-bottom: 1px solid #2c2c3e;
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
@@ -828,7 +828,7 @@ body {
 
 .kk-reject-other-textarea:focus {
     outline: none;
-    border-color: #1f3c6d;
+    border-color: #2c2c3e;
     box-shadow: 0 0 0 2px rgba(31, 60, 109, 0.15);
 }
 
@@ -1217,9 +1217,9 @@ body {
 }
 
 .pagination-btn:hover:not(:disabled) {
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
-    border-color: #1f3c6d;
+    border-color: #2c2c3e;
 }
 
 .pagination-btn:disabled {
@@ -1255,9 +1255,9 @@ body {
 }
 
 .page-number.active {
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
-    border-color: #1f3c6d;
+    border-color: #2c2c3e;
 }
 
 @media (max-width: 768px) {
@@ -1293,7 +1293,7 @@ body {
 
 /* KK Profiling Schedule Button */
 .kk-schedule-btn {
-    background: linear-gradient(135deg, #1f3c6d, #1a3349);
+    background: linear-gradient(135deg, #2c2c3e, #1a3349);
     color: white;
     border: none;
     padding: 12px 20px;
@@ -1301,7 +1301,7 @@ body {
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(31, 60, 109, 0.3);
+    box-shadow: 0 4px 12px rgba(44, 44, 62, 0.3);
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
@@ -1313,8 +1313,8 @@ body {
 
 .kk-schedule-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(31, 60, 109, 0.4);
-    background: linear-gradient(135deg, #1a3349, #152a3d);
+    box-shadow: 0 6px 20px rgba(44, 44, 62, 0.35);
+    background: linear-gradient(135deg, #3a3a4a, #2c2c3e);
 }
 
 /* KK Schedule Modal */
@@ -1476,7 +1476,7 @@ body {
 
 .calendar-day.today {
     background: #e0ecff;
-    color: #1e40af;
+    color: #2c2c3e;
     font-weight: 600;
     box-shadow: inset 0 0 0 1px #93c5fd;
 }
@@ -1574,14 +1574,14 @@ body {
     padding: 24px;
     min-width: 320px;
     max-width: 95%;
-    box-shadow: 0 12px 40px rgba(244, 194, 13, 0.25);
-    border: 2px solid #f4c20d;
+    box-shadow: 0 12px 40px rgba(245, 197, 24, 0.25);
+    border: 2px solid #f5c518;
 }
 
 .calendar-jump-title {
     font-size: 20px;
     font-weight: 800;
-    color: #1f3c6d;
+    color: #2c2c3e;
     margin-bottom: 8px;
     text-align: center;
 }
@@ -1606,7 +1606,7 @@ body {
     overflow-y: auto;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
-    background: #fffef5;
+    background: #fffdf0;
 }
 
 .calendar-jump-col-inner {
@@ -1622,12 +1622,12 @@ body {
 }
 
 .calendar-jump-item:hover {
-    background: #fff9e6;
+    background: #fffdf0;
 }
 
 .calendar-jump-item.selected {
-    background: #f4c20d;
-    color: #1f3c6d;
+    background: #f5c518;
+    color: #2c2c3e;
     font-weight: 700;
 }
 
@@ -1651,8 +1651,8 @@ body {
     padding: 10px 24px;
     border-radius: 10px;
     border: none;
-    background: #f4c20d;
-    color: #1f3c6d;
+    background: #f5c518;
+    color: #2c2c3e;
     font-weight: 700;
     cursor: pointer;
 }
@@ -1669,7 +1669,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #1f3c6d, #0f2847);
+    background: linear-gradient(135deg, #2c2c3e, #0f2847);
     color: white;
     box-shadow: 0 6px 14px rgba(15, 40, 71, 0.3);
 }
@@ -1692,11 +1692,11 @@ body {
 }
 
 .btn-jump-date {
-    background: linear-gradient(135deg, #f4c20d, #e29a00);
+    background: linear-gradient(135deg, #f5c518, #e29a00);
     color: #1f2937;
-    border: 1px solid #d4a80a;
+    border: 1px solid #e6a800;
     font-weight: 700;
-    box-shadow: 0 6px 14px rgba(244, 194, 13, 0.3);
+    box-shadow: 0 6px 14px rgba(245, 197, 24, 0.30);
 }
 
 .btn-jump-date:hover {

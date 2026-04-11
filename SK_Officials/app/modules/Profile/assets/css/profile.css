@@ -9,7 +9,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: #f0f1f5;
     min-height: 100vh;
     line-height: 1.6;
 }
@@ -103,7 +103,7 @@ body {
 }
 
 .barangay-header {
-    background: linear-gradient(135deg, #f4c20d 0%, #1f3c6d 100%);
+    background: linear-gradient(135deg, #f5c518 0%, #2c2c3e 100%);
     color: white;
     padding: 25px;
     display: flex;
@@ -130,7 +130,7 @@ body {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #f4c20d;
+    background: #f5c518;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -139,7 +139,7 @@ body {
 }
 
 .barangay-user-icon i {
-    color: #1f3c6d;
+    color: #2c2c3e;
     font-size: 14px;
 }
 
@@ -210,7 +210,7 @@ body {
 
 .official-header {
     padding: 20px;
-    background: #1f3c6d;
+    background: #2c2c3e;
     display: flex;
     align-items: center;
     gap: 15px;
@@ -257,7 +257,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    border: 3px solid #1e3c72;
+    border: 3px solid #2c2c3e;
     object-fit: cover;
 }
 
@@ -378,7 +378,7 @@ body {
 
 .education-list li:before {
     content: "•";
-    color: #f4c20d;
+    color: #f5c518;
     font-weight: bold;
     margin-top: 2px;
 }
@@ -390,8 +390,8 @@ body {
 }
 
 .committee-tag {
-    background: #ffe680;
-    color: #1f3c6d;
+    background: rgba(245, 197, 24, 0.25);
+    color: #2c2c3e;
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
@@ -401,7 +401,7 @@ body {
 
 .committee-tag:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(244, 194, 13, 0.4);
+    box-shadow: 0 4px 8px rgba(245, 197, 24, 0.40);
 }
 
 /* Kagawad Grid */
