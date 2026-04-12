@@ -13,12 +13,21 @@ body {
     min-height: 100vh;
 }
 
+/* Match Dashboard / layout: padding on inner container so sidebar margin-left animates cleanly */
 .main-content {
     margin-left: 280px;
     margin-top: 70px;
     min-height: calc(100vh - 70px);
     transition: margin-left 0.3s ease;
-    padding: 20px;
+    padding: 0;
+}
+
+.page-container.abyip-page {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-width: 0;
+    width: 100%;
 }
 
 .document-container {
@@ -37,7 +46,7 @@ body {
 .page-header-section {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
     margin-bottom: 20px;
 }
@@ -255,24 +264,14 @@ body {
     background-color: #e0e0e0;
 }
 
-.print-btn {
-    background: #667eea;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
-.print-btn:hover {
-    background: #5a6fd8;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
 /* Responsive Design */
 @media (max-width: 1024px) {
     .main-content {
         margin-left: 260px;
+        padding: 0;
+    }
+
+    .page-container.abyip-page {
         padding: 16px;
     }
 }
@@ -281,6 +280,10 @@ body {
     .main-content {
         margin-left: 0;
         margin-top: 60px;
+        padding: 0;
+    }
+
+    .page-container.abyip-page {
         padding: 14px;
     }
 
@@ -318,8 +321,12 @@ body {
 
 @media (max-width: 480px) {
     .main-content {
-        padding: 10px;
+        padding: 0;
         margin-top: 55px;
+    }
+
+    .page-container.abyip-page {
+        padding: 10px;
     }
 
     .page-title {
@@ -333,6 +340,11 @@ body {
     }
 
     .main-content.sidebar-hover {
+        margin-left: 260px !important;
+    }
+
+    /* Reinforce layout hover stretch (matches sidebar.js + other modules) */
+    main.main-content.sidebar-hover {
         margin-left: 260px !important;
     }
 }
@@ -666,6 +678,11 @@ body {
     padding: 22px;
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
     border: 1px solid rgba(148, 163, 184, 0.45);
+    min-width: 0;
+}
+
+.page-container.abyip-page .page-content-section {
+    min-width: 0;
 }
 
 .section-heading-row {
@@ -850,7 +867,7 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -943,8 +960,16 @@ body {
 }
 
 .modal-header.edit-mode {
-    background: #ffc107;
-    color: #212529;
+    background: #f4c20d;
+    color: #ffffff;
+}
+
+.modal-header.edit-mode h3 {
+    color: #ffffff;
+}
+
+.modal-header.edit-mode .modal-btn {
+    color: #ffffff;
 }
 
 .modal-header.view-mode {
@@ -1307,21 +1332,6 @@ body {
     padding: 20px;
 }
 
-/* Print Records Button */
-.print-records-btn {
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.print-records-btn:hover {
-    background: #218838;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-}
-
 /* Responsive for Records Table */
 @media screen and (max-width: 768px) {
     .header-with-button {
@@ -1410,5 +1420,628 @@ body {
     .modal-document-footer .signature-name {
         width: 150px;
         font-size: 12px;
+    }
+}
+
+/* ========== ABYIP Records list + document form (2025 refresh) ========== */
+
+.abyip-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ABYIP Records Outer Filters */
+.abyip-records-filters-outer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+/* ABYIP Records Filters with White Background */
+.abyip-records-filters-white {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.abyip-records-filter-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.abyip-records-filter-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.abyip-records-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: flex-end;
+    margin-bottom: 14px;
+}
+
+.abyip-records-search-wrap {
+    flex: 1;
+    max-width: 300px;
+    min-width: 0;
+}
+
+.abyip-filter-search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+}
+
+.abyip-filter-search:focus {
+    outline: none;
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+}
+
+.abyip-records-filter-status-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 0 1 180px;
+}
+
+.abyip-filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.abyip-filter-status {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    cursor: pointer;
+}
+
+.abyip-records-card {
+    min-width: 0;
+    overflow: visible;
+}
+
+.abyip-records-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    border-radius: 12px;
+}
+
+@media (max-width: 768px) {
+    .abyip-records-wrap {
+        max-height: min(68vh, 520px);
+    }
+
+    .abyip-records-filters-outer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .abyip-records-filters-white {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .abyip-records-filter-left,
+    .abyip-records-filter-right {
+        justify-content: stretch;
+    }
+
+    .abyip-records-search-wrap {
+        max-width: none;
+    }
+
+    .abyip-records-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .abyip-records-filter-status-wrap {
+        flex: 1 1 auto;
+        max-width: none;
+    }
+
+    .abyip-records-actions .action-buttons-cell {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .abyip-records-actions .btn-action-view,
+    .abyip-records-actions .btn-action-edit,
+    .abyip-records-actions .btn-action-delete {
+        width: auto;
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+}
+
+/* Records table: blue header, full grid */
+.abyip-records-table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: #fff;
+    border: 1px solid #1e3a8a;
+}
+
+.abyip-records-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #1d4ed8;
+    color: #ffffff;
+    font-weight: 700;
+    text-align: center;
+    padding: 12px 10px;
+    border: 1px solid #1e3a8a;
+    vertical-align: middle;
+}
+
+.abyip-records-table tbody td {
+    border: 1px solid #cbd5e1;
+    padding: 10px 10px;
+    vertical-align: middle;
+    color: #111827;
+}
+
+.abyip-records-table tbody tr:nth-child(even) td {
+    background: #f8fafc;
+}
+
+.abyip-records-title {
+    text-align: left;
+}
+
+.abyip-records-date {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.abyip-records-time {
+    text-align: center;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.abyip-records-status {
+    text-align: center;
+}
+
+.abyip-records-remarks-readonly {
+    text-align: left;
+    font-size: 13px;
+    color: #374151;
+    max-width: 280px;
+    word-wrap: break-word;
+}
+
+.abyip-records-actions {
+    text-align: center;
+    width: 220px;
+}
+
+.abyip-records-actions-col {
+    min-width: 220px;
+}
+
+.abyip-records-empty {
+    text-align: center;
+    padding: 28px 16px !important;
+    color: #64748b;
+}
+
+.status-badge.status-approved {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.status-rejected {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Document header + budget (official-style typography, no images) */
+.abyip-form-root {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000;
+}
+
+.abyip-doc-header {
+    text-align: center;
+    padding: 8px 12px 16px;
+}
+
+.abyip-doc-line-sm {
+    font-size: 12px;
+    margin: 2px 0;
+}
+
+.abyip-doc-barangay {
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 10px;
+}
+
+.abyip-doc-sk {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 8px 0 12px;
+}
+
+.abyip-doc-h1 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 8px 0 4px;
+}
+
+.abyip-doc-h2 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.abyip-doc-budget {
+    text-align: left;
+    padding: 0 12px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.abyip-doc-budget-label {
+    font-weight: 600;
+}
+
+.abyip-doc-table-wrap {
+    overflow-x: auto;
+    margin: 0;
+    padding: 0 8px 16px;
+}
+
+/* Main ABYIP grid in modal — black borders, PDF-like */
+.abyip-document-table {
+    width: 100%;
+    min-width: 960px;
+    border-collapse: collapse;
+    font-size: 11px;
+    border: 2px solid #000;
+    background: #fff;
+}
+
+.abyip-document-table th,
+.abyip-document-table td {
+    border: 1px solid #000;
+    padding: 6px 5px;
+    vertical-align: top;
+    text-align: left;
+    color: #000;
+}
+
+.abyip-document-table thead th {
+    background: #e8e8e8;
+    font-weight: 700;
+    text-align: center;
+    font-size: 11px;
+}
+
+.abyip-th-sub {
+    font-weight: 600;
+    font-size: 10px;
+}
+
+.abyip-document-table .number {
+    text-align: right;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.abyip-document-table .section-header td,
+.abyip-document-table .subsection-header td {
+    background: #d9d9d9 !important;
+    font-weight: 700;
+    text-align: center;
+    font-size: 11px;
+}
+
+.abyip-document-table .category-header td {
+    background: #efefef !important;
+    font-weight: 700;
+    text-align: left;
+    font-size: 11px;
+}
+
+.abyip-document-table .receipts-note td {
+    font-size: 11px;
+}
+
+.abyip-document-table .total-row td {
+    background: #d0d0d0 !important;
+    font-weight: 700;
+}
+
+.abyip-readonly-cell[contenteditable="false"] {
+    cursor: default;
+}
+
+.abyip-readonly-cell[contenteditable="false"]:hover,
+.abyip-readonly-cell[contenteditable="false"]:focus {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.modal-body .abyip-document-table thead th {
+    background: #e8e8e8;
+    color: #000 !important;
+    text-transform: none;
+    letter-spacing: normal;
+    border: 1px solid #000 !important;
+}
+
+.modal-body .abyip-document-table td {
+    border: 1px solid #000 !important;
+}
+
+/* Records table: status + remarks (only here, not in ABYIP document modal) */
+.abyip-records-status-cell {
+    min-width: 140px;
+    text-align: center;
+}
+
+.abyip-row-status {
+    width: 100%;
+    max-width: 160px;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.abyip-row-status.abyip-st-pending {
+    background: #fef9c3;
+    color: #854d0e;
+    border-color: #fde047;
+}
+
+.abyip-row-status.abyip-st-approved,
+.abyip-row-status.abyip-st-completed {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.abyip-row-status.abyip-st-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+.abyip-doc-footer {
+    margin-top: 8px;
+}
+
+#deleteConfirmModal {
+    z-index: 1100;
+}
+
+#abyipModalContentMount {
+    padding: 0 0 8px;
+}
+
+#abyipMetaModal {
+    z-index: 1200;
+}
+
+.abyip-meta-modal-box {
+    max-width: 440px;
+    width: 92%;
+}
+
+.abyip-meta-modal-inner {
+    padding: 24px;
+}
+
+.abyip-meta-modal-inner h4 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: #111827;
+}
+
+.abyip-meta-hint {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 16px;
+    line-height: 1.45;
+}
+
+.abyip-meta-field {
+    margin-bottom: 14px;
+}
+
+.abyip-meta-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.abyip-meta-input,
+.abyip-meta-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.abyip-meta-textarea {
+    resize: vertical;
+    min-height: 72px;
+}
+
+.abyip-meta-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.btn-print-abyip {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #1d4ed8;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
+}
+
+.btn-print-abyip:hover {
+    background: #1e40af;
+}
+
+#abyipModalFooter.abyip-modal-footer-view {
+    justify-content: flex-end;
+}
+
+/* ABYIP document modal: column layout + compact actions on small screens */
+#abyipModal .modal-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 92vh;
+}
+
+#abyipModal .modal-footer {
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    #abyipModal .modal-container {
+        max-height: 96vh;
+        width: 96%;
+        margin: 8px auto;
+    }
+
+    #abyipModal .modal-header h3 {
+        font-size: 15px;
+        line-height: 1.35;
+        padding-right: 8px;
+    }
+
+    #abyipModalFooter.modal-footer,
+    #abyipModal .modal-footer#abyipModalFooter {
+        flex-direction: row !important;
+        justify-content: flex-end !important;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 8px;
+        padding: 10px 12px !important;
+    }
+
+    #abyipModalFooter .btn-cancel,
+    #abyipModalFooter .btn-save,
+    #abyipModalFooter .btn-print-abyip {
+        width: auto !important;
+        max-width: none !important;
+        flex: 0 0 auto;
+        margin: 0 !important;
+        padding: 8px 14px !important;
+        font-size: 13px;
+        min-height: 38px;
+    }
+}
+
+@media print {
+
+    body.abyip-printing .main-header,
+    body.abyip-printing .main-sidebar,
+    body.abyip-printing .abyip-page {
+        display: none !important;
+    }
+
+    body.abyip-printing .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    body.abyip-printing #abyipModal {
+        position: static !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: transparent !important;
+    }
+
+    body.abyip-printing #abyipModal .modal-container {
+        box-shadow: none !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+    }
+
+    body.abyip-printing #abyipModal .modal-header,
+    body.abyip-printing #abyipModal .modal-footer {
+        display: none !important;
+    }
+
+    body.abyip-printing #abyipModal .modal-body {
+        overflow: visible !important;
+    }
+
+    body.abyip-printing #abyipMetaModal,
+    body.abyip-printing #deleteConfirmModal {
+        display: none !important;
     }
 }

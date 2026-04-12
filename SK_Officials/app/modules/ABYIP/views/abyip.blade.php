@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Annual Barangay Youth Investment Program (ABYIP) 2025</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annual Barangay Youth Investment Program (ABYIP) — SK Officials Portal</title>
 
     @vite([
         'app/modules/layout/css/header.css',
@@ -13,571 +13,573 @@
 </head>
 <body>
 
-<!-- ================= HEADER ================= -->
 @include('layout::header')
-
-<!-- ================= SIDEBAR ================= -->
 @include('layout::sidebar')
 
-<!-- ================= MAIN CONTENT ================= -->
 <main class="main-content">
-    <div class="document-container">
-        <!-- Page Header Section -->
+    <div class="page-container abyip-page">
+
         <section class="page-header-section">
             <div class="page-header-left">
                 <h1 class="page-title">Annual Barangay Youth Investment Program (ABYIP)</h1>
+                <p class="page-subtitle">Create, view, and manage ABYIP records for the barangay.</p>
             </div>
             <div class="page-header-right">
                 <button type="button" class="btn primary-btn" id="addAbyipBtn">+ Create ABYIP</button>
             </div>
         </section>
 
-        
-
-        <!-- ABYIP Records Table -->
         <section class="page-content-section">
             <div class="section-heading-row">
                 <h2 class="section-title">ABYIP Records</h2>
             </div>
-
-            <div class="table-card">
-                <div class="table-wrapper">
-                    <table class="abyip-table" id="recordsTable">
+            
+            <!-- Filters outside the table card with white background -->
+            <div class="abyip-records-filters-white">
+                <div class="abyip-records-filter-left">
+                    <div class="abyip-records-filter-status-wrap">
+                        <label for="abyipRecordsStatusFilter" class="abyip-filter-label">Status</label>
+                        <select id="abyipRecordsStatusFilter" class="abyip-filter-status">
+                            <option value="">All statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="abyip-records-filter-right">
+                    <div class="abyip-records-search-wrap">
+                        <label for="abyipRecordsSearch" class="abyip-sr-only">Search records by title, date, or time</label>
+                        <input type="search" id="abyipRecordsSearch" class="abyip-filter-search" placeholder="Search title, date, or time created…" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-card abyip-records-card">
+                <div class="table-wrapper abyip-records-wrap">
+                    <table class="abyip-records-table" id="recordsTable">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Title</th>
-                                <th>Date Created</th>
-                                <th>Actions</th>
+                                <th scope="col">Title</th>
+                                <th scope="col">Date Created</th>
+                                <th scope="col">Time Created</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Remarks</th>
+                                <th scope="col" class="abyip-records-actions-col">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="recordsTableBody">
-                            <!-- Records will be populated here -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
+    </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button onclick="window.print()" class="print-btn">Print Document</button>
-            <button onclick="printRecords()" class="print-records-btn">Print Records</button>
+    <template id="abyipDefaultDocumentTemplate">
+<!-- ABYIP document body (embedded in abyip.blade.php) -->
+<div id="abyipFormRoot" class="abyip-form-root">
+    <header class="abyip-doc-header" aria-label="ABYIP document header">
+        <div class="abyip-doc-header-text">
+            <p class="abyip-doc-line abyip-doc-line-sm">Republic of the Philippines</p>
+            <p class="abyip-doc-line abyip-doc-line-sm">Region IV-A</p>
+            <p class="abyip-doc-line abyip-doc-line-sm">Province of Laguna</p>
+            <p class="abyip-doc-line abyip-doc-line-sm">Municipality of Santa Cruz</p>
+            <p class="abyip-doc-barangay">BARANGAY CALIOS</p>
+            <p class="abyip-doc-sk">SANGGUNIANG KABATAAN NG CALIOS</p>
+            <div class="abyip-doc-title-block">
+                <h1 class="abyip-doc-h1">ANNUAL BARANGAY YOUTH INVESTMENT PROGRAM (ABYIP)</h1>
+                <h2 class="abyip-doc-h2">CY 2025</h2>
+            </div>
+        </div>
+    </header>
+
+    <div class="abyip-doc-budget">
+        <p><span class="abyip-doc-budget-label">Barangay Estimated Budget:</span> ₱14,199,466.00</p>
+        <p><span class="abyip-doc-budget-label">Sangguniang Kabataan Fund (10%):</span> ₱1,419,946.60</p>
+    </div>
+
+    <div class="table-wrapper abyip-doc-table-wrap">
+        <table class="abyip-document-table" id="abyipModalTable">
+            <thead>
+                <tr>
+                    <th rowspan="2">Code</th>
+                    <th rowspan="2">PPAs<br><span class="abyip-th-sub">(Programs, Projects, and Activities)</span></th>
+                    <th rowspan="2">Description</th>
+                    <th rowspan="2">Expected Result</th>
+                    <th rowspan="2">Performance Indicator</th>
+                    <th rowspan="2">Period of Implementation</th>
+                    <th colspan="3">Budget</th>
+                    <th rowspan="2">Person Responsible</th>
+                </tr>
+                <tr>
+                    <th>MOOE</th>
+                    <th>CO</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="section-header">
+                    <td colspan="10"><strong>I. RECEIPTS PROGRAM</strong></td>
+                </tr>
+                <tr class="receipts-note">
+                    <td></td>
+                    <td colspan="9">10% of the General Fund of the Barangay</td>
+                </tr>
+
+                <tr class="section-header">
+                    <td colspan="10"><strong>II. EXPENDITURE PROGRAM</strong></td>
+                </tr>
+                <tr class="subsection-header">
+                    <td colspan="10"><strong>GENERAL ADMINISTRATION PROGRAM — CURRENT OPERATING EXPENDITURES</strong></td>
+                </tr>
+                <tr class="subsection-header">
+                    <td colspan="10"><strong>Maintenance and Other Operating Expenses (MOOE)</strong></td>
+                </tr>
+
+                <tr>
+                    <td contenteditable="true">1.1</td>
+                    <td contenteditable="true">Digital Literacy Training</td>
+                    <td contenteditable="true">Computer skills development for youth</td>
+                    <td contenteditable="true">Enhanced digital competencies</td>
+                    <td contenteditable="true">Number of certified participants</td>
+                    <td contenteditable="true">February 01, 2025 to November 30, 2025</td>
+                    <td contenteditable="true" class="number">45,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">45,000.00</td>
+                    <td contenteditable="true">SK Tech Committee</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">1.2</td>
+                    <td contenteditable="true">Youth Leadership Summit</td>
+                    <td contenteditable="true">Leadership development program</td>
+                    <td contenteditable="true">Developed youth leaders</td>
+                    <td contenteditable="true">Number of graduates</td>
+                    <td contenteditable="true">March 15, 2025 to October 15, 2025</td>
+                    <td contenteditable="true" class="number">35,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">35,000.00</td>
+                    <td contenteditable="true">SK Leadership Team</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">1.3</td>
+                    <td contenteditable="true">Community Outreach Program</td>
+                    <td contenteditable="true">Service activities for community</td>
+                    <td contenteditable="true">Completed outreach projects</td>
+                    <td contenteditable="true">Number of communities served</td>
+                    <td contenteditable="true">April 01, 2025 to September 30, 2025</td>
+                    <td contenteditable="true" class="number">28,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">28,000.00</td>
+                    <td contenteditable="true">SK Outreach Committee</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">1.4</td>
+                    <td contenteditable="true">Office Equipment Purchase</td>
+                    <td contenteditable="true">Modern office technology</td>
+                    <td contenteditable="true">Equipped office with technology</td>
+                    <td contenteditable="true">Number of equipment procured</td>
+                    <td contenteditable="true">May 01, 2025 to June 30, 2025</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">65,000.00</td>
+                    <td contenteditable="true" class="number">65,000.00</td>
+                    <td contenteditable="true">SK Admin Team</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">1.5</td>
+                    <td contenteditable="true">Youth Sports Festival</td>
+                    <td contenteditable="true">Annual sports competition</td>
+                    <td contenteditable="true">Conducted sports activities</td>
+                    <td contenteditable="true">Number of participants</td>
+                    <td contenteditable="true">July 01, 2025 to August 31, 2025</td>
+                    <td contenteditable="true" class="number">40,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">40,000.00</td>
+                    <td contenteditable="true">SK Sports Committee</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">1.6</td>
+                    <td contenteditable="true">Communication Systems</td>
+                    <td contenteditable="true">Digital communication tools</td>
+                    <td contenteditable="true">Improved communication channels</td>
+                    <td contenteditable="true">Number of platforms established</td>
+                    <td contenteditable="true">June 01, 2025 to December 15, 2025</td>
+                    <td contenteditable="true" class="number">18,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">18,000.00</td>
+                    <td contenteditable="true">SK Communications Team</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">1.7</td>
+                    <td contenteditable="true">Professional Development</td>
+                    <td contenteditable="true">Skills enhancement workshops</td>
+                    <td contenteditable="true">Enhanced professional skills</td>
+                    <td contenteditable="true">Number of workshops conducted</td>
+                    <td contenteditable="true">February 15, 2025 to November 15, 2025</td>
+                    <td contenteditable="true" class="number">22,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">22,000.00</td>
+                    <td contenteditable="true">SK Training Committee</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">1.8</td>
+                    <td contenteditable="true">Youth Engagement Activities</td>
+                    <td contenteditable="true">Community youth programs</td>
+                    <td contenteditable="true">Increased youth participation</td>
+                    <td contenteditable="true">Number of activities completed</td>
+                    <td contenteditable="true">March 01, 2025 to October 30, 2025</td>
+                    <td contenteditable="true" class="number">25,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">25,000.00</td>
+                    <td contenteditable="true">SK Engagement Team</td>
+                </tr>
+
+                <tr class="subsection-header">
+                    <td colspan="10"><strong>Capital Outlay</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">1.9</td>
+                    <td contenteditable="true">Youth Center Renovation</td>
+                    <td contenteditable="true">Facility improvement project</td>
+                    <td contenteditable="true">Modernized youth facility</td>
+                    <td contenteditable="true">Percentage of renovation completed</td>
+                    <td contenteditable="true">April 15, 2025 to September 15, 2025</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">120,000.00</td>
+                    <td contenteditable="true" class="number">120,000.00</td>
+                    <td contenteditable="true">SK Facilities Committee</td>
+                </tr>
+
+                <tr class="subsection-header">
+                    <td colspan="10"><strong>B. SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS</strong></td>
+                </tr>
+                <tr class="category-header">
+                    <td colspan="10"><strong>A. Equitable Access to Quality Education</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">2.1</td>
+                    <td contenteditable="true">• Academic Scholarship Program<br>• Tutorial Services<br>• Learning Materials Distribution</td>
+                    <td contenteditable="true">Educational support initiatives</td>
+                    <td contenteditable="true">Improved academic performance</td>
+                    <td contenteditable="true">Number of scholars assisted</td>
+                    <td contenteditable="true">June 01, 2025 to December 20, 2025</td>
+                    <td contenteditable="true" class="number">85,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">85,000.00</td>
+                    <td contenteditable="true">SK Education Committee</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">2.2</td>
+                    <td contenteditable="true">STEM Workshop Series</td>
+                    <td contenteditable="true">Science and technology education</td>
+                    <td contenteditable="true">Enhanced STEM knowledge</td>
+                    <td contenteditable="true">Number of workshop participants</td>
+                    <td contenteditable="true">July 15, 2025 to October 15, 2025</td>
+                    <td contenteditable="true" class="number">42,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">42,000.00</td>
+                    <td contenteditable="true">SK STEM Team</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">2.3</td>
+                    <td contenteditable="true">Career Guidance Program</td>
+                    <td contenteditable="true">Career counseling and planning</td>
+                    <td contenteditable="true">Informed career choices</td>
+                    <td contenteditable="true">Number of counseled students</td>
+                    <td contenteditable="true">August 01, 2025 to November 30, 2025</td>
+                    <td contenteditable="true" class="number">38,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">38,000.00</td>
+                    <td contenteditable="true">SK Career Services</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>B. Environmental Protection</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">3.1</td>
+                    <td contenteditable="true">Green Initiative Project<br>• Community Garden Development</td>
+                    <td contenteditable="true">Environmental conservation activities</td>
+                    <td contenteditable="true">Sustainable environmental practices</td>
+                    <td contenteditable="true">Number of green spaces created</td>
+                    <td contenteditable="true">May 01, 2025 to October 31, 2025</td>
+                    <td contenteditable="true" class="number">32,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">32,000.00</td>
+                    <td contenteditable="true">SK Environment Team</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">3.2</td>
+                    <td contenteditable="true">Marine Conservation Program</td>
+                    <td contenteditable="true">Ocean protection initiatives</td>
+                    <td contenteditable="true">Preserved marine ecosystems</td>
+                    <td contenteditable="true">Number of conservation activities</td>
+                    <td contenteditable="true">June 15, 2025 to December 15, 2025</td>
+                    <td contenteditable="true" class="number">28,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">28,000.00</td>
+                    <td contenteditable="true">SK Marine Conservation</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>C. Disaster Risk Reduction and Resiliency</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">4.1</td>
+                    <td contenteditable="true">Emergency Response Training (Equipment and Logistics)</td>
+                    <td contenteditable="true">Disaster preparedness education</td>
+                    <td contenteditable="true">Trained emergency responders</td>
+                    <td contenteditable="true">Number of certified responders</td>
+                    <td contenteditable="true">July 01, 2025 to November 30, 2025</td>
+                    <td contenteditable="true" class="number">35,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">35,000.00</td>
+                    <td contenteditable="true">SK Emergency Response</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">4.2</td>
+                    <td contenteditable="true">Community Relief Operations</td>
+                    <td contenteditable="true">Emergency assistance program</td>
+                    <td contenteditable="true">Provided timely relief support</td>
+                    <td contenteditable="true">Number of families assisted</td>
+                    <td contenteditable="true">August 01, 2025 to December 31, 2025</td>
+                    <td contenteditable="true" class="number">30,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">30,000.00</td>
+                    <td contenteditable="true">SK Relief Operations</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>D. Youth Employment and Livelihood</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">5.1</td>
+                    <td contenteditable="true">Entrepreneurship Development Program</td>
+                    <td contenteditable="true">Business skills training</td>
+                    <td contenteditable="true">Established youth enterprises</td>
+                    <td contenteditable="true">Number of businesses started</td>
+                    <td contenteditable="true">September 01, 2025 to December 15, 2025</td>
+                    <td contenteditable="true" class="number">45,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">45,000.00</td>
+                    <td contenteditable="true">SK Livelihood Program</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>E. Health</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">6.1</td>
+                    <td contenteditable="true">Mental Health Awareness Campaign</td>
+                    <td contenteditable="true">Psychological support services</td>
+                    <td contenteditable="true">Improved mental wellness</td>
+                    <td contenteditable="true">Number of counseling sessions</td>
+                    <td contenteditable="true">October 01, 2025 to December 20, 2025</td>
+                    <td contenteditable="true" class="number">32,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">32,000.00</td>
+                    <td contenteditable="true">SK Health Services</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>F. Anti-Drug and Peace and Order</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">7.1</td>
+                    <td contenteditable="true">Substance Abuse Prevention Workshop</td>
+                    <td contenteditable="true">Anti-drug education program</td>
+                    <td contenteditable="true">Drug-free youth community</td>
+                    <td contenteditable="true">Number of workshop attendees</td>
+                    <td contenteditable="true">November 01, 2025 to December 10, 2025</td>
+                    <td contenteditable="true" class="number">25,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">25,000.00</td>
+                    <td contenteditable="true">SK Anti-Drug Campaign</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>G. Gender Sensitivity</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">8.1</td>
+                    <td contenteditable="true">Gender Equality Advocacy</td>
+                    <td contenteditable="true">Gender sensitivity education</td>
+                    <td contenteditable="true">Gender-inclusive community</td>
+                    <td contenteditable="true">Number of advocacy campaigns</td>
+                    <td contenteditable="true">October 15, 2025 to December 05, 2025</td>
+                    <td contenteditable="true" class="number">18,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">18,000.00</td>
+                    <td contenteditable="true">SK Gender Advocacy</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>H. Feeding Program for KK Members</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">9.1</td>
+                    <td contenteditable="true">Nutrition Enhancement Program</td>
+                    <td contenteditable="true">Health and nutrition support</td>
+                    <td contenteditable="true">Improved youth nutrition</td>
+                    <td contenteditable="true">Number of beneficiaries served</td>
+                    <td contenteditable="true">November 01, 2025 to December 18, 2025</td>
+                    <td contenteditable="true" class="number">35,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">35,000.00</td>
+                    <td contenteditable="true">SK Nutrition Program</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>I. Sports Development</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">10.1</td>
+                    <td contenteditable="true">Youth Athletics Development</td>
+                    <td contenteditable="true">Comprehensive sports training</td>
+                    <td contenteditable="true">Developed athletic skills</td>
+                    <td contenteditable="true">Number of athletes trained</td>
+                    <td contenteditable="true">September 15, 2025 to December 20, 2025</td>
+                    <td contenteditable="true" class="number">180,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">180,000.00</td>
+                    <td contenteditable="true">SK Athletics Department</td>
+                </tr>
+
+                <tr class="category-header">
+                    <td colspan="10"><strong>J. Other Programs</strong></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">11.1</td>
+                    <td contenteditable="true">Youth Congress</td>
+                    <td contenteditable="true">Annual youth assembly</td>
+                    <td contenteditable="true">Successful youth congress</td>
+                    <td contenteditable="true">Number of delegates</td>
+                    <td contenteditable="true">December 01, 2025 to December 15, 2025</td>
+                    <td contenteditable="true" class="number">28,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">28,000.00</td>
+                    <td contenteditable="true">SK Congress Committee</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">11.2</td>
+                    <td contenteditable="true">Cultural Heritage Festival</td>
+                    <td contenteditable="true">Cultural preservation activities</td>
+                    <td contenteditable="true">Celebrated cultural heritage</td>
+                    <td contenteditable="true">Number of cultural activities</td>
+                    <td contenteditable="true">November 20, 2025 to December 10, 2025</td>
+                    <td contenteditable="true" class="number">38,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">38,000.00</td>
+                    <td contenteditable="true">SK Cultural Committee</td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">11.3</td>
+                    <td contenteditable="true">Youth Innovation Expo</td>
+                    <td contenteditable="true">Technology and innovation showcase</td>
+                    <td contenteditable="true">Promoted youth innovation</td>
+                    <td contenteditable="true">Number of innovations presented</td>
+                    <td contenteditable="true">December 05, 2025 to December 22, 2025</td>
+                    <td contenteditable="true" class="number">42,000.00</td>
+                    <td contenteditable="true" class="number">0.00</td>
+                    <td contenteditable="true" class="number">42,000.00</td>
+                    <td contenteditable="true">SK Innovation Team</td>
+                </tr>
+
+                <tr class="total-row">
+                    <td colspan="6"><strong>TOTAL</strong></td>
+                    <td class="number abyip-mooe-total"><strong>933,000.00</strong></td>
+                    <td class="number abyip-co-total"><strong>185,000.00</strong></td>
+                    <td class="number abyip-grand-total"><strong>1,118,000.00</strong></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer class="document-footer abyip-doc-footer">
+        <div class="signature-blocks">
+            <div class="signature-left">
+                <p>Prepared by:</p>
+                <p contenteditable="true" class="signature-name">Name ng SK Kupitan</p>
+                <p contenteditable="true" class="signature-title">SK Chairperson</p>
+            </div>
+            <div class="signature-right">
+                <p>Approved by:</p>
+                <p contenteditable="true" class="signature-name">Name ng Barnggay Kupitan</p>
+                <p contenteditable="true" class="signature-title">Barangay Chairman</p>
+            </div>
+        </div>
+    </footer>
+</div>
+
+    </template>
+
+    <!-- ABYIP Create / View / Edit Modal -->
+    <div class="modal-overlay" id="abyipModal" aria-hidden="true">
+        <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="abyipModalTitle">
+            <div class="modal-header" id="abyipModalHeader">
+                <h3 id="abyipModalTitle">Create Annual Barangay Youth Investment Program (ABYIP)</h3>
+                <div class="modal-controls">
+                    <button type="button" class="modal-btn" id="abyipModalMaximize" title="Maximize" aria-label="Maximize">&#9723;</button>
+                    <button type="button" class="modal-btn" id="abyipModalClose" title="Close" aria-label="Close">&times;</button>
+                </div>
+            </div>
+
+            <div class="modal-body" id="abyipModalBody">
+                <div id="abyipModalContentMount"></div>
+            </div>
+
+            <div class="modal-footer" id="abyipModalFooter">
+                <button type="button" class="btn-cancel" id="abyipModalCancel">Cancel</button>
+                <button type="button" class="btn-save" id="abyipModalSave">Save ABYIP</button>
+                <button type="button" class="btn-print-abyip" id="abyipModalPrint">Print ABYIP</button>
+            </div>
         </div>
     </div>
 
-    <!-- ABYIP Modal -->
-    <div class="modal-overlay" id="abyipModal">
-        <div class="modal-container" id="modalContainer">
-            <div class="modal-header">
-                <h3>Create Annual Barangay Youth Investment Program (ABYIP)</h3>
-                <div class="modal-controls">
-                    <button class="modal-btn maximize-btn" id="maximizeToggleBtn" onclick="toggleMaximize()" title="Maximize">□</button>
-                    <button class="modal-btn close-btn" onclick="closeAbyipModal()" title="Close">×</button>
+    <!-- After Save ABYIP (create): title + remarks -->
+    <div class="modal-backdrop" id="abyipMetaModal" aria-hidden="true">
+        <div class="modal-box abyip-meta-modal-box" role="dialog" aria-labelledby="abyipMetaHeading">
+            <div class="abyip-meta-modal-inner">
+                <h4 id="abyipMetaHeading">Save ABYIP record</h4>
+                <p class="abyip-meta-hint">Set the record title and remarks. Title defaults to ABYIP CY 2025 (editable).</p>
+                <div class="abyip-meta-field">
+                    <label for="abyipMetaTitleInput">Title</label>
+                    <input type="text" id="abyipMetaTitleInput" class="abyip-meta-input" maxlength="500" autocomplete="off">
+                </div>
+                <div class="abyip-meta-field">
+                    <label for="abyipMetaRemarksInput">Remarks</label>
+                    <textarea id="abyipMetaRemarksInput" class="abyip-meta-textarea" rows="3" maxlength="500" placeholder="Optional"></textarea>
+                </div>
+                <div class="abyip-meta-actions">
+                    <button type="button" class="btn-cancel" id="abyipMetaCancel">Cancel</button>
+                    <button type="button" class="btn-save" id="abyipMetaConfirm">Save record</button>
                 </div>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Modal Document Header -->
-                <header class="modal-document-header">
-                    <div class="sk-header">
-                        <p>SANGGUNIANG KABATAAN NG CALIOS</p>
-                    </div>
-                    <div class="document-title">
-                        <h1>ANNUAL BARANGAY YOUTH INVESTMENT PROGRAM (ABYIP)</h1>
-                        <h2>CY 2025</h2>
-                    </div>
-                    <div class="budget-info">
-                        <p>Barangay Estimated Budget: ₱14,199,466.00</p>
-                        <p>Sangguniang Kabataan Fund (10%): ₱1,419,946.60</p>
-                    </div>
-                </header>
+        </div>
+    </div>
 
-                <!-- ABYIP Form Table -->
-                <div class="table-wrapper">
-                    <table class="abyip-table" id="abyipModalTable">
-                    <thead>
-                        <tr>
-                            <th rowspan="2">Code</th>
-                            <th rowspan="2">PPAs (Programs/Projects/Activities)</th>
-                            <th rowspan="2">Description</th>
-                            <th rowspan="2">Expected Result</th>
-                            <th rowspan="2">Performance Indicator</th>
-                            <th rowspan="2">Period of Implementation</th>
-                            <th colspan="3">Budget</th>
-                            <th rowspan="2">Person Responsible</th>
-                        </tr>
-                        <tr>
-                            <th>MOOE</th>
-                            <th>CO</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- RECEIPTS PROGRAM -->
-                        <tr class="section-header">
-                            <td colspan="10"><strong>RECEIPTS PROGRAM</strong></td>
-                        </tr>
-                        
-                        <!-- EXPENDITURE PROGRAM -->
-                        <tr class="section-header">
-                            <td colspan="10"><strong>EXPENDITURE PROGRAM</strong></td>
-                        </tr>
-                        
-                        <!-- A. GENERAL ADMINISTRATION PROGRAM -->
-                        <tr class="subsection-header">
-                            <td colspan="10"><strong>A. GENERAL ADMINISTRATION PROGRAM</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.1</td>
-                            <td contenteditable="true">Honoraria</td>
-                            <td contenteditable="true">Monthly honorarium for SK officials</td>
-                            <td contenteditable="true">Compensated SK officials for service rendered</td>
-                            <td contenteditable="true">Number of SK officials receiving honoraria</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">240,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">240,000.00</td>
-                            <td contenteditable="true">SK Chairman</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.2</td>
-                            <td contenteditable="true">Travel Expenses</td>
-                            <td contenteditable="true">Transportation allowance for official travels</td>
-                            <td contenteditable="true">Conducted official travels and meetings</td>
-                            <td contenteditable="true">Number of official travels conducted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">50,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">50,000.00</td>
-                            <td contenteditable="true">SK Treasurer</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.3</td>
-                            <td contenteditable="true">Training and Seminar Expenses</td>
-                            <td contenteditable="true">Registration fees, materials for trainings</td>
-                            <td contenteditable="true">Enhanced knowledge and skills of SK officials</td>
-                            <td contenteditable="true">Number of trainings attended</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">30,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">30,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.4</td>
-                            <td contenteditable="true">Laptop/Computer</td>
-                            <td contenteditable="true">Office equipment for SK operations</td>
-                            <td contenteditable="true">Improved office efficiency and documentation</td>
-                            <td contenteditable="true">Number of functional equipment</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">45,000.00</td>
-                            <td contenteditable="true" class="number">45,000.00</td>
-                            <td contenteditable="true">SK Chairman</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.5</td>
-                            <td contenteditable="true">Clothing/Uniform Allowance</td>
-                            <td contenteditable="true">Official uniforms for SK officials</td>
-                            <td contenteditable="true">Professional appearance of SK officials</td>
-                            <td contenteditable="true">Number of uniforms provided</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">20,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">20,000.00</td>
-                            <td contenteditable="true">SK Treasurer</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.6</td>
-                            <td contenteditable="true">Office Supplies</td>
-                            <td contenteditable="true">Paper, pens, ink, and other office materials</td>
-                            <td contenteditable="true">Adequate office supplies for daily operations</td>
-                            <td contenteditable="true">Percentage of operations without supply interruption</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">25,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">25,000.00</td>
-                            <td contenteditable="true">SK Secretary</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.7</td>
-                            <td contenteditable="true">Membership Dues</td>
-                            <td contenteditable="true">Membership fees for organizations</td>
-                            <td contenteditable="true">Active participation in youth organizations</td>
-                            <td contenteditable="true">Number of active memberships</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">10,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">10,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.8</td>
-                            <td contenteditable="true">Fidelity Bond</td>
-                            <td contenteditable="true">Insurance for SK officials</td>
-                            <td contenteditable="true">Protected SK officials from liabilities</td>
-                            <td contenteditable="true">Number of officials covered</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">5,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">5,000.00</td>
-                            <td contenteditable="true">SK Treasurer</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">1.9</td>
-                            <td contenteditable="true">Capital Outlay (Rehabilitation of SK Hall)</td>
-                            <td contenteditable="true">Place to hold SK official meetings</td>
-                            <td contenteditable="true">Functional SK Hall for meetings</td>
-                            <td contenteditable="true">Percentage of SK Hall functionality</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">92,000.00</td>
-                            <td contenteditable="true" class="number">92,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council</td>
-                        </tr>
-                        
-                        <!-- B. SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS -->
-                        <tr class="subsection-header">
-                            <td colspan="10"><strong>B. SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS</strong></td>
-                        </tr>
-                        
-                        <!-- A. Education -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>A. Equitable Access to Quality Education</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">2.1</td>
-                            <td contenteditable="true">Support to ALS and RIC Students for Educational Assistance</td>
-                            <td contenteditable="true">Provide school supplies to ALS Students and elementary, high school and college Students</td>
-                            <td contenteditable="true">Increased number of youth enrollee in schools/Decreased the number of out-of-school youth (OSY)</td>
-                            <td contenteditable="true">Percentage increase in the number of youth enrollee in schools/Percentage decrease in the number of OSY's</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">12,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">12,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council/ALS</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">2.2</td>
-                            <td contenteditable="true">Support to Elementary and Daycare</td>
-                            <td contenteditable="true">Educational assistance for elementary and daycare students</td>
-                            <td contenteditable="true">Improved learning conditions for young students</td>
-                            <td contenteditable="true">Number of students assisted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">150,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">150,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council/ALS</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">2.3</td>
-                            <td contenteditable="true">Educational Assistance</td>
-                            <td contenteditable="true">Financial support for deserving students</td>
-                            <td contenteditable="true">Reduced financial burden on students</td>
-                            <td contenteditable="true">Number of scholars supported</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">13,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">13,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <!-- B. Environmental Protection -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>B. Environmental Protection</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">3.1</td>
-                            <td contenteditable="true">Clean-Up Drive</td>
-                            <td contenteditable="true">Honorarium is given for the proper pay for services rendered in the Clean Up Drive</td>
-                            <td contenteditable="true">Increased number of youth organizations participating in environmental protection campaigns and clean-up drive activity</td>
-                            <td contenteditable="true">Percentage increase in the number of youth organizations participated in environmental protection campaigns and clean-up drive activity</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">60,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">60,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">3.2</td>
-                            <td contenteditable="true">Tree Planting</td>
-                            <td contenteditable="true">Environmental conservation through tree planting activities</td>
-                            <td contenteditable="true">Improved environmental conditions</td>
-                            <td contenteditable="true">Number of trees planted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">15,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">15,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <!-- C. Disaster Risk Reduction -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>C. Disaster Risk Reduction and Resiliency</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">4.1</td>
-                            <td contenteditable="true">Training on Disaster Preparedness for Organization of Youth Volunteer Groups (Food and Accommodations)</td>
-                            <td contenteditable="true">Disaster preparedness refers to measures taken to prepare for and reduce the effects of disaster. That is, to predict and where possible, prevent disasters, mitigate their impact on vulnerable populations.</td>
-                            <td contenteditable="true">Enhanced disaster preparedness among youth volunteers</td>
-                            <td contenteditable="true">Number of trained youth volunteers</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">10,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">10,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">4.2</td>
-                            <td contenteditable="true">Distribution of Relief Goods for KK Members</td>
-                            <td contenteditable="true">Emergency assistance during disasters</td>
-                            <td contenteditable="true">Timely distribution of relief goods</td>
-                            <td contenteditable="true">Number of beneficiaries served</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">20,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">20,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council</td>
-                        </tr>
-                        
-                        <!-- D. Livelihood -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>D. Youth Employment and Livelihood</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">5.1</td>
-                            <td contenteditable="true">Livelihood Training, Food and other supplies</td>
-                            <td contenteditable="true">Skills development for youth employment</td>
-                            <td contenteditable="true">Increased number of skilled and employed youth</td>
-                            <td contenteditable="true">Percentage increase in number of skilled and employed youth</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">20,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">20,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council</td>
-                        </tr>
-                        
-                        <!-- E. Health -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>E. Health</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">6.1</td>
-                            <td contenteditable="true">Medicines/Medical Equipment</td>
-                            <td contenteditable="true">Campaigning Materials for Anti-Drugs such as Leaflets, posters, tarpaulins</td>
-                            <td contenteditable="true">Improved health awareness and access to medical supplies</td>
-                            <td contenteditable="true">Number of health campaigns conducted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">30,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">30,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council/BADAC</td>
-                        </tr>
-                        
-                        <!-- F. Anti-Drug -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>F. Anti-Drug and Peace and Order</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">7.1</td>
-                            <td contenteditable="true">Orientation for Anti-Drug and Physical Abuse, Foods and Accommodations</td>
-                            <td contenteditable="true">Awareness campaigns against illegal drugs and abuse</td>
-                            <td contenteditable="true">Decreased number of drug-dependent youth and youth who tried using illegal drugs</td>
-                            <td contenteditable="true">Number of drug prevention education/information campaigns conducted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">10,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">10,000.00</td>
-                            <td contenteditable="true">Sangguniang Kabataan Council</td>
-                        </tr>
-                        
-                        <!-- G. Gender Sensitivity -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>G. Gender Sensitivity</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">8.1</td>
-                            <td contenteditable="true">GAD and VAWC Orientation</td>
-                            <td contenteditable="true">Gender awareness and violence against women and children prevention</td>
-                            <td contenteditable="true">Increased awareness on gender sensitivity</td>
-                            <td contenteditable="true">Number of GAD activities conducted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">15,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">15,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <!-- H. Feeding Program -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>H. Feeding Program for KK Members</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">9.1</td>
-                            <td contenteditable="true">Feeding Program</td>
-                            <td contenteditable="true">Nutritional support for KK members</td>
-                            <td contenteditable="true">Improved nutrition among youth members</td>
-                            <td contenteditable="true">Number of beneficiaries</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">25,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">25,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <!-- I. Sports Development -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>I. Sports Development</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">10.1</td>
-                            <td contenteditable="true">Sports Tournament and Equipment</td>
-                            <td contenteditable="true">Sports development activities and equipment purchase</td>
-                            <td contenteditable="true">Enhanced youth participation in sports</td>
-                            <td contenteditable="true">Number of sports activities conducted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">50,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">50,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <!-- J. Other Programs -->
-                        <tr class="category-header">
-                            <td colspan="10"><strong>J. Other Programs</strong></td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">11.1</td>
-                            <td contenteditable="true">KK Assembly</td>
-                            <td contenteditable="true">Regular assembly of Kabataan Barangay members</td>
-                            <td contenteditable="true">Conducted regular KK assemblies</td>
-                            <td contenteditable="true">Number of assemblies conducted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">20,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">20,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">11.2</td>
-                            <td contenteditable="true">Barangay Day</td>
-                            <td contenteditable="true">Celebration of Barangay Day with youth participation</td>
-                            <td contenteditable="true">Successful Barangay Day celebration</td>
-                            <td contenteditable="true">Number of youth participants</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">30,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">30,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <tr>
-                            <td contenteditable="true">11.3</td>
-                            <td contenteditable="true">Youth Week</td>
-                            <td contenteditable="true">Week-long celebration of youth activities</td>
-                            <td contenteditable="true">Successful Youth Week celebration</td>
-                            <td contenteditable="true">Number of activities conducted</td>
-                            <td contenteditable="true">January 01, 2025 to December 31, 2025</td>
-                            <td contenteditable="true" class="number">40,000.00</td>
-                            <td contenteditable="true" class="number">0.00</td>
-                            <td contenteditable="true" class="number">40,000.00</td>
-                            <td contenteditable="true">SK Council</td>
-                        </tr>
-                        
-                        <!-- Total Row -->
-                        <tr class="total-row">
-                            <td colspan="7"><strong>TOTAL</strong></td>
-                            <td class="number"><strong>0.00</strong></td>
-                            <td class="number"><strong>137,000.00</strong></td>
-                            <td class="number"><strong>1,419,946.60</strong></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                    </table>
+    <!-- Delete confirmation -->
+    <div class="modal-backdrop" id="deleteConfirmModal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-labelledby="deleteConfirmHeading">
+            <div class="confirmation-content">
+                <div class="confirmation-icon" aria-hidden="true">&#9888;</div>
+                <div class="confirmation-message">
+                    <h4 id="deleteConfirmHeading">Delete this ABYIP record?</h4>
+                    <p>This removes the record from your list. This action cannot be undone.</p>
                 </div>
-
-                <!-- Modal Document Footer -->
-                <footer class="modal-document-footer">
-                    <div class="signature-blocks">
-                        <div class="signature-left">
-                            <p>Prepared by:</p>
-                            <p contenteditable="true" class="signature-name">HON. KARIM Z. NEQUINTO</p>
-                            <p contenteditable="true" class="signature-title">SK Chairperson</p>
-                        </div>
-                        <div class="signature-right">
-                            <p>Approved by:</p>
-                            <p contenteditable="true" class="signature-name">HON. LAURA P. OBLIGACION</p>
-                            <p contenteditable="true" class="signature-title">Barangay Chairman</p>
-                        </div>
-                    </div>
-                </footer>
             </div>
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeAbyipModal()">Cancel</button>
-                <button class="btn-save" onclick="saveAbyip()">Save ABYIP</button>
+                <button type="button" class="btn-cancel" id="deleteCancelBtn">Cancel</button>
+                <button type="button" class="btn-delete" id="deleteConfirmBtn">Delete</button>
             </div>
         </div>
-    </div>
-
-    <!-- Minimized Modal Bar -->
-    <div class="minimized-modal-bar" id="minimizedModalBar" style="display: none;">
-        <span>ABYIP Form - Minimized</span>
-        <button onclick="restoreModal()">Restore</button>
     </div>
 </main>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal-backdrop" id="deleteConfirmModal" style="display:none;">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3>Confirm Delete</h3>
-            <div class="modal-window-controls">
-                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
-            </div>
-        </div>
-        <div class="modal-body">
-            <div class="confirmation-content">
-                <div class="confirmation-icon">⚠️</div>
-                <div class="confirmation-message">
-                    <h4>Are you sure you want to delete this ABYIP record?</h4>
-                    <p>This action cannot be undone. The record will be permanently removed from the system.</p>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-cancel" onclick="closeDeleteConfirm()">Cancel</button>
-            <button type="button" class="btn btn-delete" onclick="confirmDelete()">Delete</button>
-        </div>
-    </div>
-</div>
-
 @vite([
     'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
     'app/modules/ABYIP/assets/js/abyip.js'
 ])
 
