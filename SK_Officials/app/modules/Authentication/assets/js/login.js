@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!loginForm) return;
 
+    // Mark server-side errors so they survive the first input clear
+    document.querySelectorAll('.sk-field-error').forEach(function (el) {
+        if (!el.hidden) el.setAttribute('data-server-error', 'true');
+    });
+
     function validateEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
@@ -51,11 +56,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!isValid) { e.preventDefault(); return false; }
 
-        window.loader?.show('Signing In...', '.sk-login-container');
+        // Disable only the submit button, NOT all inputs
+        // Disabling inputs strips the CSRF token from the POST body → causes 419
+        const submitBtn = document.getElementById('loginBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.querySelector('span').textContent = 'Signing In...';
+        }
     });
 
     document.getElementById('forgotBtn')?.addEventListener('click', function () {
-        window.loader?.show('Loading...', '.sk-login-container');
         setTimeout(() => { window.location.href = '/forgot-password'; }, 300);
     });
 });

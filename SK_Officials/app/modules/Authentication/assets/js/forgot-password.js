@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!forgotPasswordForm) return;
 
+    // Mark server-side errors so they survive the first input clear
+    document.querySelectorAll('.sk-field-error').forEach(function (el) {
+        if (!el.hidden) el.setAttribute('data-server-error', 'true');
+    });
+
     forgotPasswordForm.addEventListener('submit', function (e) {
         const email = emailInput.value.trim();
 
@@ -29,7 +34,13 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        window.loader?.show('Sending Reset Link...', '.sk-login-container');
+        // Disable only the submit button, NOT all inputs
+        // Disabling inputs strips the CSRF token from the POST body → causes 419
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.querySelector('span').textContent = 'Sending...';
+        }
     });
 
     emailInput.addEventListener('input', function () {
@@ -39,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelector('.register-link')?.addEventListener('click', function (e) {
         e.preventDefault();
-        window.loader?.show('Loading...', '.sk-login-container');
         setTimeout(() => { window.location.href = this.href; }, 300);
     });
 });
