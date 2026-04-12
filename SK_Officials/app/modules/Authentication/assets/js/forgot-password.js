@@ -1,131 +1,55 @@
-// DOM elements
-const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-const emailInput = document.getElementById('email');
-const submitBtn = document.getElementById('submitBtn');
-const errorMessage = document.getElementById('errorMessage');
-const successMessage = document.getElementById('successMessage');
+document.addEventListener('DOMContentLoaded', function () {
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const emailInput = document.getElementById('email');
+    const emailError = document.getElementById('email-error');
 
-// Initialize forgot-password page behavior
-document.addEventListener('DOMContentLoaded', function() {
+    if (!forgotPasswordForm) return;
 
-    // Pre-fill email if it exists in session
-    if (sessionStorage.getItem('rememberedEmail')) {
-        emailInput.value = sessionStorage.getItem('rememberedEmail');
-    }
-    
-    // Focus on email input
-    emailInput.focus();
-});
-
-// Form submission handler
-forgotPasswordForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Get form values
-    const email = emailInput.value.trim();
-    
-    // Basic validation
-    if (!email) {
-        showError('Please enter your email address.');
-        return;
-    }
-    
-    // Email validation
-    if (!isValidEmail(email)) {
-        showError('Please enter a valid email address.');
-        return;
-    }
-    
-    // Show loading state using centralized loader
-    window.loader.show('Sending reset instructions...', '.forgot-password-container');
-    hideError();
-    hideSuccess();
-    
-    // Simulate API call delay
-    await simulateAsyncOperation(2000);
-    
-    // Simulate successful email sending
-    window.loader.updateText('Instructions sent!');
-    
-    setTimeout(() => {
-        window.loader.hide('.forgot-password-container');
-        showSuccess();
-        
-        // Clear form
-        emailInput.value = '';
-        
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 3000);
-    }, 1000);
-});
-
-// Utility functions
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-function showError(message) {
-    errorMessage.textContent = message;
-    errorMessage.style.display = 'block';
-    errorMessage.classList.add('show');
-    
-    // Remove animation class after animation completes
-    setTimeout(() => {
-        errorMessage.classList.remove('show');
-    }, 500);
-}
-
-function hideError() {
-    errorMessage.style.display = 'none';
-    errorMessage.classList.remove('show');
-}
-
-function showSuccess() {
-    successMessage.style.display = 'block';
-    successMessage.classList.add('show');
-}
-
-function hideSuccess() {
-    successMessage.style.display = 'none';
-    successMessage.classList.remove('show');
-}
-
-function simulateAsyncOperation(delay) {
-    return new Promise(resolve => {
-        setTimeout(resolve, delay);
+    // Mark server-side errors so they survive the first input clear
+    document.querySelectorAll('.sk-field-error').forEach(function (el) {
+        if (!el.hidden) el.setAttribute('data-server-error', 'true');
     });
-}
 
-// Input field enhancements
-emailInput.addEventListener('input', function() {
-    if (this.value.trim()) {
-        this.style.borderColor = '#28a745';
-    } else {
-        this.style.borderColor = '#e1e5e9';
-    }
-    hideError();
-    hideSuccess();
-});
+    forgotPasswordForm.addEventListener('submit', function (e) {
+        const email = emailInput.value.trim();
 
-// Enter key handling for better UX
-emailInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        forgotPasswordForm.dispatchEvent(new Event('submit'));
-    }
-});
+        emailInput.classList.remove('is-invalid');
+        emailError.hidden = true;
 
-// Prevent form resubmission on page refresh
-if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.href);
-}
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Add keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    // Escape key to go back to login
-    if (e.key === 'Escape') {
-        window.location.href = '/login';
-    }
+        if (!email) {
+            e.preventDefault();
+            emailInput.classList.add('is-invalid');
+            emailError.textContent = 'Please enter your email address.';
+            emailError.hidden = false;
+            return;
+        }
+
+        if (!emailRegex.test(email)) {
+            e.preventDefault();
+            emailInput.classList.add('is-invalid');
+            emailError.textContent = 'Please enter a valid email address.';
+            emailError.hidden = false;
+            return;
+        }
+
+        // Disable only the submit button, NOT all inputs
+        // Disabling inputs strips the CSRF token from the POST body → causes 419
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.querySelector('span').textContent = 'Sending...';
+        }
+    });
+
+    emailInput.addEventListener('input', function () {
+        this.classList.remove('is-invalid');
+        emailError.hidden = true;
+    });
+
+    document.querySelector('.register-link')?.addEventListener('click', function (e) {
+        e.preventDefault();
+        setTimeout(() => { window.location.href = this.href; }, 300);
+    });
 });

@@ -1,161 +1,71 @@
-// Predefined credentials
-const VALID_CREDENTIALS = {
-    email: 'jeromebalberona412@gmail.com',
-    password: 'Jerome123!'
-};
+document.addEventListener('DOMContentLoaded', function () {
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const emailError = document.getElementById('email-error');
+    const passwordError = document.getElementById('password-error');
 
-// DOM elements
-const loginForm = document.getElementById('loginForm');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const loginBtn = document.getElementById('loginBtn');
-const errorMessage = document.getElementById('errorMessage');
-const forgotBtn = document.getElementById('forgotBtn');
+    if (!loginForm) return;
 
-// Check if already logged in
-if (sessionStorage.getItem('isLoggedIn') === 'true') {
-    window.location.href = '/dashboard';
-}
+    // Mark server-side errors so they survive the first input clear
+    document.querySelectorAll('.sk-field-error').forEach(function (el) {
+        if (!el.hidden) el.setAttribute('data-server-error', 'true');
+    });
 
-// Form submission handler
-loginForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    // Get form values
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-
-    // Basic validation
-    if (!email || !password) {
-        showError('Please fill in all fields.');
-        return;
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-    // Email validation
-    if (!isValidEmail(email)) {
-        showError('Please enter a valid email address.');
-        return;
+    function showFieldError(input, errorEl, message) {
+        input.classList.add('is-invalid');
+        errorEl.textContent = message;
+        errorEl.hidden = false;
     }
 
-    // Show loading state using centralized loader
-    window.loader.show('Logging in...', '.login-container');
-    hideError();
+    function clearFieldError(input, errorEl) {
+        input.classList.remove('is-invalid');
+        errorEl.hidden = true;
+    }
 
-    // Create form data for Laravel authentication
-    const formData = new FormData();
-    formData.append('email', email);
-    formData.append('password', password);
-    formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+    emailInput.addEventListener('input', () => clearFieldError(emailInput, emailError));
+    passwordInput.addEventListener('input', () => clearFieldError(passwordInput, passwordError));
 
-    try {
-        // Send authentication request to Laravel
-        const response = await fetch('/login', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        });
+    loginForm.addEventListener('submit', function (e) {
+        let isValid = true;
+        clearFieldError(emailInput, emailError);
+        clearFieldError(passwordInput, passwordError);
 
-        const data = await response.json();
-
-        // Check if login is successful (either Laravel auth or predefined credentials)
-        if ((response.ok && data.success) || (email === VALID_CREDENTIALS.email && password === VALID_CREDENTIALS.password)) {
-            // Single successful login - store session and redirect
-            window.loader.updateText('Login Successful!');
-
-            // Store session info
-            sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('userEmail', email);
-
-            // Single redirect to dashboard
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 1000);
-        } else {
-            throw new Error(data.message || 'Invalid credentials');
+        if (!emailInput.value.trim()) {
+            showFieldError(emailInput, emailError, 'Email address is required.');
+            isValid = false;
+        } else if (!validateEmail(emailInput.value.trim())) {
+            showFieldError(emailInput, emailError, 'Please enter a valid email address.');
+            isValid = false;
         }
 
-    } catch (error) {
-        // Failed login
-        window.loader.hide('.login-container');
-        showError('The credentials are incorrect.');
-        passwordInput.value = ''; // Clear only password field
-        passwordInput.focus(); // Focus back to password field
-    }
-});
+        if (!passwordInput.value) {
+            showFieldError(passwordInput, passwordError, 'Password is required.');
+            isValid = false;
+        } else if (passwordInput.value.length < 8) {
+            showFieldError(passwordInput, passwordError, 'Password must be at least 8 characters.');
+            isValid = false;
+        } else if (passwordInput.value.length > 64) {
+            showFieldError(passwordInput, passwordError, 'Password must not exceed 64 characters.');
+            isValid = false;
+        }
 
-// Forgot password handler
-forgotBtn.addEventListener('click', function () {
-    // Redirect to forgot password page
-    window.location.href = '/forgot-password';
-});
+        if (!isValid) { e.preventDefault(); return false; }
 
-// Utility functions
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-function showError(message) {
-    errorMessage.textContent = message;
-    errorMessage.style.display = 'block';
-    errorMessage.classList.add('show');
-
-    // Remove animation class after animation completes
-    setTimeout(() => {
-        errorMessage.classList.remove('show');
-    }, 500);
-}
-
-function hideError() {
-    errorMessage.style.display = 'none';
-    errorMessage.classList.remove('show');
-}
-
-function simulateAsyncOperation(delay) {
-    return new Promise(resolve => {
-        setTimeout(resolve, delay);
+        // Disable only the submit button, NOT all inputs
+        // Disabling inputs strips the CSRF token from the POST body → causes 419
+        const submitBtn = document.getElementById('loginBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.querySelector('span').textContent = 'Signing In...';
+        }
     });
-}
 
-// Input field enhancements
-emailInput.addEventListener('input', function () {
-    if (this.value.trim()) {
-        this.style.borderColor = '#28a745';
-    } else {
-        this.style.borderColor = '#e1e5e9';
-    }
-    hideError();
+    document.getElementById('forgotBtn')?.addEventListener('click', function () {
+        setTimeout(() => { window.location.href = '/forgot-password'; }, 300);
+    });
 });
-
-passwordInput.addEventListener('input', function () {
-    if (this.value) {
-        this.style.borderColor = '#28a745';
-    } else {
-        this.style.borderColor = '#e1e5e9';
-    }
-    hideError();
-});
-
-// Enter key handling for better UX
-passwordInput.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        loginForm.dispatchEvent(new Event('submit'));
-    }
-});
-
-emailInput.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        passwordInput.focus();
-    }
-});
-
-// Focus management
-emailInput.focus();
-
-// Prevent form resubmission on page refresh
-if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.href);
-}

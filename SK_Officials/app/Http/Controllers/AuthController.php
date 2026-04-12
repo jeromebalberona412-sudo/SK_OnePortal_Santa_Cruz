@@ -14,30 +14,39 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required',
         ]);
 
         // Predefined credentials for demo
-        $validEmail = 'jeromebalberona412@gmail.com';
+        $validEmail    = 'jeromebalberona412@gmail.com';
         $validPassword = 'Jerome123!';
 
         if ($credentials['email'] === $validEmail && $credentials['password'] === $validPassword) {
-            // Create a simple session for demo purposes
             Session::put('authenticated', true);
             Session::put('user_email', $credentials['email']);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Login successful',
-                'redirect' => route('dashboard')
-            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success'  => true,
+                    'message'  => 'Login successful',
+                    'redirect' => route('dashboard'),
+                ]);
+            }
+
+            return redirect()->route('dashboard');
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'The credentials are incorrect.'
-        ], 401);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The credentials are incorrect.',
+            ], 401);
+        }
+
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => 'The credentials are incorrect.']);
     }
 
     /**

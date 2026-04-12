@@ -8,7 +8,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: #f0f1f5;
     min-height: 100vh;
 }
 
@@ -141,8 +141,8 @@ body {
 .filter-input:focus,
 .filter-select:focus {
     outline: none;
-    border-color: #1f3c6d;
-    box-shadow: 0 0 0 3px rgba(31, 60, 109, 0.2);
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
 }
 
 .page-content-section {
@@ -193,7 +193,7 @@ body {
 }
 
 .kabataan-table thead {
-    background: #1f3c6d;
+    background: #2c2c3e;
 }
 
 .kabataan-table thead th {
@@ -263,7 +263,7 @@ body {
 }
 
 .kabataan-table tbody tr:hover {
-    background: #fef9c3;
+    background: rgba(245, 197, 24, 0.10);
 }
 
 .kabataan-name-cell {
@@ -287,7 +287,7 @@ body {
 
 /* Action buttons: View = blue, Edit = yellow */
 .btn-action-view {
-    background: #1d4ed8;
+    background: #3a3a4a;
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -299,7 +299,7 @@ body {
 }
 
 .btn-action-view:hover {
-    background: #1e40af;
+    background: #2c2c3e;
 }
 
 .btn-action-edit {
@@ -376,7 +376,7 @@ body {
 
 .modal-header {
     padding: 14px 18px;
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -474,8 +474,8 @@ body {
 }
 
 .kabataan-mode-btn.active {
-    border-color: #1f3c6d;
-    background: #1f3c6d;
+    border-color: #2c2c3e;
+    background: #2c2c3e;
     color: #fff;
 }
 
@@ -537,10 +537,10 @@ body {
 .kabataan-view-section-title {
     font-size: 12px;
     font-weight: 900;
-    color: #1f3c6d;
+    color: #2c2c3e;
     margin: 8px 0 4px 0;
     padding-bottom: 2px;
-    border-bottom: 1px solid #1f3c6d;
+    border-bottom: 1px solid #2c2c3e;
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
@@ -580,7 +580,7 @@ body {
 .kabataan-block-title {
     font-size: 15px;
     font-weight: 700;
-    color: #1f3c6d;
+    color: #2c2c3e;
     margin-bottom: 6px;
 }
 
@@ -769,9 +769,9 @@ body {
 }
 
 .pagination-btn:hover:not(:disabled) {
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
-    border-color: #1f3c6d;
+    border-color: #2c2c3e;
 }
 
 .pagination-btn:disabled {
@@ -807,9 +807,9 @@ body {
 }
 
 .page-number.active {
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
-    border-color: #1f3c6d;
+    border-color: #2c2c3e;
 }
 
 @media (max-width: 768px) {

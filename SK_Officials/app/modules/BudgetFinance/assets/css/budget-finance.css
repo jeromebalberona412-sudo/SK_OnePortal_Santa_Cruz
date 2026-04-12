@@ -42,7 +42,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: #f0f1f5;
     min-height: 100vh;
 }
 
@@ -147,7 +147,7 @@ body {
 }
 
 .summary-card.blue {
-    background: #1d4ed8;
+    background: #3a3a4a;
 }
 
 .summary-card.red {
@@ -195,11 +195,11 @@ body {
 }
 
 .budget-table thead th {
-    background: #1d4ed8;
+    background: #3a3a4a;
 }
 
 .budget-row-budget {
-    color: #1d4ed8;
+    color: #3a3a4a;
     font-weight: 800;
 }
 
@@ -227,7 +227,7 @@ body {
 
 .status-pill.Planned {
     background: #dbeafe;
-    color: #1e40af;
+    color: #2c2c3e;
 }
 
 .status-pill.Ongoing {
@@ -249,7 +249,7 @@ body {
 }
 
 .budget-view-btn {
-    background: #1d4ed8;
+    background: #3a3a4a;
     color: #ffffff;
     padding: 6px 10px;
     border-radius: 999px;
@@ -262,12 +262,12 @@ body {
 }
 
 .budget-view-btn:hover {
-    background: #1e40af;
+    background: #2c2c3e;
     transform: translateY(-1px);
 }
 
 .budget-action-btn {
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
     padding: 6px 10px;
     border-radius: 999px;
@@ -285,7 +285,7 @@ body {
 
 .budget-action-btn.secondary {
     background: #ffffff;
-    color: #1f3c6d;
+    color: #2c2c3e;
     border: 1px solid rgba(31, 60, 109, 0.35);
     box-shadow: none;
 }
@@ -343,7 +343,7 @@ body {
 
 .modal-header {
     padding: 14px 18px;
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -506,7 +506,7 @@ body {
     }
 
     .print-summary-item.blue {
-        background: #1d4ed8;
+        background: #3a3a4a;
     }
 
     .print-summary-item.red {

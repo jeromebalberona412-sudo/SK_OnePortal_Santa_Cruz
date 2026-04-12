@@ -8,7 +8,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: #f0f1f5;
     min-height: 100vh;
 }
 
@@ -115,8 +115,8 @@ body {
 .filter-input:focus,
 .filter-select:focus {
     outline: none;
-    border-color: #1f3c6d;
-    box-shadow: 0 0 0 3px rgba(31, 60, 109, 0.2);
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
 }
 
 .page-content-section {
@@ -161,7 +161,7 @@ body {
 }
 
 .events-table th {
-    background: #1d4ed8;
+    background: #3a3a4a;
     color: #ffffff;
 }
 
@@ -184,7 +184,7 @@ body {
 
 .status-pill.upcoming {
     background: #eff6ff;
-    color: #1d4ed8;
+    color: #3a3a4a;
 }
 
 .status-pill.ongoing {
@@ -216,24 +216,24 @@ body {
 }
 
 .event-action-view {
-    background: #1d4ed8;
+    background: #3a3a4a;
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(29, 78, 216, 0.35);
 }
 
 .event-action-view:hover {
-    background: #1e40af;
+    background: #2c2c3e;
     transform: translateY(-1px);
 }
 
 .event-action-edit {
-    background: #f4c20d;
+    background: #f5c518;
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(244, 194, 13, 0.45);
 }
 
 .event-action-edit:hover {
-    background: #d4a80a;
+    background: #e6a800;
     transform: translateY(-1px);
 }
 
@@ -294,7 +294,7 @@ body {
 
 .modal-header {
     padding: 14px 18px;
-    background: #1f3c6d;
+    background: #2c2c3e;
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -385,8 +385,8 @@ body {
 
 .event-time-part:focus {
     outline: none;
-    border-color: #1f3c6d;
-    box-shadow: 0 0 0 3px rgba(31, 60, 109, 0.2);
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
 }
 
 .modal-field input,

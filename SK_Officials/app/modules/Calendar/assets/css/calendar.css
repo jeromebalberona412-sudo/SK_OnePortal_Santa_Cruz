@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: #f0f1f5;
     min-height: 100vh;
 }
 
@@ -28,7 +28,7 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    color: #1f3c6d;
+    color: #2c2c3e;
 }
 
 .calendar-title {
@@ -47,7 +47,7 @@ body {
     flex-wrap: wrap;
     gap: 12px;
     padding: 10px 16px;
-    background: rgba(31, 60, 109, 0.85);
+    background: rgba(44, 44, 62, 0.90);
     border-radius: 12px;
 }
 
@@ -69,7 +69,7 @@ body {
 }
 
 .calendar-nav-select option {
-    color: #1f3c6d;
+    color: #2c2c3e;
 }
 
 .calendar-nav-btn {
@@ -91,7 +91,7 @@ body {
     padding: 10px 20px;
     border-radius: 10px;
     border: none;
-    background: #f4c20d;
+    background: #f5c518;
     color: #ffffff;
     font-weight: 700;
     font-size: 14px;
@@ -99,15 +99,15 @@ body {
 }
 
 .calendar-jump-btn:hover {
-    background: #d4a80a;
+    background: #e6a800;
 }
 
 .calendar-main-section {
     background: #ffffff;
     border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 8px 24px rgba(244, 194, 13, 0.2);
-    border: 1px solid #f4c20d;
+    box-shadow: 0 8px 24px rgba(245, 197, 24, 0.20);
+    border: 1px solid #f5c518;
 }
 
 .calendar-legend {
@@ -132,11 +132,11 @@ body {
 }
 
 .legend-dot.has-notes {
-    background: #f4c20d;
+    background: #f5c518;
 }
 
 .legend-dot.today {
-    background: #d4a80a;
+    background: #e6a800;
 }
 
 .calendar-grid {
@@ -167,19 +167,19 @@ body {
 }
 
 .calendar-day:hover {
-    background: #fff7d1;
-    border-color: #f4c20d;
-    box-shadow: 0 4px 12px rgba(244, 194, 13, 0.25);
+    background: rgba(245, 197, 24, 0.08);
+    border-color: #f5c518;
+    box-shadow: 0 4px 12px rgba(245, 197, 24, 0.25);
 }
 
 .calendar-day.is-today {
-    border: 2px solid #d4a80a;
-    background: #fffef5;
-    box-shadow: 0 0 0 1px #f4c20d;
+    border: 2px solid #e6a800;
+    background: #fffdf0;
+    box-shadow: 0 0 0 1px #f5c518;
 }
 
 .calendar-day.has-notes {
-    border-color: #f4c20d;
+    border-color: #f5c518;
 }
 
 .calendar-day-cell-actions {
@@ -232,7 +232,7 @@ body {
 .calendar-day-add {
     margin-top: auto;
     font-size: 10px;
-    color: #1f3c6d;
+    color: #2c2c3e;
     text-align: right;
     font-weight: 600;
 }
@@ -304,7 +304,7 @@ body {
     margin: -20px -20px 0 -20px;
     padding: 14px 20px;
     flex-shrink: 0;
-    background: #1f3c6d;
+    background: #2c2c3e;
     border-radius: 16px 16px 0 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
@@ -352,7 +352,7 @@ body {
     display: block;
     font-size: 13px;
     font-weight: 600;
-    color: #1f3c6d;
+    color: #2c2c3e;
     margin-bottom: 4px;
     margin-top: 10px;
 }
@@ -371,7 +371,7 @@ body {
 
 .calendar-note-title-input:focus {
     outline: none;
-    border-color: #1f3c6d;
+    border-color: #2c2c3e;
 }
 
 .calendar-note-title-input[readonly] {
@@ -401,8 +401,8 @@ body {
 
 .calendar-modal textarea:focus {
     outline: none;
-    border-color: #1f3c6d;
-    box-shadow: 0 0 0 3px rgba(31, 60, 109, 0.2);
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
 }
 
 .calendar-modal-actions {
@@ -606,17 +606,17 @@ body {
 }
 
 .calendar-confirm-overlay.theme-edit .calendar-confirm-header {
-    background: #f4c20d;
-    color: #1f3c6d;
+    background: #f5c518;
+    color: #2c2c3e;
 }
 
 .calendar-confirm-overlay.theme-edit .calendar-confirm-actions {
-    background: #fffef5;
+    background: #fffdf0;
 }
 
 .calendar-confirm-overlay.theme-edit .calendar-confirm-ok {
-    background: #f4c20d;
-    color: #1f3c6d;
+    background: #f5c518;
+    color: #2c2c3e;
 }
 
 .calendar-confirm-overlay.theme-delete .calendar-confirm-header {
@@ -654,14 +654,14 @@ body {
     padding: 24px;
     min-width: 320px;
     max-width: 95%;
-    box-shadow: 0 12px 40px rgba(244, 194, 13, 0.3);
-    border: 2px solid #f4c20d;
+    box-shadow: 0 12px 40px rgba(245, 197, 24, 0.30);
+    border: 2px solid #f5c518;
 }
 
 .calendar-jump-title {
     font-size: 20px;
     font-weight: 800;
-    color: #1f3c6d;
+    color: #2c2c3e;
     margin-bottom: 8px;
     text-align: center;
 }
@@ -686,7 +686,7 @@ body {
     overflow-y: auto;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
-    background: #fffef5;
+    background: #fffdf0;
 }
 
 .calendar-jump-col-inner {
@@ -702,12 +702,12 @@ body {
 }
 
 .calendar-jump-item:hover {
-    background: #fff9e6;
+    background: #fffdf0;
 }
 
 .calendar-jump-item.selected {
-    background: #f4c20d;
-    color: #1f3c6d;
+    background: #f5c518;
+    color: #2c2c3e;
     font-weight: 700;
 }
 
@@ -735,14 +735,14 @@ body {
     padding: 10px 24px;
     border-radius: 10px;
     border: none;
-    background: #f4c20d;
-    color: #1f3c6d;
+    background: #f5c518;
+    color: #2c2c3e;
     font-weight: 700;
     cursor: pointer;
 }
 
 .calendar-jump-ok:hover {
-    background: #d4a80a;
+    background: #e6a800;
 }
 
 /* Success/action toast - top-center */
