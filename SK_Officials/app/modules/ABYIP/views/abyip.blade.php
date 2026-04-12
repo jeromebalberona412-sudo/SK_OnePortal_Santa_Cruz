@@ -25,6 +25,10 @@
                 <p class="page-subtitle">Create, view, and manage ABYIP records for the barangay.</p>
             </div>
             <div class="page-header-right">
+                <div class="abyip-search-inline">
+                    <label for="abyipRecordsSearch" class="abyip-sr-only">Search records by title, date, or time</label>
+                    <input type="search" id="abyipRecordsSearch" class="abyip-filter-search-inline" placeholder="Search title, date, or time created…" autocomplete="off">
+                </div>
                 <button type="button" class="btn primary-btn" id="addAbyipBtn">+ Create ABYIP</button>
             </div>
         </section>
@@ -32,28 +36,6 @@
         <section class="page-content-section">
             <div class="section-heading-row">
                 <h2 class="section-title">ABYIP Records</h2>
-            </div>
-            
-            <!-- Filters outside the table card with white background -->
-            <div class="abyip-records-filters-white">
-                <div class="abyip-records-filter-left">
-                    <div class="abyip-records-filter-status-wrap">
-                        <label for="abyipRecordsStatusFilter" class="abyip-filter-label">Status</label>
-                        <select id="abyipRecordsStatusFilter" class="abyip-filter-status">
-                            <option value="">All statuses</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Completed">Completed</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="abyip-records-filter-right">
-                    <div class="abyip-records-search-wrap">
-                        <label for="abyipRecordsSearch" class="abyip-sr-only">Search records by title, date, or time</label>
-                        <input type="search" id="abyipRecordsSearch" class="abyip-filter-search" placeholder="Search title, date, or time created…" autocomplete="off">
-                    </div>
-                </div>
             </div>
             
             <div class="table-card abyip-records-card">

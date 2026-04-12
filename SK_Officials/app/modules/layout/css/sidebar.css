@@ -140,15 +140,15 @@
 }
 
 .nav-link.active {
-    background: rgba(245, 197, 24, 0.16);
-    color: #f5c518;
+    background: #f5c518;
+    color: #2c2c3e;
     font-weight: 600;
     box-shadow: 0 2px 12px rgba(245, 197, 24, 0.15);
     border: 1px solid rgba(245, 197, 24, 0.22);
 }
 
 .nav-link.active .nav-icon {
-    color: #f5c518;
+    color: #2c2c3e;
 }
 
 .nav-link.active::before {

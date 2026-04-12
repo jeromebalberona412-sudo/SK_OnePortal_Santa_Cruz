@@ -76,24 +76,24 @@
 
                     <!-- Email Field -->
                     <div class="sk-form-group">
-                        <label for="email" class="sk-label">
-                            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <label for="email" class="sk-label">Email Address</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                             </svg>
-                            Email Address
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            class="sk-input"
-                            value="{{ old('email') }}"
-                            autofocus
-                            placeholder="Enter your email address"
-                            maxlength="100"
-                            autocomplete="email"
-                        >
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="sk-input"
+                                value="{{ old('email') }}"
+                                autofocus
+                                placeholder="Enter your email address"
+                                maxlength="100"
+                                autocomplete="email"
+                            >
+                        </div>
                         <div class="sk-field-error" id="email-error" @if(! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
                     </div>
 

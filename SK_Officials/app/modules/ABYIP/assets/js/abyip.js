@@ -12,10 +12,10 @@ let recordPendingDeleteId = null;
 let pendingCreateDocumentHtml = null;
 
 let filterSearchText = '';
-let filterStatusValue = '';
 let searchDebounceTimer = null;
 
-const STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected', 'Completed'];
+// Static status - all records are always Pending
+const STATIC_STATUS = 'Pending';
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-PH', {
@@ -173,9 +173,6 @@ function getRecordSearchHaystack(record) {
 }
 
 function recordMatchesFilters(record) {
-    if (filterStatusValue && (record.status || 'Pending') !== filterStatusValue) {
-        return false;
-    }
     const q = filterSearchText.trim().toLowerCase();
     if (!q) return true;
     return getRecordSearchHaystack(record).indexOf(q) !== -1;
@@ -185,29 +182,8 @@ function getFilteredRecords() {
     return abyipRecords.filter(recordMatchesFilters);
 }
 
-function buildStatusSelect(id, current) {
-    const cur = current || 'Pending';
-    let opts = '';
-    for (let i = 0; i < STATUS_OPTIONS.length; i++) {
-        const v = STATUS_OPTIONS[i];
-        opts +=
-            '<option value="' +
-            escapeAttr(v) +
-            '"' +
-            (v === cur ? ' selected' : '') +
-            '>' +
-            escapeHtml(v) +
-            '</option>';
-    }
-    return (
-        '<select class="' +
-        statusSelectClass(cur) +
-        '" data-id="' +
-        id +
-        '" aria-label="Status">' +
-        opts +
-        '</select>'
-    );
+function buildStatusDisplay() {
+    return '<span class="status-badge status-pending">Pending</span>';
 }
 
 function renderRecordsTable() {
@@ -223,7 +199,7 @@ function renderRecordsTable() {
     const filtered = getFilteredRecords();
     if (filtered.length === 0) {
         tbody.innerHTML =
-            '<tr><td colspan="6" class="abyip-records-empty">No records match your search or status filter.</td></tr>';
+            '<tr><td colspan="6" class="abyip-records-empty">No records match your search.</td></tr>';
         return;
     }
 
@@ -244,7 +220,7 @@ function renderRecordsTable() {
                 formatTimeCreated12(record.dateCreated) +
                 '</td>' +
                 '<td class="abyip-records-status-cell">' +
-                buildStatusSelect(record.id, record.status) +
+                buildStatusDisplay() +
                 '</td>' +
                 '<td class="abyip-records-remarks-readonly">' +
                 escapeHtml(remarksText) +
@@ -433,7 +409,7 @@ function confirmMetaSave() {
         id: nextId,
         title,
         dateCreated: new Date().toISOString(),
-        status: 'Pending',
+        status: STATIC_STATUS,
         statusRemarks,
         documentHtml: pendingCreateDocumentHtml
     });
@@ -474,7 +450,7 @@ function loadRecords() {
             id: 1,
             title: DEFAULT_RECORD_TITLE,
             dateCreated: new Date().toISOString(),
-            status: 'Pending',
+            status: STATIC_STATUS,
             statusRemarks: '',
             documentHtml: ''
         }
@@ -570,16 +546,8 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (action === 'delete') openDeleteModal(id);
     });
 
-    document.getElementById('recordsTableBody')?.addEventListener('change', function (e) {
-        const sel = e.target.closest('select.abyip-row-status');
-        if (!sel) return;
-        const id = parseInt(sel.getAttribute('data-id'), 10);
-        const status = sel.value;
-        updateRecordStatus(id, status);
-    });
 
     const searchInput = document.getElementById('abyipRecordsSearch');
-    const statusFilter = document.getElementById('abyipRecordsStatusFilter');
     if (searchInput) {
         searchInput.addEventListener('input', function () {
             clearTimeout(searchDebounceTimer);
@@ -587,12 +555,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 filterSearchText = searchInput.value || '';
                 renderRecordsTable();
             }, 200);
-        });
-    }
-    if (statusFilter) {
-        statusFilter.addEventListener('change', function () {
-            filterStatusValue = statusFilter.value || '';
-            renderRecordsTable();
         });
     }
 
@@ -612,8 +574,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalContainer = modalOverlay?.querySelector('.modal-container');
     if (maxBtn && modalOverlay && modalContainer) {
         maxBtn.addEventListener('click', function () {
-            modalOverlay.classList.toggle('modal-maximized');
-            modalContainer.classList.toggle('maximized');
+            const isMax = modalOverlay.classList.toggle('modal-maximized');
+            modalContainer.classList.toggle('modal-maximized', isMax);
+            maxBtn.textContent = isMax ? '⧉' : '□';
         });
     }
 

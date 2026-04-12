@@ -45,6 +45,7 @@ html {
         overflow-x: hidden;
         height: auto;
     }
+
     html {
         overflow-y: auto;
         overflow-x: hidden;
@@ -97,8 +98,13 @@ html {
 }
 
 @keyframes subtleZoom {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.03); }
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.03);
+    }
 }
 
 .sk-gradient-overlay {
@@ -159,9 +165,19 @@ html {
 }
 
 @keyframes float {
-    0%, 100% { transform: translate(0, 0); }
-    33% { transform: translate(30px, -30px); }
-    66% { transform: translate(-20px, 20px); }
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    33% {
+        transform: translate(30px, -30px);
+    }
+
+    66% {
+        transform: translate(-20px, 20px);
+    }
 }
 
 /* Container */
@@ -206,6 +222,7 @@ html {
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -231,10 +248,13 @@ html {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
         opacity: 0.5;
     }
+
     50% {
         transform: scale(1.1);
         opacity: 0.9;
@@ -255,8 +275,15 @@ html {
 }
 
 @keyframes logoFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
 }
 
 .sk-main-title {
@@ -322,6 +349,7 @@ html {
         opacity: 0;
         transform: translateX(60px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -341,8 +369,13 @@ html {
 }
 
 @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
 }
 
 .sk-login-card::after {
@@ -364,10 +397,7 @@ html {
 .card-title {
     font-size: 2rem;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--sk-gold-dark) 0%, var(--sk-gold) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #2F4E85;
     margin-bottom: 0.625rem;
     letter-spacing: -0.03em;
     line-height: 1.2;
@@ -375,6 +405,8 @@ html {
     align-items: center;
     gap: 0.5rem;
     flex-wrap: nowrap;
+    justify-content: center;
+    text-align: center;
 }
 
 .wave-emoji {
@@ -387,13 +419,37 @@ html {
 }
 
 @keyframes wave {
-    0%, 100% { transform: rotate(0deg); }
-    10%, 30% { transform: rotate(14deg); }
-    20%, 40% { transform: rotate(-8deg); }
-    50% { transform: rotate(14deg); }
-    60% { transform: rotate(-4deg); }
-    70% { transform: rotate(10deg); }
-    80% { transform: rotate(0deg); }
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    10%,
+    30% {
+        transform: rotate(14deg);
+    }
+
+    20%,
+    40% {
+        transform: rotate(-8deg);
+    }
+
+    50% {
+        transform: rotate(14deg);
+    }
+
+    60% {
+        transform: rotate(-4deg);
+    }
+
+    70% {
+        transform: rotate(10deg);
+    }
+
+    80% {
+        transform: rotate(0deg);
+    }
 }
 
 .card-subtitle {
@@ -401,6 +457,7 @@ html {
     color: var(--sk-gray-600);
     font-weight: 500;
     letter-spacing: 0.01em;
+    text-align: center;
 }
 
 /* Alerts */
@@ -421,6 +478,7 @@ html {
         opacity: 0;
         transform: translateY(-12px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -459,24 +517,30 @@ html {
 }
 
 .sk-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
     font-size: 0.95rem;
     font-weight: 600;
     color: var(--sk-gray-700);
     letter-spacing: 0.01em;
 }
 
-.label-icon {
-    width: 18px;
-    height: 18px;
+.input-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
     color: var(--sk-gold);
+    z-index: 1;
 }
 
 .sk-input {
     width: 100%;
-    padding: 0.875rem 1.125rem;
+    padding: 0.875rem 1.125rem 0.875rem 3rem;
     font-size: 0.95rem;
     border: 2px solid var(--sk-gray-200);
     border-radius: 12px;
@@ -583,7 +647,7 @@ html {
 
 .sk-link {
     font-size: 0.95rem;
-    color: var(--sk-gold-dark);
+    color: #2F4E85;
     text-decoration: none;
     font-weight: 600;
     background: none;
@@ -601,7 +665,7 @@ html {
     left: 0;
     width: 0;
     height: 2px;
-    background: var(--sk-gold-dark);
+    background: #2F4E85;
     transition: width var(--transition-base);
 }
 
@@ -610,7 +674,7 @@ html {
 }
 
 .sk-link:hover {
-    color: var(--sk-gold);
+    color: #2D4C7C;
 }
 
 /* Submit Button */
@@ -619,8 +683,8 @@ html {
     padding: 0.875rem 1.5rem;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--sk-dark);
-    background: linear-gradient(135deg, var(--sk-yellow) 0%, var(--sk-yellow-light) 100%);
+    color: white;
+    background: #2F4E85;
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -629,7 +693,7 @@ html {
     justify-content: center;
     gap: 0.75rem;
     transition: all var(--transition-base);
-    box-shadow: 0 8px 24px rgba(245, 197, 24, 0.30);
+    box-shadow: 0 8px 24px rgba(47, 78, 133, 0.30);
     position: relative;
     overflow: hidden;
     margin-top: 0.5rem;
@@ -652,12 +716,11 @@ html {
 }
 
 .sk-submit-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(245, 197, 24, 0.40);
+    background: #2D4C7C;
 }
 
 .sk-submit-btn:active {
-    transform: translateY(-1px);
+    background: #2D4C7C;
 }
 
 .sk-submit-btn:disabled {
@@ -673,7 +736,7 @@ html {
 }
 
 .sk-submit-btn:hover .btn-icon {
-    transform: translateX(5px);
+    transform: none;
 }
 
 /* Loading Overlay */
@@ -739,7 +802,9 @@ html {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */
@@ -747,9 +812,11 @@ html {
     .sk-branding-section {
         padding: 3rem;
     }
+
     .sk-main-title {
         font-size: 4rem;
     }
+
     .sk-login-section {
         width: 500px;
         padding: 3rem 3rem 3rem 2rem;
@@ -763,23 +830,28 @@ html {
         overflow-y: auto;
         height: auto;
     }
+
     .sk-branding-section {
         padding: 4rem 3rem 3rem;
         text-align: center;
     }
+
     .branding-content {
         max-width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
     }
+
     .sk-main-title {
         font-size: 4rem;
     }
+
     .sk-tagline {
         font-size: 1.35rem;
         max-width: 600px;
     }
+
     .sk-login-section {
         width: 100%;
         max-width: 580px;
@@ -793,27 +865,34 @@ html {
     .sk-branding-section {
         padding: 3rem 2rem 2rem;
     }
+
     .sk-main-title {
         font-size: 3rem;
     }
+
     .sk-tagline {
         font-size: 1.2rem;
     }
+
     .logo-wrapper::before {
         width: 240px;
         height: 240px;
     }
+
     .sk-logo {
         width: 180px;
         height: 180px;
     }
+
     .sk-login-section {
         padding: 0 2rem 3rem;
     }
+
     .sk-login-card {
         padding: 3rem 2.5rem;
         border-radius: 28px;
     }
+
     .card-title {
         font-size: 2.25rem;
     }
@@ -823,39 +902,50 @@ html {
     .sk-branding-section {
         padding: 2.5rem 1.5rem 2rem;
     }
+
     .sk-main-title {
         font-size: 2.5rem;
     }
+
     .sk-tagline {
         font-size: 1.1rem;
     }
+
     .logo-wrapper {
         margin-bottom: 2rem;
     }
+
     .logo-wrapper::before {
         width: 200px;
         height: 200px;
     }
+
     .sk-logo {
         width: 150px;
         height: 150px;
     }
+
     .sk-login-section {
         padding: 0 1.5rem 2.5rem;
     }
+
     .sk-login-card {
         padding: 2.5rem 2rem;
         border-radius: 24px;
     }
+
     .card-header {
         margin-bottom: 2.5rem;
     }
+
     .card-title {
         font-size: 2rem;
     }
+
     .sk-form-options {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 1rem;
     }
 }
@@ -864,37 +954,53 @@ html {
     .sk-branding-section {
         padding: 2rem 1.25rem 1.5rem;
     }
+
     .sk-main-title {
         font-size: 2rem;
     }
+
     .sk-tagline {
         font-size: 1rem;
     }
+
     .logo-wrapper {
         margin-bottom: 1.5rem;
     }
+
     .logo-wrapper::before {
         width: 160px;
         height: 160px;
     }
+
     .sk-logo {
         width: 120px;
         height: 120px;
     }
+
     .sk-login-section {
         padding: 0 1.25rem 2rem;
     }
+
     .sk-login-card {
         padding: 2rem 1.75rem;
         border-radius: 20px;
     }
+
     .card-title {
         font-size: 1.75rem;
     }
+
     .sk-input {
-        padding: 0.875rem 1rem;
+        padding: 0.875rem 1rem 0.875rem 3.5rem;
         font-size: 0.95rem;
     }
+
+    .input-icon {
+        left: 1.25rem;
+        width: 22px;
+        height: 22px;
+    }
+
     .sk-submit-btn {
         padding: 1rem 1.5rem;
         font-size: 1rem;
@@ -903,6 +1009,7 @@ html {
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
