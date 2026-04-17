@@ -12,17 +12,12 @@ function initializeCommitteesUI() {
     const otherCommitteeField = document.getElementById('otherCommitteeField');
     const otherCommitteeInput = document.getElementById('otherCommitteeInput');
     const headInput = document.getElementById('committeeHeadInput');
-    const membersChecklist = document.getElementById('committeeMembersChecklist');
     const descInput = document.getElementById('committeeDescriptionInput');
-    const statusInput = document.getElementById('committeeStatusInput');
     const saveBtn = document.getElementById('committeeSaveBtn');
     const successModal = document.getElementById('committeeSuccessModal');
     const successMessage = document.getElementById('committeeSuccessMessage');
     const viewModal = document.getElementById('committeeViewModal');
-    const viewCommitteeName = document.getElementById('viewCommitteeName');
     const viewCommitteeHead = document.getElementById('viewCommitteeHead');
-    const viewCommitteeMembers = document.getElementById('viewCommitteeMembers');
-    const viewCommitteeDescription = document.getElementById('viewCommitteeDescription');
 
     // Modal maximize/minimize (restore) controls
     function resetModalMaximize(backdropEl) {
@@ -69,7 +64,10 @@ function initializeCommitteesUI() {
         'Robert James Tan',
     ];
 
-    function populateHeadDropdowns() {
+    function populateDropdowns() {
+        const assignedHeads = committees.map(c => c.head);
+        const assignedCommittees = committees.map(c => c.name);
+
         if (headFilter) {
             headFilter.innerHTML = '<option value="">All heads</option>';
             officialMembers.forEach((name) => {
@@ -83,34 +81,61 @@ function initializeCommitteesUI() {
         if (headInput) {
             headInput.innerHTML = '<option value="">Select Committee Head</option>';
             officialMembers.forEach((name) => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                headInput.appendChild(option);
+                // Skip if this person is already assigned to a committee (except when editing)
+                const isAssigned = assignedHeads.includes(name) &&
+                    !(editingIndex >= 0 && committees[editingIndex]?.head === name);
+
+                if (!isAssigned) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    headInput.appendChild(option);
+                }
             });
         }
-    }
 
-    function populateMembersDropdown(selectedHead) {
-        if (!membersChecklist) return;
-        membersChecklist.innerHTML = '';
-        officialMembers
-            .filter((member) => !selectedHead || member !== selectedHead)
-            .forEach((member) => {
-                const label = document.createElement('label');
-                label.className = 'member-checkbox-item';
+        // Populate committee name dropdown with available committees
+        if (nameInput) {
+            const currentValue = nameInput.value;
+            nameInput.innerHTML = '<option value="">Select Committee</option>';
 
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = member;
+            const standardCommittees = [
+                'Committee on Peace and Order',
+                'Committee on Health',
+                'Committee on Education',
+                'Committee on Environment',
+                'Committee on Social Services',
+                'Committee on Livelihood / Employment',
+                'Committee on Infrastructure',
+                'Committee on Budget and Finance',
+                'Committee on Women and Family',
+                'Committee on Youth and Sports Development'
+            ];
 
-                const text = document.createElement('span');
-                text.textContent = member;
+            standardCommittees.forEach((committee) => {
+                // Skip if this committee is already assigned (except when editing the same committee)
+                const isAssigned = assignedCommittees.includes(committee) &&
+                    !(editingIndex >= 0 && committees[editingIndex]?.name === committee);
 
-                label.appendChild(checkbox);
-                label.appendChild(text);
-                membersChecklist.appendChild(label);
+                if (!isAssigned) {
+                    const option = document.createElement('option');
+                    option.value = committee;
+                    option.textContent = committee;
+                    nameInput.appendChild(option);
+                }
             });
+
+            // Always add "Other" option
+            const otherOption = document.createElement('option');
+            otherOption.value = 'Other';
+            otherOption.textContent = 'Other';
+            nameInput.appendChild(otherOption);
+
+            // Restore previous selection if it still exists
+            if (currentValue) {
+                nameInput.value = currentValue;
+            }
+        }
     }
 
     function render() {
@@ -120,8 +145,7 @@ function initializeCommitteesUI() {
             const matchesSearch =
                 !currentQuery ||
                 c.name.toLowerCase().includes(currentQuery) ||
-                c.description.toLowerCase().includes(currentQuery) ||
-                c.members.some((m) => m.toLowerCase().includes(currentQuery));
+                c.head.toLowerCase().includes(currentQuery);
 
             const matchesHead =
                 !currentHeadFilter ||
@@ -132,7 +156,7 @@ function initializeCommitteesUI() {
 
         if (filtered.length === 0) {
             const empty = document.createElement('tr');
-            empty.innerHTML = '<td colspan="5" class="empty-state">No committees added yet. Click "+ Add Committee".</td>';
+            empty.innerHTML = '<td colspan="3" class="empty-state">No committees assigned yet. Click "+ Assign Committee".</td>';
             grid.appendChild(empty);
             return;
         }
@@ -143,8 +167,6 @@ function initializeCommitteesUI() {
             row.innerHTML = `
                 <td>${c.name}</td>
                 <td>${c.head}</td>
-                <td>${c.members.join(', ')}</td>
-                <td>${c.description}</td>
                 <td>
                     <div class="committee-actions">
                         <button type="button" class="btn-outline" data-action="view" data-index="${sourceIndex}">View</button>
@@ -187,6 +209,7 @@ function initializeCommitteesUI() {
     // Open / close modal
     function openModal() {
         if (!modal) return;
+        populateDropdowns(); // Refresh dropdown to show available committee heads and committees
         modal.style.display = 'flex';
         resetModalMaximize(modal);
         editingIndex = -1;
@@ -203,8 +226,6 @@ function initializeCommitteesUI() {
         if (otherCommitteeField) otherCommitteeField.style.display = 'none';
         if (headInput) headInput.value = '';
         if (descInput) descInput.value = '';
-        if (statusInput) statusInput.value = 'active';
-        populateMembersDropdown('');
     }
 
     function openSuccessModal(message) {
@@ -224,11 +245,6 @@ function initializeCommitteesUI() {
         addBtn.addEventListener('click', openModal);
     }
 
-    if (headInput) {
-        headInput.addEventListener('change', () => {
-            populateMembersDropdown(headInput.value);
-        });
-    }
 
     if (modal) {
         modal.addEventListener('click', (e) => {
@@ -248,10 +264,7 @@ function initializeCommitteesUI() {
             const committee = committees[index];
 
             if (action === 'view') {
-                if (viewCommitteeName) viewCommitteeName.value = committee.name;
-                if (viewCommitteeHead) viewCommitteeHead.value = committee.head;
-                if (viewCommitteeMembers) viewCommitteeMembers.value = committee.members.join('\n');
-                if (viewCommitteeDescription) viewCommitteeDescription.value = committee.description;
+                if (viewCommitteeHead) viewCommitteeHead.value = `${committee.name} - ${committee.head}`;
                 if (viewModal) {
                     resetModalMaximize(viewModal);
                     viewModal.style.display = 'flex';
@@ -262,14 +275,8 @@ function initializeCommitteesUI() {
             editingIndex = index;
             if (nameInput) nameInput.value = committee.name;
             if (headInput) headInput.value = committee.head;
-            populateMembersDropdown(committee.head);
-            if (membersChecklist) {
-                Array.from(membersChecklist.querySelectorAll('input[type="checkbox"]')).forEach((cb) => {
-                    cb.checked = committee.members.includes(cb.value);
-                });
-            }
-            if (descInput) descInput.value = committee.description;
             if (saveBtn) saveBtn.textContent = 'Update';
+            populateDropdowns(); // Refresh dropdown when editing
             if (modal) {
                 resetModalMaximize(modal);
                 modal.style.display = 'flex';
@@ -291,11 +298,7 @@ function initializeCommitteesUI() {
             let name = (nameInput?.value || '').trim();
             const otherCommittee = (otherCommitteeInput?.value || '').trim();
             const head = (headInput?.value || '').trim();
-            const members = membersChecklist
-                ? Array.from(membersChecklist.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value.trim()).filter(Boolean)
-                : [];
             const desc = (descInput?.value || '').trim();
-            const status = (statusInput?.value || 'active').trim();
 
             // Handle Other committee option
             if (name === 'Other' && otherCommittee) {
@@ -306,7 +309,27 @@ function initializeCommitteesUI() {
             }
 
             if (!name || !head) {
-                alert('Please fill in committee name and head. UI only.');
+                alert('Please select a committee and assign it to someone.');
+                return;
+            }
+
+            // Check if the committee head is already assigned to another committee
+            const isDuplicateHead = committees.some((c, index) =>
+                c.head === head && index !== editingIndex
+            );
+
+            if (isDuplicateHead) {
+                alert(`${head} is already assigned to a committee. Please select someone else.`);
+                return;
+            }
+
+            // Check if the committee name is already assigned to another committee
+            const isDuplicateCommittee = committees.some((c, index) =>
+                c.name === name && index !== editingIndex
+            );
+
+            if (isDuplicateCommittee) {
+                alert(`${name} is already assigned. Please select a different committee.`);
                 return;
             }
 
@@ -317,11 +340,7 @@ function initializeCommitteesUI() {
             setTimeout(() => {
                 const payload = {
                     name,
-                    description: desc || 'No description yet.',
-                    headRole: 'SK Official',
                     head,
-                    members,
-                    scope: 'Custom',
                 };
                 if (editingIndex >= 0 && committees[editingIndex]) {
                     committees[editingIndex] = payload;
@@ -331,9 +350,10 @@ function initializeCommitteesUI() {
 
                 closeModal();
                 render();
+                populateDropdowns(); // Refresh dropdowns after saving
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
-                openSuccessModal(editingIndex >= 0 ? 'Update successful.' : 'Add successful.');
+                openSuccessModal(editingIndex >= 0 ? 'Update successful.' : 'Assignment successful.');
                 editingIndex = -1;
             }, 500);
         });
@@ -348,11 +368,16 @@ function initializeCommitteesUI() {
         });
     }
 
-    populateHeadDropdowns();
-    populateMembersDropdown('');
-    render();
+    if (successModal) {
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal || e.target.hasAttribute('data-success-close')) {
+                closeSuccessModal();
+            }
+        });
+    }
 
+    populateDropdowns();
+    render();
     wireModalToggle(modal);
     wireModalToggle(viewModal);
 }
-

@@ -32,7 +32,7 @@
             </div>
             <div class="page-header-right">
                 <button type="button" class="btn primary-btn" id="addCommitteeBtn">
-                    + Add Committee
+                    + Assign Committee
                 </button>
             </div>
         </section>
@@ -67,9 +67,7 @@
                     <thead>
                         <tr>
                             <th>Committee Name</th>
-                            <th>Head</th>
-                            <th>Members</th>
-                            <th>Description</th>
+                            <th>Assigned To</th>
                             <th class="col-actions">Actions</th>
                         </tr>
                     </thead>
@@ -84,7 +82,7 @@
 <div class="modal-backdrop" id="committeeModal" style="display:none;">
     <div class="modal-box">
         <div class="modal-header">
-            <h2 class="modal-title">Add Committee</h2>
+            <h2 class="modal-title">Assign Committee</h2>
             <div class="modal-window-controls">
                 <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
@@ -118,14 +116,6 @@
                     <option value="">Select Committee Head</option>
                 </select>
             </div>
-            <div class="modal-field">
-                <label class="modal-field-label-block">Members (select one or more)</label>
-                <div id="committeeMembersChecklist" class="members-checklist"></div>
-            </div>
-            <div class="modal-field">
-                <label for="committeeDescriptionInput">Description</label>
-                <textarea id="committeeDescriptionInput" rows="3" placeholder="Short description of the committee"></textarea>
-            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn" data-modal-cancel>Cancel</button>
@@ -145,10 +135,7 @@
             </div>
         </div>
         <div class="modal-body">
-            <div class="modal-field"><label>Committee Name</label><input type="text" id="viewCommitteeName" readonly></div>
-            <div class="modal-field"><label>Committee Head</label><input type="text" id="viewCommitteeHead" readonly></div>
-            <div class="modal-field"><label>Members</label><textarea id="viewCommitteeMembers" rows="4" readonly></textarea></div>
-            <div class="modal-field"><label>Description</label><textarea id="viewCommitteeDescription" rows="3" readonly></textarea></div>
+            <div class="modal-field"><label>Assigned To</label><input type="text" id="viewCommitteeHead" readonly></div>
         </div>
         <!-- Footer intentionally removed (use top-right close button) -->
     </div>
