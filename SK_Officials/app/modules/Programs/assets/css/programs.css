@@ -120,11 +120,133 @@ body {
 }
 
 .page-content-section {
+    background: #f0f1f5;
+    padding: 28px 32px;
+    box-sizing: border-box;
+}
+
+.content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    align-items: start;
+    box-sizing: border-box;
+}
+
+.main-content-area {
     background: #ffffff;
     border-radius: 18px;
-    padding: 22px;
+    padding: 20px;
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
-    border: 1px solid rgba(148, 163, 184, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.programs-sidebar {
+    min-width: 0;
+    position: sticky;
+    top: 94px;
+    max-height: calc(100vh - 94px);
+    overflow-y: auto;
+}
+
+.programs-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.programs-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(245, 197, 24, 0.25);
+    border-radius: 6px;
+}
+
+.sidebar-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 3px;
+}
+
+.sidebar-subtitle {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 16px;
+}
+
+.program-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f5f7fa;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.summary-item:hover {
+    background: #eef1fb;
+}
+
+.summary-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.summary-icon svg {
+    width: 20px;
+    height: 20px;
+    color: white;
+}
+
+.summary-icon.total {
+    background: linear-gradient(135deg, #2c2c3e, #3a3a4a);
+}
+
+.summary-icon.planned {
+    background: linear-gradient(135deg, #6b7280, #9ca3af);
+}
+
+.summary-icon.ongoing {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.summary-icon.completed {
+    background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+.summary-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.summary-content h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c2c3e;
+    margin: 0;
 }
 
 .section-heading-row {
@@ -142,19 +264,6 @@ body {
     color: #6b7280;
 }
 
-.programs-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 2.2fr) minmax(260px, 1fr);
-    gap: 18px;
-}
-
-.programs-table-card {
-    background: #f9fafb;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-    overflow: hidden;
-}
 
 .table-wrapper {
     max-height: 420px;
@@ -276,93 +385,108 @@ body {
     width: 1%;
 }
 
-.programs-summary-card {
-    background: #0f172a;
-    color: #e5e7eb;
-    border-radius: 16px;
-    padding: 16px 16px 18px 16px;
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.6);
-    position: relative;
-    overflow: hidden;
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .content-wrapper {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .programs-sidebar {
+        position: static;
+        max-height: none;
+        order: -1;
+    }
 }
 
-.programs-summary-card::before {
-    content: "";
-    position: absolute;
-    inset: -40%;
-    background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.32), transparent 55%);
-    opacity: 0.9;
-    pointer-events: none;
+@media (max-width: 768px) {
+    .page-content-section {
+        padding: 16px 20px;
+    }
+
+    .main-content-area {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .sidebar-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .summary-item {
+        padding: 10px;
+    }
+
+    .summary-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .summary-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .summary-value {
+        font-size: 16px;
+    }
+
+    .programs-table {
+        font-size: 12px;
+    }
+
+    .program-title-cell {
+        min-width: 120px;
+    }
+
+    .program-budget,
+    .program-duration {
+        min-width: 80px;
+    }
 }
 
-.programs-summary-card>* {
-    position: relative;
-    z-index: 1;
+@media (max-width: 480px) {
+    .page-content-section {
+        padding: 12px 14px;
+    }
+
+    .main-content-area {
+        padding: 12px;
+    }
+
+    .sidebar-card {
+        padding: 14px;
+    }
+
+    .sidebar-title {
+        font-size: 14px;
+    }
+
+    .summary-item {
+        padding: 8px;
+        gap: 10px;
+    }
+
+    .summary-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .summary-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .summary-content h3 {
+        font-size: 12px;
+    }
+
+    .summary-value {
+        font-size: 14px;
+    }
 }
 
-.summary-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 12px;
-}
-
-.summary-list {
-    list-style: none;
-    margin: 0 0 14px 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.summary-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-}
-
-.summary-label {
-    color: #cbd5f5;
-}
-
-.summary-value {
-    font-size: 18px;
-    font-weight: 800;
-    color: #ffffff;
-}
-
-.summary-pill {
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.summary-pill.planned {
-    background: rgba(251, 191, 36, 0.18);
-    color: #fbbf24;
-}
-
-.summary-pill.ongoing {
-    background: rgba(52, 211, 153, 0.18);
-    color: #6ee7b7;
-}
-
-.summary-pill.completed {
-    background: rgba(156, 163, 175, 0.18);
-    color: #e5e7eb;
-}
-
-.summary-note {
-    font-size: 11px;
-    color: #9ca3af;
-    margin-top: 8px;
-}
-
-/* Simple modal styles (shared by programs modal) */
 .modal-backdrop {
     position: fixed;
     inset: 0;

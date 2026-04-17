@@ -30,11 +30,6 @@
                     Plan and track major SK initiatives, budgets, and timelines.
                 </p>
             </div>
-            <div class="page-header-right">
-                <button type="button" class="btn primary-btn" id="addProgramBtn">
-                    + Add Program
-                </button>
-            </div>
         </section>
 
         <section class="page-filters-section">
@@ -77,8 +72,9 @@
                 </p>
             </div>
 
-            <div class="programs-layout">
-                <div class="programs-table-card">
+            <div class="content-wrapper">
+                {{-- LEFT: Programs Table --}}
+                <div class="main-content-area">
                     <div class="table-wrapper">
                         <table class="programs-table">
                             <thead>
@@ -98,99 +94,64 @@
                     </div>
                 </div>
 
-                <aside class="programs-summary-card">
-                    <h3 class="summary-title">Program Overview</h3>
-                    <ul class="summary-list">
-                        <li>
-                            <span class="summary-label">Total Programs</span>
-                            <span class="summary-value" id="summaryTotalPrograms">0</span>
-                        </li>
-                        <li>
-                            <span class="summary-label">Planned</span>
-                            <span class="summary-pill planned" id="summaryPlanned">0</span>
-                        </li>
-                        <li>
-                            <span class="summary-label">Ongoing</span>
-                            <span class="summary-pill ongoing" id="summaryOngoing">0</span>
-                        </li>
-                        <li>
-                            <span class="summary-label">Completed</span>
-                            <span class="summary-pill completed" id="summaryCompleted">0</span>
-                        </li>
-                    </ul>
+                {{-- RIGHT: Program Overview Sidebar --}}
+                <aside class="programs-sidebar">
+                    <div class="sidebar-card">
+                        <h2 class="sidebar-title">Program Overview</h2>
+                        <p class="sidebar-subtitle">Summary of all SK programs</p>
+                        <div class="program-summary">
+                            <div class="summary-item">
+                                <div class="summary-icon total">
+                                    <svg viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 100 4h2a2 2 0 100 4h2a1 1 0 100 2 2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="summary-content">
+                                    <h3>Total Programs</h3>
+                                    <p class="summary-value" id="summaryTotalPrograms">0</p>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon planned">
+                                    <svg viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="summary-content">
+                                    <h3>Planned</h3>
+                                    <p class="summary-value" id="summaryPlanned">0</p>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon ongoing">
+                                    <svg viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="summary-content">
+                                    <h3>Ongoing</h3>
+                                    <p class="summary-value" id="summaryOngoing">0</p>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon completed">
+                                    <svg viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="summary-content">
+                                    <h3>Completed</h3>
+                                    <p class="summary-value" id="summaryCompleted">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </aside>
             </div>
         </section>
     </div>
 </main>
-
-<!-- Programs Modal (UI-only, handled by programs.js) -->
-<div class="modal-backdrop" id="programModal" style="display:none;">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2 class="modal-title">Add Program</h2>
-            <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
-                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
-            </div>
-        </div>
-        <div class="modal-body">
-            <div class="modal-field">
-                <label for="programCommitteeInput">Program Type</label>
-                <select id="programCommitteeInput">
-                    <option value="" selected disabled>Select Program Type</option>
-                    <option value="Youth Development Program">Youth Development Program</option>
-                    <option value="Education Support Program">Education Support Program</option>
-                    <option value="Sports Development Program">Sports Development Program</option>
-                    <option value="Environmental Program">Environmental Program</option>
-                    <option value="Health and Wellness Program">Health and Wellness Program</option>
-                    <option value="Livelihood and Employment Program">Livelihood and Employment Program</option>
-                    <option value="Gender and Development (GAD) Program">Gender and Development (GAD) Program</option>
-                    <option value="Peace and Order Program">Peace and Order Program</option>
-                    <option value="Culture and Arts Program">Culture and Arts Program</option>
-                    <option value="ICT and Digital Literacy Program">ICT and Digital Literacy Program</option>
-                    <option value="Disaster Risk Reduction Program">Disaster Risk Reduction Program</option>
-                    <option value="Volunteerism Program">Volunteerism Program</option>
-                    <option value="Entrepreneurship Program">Entrepreneurship Program</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-            
-            <div class="modal-field">
-                <label for="programNameInput">Specify Program Name</label>
-                <input type="text" id="programNameInput" placeholder="Enter program name">
-            </div>
-            <div class="modal-field">
-                <label for="programTitleInput">Program Title/Theme</label>
-                <input type="text" id="programTitleInput" placeholder="e.g. Youth Leadership Training">
-            </div>
-            <div class="modal-field">
-                <label for="programBudgetInput">Budget (₱)</label>
-                <input type="text" id="programBudgetInput" inputmode="numeric" placeholder="e.g. 50,000">
-            </div>
-            <div class="modal-field">
-                <label for="programStartInput">Start Date</label>
-                <input type="date" id="programStartInput">
-            </div>
-            <div class="modal-field">
-                <label for="programEndInput">End Date</label>
-                <input type="date" id="programEndInput">
-            </div>
-            <div class="modal-field">
-                <label for="programStatusInput">Status</label>
-                <select id="programStatusInput">
-                    <option value="planned">Planned</option>
-                    <option value="ongoing">Ongoing</option>
-                    <option value="completed">Completed</option>
-                </select>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn" data-modal-cancel>Cancel</button>
-            <button type="button" class="btn primary-btn" id="programSaveBtn">Save</button>
-        </div>
-    </div>
-</div>
 
 <!-- Program View Modal -->
 <div class="modal-backdrop" id="programViewModal" style="display:none;">
@@ -229,22 +190,6 @@
             </div>
         </div>
         <!-- Footer intentionally removed (use top-right close button) -->
-    </div>
-</div>
-
-<!-- Success Modal -->
-<div class="modal-backdrop" id="programSuccessModal" style="display:none;">
-    <div class="modal-box success-modal-box">
-        <div class="modal-header success-modal-header">
-            <h2 class="modal-title">Success</h2>
-            <button type="button" class="modal-close" data-success-close aria-label="Close">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p class="success-modal-message" id="programSuccessMessage">Add successful.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn primary-btn" data-success-close>OK</button>
-        </div>
     </div>
 </div>
 
