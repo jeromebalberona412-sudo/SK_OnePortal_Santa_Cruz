@@ -157,27 +157,6 @@ function initializeCalendar() {
             if (hasNote) cell.classList.add('has-notes');
             if (isPastDate) cell.classList.add('is-past');
 
-            if (isSaturday && hasNote && canEdit) {
-                const cellActions = document.createElement('div');
-                cellActions.className = 'calendar-day-cell-actions';
-                cellActions.addEventListener('click', (e) => e.stopPropagation());
-                const editCellBtn = document.createElement('button');
-                editCellBtn.type = 'button';
-                editCellBtn.className = 'cell-edit';
-                editCellBtn.textContent = 'Edit';
-                editCellBtn.addEventListener('click', () => openEditor(dateKey, day, monthName));
-                const delCellBtn = document.createElement('button');
-                delCellBtn.type = 'button';
-                delCellBtn.className = 'cell-delete';
-                delCellBtn.textContent = 'Delete';
-                delCellBtn.addEventListener('click', async () => {
-                    const ok = await showConfirm({ title: 'Delete Note', message: 'Delete this note?', confirmText: 'Delete', cancelText: 'Cancel', confirmClass: 'confirm-danger', theme: 'delete' });
-                    if (ok) { delete notes[dateKey]; render(); showToast('Delete successful'); }
-                });
-                cellActions.appendChild(editCellBtn);
-                cellActions.appendChild(delCellBtn);
-                cell.appendChild(cellActions);
-            }
 
             const dayNumber = document.createElement('div');
             dayNumber.className = 'calendar-day-number';

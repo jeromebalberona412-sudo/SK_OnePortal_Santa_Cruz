@@ -234,38 +234,6 @@ body {
     box-shadow: 0 4px 12px rgba(245, 197, 24, 0.2);
 }
 
-.calendar-day-cell-actions {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    display: flex;
-    gap: 4px;
-    z-index: 2;
-}
-
-.calendar-day-cell-actions button {
-    padding: 2px 6px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 10px;
-    font-weight: 600;
-    line-height: 1.2;
-}
-
-.calendar-day-cell-actions .cell-edit {
-    background: #fbbf24;
-    color: #000;
-}
-
-.calendar-day-cell-actions .cell-delete {
-    background: #dc2626;
-    color: #fff;
-}
-
-.calendar-day-cell-actions button:hover {
-    opacity: 0.9;
-}
 
 .calendar-day-number {
     font-size: 14px;
