@@ -1,0 +1,7 @@
+https://www.youtube.com/watch?v=JOhU5_DseZk
+
+composer require phpoffice/phpword
+
+php artisan boost:install
+
+composer update

@@ -311,6 +311,35 @@
     </div>
 </div>
 
+<!-- Clear All Schedules Confirmation Modal -->
+<div class="modal-backdrop kk-modal-backdrop" id="kkClearScheduleModal" style="display:none;">
+    <div class="modal-box kk-clear-schedule-modal-box kk-modal-animate-small">
+        <div class="modal-header kk-clear-schedule-header">
+            <div class="kk-clear-schedule-icon">⚠️</div>
+            <h2 class="modal-title">Clear All Profiling Schedules</h2>
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body kk-clear-schedule-body">
+            <p class="kk-clear-schedule-message">
+                Are you sure you want to clear all profiling schedules?
+            </p>
+            <p class="kk-clear-schedule-warning">
+                This action cannot be undone. All scheduled profiling periods will be permanently removed.
+            </p>
+            <div class="kk-clear-schedule-details">
+                <div class="kk-schedule-count">
+                    <span class="kk-count-label">Total scheduled periods:</span>
+                    <span class="kk-count-value" id="scheduleCount">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer kk-clear-schedule-footer">
+            <button type="button" class="btn btn-cancel-clear" id="cancelClearBtn">Cancel</button>
+            <button type="button" class="btn btn-confirm-clear" id="confirmClearBtn">Clear All Schedules</button>
+        </div>
+    </div>
+</div>
+
 @vite([
     'app/modules/layout/js/header.js',
     'app/modules/layout/js/sidebar.js',

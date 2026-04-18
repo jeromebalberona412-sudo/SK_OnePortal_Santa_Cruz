@@ -136,7 +136,7 @@ body {
 }
 
 .legend-dot.today {
-    background: #e6a800;
+    background: linear-gradient(135deg, #f5c518 0%, #e6a800 100%);
 }
 
 .calendar-grid {
@@ -185,9 +185,9 @@ body {
 }
 
 .calendar-day.is-today.has-notes {
-    border: 2px solid #e6a800;
-    background: linear-gradient(135deg, #2c2c3e 0%, #3a3a4a 100%);
-    box-shadow: 0 4px 12px rgba(44, 44, 62, 0.3);
+    border: 2px solid #f5c518;
+    background: linear-gradient(135deg, #fffdf0 0%, #f5c518 100%);
+    box-shadow: 0 4px 12px rgba(245, 197, 24, 0.4);
 }
 
 .calendar-day.has-notes {
@@ -201,6 +201,16 @@ body {
     font-weight: 700;
 }
 
+.calendar-day.is-today .calendar-day-number {
+    color: #2c2c3e;
+    font-weight: 800;
+}
+
+.calendar-day.is-today.has-notes .calendar-day-number {
+    color: #2c2c3e;
+    font-weight: 800;
+}
+
 .calendar-day.has-notes .calendar-day-notes-preview {
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
@@ -208,6 +218,16 @@ body {
 
 .calendar-day.has-notes .calendar-day-add {
     color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+}
+
+.calendar-day.is-today.has-notes .calendar-day-notes-preview {
+    color: rgba(44, 44, 62, 0.9);
+    font-weight: 500;
+}
+
+.calendar-day.is-today.has-notes .calendar-day-add {
+    color: rgba(44, 44, 62, 0.8);
     font-weight: 600;
 }
 

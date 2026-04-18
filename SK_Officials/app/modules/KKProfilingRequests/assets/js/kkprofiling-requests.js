@@ -775,6 +775,7 @@ function initializeKKProfilingRequestsUI() {
 function initializeKKProfilingSchedule() {
     const scheduleBtn = document.getElementById('kkProfilingScheduleBtn');
     const scheduleModal = document.getElementById('kkScheduleModal');
+    const clearScheduleModal = document.getElementById('kkClearScheduleModal');
     const calendarDays = document.getElementById('calendarDays');
     const calendarMonthYear = document.getElementById('calendarMonthYear');
     const calendarPrev = document.getElementById('calendarPrev');
@@ -782,6 +783,9 @@ function initializeKKProfilingSchedule() {
     const clearScheduleBtn = document.getElementById('clearScheduleBtn');
     const saveScheduleBtn = document.getElementById('saveScheduleBtn');
     const jumpBtn = document.getElementById('scheduleJumpBtn');
+    const cancelClearBtn = document.getElementById('cancelClearBtn');
+    const confirmClearBtn = document.getElementById('confirmClearBtn');
+    const scheduleCount = document.getElementById('scheduleCount');
     const scheduleModalBox = scheduleModal ? scheduleModal.querySelector('.kk-schedule-modal-box') : null;
     const scheduleToggle = document.getElementById('kkScheduleModalToggle');
 
@@ -817,11 +821,7 @@ function initializeKKProfilingSchedule() {
     // Clear schedule button
     if (clearScheduleBtn) {
         clearScheduleBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear all profiling schedules?')) {
-                profilingDates.clear();
-                renderCalendar();
-                showSuccessMessage('All schedules cleared!');
-            }
+            openClearScheduleModal();
         });
     }
 
@@ -838,16 +838,42 @@ function initializeKKProfilingSchedule() {
         });
     }
 
+    // Clear schedule modal event listeners
+    if (cancelClearBtn) {
+        cancelClearBtn.addEventListener('click', () => {
+            closeClearScheduleModal();
+        });
+    }
+
+    if (confirmClearBtn) {
+        confirmClearBtn.addEventListener('click', () => {
+            confirmClearSchedule();
+        });
+    }
+
     // Modal close handlers
     const closeButtons = scheduleModal?.querySelectorAll('[data-modal-close]');
     closeButtons?.forEach(btn => {
         btn.addEventListener('click', closeScheduleModal);
     });
 
+    // Close handlers for clear schedule modal
+    const clearCloseButtons = clearScheduleModal?.querySelectorAll('[data-modal-close]');
+    clearCloseButtons?.forEach(btn => {
+        btn.addEventListener('click', closeClearScheduleModal);
+    });
+
     // Close modal when clicking backdrop
     scheduleModal?.addEventListener('click', (e) => {
         if (e.target === scheduleModal) {
             closeScheduleModal();
+        }
+    });
+
+    // Close clear schedule modal when clicking backdrop
+    clearScheduleModal?.addEventListener('click', (e) => {
+        if (e.target === clearScheduleModal) {
+            closeClearScheduleModal();
         }
     });
 
@@ -866,6 +892,34 @@ function initializeKKProfilingSchedule() {
             scheduleModal.classList.remove('modal-maximized');
             if (scheduleModalBox) scheduleModalBox.classList.remove('modal-maximized');
             if (scheduleToggle) scheduleToggle.textContent = '□';
+        }
+    }
+
+    function openClearScheduleModal() {
+        if (clearScheduleModal && scheduleCount) {
+            // Update the schedule count
+            scheduleCount.textContent = profilingDates.size;
+            clearScheduleModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeClearScheduleModal() {
+        if (clearScheduleModal) {
+            clearScheduleModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
+    function confirmClearSchedule() {
+        if (profilingDates.size > 0) {
+            profilingDates.clear();
+            renderCalendar();
+            closeClearScheduleModal();
+            showToast('All profiling schedules cleared successfully!', 'success');
+        } else {
+            closeClearScheduleModal();
+            showToast('No schedules to clear.', 'info');
         }
     }
 
