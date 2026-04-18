@@ -367,11 +367,12 @@ body {
     background: #ffffff;
     border-radius: 16px;
     width: 100%;
-    max-width: 720px;
+    max-width: 550px;
+    max-height: 75vh;
+    overflow-y: auto;
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
 .modal-header {
@@ -708,6 +709,34 @@ body {
         flex-direction: column;
         gap: 0;
     }
+
+    .modal-box {
+        max-width: 95%;
+        max-height: 85vh;
+        margin: 10px;
+    }
+
+    .modal-header {
+        padding: 12px 14px;
+    }
+
+    .modal-title {
+        font-size: 14px;
+    }
+
+    .kabataan-view-section-title {
+        font-size: 12px;
+        margin: 10px 0 5px 0;
+    }
+
+    .kabataan-view-label {
+        font-size: 11px;
+        min-width: 90px;
+    }
+
+    .kabataan-view-value {
+        font-size: 11px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -718,6 +747,42 @@ body {
 
     .page-title {
         font-size: 22px;
+    }
+
+    .modal-box {
+        max-width: 98%;
+        max-height: 90vh;
+        margin: 5px;
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        padding: 10px 12px;
+    }
+
+    .modal-title {
+        font-size: 13px;
+    }
+
+    .kabataan-view-section-title {
+        font-size: 11px;
+        margin: 8px 0 4px 0;
+    }
+
+    .kabataan-view-label {
+        font-size: 10px;
+        min-width: 80px;
+        line-height: 1.3;
+    }
+
+    .kabataan-view-value {
+        font-size: 10px;
+        line-height: 1.3;
+    }
+
+    .kabataan-view-row {
+        padding: 2px 0;
+        gap: 6px;
     }
 }
 

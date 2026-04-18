@@ -128,36 +128,56 @@
         <div class="modal-body kk-view-modal-body">
             <div class="modal-columns kk-view-columns">
                 <div class="modal-column">
-                    <div class="kk-view-section-title">Personal Information</div>
+                    <div class="kk-view-section-title">GENERAL INFORMATION</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Respondent Number:</span><span class="kk-view-value" id="kkViewRespondentNumber"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Date:</span><span class="kk-view-value" id="kkViewDate"></span></div>
+                    
+                    <div class="kk-view-section-title">I. PROFILE - Name of Respondent</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Last Name:</span><span class="kk-view-value" id="kkViewLastName"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">First Name:</span><span class="kk-view-value" id="kkViewFirstName"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">Middle Name:</span><span class="kk-view-value" id="kkViewMiddleName"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Last Name:</span><span class="kk-view-value" id="kkViewLastName"></span></div>
                     <div class="kk-view-row"><span class="kk-view-label">Suffix:</span><span class="kk-view-value" id="kkViewSuffix"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">AGE:</span><span class="kk-view-value" id="kkViewAge"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">BIRTHDAY:</span><span class="kk-view-value" id="kkViewBirthday"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">SEX ASSIGNED AT BIRTH:</span><span class="kk-view-value" id="kkViewSexAssignedAtBirth"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">CIVIL STATUS:</span><span class="kk-view-value" id="kkViewCivilStatus"></span></div>
                     
-                    <div class="kk-view-section-title">Location Information</div>
-                    <div class="kk-view-row"><span class="kk-view-label">REGION:</span><span class="kk-view-value" id="kkViewRegion"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">PROVINCE:</span><span class="kk-view-value" id="kkViewProvince"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">CITY/MUNICIPALITY:</span><span class="kk-view-value" id="kkViewCity"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">Purok/Sitio:</span><span class="kk-view-value" id="kkViewBarangay"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">HOME ADDRESS:</span><span class="kk-view-value" id="kkViewHomeAddress"></span></div>
+                    <div class="kk-view-section-title">Location</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Region:</span><span class="kk-view-value" id="kkViewRegion"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Province:</span><span class="kk-view-value" id="kkViewProvince"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">City / Municipality:</span><span class="kk-view-value" id="kkViewCity"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Barangay:</span><span class="kk-view-value" id="kkViewBarangay"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Purok / Zone:</span><span class="kk-view-value" id="kkViewPurokZone"></span></div>
+                    
+                    <div class="kk-view-section-title">Personal Information</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Sex Assigned at Birth:</span><span class="kk-view-value" id="kkViewSexAssignedAtBirth"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Age:</span><span class="kk-view-value" id="kkViewAge"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Birthday (dd/mm/yy):</span><span class="kk-view-value" id="kkViewBirthday"></span></div>
+                    
+                    <div class="kk-view-section-title">Contact Information</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Email Address:</span><span class="kk-view-value" id="kkViewEmailAddress"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Contact Number:</span><span class="kk-view-value" id="kkViewContactNumber"></span></div>
                 </div>
                 <div class="modal-column">
-                    <div class="kk-view-section-title">Youth Information</div>
-                    <div class="kk-view-row"><span class="kk-view-label">YOUTH CLASSIFICATION:</span><span class="kk-view-value" id="kkViewYouthClassification"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">YOUTH AGE GROUP:</span><span class="kk-view-value" id="kkViewYouthAgeGroup"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">CONTACT NUMBER:</span><span class="kk-view-value" id="kkViewContactNumber"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">HIGHEST EDUCATIONAL ATTAINMENT:</span><span class="kk-view-value" id="kkViewHighestEducationalAttainment"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">WORK STATUS:</span><span class="kk-view-value" id="kkViewWorkStatus"></span></div>
+                    <div class="kk-view-section-title">II. DEMOGRAPHIC CHARACTERISTICS</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Civil Status:</span><span class="kk-view-value" id="kkViewCivilStatus"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Youth Classification:</span><span class="kk-view-value" id="kkViewYouthClassification"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Youth Age Group:</span><span class="kk-view-value" id="kkViewYouthAgeGroup"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Work Status:</span><span class="kk-view-value" id="kkViewWorkStatus"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Educational Background:</span><span class="kk-view-value" id="kkViewEducationalBackground"></span></div>
                     
-                    <div class="kk-view-section-title">Civic Participation</div>
-                    <div class="kk-view-row"><span class="kk-view-label">REGISTERED VOTER?:</span><span class="kk-view-value" id="kkViewRegisteredVoter"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">VOTED LAST ELECTION?:</span><span class="kk-view-value" id="kkViewVotedLastElection"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">ATTENDED KK ASSEMBLY?:</span><span class="kk-view-value" id="kkViewAttendedKKAssembly"></span></div>
-                    <div class="kk-view-row"><span class="kk-view-label">IF YES, HOW MANY TIMES?:</span><span class="kk-view-value" id="kkViewHowManyTimes"></span></div>
+                    <div class="kk-view-section-title">VOTER & PARTICIPATION INFO</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Registered SK Voter:</span><span class="kk-view-value" id="kkViewRegisteredSKVoter"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Registered National Voter:</span><span class="kk-view-value" id="kkViewRegisteredNationalVoter"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Voting History (Last SK Election):</span><span class="kk-view-value" id="kkViewVotingHistory"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label" id="kkViewVotingFrequencyLabel">If YES, how many times:</span><span class="kk-view-value" id="kkViewVotingFrequency"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label" id="kkViewVotingReasonLabel">If NO, reason:</span><span class="kk-view-value" id="kkViewVotingReason"></span></div>
+                    
+                    <div class="kk-view-section-title">Participation</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Have you already attended a KK Assembly?</span><span class="kk-view-value" id="kkViewAttendedKKAssembly"></span></div>
+                    
+                    <div class="kk-view-section-title">SOCIAL / COMMUNITY</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Facebook Account:</span><span class="kk-view-value" id="kkViewFacebookAccount"></span></div>
+                    <div class="kk-view-row"><span class="kk-view-label">Willing to join the group chat?</span><span class="kk-view-value" id="kkViewWillingToJoinGroupChat"></span></div>
+                    
+                    <div class="kk-view-section-title">SIGNATURE</div>
+                    <div class="kk-view-row"><span class="kk-view-label">Name and Signature of Participant:</span><span class="kk-view-value" id="kkViewSignature"></span></div>
                 </div>
             </div>
             <div class="kk-view-rejection-wrap" id="kkViewRejectionWrap" style="display:none;">

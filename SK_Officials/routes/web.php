@@ -102,7 +102,7 @@ Route::middleware(['web'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | SK Officials Modules: Committees, Programs, Events (UI Only)
+    | SK Officials Modules: Committees, Programs (UI Only)
     |--------------------------------------------------------------------------
     */
 
@@ -120,13 +120,7 @@ Route::middleware(['web'])->group(function () {
         return view('Programs::programs');
     })->name('programs');
 
-    Route::get('/events', function () {
-        if (!session('authenticated')) {
-            return redirect()->route('login');
-        }
-        return view('Events::events');
-    })->name('events');
-
+    
     Route::get('/budget-finance', function () {
         if (!session('authenticated')) {
             return redirect()->route('login');

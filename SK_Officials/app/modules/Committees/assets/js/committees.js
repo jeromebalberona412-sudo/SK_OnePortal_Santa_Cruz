@@ -12,6 +12,7 @@ function initializeCommitteesUI() {
     const otherCommitteeField = document.getElementById('otherCommitteeField');
     const otherCommitteeInput = document.getElementById('otherCommitteeInput');
     const headInput = document.getElementById('committeeHeadInput');
+    const dateInput = document.getElementById('committeeDateInput');
     const descInput = document.getElementById('committeeDescriptionInput');
     const saveBtn = document.getElementById('committeeSaveBtn');
     const successModal = document.getElementById('committeeSuccessModal');
@@ -156,7 +157,7 @@ function initializeCommitteesUI() {
 
         if (filtered.length === 0) {
             const empty = document.createElement('tr');
-            empty.innerHTML = '<td colspan="3" class="empty-state">No committees assigned yet. Click "+ Assign Committee".</td>';
+            empty.innerHTML = '<td colspan="4" class="empty-state">No committees assigned yet. Click "+ Assign Committee".</td>';
             grid.appendChild(empty);
             return;
         }
@@ -164,13 +165,24 @@ function initializeCommitteesUI() {
         filtered.forEach((c) => {
             const sourceIndex = committees.indexOf(c);
             const row = document.createElement('tr');
+
+            // Format description HTML (simplified for table display)
+            const descriptionHtml = `
+                <div class="committee-description">
+                    <div class="committee-description-item">
+                        <span class="committee-description-value">${c.description || c.purpose || 'N/A'}</span>
+                    </div>
+                </div>
+            `;
+
             row.innerHTML = `
                 <td>${c.name}</td>
                 <td>${c.head}</td>
+                <td>${descriptionHtml}</td>
                 <td>
                     <div class="committee-actions">
-                        <button type="button" class="btn-outline" data-action="view" data-index="${sourceIndex}">View</button>
-                        <button type="button" class="btn-outline edit-btn" data-action="edit" data-index="${sourceIndex}">Edit</button>
+                        <button type="button" class="btn-action-view" data-action="view" data-index="${sourceIndex}">View</button>
+                        <button type="button" class="btn-action-edit" data-action="edit" data-index="${sourceIndex}">Edit</button>
                     </div>
                 </td>
             `;
@@ -341,9 +353,19 @@ function initializeCommitteesUI() {
                 const payload = {
                     name,
                     head,
+                    description: desc || 'To serve the youth and community through dedicated programs and initiatives.',
+                    // Additional fields for completeness
+                    purpose: desc || 'To serve the youth and community through dedicated programs and initiatives.',
+                    responsibilities: 'Organize activities, coordinate with members, and report progress to SK council.',
+                    dateCreated: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+                    status: 'Active' // Default status
                 };
                 if (editingIndex >= 0 && committees[editingIndex]) {
-                    committees[editingIndex] = payload;
+                    // Preserve existing description fields when editing
+                    committees[editingIndex] = {
+                        ...committees[editingIndex],
+                        ...payload
+                    };
                 } else {
                     committees.push(payload);
                 }

@@ -146,31 +146,129 @@ body {
     color: #6b7280;
 }
 
-.table-wrapper {
-    overflow: auto;
+.table-card {
+    background: #f9fafb;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
 }
 
-.committee-table {
+.table-wrapper {
+    max-height: 480px;
+    overflow: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .committees-table {
+        min-width: 700px;
+    }
+}
+
+.committees-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
 }
 
-.committee-table th,
-.committee-table td {
-    border: 1px solid #dbeafe;
-    padding: 10px;
-    text-align: center;
-    vertical-align: middle;
+.committees-table thead {
+    background: #2c2c3e;
 }
 
-.committee-table th {
-    background: #3a3a4a;
+.committees-table thead th {
     color: #ffffff;
-    font-weight: 700;
+    padding: 12px;
+    font-weight: 600;
+    text-align: center;
+    border-bottom: none;
 }
 
-.committee-table th.col-actions {
+.column-hint {
+    font-size: 10px;
+    color: #d1d5db;
+    font-weight: 400;
+    margin-top: 2px;
+}
+
+.committees-table th,
+.committees-table td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+}
+
+.committees-table th:nth-child(3),
+.committees-table td:nth-child(3) {
+    text-align: left;
+    max-width: 350px;
+}
+
+.committee-description {
+    text-align: left;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.committee-description-item {
+    margin-bottom: 4px;
+}
+
+.committee-description-label {
+    font-weight: 600;
+    color: #374151;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.committee-description-value {
+    color: #6b7280;
+}
+
+.committee-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.committee-status.active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.committee-status.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.committee-status.completed {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.committees-table th:last-child,
+.committees-table td:last-child {
+    border-right: none;
+}
+
+.committees-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.committees-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.committees-table tbody tr:hover {
+    background: #f3f4f6;
+}
+
+.committees-table th.col-actions {
     width: 1%;
     white-space: nowrap;
 }
@@ -182,12 +280,43 @@ body {
 }
 
 .committee-actions button {
-    border-radius: 999px;
+    border-radius: 6px;
     border: none;
-    padding: 4px 10px;
+    padding: 6px 12px;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-action-view {
+    background: #2c2c3e;
+    color: #ffffff;
+}
+
+.btn-action-view:hover {
+    background: #1f2937;
+    transform: translateY(-1px);
+}
+
+.btn-action-edit {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.btn-action-edit:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+}
+
+.btn-action-delete {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.btn-action-delete:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
 }
 
 .btn-outline {

@@ -62,17 +62,20 @@
                 </p>
             </div>
 
-            <div class="table-wrapper">
-                <table class="committee-table">
-                    <thead>
-                        <tr>
-                            <th>Committee Name</th>
-                            <th>Assigned To</th>
-                            <th class="col-actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="committeeGrid"></tbody>
-                </table>
+            <div class="table-card">
+                <div class="table-wrapper">
+                    <table class="committees-table">
+                        <thead>
+                            <tr>
+                                <th>Committee Name</th>
+                                <th>Assigned To</th>
+                                <th>Description</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="committeeGrid"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </div>
@@ -115,6 +118,10 @@
                 <select id="committeeHeadInput">
                     <option value="">Select Committee Head</option>
                 </select>
+            </div>
+            <div class="modal-field">
+                <label for="committeeDescriptionInput">Description</label>
+                <textarea id="committeeDescriptionInput" rows="3" placeholder="Enter committee purpose and responsibilities..."></textarea>
             </div>
         </div>
         <div class="modal-footer">

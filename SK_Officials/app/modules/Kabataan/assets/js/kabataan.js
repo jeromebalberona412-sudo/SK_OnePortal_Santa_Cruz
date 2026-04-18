@@ -86,6 +86,10 @@ function initializeKabataanUI() {
             const key = map[id];
             if (key) o[key] = el.type === 'number' ? (el.value === '' ? '' : Number(el.value)) : el.value;
         });
+
+        // Map email to emailAddress for compatibility
+        if (o.email) o.emailAddress = o.email;
+
         return o;
     }
 
@@ -104,7 +108,8 @@ function initializeKabataanUI() {
             const id = map[key];
             const el = getField(id);
             if (!el) return;
-            const val = k[key];
+            // Use emailAddress if email is not available (new data structure)
+            const val = k[key] !== undefined ? k[key] : (key === 'email' ? k.emailAddress : undefined);
             el.value = val === null || val === undefined ? '' : String(val);
         });
     }
@@ -139,28 +144,280 @@ function initializeKabataanUI() {
     }
 
     const defaultRecord = () => ({
+        respondentNumber: '',
+        date: '',
         firstName: '', middleName: '', lastName: '', suffix: '',
-        dob: '', age: 0, sex: 'Male', civilStatus: 'Single',
-        region: '', province: '', city: '', barangay: '', address: '',
-        email: '', contactNumber: '',
-        highestEducation: '', currentlyStudying: 'Yes',
-        workStatus: '', occupation: '',
-        registeredVoter: 'Yes', votedLastElection: 'No', youthClassification: 'ISY',
+        region: '', province: '', city: '', barangay: '', purokZone: '',
+        sex: 'Male', age: 0, birthday: '',
+        emailAddress: '', contactNumber: '',
+        civilStatus: 'Single',
+        youthClassification: '',
+        youthAgeGroup: '',
+        workStatus: '',
+        educationalBackground: '',
+        registeredSKVoter: 'Yes',
+        registeredNationalVoter: 'Yes',
+        votingHistory: 'Yes',
+        votingFrequency: '',
+        votingReason: '',
+        attendedKKAssembly: 'Yes',
+        facebookAccount: '',
+        willingToJoinGroupChat: 'Yes',
+        signature: '',
+        // Legacy fields for compatibility
+        dob: '', address: '', highestEducation: '', currentlyStudying: 'Yes',
+        occupation: '', registeredVoter: 'Yes', votedLastElection: 'No',
     });
 
     const kabataan = [
-        { ...defaultRecord(), firstName: 'Juan', middleName: 'Miguel', lastName: 'Reyes', suffix: 'Jr.', age: 21, sex: 'Male', barangay: 'Purok 1', highestEducation: 'College Level', workStatus: 'Student', contactNumber: '09123456789', email: 'juan.reyes@email.com' },
-        { ...defaultRecord(), firstName: 'Maria', middleName: 'Beatriz', lastName: 'Cruz', age: 19, sex: 'Female', barangay: 'Sitio 2', highestEducation: 'High School Graduate', workStatus: 'Student', contactNumber: '09123456790', email: 'maria.cruz@email.com' },
-        { ...defaultRecord(), firstName: 'Antonio', middleName: 'Carlos', lastName: 'Garcia', age: 23, sex: 'Male', barangay: 'Villa Gracias', highestEducation: 'College Graduate', workStatus: 'Employed', contactNumber: '09123456791', email: 'antonio.garcia@email.com' },
-        { ...defaultRecord(), firstName: 'Angelica', middleName: 'Sofia', lastName: 'Santillan', suffix: '', age: 20, sex: 'Female', barangay: 'Bayside Calios', highestEducation: 'College Level', workStatus: 'Student', contactNumber: '09123456792', email: 'angelica.santillan@email.com' },
-        { ...defaultRecord(), firstName: 'Carlos', middleName: 'Domingo', lastName: 'Mendoza', suffix: 'Sr.', age: 22, sex: 'Male', barangay: 'Purok 3', highestEducation: 'College Level', workStatus: 'Student', contactNumber: '09123456793', email: 'carlos.mendoza@email.com' },
-        { ...defaultRecord(), firstName: 'Patricia', middleName: 'Rosa', lastName: 'Del Rosario', age: 18, sex: 'Female', barangay: 'Sitio 1', highestEducation: 'High School', workStatus: 'Student', contactNumber: '09123456794', email: 'patricia.rosario@email.com' },
-        { ...defaultRecord(), firstName: 'Miguel', middleName: 'Antonio', lastName: 'Fernandez', suffix: 'III', age: 24, sex: 'Male', barangay: 'Purok 4', highestEducation: 'College Graduate', workStatus: 'Employed', contactNumber: '09123456795', email: 'miguel.fernandez@email.com' },
-        { ...defaultRecord(), firstName: 'Sofia', middleName: 'Isabel', lastName: 'Castillo', age: 17, sex: 'Female', barangay: 'Sitio 3', highestEducation: 'High School', workStatus: 'Student', contactNumber: '09123456796', email: 'sofia.castillo@email.com' },
-        { ...defaultRecord(), firstName: 'Jose', middleName: 'Luis', lastName: 'Rivera', age: 20, sex: 'Male', barangay: 'Purok 5', highestEducation: 'College Level', workStatus: 'NEET', contactNumber: '09123456797', email: 'jose.rivera@email.com' },
-        { ...defaultRecord(), firstName: 'Ana', middleName: 'Katrina', lastName: 'Villanueva', age: 19, sex: 'Female', barangay: 'Sitio 4', highestEducation: 'College Level', workStatus: 'Student', contactNumber: '09123456798', email: 'ana.villanueva@email.com' },
-        { ...defaultRecord(), firstName: 'Roberto', middleName: 'Francisco', lastName: 'Santos', age: 21, sex: 'Male', barangay: 'Purok 6', highestEducation: 'College Level', workStatus: 'Employed', contactNumber: '09123456799', email: 'roberto.santos@email.com' },
-        { ...defaultRecord(), firstName: 'Catherine', middleName: 'Mae', lastName: 'Lopez', age: 18, sex: 'Female', barangay: 'Sitio 5', highestEducation: 'High School', workStatus: 'Student', contactNumber: '09123456800', email: 'catherine.lopez@email.com' }
+        {
+            respondentNumber: '001',
+            date: '2026-03-12',
+            firstName: 'Juan',
+            middleName: 'Miguel',
+            lastName: 'Reyes',
+            suffix: 'Jr.',
+            region: '4A (CALABARZON)',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'BAYSIDE',
+            purokZone: 'Zone 1',
+            sex: 'Male',
+            age: 21,
+            birthday: '15/04/2005',
+            emailAddress: 'juan.reyes@email.com',
+            contactNumber: '09123456789',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Core Youth (18–24 yrs old)',
+            workStatus: 'Student',
+            educationalBackground: 'College Level',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '1–2 times',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: 'juan.reyes.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Juan Reyes'
+        },
+        {
+            respondentNumber: '002',
+            date: '2026-03-13',
+            firstName: 'Maria',
+            middleName: 'Beatriz',
+            lastName: 'Cruz',
+            suffix: '',
+            region: '4A (CALABARZON)',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'VILLA GRACIA',
+            purokZone: 'Zone 2',
+            sex: 'Female',
+            age: 19,
+            birthday: '22/08/2006',
+            emailAddress: 'maria.cruz@email.com',
+            contactNumber: '09123456790',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Core Youth (18–24 yrs old)',
+            workStatus: 'Student',
+            educationalBackground: 'College Level',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'No',
+            votingHistory: 'No',
+            votingReason: 'Not interested to attend',
+            attendedKKAssembly: 'No',
+            facebookAccount: 'maria.cruz.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Maria Cruz'
+        },
+        {
+            respondentNumber: '003',
+            date: '2026-03-14',
+            firstName: 'Antonio',
+            middleName: 'Carlos',
+            lastName: 'Garcia',
+            suffix: 'Sr.',
+            region: '4A (CALABARZON)',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'IMELDA',
+            purokZone: 'Zone 3',
+            sex: 'Male',
+            age: 23,
+            birthday: '10/12/2002',
+            emailAddress: 'antonio.garcia@email.com',
+            contactNumber: '09123456791',
+            civilStatus: 'Single',
+            youthClassification: 'Working Youth',
+            youthAgeGroup: 'Core Youth (18–24 yrs old)',
+            workStatus: 'Employed',
+            educationalBackground: 'College Graduate',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '3–4 times',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: 'antonio.garcia.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Antonio Garcia'
+        },
+        {
+            respondentNumber: '004',
+            date: '2026-03-15',
+            firstName: 'Angelica',
+            middleName: 'Sofia',
+            lastName: 'Santillan',
+            suffix: '',
+            region: '4A (CALABARZON)',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'LUPANG PANGAKO',
+            purokZone: 'Zone 4',
+            sex: 'Female',
+            age: 20,
+            birthday: '05/06/2005',
+            emailAddress: 'angelica.santillan@email.com',
+            contactNumber: '09123456792',
+            civilStatus: 'Single',
+            youthClassification: 'Out of School Youth',
+            youthAgeGroup: 'Core Youth (18–24 yrs old)',
+            workStatus: 'Unemployed',
+            educationalBackground: 'High School Graduate',
+            registeredSKVoter: 'No',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '1–2 times',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: 'angelica.santillan.fb',
+            willingToJoinGroupChat: 'No',
+            signature: 'Angelica Santillan'
+        },
+        {
+            respondentNumber: '005',
+            date: '2026-03-16',
+            firstName: 'Carlos',
+            middleName: 'Domingo',
+            lastName: 'Mendoza',
+            suffix: 'Jr.',
+            region: '4A (CALABARZON)',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'DAMAYAN',
+            purokZone: 'Zone 5',
+            sex: 'Male',
+            age: 22,
+            birthday: '18/09/2003',
+            emailAddress: 'carlos.mendoza@email.com',
+            contactNumber: '09123456793',
+            civilStatus: 'Married',
+            youthClassification: 'Working Youth',
+            youthAgeGroup: 'Core Youth (18–24 yrs old)',
+            workStatus: 'Self-Employed',
+            educationalBackground: 'College Level',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '5 and above',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: 'carlos.mendoza.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Carlos Mendoza'
+        },
+        {
+            respondentNumber: '006',
+            date: '2026-03-17',
+            firstName: 'Patricia',
+            middleName: 'Rosa',
+            lastName: 'Del Rosario',
+            suffix: '',
+            region: '4A (CALABARZON)',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'MARCELO',
+            purokZone: 'Zone 6',
+            sex: 'Female',
+            age: 18,
+            birthday: '25/02/2008',
+            emailAddress: 'patricia.rosario@email.com',
+            contactNumber: '09123456794',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Child Youth (15–17 yrs old)',
+            workStatus: 'Student',
+            educationalBackground: 'High School Level',
+            registeredSKVoter: 'No',
+            registeredNationalVoter: 'No',
+            votingHistory: 'No',
+            votingReason: 'There was no KK Assembly',
+            attendedKKAssembly: 'No',
+            facebookAccount: 'patricia.rosario.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Patricia Del Rosario'
+        },
+        {
+            respondentNumber: '007',
+            date: '2026-03-18',
+            firstName: 'Miguel',
+            middleName: 'Antonio',
+            lastName: 'Fernandez',
+            suffix: 'III',
+            region: '4A (CALABARZON)',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'BIGAYANVILLA ROSA',
+            purokZone: 'Zone 7',
+            sex: 'Male',
+            age: 24,
+            birthday: '30/11/2001',
+            emailAddress: 'miguel.fernandez@email.com',
+            contactNumber: '09123456795',
+            civilStatus: 'Single',
+            youthClassification: 'Working Youth',
+            youthAgeGroup: 'Young Adult (25–30 yrs old)',
+            workStatus: 'Employed',
+            educationalBackground: 'College Graduate',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '3–4 times',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: 'miguel.fernandez.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Miguel Fernandez'
+        },
+        {
+            respondentNumber: '008',
+            date: '2026-03-19',
+            firstName: 'Sofia',
+            middleName: 'Isabel',
+            lastName: 'Castillo',
+            suffix: '',
+            region: '4A (CALABARZON)',
+            province: 'Laguna',
+            city: 'Santa Cruz',
+            barangay: 'PHASE3',
+            purokZone: 'Zone 8',
+            sex: 'Female',
+            age: 17,
+            birthday: '14/07/2008',
+            emailAddress: 'sofia.castillo@email.com',
+            contactNumber: '09123456796',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Child Youth (15–17 yrs old)',
+            workStatus: 'Student',
+            educationalBackground: 'High School Level',
+            registeredSKVoter: 'No',
+            registeredNationalVoter: 'No',
+            votingHistory: 'No',
+            votingReason: 'Not interested to attend',
+            attendedKKAssembly: 'No',
+            facebookAccount: 'sofia.castillo.fb',
+            willingToJoinGroupChat: 'No',
+            signature: 'Sofia Castillo'
+        }
     ];
 
     // Sort kabataan array alphabetically by last name (professional standard)
@@ -202,10 +459,11 @@ function initializeKabataanUI() {
         const filtered = kabataan.filter((k) => {
             const q = currentQuery;
             const full = fullNameFrom(k).toLowerCase();
-            const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (k.highestEducation && k.highestEducation.toLowerCase().includes(q));
+            const education = k.educationalBackground || k.highestEducation || '';
+            const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (education && education.toLowerCase().includes(q));
             const matchGender = !currentGender || k.sex === currentGender;
             const matchPurok = !currentPurok || k.barangay === currentPurok;
-            const matchEducation = !currentEducation || k.highestEducation === currentEducation;
+            const matchEducation = !currentEducation || education === currentEducation;
             return matchSearch && matchGender && matchPurok && matchEducation;
         });
 
@@ -238,7 +496,7 @@ function initializeKabataanUI() {
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
                 <td>${k.barangay || '-'}</td>
-                <td>${k.highestEducation || '-'}</td>
+                <td>${k.educationalBackground || k.highestEducation || '-'}</td>
                 <td>
                     <div class="kabataan-actions">
                         <button type="button" class="btn-action-view" data-action="view" data-index="${index}">View</button>
@@ -259,7 +517,8 @@ function initializeKabataanUI() {
             const total = kabataan.filter((k) => {
                 const q = currentQuery;
                 const full = fullNameFrom(k).toLowerCase();
-                const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (k.highestEducation && k.highestEducation.toLowerCase().includes(q));
+                const education = k.educationalBackground || k.highestEducation || '';
+                const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (education && education.toLowerCase().includes(q));
                 const matchGender = !currentGender || k.sex === currentGender;
                 const matchPurok = !currentPurok || k.barangay === currentPurok;
                 return matchSearch && matchGender && matchPurok;
@@ -307,14 +566,17 @@ function initializeKabataanUI() {
     }
 
     function goToPage(page) {
-        const totalPages = Math.ceil(kabataan.filter((k) => {
+        const total = kabataan.filter((k) => {
             const q = currentQuery;
             const full = fullNameFrom(k).toLowerCase();
-            const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (k.highestEducation && k.highestEducation.toLowerCase().includes(q));
+            const education = k.educationalBackground || k.highestEducation || '';
+            const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (education && education.toLowerCase().includes(q));
             const matchGender = !currentGender || k.sex === currentGender;
             const matchPurok = !currentPurok || k.barangay === currentPurok;
             return matchSearch && matchGender && matchPurok;
-        }).length / recordsPerPage);
+        }).length / recordsPerPage;
+
+        const totalPages = Math.ceil(total);
 
         if (page >= 1 && page <= totalPages) {
             currentPage = page;
@@ -327,38 +589,59 @@ function initializeKabataanUI() {
 
         // Add section titles and fields to left column
         viewColumnLeft.innerHTML = `
-            <div class="kabataan-view-section-title">Personal Information</div>
+            <div class="kabataan-view-section-title">General Information</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Respondent Number:</span><span class="kabataan-view-value">${k.respondentNumber || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Date:</span><span class="kabataan-view-value">${k.date || '-'}</span></div>
+            
+            <div class="kabataan-view-section-title">Profile - Name of Respondent</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Last Name:</span><span class="kabataan-view-value">${k.lastName || '-'}</span></div>
             <div class="kabataan-view-row"><span class="kabataan-view-label">First Name:</span><span class="kabataan-view-value">${k.firstName || '-'}</span></div>
             <div class="kabataan-view-row"><span class="kabataan-view-label">Middle Name:</span><span class="kabataan-view-value">${k.middleName || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Last Name:</span><span class="kabataan-view-value">${k.lastName || '-'}</span></div>
             <div class="kabataan-view-row"><span class="kabataan-view-label">Suffix:</span><span class="kabataan-view-value">${k.suffix || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">AGE:</span><span class="kabataan-view-value">${k.age || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">BIRTHDAY:</span><span class="kabataan-view-value">${k.dob || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">SEX ASSIGNED AT BIRTH:</span><span class="kabataan-view-value">${k.sex || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">CIVIL STATUS:</span><span class="kabataan-view-value">${k.civilStatus || '-'}</span></div>
             
-            <div class="kabataan-view-section-title">Location Information</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">REGION:</span><span class="kabataan-view-value">${k.region || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">PROVINCE:</span><span class="kabataan-view-value">${k.province || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">CITY/MUNICIPALITY:</span><span class="kabataan-view-value">${k.city || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">BARANGAY:</span><span class="kabataan-view-value">${k.barangay || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">HOME ADDRESS:</span><span class="kabataan-view-value">SAN LUIS</span></div>
+            <div class="kabataan-view-section-title">Location</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Region:</span><span class="kabataan-view-value">${k.region || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Province:</span><span class="kabataan-view-value">${k.province || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">City / Municipality:</span><span class="kabataan-view-value">${k.city || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Barangay:</span><span class="kabataan-view-value">${k.barangay || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Purok / Zone:</span><span class="kabataan-view-value">${k.purokZone || '-'}</span></div>
+            
+            <div class="kabataan-view-section-title">Personal Information</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Sex Assigned at Birth:</span><span class="kabataan-view-value">${k.sex || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Age:</span><span class="kabataan-view-value">${k.age || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Birthday:</span><span class="kabataan-view-value">${k.birthday || k.dob || '-'}</span></div>
         `;
 
         // Add section titles and fields to right column
         viewColumnRight.innerHTML = `
-            <div class="kabataan-view-section-title">Youth Information</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">YOUTH CLASSIFICATION:</span><span class="kabataan-view-value">${k.youthClassification || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">YOUTH AGE GROUP:</span><span class="kabataan-view-value">${k.age || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">CONTACT NUMBER:</span><span class="kabataan-view-value">${k.contactNumber || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">HIGHEST EDUCATIONAL ATTAINMENT:</span><span class="kabataan-view-value">${k.highestEducation || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">WORK STATUS:</span><span class="kabataan-view-value">${k.workStatus || '-'}</span></div>
+            <div class="kabataan-view-section-title">Contact Information</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Email Address:</span><span class="kabataan-view-value">${k.emailAddress || k.email || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Contact Number:</span><span class="kabataan-view-value">${k.contactNumber || '-'}</span></div>
             
-            <div class="kabataan-view-section-title">Civic Participation</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">REGISTERED VOTER?:</span><span class="kabataan-view-value">${k.registeredVoter || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">VOTED LAST ELECTION?:</span><span class="kabataan-view-value">${k.votedLastElection || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">ATTENDED KK ASSEMBLY?:</span><span class="kabataan-view-value">${k.currentlyStudying || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">IF YES, HOW MANY TIMES?:</span><span class="kabataan-view-value">${k.id || '-'}</span></div>
+            <div class="kabataan-view-section-title">Demographic Characteristics</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Civil Status:</span><span class="kabataan-view-value">${k.civilStatus || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Youth Classification:</span><span class="kabataan-view-value">${k.youthClassification || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Youth Age Group:</span><span class="kabataan-view-value">${k.youthAgeGroup || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Work Status:</span><span class="kabataan-view-value">${k.workStatus || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Educational Background:</span><span class="kabataan-view-value">${k.educationalBackground || k.highestEducation || '-'}</span></div>
+            
+            <div class="kabataan-view-section-title">Voter & Participation Info</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Registered SK Voter:</span><span class="kabataan-view-value">${k.registeredSKVoter || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Registered National Voter:</span><span class="kabataan-view-value">${k.registeredNationalVoter || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Voting History (Last SK Election):</span><span class="kabataan-view-value">${k.votingHistory || '-'}</span></div>
+            ${k.votingHistory === 'Yes' ? `
+                <div class="kabataan-view-row"><span class="kabataan-view-label">Voting Frequency:</span><span class="kabataan-view-value">${k.votingFrequency || '-'}</span></div>
+            ` : k.votingReason ? `
+                <div class="kabataan-view-row"><span class="kabataan-view-label">Reason:</span><span class="kabataan-view-value">${k.votingReason || '-'}</span></div>
+            ` : ''}
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Attended KK Assembly:</span><span class="kabataan-view-value">${k.attendedKKAssembly || '-'}</span></div>
+            
+            <div class="kabataan-view-section-title">Social / Community</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Facebook Account:</span><span class="kabataan-view-value">${k.facebookAccount || '-'}</span></div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Willing to join group chat:</span><span class="kabataan-view-value">${k.willingToJoinGroupChat || '-'}</span></div>
+            
+            <div class="kabataan-view-section-title">Signature</div>
+            <div class="kabataan-view-row"><span class="kabataan-view-label">Name and Signature:</span><span class="kabataan-view-value">${k.signature || '-'}</span></div>
         `;
     }
 

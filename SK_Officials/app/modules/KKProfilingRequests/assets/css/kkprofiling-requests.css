@@ -552,8 +552,8 @@ body {
     background: #ffffff;
     border-radius: 16px;
     width: 100%;
-    max-width: 650px;
-    max-height: 70vh;
+    max-width: 550px;
+    max-height: 75vh;
     overflow-y: auto;
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
     display: flex;
@@ -687,14 +687,14 @@ body {
 }
 
 .kk-view-section-title {
-    font-size: 12px;
-    font-weight: 900;
-    color: #2c2c3e;
-    margin: 8px 0 4px 0;
-    padding-bottom: 2px;
-    border-bottom: 1px solid #2c2c3e;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 12px 0 6px 0;
+    padding-bottom: 3px;
+    border-bottom: 2px solid #e5e7eb;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
 }
 
 .kk-view-label {

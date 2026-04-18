@@ -15,215 +15,211 @@ function initializeKKProfilingRequestsUI() {
 
     if (!tbody) return;
 
-    // Sample UI-only data for KK Profiling Requests from Barangay Calios, Santa Cruz, Laguna
+    // Sample UI-only data for KK Profiling Requests with comprehensive structure
     const requests = [
         {
             id: 1,
+            respondentNumber: 'KK001',
+            date: '2026-03-12',
             firstName: 'Miguel',
             middleName: 'Santos',
             lastName: 'Reyes',
             suffix: 'Jr.',
-            age: 17,
-            dateOfBirth: '10/22/2006',
-            sex: 'Female',
-            civilStatus: 'Single',
-            region: '4A',
+            region: '4A (CALABARZON)',
             province: 'Laguna',
             city: 'Santa Cruz',
-            barangay: 'Calios',
-            youthClassification: 'In School (ISY)',
-            ageGroup: '15–17',
-            highestEducation: 'College',
-            workStatus: 'N/A',
-            occupation: 'N/A',
-            registeredVoter: 'Yes',
-            votedLastElection: 'Yes',
-            activeInSK: 'Yes',
-            recordId: '1',
+            barangay: 'BAYSIDE',
+            purokZone: 'Zone 1',
+            sex: 'Male',
+            age: 17,
+            birthday: '22/10/2006',
+            emailAddress: 'miguel.reyes@email.com',
+            contactNumber: '09123456789',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Child Youth (15–17 yrs old)',
+            workStatus: 'Student',
+            educationalBackground: 'College Level',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '1–2 times',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: 'miguel.reyes.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Miguel Reyes',
             status: 'Pending',
             rejectionReason: '',
         },
         {
             id: 2,
+            respondentNumber: 'KK002',
+            date: '2026-03-13',
             firstName: 'Angelica',
             middleName: 'Lorenzo',
             lastName: 'Cruz',
-            suffix: 'None',
-            age: 19,
-            dateOfBirth: '03/15/2005',
-            sex: 'Female',
-            civilStatus: 'Single',
-            region: '4A',
+            suffix: '',
+            region: '4A (CALABARZON)',
             province: 'Laguna',
             city: 'Santa Cruz',
-            barangay: 'Calios',
-            youthClassification: 'In School (ISY)',
-            ageGroup: '18–21',
-            highestEducation: 'College',
+            barangay: 'VILLA GRACIA',
+            purokZone: 'Zone 2',
+            sex: 'Female',
+            age: 19,
+            birthday: '15/03/2005',
+            emailAddress: 'angelica.cruz@email.com',
+            contactNumber: '09123456790',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Core Youth (18–24 yrs old)',
             workStatus: 'Student',
-            occupation: 'Student',
-            registeredVoter: 'Yes',
-            votedLastElection: 'No',
-            activeInSK: 'Yes',
-            recordId: '2',
+            educationalBackground: 'College Level',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'No',
+            votingHistory: 'No',
+            votingReason: 'Not interested to attend',
+            attendedKKAssembly: 'No',
+            facebookAccount: 'angelica.cruz.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Angelica Cruz',
             status: 'Approved',
             rejectionReason: '',
         },
         {
             id: 3,
+            respondentNumber: 'KK003',
+            date: '2026-03-14',
             firstName: 'Jose',
             middleName: 'Antonio',
             lastName: 'Garcia',
-            suffix: 'None',
-            age: 17,
-            dateOfBirth: '07/08/2006',
-            sex: 'Male',
-            civilStatus: 'Single',
-            region: '4A',
+            suffix: '',
+            region: '4A (CALABARZON)',
             province: 'Laguna',
             city: 'Santa Cruz',
-            barangay: 'Calios',
-            youthClassification: 'Out of School (OSY)',
-            ageGroup: '15–17',
-            highestEducation: 'High School',
+            barangay: 'IMELDA',
+            purokZone: 'Zone 3',
+            sex: 'Male',
+            age: 17,
+            birthday: '08/07/2006',
+            emailAddress: 'jose.garcia@email.com',
+            contactNumber: '09123456791',
+            civilStatus: 'Single',
+            youthClassification: 'Out of School Youth',
+            youthAgeGroup: 'Child Youth (15–17 yrs old)',
             workStatus: 'Unemployed',
-            occupation: 'N/A',
-            registeredVoter: 'No',
-            votedLastElection: 'No',
-            activeInSK: 'No',
-            recordId: '3',
+            educationalBackground: 'High School Graduate',
+            registeredSKVoter: 'No',
+            registeredNationalVoter: 'No',
+            votingHistory: 'No',
+            votingReason: 'There was no KK Assembly',
+            attendedKKAssembly: 'No',
+            facebookAccount: 'jose.garcia.fb',
+            willingToJoinGroupChat: 'No',
+            signature: 'Jose Garcia',
             status: 'Rejected',
             rejectionReason: 'Invalid birthdate / age mismatch',
         },
         {
             id: 4,
+            respondentNumber: 'KK004',
+            date: '2026-03-15',
             firstName: 'Maria',
             middleName: 'Beatriz',
             lastName: 'Santillan',
-            suffix: 'None',
-            age: 20,
-            dateOfBirth: '12/01/2004',
-            sex: 'Female',
-            civilStatus: 'Single',
-            region: '4A',
+            suffix: '',
+            region: '4A (CALABARZON)',
             province: 'Laguna',
             city: 'Santa Cruz',
-            barangay: 'Calios',
-            youthClassification: 'In School (ISY)',
-            ageGroup: '18–21',
-            highestEducation: 'College',
+            barangay: 'LUPANG PANGAKO',
+            purokZone: 'Zone 4',
+            sex: 'Female',
+            age: 20,
+            birthday: '01/12/2004',
+            emailAddress: 'maria.santillan@email.com',
+            contactNumber: '09123456792',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Core Youth (18–24 yrs old)',
             workStatus: 'Employed',
-            occupation: 'Office Worker',
-            registeredVoter: 'Yes',
-            votedLastElection: 'Yes',
-            activeInSK: 'Yes',
-            recordId: '4',
+            educationalBackground: 'College Level',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '1–2 times',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: 'maria.santillan.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Maria Santillan',
             status: 'Pending',
             rejectionReason: '',
         },
         {
             id: 5,
+            respondentNumber: 'KK005',
+            date: '2026-03-16',
             firstName: 'Carlos',
             middleName: 'Domingo',
             lastName: 'Mendoza',
             suffix: 'Sr.',
-            age: 21,
-            dateOfBirth: '05/10/2003',
-            sex: 'Male',
-            civilStatus: 'Single',
-            region: '4A',
+            region: '4A (CALABARZON)',
             province: 'Laguna',
             city: 'Santa Cruz',
-            barangay: 'Calios',
-            youthClassification: 'Out of School (OSY)',
-            ageGroup: '18–21',
-            highestEducation: 'College',
-            workStatus: 'Employed',
-            occupation: 'Business Owner',
-            registeredVoter: 'Yes',
-            votedLastElection: 'Yes',
-            activeInSK: 'Yes',
-            recordId: '5',
+            barangay: 'DAMAYAN',
+            purokZone: 'Zone 5',
+            sex: 'Male',
+            age: 21,
+            birthday: '10/05/2003',
+            emailAddress: 'carlos.mendoza@email.com',
+            contactNumber: '09123456793',
+            civilStatus: 'Married',
+            youthClassification: 'Working Youth',
+            youthAgeGroup: 'Core Youth (18–24 yrs old)',
+            workStatus: 'Self-Employed',
+            educationalBackground: 'College Level',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '5 and above',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: 'carlos.mendoza.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Carlos Mendoza',
             status: 'Approved',
             rejectionReason: '',
         },
         {
             id: 6,
+            respondentNumber: 'KK006',
+            date: '2026-03-17',
             firstName: 'Patricia',
             middleName: 'Rosa',
             lastName: 'Del Rosario',
-            suffix: 'None',
-            age: 16,
-            dateOfBirth: '09/18/2007',
-            sex: 'Female',
-            civilStatus: 'Single',
-            region: '4A',
+            suffix: '',
+            region: '4A (CALABARZON)',
             province: 'Laguna',
             city: 'Santa Cruz',
-            barangay: 'Calios',
-            youthClassification: 'In School (ISY)',
-            ageGroup: '15–17',
-            highestEducation: 'High School',
+            barangay: 'MARCELO',
+            purokZone: 'Zone 6',
+            sex: 'Female',
+            age: 16,
+            birthday: '18/09/2007',
+            emailAddress: 'patricia.rosario@email.com',
+            contactNumber: '09123456794',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Child Youth (15–17 yrs old)',
             workStatus: 'Student',
-            occupation: 'Student',
-            registeredVoter: 'No',
-            votedLastElection: 'No',
-            activeInSK: 'No',
-            recordId: '6',
+            educationalBackground: 'High School Level',
+            registeredSKVoter: 'No',
+            registeredNationalVoter: 'No',
+            votingHistory: 'No',
+            votingReason: 'Not interested to attend',
+            attendedKKAssembly: 'No',
+            facebookAccount: 'patricia.rosario.fb',
+            willingToJoinGroupChat: 'Yes',
+            signature: 'Patricia Del Rosario',
             status: 'Rejected',
             rejectionReason: 'Incomplete information provided',
-        },
-        {
-            id: 7,
-            firstName: 'Antonio',
-            middleName: 'Miguel',
-            lastName: 'Fernandez',
-            suffix: 'III',
-            age: 22,
-            dateOfBirth: '02/14/2003',
-            sex: 'Male',
-            civilStatus: 'Single',
-            region: '4A',
-            province: 'Laguna',
-            city: 'Santa Cruz',
-            barangay: 'Calios',
-            youthClassification: 'Out of School (OSY)',
-            ageGroup: '22–30',
-            highestEducation: 'College',
-            workStatus: 'Employed',
-            occupation: 'Teacher',
-            registeredVoter: 'Yes',
-            votedLastElection: 'Yes',
-            activeInSK: 'Yes',
-            recordId: '7',
-            status: 'Pending',
-            rejectionReason: '',
-        },
-        {
-            id: 8,
-            firstName: 'Sofia',
-            middleName: 'Isabel',
-            lastName: 'Castillo',
-            suffix: 'None',
-            age: 18,
-            dateOfBirth: '11/25/2006',
-            sex: 'Female',
-            civilStatus: 'Single',
-            region: '4A',
-            province: 'Laguna',
-            city: 'Santa Cruz',
-            barangay: 'Calios',
-            youthClassification: 'In School (ISY)',
-            ageGroup: '15–17',
-            highestEducation: 'College',
-            workStatus: 'Student',
-            occupation: 'Student',
-            registeredVoter: 'Yes',
-            votedLastElection: 'No',
-            activeInSK: 'Yes',
-            recordId: '8',
-            status: 'Approved',
-            rejectionReason: '',
         }
     ];
 
@@ -450,10 +446,11 @@ function initializeKKProfilingRequestsUI() {
 
     function populateViewModal(request) {
         const {
-            firstName, middleName, lastName, suffix, age, dateOfBirth, sex, civilStatus,
-            region, province, city, barangay, youthClassification, ageGroup,
-            highestEducation, workStatus, occupation, registeredVoter, votedLastElection,
-            activeInSK, recordId, status, rejectionReason
+            respondentNumber, date, firstName, middleName, lastName, suffix, age, birthday, sex, civilStatus,
+            region, province, city, barangay, purokZone, emailAddress, contactNumber,
+            youthClassification, youthAgeGroup, workStatus, educationalBackground,
+            registeredSKVoter, registeredNationalVoter, votingHistory, votingFrequency, votingReason, attendedKKAssembly,
+            facebookAccount, willingToJoinGroupChat, signature, status, rejectionReason
         } = request;
 
         const setVal = (id, val) => {
@@ -461,35 +458,77 @@ function initializeKKProfilingRequestsUI() {
             if (el) el.textContent = val ?? '';
         };
 
-        // Personal Information
+        // General Information
+        setVal('kkViewRespondentNumber', respondentNumber);
+        setVal('kkViewDate', date);
+
+        // Profile - Name of Respondent
+        setVal('kkViewLastName', lastName);
         setVal('kkViewFirstName', firstName);
         setVal('kkViewMiddleName', middleName);
-        setVal('kkViewLastName', lastName);
         setVal('kkViewSuffix', suffix || 'None');
-        setVal('kkViewAge', age);
-        setVal('kkViewBirthday', dateOfBirth);
-        setVal('kkViewSexAssignedAtBirth', sex);
-        setVal('kkViewCivilStatus', civilStatus);
 
-        // Location Information
+        // Location
         setVal('kkViewRegion', region);
         setVal('kkViewProvince', province);
         setVal('kkViewCity', city);
         setVal('kkViewBarangay', barangay);
-        setVal('kkViewHomeAddress', barangay === 'Calios' ? 'Bay side' : barangay === 'Calios' ? 'Villa Garcia' : barangay || 'Villa Gracia'); // Transform Calios to Bay side or Villa Garcia
+        setVal('kkViewPurokZone', purokZone || 'N/A');
 
-        // Youth Information
+        // Personal Information
+        setVal('kkViewSexAssignedAtBirth', sex);
+        setVal('kkViewAge', age);
+        setVal('kkViewBirthday', birthday);
+
+        // Contact Information
+        setVal('kkViewEmailAddress', emailAddress);
+        setVal('kkViewContactNumber', contactNumber);
+
+        // Demographic Characteristics
+        setVal('kkViewCivilStatus', civilStatus);
         setVal('kkViewYouthClassification', youthClassification);
-        setVal('kkViewYouthAgeGroup', ageGroup);
-        setVal('kkViewContactNumber', ''); // Add contact number field if available
-        setVal('kkViewHighestEducationalAttainment', highestEducation);
-        setVal('kkViewWorkStatus', workStatus || occupation || 'N/A');
+        setVal('kkViewYouthAgeGroup', youthAgeGroup);
+        setVal('kkViewWorkStatus', workStatus);
+        setVal('kkViewEducationalBackground', educationalBackground);
 
-        // Civic Participation
-        setVal('kkViewRegisteredVoter', registeredVoter);
-        setVal('kkViewVotedLastElection', votedLastElection);
-        setVal('kkViewAttendedKKAssembly', activeInSK);
-        setVal('kkViewHowManyTimes', recordId);
+        // Voter & Participation Info
+        setVal('kkViewRegisteredSKVoter', registeredSKVoter);
+        setVal('kkViewRegisteredNationalVoter', registeredNationalVoter);
+        setVal('kkViewVotingHistory', votingHistory);
+
+        // Show/hide voting frequency or reason based on voting history
+        const frequencyLabel = document.getElementById('kkViewVotingFrequencyLabel');
+        const frequencyValue = document.getElementById('kkViewVotingFrequency');
+        const reasonLabel = document.getElementById('kkViewVotingReasonLabel');
+        const reasonValue = document.getElementById('kkViewVotingReason');
+
+        if (votingHistory === 'Yes') {
+            if (frequencyLabel) frequencyLabel.style.display = 'flex';
+            if (frequencyValue) {
+                frequencyValue.style.display = 'block';
+                frequencyValue.textContent = votingFrequency || 'N/A';
+            }
+            if (reasonLabel) reasonLabel.style.display = 'none';
+            if (reasonValue) reasonValue.style.display = 'none';
+        } else {
+            if (frequencyLabel) frequencyLabel.style.display = 'none';
+            if (frequencyValue) frequencyValue.style.display = 'none';
+            if (reasonLabel) reasonLabel.style.display = 'flex';
+            if (reasonValue) {
+                reasonValue.style.display = 'block';
+                reasonValue.textContent = votingReason || 'N/A';
+            }
+        }
+
+        // Participation
+        setVal('kkViewAttendedKKAssembly', attendedKKAssembly);
+
+        // Social / Community
+        setVal('kkViewFacebookAccount', facebookAccount);
+        setVal('kkViewWillingToJoinGroupChat', willingToJoinGroupChat);
+
+        // Signature
+        setVal('kkViewSignature', signature);
 
         const rejectionWrap = document.getElementById('kkViewRejectionWrap');
         const rejectionText = document.getElementById('kkViewRejectionText');

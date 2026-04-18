@@ -35,9 +35,6 @@ export default defineConfig({
                 // Budget & Finance module assets
                 'app/modules/BudgetFinance/assets/css/budget-finance.css',
                 'app/modules/BudgetFinance/assets/js/budget-finance.js',
-                // Events module assets
-                'app/modules/Events/assets/css/events.css',
-                'app/modules/Events/assets/js/events.js',
                 // Kabataan module assets
                 'app/modules/Kabataan/assets/css/kabataan.css',
                 'app/modules/Kabataan/assets/js/kabataan.js',
