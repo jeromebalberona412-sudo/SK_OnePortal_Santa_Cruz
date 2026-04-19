@@ -1,0 +1,6 @@
+In Abyip Module:
+use phpword library to export to msword the abyip dun na ang nila iedit ng mas matindi kung gusto nila like sa ribbon,menu mahala yug portal azure api yawa
+add validation 1 lang pwede mag create ng abyip sa isang taon tapos 
+@ -1,7 +0,0 @@
+https://www.youtube.com/watch?v=JOhU5_DseZk
+composer require phpoffice/phpword

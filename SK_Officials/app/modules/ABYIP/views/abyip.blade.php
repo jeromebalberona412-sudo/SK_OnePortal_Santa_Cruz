@@ -516,6 +516,7 @@
                 <button type="button" class="btn-cancel" id="abyipModalCancel">Cancel</button>
                 <button type="button" class="btn-save" id="abyipModalSave">Save ABYIP</button>
                 <button type="button" class="btn-print-abyip" id="abyipModalPrint">Print ABYIP</button>
+                <button type="button" class="btn-export-word" id="abyipModalExportWord">Export to Word</button>
             </div>
         </div>
     </div>
@@ -546,7 +547,6 @@
     <div class="modal-backdrop" id="deleteConfirmModal" aria-hidden="true">
         <div class="modal-box" role="dialog" aria-labelledby="deleteConfirmHeading">
             <div class="confirmation-content">
-                <div class="confirmation-icon" aria-hidden="true">&#9888;</div>
                 <div class="confirmation-message">
                     <h4 id="deleteConfirmHeading">Delete this ABYIP record?</h4>
                     <p>This removes the record from your list. This action cannot be undone.</p>

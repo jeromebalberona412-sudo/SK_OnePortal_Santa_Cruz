@@ -270,20 +270,25 @@ function setMountContentEditable(editable) {
 
 function setMainModalFooterMode(mode) {
     const footer = document.getElementById('abyipModalFooter');
+    const exportBtn = document.getElementById('abyipModalExportWord');
+    const printBtn = document.getElementById('abyipModalPrint');
     const saveBtn = document.getElementById('abyipModalSave');
     const cancelBtn = document.getElementById('abyipModalCancel');
-    const printBtn = document.getElementById('abyipModalPrint');
 
     if (mode === 'view') {
         footer?.classList.add('abyip-modal-footer-view');
+        // Show only Print and Export buttons in view mode (no cancel button)
+        if (exportBtn) exportBtn.style.display = 'inline-block';
+        if (printBtn) printBtn.style.display = 'inline-block';
         if (saveBtn) saveBtn.style.display = 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
-        if (printBtn) printBtn.style.display = 'inline-flex';
     } else {
         footer?.classList.remove('abyip-modal-footer-view');
-        if (saveBtn) saveBtn.style.display = 'inline-flex';
-        if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+        // Show Save and Cancel buttons in create/edit modes
+        if (exportBtn) exportBtn.style.display = 'none';
         if (printBtn) printBtn.style.display = 'none';
+        if (saveBtn) saveBtn.style.display = 'inline-block';
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
     }
 }
 
@@ -504,6 +509,193 @@ function closeDeleteModal() {
     }
 }
 
+function exportToWord() {
+    const modalContent = document.getElementById('abyipModalContentMount');
+    if (!modalContent) return;
+
+    // Create a temporary container for the content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = modalContent.innerHTML;
+
+    // Apply centering to header elements
+    const headerElements = tempDiv.querySelectorAll('.abyip-doc-header, .abyip-doc-header-text, .abyip-doc-line, .abyip-doc-barangay, .abyip-doc-sk, .abyip-doc-title-block, .abyip-doc-h1, .abyip-doc-h2');
+    headerElements.forEach(el => {
+        el.style.textAlign = 'center';
+    });
+
+    // Apply centering to footer elements
+    const footerElements = tempDiv.querySelectorAll('.abyip-doc-footer, .signature-blocks, .signature-left, .signature-right');
+    footerElements.forEach(el => {
+        el.style.textAlign = 'center';
+    });
+
+    // Remove interactive elements
+    const editableElements = tempDiv.querySelectorAll('[contenteditable="true"]');
+    editableElements.forEach(el => {
+        el.removeAttribute('contenteditable');
+        el.style.backgroundColor = 'transparent';
+        el.style.boxShadow = 'none';
+    });
+
+    // Create Word document content
+    const wordContent = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta charset="utf-8">
+            <title>ABYIP Document</title>
+            <!--[if gte mso 9]>
+            <xml>
+                <w:WordDocument>
+                    <w:View>Print</w:View>
+                    <w:Zoom>90</w:Zoom>
+                </w:WordDocument>
+            </xml>
+            <![endif]-->
+            <style>
+                @page {
+                    margin: 0.5in;
+                    size: A4;
+                }
+                body {
+                    font-family: 'Times New Roman', serif;
+                    font-size: 9pt;
+                    line-height: 1.1;
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    justify-content: center;
+                }
+                .table-wrapper {
+                    margin: 0 auto;
+                    width: auto;
+                    display: flex;
+                    justify-content: center;
+                }
+                table {
+                    border-collapse: collapse;
+                    width: auto;
+                    margin: 5px auto;
+                    font-size: 8pt;
+                }
+                th, td {
+                    border: 1px solid #000;
+                    padding: 4px;
+                    text-align: left;
+                    vertical-align: top;
+                    font-size: 8pt;
+                }
+                th {
+                    background-color: #f0f0f0;
+                    font-weight: bold;
+                    text-align: center;
+                }
+                .number {
+                    text-align: right !important;
+                    font-family: 'Courier New', monospace;
+                }
+                .total-row td {
+                    background-color: #d0d0d0 !important;
+                    font-weight: bold;
+                }
+                .section-header td {
+                    background-color: #d0d0d0 !important;
+                    font-weight: bold;
+                    text-align: center;
+                }
+                .subsection-header td {
+                    background-color: #e8e8e8 !important;
+                    font-weight: bold;
+                    text-align: center;
+                }
+                .category-header td {
+                    background-color: #f5f5f5 !important;
+                    font-weight: bold;
+                }
+                h1, h2 {
+                    text-align: center;
+                    font-weight: bold;
+                }
+                h1 {
+                    font-size: 12pt;
+                }
+                h2 {
+                    font-size: 10pt;
+                }
+                .document-footer {
+                    margin-top: 20px;
+                }
+                .signature-blocks {
+                    display: flex;
+                    justify-content: space-around;
+                    margin-top: 30px;
+                    text-align: center;
+                }
+                .signature-left, .signature-right {
+                    width: 45%;
+                    text-align: center;
+                }
+                .signature-name {
+                    font-weight: bold;
+                    margin: 20px 0 5px 0;
+                    border-bottom: 1px solid #000;
+                    padding-bottom: 2px;
+                    min-height: 20px;
+                    display: inline-block;
+                    width: 200px;
+                }
+                .abyip-doc-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                .abyip-doc-header-text {
+                    text-align: center;
+                }
+                .abyip-doc-line {
+                    text-align: center;
+                    margin: 2px 0;
+                }
+                .abyip-doc-barangay,
+                .abyip-doc-sk {
+                    text-align: center;
+                    margin: 5px 0;
+                    font-weight: bold;
+                }
+                .abyip-doc-title-block {
+                    text-align: center;
+                    margin: 15px 0;
+                }
+                .abyip-doc-h1,
+                .abyip-doc-h2 {
+                    text-align: center;
+                    font-weight: bold;
+                    margin: 5px 0;
+                }
+                .abyip-doc-footer {
+                    text-align: center;
+                    margin-top: 40px;
+                }
+            </style>
+        </head>
+        <body>
+            ${tempDiv.innerHTML}
+        </body>
+        </html>
+    `;
+
+    // Create blob and download
+    const blob = new Blob([wordContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ABYIP_${new Date().toISOString().split('T')[0]}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showNotification('Document exported to MS Word successfully!', 'success');
+}
+
 function confirmDeleteRecord() {
     if (recordPendingDeleteId == null) return;
     abyipRecords = abyipRecords.filter((r) => r.id !== recordPendingDeleteId);
@@ -529,6 +721,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('abyipModalCancel')?.addEventListener('click', closeAbyipModal);
     document.getElementById('abyipModalSave')?.addEventListener('click', saveAbyip);
     document.getElementById('abyipModalPrint')?.addEventListener('click', printAbyipDocument);
+    document.getElementById('abyipModalExportWord')?.addEventListener('click', exportToWord);
 
     document.getElementById('abyipMetaConfirm')?.addEventListener('click', confirmMetaSave);
     document.getElementById('abyipMetaCancel')?.addEventListener('click', cancelMetaSave);
