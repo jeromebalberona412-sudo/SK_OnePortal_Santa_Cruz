@@ -144,6 +144,30 @@ Route::middleware(['web'])->group(function () {
         return view('ABYIP::abyip');
     })->name('abyip.index');
 
+    // Deleted Kabataan
+    Route::get('/deleted-kabataan', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Deleted_Kabataan::deleted-kabataan');
+    })->name('deleted-kabataan');
+
+    // Deleted ABYIP
+    Route::get('/deleted-abyip', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Deleted_Abyip::deleted-abyip');
+    })->name('deleted-abyip');
+
+    // Rejected KK Profiling
+    Route::get('/rejected-kkprofiling', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Rejected_KKProfiling::rejected-kkprofiling');
+    })->name('rejected-kkprofiling');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 });

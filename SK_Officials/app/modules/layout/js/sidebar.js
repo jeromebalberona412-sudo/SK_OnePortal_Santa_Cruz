@@ -3,6 +3,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     initializeSidebar();
     isolateSidebarScroll();
+    restoreArchivedDropdown();
 });
 
 /**
@@ -121,39 +122,43 @@ window.SidebarFunctions = {
 };
 
 // Archived Dropdown Toggle
+// State is persisted in sessionStorage so it survives page navigation.
 function toggleArchivedDropdown(event) {
     event.preventDefault();
     const dropdown = document.getElementById('archivedDropdown');
-    const sidebar  = document.getElementById('mainSidebar');
     if (!dropdown) return;
 
-    const isOpening = !dropdown.classList.contains('open');
+    const isNowOpen = !dropdown.classList.contains('open');
     dropdown.classList.toggle('open');
+    sessionStorage.setItem('archivedDropdownOpen', isNowOpen ? '1' : '0');
+}
 
-    // When opening, scroll the sidebar so the submenu is visible
-    if (isOpening && sidebar) {
-        // Wait for the CSS max-height transition to start (one frame)
-        requestAnimationFrame(() => {
-            const submenu = document.getElementById('archivedSubmenu');
-            if (!submenu) return;
+// Restore archived dropdown state on every page load
+function restoreArchivedDropdown() {
+    const dropdown = document.getElementById('archivedDropdown');
+    if (!dropdown) return;
 
-            // Get position of the dropdown item relative to the sidebar
-            const dropdownRect = dropdown.getBoundingClientRect();
-            const sidebarRect  = sidebar.getBoundingClientRect();
+    // Default open if a sub-page is active, or if user had it open
+    const isActive = dropdown.querySelector('.nav-sublink.active') !== null;
+    const wasOpen  = sessionStorage.getItem('archivedDropdownOpen') === '1';
 
-            // How far the bottom of the submenu will be after it fully expands
-            const submenuHeight = submenu.scrollHeight;
-            const targetBottom  = dropdownRect.bottom - sidebarRect.top + submenuHeight + sidebar.scrollTop;
-            const visibleBottom = sidebar.scrollTop + sidebar.clientHeight;
-
-            if (targetBottom > visibleBottom) {
-                sidebar.scrollTo({
-                    top: targetBottom - sidebar.clientHeight + 16,
-                    behavior: 'smooth'
-                });
-            }
-        });
+    if (isActive || wasOpen) {
+        dropdown.classList.add('open');
+        // Make sure storage reflects the open state
+        sessionStorage.setItem('archivedDropdownOpen', '1');
     }
 }
 
 window.toggleArchivedDropdown = toggleArchivedDropdown;
+
+// Deleted ABYIP — opens a modal view (stub, connect to ABYIP module modal)
+function openDeletedABYIPModal(event) {
+    event.preventDefault();
+    // TODO: wire up to the actual Deleted ABYIP modal when the module is ready
+    const modal = document.getElementById('deletedABYIPModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+window.openDeletedABYIPModal = openDeletedABYIPModal;
