@@ -1,12 +1,9 @@
 // Deleted ABYIP Module
-// Shows ABYIP records that have been deleted.
-// Restore moves them back to the active ABYIP list.
 
 document.addEventListener('DOMContentLoaded', function () {
     initDeletedAbyip();
 });
 
-// ── Deleted ABYIP records (mirrors abyip.js structure) ───────────────────────
 const deletedAbyipRecords = [
     {
         id: 'da-001',
@@ -15,7 +12,8 @@ const deletedAbyipRecords = [
         timeCreated: '10:30 AM',
         status: 'Draft',
         remarks: 'Superseded by 2025 version',
-        deletedAt: 'Mar 20, 2026',
+        deletedDate: 'Mar 20, 2026',
+        deletedTime: '11:15 AM',
     },
     {
         id: 'da-002',
@@ -24,7 +22,8 @@ const deletedAbyipRecords = [
         timeCreated: '02:15 PM',
         status: 'Approved',
         remarks: 'Archived after audit',
-        deletedAt: 'Apr 01, 2026',
+        deletedDate: 'Apr 01, 2026',
+        deletedTime: '03:45 PM',
     },
 ];
 
@@ -37,6 +36,7 @@ function initDeletedAbyip() {
     renderTable();
     bindSearch();
     bindRestoreModal();
+    bindViewModal();
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ function renderTable() {
     const page  = daFiltered.slice(start, end);
 
     if (daFiltered.length === 0) {
-        tbody.innerHTML = `<tr class="empty-state-row"><td colspan="7">No deleted ABYIP records found.</td></tr>`;
+        tbody.innerHTML = `<tr class="empty-state-row"><td colspan="8">No deleted ABYIP records found.</td></tr>`;
         if (info) info.textContent = 'No records found';
         renderPagination(0);
         return;
@@ -63,9 +63,13 @@ function renderTable() {
             <td>${r.timeCreated}</td>
             <td><span class="status-pill ${r.status.toLowerCase()}">${r.status}</span></td>
             <td style="text-align:left;font-size:12px;color:#6b7280;">${r.remarks || '—'}</td>
-            <td><span class="deleted-at-badge">${r.deletedAt}</span></td>
+            <td><span class="deleted-at-badge">${r.deletedDate}</span></td>
+            <td><span class="deleted-time-badge">${r.deletedTime}</span></td>
             <td>
-                <button class="btn-restore-action" data-id="${r.id}">↩ Restore</button>
+                <div class="action-btns">
+                    <button class="btn-view-action" data-id="${r.id}">View</button>
+                    <button class="btn-restore-action" data-id="${r.id}">Restore</button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -77,9 +81,10 @@ function renderTable() {
     renderPagination(daFiltered.length);
 
     tbody.querySelectorAll('.btn-restore-action').forEach(btn => {
-        btn.addEventListener('click', function () {
-            openRestoreModal(this.dataset.id);
-        });
+        btn.addEventListener('click', function () { openRestoreModal(this.dataset.id); });
+    });
+    tbody.querySelectorAll('.btn-view-action').forEach(btn => {
+        btn.addEventListener('click', function () { openViewModal(this.dataset.id); });
     });
 }
 
@@ -97,7 +102,6 @@ function renderPagination(total) {
             btn.addEventListener('click', () => { daCurrentPage = i + 1; renderTable(); });
         });
     }
-
     if (prev) { prev.disabled = daCurrentPage === 1; prev.onclick = () => { daCurrentPage--; renderTable(); }; }
     if (next) { next.disabled = daCurrentPage >= pages || pages === 0; next.onclick = () => { daCurrentPage++; renderTable(); }; }
 }
@@ -115,6 +119,56 @@ function bindSearch() {
         daCurrentPage = 1;
         renderTable();
     });
+}
+
+// ── View modal ────────────────────────────────────────────────────────────────
+function openViewModal(id) {
+    const r = deletedAbyipRecords.find(x => x.id === id);
+    if (!r) return;
+    const body = document.getElementById('daViewModalBody');
+    if (body) {
+        body.innerHTML = `
+            <div class="view-detail-grid">
+                <div class="view-detail-row"><span class="view-detail-label">Title</span><span class="view-detail-value">${r.title}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Date Created</span><span class="view-detail-value">${r.dateCreated}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Time Created</span><span class="view-detail-value">${r.timeCreated}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Status</span><span class="view-detail-value">${r.status}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Remarks</span><span class="view-detail-value">${r.remarks || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Deleted Date</span><span class="view-detail-value">${r.deletedDate}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Deleted Time</span><span class="view-detail-value">${r.deletedTime}</span></div>
+            </div>`;
+    }
+    const modal = document.getElementById('daViewModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function bindViewModal() {
+    const modal    = document.getElementById('daViewModal');
+    const box      = document.getElementById('daViewModalBox');
+    const closeBtn = document.getElementById('daViewModalClose');
+    const toggleBtn = document.getElementById('daViewModalToggle');
+
+    const close = () => {
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('view-modal-maximized');
+        }
+        if (box) box.classList.remove('view-modal-maximized');
+        if (toggleBtn) toggleBtn.textContent = '□';
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+    if (toggleBtn && box) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isMax = !box.classList.contains('view-modal-maximized');
+            modal.classList.toggle('view-modal-maximized', isMax);
+            box.classList.toggle('view-modal-maximized', isMax);
+            toggleBtn.textContent = isMax ? '⧉' : '□';
+        });
+    }
 }
 
 // ── Restore modal ─────────────────────────────────────────────────────────────

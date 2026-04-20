@@ -1,12 +1,9 @@
 // Rejected KK Profiling Module
-// Shows KK Profiling requests that were rejected.
-// Restore moves them back to the active KK Profiling list.
 
 document.addEventListener('DOMContentLoaded', function () {
     initRejectedKK();
 });
 
-// ── Rejected KK records (mirrors kkprofiling-requests.js structure) ───────────
 const rejectedKKRecords = [
     {
         id: 'rkk-001',
@@ -24,7 +21,8 @@ const rejectedKKRecords = [
         educationalBackground: 'High School Graduate',
         registeredSKVoter: 'No',
         rejectionReason: 'Incomplete requirements submitted',
-        rejectedAt: 'Apr 05, 2026',
+        rejectedDate: 'Apr 05, 2026',
+        rejectedTime: '10:20 AM',
     },
     {
         id: 'rkk-002',
@@ -42,7 +40,8 @@ const rejectedKKRecords = [
         educationalBackground: 'College Level',
         registeredSKVoter: 'Yes',
         rejectionReason: 'Age does not meet eligibility criteria',
-        rejectedAt: 'Apr 08, 2026',
+        rejectedDate: 'Apr 08, 2026',
+        rejectedTime: '01:55 PM',
     },
     {
         id: 'rkk-003',
@@ -60,7 +59,8 @@ const rejectedKKRecords = [
         educationalBackground: 'College Graduate',
         registeredSKVoter: 'Yes',
         rejectionReason: 'Duplicate submission detected',
-        rejectedAt: 'Apr 14, 2026',
+        rejectedDate: 'Apr 14, 2026',
+        rejectedTime: '04:10 PM',
     },
 ];
 
@@ -73,6 +73,7 @@ function initRejectedKK() {
     renderTable();
     bindSearch();
     bindRestoreModal();
+    bindViewModal();
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -86,7 +87,7 @@ function renderTable() {
     const page  = rkkFiltered.slice(start, end);
 
     if (rkkFiltered.length === 0) {
-        tbody.innerHTML = `<tr class="empty-state-row"><td colspan="8">No rejected KK Profiling records found.</td></tr>`;
+        tbody.innerHTML = `<tr class="empty-state-row"><td colspan="9">No rejected KK Profiling records found.</td></tr>`;
         if (info) info.textContent = 'No records found';
         renderPagination(0);
         return;
@@ -102,9 +103,13 @@ function renderTable() {
             <td>${r.purokZone || '—'}</td>
             <td>${r.youthClassification || '—'}</td>
             <td><span class="rejection-reason-cell" title="${r.rejectionReason}">${r.rejectionReason}</span></td>
-            <td><span class="rejected-at-badge">${r.rejectedAt}</span></td>
+            <td><span class="deleted-at-badge">${r.rejectedDate}</span></td>
+            <td><span class="deleted-time-badge">${r.rejectedTime}</span></td>
             <td>
-                <button class="btn-restore-action" data-id="${r.id}">↩ Restore</button>
+                <div class="action-btns">
+                    <button class="btn-view-action" data-id="${r.id}">View</button>
+                    <button class="btn-restore-action" data-id="${r.id}">Restore</button>
+                </div>
             </td>
         </tr>`;
     }).join('');
@@ -116,9 +121,10 @@ function renderTable() {
     renderPagination(rkkFiltered.length);
 
     tbody.querySelectorAll('.btn-restore-action').forEach(btn => {
-        btn.addEventListener('click', function () {
-            openRestoreModal(this.dataset.id);
-        });
+        btn.addEventListener('click', function () { openRestoreModal(this.dataset.id); });
+    });
+    tbody.querySelectorAll('.btn-view-action').forEach(btn => {
+        btn.addEventListener('click', function () { openViewModal(this.dataset.id); });
     });
 }
 
@@ -136,7 +142,6 @@ function renderPagination(total) {
             btn.addEventListener('click', () => { rkkCurrentPage = i + 1; renderTable(); });
         });
     }
-
     if (prev) { prev.disabled = rkkCurrentPage === 1; prev.onclick = () => { rkkCurrentPage--; renderTable(); }; }
     if (next) { next.disabled = rkkCurrentPage >= pages || pages === 0; next.onclick = () => { rkkCurrentPage++; renderTable(); }; }
 }
@@ -155,6 +160,61 @@ function bindSearch() {
         rkkCurrentPage = 1;
         renderTable();
     });
+}
+
+// ── View modal ────────────────────────────────────────────────────────────────
+function openViewModal(id) {
+    const r = rejectedKKRecords.find(x => x.id === id);
+    if (!r) return;
+    const body = document.getElementById('rkkViewModalBody');
+    if (body) {
+        body.innerHTML = `
+            <div class="view-detail-grid">
+                <div class="view-detail-row"><span class="view-detail-label">Full Name</span><span class="view-detail-value">${r.lastName}, ${r.firstName} ${r.middleName || ''} ${r.suffix || ''}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Age</span><span class="view-detail-value">${r.age || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Sex</span><span class="view-detail-value">${r.sex || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Purok / Zone</span><span class="view-detail-value">${r.purokZone || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Barangay</span><span class="view-detail-value">${r.barangay || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Youth Classification</span><span class="view-detail-value">${r.youthClassification || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Work Status</span><span class="view-detail-value">${r.workStatus || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Education</span><span class="view-detail-value">${r.educationalBackground || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Registered SK Voter</span><span class="view-detail-value">${r.registeredSKVoter || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Rejection Reason</span><span class="view-detail-value" style="color:#dc2626;">${r.rejectionReason || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Rejected Date</span><span class="view-detail-value">${r.rejectedDate}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Rejected Time</span><span class="view-detail-value">${r.rejectedTime}</span></div>
+            </div>`;
+    }
+    const modal = document.getElementById('rkkViewModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function bindViewModal() {
+    const modal    = document.getElementById('rkkViewModal');
+    const box      = document.getElementById('rkkViewModalBox');
+    const closeBtn = document.getElementById('rkkViewModalClose');
+    const toggleBtn = document.getElementById('rkkViewModalToggle');
+
+    const close = () => {
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('view-modal-maximized');
+        }
+        if (box) box.classList.remove('view-modal-maximized');
+        if (toggleBtn) toggleBtn.textContent = '□';
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+    if (toggleBtn && box) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isMax = !box.classList.contains('view-modal-maximized');
+            modal.classList.toggle('view-modal-maximized', isMax);
+            box.classList.toggle('view-modal-maximized', isMax);
+            toggleBtn.textContent = isMax ? '⧉' : '□';
+        });
+    }
 }
 
 // ── Restore modal ─────────────────────────────────────────────────────────────

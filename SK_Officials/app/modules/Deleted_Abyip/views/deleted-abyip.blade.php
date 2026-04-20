@@ -43,7 +43,8 @@
                                 <th>Time Created</th>
                                 <th>Status</th>
                                 <th>Remarks</th>
-                                <th>Deleted At</th>
+                                <th>Deleted Date</th>
+                                <th>Deleted Time</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -70,10 +71,6 @@
 <div class="restore-modal-backdrop" id="daRestoreModal" style="display:none;">
     <div class="restore-modal-box">
         <div class="restore-modal-header">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="restore-modal-icon">
-                <polyline points="1 4 1 10 7 10"></polyline>
-                <path d="M3.51 15a9 9 0 1 0 .49-4.5"></path>
-            </svg>
             <h2 class="restore-modal-title">Restore Record</h2>
         </div>
         <div class="restore-modal-body">
@@ -84,6 +81,20 @@
             <button type="button" class="btn-cancel-restore" id="daRestoreCancelBtn">Cancel</button>
             <button type="button" class="btn-confirm-restore" id="daRestoreConfirmBtn">Restore</button>
         </div>
+    </div>
+</div>
+
+<!-- View Modal -->
+<div class="restore-modal-backdrop" id="daViewModal" style="display:none;">
+    <div class="restore-modal-box view-modal-box" id="daViewModalBox">
+        <div class="restore-modal-header view-modal-header">
+            <h2 class="restore-modal-title">Record Details</h2>
+            <div class="view-modal-controls">
+                <button type="button" class="view-modal-toggle" id="daViewModalToggle" aria-label="Maximize">□</button>
+                <button type="button" class="view-modal-close" id="daViewModalClose">&times;</button>
+            </div>
+        </div>
+        <div class="view-modal-body" id="daViewModalBody"></div>
     </div>
 </div>
 

@@ -44,7 +44,8 @@
                                 <th>Purok / Zone</th>
                                 <th>Youth Classification</th>
                                 <th>Rejection Reason</th>
-                                <th>Rejected At</th>
+                                <th>Rejected Date</th>
+                                <th>Rejected Time</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -71,10 +72,6 @@
 <div class="restore-modal-backdrop" id="rkkRestoreModal" style="display:none;">
     <div class="restore-modal-box">
         <div class="restore-modal-header">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="restore-modal-icon">
-                <polyline points="1 4 1 10 7 10"></polyline>
-                <path d="M3.51 15a9 9 0 1 0 .49-4.5"></path>
-            </svg>
             <h2 class="restore-modal-title">Restore Record</h2>
         </div>
         <div class="restore-modal-body">
@@ -85,6 +82,20 @@
             <button type="button" class="btn-cancel-restore" id="rkkRestoreCancelBtn">Cancel</button>
             <button type="button" class="btn-confirm-restore" id="rkkRestoreConfirmBtn">Restore</button>
         </div>
+    </div>
+</div>
+
+<!-- View Modal -->
+<div class="restore-modal-backdrop" id="rkkViewModal" style="display:none;">
+    <div class="restore-modal-box view-modal-box" id="rkkViewModalBox">
+        <div class="restore-modal-header view-modal-header">
+            <h2 class="restore-modal-title">Record Details</h2>
+            <div class="view-modal-controls">
+                <button type="button" class="view-modal-toggle" id="rkkViewModalToggle" aria-label="Maximize">□</button>
+                <button type="button" class="view-modal-close" id="rkkViewModalClose">&times;</button>
+            </div>
+        </div>
+        <div class="view-modal-body" id="rkkViewModalBody"></div>
     </div>
 </div>
 

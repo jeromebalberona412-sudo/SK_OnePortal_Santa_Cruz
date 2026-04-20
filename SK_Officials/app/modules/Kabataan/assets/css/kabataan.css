@@ -177,12 +177,32 @@ body {
 }
 
 .table-wrapper {
-    overflow: visible;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Horizontal scrollbar for the kabataan table — thin, yellow on hover */
+.table-wrapper::-webkit-scrollbar {
+    height: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(244, 194, 13, 0.35);
+    border-radius: 4px;
+}
+
+.table-wrapper:hover::-webkit-scrollbar-thumb {
+    background: #f4c20d;
 }
 
 @media (max-width: 768px) {
     .kabataan-table {
-        min-width: 600px;
+        min-width: 700px;
     }
 }
 

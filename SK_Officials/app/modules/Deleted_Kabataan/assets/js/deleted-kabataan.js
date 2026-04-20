@@ -1,15 +1,9 @@
 // Deleted Kabataan Module
-// Shares the same data source as kabataan.js (kabataan array).
-// Records with status === 'deleted' are shown here.
-// Restore moves them back to active.
 
 document.addEventListener('DOMContentLoaded', function () {
     initDeletedKabataan();
 });
 
-// ── Shared data store (mirrors kabataan.js sample data, marked deleted) ──────
-// In production this would come from an API / shared store.
-// For UI-only: we seed a few deleted records from the same structure.
 const deletedKabataanRecords = [
     {
         id: 'dk-001',
@@ -27,7 +21,8 @@ const deletedKabataanRecords = [
         workStatus: 'Student',
         civilStatus: 'Single',
         contactNumber: '09187654321',
-        deletedAt: 'Apr 10, 2026',
+        deletedDate: 'Apr 10, 2026',
+        deletedTime: '09:45 AM',
     },
     {
         id: 'dk-002',
@@ -45,7 +40,8 @@ const deletedKabataanRecords = [
         workStatus: 'Student',
         civilStatus: 'Single',
         contactNumber: '09198765432',
-        deletedAt: 'Apr 12, 2026',
+        deletedDate: 'Apr 12, 2026',
+        deletedTime: '02:30 PM',
     },
 ];
 
@@ -58,6 +54,7 @@ function initDeletedKabataan() {
     renderTable();
     bindSearch();
     bindRestoreModal();
+    bindViewModal();
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -71,7 +68,7 @@ function renderTable() {
     const page  = dkFiltered.slice(start, end);
 
     if (dkFiltered.length === 0) {
-        tbody.innerHTML = `<tr class="empty-state-row"><td colspan="7">No deleted Kabataan records found.</td></tr>`;
+        tbody.innerHTML = `<tr class="empty-state-row"><td colspan="8">No deleted Kabataan records found.</td></tr>`;
         if (info) info.textContent = 'No records found';
         renderPagination(0);
         return;
@@ -86,11 +83,13 @@ function renderTable() {
             <td>${r.sex || '—'}</td>
             <td>${r.barangay || '—'}</td>
             <td>${r.educationalBackground || '—'}</td>
-            <td><span class="deleted-at-badge">${r.deletedAt}</span></td>
+            <td><span class="deleted-at-badge">${r.deletedDate}</span></td>
+            <td><span class="deleted-time-badge">${r.deletedTime}</span></td>
             <td>
-                <button class="btn-restore-action" data-id="${r.id}">
-                    ↩ Restore
-                </button>
+                <div class="action-btns">
+                    <button class="btn-view-action" data-id="${r.id}">View</button>
+                    <button class="btn-restore-action" data-id="${r.id}">Restore</button>
+                </div>
             </td>
         </tr>`;
     }).join('');
@@ -101,11 +100,11 @@ function renderTable() {
 
     renderPagination(dkFiltered.length);
 
-    // Wire restore buttons
     tbody.querySelectorAll('.btn-restore-action').forEach(btn => {
-        btn.addEventListener('click', function () {
-            openRestoreModal(this.dataset.id);
-        });
+        btn.addEventListener('click', function () { openRestoreModal(this.dataset.id); });
+    });
+    tbody.querySelectorAll('.btn-view-action').forEach(btn => {
+        btn.addEventListener('click', function () { openViewModal(this.dataset.id); });
     });
 }
 
@@ -123,7 +122,6 @@ function renderPagination(total) {
             btn.addEventListener('click', () => { dkCurrentPage = i + 1; renderTable(); });
         });
     }
-
     if (prev) { prev.disabled = dkCurrentPage === 1; prev.onclick = () => { dkCurrentPage--; renderTable(); }; }
     if (next) { next.disabled = dkCurrentPage >= pages || pages === 0; next.onclick = () => { dkCurrentPage++; renderTable(); }; }
 }
@@ -141,6 +139,61 @@ function bindSearch() {
         dkCurrentPage = 1;
         renderTable();
     });
+}
+
+// ── View modal ────────────────────────────────────────────────────────────────
+function openViewModal(id) {
+    const r = deletedKabataanRecords.find(x => x.id === id);
+    if (!r) return;
+    const body = document.getElementById('dkViewModalBody');
+    if (body) {
+        body.innerHTML = `
+            <div class="view-detail-grid">
+                <div class="view-detail-row"><span class="view-detail-label">Full Name</span><span class="view-detail-value">${r.lastName}, ${r.firstName} ${r.middleName || ''} ${r.suffix || ''}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Age</span><span class="view-detail-value">${r.age || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Sex</span><span class="view-detail-value">${r.sex || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Civil Status</span><span class="view-detail-value">${r.civilStatus || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Barangay</span><span class="view-detail-value">${r.barangay || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Purok / Zone</span><span class="view-detail-value">${r.purokZone || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Education</span><span class="view-detail-value">${r.educationalBackground || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Youth Classification</span><span class="view-detail-value">${r.youthClassification || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Work Status</span><span class="view-detail-value">${r.workStatus || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Contact Number</span><span class="view-detail-value">${r.contactNumber || '—'}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Deleted Date</span><span class="view-detail-value">${r.deletedDate}</span></div>
+                <div class="view-detail-row"><span class="view-detail-label">Deleted Time</span><span class="view-detail-value">${r.deletedTime}</span></div>
+            </div>`;
+    }
+    const modal = document.getElementById('dkViewModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function bindViewModal() {
+    const modal    = document.getElementById('dkViewModal');
+    const box      = document.getElementById('dkViewModalBox');
+    const closeBtn = document.getElementById('dkViewModalClose');
+    const toggleBtn = document.getElementById('dkViewModalToggle');
+
+    const close = () => {
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('view-modal-maximized');
+        }
+        if (box) box.classList.remove('view-modal-maximized');
+        if (toggleBtn) toggleBtn.textContent = '□';
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+    if (toggleBtn && box) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isMax = !box.classList.contains('view-modal-maximized');
+            modal.classList.toggle('view-modal-maximized', isMax);
+            box.classList.toggle('view-modal-maximized', isMax);
+            toggleBtn.textContent = isMax ? '⧉' : '□';
+        });
+    }
 }
 
 // ── Restore modal ─────────────────────────────────────────────────────────────
@@ -171,7 +224,6 @@ function bindRestoreModal() {
     if (confirmBtn) {
         confirmBtn.addEventListener('click', function () {
             if (!dkPendingRestoreId) return;
-            // Remove from deleted list
             const idx = deletedKabataanRecords.findIndex(r => r.id === dkPendingRestoreId);
             if (idx !== -1) deletedKabataanRecords.splice(idx, 1);
             dkFiltered = [...deletedKabataanRecords];
