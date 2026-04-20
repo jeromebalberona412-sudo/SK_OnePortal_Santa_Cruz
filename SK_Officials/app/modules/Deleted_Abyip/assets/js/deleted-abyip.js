@@ -12,8 +12,9 @@ const deletedAbyipRecords = [
         timeCreated: '10:30 AM',
         status: 'Draft',
         remarks: 'Superseded by 2025 version',
-        deletedDate: 'Mar 20, 2026',
+        deletedDate: 'Apr 20, 2026',
         deletedTime: '11:15 AM',
+        _deletedTs: new Date('2026-04-20T11:15:00'),
     },
     {
         id: 'da-002',
@@ -24,6 +25,7 @@ const deletedAbyipRecords = [
         remarks: 'Archived after audit',
         deletedDate: 'Apr 01, 2026',
         deletedTime: '03:45 PM',
+        _deletedTs: new Date('2026-04-01T15:45:00'),
     },
 ];
 
@@ -31,15 +33,97 @@ let daFiltered = [...deletedAbyipRecords];
 let daCurrentPage = 1;
 const daPerPage = 10;
 let daPendingRestoreId = null;
+let daActiveFilter = 'all';
+
+function daNow() { return new Date('2026-04-20T12:00:00'); }
+
+function daIsToday(ts) {
+    const n = daNow();
+    return ts.getFullYear() === n.getFullYear() && ts.getMonth() === n.getMonth() && ts.getDate() === n.getDate();
+}
+
+function daIsThisWeek(ts) {
+    const n = daNow();
+    const startOfWeek = new Date(n);
+    startOfWeek.setDate(n.getDate() - n.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    return ts >= startOfWeek;
+}
+
+function daIsThisMonth(ts) {
+    const n = daNow();
+    return ts.getFullYear() === n.getFullYear() && ts.getMonth() === n.getMonth();
+}
+
+function daApplyFilter(records, filter) {
+    if (filter === 'today') return records.filter(r => daIsToday(r._deletedTs));
+    if (filter === 'week')  return records.filter(r => daIsThisWeek(r._deletedTs));
+    if (filter === 'month') return records.filter(r => daIsThisMonth(r._deletedTs));
+    return records;
+}
 
 function initDeletedAbyip() {
+    renderStats();
     renderTable();
     bindSearch();
+    bindFilterTabs();
     bindRestoreModal();
     bindViewModal();
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
+function renderStats() {
+    const row = document.getElementById('daStatsRow');
+    if (!row) return;
+    const total = deletedAbyipRecords.length;
+    const month = deletedAbyipRecords.filter(r => daIsThisMonth(r._deletedTs)).length;
+    const today = deletedAbyipRecords.filter(r => daIsToday(r._deletedTs)).length;
+
+    row.innerHTML = `
+        <div class="stat-card stat-card-red">
+            <div class="stat-card-body">
+                <div class="stat-card-label">Total Deleted</div>
+                <div class="stat-card-value">${total}</div>
+            </div>
+            <div class="stat-card-icon stat-icon-red">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+            </div>
+        </div>
+        <div class="stat-card stat-card-yellow">
+            <div class="stat-card-body">
+                <div class="stat-card-label">This Month</div>
+                <div class="stat-card-value">${month}</div>
+            </div>
+            <div class="stat-card-icon stat-icon-yellow">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+            </div>
+        </div>
+        <div class="stat-card stat-card-blue">
+            <div class="stat-card-body">
+                <div class="stat-card-label">Today</div>
+                <div class="stat-card-value">${today}</div>
+            </div>
+            <div class="stat-card-icon stat-icon-blue">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+        </div>`;
+}
+
+function bindFilterTabs() {
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            daActiveFilter = this.dataset.filter;
+            const labels = { all: 'All Deleted Records', today: 'Deleted Today', week: 'Deleted This Week', month: 'Deleted This Month' };
+            const label = document.getElementById('daSectionLabel');
+            if (label) label.textContent = labels[daActiveFilter] || 'Deleted Records';
+            daFiltered = daApplyFilter(deletedAbyipRecords, daActiveFilter);
+            daCurrentPage = 1;
+            renderTable();
+        });
+    });
+}
+
 function renderTable() {
     const tbody = document.getElementById('deletedAbyipTableBody');
     const info  = document.getElementById('deletedAbyipPaginationInfo');
@@ -74,9 +158,7 @@ function renderTable() {
         </tr>
     `).join('');
 
-    if (info) {
-        info.textContent = `Showing ${start + 1}–${Math.min(end, daFiltered.length)} of ${daFiltered.length} records`;
-    }
+    if (info) info.textContent = `Showing ${start + 1}–${Math.min(end, daFiltered.length)} of ${daFiltered.length} records`;
 
     renderPagination(daFiltered.length);
 
@@ -106,13 +188,13 @@ function renderPagination(total) {
     if (next) { next.disabled = daCurrentPage >= pages || pages === 0; next.onclick = () => { daCurrentPage++; renderTable(); }; }
 }
 
-// ── Search ────────────────────────────────────────────────────────────────────
 function bindSearch() {
     const input = document.getElementById('deletedAbyipSearch');
     if (!input) return;
     input.addEventListener('input', function () {
         const q = this.value.toLowerCase();
-        daFiltered = deletedAbyipRecords.filter(r =>
+        const base = daApplyFilter(deletedAbyipRecords, daActiveFilter);
+        daFiltered = base.filter(r =>
             r.title.toLowerCase().includes(q) ||
             (r.remarks || '').toLowerCase().includes(q)
         );
@@ -121,21 +203,37 @@ function bindSearch() {
     });
 }
 
-// ── View modal ────────────────────────────────────────────────────────────────
 function openViewModal(id) {
     const r = deletedAbyipRecords.find(x => x.id === id);
     if (!r) return;
     const body = document.getElementById('daViewModalBody');
     if (body) {
         body.innerHTML = `
-            <div class="view-detail-grid">
-                <div class="view-detail-row"><span class="view-detail-label">Title</span><span class="view-detail-value">${r.title}</span></div>
-                <div class="view-detail-row"><span class="view-detail-label">Date Created</span><span class="view-detail-value">${r.dateCreated}</span></div>
-                <div class="view-detail-row"><span class="view-detail-label">Time Created</span><span class="view-detail-value">${r.timeCreated}</span></div>
-                <div class="view-detail-row"><span class="view-detail-label">Status</span><span class="view-detail-value">${r.status}</span></div>
-                <div class="view-detail-row"><span class="view-detail-label">Remarks</span><span class="view-detail-value">${r.remarks || '—'}</span></div>
-                <div class="view-detail-row"><span class="view-detail-label">Deleted Date</span><span class="view-detail-value">${r.deletedDate}</span></div>
-                <div class="view-detail-row"><span class="view-detail-label">Deleted Time</span><span class="view-detail-value">${r.deletedTime}</span></div>
+            <div class="view-modal-grid">
+                <div class="view-modal-column">
+                    <div class="view-section-card">
+                        <h3 class="view-section-title">Document Information</h3>
+                        <div class="view-fullname">${r.title}</div>
+                        <div class="view-field-group">
+                            <div class="view-field"><span class="view-field-label">Date Created</span><span class="view-field-value">${r.dateCreated}</span></div>
+                            <div class="view-field"><span class="view-field-label">Time Created</span><span class="view-field-value">${r.timeCreated}</span></div>
+                        </div>
+                        <div class="view-field"><span class="view-field-label">Status</span><span class="view-badge view-badge-${r.status.toLowerCase()}">${r.status}</span></div>
+                    </div>
+                </div>
+                <div class="view-modal-column">
+                    <div class="view-section-card">
+                        <h3 class="view-section-title">Additional Details</h3>
+                        <div class="view-field"><span class="view-field-label">Remarks</span><span class="view-field-value">${r.remarks || '—'}</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="view-deletion-section">
+                <h3 class="view-section-title view-section-title-danger">Deletion Information</h3>
+                <div class="view-field-group-inline">
+                    <div class="view-field"><span class="view-field-label">Deleted Date</span><span class="view-field-value-danger">${r.deletedDate}</span></div>
+                    <div class="view-field"><span class="view-field-label">Deleted Time</span><span class="view-field-value-danger">${r.deletedTime}</span></div>
+                </div>
             </div>`;
     }
     const modal = document.getElementById('daViewModal');
@@ -149,10 +247,7 @@ function bindViewModal() {
     const toggleBtn = document.getElementById('daViewModalToggle');
 
     const close = () => {
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('view-modal-maximized');
-        }
+        if (modal) { modal.style.display = 'none'; modal.classList.remove('view-modal-maximized'); }
         if (box) box.classList.remove('view-modal-maximized');
         if (toggleBtn) toggleBtn.textContent = '□';
     };
@@ -171,7 +266,6 @@ function bindViewModal() {
     }
 }
 
-// ── Restore modal ─────────────────────────────────────────────────────────────
 function openRestoreModal(id) {
     const record = deletedAbyipRecords.find(r => r.id === id);
     if (!record) return;
@@ -199,18 +293,33 @@ function bindRestoreModal() {
     if (confirmBtn) {
         confirmBtn.addEventListener('click', function () {
             if (!daPendingRestoreId) return;
+            const record = deletedAbyipRecords.find(r => r.id === daPendingRestoreId);
+            const title = record ? record.title : 'Record';
             const idx = deletedAbyipRecords.findIndex(r => r.id === daPendingRestoreId);
             if (idx !== -1) deletedAbyipRecords.splice(idx, 1);
-            daFiltered = [...deletedAbyipRecords];
+            daFiltered = daApplyFilter(deletedAbyipRecords, daActiveFilter);
             closeRestoreModal();
             daCurrentPage = 1;
+            renderStats();
             renderTable();
-            showToast('daToast', 'ABYIP record restored successfully.');
+            showRestoreBanner('daRestoreBanner', 'daRestoreBannerText', `"${title}" has been restored to the ABYIP list.`);
         });
     }
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+function showRestoreBanner(bannerId, textId, message) {
+    const banner = document.getElementById(bannerId);
+    const text   = document.getElementById(textId);
+    if (!banner || !text) return;
+    text.textContent = message;
+    banner.style.display = 'flex';
+    banner.classList.add('show');
+    setTimeout(() => {
+        banner.classList.remove('show');
+        setTimeout(() => { banner.style.display = 'none'; }, 400);
+    }, 4000);
+}
+
 function showToast(toastId, message) {
     const toast = document.getElementById(toastId);
     if (!toast) return;

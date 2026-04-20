@@ -29,9 +29,26 @@
             </div>
         </section>
 
+        <!-- Stats Cards -->
+        <div class="stats-cards-row" id="daStatsRow"></div>
+
+        <!-- Restore Success Banner -->
+        <div class="restore-success-banner" id="daRestoreBanner" style="display:none;">
+            <span class="restore-banner-icon">✓</span>
+            <span class="restore-banner-text" id="daRestoreBannerText"></span>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs-row">
+            <button class="filter-tab active" data-filter="all">All Deleted</button>
+            <button class="filter-tab" data-filter="today">Deleted Today</button>
+            <button class="filter-tab" data-filter="week">This Week</button>
+            <button class="filter-tab" data-filter="month">This Month</button>
+        </div>
+
         <section class="page-content-section">
             <div class="section-heading-row">
-                <h2 class="section-title">Deleted Records</h2>
+                <h2 class="section-title" id="daSectionLabel">All Deleted Records</h2>
             </div>
             <div class="table-card">
                 <div class="table-wrapper">
