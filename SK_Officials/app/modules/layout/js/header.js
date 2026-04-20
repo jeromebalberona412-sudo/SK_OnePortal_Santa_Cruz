@@ -1,636 +1,277 @@
 // Header JavaScript Functionality
+// Single DOMContentLoaded — no duplicate listeners
 
 document.addEventListener('DOMContentLoaded', function () {
-
     initializeHeader();
-
 });
 
-
-
 function initializeHeader() {
+    const sidebarToggle    = document.getElementById('sidebarToggle');
+    const userMenuToggle   = document.getElementById('userMenuToggle');
+    const userDropdown     = document.getElementById('userDropdown');
+    const searchInput      = document.querySelector('.search-input');
+    const searchBtn        = document.querySelector('.search-btn');
+    const notificationBtn  = document.querySelector('.notification-btn');
 
-    // Get DOM elements
-
-    const sidebarToggle = document.getElementById('sidebarToggle');
-
-    const userMenuToggle = document.getElementById('userMenuToggle');
-
-    const userDropdown = document.getElementById('userDropdown');
-
-    const searchInput = document.querySelector('.search-input');
-
-    const searchBtn = document.querySelector('.search-btn');
-
-    const notificationBtn = document.querySelector('.notification-btn');
-
-    const logoutBtn = document.getElementById('logoutBtn'); // Added logout button element
-
-
-
-    // Sidebar toggle functionality
-
+    // ── Sidebar toggle ──────────────────────────────────────────────────────
     if (sidebarToggle) {
-
         sidebarToggle.addEventListener('click', responsiveToggleSidebar);
-
     }
-
-    // Sync toggle state on load (desktop: X when sidebar open, burger when collapsed)
-
     syncToggleState();
 
-
-
-    // User menu dropdown functionality
-
+    // ── Profile dropdown — click-only, no hover ─────────────────────────────
     if (userMenuToggle && userDropdown) {
-
-        userMenuToggle.addEventListener('click', toggleUserDropdown);
-
+        // Toggle open/close on button click
+        userMenuToggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = userDropdown.classList.contains('open');
+            closeProfileDropdown(); // close first (handles any stale state)
+            if (!isOpen) {
+                userDropdown.classList.add('open');
+                userMenuToggle.setAttribute('aria-expanded', 'true');
+            }
+        });
     }
 
+    // ── Change Password trigger ─────────────────────────────────────────────
+    const changePasswordTrigger = document.getElementById('changePasswordTrigger');
+    if (changePasswordTrigger) {
+        changePasswordTrigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            closeProfileDropdown();
+            // TODO: wire to change-password route or modal when ready
+        });
+    }
 
-
-    // Logout functionality
-
+    // ── Logout ──────────────────────────────────────────────────────────────
     initializeLogout();
 
-
-
-    // Search functionality
-
+    // ── Search ──────────────────────────────────────────────────────────────
     if (searchInput && searchBtn) {
-
         initializeSearch();
-
     }
 
-
-
-    // Notification functionality
-
+    // ── Notifications ───────────────────────────────────────────────────────
     if (notificationBtn) {
-
         initializeNotifications();
-
     }
 
+    // ── Global outside-click — single listener on document ──────────────────
+    document.addEventListener('click', function (e) {
+        // Close profile dropdown when clicking outside
+        if (userDropdown && userMenuToggle) {
+            if (!userMenuToggle.contains(e.target) && !userDropdown.contains(e.target)) {
+                closeProfileDropdown();
+            }
+        }
+    });
 
-
-    // Close dropdowns when clicking outside
-
-    document.addEventListener('click', handleOutsideClick);
-
+    // ── Escape key closes dropdown ──────────────────────────────────────────
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeProfileDropdown();
+            const logoutModal = document.getElementById('logoutModal');
+            if (logoutModal && logoutModal.style.display === 'flex') {
+                logoutModal.style.display = 'none';
+            }
+        }
+        // Ctrl/Cmd + K → focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const si = document.querySelector('.search-input');
+            if (si) si.focus();
+        }
+    });
 }
 
+// ── Profile dropdown helpers ────────────────────────────────────────────────
+function closeProfileDropdown() {
+    const userDropdown   = document.getElementById('userDropdown');
+    const userMenuToggle = document.getElementById('userMenuToggle');
+    if (userDropdown)   userDropdown.classList.remove('open');
+    if (userMenuToggle) userMenuToggle.setAttribute('aria-expanded', 'false');
+}
 
-
+// ── Sidebar toggle ──────────────────────────────────────────────────────────
 function responsiveToggleSidebar() {
-    const sidebar = document.getElementById('mainSidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    let overlay = document.querySelector('.sidebar-overlay');
+    const sidebar      = document.getElementById('mainSidebar');
+    const toggle       = document.getElementById('sidebarToggle');
+    let   overlay      = document.querySelector('.sidebar-overlay');
 
-    if (!sidebar || !sidebarToggle) return;
+    if (!sidebar || !toggle) return;
 
-    const isOpen = sidebar.classList.contains('open');
-
-    // ===== MOBILE =====
     if (window.innerWidth <= 768) {
+        // Mobile: slide in/out
+        const isOpen = sidebar.classList.contains('open');
         if (isOpen) {
             sidebar.classList.remove('open');
-            sidebarToggle.classList.remove('active');
+            toggle.classList.remove('active');
             if (overlay) overlay.classList.remove('show');
         } else {
             sidebar.classList.add('open');
-            sidebarToggle.classList.add('active');
+            toggle.classList.add('active');
             if (!overlay) overlay = createOverlay();
             overlay.classList.add('show');
         }
     } else {
-        // ===== DESKTOP (per reference) =====
+        // Desktop: collapse / expand permanently
         const isCollapsed = sidebar.classList.contains('collapsed');
+        const mainContent = document.querySelector('.main-content');
 
         if (isCollapsed) {
-            // Expand sidebar permanently
-            sidebar.classList.remove('collapsed');
-            sidebar.classList.remove('hovering');
-
-            const mainContent = document.querySelector('.main-content');
+            sidebar.classList.remove('collapsed', 'hovering');
             if (mainContent) {
-                mainContent.classList.remove('sidebar-collapsed');
-                mainContent.classList.remove('sidebar-hover');
+                mainContent.classList.remove('sidebar-collapsed', 'sidebar-hover');
             }
-
-            // Update toggle button to show X (active state)
-            sidebarToggle.classList.add('active');
+            toggle.classList.add('active');
         } else {
-            // Collapse sidebar
             sidebar.classList.add('collapsed');
-
-            const mainContent = document.querySelector('.main-content');
             if (mainContent) {
                 mainContent.classList.add('sidebar-collapsed');
+                mainContent.classList.remove('sidebar-hover');
             }
-
-            // Update toggle button to show hamburger (inactive state)
-            sidebarToggle.classList.remove('active');
+            toggle.classList.remove('active');
         }
-
         if (overlay) overlay.classList.remove('show');
     }
 }
 
 function syncToggleState() {
     const sidebar = document.getElementById('mainSidebar');
-    const toggle = document.getElementById('sidebarToggle');
-    if (!sidebar || !toggle) return;
+    const toggle  = document.getElementById('sidebarToggle');
+    if (!sidebar || !toggle || window.innerWidth <= 768) return;
 
-    if (window.innerWidth <= 768) {
-        return;
-    }
-
-    // Sync toggle button state with sidebar state
-    // Consider hover state as well
     const isCollapsed = sidebar.classList.contains('collapsed');
-    const isHovering = sidebar.classList.contains('hovering');
+    const isHovering  = sidebar.classList.contains('hovering');
 
     if (isCollapsed && !isHovering) {
-        // Sidebar is collapsed and not hovering - show hamburger
         toggle.classList.remove('active');
     } else {
-        // Sidebar is expanded or hovering - show X
         toggle.classList.add('active');
     }
 }
 
-
-
-function toggleUserDropdown(event) {
-
-    event.stopPropagation();
-
-    const userDropdown = document.getElementById('userDropdown');
-
-
-
-    if (userDropdown) {
-
-        userDropdown.classList.toggle('show');
-
-    }
-
-}
-
-
-
-function initializeSearch() {
-
-    const searchInput = document.querySelector('.search-input');
-
-    const searchBtn = document.querySelector('.search-btn');
-
-
-
-    // Search on enter key
-
-    if (searchInput) {
-
-        searchInput.addEventListener('keypress', function (e) {
-
-            if (e.key === 'Enter') {
-
-                performSearch();
-
-            }
-
-        });
-
-
-
-        // Search on input with debounce
-
-        let searchTimeout;
-
-        searchInput.addEventListener('input', function () {
-
-            clearTimeout(searchTimeout);
-
-            searchTimeout = setTimeout(() => {
-
-                if (this.value.trim()) {
-
-                    performSearch();
-
-                }
-
-            }, 300);
-
-        });
-
-    }
-
-
-
-    // Search on button click
-
-    if (searchBtn) {
-
-        searchBtn.addEventListener('click', performSearch);
-
-    }
-
-}
-
-
-
-function performSearch() {
-
-    const searchInput = document.querySelector('.search-input');
-
-    const query = searchInput ? searchInput.value.trim() : '';
-
-
-
-    if (query) {
-
-        console.log('Searching for:', query);
-
-        // Implement actual search functionality here
-
-        // For now, just log the query
-
-        showSearchResults(query);
-
-    }
-
-}
-
-
-
-function showSearchResults(query) {
-
-    // This function would typically display search results
-
-    // For now, we'll just show a simple alert
-
-    console.log('Search results for:', query);
-
-
-
-    // You can implement a dropdown with search results here
-
-    // or redirect to a search results page
-
-}
-
-
-
-function initializeNotifications() {
-
-    const notificationBtn = document.querySelector('.notification-btn');
-
-    const notificationBadge = document.querySelector('.notification-badge');
-
-
-
-    if (notificationBtn) {
-
-        notificationBtn.addEventListener('click', function () {
-
-            toggleNotifications();
-
-        });
-
-    }
-
-
-
-    // Simulate real-time notifications
-
-    setInterval(() => {
-
-        updateNotificationBadge();
-
-    }, 30000); // Check every 30 seconds
-
-}
-
-
-
-function toggleNotifications() {
-
-    // This function would show/hide notifications dropdown
-
-    console.log('Toggle notifications panel');
-
-
-
-    // Implement notification panel toggle here
-
-    // For now, just log the action
-
-}
-
-
-
-function updateNotificationBadge() {
-
-    const notificationBadge = document.querySelector('.notification-badge');
-
-
-
-    // Simulate getting notification count
-
-    const count = Math.floor(Math.random() * 10);
-
-
-
-    if (notificationBadge) {
-
-        if (count > 0) {
-
-            notificationBadge.textContent = count;
-
-            notificationBadge.style.display = 'block';
-
-        } else {
-
-            notificationBadge.style.display = 'none';
-
-        }
-
-    }
-
-}
-
-
-
-function handleOutsideClick(event) {
-
-    const userMenuToggle = document.getElementById('userMenuToggle');
-
-    const userDropdown = document.getElementById('userDropdown');
-
-
-
-    // Close user dropdown if clicking outside
-
-    if (userDropdown && userMenuToggle) {
-
-        if (!userMenuToggle.contains(event.target) && !userDropdown.contains(event.target)) {
-
-            userDropdown.classList.remove('show');
-
-        }
-
-    }
-
-}
-
-
-
 function createOverlay() {
-
     const overlay = document.createElement('div');
-
     overlay.className = 'sidebar-overlay';
-
     overlay.addEventListener('click', function () {
         const sidebar = document.getElementById('mainSidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-
+        const toggle  = document.getElementById('sidebarToggle');
         if (sidebar) sidebar.classList.remove('open');
-        if (sidebarToggle) sidebarToggle.classList.remove('active');
+        if (toggle)  toggle.classList.remove('active');
         overlay.classList.remove('show');
     });
-
-
-
     document.body.appendChild(overlay);
-
     return overlay;
-
 }
 
+// ── Search ──────────────────────────────────────────────────────────────────
+function initializeSearch() {
+    const searchInput = document.querySelector('.search-input');
+    const searchBtn   = document.querySelector('.search-btn');
 
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') performSearch();
+        });
+        let searchTimeout;
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.trim()) performSearch();
+            }, 300);
+        });
+    }
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+    }
+}
 
-// Logout functionality
+function performSearch() {
+    const searchInput = document.querySelector('.search-input');
+    const query = searchInput ? searchInput.value.trim() : '';
+    if (query) console.log('Searching for:', query);
+}
 
+// ── Notifications ────────────────────────────────────────────────────────────
+function initializeNotifications() {
+    const notificationBtn = document.querySelector('.notification-btn');
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', function () {
+            console.log('Toggle notifications panel');
+        });
+    }
+    setInterval(updateNotificationBadge, 30000);
+}
+
+function updateNotificationBadge() {
+    const badge = document.querySelector('.notification-badge');
+    const count = Math.floor(Math.random() * 10);
+    if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'block' : 'none';
+    }
+}
+
+// ── Logout ───────────────────────────────────────────────────────────────────
 function initializeLogout() {
-
-    const logoutTrigger = document.getElementById('logoutTrigger');
-
-    const logoutModal = document.getElementById('logoutModal');
-
-    const cancelLogout = document.getElementById('cancelLogout');
-
-    const confirmLogout = document.getElementById('confirmLogout');
-
-    const logoutForm = document.getElementById('logoutForm');
-
-
-
-    // Open logout modal
+    const logoutTrigger  = document.getElementById('logoutTrigger');
+    const logoutModal    = document.getElementById('logoutModal');
+    const cancelLogout   = document.getElementById('cancelLogout');
+    const confirmLogout  = document.getElementById('confirmLogout');
 
     if (logoutTrigger) {
-
         logoutTrigger.addEventListener('click', function (e) {
-
             e.preventDefault();
-
-            if (logoutModal) {
-
-                logoutModal.style.display = 'flex';
-
-            }
-
+            closeProfileDropdown();
+            if (logoutModal) logoutModal.style.display = 'flex';
         });
-
     }
-
-
-
-    // Cancel logout
 
     if (cancelLogout) {
-
         cancelLogout.addEventListener('click', function () {
-
-            if (logoutModal) {
-
-                logoutModal.style.display = 'none';
-
-            }
-
+            if (logoutModal) logoutModal.style.display = 'none';
         });
-
     }
-
-
-
-    // Confirm logout
 
     if (confirmLogout) {
-
         confirmLogout.addEventListener('click', function () {
-
-            if (logoutModal) {
-                logoutModal.style.display = 'none';
-            }
-
+            if (logoutModal) logoutModal.style.display = 'none';
             handleLogout();
-
         });
-
     }
-
-
-
-    // Close modal when clicking overlay
 
     if (logoutModal) {
-
         logoutModal.addEventListener('click', function (e) {
-
-            if (e.target === logoutModal) {
-
-                logoutModal.style.display = 'none';
-
-            }
-
+            if (e.target === logoutModal) logoutModal.style.display = 'none';
         });
-
     }
-
-
-
-    // Close modal with Escape key
-
-    document.addEventListener('keydown', function (e) {
-
-        if (e.key === 'Escape' && logoutModal) {
-
-            if (logoutModal.style.display === 'flex') {
-
-                logoutModal.style.display = 'none';
-
-            }
-
-        }
-
-    });
-
 }
-
-
 
 function handleLogout() {
-
     const logoutForm = document.getElementById('logoutForm');
-
-    // Clear sessionStorage
     sessionStorage.removeItem('isLoggedIn');
     sessionStorage.removeItem('userEmail');
-
-    if (logoutForm) {
-
-        logoutForm.submit();
-
-    }
-
+    if (logoutForm) logoutForm.submit();
 }
 
-
-
-// Handle window resize
-
+// ── Resize ───────────────────────────────────────────────────────────────────
 window.addEventListener('resize', function () {
-
-    handleResize();
-
-});
-
-
-
-function handleResize() {
-
-    const sidebar = document.getElementById('mainSidebar');
-
-    const sidebarToggle = document.getElementById('sidebarToggle');
-
-    const overlay = document.querySelector('.sidebar-overlay');
-
-
-
+    const sidebar  = document.getElementById('mainSidebar');
+    const overlay  = document.querySelector('.sidebar-overlay');
     if (window.innerWidth > 768) {
-
-        if (overlay) overlay.classList.remove('show');
-
-        if (sidebar) sidebar.classList.remove('open');
-
+        if (overlay)  overlay.classList.remove('show');
+        if (sidebar)  sidebar.classList.remove('open');
         syncToggleState();
-
     }
-
-}
-
-
-
-// Keyboard shortcuts
-
-document.addEventListener('keydown', function (e) {
-
-    // Ctrl/Cmd + K for search focus
-
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-
-        e.preventDefault();
-
-        const searchInput = document.querySelector('.search-input');
-
-        if (searchInput) {
-
-            searchInput.focus();
-
-        }
-
-    }
-
-
-
-    // Escape to close dropdowns
-
-    if (e.key === 'Escape') {
-
-        const userDropdown = document.getElementById('userDropdown');
-
-        if (userDropdown) {
-
-            userDropdown.classList.remove('show');
-
-        }
-
-    }
-
 });
 
-
-
-// Export functions for external use if needed
-
+// ── Exports ──────────────────────────────────────────────────────────────────
 window.HeaderFunctions = {
-
-    toggleSidebar: responsiveToggleSidebar,
-
-    toggleUserDropdown: toggleUserDropdown,
-
-    performSearch: performSearch,
-
+    toggleSidebar:          responsiveToggleSidebar,
+    closeProfileDropdown:   closeProfileDropdown,
+    performSearch:          performSearch,
     updateNotificationBadge: updateNotificationBadge,
-
-    initializeLogout: initializeLogout,
-
-    handleLogout: handleLogout
-
+    initializeLogout:       initializeLogout,
+    handleLogout:           handleLogout,
 };

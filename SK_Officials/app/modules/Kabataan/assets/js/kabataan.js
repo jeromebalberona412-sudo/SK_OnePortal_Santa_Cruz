@@ -501,6 +501,7 @@ function initializeKabataanUI() {
                     <div class="kabataan-actions">
                         <button type="button" class="btn-action-view" data-action="view" data-index="${index}">View</button>
                         <button type="button" class="btn-action-edit" data-action="edit" data-index="${index}">Edit</button>
+                        <button type="button" class="btn-action-delete" data-action="delete" data-index="${index}">Delete</button>
                     </div>
                 </td>
             `;
@@ -784,7 +785,46 @@ function initializeKabataanUI() {
         const action = btn.dataset.action;
         const index = parseInt(btn.dataset.index, 10);
         if ((action === 'view' || action === 'edit') && !Number.isNaN(index)) openModal(action, index);
+        if (action === 'delete' && !Number.isNaN(index)) openDeleteConfirm(index);
     });
+
+    // ── Delete confirmation modal ──
+    const deleteModal = document.getElementById('kabataanDeleteModal');
+    const deleteModalName = document.getElementById('kabataanDeleteName');
+    const deleteConfirmBtn = document.getElementById('kabataanDeleteConfirmBtn');
+    const deleteCancelBtn = document.getElementById('kabataanDeleteCancelBtn');
+    let pendingDeleteIndex = null;
+
+    function openDeleteConfirm(index) {
+        const k = kabataan[index];
+        if (!k) return;
+        pendingDeleteIndex = index;
+        if (deleteModalName) deleteModalName.textContent = fullNameFrom(k);
+        if (deleteModal) deleteModal.style.display = 'flex';
+    }
+
+    function closeDeleteConfirm() {
+        pendingDeleteIndex = null;
+        if (deleteModal) deleteModal.style.display = 'none';
+    }
+
+    if (deleteModal) {
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) closeDeleteConfirm();
+        });
+    }
+
+    if (deleteCancelBtn) deleteCancelBtn.addEventListener('click', closeDeleteConfirm);
+
+    if (deleteConfirmBtn) {
+        deleteConfirmBtn.addEventListener('click', () => {
+            if (pendingDeleteIndex === null) return;
+            kabataan.splice(pendingDeleteIndex, 1);
+            closeDeleteConfirm();
+            currentPage = 1;
+            render();
+        });
+    }
 
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {

@@ -4,3 +4,9 @@ add validation 1 lang pwede mag create ng abyip sa isang taon tapos
 @ -1,7 +0,0 @@
 https://www.youtube.com/watch?v=JOhU5_DseZk
 composer require phpoffice/phpword
+validation in add and delete abyip:
+once nakapag add ng abyip sa isang taon tapos inaspam ng delete para
+hindi dumami yung deleted na nagawa 3 attempts lang pwede i restore na lang 
+nila sa archived yung na delete nila kapag max 3 attempts na para hindi takaw sa 
+storage ng database mas okay pati na once na nakapag add ngayon tapos dinelete agad ngayonmay restriction na nag 
+add ulit is bawal i delete edit niya na lang yung abyip tanga tanga siya e

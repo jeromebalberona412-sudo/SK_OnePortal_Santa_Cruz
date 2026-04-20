@@ -562,6 +562,7 @@
 
 @vite([
     'app/modules/layout/js/header.js',
+    'app/modules/layout/js/sidebar.js',
     'app/modules/ABYIP/assets/js/abyip.js'
 ])
 

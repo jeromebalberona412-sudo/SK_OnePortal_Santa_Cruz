@@ -49,6 +49,7 @@ export default defineConfig({
                 'app/modules/Deleted_Kabataan/assets/js/deleted-kabataan.js',
                 // Deleted ABYIP module assets
                 'app/modules/Deleted_Abyip/assets/css/deleted-abyip.css',
+                'app/modules/Deleted_Abyip/assets/js/deleted-abyip.js',
                 // Rejected KK Profiling module assets
                 'app/modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css',
                 'app/modules/Rejected_KKProfiling/assets/js/rejected-kkprofiling.js',

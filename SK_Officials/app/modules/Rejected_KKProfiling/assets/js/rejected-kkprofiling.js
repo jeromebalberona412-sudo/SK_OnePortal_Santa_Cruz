@@ -1,23 +1,81 @@
-// Rejected KK Profiling Module JS
+// Rejected KK Profiling Module
+// Shows KK Profiling requests that were rejected.
+// Restore moves them back to the active KK Profiling list.
 
 document.addEventListener('DOMContentLoaded', function () {
     initRejectedKK();
 });
 
-// Sample data — replace with real API/localStorage data
-const rejectedKKData = [];
+// ── Rejected KK records (mirrors kkprofiling-requests.js structure) ───────────
+const rejectedKKRecords = [
+    {
+        id: 'rkk-001',
+        respondentNumber: '011',
+        firstName: 'Benito',
+        middleName: 'Cruz',
+        lastName: 'Aquino',
+        suffix: 'Jr.',
+        sex: 'Male',
+        age: 22,
+        purokZone: 'Zone 2',
+        barangay: 'VILLA GRACIA',
+        youthClassification: 'Out of School Youth',
+        workStatus: 'Unemployed',
+        educationalBackground: 'High School Graduate',
+        registeredSKVoter: 'No',
+        rejectionReason: 'Incomplete requirements submitted',
+        rejectedAt: 'Apr 05, 2026',
+    },
+    {
+        id: 'rkk-002',
+        respondentNumber: '012',
+        firstName: 'Carla',
+        middleName: 'Reyes',
+        lastName: 'Bautista',
+        suffix: '',
+        sex: 'Female',
+        age: 19,
+        purokZone: 'Zone 4',
+        barangay: 'LUPANG PANGAKO',
+        youthClassification: 'In School Youth',
+        workStatus: 'Student',
+        educationalBackground: 'College Level',
+        registeredSKVoter: 'Yes',
+        rejectionReason: 'Age does not meet eligibility criteria',
+        rejectedAt: 'Apr 08, 2026',
+    },
+    {
+        id: 'rkk-003',
+        respondentNumber: '013',
+        firstName: 'Dante',
+        middleName: '',
+        lastName: 'Flores',
+        suffix: '',
+        sex: 'Male',
+        age: 25,
+        purokZone: 'Zone 7',
+        barangay: 'BIGAYANVILLA ROSA',
+        youthClassification: 'Working Youth',
+        workStatus: 'Employed',
+        educationalBackground: 'College Graduate',
+        registeredSKVoter: 'Yes',
+        rejectionReason: 'Duplicate submission detected',
+        rejectedAt: 'Apr 14, 2026',
+    },
+];
 
+let rkkFiltered = [...rejectedKKRecords];
 let rkkCurrentPage = 1;
 const rkkPerPage = 10;
-let rkkFiltered = [...rejectedKKData];
+let rkkPendingRestoreId = null;
 
 function initRejectedKK() {
     renderTable();
     bindSearch();
-    bindPurokFilter();
-    bindModalClose();
+    bindRestoreModal();
 }
 
+// ── Render ────────────────────────────────────────────────────────────────────
 function renderTable() {
     const tbody = document.getElementById('rejectedKKTableBody');
     const info  = document.getElementById('rejectedKKPaginationInfo');
@@ -28,31 +86,40 @@ function renderTable() {
     const page  = rkkFiltered.slice(start, end);
 
     if (rkkFiltered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No rejected KK Profiling records found.</td></tr>`;
+        tbody.innerHTML = `<tr class="empty-state-row"><td colspan="8">No rejected KK Profiling records found.</td></tr>`;
         if (info) info.textContent = 'No records found';
         renderPagination(0);
         return;
     }
 
-    tbody.innerHTML = page.map(r => `
+    tbody.innerHTML = page.map(r => {
+        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        return `
         <tr>
-            <td>${r.lastName}, ${r.firstName} ${r.middleName || ''} ${r.suffix || ''}</td>
-            <td>${r.age}</td>
-            <td>${r.purokZone}</td>
-            <td>${r.registeredVoter}</td>
+            <td style="font-weight:600;color:#111827;">${fullName}</td>
+            <td>${r.age || '—'}</td>
+            <td>${r.sex || '—'}</td>
+            <td>${r.purokZone || '—'}</td>
+            <td>${r.youthClassification || '—'}</td>
             <td><span class="rejection-reason-cell" title="${r.rejectionReason}">${r.rejectionReason}</span></td>
             <td><span class="rejected-at-badge">${r.rejectedAt}</span></td>
             <td>
-                <button class="btn-view-rkk" onclick="openRkkViewModal('${r.id}')">View</button>
+                <button class="btn-restore-action" data-id="${r.id}">↩ Restore</button>
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
 
     if (info) {
         info.textContent = `Showing ${start + 1}–${Math.min(end, rkkFiltered.length)} of ${rkkFiltered.length} records`;
     }
 
     renderPagination(rkkFiltered.length);
+
+    tbody.querySelectorAll('.btn-restore-action').forEach(btn => {
+        btn.addEventListener('click', function () {
+            openRestoreModal(this.dataset.id);
+        });
+    });
 }
 
 function renderPagination(total) {
@@ -63,104 +130,77 @@ function renderPagination(total) {
 
     if (nums) {
         nums.innerHTML = Array.from({ length: pages }, (_, i) => `
-            <button class="pagination-btn ${i + 1 === rkkCurrentPage ? 'active' : ''}"
-                    onclick="rkkGoToPage(${i + 1})">${i + 1}</button>
+            <button class="pagination-btn ${i + 1 === rkkCurrentPage ? 'active' : ''}">${i + 1}</button>
         `).join('');
+        nums.querySelectorAll('.pagination-btn').forEach((btn, i) => {
+            btn.addEventListener('click', () => { rkkCurrentPage = i + 1; renderTable(); });
+        });
     }
 
-    if (prev) prev.disabled = rkkCurrentPage === 1;
-    if (next) next.disabled = rkkCurrentPage === pages || pages === 0;
-
-    if (prev) prev.onclick = () => rkkGoToPage(rkkCurrentPage - 1);
-    if (next) next.onclick = () => rkkGoToPage(rkkCurrentPage + 1);
+    if (prev) { prev.disabled = rkkCurrentPage === 1; prev.onclick = () => { rkkCurrentPage--; renderTable(); }; }
+    if (next) { next.disabled = rkkCurrentPage >= pages || pages === 0; next.onclick = () => { rkkCurrentPage++; renderTable(); }; }
 }
 
-function rkkGoToPage(page) {
-    rkkCurrentPage = page;
-    renderTable();
-}
-
+// ── Search ────────────────────────────────────────────────────────────────────
 function bindSearch() {
     const input = document.getElementById('rejectedKKSearch');
     if (!input) return;
-    input.addEventListener('input', applyFilters);
-}
-
-function bindPurokFilter() {
-    const select = document.getElementById('rejectedKKPurokFilter');
-    if (!select) return;
-    select.addEventListener('change', applyFilters);
-}
-
-function applyFilters() {
-    const q     = (document.getElementById('rejectedKKSearch')?.value || '').toLowerCase();
-    const purok = document.getElementById('rejectedKKPurokFilter')?.value || '';
-
-    rkkFiltered = rejectedKKData.filter(r => {
-        const matchSearch = `${r.firstName} ${r.middleName} ${r.lastName}`.toLowerCase().includes(q);
-        const matchPurok  = purok === '' || r.purokZone === purok;
-        return matchSearch && matchPurok;
+    input.addEventListener('input', function () {
+        const q = this.value.toLowerCase();
+        rkkFiltered = rejectedKKRecords.filter(r =>
+            `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
+            (r.purokZone || '').toLowerCase().includes(q) ||
+            (r.rejectionReason || '').toLowerCase().includes(q)
+        );
+        rkkCurrentPage = 1;
+        renderTable();
     });
-
-    rkkCurrentPage = 1;
-    renderTable();
 }
 
-function openRkkViewModal(id) {
-    const record = rejectedKKData.find(r => r.id === id);
+// ── Restore modal ─────────────────────────────────────────────────────────────
+function openRestoreModal(id) {
+    const record = rejectedKKRecords.find(r => r.id === id);
     if (!record) return;
-
-    const fields = {
-        rkkViewRespondentNumber: record.respondentNumber || '—',
-        rkkViewDate: record.date || '—',
-        rkkViewLastName: record.lastName,
-        rkkViewFirstName: record.firstName,
-        rkkViewMiddleName: record.middleName || '—',
-        rkkViewSuffix: record.suffix || '—',
-        rkkViewRegion: record.region || '—',
-        rkkViewProvince: record.province || '—',
-        rkkViewCity: record.city || '—',
-        rkkViewBarangay: record.barangay || '—',
-        rkkViewPurokZone: record.purokZone || '—',
-        rkkViewSex: record.sex || '—',
-        rkkViewAge: record.age,
-        rkkViewBirthday: record.birthday || '—',
-        rkkViewEmail: record.email || '—',
-        rkkViewContact: record.contactNumber || '—',
-        rkkViewCivilStatus: record.civilStatus || '—',
-        rkkViewYouthClassification: record.youthClassification || '—',
-        rkkViewAgeGroup: record.ageGroup || '—',
-        rkkViewWorkStatus: record.workStatus || '—',
-        rkkViewEducation: record.educationalBackground || '—',
-        rkkViewSKVoter: record.registeredSKVoter || '—',
-        rkkViewNationalVoter: record.registeredNationalVoter || '—',
-        rkkViewVotingHistory: record.votingHistory || '—',
-        rkkViewRejectedAt: record.rejectedAt || '—',
-        rkkViewRejectionReason: record.rejectionReason || '—',
-    };
-
-    Object.entries(fields).forEach(([id, val]) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = val;
-    });
-
-    document.getElementById('rejectedKKViewModal').style.display = 'flex';
+    rkkPendingRestoreId = id;
+    const nameEl = document.getElementById('rkkRestoreName');
+    if (nameEl) nameEl.textContent = `${record.lastName}, ${record.firstName}${record.middleName ? ' ' + record.middleName : ''}`;
+    const modal = document.getElementById('rkkRestoreModal');
+    if (modal) modal.style.display = 'flex';
 }
 
-function bindModalClose() {
-    document.querySelectorAll('[data-modal-close]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.rkk-modal-backdrop').forEach(m => m.style.display = 'none');
-        });
-    });
+function closeRestoreModal() {
+    rkkPendingRestoreId = null;
+    const modal = document.getElementById('rkkRestoreModal');
+    if (modal) modal.style.display = 'none';
+}
 
-    const reEvalBtn = document.getElementById('rkkReEvaluateBtn');
-    if (reEvalBtn) {
-        reEvalBtn.addEventListener('click', () => {
-            alert('Re-evaluate functionality will be connected to the backend.');
+function bindRestoreModal() {
+    const cancelBtn  = document.getElementById('rkkRestoreCancelBtn');
+    const confirmBtn = document.getElementById('rkkRestoreConfirmBtn');
+    const modal      = document.getElementById('rkkRestoreModal');
+
+    if (cancelBtn)  cancelBtn.addEventListener('click', closeRestoreModal);
+    if (modal)      modal.addEventListener('click', e => { if (e.target === modal) closeRestoreModal(); });
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+            if (!rkkPendingRestoreId) return;
+            const idx = rejectedKKRecords.findIndex(r => r.id === rkkPendingRestoreId);
+            if (idx !== -1) rejectedKKRecords.splice(idx, 1);
+            rkkFiltered = [...rejectedKKRecords];
+            closeRestoreModal();
+            rkkCurrentPage = 1;
+            renderTable();
+            showToast('rkkToast', 'Record restored to KK Profiling.');
         });
     }
 }
 
-window.openRkkViewModal = openRkkViewModal;
-window.rkkGoToPage = rkkGoToPage;
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(toastId, message) {
+    const toast = document.getElementById(toastId);
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}

@@ -296,6 +296,31 @@
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal-backdrop kabataan-delete-backdrop" id="kabataanDeleteModal" style="display:none;">
+    <div class="kabataan-delete-box">
+        <div class="kabataan-delete-header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kabataan-delete-icon">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6l-1 14H6L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M9 6V4h6v2"></path>
+            </svg>
+            <h2 class="kabataan-delete-title">Delete Record</h2>
+        </div>
+        <div class="kabataan-delete-body">
+            <p class="kabataan-delete-message">Are you sure you want to delete</p>
+            <p class="kabataan-delete-name" id="kabataanDeleteName"></p>
+            <p class="kabataan-delete-warning">This action cannot be undone.</p>
+        </div>
+        <div class="kabataan-delete-footer">
+            <button type="button" class="btn kabataan-cancel-btn" id="kabataanDeleteCancelBtn">Cancel</button>
+            <button type="button" class="btn kabataan-confirm-delete-btn" id="kabataanDeleteConfirmBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 @vite([
     'app/modules/layout/js/header.js',

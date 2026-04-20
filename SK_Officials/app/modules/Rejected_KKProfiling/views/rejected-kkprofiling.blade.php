@@ -18,13 +18,83 @@
 
 <main class="main-content">
     <div class="page-container rejected-kk-page">
-        <h1 class="page-title">Rejected KK Profiling</h1>
+
+        <section class="page-header-section">
+            <div class="page-header-left">
+                <h1 class="page-title">Rejected KK Profiling</h1>
+                <p class="page-subtitle">KK Profiling requests that were rejected.</p>
+            </div>
+            <div class="page-header-right">
+                <input type="text" id="rejectedKKSearch" class="filter-input" placeholder="Search by name…">
+            </div>
+        </section>
+
+        <section class="page-content-section">
+            <div class="section-heading-row">
+                <h2 class="section-title">Rejected Records</h2>
+            </div>
+            <div class="table-card">
+                <div class="table-wrapper">
+                    <table class="rkk-table">
+                        <thead>
+                            <tr>
+                                <th>Full Name<div class="column-hint">LN, FN, MN, Suffix</div></th>
+                                <th>Age</th>
+                                <th>Sex</th>
+                                <th>Purok / Zone</th>
+                                <th>Youth Classification</th>
+                                <th>Rejection Reason</th>
+                                <th>Rejected At</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rejectedKKTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span id="rejectedKKPaginationInfo">No records found</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button type="button" id="rejectedKKPrevBtn" class="pagination-btn" disabled>Previous</button>
+                        <div class="pagination-numbers" id="rejectedKKPageNumbers"></div>
+                        <button type="button" id="rejectedKKNextBtn" class="pagination-btn" disabled>Next</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </div>
 </main>
 
+<!-- Restore Confirmation Modal -->
+<div class="restore-modal-backdrop" id="rkkRestoreModal" style="display:none;">
+    <div class="restore-modal-box">
+        <div class="restore-modal-header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="restore-modal-icon">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 .49-4.5"></path>
+            </svg>
+            <h2 class="restore-modal-title">Restore Record</h2>
+        </div>
+        <div class="restore-modal-body">
+            <p class="restore-modal-message">Restore this record back to KK Profiling?</p>
+            <p class="restore-modal-name" id="rkkRestoreName"></p>
+        </div>
+        <div class="restore-modal-footer">
+            <button type="button" class="btn-cancel-restore" id="rkkRestoreCancelBtn">Cancel</button>
+            <button type="button" class="btn-confirm-restore" id="rkkRestoreConfirmBtn">Restore</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="dk-toast" id="rkkToast"></div>
+
 @vite([
     'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js'
+    'app/modules/layout/js/sidebar.js',
+    'app/modules/Rejected_KKProfiling/assets/js/rejected-kkprofiling.js'
 ])
 
 </body>

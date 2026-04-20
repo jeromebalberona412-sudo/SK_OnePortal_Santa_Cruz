@@ -26,3 +26,94 @@ sk chairman set status in abyip rstricted other sk officials
 
 #2F4E85;
 https://www.scribd.com/document/707004073/KK-Profiling-Form
+
+May mga **official sources at guidelines** na pwede mong gamitin para suportahan yung data retention (hindi lang opinion). Hindi kasi fixed number sa batas, pero may **principles at recommended practices**.
+
+---
+
+## 📚 1. Philippine Law (Primary Basis)
+
+### Data Privacy Act of 2012
+
+* Walang exact years na binigay
+* Pero malinaw ang principle:
+
+> 📌 **“Personal data shall not be retained longer than necessary”**
+
+👉 Ito ang pinaka-base mo sa retention policy
+
+---
+
+## 🏛️ 2. Official Guidelines (Very Important)
+
+### National Privacy Commission
+
+Ito ang nag-iimplement ng Data Privacy Act sa PH.
+
+#### Key guidance nila:
+
+* **Storage Limitation Principle**
+* **Data Minimization**
+* Dapat may:
+
+  * Retention policy
+  * Disposal policy
+
+📌 Sabi nila:
+
+> Keep data only for as long as necessary for the purpose it was collected
+
+---
+
+## 📄 3. Supporting Study / Global Standard
+
+### General Data Protection Regulation
+
+Kahit EU ito, ginagamit siya worldwide as reference.
+
+* Same principle:
+
+  * **“No longer than necessary”**
+* Maraming systems sumusunod dito
+
+---
+
+## 🧠 4. Real-world Practice (System Design Standard)
+
+Sa IT / government systems, common retention:
+
+| Data Type             | Common Retention |
+| --------------------- | ---------------- |
+| Deleted records       | 1–2 years        |
+| Rejected applications | 6–12 months      |
+| Audit logs            | 1–5 years        |
+
+👉 Ito ang ginagamit sa:
+
+* Government systems
+* School systems
+* HR systems
+
+---
+
+## 📊 5. Pwede mong gawing justification (for thesis / system doc)
+
+You can say:
+
+> “The system follows the Data Privacy Act of 2012 and adheres to the data minimization and storage limitation principles recommended by the National Privacy Commission, ensuring that personal data is retained only for a necessary period and automatically deleted after a defined retention timeframe.”
+
+---
+
+## ✅ Conclusion (Evidence-based ka na)
+
+Walang exact number sa batas, pero meron:
+
+* ✔ Legal principle (RA 10173)
+* ✔ NPC guidelines
+* ✔ Global standard (GDPR)
+* ✔ Industry practice
+
+👉 Kaya valid yung:
+
+* **Deleted = 2 years**
+* **Rejected = 1 year**

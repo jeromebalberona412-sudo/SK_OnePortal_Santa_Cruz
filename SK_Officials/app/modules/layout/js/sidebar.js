@@ -1,164 +1,137 @@
 // Sidebar JavaScript Functionality
+// Single DOMContentLoaded — no duplicate listeners
 
 document.addEventListener('DOMContentLoaded', function () {
     initializeSidebar();
     isolateSidebarScroll();
-    restoreArchivedDropdown();
+    initArchivedDropdown();
 });
 
-/**
- * Prevent the page from scrolling when the mouse wheel is used over the sidebar.
- * Works by intercepting the wheel event and manually scrolling the sidebar,
- * then stopping propagation so the main page never sees it.
- */
+// ── Prevent page scroll when wheeling over sidebar ───────────────────────────
 function isolateSidebarScroll() {
     const sidebar = document.getElementById('mainSidebar');
     if (!sidebar) return;
 
     sidebar.addEventListener('wheel', function (e) {
-        const scrollTop    = sidebar.scrollTop;
-        const scrollHeight = sidebar.scrollHeight;
-        const clientHeight = sidebar.clientHeight;
+        const atTop    = sidebar.scrollTop === 0 && e.deltaY < 0;
+        const atBottom = sidebar.scrollTop + sidebar.clientHeight >= sidebar.scrollHeight && e.deltaY > 0;
 
-        const atTop    = scrollTop === 0 && e.deltaY < 0;
-        const atBottom = scrollTop + clientHeight >= scrollHeight && e.deltaY > 0;
-
-        // Only block propagation when the sidebar itself can still scroll
-        if (!atTop && !atBottom) {
-            e.stopPropagation();
-        }
-
-        // Always prevent the default page scroll while cursor is over sidebar
+        if (!atTop && !atBottom) e.stopPropagation();
         e.preventDefault();
         sidebar.scrollTop += e.deltaY;
     }, { passive: false });
 }
 
+// ── Sidebar collapse / hover (desktop) ──────────────────────────────────────
 function initializeSidebar() {
-    const sidebar = document.getElementById('mainSidebar');
+    const sidebar     = document.getElementById('mainSidebar');
     const mainContent = document.querySelector('.main-content');
-    const sidebarToggle = document.getElementById('sidebarToggle');
+    const toggle      = document.getElementById('sidebarToggle');
 
     if (!sidebar || !mainContent) return;
 
     let hoverTimeout;
     let isHovering = false;
 
-    // Initialize sidebar state
-    function initializeSidebarState() {
+    function initState() {
         if (window.innerWidth > 768) {
-            // Desktop: start collapsed
             sidebar.classList.add('collapsed');
             mainContent.classList.add('sidebar-collapsed');
-
-            // Update toggle button to show hamburger (collapsed state)
-            if (sidebarToggle) {
-                sidebarToggle.classList.remove('active');
-            }
+            if (toggle) toggle.classList.remove('active');
         } else {
-            // Mobile: ensure normal state
             sidebar.classList.remove('collapsed');
             mainContent.classList.remove('sidebar-collapsed');
         }
     }
 
-    // Initialize on load
-    initializeSidebarState();
+    initState();
 
-    // Handle mouse enter on sidebar
     sidebar.addEventListener('mouseenter', function () {
         if (window.innerWidth > 768 && sidebar.classList.contains('collapsed')) {
             clearTimeout(hoverTimeout);
             isHovering = true;
-
-            // Add hover state class to sidebar
             sidebar.classList.add('hovering');
-
-            // Add hover state class to main content
             mainContent.classList.add('sidebar-hover');
-
-            // Update toggle button to show X during hover
-            if (sidebarToggle) {
-                sidebarToggle.classList.add('active');
-            }
+            if (toggle) toggle.classList.add('active');
         }
     });
 
-    // Handle mouse leave from sidebar
     sidebar.addEventListener('mouseleave', function () {
         if (window.innerWidth > 768 && sidebar.classList.contains('collapsed')) {
             clearTimeout(hoverTimeout);
             isHovering = false;
-
-            // Add a small delay before collapsing to prevent flickering
-            hoverTimeout = setTimeout(() => {
+            hoverTimeout = setTimeout(function () {
                 if (!isHovering) {
                     sidebar.classList.remove('hovering');
                     mainContent.classList.remove('sidebar-hover');
-
-                    // Update toggle button back to hamburger when hover ends
-                    if (sidebarToggle) {
-                        sidebarToggle.classList.remove('active');
-                    }
+                    if (toggle) toggle.classList.remove('active');
                 }
             }, 100);
         }
     });
 
-    // Handle window resize
     window.addEventListener('resize', function () {
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('collapsed', 'hovering');
             mainContent.classList.remove('sidebar-collapsed', 'sidebar-hover');
         } else {
-            initializeSidebarState();
+            initState();
         }
     });
 }
 
-// Export functions for external use if needed
-window.SidebarFunctions = {
-    initializeSidebar: initializeSidebar
-};
+// ── Archived dropdown — click-only, no inline onclick ───────────────────────
+function initArchivedDropdown() {
+    const toggleLink = document.getElementById('archivedToggleLink');
+    const dropdown   = document.getElementById('archivedDropdown');
 
-// Archived Dropdown Toggle
-// State is persisted in sessionStorage so it survives page navigation.
-function toggleArchivedDropdown(event) {
-    event.preventDefault();
-    const dropdown = document.getElementById('archivedDropdown');
-    if (!dropdown) return;
+    if (!toggleLink || !dropdown) return;
 
-    const isNowOpen = !dropdown.classList.contains('open');
-    dropdown.classList.toggle('open');
-    sessionStorage.setItem('archivedDropdownOpen', isNowOpen ? '1' : '0');
-}
+    // Wire click listener once
+    toggleLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        const isNowOpen = !dropdown.classList.contains('open');
+        dropdown.classList.toggle('open', isNowOpen);
+        sessionStorage.setItem('archivedDropdownOpen', isNowOpen ? '1' : '0');
+        nudgeSidebarScroll();
+    });
 
-// Restore archived dropdown state on every page load
-function restoreArchivedDropdown() {
-    const dropdown = document.getElementById('archivedDropdown');
-    if (!dropdown) return;
-
-    // Default open if a sub-page is active, or if user had it open
+    // Restore state from sessionStorage on page load
     const isActive = dropdown.querySelector('.nav-sublink.active') !== null;
     const wasOpen  = sessionStorage.getItem('archivedDropdownOpen') === '1';
 
     if (isActive || wasOpen) {
         dropdown.classList.add('open');
-        // Make sure storage reflects the open state
         sessionStorage.setItem('archivedDropdownOpen', '1');
+        // Nudge after paint so scrollbar reflects expanded height
+        requestAnimationFrame(nudgeSidebarScroll);
     }
 }
 
-window.toggleArchivedDropdown = toggleArchivedDropdown;
-
-// Deleted ABYIP — opens a modal view (stub, connect to ABYIP module modal)
-function openDeletedABYIPModal(event) {
-    event.preventDefault();
-    // TODO: wire up to the actual Deleted ABYIP modal when the module is ready
-    const modal = document.getElementById('deletedABYIPModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
+// Force scrollbar thumb to recalculate after content height changes
+function nudgeSidebarScroll() {
+    const sidebar = document.getElementById('mainSidebar');
+    if (!sidebar) return;
+    requestAnimationFrame(function () {
+        const prev = sidebar.scrollTop;
+        sidebar.scrollTop = prev + 1;
+        sidebar.scrollTop = prev;
+    });
 }
 
-window.openDeletedABYIPModal = openDeletedABYIPModal;
+// ── Keep toggleArchivedDropdown on window for any legacy callers ─────────────
+// (safe no-op if the new listener is already handling it)
+window.toggleArchivedDropdown = function (event) {
+    if (event) event.preventDefault();
+    const dropdown = document.getElementById('archivedDropdown');
+    if (!dropdown) return;
+    const isNowOpen = !dropdown.classList.contains('open');
+    dropdown.classList.toggle('open', isNowOpen);
+    sessionStorage.setItem('archivedDropdownOpen', isNowOpen ? '1' : '0');
+    nudgeSidebarScroll();
+};
+
+// ── Exports ──────────────────────────────────────────────────────────────────
+window.SidebarFunctions = {
+    initializeSidebar: initializeSidebar,
+};
