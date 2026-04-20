@@ -358,21 +358,24 @@ body {
 }
 
 .modal-toggle-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    background: rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 900;
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s ease;
+    color: #ffffff;
+    padding: 4px 8px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
 }
 
 .modal-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateY(-1px);
+    color: #ffffff;
+    opacity: 0.85;
+    transform: none;
 }
 
 .modal-title {

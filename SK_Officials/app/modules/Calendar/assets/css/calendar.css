@@ -529,7 +529,10 @@ body {
     }
 
     .calendar-header-right {
-        justify-content: flex-start;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .calendar-nav-select {
@@ -549,6 +552,24 @@ body {
 
     .calendar-title {
         font-size: 22px;
+    }
+
+    .calendar-header-right {
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+
+    .calendar-current-date {
+        font-size: 13px;
+    }
+
+    .calendar-nav-btn,
+    .calendar-jump-btn {
+        font-size: 12px;
+        padding: 6px 10px;
+        white-space: nowrap;
     }
 
     .calendar-grid {
