@@ -1013,6 +1013,7 @@ html {
     flex-direction: column;
     transform: scale(0.8);
     transition: all 0.3s ease;
+    overflow: hidden;
 }
 
 .modal-overlay.active .modal-container {
@@ -1126,13 +1127,19 @@ html {
     -webkit-overflow-scrolling: touch;
 }
 
+.modal-overlay.modal-maximized .modal-footer {
+    border-radius: 0;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 14px 20px;
+}
+
 .modal-body {
     padding: 0;
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
     background: white;
-    min-height: 400px;
-    max-height: calc(90vh - 160px);
 }
 
 .modal-document-header {
@@ -1293,13 +1300,16 @@ html {
 }
 
 .modal-footer {
-    padding: 20px 24px;
+    padding: 14px 20px;
     border-top: 1px solid #e9ecef;
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
+    align-items: center;
+    gap: 10px;
     background: white;
     border-radius: 0 0 12px 12px;
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .btn-cancel,
@@ -1346,6 +1356,22 @@ html {
 .btn-export-word:hover {
     background: #1e40af;
     transform: none;
+}
+
+.btn-print-abyip {
+    background: #2c2c3e;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: none;
+}
+
+.btn-print-abyip:hover {
+    background: #1a1a2e;
 }
 
 /* Minimized Modal Bar */
@@ -1478,13 +1504,16 @@ html {
     }
 
     .modal-footer {
-        padding: 15px 20px;
-        flex-direction: column;
+        padding: 12px 16px;
+        gap: 8px;
+        flex-direction: row;
+        justify-content: flex-end;
+        flex-wrap: wrap;
     }
 
     .btn-cancel,
     .btn-save {
-        width: 100%;
+        flex: 0 0 auto;
     }
 
     .modal-document-header .government-header p {

@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — SK Officials Portal</title>
 
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     @vite([
         'app/modules/layout/css/header.css',
         'app/modules/layout/css/sidebar.css',
@@ -44,10 +47,29 @@
         </div>
     </div>
 
-    <!-- ══ Stat Cards ════════════════════════════════════════ -->
-    <div class="stats-cards-row">
+    <!-- ══ Calendar Reminder Banner ═════════════════════════ -->
+    <div id="calendarReminderBanner" class="dash-reminder-banner d-none mb-3">
+        <div class="dash-reminder-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+            </svg>
+        </div>
+        <div class="dash-reminder-body">
+            <span class="dash-reminder-label">Today's Reminder</span>
+            <span class="dash-reminder-text" id="reminderText"></span>
+        </div>
+        <a href="{{ route('calendar') }}" class="dash-reminder-link">View Calendar</a>
+    </div>
 
-        <!-- Total Kabataan -->
+    <!-- ══ Stat Cards — 2-row grid (all 11 cards) ═══════════ -->
+    <div class="stats-2row-grid mb-3">
+
+        <!-- ── BLUE GROUP ── Total Kabataan, KK Total ──────── -->
+
+        <!-- 1. Total Kabataan -->
         <div class="stat-card stat-card-blue">
             <div class="stat-card-icon stat-icon-blue">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -59,27 +81,29 @@
             </div>
             <div class="stat-card-body">
                 <span class="stat-card-value" id="statKabataan">342</span>
-                <span class="stat-card-label">Total Kabataan Registered</span>
+                <span class="stat-card-label">Total Kabataan</span>
             </div>
         </div>
 
-        <!-- Total ABYIP Members -->
-        <div class="stat-card stat-card-purple">
-            <div class="stat-card-icon stat-icon-purple">
+        <!-- 2. KK Total -->
+        <div class="stat-card stat-card-indigo">
+            <div class="stat-card-icon stat-icon-indigo">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14,2 14,8 20,8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="19" y1="8" x2="19" y2="14"></line>
+                    <line x1="22" y1="11" x2="16" y2="11"></line>
                 </svg>
             </div>
             <div class="stat-card-body">
-                <span class="stat-card-value" id="statAbyip">87</span>
-                <span class="stat-card-label">Total ABYIP Members</span>
+                <span class="stat-card-value" id="statKkTotal">198</span>
+                <span class="stat-card-label">KK Total</span>
             </div>
         </div>
 
-        <!-- Pending KK Requests -->
+        <!-- ── YELLOW GROUP ── Pending KK ──────────────────── -->
+
+        <!-- 3. Pending KK Requests -->
         <div class="stat-card stat-card-orange">
             <div class="stat-card-icon stat-icon-orange">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -89,11 +113,13 @@
             </div>
             <div class="stat-card-body">
                 <span class="stat-card-value" id="statPending">14</span>
-                <span class="stat-card-label">Pending KK Requests</span>
+                <span class="stat-card-label">Pending KK</span>
             </div>
         </div>
 
-        <!-- Approved Requests -->
+        <!-- ── GREEN GROUP ── Approved, Active Programs, Total Budget ── -->
+
+        <!-- 4. Approved Requests -->
         <div class="stat-card stat-card-green">
             <div class="stat-card-icon stat-icon-green">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -101,27 +127,12 @@
                 </svg>
             </div>
             <div class="stat-card-body">
-                <span class="stat-card-value" id="statApproved">198</span>
-                <span class="stat-card-label">Approved Requests</span>
+                <span class="stat-card-value" id="statApproved">23</span>
+                <span class="stat-card-label">Approved</span>
             </div>
         </div>
 
-        <!-- Rejected Requests -->
-        <div class="stat-card stat-card-red">
-            <div class="stat-card-icon stat-icon-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-            </div>
-            <div class="stat-card-body">
-                <span class="stat-card-value" id="statRejected">23</span>
-                <span class="stat-card-label">Rejected Requests</span>
-            </div>
-        </div>
-
-        <!-- Active Programs -->
+        <!-- 5. Active Programs -->
         <div class="stat-card stat-card-teal">
             <div class="stat-card-icon stat-icon-teal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -135,7 +146,7 @@
             </div>
         </div>
 
-        <!-- Total Budget -->
+        <!-- 6. Total Budget -->
         <div class="stat-card stat-card-yellow">
             <div class="stat-card-icon stat-icon-yellow">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -145,11 +156,88 @@
             </div>
             <div class="stat-card-body">
                 <span class="stat-card-value" id="statBudget">₱1.42M</span>
-                <span class="stat-card-label">Total Budget Allocated</span>
+                <span class="stat-card-label">Total Budget</span>
             </div>
         </div>
 
-    </div><!-- /stats-cards-row -->
+        <!-- ── RED GROUP ── Rejected, Deleted Kabataan, Deleted ABYIP, Rejected Items, Rejected KK ── -->
+
+        <!-- 7. Rejected Requests -->
+        <div class="stat-card stat-card-red">
+            <div class="stat-card-icon stat-icon-red">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statRejected">23</span>
+                <span class="stat-card-label">Rejected</span>
+            </div>
+        </div>
+
+        <!-- 8. Deleted Kabataan -->
+        <div class="stat-card stat-card-slate">
+            <div class="stat-card-icon stat-icon-slate">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14H6L5 6"></path>
+                    <path d="M10 11v6"></path><path d="M14 11v6"></path>
+                    <path d="M9 6V4h6v2"></path>
+                </svg>
+            </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statDeletedKabataan">7</span>
+                <span class="stat-card-label">Deleted Kabataan</span>
+            </div>
+        </div>
+
+        <!-- 9. Deleted ABYIP -->
+        <div class="stat-card stat-card-slate">
+            <div class="stat-card-icon stat-icon-slate">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14,2 14,8 20,8"></polyline>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statDeletedAbyip">3</span>
+                <span class="stat-card-label">Deleted ABYIP</span>
+            </div>
+        </div>
+
+        <!-- 10. Rejected Items -->
+        <div class="stat-card stat-card-rose">
+            <div class="stat-card-icon stat-icon-rose">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statRejectedItems">11</span>
+                <span class="stat-card-label">Rejected Items</span>
+            </div>
+        </div>
+
+        <!-- 11. Rejected KK Profiling -->
+        <div class="stat-card stat-card-rose">
+            <div class="stat-card-icon stat-icon-rose">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+            </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statRejectedKK">5</span>
+                <span class="stat-card-label">Rejected KK</span>
+            </div>
+        </div>
+
+    </div><!-- /stats-2row-grid -->
 
     <!-- ══ Quick Actions ═════════════════════════════════════ -->
     <div class="dash-section-card">
@@ -196,6 +284,28 @@
             <div class="chart-canvas-wrap">
                 <canvas id="chartMonthlyRequests"></canvas>
             </div>
+            <div class="line-chart-filter-row">
+                <label class="line-chart-checkbox">
+                    <input type="checkbox" id="filterApproved" checked>
+                    <span class="line-chart-checkbox-box" style="background:#22c55e;"></span>
+                    <span>Approved</span>
+                </label>
+                <label class="line-chart-checkbox">
+                    <input type="checkbox" id="filterRejected" checked>
+                    <span class="line-chart-checkbox-box" style="background:#ef4444;"></span>
+                    <span>Rejected</span>
+                </label>
+                <label class="line-chart-checkbox">
+                    <input type="checkbox" id="filterPending" checked>
+                    <span class="line-chart-checkbox-box" style="background:#f59e0b;"></span>
+                    <span>Pending</span>
+                </label>
+                <label class="line-chart-checkbox">
+                    <input type="checkbox" id="filterAll" checked>
+                    <span class="line-chart-checkbox-box" style="background:#6b7280;"></span>
+                    <span>All</span>
+                </label>
+            </div>
         </div>
 
     </div>
@@ -214,23 +324,7 @@
             <div class="chart-canvas-wrap chart-canvas-wrap--pie">
                 <canvas id="chartAbyipStatus"></canvas>
             </div>
-            <div class="pie-legend-row" id="abyipLegend">
-                <div class="pie-legend-item">
-                    <span class="pie-legend-dot" style="background:#22c55e;"></span>
-                    <span class="pie-legend-label">Active</span>
-                    <span class="pie-legend-pct">62%</span>
-                </div>
-                <div class="pie-legend-item">
-                    <span class="pie-legend-dot" style="background:#f59e0b;"></span>
-                    <span class="pie-legend-label">Pending</span>
-                    <span class="pie-legend-pct">24%</span>
-                </div>
-                <div class="pie-legend-item">
-                    <span class="pie-legend-dot" style="background:#ef4444;"></span>
-                    <span class="pie-legend-label">Inactive</span>
-                    <span class="pie-legend-pct">14%</span>
-                </div>
-            </div>
+            <div class="pie-legend-row" id="abyipLegend"></div>
         </div>
 
         <div class="dash-section-card">
@@ -247,6 +341,20 @@
             <div class="donut-legend" id="donutLegend"></div>
         </div>
 
+    </div>
+
+    <!-- ══ Committees Section ════════════════════════════════ -->
+    <div class="dash-section-card mb-3">
+        <div class="dash-section-header">
+            <div>
+                <h2 class="dash-section-title">Committees</h2>
+                <p class="dash-section-sub">SK committee overview and status</p>
+            </div>
+            <span class="dash-chart-badge">Overview</span>
+        </div>
+        <div class="row g-2" id="committeesList">
+            <!-- Rendered by JS -->
+        </div>
     </div>
 
     <!-- ══ Bottom Row: Activity + Announcements + Events ═════ -->
@@ -471,6 +579,9 @@
     'app/modules/layout/js/sidebar.js',
     'app/modules/Dashboard/assets/js/dashboard.js'
 ])
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

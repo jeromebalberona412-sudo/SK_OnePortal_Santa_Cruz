@@ -14,8 +14,8 @@ import Chart from 'chart.js/auto';
 const YEAR_DATA = {
     2023: {
         stats: { kabataan: 198, abyip: 34, pending: 8, approved: 87, rejected: 11, programs: 4, budget: '₱0.62M' },
-        purokLabels:  ['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5','Purok 6'],
-        purokCounts:  [42, 31, 28, 37, 24, 36],
+        purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
+        purokCounts:  [22, 18, 15, 20, 14, 19, 17, 16, 21, 16],
         monthlyApproved: [4,6,5,8,7,10,9,11,10,12,8,7],
         monthlyRejected: [1,2,1,2,1,3,2,3,1,2,2,1],
         abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[18,6,4,6] },
@@ -36,8 +36,8 @@ const YEAR_DATA = {
     },
     2024: {
         stats: { kabataan: 267, abyip: 58, pending: 11, approved: 143, rejected: 17, programs: 6, budget: '₱0.98M' },
-        purokLabels:  ['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5','Purok 6'],
-        purokCounts:  [55, 44, 38, 49, 35, 46],
+        purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
+        purokCounts:  [30, 25, 22, 28, 20, 27, 24, 23, 29, 19],
         monthlyApproved: [8,10,9,13,11,16,14,18,15,20,17,12],
         monthlyRejected: [2,3,2,3,2,4,3,5,2,4,3,2],
         abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[30,9,6,13] },
@@ -61,8 +61,8 @@ const YEAR_DATA = {
     },
     2025: {
         stats: { kabataan: 310, abyip: 74, pending: 12, approved: 172, rejected: 20, programs: 8, budget: '₱1.18M' },
-        purokLabels:  ['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5','Purok 6'],
-        purokCounts:  [68, 55, 47, 61, 42, 57],
+        purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
+        purokCounts:  [36, 30, 27, 34, 25, 32, 29, 28, 35, 24],
         monthlyApproved: [10,13,12,17,14,21,18,24,20,27,23,19],
         monthlyRejected: [2,4,3,4,3,5,4,6,3,5,4,3],
         abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[40,10,7,17] },
@@ -87,12 +87,12 @@ const YEAR_DATA = {
     },
     2026: {
         stats: { kabataan: 342, abyip: 87, pending: 14, approved: 198, rejected: 23, programs: 9, budget: '₱1.42M' },
-        purokLabels:  ['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5','Purok 6'],
-        purokCounts:  [78, 63, 54, 72, 49, 66],
+        purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
+        purokCounts:  [42, 35, 31, 38, 28, 36, 33, 32, 40, 27],
         monthlyApproved: [12,18,15,22,19,28,24,31,27,35,30,38],
         monthlyRejected: [3, 5, 4, 6, 3, 7, 5, 8, 4, 6, 5, 4],
-        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[45,12,8,22] },
-        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[320000,180000,150000,95000,120000,85000] },
+        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[52,14,9,25] },
+        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[340000,190000,160000,100000,130000,90000] },
         activity: [
             { type:'approve', text:'KK Profiling request approved',  who:'Juan Dela Cruz',  time:'2 min ago' },
             { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'15 min ago' },
@@ -155,6 +155,8 @@ document.addEventListener('DOMContentLoaded', function () {
     renderAll(selectedYear);
     initYearFilter();
     initModals();
+    renderReminder();
+    renderCommittees();
 });
 
 /* ── Year filter ─────────────────────────────────────────── */
@@ -186,11 +188,15 @@ function renderAll(year) {
 /* ── Stat cards ──────────────────────────────────────────── */
 function renderStats(d) {
     animateCount('statKabataan', d.stats.kabataan);
-    animateCount('statAbyip',    d.stats.abyip);
+    animateCount('statKkTotal',  d.stats.kkTotal  || 198);
     animateCount('statPending',  d.stats.pending);
     animateCount('statApproved', d.stats.approved);
     animateCount('statRejected', d.stats.rejected);
     animateCount('statPrograms', d.stats.programs);
+    animateCount('statDeletedKabataan', d.stats.deletedKabataan || 7);
+    animateCount('statDeletedAbyip',    d.stats.deletedAbyip    || 3);
+    animateCount('statRejectedItems',   d.stats.rejectedItems   || 11);
+    animateCount('statRejectedKK',      d.stats.rejectedKK      || 5);
     const budgetEl = document.getElementById('statBudget');
     if (budgetEl) budgetEl.textContent = d.stats.budget;
 }
@@ -337,12 +343,16 @@ function renderBarChart(d) {
                 label: 'Kabataan',
                 data: d.purokCounts,
                 backgroundColor: [
-                    'rgba(244,194,13,.85)',
                     'rgba(59,130,246,.85)',
                     'rgba(34,197,94,.85)',
+                    'rgba(244,194,13,.85)',
+                    'rgba(239,68,68,.85)',
                     'rgba(168,85,247,.85)',
-                    'rgba(249,115,22,.85)',
                     'rgba(20,184,166,.85)',
+                    'rgba(249,115,22,.85)',
+                    'rgba(99,102,241,.85)',
+                    'rgba(236,72,153,.85)',
+                    'rgba(16,185,129,.85)',
                 ],
                 borderRadius: 8,
                 borderSkipped: false,
@@ -356,8 +366,15 @@ function renderBarChart(d) {
                 tooltip: { callbacks: { label: function (c) { return ' ' + c.parsed.y + ' youth'; } } }
             },
             scales: {
-                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { stepSize: 20 } },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 10 },
+                        maxRotation: 35,
+                        minRotation: 25,
+                    }
+                },
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { stepSize: 10 } },
             },
         },
     });
@@ -368,6 +385,12 @@ function renderLineChart(d) {
     const ctx = document.getElementById('chartMonthlyRequests');
     if (!ctx) return;
     if (chartLine) { chartLine.destroy(); chartLine = null; }
+
+    /* Derive pending = approved - rejected as a rough estimate */
+    const monthlyPending = d.monthlyApproved.map(function (a, i) {
+        return Math.max(0, Math.round((a + d.monthlyRejected[i]) * 0.18));
+    });
+
     chartLine = new Chart(ctx, {
         type: 'line',
         data: {
@@ -383,6 +406,7 @@ function renderLineChart(d) {
                     pointBackgroundColor: '#22c55e',
                     tension: 0.4,
                     fill: true,
+                    hidden: false,
                 },
                 {
                     label: 'Rejected',
@@ -394,26 +418,65 @@ function renderLineChart(d) {
                     pointBackgroundColor: '#ef4444',
                     tension: 0.4,
                     fill: true,
+                    hidden: false,
+                },
+                {
+                    label: 'Pending',
+                    data: monthlyPending,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245,158,11,.08)',
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#f59e0b',
+                    tension: 0.4,
+                    fill: true,
+                    hidden: false,
                 },
             ],
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'end',
-                    labels: { boxWidth: 12, padding: 14, font: { size: 11 } },
-                },
-            },
+            plugins: { legend: { display: false } },
             scales: {
                 x: { grid: { display: false }, ticks: { font: { size: 11 } } },
                 y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' } },
             },
         },
     });
+
+    /* Wire up checkbox filters */
+    const cbApproved = document.getElementById('filterApproved');
+    const cbRejected = document.getElementById('filterRejected');
+    const cbPending  = document.getElementById('filterPending');
+    const cbAll      = document.getElementById('filterAll');
+
+    function syncAllCheckbox() {
+        if (cbAll) {
+            cbAll.checked = [cbApproved, cbRejected, cbPending].every(function (cb) { return cb && cb.checked; });
+        }
+    }
+
+    function applyFilter() {
+        if (cbApproved) chartLine.data.datasets[0].hidden = !cbApproved.checked;
+        if (cbRejected) chartLine.data.datasets[1].hidden = !cbRejected.checked;
+        if (cbPending)  chartLine.data.datasets[2].hidden = !cbPending.checked;
+        chartLine.update();
+        syncAllCheckbox();
+    }
+
+    [cbApproved, cbRejected, cbPending].forEach(function (cb) {
+        if (cb) { cb.checked = true; cb.addEventListener('change', applyFilter); }
+    });
+
+    if (cbAll) {
+        cbAll.checked = true;
+        cbAll.addEventListener('change', function () {
+            const state = cbAll.checked;
+            [cbApproved, cbRejected, cbPending].forEach(function (cb) { if (cb) cb.checked = state; });
+            applyFilter();
+        });
+    }
 }
 
 /* ── Pie Chart ───────────────────────────────────────────── */
@@ -421,13 +484,48 @@ function renderPieChart(d) {
     const ctx = document.getElementById('chartAbyipStatus');
     if (!ctx) return;
     if (chartPie) { chartPie.destroy(); chartPie = null; }
+
+    const PIE_COLORS = ['#22c55e','#ef4444','#f59e0b','#3b82f6'];
+    const total = d.abyipStatus.values.reduce(function (a, b) { return a + b; }, 0);
+
+    /* Inline label plugin — draws label+% directly on each slice */
+    const pieLabelsPlugin = {
+        id: 'pieLabels',
+        afterDraw: function (chart) {
+            const ctx2 = chart.ctx;
+            chart.data.datasets.forEach(function (dataset, di) {
+                const meta = chart.getDatasetMeta(di);
+                meta.data.forEach(function (arc, i) {
+                    const val = dataset.data[i];
+                    if (!val) return;
+                    const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                    const label = chart.data.labels[i];
+                    const angle = (arc.startAngle + arc.endAngle) / 2;
+                    const r = (arc.innerRadius + arc.outerRadius) / 2;
+                    const x = arc.x + Math.cos(angle) * r;
+                    const y = arc.y + Math.sin(angle) * r;
+                    ctx2.save();
+                    ctx2.textAlign = 'center';
+                    ctx2.textBaseline = 'middle';
+                    ctx2.fillStyle = '#fff';
+                    ctx2.font = 'bold 11px Segoe UI, sans-serif';
+                    ctx2.fillText(label, x, y - 7);
+                    ctx2.font = 'bold 12px Segoe UI, sans-serif';
+                    ctx2.fillText(pct + '%', x, y + 7);
+                    ctx2.restore();
+                });
+            });
+        }
+    };
+
     chartPie = new Chart(ctx, {
         type: 'pie',
+        plugins: [pieLabelsPlugin],
         data: {
             labels: d.abyipStatus.labels,
             datasets: [{
                 data: d.abyipStatus.values,
-                backgroundColor: ['#22c55e','#f97316','#f4c20d','#3b82f6'],
+                backgroundColor: PIE_COLORS,
                 borderWidth: 2,
                 borderColor: '#fff',
             }],
@@ -440,8 +538,8 @@ function renderPieChart(d) {
                 tooltip: {
                     callbacks: {
                         label: function (c) {
-                            const total = c.dataset.data.reduce(function (a, b) { return a + b; }, 0);
-                            return ' ' + c.label + ': ' + c.parsed + ' (' + ((c.parsed / total) * 100).toFixed(1) + '%)';
+                            const t = c.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                            return ' ' + c.label + ': ' + c.parsed + ' (' + ((c.parsed / t) * 100).toFixed(1) + '%)';
                         }
                     }
                 }
@@ -449,17 +547,13 @@ function renderPieChart(d) {
         },
     });
 
-    /* Update the HTML legend percentages */
-    const total = d.abyipStatus.values.reduce(function (a, b) { return a + b; }, 0);
+    /* Update HTML legend — label + color box only, no % */
     const legend = document.getElementById('abyipLegend');
     if (legend) {
-        const colors = ['#22c55e','#f59e0b','#ef4444','#3b82f6'];
         legend.innerHTML = d.abyipStatus.labels.map(function (label, i) {
-            const pct = total > 0 ? ((d.abyipStatus.values[i] / total) * 100).toFixed(0) : 0;
             return `<div class="pie-legend-item">
-                <span class="pie-legend-dot" style="background:${colors[i]};"></span>
+                <span class="pie-legend-box" style="background:${PIE_COLORS[i]};"></span>
                 <span class="pie-legend-label">${esc(label)}</span>
-                <span class="pie-legend-pct">${pct}%</span>
             </div>`;
         }).join('');
     }
@@ -473,8 +567,37 @@ function renderDonutChart(d) {
     const colors = ['#3b82f6','#22c55e','#ef4444','#14b8a6','#f97316','#a855f7'];
     const total  = d.budgetPrograms.values.reduce(function (a, b) { return a + b; }, 0);
 
+    /* Inline label plugin for donut — draws % on each segment */
+    const donutLabelsPlugin = {
+        id: 'donutLabels',
+        afterDraw: function (chart) {
+            const ctx2 = chart.ctx;
+            chart.data.datasets.forEach(function (dataset, di) {
+                const meta = chart.getDatasetMeta(di);
+                meta.data.forEach(function (arc, i) {
+                    const val = dataset.data[i];
+                    if (!val) return;
+                    const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                    if (pct < 5) return; /* skip tiny slices */
+                    const angle = (arc.startAngle + arc.endAngle) / 2;
+                    const r = (arc.innerRadius + arc.outerRadius) / 2;
+                    const x = arc.x + Math.cos(angle) * r;
+                    const y = arc.y + Math.sin(angle) * r;
+                    ctx2.save();
+                    ctx2.textAlign = 'center';
+                    ctx2.textBaseline = 'middle';
+                    ctx2.fillStyle = '#fff';
+                    ctx2.font = 'bold 11px Segoe UI, sans-serif';
+                    ctx2.fillText(pct + '%', x, y);
+                    ctx2.restore();
+                });
+            });
+        }
+    };
+
     chartDonut = new Chart(ctx, {
         type: 'doughnut',
+        plugins: [donutLabelsPlugin],
         data: {
             labels: d.budgetPrograms.labels,
             datasets: [{
@@ -488,7 +611,7 @@ function renderDonutChart(d) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '68%',
+            cutout: '62%',
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -502,13 +625,76 @@ function renderDonutChart(d) {
         },
     });
 
+    /* Horizontal legend — square box + label only, no % */
     const legend = document.getElementById('donutLegend');
     if (!legend) return;
     legend.innerHTML = d.budgetPrograms.labels.map(function (label, i) {
         return `<div class="donut-legend-item">
-            <div class="donut-legend-dot" style="background:${colors[i]};"></div>
+            <div class="donut-legend-box" style="background:${colors[i]};"></div>
             <span class="donut-legend-label">${esc(label)}</span>
-            <span class="donut-legend-value">${total > 0 ? ((d.budgetPrograms.values[i] / total) * 100).toFixed(0) : 0}%</span>
+        </div>`;
+    }).join('');
+}
+
+/* ── Calendar Reminder ───────────────────────────────────── */
+function renderReminder() {
+    /* Read today's note from localStorage (set by the Calendar module).
+       Key format: calNote_YYYY_M_D  e.g. calNote_2026_4_22
+       Falls back to sample notes so the banner is always visible as a demo. */
+    const today = new Date();
+    const key   = 'calNote_' + today.getFullYear() + '_' + (today.getMonth() + 1) + '_' + today.getDate();
+    const stored = localStorage.getItem(key);
+
+    /* Sample notes shown when no real note is saved */
+    const SAMPLE_NOTES = [
+        'SK Meeting at 3:00 PM',
+        'Submit ABYIP documents',
+        'KK Profiling deadline today',
+    ];
+
+    const noteText = (stored && stored.trim())
+        ? stored.trim()
+        : SAMPLE_NOTES.join('  •  ');
+
+    const banner = document.getElementById('calendarReminderBanner');
+    const textEl = document.getElementById('reminderText');
+    if (banner && textEl) {
+        textEl.textContent = noteText;
+        banner.classList.remove('d-none');
+    }
+}
+
+/* ── Committees ──────────────────────────────────────────── */
+const COMMITTEES = [
+    { name:'Education Committee',       chair:'Maria Santos',    members:5, status:'Active' },
+    { name:'Sports Committee',          chair:'Juan Dela Cruz',  members:4, status:'Active' },
+    { name:'Health Committee',          chair:'Ana Lim',         members:6, status:'Active' },
+    { name:'Environment Committee',     chair:'Pedro Reyes',     members:4, status:'Active' },
+    { name:'Livelihood Committee',      chair:'Liza Mendoza',    members:5, status:'Active' },
+    { name:'Peace & Order Committee',   chair:'Carlo Bautista',  members:3, status:'Active' },
+];
+
+function renderCommittees() {
+    const container = document.getElementById('committeesList');
+    if (!container) return;
+    container.innerHTML = COMMITTEES.map(function (c) {
+        return `<div class="col-12 col-sm-6 col-lg-4">
+            <div class="committee-card">
+                <div class="committee-card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="committee-card-body">
+                    <div class="committee-card-name">${esc(c.name)}</div>
+                    <div class="committee-card-meta">Chair: ${esc(c.chair)}</div>
+                    <div class="committee-card-meta">${c.members} members</div>
+                </div>
+                <span class="committee-card-badge">${esc(c.status)}</span>
+            </div>
         </div>`;
     }).join('');
 }
