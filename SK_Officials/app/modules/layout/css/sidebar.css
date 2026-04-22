@@ -78,15 +78,44 @@
     color: rgba(255, 255, 255, 0.7);
 }
 
-/* Sidebar scrollbar — hidden */
+/* Sidebar scrollbar — hidden by default, yellow on hover */
 .main-sidebar {
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
     overscroll-behavior: contain;
+    transition: scrollbar-color 0.3s ease;
 }
 
+.main-sidebar:hover {
+    scrollbar-color: rgba(255, 215, 0, 0.75) transparent;
+}
+
+/* WebKit: define the scrollbar track + thumb */
 .main-sidebar::-webkit-scrollbar {
-    display: none;
-    width: 0;
+    width: 6px;
+}
+
+.main-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.main-sidebar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Reveal thumb on sidebar hover */
+.main-sidebar:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.75);
+    box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
+}
+
+/* Slight brightness boost when hovering the thumb itself */
+.main-sidebar:hover::-webkit-scrollbar-thumb:hover {
+    background: #FFD700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.65);
 }
 
 /* sidebar-content does not scroll — the sidebar itself does */
