@@ -197,8 +197,12 @@ function renderStats(d) {
     animateCount('statDeletedAbyip',    d.stats.deletedAbyip    || 3);
     animateCount('statRejectedItems',   d.stats.rejectedItems   || 11);
     animateCount('statRejectedKK',      d.stats.rejectedKK      || 5);
-    const budgetEl = document.getElementById('statBudget');
-    if (budgetEl) budgetEl.textContent = d.stats.budget;
+    const budgetEl    = document.getElementById('statBudget');
+    const expensesEl  = document.getElementById('statExpenses');
+    const remainingEl = document.getElementById('statRemaining');
+    if (budgetEl)    budgetEl.textContent    = d.stats.budget    || '₱270K';
+    if (expensesEl)  expensesEl.textContent  = d.stats.expenses  || '₱93K';
+    if (remainingEl) remainingEl.textContent = d.stats.remaining || '₱177K';
 }
 
 function animateCount(id, target) {

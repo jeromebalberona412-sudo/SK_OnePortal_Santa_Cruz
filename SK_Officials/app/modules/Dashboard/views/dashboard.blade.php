@@ -65,10 +65,10 @@
     </div>
 
     <!-- ══ Stat Cards — 2-row grid (all 11 cards) ═══════════ -->
+    <!-- ══ Stat Cards ═══════════════════════════════════════ -->
     <div class="stats-2row-grid mb-3">
 
-        <!-- ── BLUE GROUP ── Total Kabataan, KK Total ──────── -->
-
+        <!-- ── BLUE ── -->
         <!-- 1. Total Kabataan -->
         <div class="stat-card stat-card-blue">
             <div class="stat-card-icon stat-icon-blue">
@@ -101,9 +101,8 @@
             </div>
         </div>
 
-        <!-- ── YELLOW GROUP ── Pending KK ──────────────────── -->
-
-        <!-- 3. Pending KK Requests -->
+        <!-- ── YELLOW ── -->
+        <!-- 3. Pending KK -->
         <div class="stat-card stat-card-orange">
             <div class="stat-card-icon stat-icon-orange">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -117,9 +116,8 @@
             </div>
         </div>
 
-        <!-- ── GREEN GROUP ── Approved, Active Programs, Total Budget ── -->
-
-        <!-- 4. Approved Requests -->
+        <!-- ── GREEN ── -->
+        <!-- 4. Approved -->
         <div class="stat-card stat-card-green">
             <div class="stat-card-icon stat-icon-green">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -155,14 +153,41 @@
                 </svg>
             </div>
             <div class="stat-card-body">
-                <span class="stat-card-value" id="statBudget">₱1.42M</span>
+                <span class="stat-card-value" id="statBudget">₱270K</span>
                 <span class="stat-card-label">Total Budget</span>
             </div>
         </div>
 
-        <!-- ── RED GROUP ── Rejected, Deleted Kabataan, Deleted ABYIP, Rejected Items, Rejected KK ── -->
+        <!-- 7. Remaining Budget -->
+        <div class="stat-card stat-card-green">
+            <div class="stat-card-icon stat-icon-green">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+            </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statRemaining">₱177K</span>
+                <span class="stat-card-label">Remaining Budget</span>
+            </div>
+        </div>
 
-        <!-- 7. Rejected Requests -->
+        <!-- ── RED ── -->
+        <!-- 8. Total Expenses -->
+        <div class="stat-card stat-card-red">
+            <div class="stat-card-icon stat-icon-red">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+            </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statExpenses">₱93K</span>
+                <span class="stat-card-label">Total Expenses</span>
+            </div>
+        </div>
+
+        <!-- 9. Rejected -->
         <div class="stat-card stat-card-red">
             <div class="stat-card-icon stat-icon-red">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -177,7 +202,7 @@
             </div>
         </div>
 
-        <!-- 8. Deleted Kabataan -->
+        <!-- 10. Deleted Kabataan -->
         <div class="stat-card stat-card-slate">
             <div class="stat-card-icon stat-icon-slate">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -193,7 +218,7 @@
             </div>
         </div>
 
-        <!-- 9. Deleted ABYIP -->
+        <!-- 11. Deleted ABYIP -->
         <div class="stat-card stat-card-slate">
             <div class="stat-card-icon stat-icon-slate">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -208,7 +233,7 @@
             </div>
         </div>
 
-        <!-- 10. Rejected Items -->
+        <!-- 12. Rejected Items -->
         <div class="stat-card stat-card-rose">
             <div class="stat-card-icon stat-icon-rose">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -223,7 +248,7 @@
             </div>
         </div>
 
-        <!-- 11. Rejected KK Profiling -->
+        <!-- 13. Rejected KK -->
         <div class="stat-card stat-card-rose">
             <div class="stat-card-icon stat-icon-rose">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -286,14 +311,14 @@
             </div>
             <div class="line-chart-filter-row">
                 <label class="line-chart-checkbox">
+                    <input type="checkbox" id="filterAll" checked>
+                    <span class="line-chart-checkbox-box" style="background:#6b7280;"></span>
+                    <span>All</span>
+                </label>
+                <label class="line-chart-checkbox">
                     <input type="checkbox" id="filterApproved" checked>
                     <span class="line-chart-checkbox-box" style="background:#22c55e;"></span>
                     <span>Approved</span>
-                </label>
-                <label class="line-chart-checkbox">
-                    <input type="checkbox" id="filterRejected" checked>
-                    <span class="line-chart-checkbox-box" style="background:#ef4444;"></span>
-                    <span>Rejected</span>
                 </label>
                 <label class="line-chart-checkbox">
                     <input type="checkbox" id="filterPending" checked>
@@ -301,9 +326,9 @@
                     <span>Pending</span>
                 </label>
                 <label class="line-chart-checkbox">
-                    <input type="checkbox" id="filterAll" checked>
-                    <span class="line-chart-checkbox-box" style="background:#6b7280;"></span>
-                    <span>All</span>
+                    <input type="checkbox" id="filterRejected" checked>
+                    <span class="line-chart-checkbox-box" style="background:#ef4444;"></span>
+                    <span>Rejected</span>
                 </label>
             </div>
         </div>
