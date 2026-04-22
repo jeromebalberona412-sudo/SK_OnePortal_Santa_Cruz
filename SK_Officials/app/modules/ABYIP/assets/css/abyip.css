@@ -25,19 +25,11 @@ html {
 
 /* ===== LAYOUT ===== */
 .main-content {
-    margin-left: 80px;
+    margin-left: 280px;
     margin-top: 70px;
     min-height: calc(100vh - 70px);
     transition: margin-left 0.3s ease;
     padding: 0;
-}
-
-.main-content:not(.sidebar-collapsed) {
-    margin-left: 260px;
-}
-
-.main-content.sidebar-hover {
-    margin-left: 260px !important;
 }
 
 .page-container.abyip-page {
@@ -362,26 +354,6 @@ html {
 @media (min-width: 769px) {
     .main-content.sidebar-collapsed {
         margin-left: 80px;
-    }
-
-    .main-content.sidebar-hover {
-        margin-left: 260px !important;
-    }
-
-    /* Reinforce layout hover stretch (matches sidebar.js + other modules) */
-    main.main-content.sidebar-hover {
-        margin-left: 260px !important;
-    }
-
-    /* Ensure smooth transition for hover effect */
-    .main-content {
-        transition: margin-left 0.3s ease !important;
-    }
-
-    /* Sidebar hover state for ABYIP page */
-    .main-sidebar.collapsed:hover~.main-content,
-    .main-sidebar.collapsed.hovering~.main-content {
-        margin-left: 260px !important;
     }
 }
 

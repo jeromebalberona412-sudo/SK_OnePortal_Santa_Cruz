@@ -16,7 +16,7 @@ body {
     margin-left: 280px;
     margin-top: 70px;
     min-height: calc(100vh - 70px);
-    transition: margin-left 0.3s ease;
+    transition: margin-left 0.28s ease;
     padding: 20px;
 }
 
@@ -831,8 +831,8 @@ body {
         margin-left: 80px;
     }
 
-    .main-content.sidebar-hover {
-        margin-left: 260px !important;
+    .main-content.sidebar-expanded-content {
+        margin-left: 260px;
     }
 }
 

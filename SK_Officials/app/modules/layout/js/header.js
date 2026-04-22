@@ -119,16 +119,15 @@ function responsiveToggleSidebar() {
         const mainContent = document.querySelector('.main-content');
 
         if (isCollapsed) {
-            sidebar.classList.remove('collapsed', 'hovering');
+            sidebar.classList.remove('collapsed');
             if (mainContent) {
-                mainContent.classList.remove('sidebar-collapsed', 'sidebar-hover');
+                mainContent.classList.remove('sidebar-collapsed');
             }
             toggle.classList.add('active');
         } else {
             sidebar.classList.add('collapsed');
             if (mainContent) {
                 mainContent.classList.add('sidebar-collapsed');
-                mainContent.classList.remove('sidebar-hover');
             }
             toggle.classList.remove('active');
         }
@@ -141,10 +140,7 @@ function syncToggleState() {
     const toggle  = document.getElementById('sidebarToggle');
     if (!sidebar || !toggle || window.innerWidth <= 768) return;
 
-    const isCollapsed = sidebar.classList.contains('collapsed');
-    const isHovering  = sidebar.classList.contains('hovering');
-
-    if (isCollapsed && !isHovering) {
+    if (sidebar.classList.contains('collapsed')) {
         toggle.classList.remove('active');
     } else {
         toggle.classList.add('active');
