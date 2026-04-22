@@ -178,16 +178,56 @@ body {
     box-shadow: 0 6px 16px rgba(245, 197, 24, 0.4);
 }
 
+/* ══════════════════════════════════════════════════════════
+   TODAY HIGHLIGHT LOGIC
+   - Today WITHOUT notes: white bg + yellow border (outline only)
+   - Today WITH notes: FULL yellow bg (no white)
+══════════════════════════════════════════════════════════ */
+
+/* Today WITHOUT notes — white bg, yellow border only */
 .calendar-day.is-today {
-    border: 2px solid #e6a800;
-    background: #fffdf0;
-    box-shadow: 0 0 0 1px #f5c518;
+    background: #ffffff !important;
+    border: 2px solid #f5c518 !important;
+    box-shadow: 0 0 0 1px rgba(245, 197, 24, 0.3) !important;
 }
 
+.calendar-day.is-today .calendar-day-number {
+    color: #111827 !important;
+    font-weight: 800;
+}
+
+.calendar-day.is-today:hover {
+    background: rgba(245, 197, 24, 0.08) !important;
+    border-color: #e6a800 !important;
+    box-shadow: 0 4px 12px rgba(245, 197, 24, 0.25) !important;
+}
+
+/* Today WITH notes — FULL yellow bg, no white */
 .calendar-day.is-today.has-notes {
-    border: 2px solid #f5c518;
-    background: linear-gradient(135deg, #fffdf0 0%, #f5c518 100%);
-    box-shadow: 0 4px 12px rgba(245, 197, 24, 0.4);
+    background: #f5c518 !important;
+    border: 2px solid #e6a800 !important;
+    box-shadow: 0 4px 14px rgba(245, 197, 24, 0.45) !important;
+}
+
+.calendar-day.is-today.has-notes .calendar-day-number {
+    color: #1a1a2e !important;
+    font-weight: 800;
+}
+
+.calendar-day.is-today.has-notes .calendar-day-notes-preview {
+    color: rgba(26, 26, 46, 0.85) !important;
+    font-weight: 500;
+}
+
+.calendar-day.is-today.has-notes .calendar-day-add {
+    color: rgba(26, 26, 46, 0.75) !important;
+    font-weight: 600;
+}
+
+.calendar-day.is-today.has-notes:hover {
+    background: #e6a800 !important;
+    border-color: #d4960a !important;
+    box-shadow: 0 6px 18px rgba(245, 197, 24, 0.55) !important;
 }
 
 .calendar-day.has-notes {
@@ -201,16 +241,6 @@ body {
     font-weight: 700;
 }
 
-.calendar-day.is-today .calendar-day-number {
-    color: #2c2c3e;
-    font-weight: 800;
-}
-
-.calendar-day.is-today.has-notes .calendar-day-number {
-    color: #2c2c3e;
-    font-weight: 800;
-}
-
 .calendar-day.has-notes .calendar-day-notes-preview {
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
@@ -218,16 +248,6 @@ body {
 
 .calendar-day.has-notes .calendar-day-add {
     color: rgba(255, 255, 255, 0.8);
-    font-weight: 600;
-}
-
-.calendar-day.is-today.has-notes .calendar-day-notes-preview {
-    color: rgba(44, 44, 62, 0.9);
-    font-weight: 500;
-}
-
-.calendar-day.is-today.has-notes .calendar-day-add {
-    color: rgba(44, 44, 62, 0.8);
     font-weight: 600;
 }
 

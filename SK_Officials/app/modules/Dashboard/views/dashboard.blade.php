@@ -25,14 +25,22 @@
             <h1 class="dash-page-title">Dashboard</h1>
             <p class="dash-page-sub">Welcome back, <strong>Calios</strong> &mdash; SK Official</p>
         </div>
-        <div class="dash-date-badge">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-            </svg>
-            <span id="dashDateText">—</span>
+        <div class="dash-year-filter">
+            <label for="yearSelect" class="dash-year-label">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                </svg>
+                Year
+            </label>
+            <select id="yearSelect" class="dash-year-select">
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
+            </select>
         </div>
     </div>
 
@@ -40,13 +48,8 @@
     <div class="stats-cards-row">
 
         <!-- Total Kabataan -->
-        <div class="stat-card stat-card-yellow">
-            <div class="stat-card-body">
-                <span class="stat-card-label">Total Kabataan</span>
-                <span class="stat-card-value" id="statKabataan">—</span>
-                <span class="stat-card-trend trend-up" id="trendKabataan">+5%</span>
-            </div>
-            <div class="stat-card-icon stat-icon-yellow">
+        <div class="stat-card stat-card-blue">
+            <div class="stat-card-icon stat-icon-blue">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
@@ -54,16 +57,15 @@
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
             </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statKabataan">342</span>
+                <span class="stat-card-label">Total Kabataan Registered</span>
+            </div>
         </div>
 
         <!-- Total ABYIP Members -->
-        <div class="stat-card stat-card-blue">
-            <div class="stat-card-body">
-                <span class="stat-card-label">Total ABYIP Members</span>
-                <span class="stat-card-value" id="statAbyip">—</span>
-                <span class="stat-card-trend trend-up" id="trendAbyip">+3%</span>
-            </div>
-            <div class="stat-card-icon stat-icon-blue">
+        <div class="stat-card stat-card-purple">
+            <div class="stat-card-icon stat-icon-purple">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14,2 14,8 20,8"></polyline>
@@ -71,44 +73,41 @@
                     <line x1="16" y1="17" x2="8" y2="17"></line>
                 </svg>
             </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statAbyip">87</span>
+                <span class="stat-card-label">Total ABYIP Members</span>
+            </div>
         </div>
 
         <!-- Pending KK Requests -->
         <div class="stat-card stat-card-orange">
-            <div class="stat-card-body">
-                <span class="stat-card-label">Pending KK Requests</span>
-                <span class="stat-card-value" id="statPending">—</span>
-                <span class="stat-card-trend trend-neutral" id="trendPending">—</span>
-            </div>
             <div class="stat-card-icon stat-icon-orange">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
             </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statPending">14</span>
+                <span class="stat-card-label">Pending KK Requests</span>
+            </div>
         </div>
 
         <!-- Approved Requests -->
         <div class="stat-card stat-card-green">
-            <div class="stat-card-body">
-                <span class="stat-card-label">Approved Requests</span>
-                <span class="stat-card-value" id="statApproved">—</span>
-                <span class="stat-card-trend trend-up" id="trendApproved">+8%</span>
-            </div>
             <div class="stat-card-icon stat-icon-green">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
             </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statApproved">198</span>
+                <span class="stat-card-label">Approved Requests</span>
+            </div>
         </div>
 
         <!-- Rejected Requests -->
         <div class="stat-card stat-card-red">
-            <div class="stat-card-body">
-                <span class="stat-card-label">Rejected Requests</span>
-                <span class="stat-card-value" id="statRejected">—</span>
-                <span class="stat-card-trend trend-down" id="trendRejected">↓2%</span>
-            </div>
             <div class="stat-card-icon stat-icon-red">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
@@ -116,35 +115,37 @@
                     <line x1="9" y1="9" x2="15" y2="15"></line>
                 </svg>
             </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statRejected">23</span>
+                <span class="stat-card-label">Rejected Requests</span>
+            </div>
         </div>
 
         <!-- Active Programs -->
-        <div class="stat-card stat-card-purple">
-            <div class="stat-card-body">
-                <span class="stat-card-label">Active Programs</span>
-                <span class="stat-card-value" id="statPrograms">—</span>
-                <span class="stat-card-trend trend-up" id="trendPrograms">+2</span>
-            </div>
-            <div class="stat-card-icon stat-icon-purple">
+        <div class="stat-card stat-card-teal">
+            <div class="stat-card-icon stat-icon-teal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
             </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statPrograms">9</span>
+                <span class="stat-card-label">Active Programs</span>
+            </div>
         </div>
 
         <!-- Total Budget -->
-        <div class="stat-card stat-card-teal">
-            <div class="stat-card-body">
-                <span class="stat-card-label">Total Budget Allocated</span>
-                <span class="stat-card-value" id="statBudget">—</span>
-                <span class="stat-card-trend trend-up" id="trendBudget">+12%</span>
-            </div>
-            <div class="stat-card-icon stat-icon-teal">
+        <div class="stat-card stat-card-yellow">
+            <div class="stat-card-icon stat-icon-yellow">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 1v22"></path>
                     <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
                 </svg>
+            </div>
+            <div class="stat-card-body">
+                <span class="stat-card-value" id="statBudget">₱1.42M</span>
+                <span class="stat-card-label">Total Budget Allocated</span>
             </div>
         </div>
 
@@ -159,37 +160,11 @@
             </div>
         </div>
         <div class="quick-actions-grid">
-            <button class="qa-btn qa-yellow" id="qaAddKabataan">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="8.5" cy="7" r="4"></circle>
-                    <line x1="20" y1="8" x2="20" y2="14"></line>
-                    <line x1="23" y1="11" x2="17" y2="11"></line>
-                </svg>
-                Add Kabataan
-            </button>
             <button class="qa-btn qa-green" id="qaApproveRequests">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 Approve Requests
-            </button>
-            <button class="qa-btn qa-blue" id="qaCreateProgram">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="16"></line>
-                    <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-                Create Program
-            </button>
-            <button class="qa-btn qa-dark" id="qaAddAbyip">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14,2 14,8 20,8"></polyline>
-                    <line x1="12" y1="18" x2="12" y2="12"></line>
-                    <line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
-                Add ABYIP Member
             </button>
         </div>
     </div>
@@ -200,7 +175,7 @@
         <div class="dash-section-card">
             <div class="dash-section-header">
                 <div>
-                    <h2 class="dash-section-title">Kabataan per Barangay</h2>
+                    <h2 class="dash-section-title">Kabataan per Purok/Sitio</h2>
                     <p class="dash-section-sub">Youth population distribution</p>
                 </div>
                 <span class="dash-chart-badge">Bar Chart</span>
@@ -238,6 +213,23 @@
             </div>
             <div class="chart-canvas-wrap chart-canvas-wrap--pie">
                 <canvas id="chartAbyipStatus"></canvas>
+            </div>
+            <div class="pie-legend-row" id="abyipLegend">
+                <div class="pie-legend-item">
+                    <span class="pie-legend-dot" style="background:#22c55e;"></span>
+                    <span class="pie-legend-label">Active</span>
+                    <span class="pie-legend-pct">62%</span>
+                </div>
+                <div class="pie-legend-item">
+                    <span class="pie-legend-dot" style="background:#f59e0b;"></span>
+                    <span class="pie-legend-label">Pending</span>
+                    <span class="pie-legend-pct">24%</span>
+                </div>
+                <div class="pie-legend-item">
+                    <span class="pie-legend-dot" style="background:#ef4444;"></span>
+                    <span class="pie-legend-label">Inactive</span>
+                    <span class="pie-legend-pct">14%</span>
+                </div>
             </div>
         </div>
 

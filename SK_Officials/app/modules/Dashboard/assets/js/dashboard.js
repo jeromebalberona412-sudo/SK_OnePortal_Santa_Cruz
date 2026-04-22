@@ -1,62 +1,140 @@
 /**
  * SK Officials Dashboard — dashboard.js
  * Chart.js imported via npm (bundled by Vite)
+ * Year filter: 2023–2026 with per-year data
  */
 
 import Chart from 'chart.js/auto';
 
-/* ── Sample data (swap with real API calls) ──────────────── */
-const DATA = {
-    stats: {
-        kabataan: 342,
-        abyip:    87,
-        pending:  14,
-        approved: 198,
-        rejected: 23,
-        programs: 9,
-        budget:   '₱1.42M',
+/* ══════════════════════════════════════════════════════════
+   PER-YEAR DATA STORE
+   2023 = first real year; 2024–2026 = progressively more data
+   Years with no data will show zeros / empty charts.
+══════════════════════════════════════════════════════════ */
+const YEAR_DATA = {
+    2023: {
+        stats: { kabataan: 198, abyip: 34, pending: 8, approved: 87, rejected: 11, programs: 4, budget: '₱0.62M' },
+        purokLabels:  ['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5','Purok 6'],
+        purokCounts:  [42, 31, 28, 37, 24, 36],
+        monthlyApproved: [4,6,5,8,7,10,9,11,10,12,8,7],
+        monthlyRejected: [1,2,1,2,1,3,2,3,1,2,2,1],
+        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[18,6,4,6] },
+        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[140000,80000,70000,40000,50000,40000] },
+        activity: [
+            { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'Jan 5, 2023' },
+            { type:'approve', text:'KK Profiling request approved',   who:'Juan Dela Cruz',  time:'Feb 12, 2023' },
+            { type:'reject',  text:'KK Profiling request rejected',   who:'Pedro Reyes',     time:'Mar 3, 2023' },
+        ],
+        announcements: [
+            { title:'SK Orientation — Jan 10, 2023',   date:'Jan 8, 2023' },
+            { title:'ABYIP Kick-off Meeting',           date:'Feb 1, 2023' },
+        ],
+        events: [
+            { day:'10', mon:'Jan', title:'SK Orientation',         time:'9:00 AM' },
+            { day:'01', mon:'Feb', title:'ABYIP Kick-off',         time:'8:00 AM' },
+        ],
     },
-    barangayLabels: ['Calios','Bagong Silang','Maligaya','Pag-asa','Rizal','Sampaguita'],
-    barangayCounts: [342, 215, 189, 267, 143, 198],
-    monthlyLabels:  ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-    monthlyApproved:[12,18,15,22,19,28,24,31,27,35,30,38],
-    monthlyRejected:[3, 5, 4, 6, 3, 7, 5, 8, 4, 6, 5, 4],
-    abyipStatus: {
-        labels: ['Active','Inactive','Pending','Completed'],
-        values: [45, 12, 8, 22],
+    2024: {
+        stats: { kabataan: 267, abyip: 58, pending: 11, approved: 143, rejected: 17, programs: 6, budget: '₱0.98M' },
+        purokLabels:  ['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5','Purok 6'],
+        purokCounts:  [55, 44, 38, 49, 35, 46],
+        monthlyApproved: [8,10,9,13,11,16,14,18,15,20,17,12],
+        monthlyRejected: [2,3,2,3,2,4,3,5,2,4,3,2],
+        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[30,9,6,13] },
+        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[220000,120000,100000,65000,80000,60000] },
+        activity: [
+            { type:'approve', text:'KK Profiling request approved',  who:'Ana Lim',         time:'Jan 15, 2024' },
+            { type:'add',     text:'New ABYIP member added',          who:'Liza Mendoza',    time:'Mar 20, 2024' },
+            { type:'delete',  text:'Kabataan record deleted',         who:'Carlo Bautista',  time:'Jun 8, 2024' },
+            { type:'restore', text:'Deleted record restored',         who:'Mark Villanueva', time:'Aug 14, 2024' },
+        ],
+        announcements: [
+            { title:'Youth Congress 2024',              date:'Mar 5, 2024' },
+            { title:'KK Profiling Drive — Q2',          date:'Apr 10, 2024' },
+            { title:'Sports Festival Registration',     date:'Jul 1, 2024' },
+        ],
+        events: [
+            { day:'05', mon:'Mar', title:'Youth Congress 2024',    time:'9:00 AM' },
+            { day:'10', mon:'Apr', title:'KK Profiling Drive',     time:'8:00 AM' },
+            { day:'01', mon:'Jul', title:'Sports Festival',        time:'7:00 AM' },
+        ],
     },
-    budgetPrograms: {
-        labels: ['Education','Sports','Health','Environment','Livelihood','Others'],
-        values: [320000, 180000, 150000, 95000, 120000, 85000],
+    2025: {
+        stats: { kabataan: 310, abyip: 74, pending: 12, approved: 172, rejected: 20, programs: 8, budget: '₱1.18M' },
+        purokLabels:  ['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5','Purok 6'],
+        purokCounts:  [68, 55, 47, 61, 42, 57],
+        monthlyApproved: [10,13,12,17,14,21,18,24,20,27,23,19],
+        monthlyRejected: [2,4,3,4,3,5,4,6,3,5,4,3],
+        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[40,10,7,17] },
+        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[280000,155000,130000,80000,100000,75000] },
+        activity: [
+            { type:'approve', text:'Program budget approved',         who:'SK Treasurer',    time:'Feb 3, 2025' },
+            { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'Apr 11, 2025' },
+            { type:'reject',  text:'KK Profiling request rejected',   who:'Pedro Reyes',     time:'Jul 22, 2025' },
+            { type:'approve', text:'KK Profiling request approved',   who:'Juan Dela Cruz',  time:'Oct 5, 2025' },
+            { type:'delete',  text:'ABYIP record deleted',            who:'Ana Lim',         time:'Nov 30, 2025' },
+        ],
+        announcements: [
+            { title:'SK General Assembly — Feb 2025',  date:'Jan 28, 2025' },
+            { title:'ABYIP Budget Review Meeting',      date:'Mar 15, 2025' },
+            { title:'KK Profiling Deadline Extended',   date:'Jun 10, 2025' },
+        ],
+        events: [
+            { day:'10', mon:'Feb', title:'SK General Assembly',    time:'9:00 AM' },
+            { day:'15', mon:'Mar', title:'ABYIP Budget Review',    time:'2:00 PM' },
+            { day:'10', mon:'Jun', title:'KK Profiling Drive',     time:'8:00 AM' },
+        ],
     },
-    activity: [
-        { type:'approve', text:'KK Profiling request approved',  who:'Juan Dela Cruz',  time:'2 min ago' },
-        { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'15 min ago' },
-        { type:'reject',  text:'KK Profiling request rejected',   who:'Pedro Reyes',     time:'1 hr ago' },
-        { type:'delete',  text:'Kabataan record deleted',         who:'Ana Lim',         time:'2 hrs ago' },
-        { type:'restore', text:'Deleted record restored',         who:'Carlo Bautista',  time:'3 hrs ago' },
-        { type:'approve', text:'Program budget approved',         who:'SK Treasurer',    time:'5 hrs ago' },
-        { type:'add',     text:'New ABYIP member added',          who:'Liza Mendoza',    time:'Yesterday' },
-        { type:'delete',  text:'ABYIP record deleted',            who:'Mark Villanueva', time:'Yesterday' },
-    ],
-    announcements: [
-        { title:'SK General Assembly — May 5, 2026',    date:'Apr 22, 2026' },
-        { title:'ABYIP Budget Review Meeting',           date:'Apr 20, 2026' },
-        { title:'KK Profiling Deadline Extended',        date:'Apr 18, 2026' },
-        { title:'Youth Sports Festival Registration',    date:'Apr 15, 2026' },
-    ],
-    events: [
-        { day:'05', mon:'May', title:'SK General Assembly',       time:'9:00 AM' },
-        { day:'10', mon:'May', title:'Youth Leadership Summit',   time:'8:00 AM' },
-        { day:'15', mon:'May', title:'ABYIP Budget Review',       time:'2:00 PM' },
-        { day:'20', mon:'May', title:'Community Outreach Day',    time:'7:00 AM' },
-    ],
-    pendingRequests: [
-        { id:1, name:'Jose Rizal',       purok:'Purok 3', date:'Apr 20, 2026' },
-        { id:2, name:'Andres Bonifacio', purok:'Purok 1', date:'Apr 21, 2026' },
-        { id:3, name:'Emilio Aguinaldo', purok:'Purok 5', date:'Apr 22, 2026' },
-    ],
+    2026: {
+        stats: { kabataan: 342, abyip: 87, pending: 14, approved: 198, rejected: 23, programs: 9, budget: '₱1.42M' },
+        purokLabels:  ['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5','Purok 6'],
+        purokCounts:  [78, 63, 54, 72, 49, 66],
+        monthlyApproved: [12,18,15,22,19,28,24,31,27,35,30,38],
+        monthlyRejected: [3, 5, 4, 6, 3, 7, 5, 8, 4, 6, 5, 4],
+        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[45,12,8,22] },
+        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[320000,180000,150000,95000,120000,85000] },
+        activity: [
+            { type:'approve', text:'KK Profiling request approved',  who:'Juan Dela Cruz',  time:'2 min ago' },
+            { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'15 min ago' },
+            { type:'reject',  text:'KK Profiling request rejected',   who:'Pedro Reyes',     time:'1 hr ago' },
+            { type:'delete',  text:'Kabataan record deleted',         who:'Ana Lim',         time:'2 hrs ago' },
+            { type:'restore', text:'Deleted record restored',         who:'Carlo Bautista',  time:'3 hrs ago' },
+            { type:'approve', text:'Program budget approved',         who:'SK Treasurer',    time:'5 hrs ago' },
+            { type:'add',     text:'New ABYIP member added',          who:'Liza Mendoza',    time:'Yesterday' },
+            { type:'delete',  text:'ABYIP record deleted',            who:'Mark Villanueva', time:'Yesterday' },
+        ],
+        announcements: [
+            { title:'SK General Assembly — May 5, 2026',    date:'Apr 22, 2026' },
+            { title:'ABYIP Budget Review Meeting',           date:'Apr 20, 2026' },
+            { title:'KK Profiling Deadline Extended',        date:'Apr 18, 2026' },
+            { title:'Youth Sports Festival Registration',    date:'Apr 15, 2026' },
+        ],
+        events: [
+            { day:'05', mon:'May', title:'SK General Assembly',       time:'9:00 AM' },
+            { day:'10', mon:'May', title:'Youth Leadership Summit',   time:'8:00 AM' },
+            { day:'15', mon:'May', title:'ABYIP Budget Review',       time:'2:00 PM' },
+            { day:'20', mon:'May', title:'Community Outreach Day',    time:'7:00 AM' },
+        ],
+    },
 };
+
+/* Pending requests are always current — not year-filtered */
+const PENDING_REQUESTS = [
+    { id:1, name:'Jose Rizal',       purok:'Purok 3', date:'Apr 20, 2026' },
+    { id:2, name:'Andres Bonifacio', purok:'Purok 1', date:'Apr 21, 2026' },
+    { id:3, name:'Emilio Aguinaldo', purok:'Purok 5', date:'Apr 22, 2026' },
+];
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* Active chart instances — destroyed and rebuilt on year change */
+let chartBar    = null;
+let chartLine   = null;
+let chartPie    = null;
+let chartDonut  = null;
+
+/* Currently selected year */
+let selectedYear = 2026;
 
 /* ── Chart.js global defaults ────────────────────────────── */
 function applyChartDefaults() {
@@ -74,39 +152,47 @@ function applyChartDefaults() {
 /* ── Boot ────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function () {
     applyChartDefaults();
-    renderDate();
-    renderStats();
-    renderActivity();
-    renderAnnouncements();
-    renderEvents();
-    renderPendingRequests();
-    renderBarChart();
-    renderLineChart();
-    renderPieChart();
-    renderDonutChart();
+    renderAll(selectedYear);
+    initYearFilter();
     initModals();
 });
 
-/* ── Date badge ──────────────────────────────────────────── */
-function renderDate() {
-    const el = document.getElementById('dashDateText');
-    if (!el) return;
-    el.textContent = new Date().toLocaleDateString('en-PH', {
-        weekday:'short', year:'numeric', month:'long', day:'numeric'
+/* ── Year filter ─────────────────────────────────────────── */
+function initYearFilter() {
+    const sel = document.getElementById('yearSelect');
+    if (!sel) return;
+    sel.value = String(selectedYear);
+    sel.addEventListener('change', function () {
+        selectedYear = Number(sel.value);
+        renderAll(selectedYear);
     });
 }
 
+/* ── Render everything for a given year ──────────────────── */
+function renderAll(year) {
+    const d = YEAR_DATA[year];
+    if (!d) return;
+    renderStats(d);
+    renderActivity(d);
+    renderAnnouncements(d);
+    renderEvents(d);
+    renderPendingRequests();
+    renderBarChart(d);
+    renderLineChart(d);
+    renderPieChart(d);
+    renderDonutChart(d);
+}
+
 /* ── Stat cards ──────────────────────────────────────────── */
-function renderStats() {
-    const d = DATA.stats;
-    animateCount('statKabataan', d.kabataan);
-    animateCount('statAbyip',    d.abyip);
-    animateCount('statPending',  d.pending);
-    animateCount('statApproved', d.approved);
-    animateCount('statRejected', d.rejected);
-    animateCount('statPrograms', d.programs);
+function renderStats(d) {
+    animateCount('statKabataan', d.stats.kabataan);
+    animateCount('statAbyip',    d.stats.abyip);
+    animateCount('statPending',  d.stats.pending);
+    animateCount('statApproved', d.stats.approved);
+    animateCount('statRejected', d.stats.rejected);
+    animateCount('statPrograms', d.stats.programs);
     const budgetEl = document.getElementById('statBudget');
-    if (budgetEl) budgetEl.textContent = d.budget;
+    if (budgetEl) budgetEl.textContent = d.stats.budget;
 }
 
 function animateCount(id, target) {
@@ -130,10 +216,14 @@ const ICONS = {
     add:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`,
 };
 
-function renderActivity() {
+function renderActivity(d) {
     const list = document.getElementById('activityList');
     if (!list) return;
-    list.innerHTML = DATA.activity.map(function (item) {
+    if (!d.activity || !d.activity.length) {
+        list.innerHTML = '<p class="dash-empty-msg">No activity recorded for this year.</p>';
+        return;
+    }
+    list.innerHTML = d.activity.map(function (item) {
         return `<div class="activity-item">
             <div class="activity-dot ${item.type}">${ICONS[item.type] || ''}</div>
             <div class="activity-body">
@@ -146,10 +236,14 @@ function renderActivity() {
 }
 
 /* ── Announcements ───────────────────────────────────────── */
-function renderAnnouncements() {
+function renderAnnouncements(d) {
     const list = document.getElementById('announcementsList');
     if (!list) return;
-    list.innerHTML = DATA.announcements.map(function (a) {
+    if (!d.announcements || !d.announcements.length) {
+        list.innerHTML = '<p class="dash-empty-msg">No announcements for this year.</p>';
+        return;
+    }
+    list.innerHTML = d.announcements.map(function (a) {
         return `<div class="announcement-item">
             <div class="announcement-item-title">${esc(a.title)}</div>
             <div class="announcement-item-meta">${esc(a.date)}</div>
@@ -158,10 +252,14 @@ function renderAnnouncements() {
 }
 
 /* ── Events ──────────────────────────────────────────────── */
-function renderEvents() {
+function renderEvents(d) {
     const list = document.getElementById('eventsList');
     if (!list) return;
-    list.innerHTML = DATA.events.map(function (e) {
+    if (!d.events || !d.events.length) {
+        list.innerHTML = '<p class="dash-empty-msg">No events for this year.</p>';
+        return;
+    }
+    list.innerHTML = d.events.map(function (e) {
         return `<div class="event-item">
             <div class="event-date-box">
                 <span class="event-date-day">${esc(e.day)}</span>
@@ -179,11 +277,11 @@ function renderEvents() {
 function renderPendingRequests() {
     const container = document.getElementById('pendingRequestsList');
     if (!container) return;
-    if (!DATA.pendingRequests.length) {
+    if (!PENDING_REQUESTS.length) {
         container.innerHTML = '<p style="font-size:13px;color:#9ca3af;text-align:center;padding:20px 0;">No pending requests.</p>';
         return;
     }
-    container.innerHTML = DATA.pendingRequests.map(function (r) {
+    container.innerHTML = PENDING_REQUESTS.map(function (r) {
         return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;margin-bottom:8px;">
             <div>
                 <div style="font-size:13px;font-weight:700;color:#111827;">${esc(r.name)}</div>
@@ -205,34 +303,39 @@ function renderPendingRequests() {
 }
 
 function handleApprove(id) {
-    DATA.pendingRequests = DATA.pendingRequests.filter(function (r) { return r.id !== id; });
+    const idx = PENDING_REQUESTS.findIndex(function (r) { return r.id === id; });
+    if (idx !== -1) PENDING_REQUESTS.splice(idx, 1);
     renderPendingRequests();
-    DATA.stats.approved++;
-    DATA.stats.pending = Math.max(0, DATA.stats.pending - 1);
-    setText('statApproved', DATA.stats.approved.toLocaleString());
-    setText('statPending',  DATA.stats.pending.toLocaleString());
+    const d = YEAR_DATA[selectedYear];
+    d.stats.approved++;
+    d.stats.pending = Math.max(0, d.stats.pending - 1);
+    setText('statApproved', d.stats.approved.toLocaleString());
+    setText('statPending',  d.stats.pending.toLocaleString());
 }
 
 function handleReject(id) {
-    DATA.pendingRequests = DATA.pendingRequests.filter(function (r) { return r.id !== id; });
+    const idx = PENDING_REQUESTS.findIndex(function (r) { return r.id === id; });
+    if (idx !== -1) PENDING_REQUESTS.splice(idx, 1);
     renderPendingRequests();
-    DATA.stats.rejected++;
-    DATA.stats.pending = Math.max(0, DATA.stats.pending - 1);
-    setText('statRejected', DATA.stats.rejected.toLocaleString());
-    setText('statPending',  DATA.stats.pending.toLocaleString());
+    const d = YEAR_DATA[selectedYear];
+    d.stats.rejected++;
+    d.stats.pending = Math.max(0, d.stats.pending - 1);
+    setText('statRejected', d.stats.rejected.toLocaleString());
+    setText('statPending',  d.stats.pending.toLocaleString());
 }
 
 /* ── Bar Chart ───────────────────────────────────────────── */
-function renderBarChart() {
+function renderBarChart(d) {
     const ctx = document.getElementById('chartKabataanBarangay');
     if (!ctx) return;
-    new Chart(ctx, {
+    if (chartBar) { chartBar.destroy(); chartBar = null; }
+    chartBar = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: DATA.barangayLabels,
+            labels: d.purokLabels,
             datasets: [{
                 label: 'Kabataan',
-                data: DATA.barangayCounts,
+                data: d.purokCounts,
                 backgroundColor: [
                     'rgba(244,194,13,.85)',
                     'rgba(59,130,246,.85)',
@@ -254,24 +357,25 @@ function renderBarChart() {
             },
             scales: {
                 x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { stepSize: 50 } },
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { stepSize: 20 } },
             },
         },
     });
 }
 
 /* ── Line Chart ──────────────────────────────────────────── */
-function renderLineChart() {
+function renderLineChart(d) {
     const ctx = document.getElementById('chartMonthlyRequests');
     if (!ctx) return;
-    new Chart(ctx, {
+    if (chartLine) { chartLine.destroy(); chartLine = null; }
+    chartLine = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: DATA.monthlyLabels,
+            labels: MONTHS,
             datasets: [
                 {
                     label: 'Approved',
-                    data: DATA.monthlyApproved,
+                    data: d.monthlyApproved,
                     borderColor: '#22c55e',
                     backgroundColor: 'rgba(34,197,94,.1)',
                     borderWidth: 2.5,
@@ -282,7 +386,7 @@ function renderLineChart() {
                 },
                 {
                     label: 'Rejected',
-                    data: DATA.monthlyRejected,
+                    data: d.monthlyRejected,
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239,68,68,.08)',
                     borderWidth: 2.5,
@@ -313,15 +417,16 @@ function renderLineChart() {
 }
 
 /* ── Pie Chart ───────────────────────────────────────────── */
-function renderPieChart() {
+function renderPieChart(d) {
     const ctx = document.getElementById('chartAbyipStatus');
     if (!ctx) return;
-    new Chart(ctx, {
+    if (chartPie) { chartPie.destroy(); chartPie = null; }
+    chartPie = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: DATA.abyipStatus.labels,
+            labels: d.abyipStatus.labels,
             datasets: [{
-                data: DATA.abyipStatus.values,
+                data: d.abyipStatus.values,
                 backgroundColor: ['#22c55e','#f97316','#f4c20d','#3b82f6'],
                 borderWidth: 2,
                 borderColor: '#fff',
@@ -331,11 +436,7 @@ function renderPieChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: true,
-                    position: 'right',
-                    labels: { boxWidth: 12, padding: 12, font: { size: 11 } },
-                },
+                legend: { display: false },
                 tooltip: {
                     callbacks: {
                         label: function (c) {
@@ -347,22 +448,37 @@ function renderPieChart() {
             },
         },
     });
+
+    /* Update the HTML legend percentages */
+    const total = d.abyipStatus.values.reduce(function (a, b) { return a + b; }, 0);
+    const legend = document.getElementById('abyipLegend');
+    if (legend) {
+        const colors = ['#22c55e','#f59e0b','#ef4444','#3b82f6'];
+        legend.innerHTML = d.abyipStatus.labels.map(function (label, i) {
+            const pct = total > 0 ? ((d.abyipStatus.values[i] / total) * 100).toFixed(0) : 0;
+            return `<div class="pie-legend-item">
+                <span class="pie-legend-dot" style="background:${colors[i]};"></span>
+                <span class="pie-legend-label">${esc(label)}</span>
+                <span class="pie-legend-pct">${pct}%</span>
+            </div>`;
+        }).join('');
+    }
 }
 
 /* ── Donut Chart ─────────────────────────────────────────── */
-function renderDonutChart() {
+function renderDonutChart(d) {
     const ctx = document.getElementById('chartBudgetDonut');
     if (!ctx) return;
+    if (chartDonut) { chartDonut.destroy(); chartDonut = null; }
     const colors = ['#3b82f6','#22c55e','#ef4444','#14b8a6','#f97316','#a855f7'];
-    const d      = DATA.budgetPrograms;
-    const total  = d.values.reduce(function (a, b) { return a + b; }, 0);
+    const total  = d.budgetPrograms.values.reduce(function (a, b) { return a + b; }, 0);
 
-    new Chart(ctx, {
+    chartDonut = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: d.labels,
+            labels: d.budgetPrograms.labels,
             datasets: [{
-                data: d.values,
+                data: d.budgetPrograms.values,
                 backgroundColor: colors,
                 borderWidth: 2,
                 borderColor: '#fff',
@@ -388,11 +504,11 @@ function renderDonutChart() {
 
     const legend = document.getElementById('donutLegend');
     if (!legend) return;
-    legend.innerHTML = d.labels.map(function (label, i) {
+    legend.innerHTML = d.budgetPrograms.labels.map(function (label, i) {
         return `<div class="donut-legend-item">
             <div class="donut-legend-dot" style="background:${colors[i]};"></div>
             <span class="donut-legend-label">${esc(label)}</span>
-            <span class="donut-legend-value">${((d.values[i] / total) * 100).toFixed(0)}%</span>
+            <span class="donut-legend-value">${total > 0 ? ((d.budgetPrograms.values[i] / total) * 100).toFixed(0) : 0}%</span>
         </div>`;
     }).join('');
 }
