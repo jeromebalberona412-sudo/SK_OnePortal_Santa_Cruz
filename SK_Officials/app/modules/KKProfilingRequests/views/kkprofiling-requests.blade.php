@@ -26,25 +26,44 @@
                     Review, approve, or reject KK Profiling submissions from kabataan.
                 </p>
             </div>
-            <div class="page-header-right page-header-right-with-search">
-                <div class="header-search-wrap">
-                    <input type="text" id="kkSearch" class="filter-input kk-search-input" placeholder="Search" maxlength="80">
+            <div class="page-header-right-with-search">
+                <div class="abyip-search-inline">
+                    <label for="kkSearch" class="abyip-sr-only">Search KK profiling records</label>
+                    <div class="abyip-search-wrapper">
+                        <span class="abyip-search-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </span>
+                        <input type="text" id="kkSearch" class="abyip-filter-search-inline" placeholder="Search KK profiling..." maxlength="80" autocomplete="off">
+                    </div>
                 </div>
-                <div class="status-tabs" id="kkStatusTabs">
-                    <button type="button" class="status-tab active" data-status-filter="All">All</button>
-                    <button type="button" class="status-tab" data-status-filter="Pending">Pending</button>
-                    <button type="button" class="status-tab" data-status-filter="Approved">Approved</button>
-                    <button type="button" class="status-tab" data-status-filter="Rejected">Rejected</button>
-                </div>
+                <button type="button" id="kkProfilingScheduleBtn" class="btn primary-btn">
+                    Schedule KK
+                </button>
             </div>
         </section>
 
         <section class="page-filters-section">
             <div class="filters-row">
                 <div class="filter-item">
+                    <label for="kkStatusFilter" class="filter-label">Status</label>
+                    <select id="kkStatusFilter" class="filter-select" onchange="document.querySelectorAll('.status-tab').forEach(t=>t.classList.remove('active')); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.classList.add('active'); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.click();">
+                        <option value="All">All</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                    {{-- Hidden tabs still used by JS logic --}}
+                    <div class="status-tabs d-none" id="kkStatusTabs" style="display:none!important;">
+                        <button type="button" class="status-tab active" data-status-filter="All">All</button>
+                        <button type="button" class="status-tab" data-status-filter="Pending">Pending</button>
+                        <button type="button" class="status-tab" data-status-filter="Approved">Approved</button>
+                        <button type="button" class="status-tab" data-status-filter="Rejected">Rejected</button>
+                    </div>
+                </div>
+                <div class="filter-item">
                     <label for="kkBarangayFilter" class="filter-label">Purok/Sitio</label>
                     <select id="kkBarangayFilter" class="filter-select">
-                        <option value="">Prok/Sitio</option>
+                        <option value="">All</option>
                         <option value="BAYSIDE">BAYSIDE</option>
                         <option value="VILLA GRACIA">VILLA GRACIA</option>
                         <option value="IMELDA">IMELDA</option>
@@ -57,18 +76,12 @@
                     </select>
                 </div>
                 <div class="filter-item">
-                    <label for="kkVoterFilter" class="filter-label">Registered Voter</label>
+                    <label for="kkVoterFilter" class="filter-label">Voter</label>
                     <select id="kkVoterFilter" class="filter-select">
                         <option value="">All</option>
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
                     </select>
-                </div>
-                <div class="filter-item">
-                    <!-- KK Profiling Schedule Button -->
-                    <button type="button" id="kkProfilingScheduleBtn" class="kk-schedule-btn">
-                        KK Profiling Schedule
-                    </button>
                 </div>
             </div>
         </section>
@@ -288,6 +301,20 @@
                             <button type="button" class="calendar-nav-btn" id="calendarNext">&gt;</button>
                             <button type="button" class="btn btn-jump-date" id="scheduleJumpBtn">Jump to date</button>
                         </div>
+                        <div class="calendar-legend-inline">
+                            <div class="legend-item">
+                                <div class="legend-color profiling"></div>
+                                <span>Profiling Period</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color today"></div>
+                                <span>Today</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color other-month"></div>
+                                <span>Other Month</span>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Week Days -->
@@ -308,21 +335,7 @@
                 </div>
             </div>
             
-            <!-- Legend -->
-            <div class="calendar-legend">
-                <div class="legend-item">
-                    <div class="legend-color profiling"></div>
-                    <span>Profiling Period</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color today"></div>
-                    <span>Today</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color other-month"></div>
-                    <span>Other Month</span>
-                </div>
-            </div>
+            <!-- Legend removed — Jump to date is in the calendar header -->
             <div class="schedule-bottom-actions">
                 <button type="button" class="btn btn-secondary" id="clearScheduleBtn">Clear All</button>
                 <button type="button" class="btn btn-primary" id="saveScheduleBtn">Save Schedule</button>

@@ -78,16 +78,15 @@
     color: rgba(255, 255, 255, 0.7);
 }
 
-/* Sidebar scrollbar — hidden by default, yellow on hover */
+/* Sidebar scrollbar — hidden by default, yellow only on hover */
 .main-sidebar {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
     overscroll-behavior: contain;
-    transition: scrollbar-color 0.3s ease;
 }
 
 .main-sidebar:hover {
-    scrollbar-color: rgba(255, 215, 0, 0.75) transparent;
+    scrollbar-color: rgba(255, 215, 0, 0.85) transparent;
 }
 
 /* WebKit: define the scrollbar track + thumb */
@@ -103,12 +102,11 @@
 .main-sidebar::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 10px;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Reveal thumb on sidebar hover */
 .main-sidebar:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 215, 0, 0.75);
+    background: rgba(255, 215, 0, 0.85);
     box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
 }
 
@@ -503,7 +501,9 @@
     .main-sidebar.collapsed .nav-text,
     .main-sidebar.collapsed .nav-badge,
     .main-sidebar.collapsed .sidebar-footer,
-    .main-sidebar.collapsed .sidebar-close {
+    .main-sidebar.collapsed .sidebar-close,
+    .main-sidebar.collapsed .admin-info,
+    .main-sidebar.collapsed .nav-chevron {
         display: none;
     }
 
@@ -526,6 +526,10 @@
         padding: 20px 10px;
         justify-content: center;
     }
+
+    .main-sidebar.collapsed .sidebar-admin {
+        justify-content: center;
+    }
 }
 
 /* ── Archived Dropdown ── */
@@ -539,11 +543,27 @@
     height: 16px;
     flex-shrink: 0;
     margin-left: auto;
-    transition: transform 0s;
+    transition: transform 0.2s ease;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .nav-item-dropdown.open .nav-chevron {
     transform: rotate(180deg);
+}
+
+/* Ensure Archived nav-text is always visible when sidebar is expanded */
+.nav-link-dropdown .nav-text {
+    flex: 1;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-link-dropdown:hover .nav-text,
+.nav-link-dropdown:hover .nav-chevron {
+    color: #1f3c6d;
 }
 
 /* Use display toggle via JS — no max-height trick that inflates scrollbar */
@@ -652,5 +672,13 @@
 
     .main-sidebar.collapsed .nav-chevron {
         display: none;
+    }
+}
+
+/* Mobile only: bottom padding on open submenu so last item (Rejected KK Profiling)
+   has the same breathing room as the bottom of the main nav list (96px) */
+@media (max-width: 768px) {
+    .nav-item-dropdown.open .nav-submenu {
+        padding-bottom: 96px;
     }
 }

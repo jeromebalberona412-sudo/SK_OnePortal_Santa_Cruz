@@ -26,11 +26,17 @@
                     Central registry of youth in the Purok / Sitio for SK programs and events.
                 </p>
             </div>
-            <div class="page-header-right page-header-right-with-search">
-                <div class="header-search-wrap kabataan-header-search">
-                    <input type="text" id="kabataanSearch" class="filter-input kabataan-search-input" placeholder="Search">
+            <div class="page-header-right-with-search">
+                <div class="abyip-search-inline">
+                    <label for="kabataanSearch" class="abyip-sr-only">Search kabataan records</label>
+                    <div class="abyip-search-wrapper">
+                        <span class="abyip-search-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </span>
+                        <input type="text" id="kabataanSearch" class="abyip-filter-search-inline" placeholder="Search kabataan..." autocomplete="off">
+                    </div>
                 </div>
-                <button type="button" class="btn primary-btn" id="addKabataanBtn">+ Add Kabataan</button>
+                <button type="button" class="btn primary-btn" id="addKabataanBtn">Add Kabataan</button>
             </div>
         </section>
 
@@ -102,22 +108,22 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <!-- Pagination Controls -->
-                <div class="pagination-container">
-                    <div class="pagination-info">
-                        <span id="kabataanPaginationInfo">Showing 1-10 of 12 records</span>
-                    </div>
-                    <div class="pagination-controls">
-                        <button type="button" id="kabataanPrevBtn" class="pagination-btn" disabled>Previous</button>
-                        <div class="pagination-numbers" id="kabataanPageNumbers"></div>
-                        <button type="button" id="kabataanNextBtn" class="pagination-btn">Next</button>
-                    </div>
-                </div>
             </div>
         </section>
     </div>
 </main>
+
+<!-- Pagination Controls -->
+<div class="pagination-container">
+    <div class="pagination-info">
+        <span id="kabataanPaginationInfo">Showing 1-10 of 12 records</span>
+    </div>
+    <div class="pagination-controls">
+        <button type="button" id="kabataanPrevBtn" class="pagination-btn" disabled>Previous</button>
+        <div class="pagination-numbers" id="kabataanPageNumbers"></div>
+        <button type="button" id="kabataanNextBtn" class="pagination-btn">Next</button>
+    </div>
+</div>
 
 <!-- Kabataan Modal -->
 <div class="modal-backdrop kabataan-modal-backdrop" id="kabataanModal" style="display:none;">
