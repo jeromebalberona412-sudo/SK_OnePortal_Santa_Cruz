@@ -68,198 +68,194 @@
     <!-- ══ Stat Cards ═══════════════════════════════════════ -->
     <div class="stats-2row-grid mb-3">
 
-        <!-- ── BLUE ── -->
         <!-- 1. Total Kabataan -->
         <div class="stat-card stat-card-blue">
-            <div class="stat-card-icon stat-icon-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statKabataan">342</span>
-                <span class="stat-card-label">Total Kabataan</span>
+                <div class="stat-card-icon stat-icon-blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Total Kabataan</span>
         </div>
 
         <!-- 2. KK Total -->
         <div class="stat-card stat-card-indigo">
-            <div class="stat-card-icon stat-icon-indigo">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <line x1="19" y1="8" x2="19" y2="14"></line>
-                    <line x1="22" y1="11" x2="16" y2="11"></line>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statKkTotal">198</span>
-                <span class="stat-card-label">KK Total</span>
+                <div class="stat-card-icon stat-icon-indigo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <line x1="19" y1="8" x2="19" y2="14"></line>
+                        <line x1="22" y1="11" x2="16" y2="11"></line>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">KK Total</span>
         </div>
 
-        <!-- ── YELLOW ── -->
         <!-- 3. Pending KK -->
         <div class="stat-card stat-card-orange">
-            <div class="stat-card-icon stat-icon-orange">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statPending">14</span>
-                <span class="stat-card-label">Pending KK</span>
+                <div class="stat-card-icon stat-icon-orange">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Pending KK</span>
         </div>
 
-        <!-- ── GREEN ── -->
         <!-- 4. Approved -->
         <div class="stat-card stat-card-green">
-            <div class="stat-card-icon stat-icon-green">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statApproved">23</span>
-                <span class="stat-card-label">Approved</span>
+                <div class="stat-card-icon stat-icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Approved</span>
         </div>
 
         <!-- 5. Active Programs -->
         <div class="stat-card stat-card-teal">
-            <div class="stat-card-icon stat-icon-teal">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statPrograms">9</span>
-                <span class="stat-card-label">Active Programs</span>
+                <div class="stat-card-icon stat-icon-teal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Active Programs</span>
         </div>
 
         <!-- 6. Total Budget -->
         <div class="stat-card stat-card-yellow">
-            <div class="stat-card-icon stat-icon-yellow">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 1v22"></path>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statBudget">₱270K</span>
-                <span class="stat-card-label">Total Budget</span>
+                <div class="stat-card-icon stat-icon-yellow">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1v22"></path>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Total Budget</span>
         </div>
 
         <!-- 7. Remaining Budget -->
         <div class="stat-card stat-card-green">
-            <div class="stat-card-icon stat-icon-green">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statRemaining">₱177K</span>
-                <span class="stat-card-label">Remaining Budget</span>
+                <div class="stat-card-icon stat-icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Remaining Budget</span>
         </div>
 
-        <!-- ── RED ── -->
         <!-- 8. Total Expenses -->
         <div class="stat-card stat-card-red">
-            <div class="stat-card-icon stat-icon-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="1" x2="12" y2="23"></line>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statExpenses">₱93K</span>
-                <span class="stat-card-label">Total Expenses</span>
+                <div class="stat-card-icon stat-icon-red">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Total Expenses</span>
         </div>
 
         <!-- 9. Rejected -->
         <div class="stat-card stat-card-red">
-            <div class="stat-card-icon stat-icon-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statRejected">23</span>
-                <span class="stat-card-label">Rejected</span>
+                <div class="stat-card-icon stat-icon-red">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Rejected</span>
         </div>
 
         <!-- 10. Deleted Kabataan -->
         <div class="stat-card stat-card-slate">
-            <div class="stat-card-icon stat-icon-slate">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6l-1 14H6L5 6"></path>
-                    <path d="M10 11v6"></path><path d="M14 11v6"></path>
-                    <path d="M9 6V4h6v2"></path>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statDeletedKabataan">7</span>
-                <span class="stat-card-label">Deleted Kabataan</span>
+                <div class="stat-card-icon stat-icon-slate">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14H6L5 6"></path>
+                        <path d="M10 11v6"></path><path d="M14 11v6"></path>
+                        <path d="M9 6V4h6v2"></path>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Deleted Kabataan</span>
         </div>
 
         <!-- 11. Deleted ABYIP -->
         <div class="stat-card stat-card-slate">
-            <div class="stat-card-icon stat-icon-slate">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14,2 14,8 20,8"></polyline>
-                    <line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statDeletedAbyip">3</span>
-                <span class="stat-card-label">Deleted ABYIP</span>
+                <div class="stat-card-icon stat-icon-slate">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14,2 14,8 20,8"></polyline>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Deleted ABYIP</span>
         </div>
 
         <!-- 12. Rejected Items -->
         <div class="stat-card stat-card-rose">
-            <div class="stat-card-icon stat-icon-rose">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statRejectedItems">11</span>
-                <span class="stat-card-label">Rejected Items</span>
+                <div class="stat-card-icon stat-icon-rose">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Rejected Items</span>
         </div>
 
         <!-- 13. Rejected KK -->
         <div class="stat-card stat-card-rose">
-            <div class="stat-card-icon stat-icon-rose">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-            </div>
-            <div class="stat-card-body">
+            <div class="stat-card-top">
                 <span class="stat-card-value" id="statRejectedKK">5</span>
-                <span class="stat-card-label">Rejected KK</span>
+                <div class="stat-card-icon stat-icon-rose">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </div>
             </div>
+            <span class="stat-card-label">Rejected KK</span>
         </div>
 
     </div><!-- /stats-2row-grid -->
