@@ -30,7 +30,7 @@
         </section>
 
         <!-- Stats Cards -->
-        <div class="stats-cards-row" id="daStatsRow"></div>
+        <div class="module-stats-grid" id="daStatsRow"></div>
 
         <!-- Restore Success Banner -->
         <div class="restore-success-banner" id="daRestoreBanner" style="display:none;">

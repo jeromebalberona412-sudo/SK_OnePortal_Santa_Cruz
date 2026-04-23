@@ -33,6 +33,76 @@ body {
     margin-bottom: 20px;
 }
 
+.page-header-left {
+    flex: 1;
+}
+
+.page-header-right {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Search with icon — matches ABYIP/Kabataan style */
+.abyip-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.abyip-search-inline {
+    position: relative;
+}
+
+.abyip-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.abyip-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.abyip-filter-search-inline {
+    padding-left: 34px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #374151;
+    background: #f9fafb;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    height: 38px;
+    width: 220px;
+}
+
+.abyip-filter-search-inline:focus {
+    outline: none;
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+    background: #fff;
+}
+
+.abyip-filter-search-inline::placeholder {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
 .page-title {
     font-size: 28px;
     font-weight: 700;
@@ -71,6 +141,55 @@ body {
 
 .page-filters-section {
     margin-bottom: 18px;
+}
+
+/* ── Action Bar: Search + Button row above filters ── */
+.table-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.table-action-bar .abyip-filter-search-inline {
+    width: 220px;
+}
+
+@media (max-width: 768px) {
+    .table-action-bar {
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+    .table-action-bar .abyip-search-inline {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+    .table-action-bar .abyip-filter-search-inline {
+        width: 100%;
+    }
+    .table-action-bar .primary-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .table-action-bar {
+        gap: 6px;
+    }
+    .table-action-bar .abyip-filter-search-inline {
+        font-size: 12px;
+        height: 36px;
+        padding-left: 30px;
+    }
+    .table-action-bar .primary-btn {
+        font-size: 12px;
+        padding: 0 12px;
+        height: 36px;
+        border-radius: 8px;
+    }
 }
 
 .filters-row {
@@ -656,12 +775,13 @@ body {
         padding: 14px;
     }
 
+    /* Header: title left, search right — same row */
     .page-header-section {
         flex-direction: row;
         align-items: flex-start;
         justify-content: space-between;
         gap: 8px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
 
     .page-header-left {
@@ -677,63 +797,52 @@ body {
         font-size: 11px;
     }
 
-    /* Filters: search upper right, committee + status on same line below */
-    .filters-row {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
+    /* Search stays on the right, compact */
+    .page-header-right {
+        flex-shrink: 0;
+        padding-top: 2px;
     }
 
-    .filter-item:first-child {
-        /* Search stays upper right */
-        grid-column: 1;
-        max-width: 160px;
-        margin-left: auto;
+    .abyip-filter-search-inline {
+        width: 150px;
+        height: 36px;
+        font-size: 12px;
+        padding-left: 30px;
     }
 
-    .filter-item:nth-child(2),
-    .filter-item:nth-child(3) {
-        /* Committee and Status on same horizontal line */
-        grid-column: 1;
+    .abyip-filter-search-inline::placeholder {
+        font-size: 11px;
     }
 
-    /* Make committee and status sit side by side */
+    /* Filters: Committee + Status side by side, bigger */
     .filters-row {
         display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        flex-wrap: nowrap;
+        gap: 10px;
+        margin-bottom: 14px;
     }
 
-    .filter-item:first-child {
-        /* Search: upper right, smaller */
-        flex: 0 0 auto;
-        width: 140px;
-        margin-left: auto;
-        order: -1;
-        margin-bottom: 8px;
-    }
-
-    .filter-item:nth-child(2),
-    .filter-item:nth-child(3) {
-        /* Committee and Status: same line, equal width */
+    .filter-item {
         flex: 1 1 0;
         min-width: 0;
     }
 
     .filter-label {
-        font-size: 10px;
-        margin-bottom: 3px;
-    }
-
-    .filter-input,
-    .filter-select {
         font-size: 11px;
-        padding: 6px 8px;
-        border-radius: 7px;
-        height: 36px;
+        margin-bottom: 4px;
     }
 
-    /* Program Portfolio Overview: smaller, no horizontal scroll */
+    .filter-select {
+        width: 100%;
+        height: 40px;
+        font-size: 13px;
+        padding: 0 28px 0 10px;
+        border-radius: 8px;
+        border: 1.5px solid #d1d5db;
+        background: #f9fafb;
+    }
+
+    /* Program Portfolio Overview: compact 2-col grid, below table */
     .programs-sidebar {
         order: 1;
     }
@@ -752,19 +861,25 @@ body {
         margin-bottom: 12px;
     }
 
+    .program-summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
     .summary-item {
         padding: 8px;
         gap: 8px;
     }
 
     .summary-icon {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
     }
 
     .summary-icon svg {
-        width: 16px;
-        height: 16px;
+        width: 15px;
+        height: 15px;
     }
 
     .summary-content h3 {
@@ -775,7 +890,7 @@ body {
         font-size: 14px;
     }
 
-    /* Table: scrollable, no horizontal overflow from sidebar */
+    /* Table: scrollable horizontally */
     .page-content-section {
         padding: 14px 16px;
         overflow: visible;
@@ -794,7 +909,7 @@ body {
 
     .programs-table {
         font-size: 11px;
-        min-width: 600px;
+        min-width: 560px;
     }
 
     .program-title-cell {
@@ -817,15 +932,15 @@ body {
         font-size: 15px;
     }
 
-    .filter-item:first-child {
+    .abyip-filter-search-inline {
         width: 120px;
+        height: 34px;
+        font-size: 11px;
     }
 
-    .filter-input,
     .filter-select {
-        font-size: 10px;
-        padding: 5px 6px;
-        height: 34px;
+        height: 38px;
+        font-size: 12px;
     }
 
     .page-content-section {
@@ -840,23 +955,19 @@ body {
         padding: 12px;
     }
 
-    .sidebar-title {
-        font-size: 13px;
-    }
-
     .summary-item {
         padding: 6px;
         gap: 6px;
     }
 
     .summary-icon {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
     }
 
     .summary-icon svg {
-        width: 14px;
-        height: 14px;
+        width: 13px;
+        height: 13px;
     }
 
     .summary-content h3 {
@@ -869,7 +980,7 @@ body {
 
     .programs-table {
         font-size: 10px;
-        min-width: 550px;
+        min-width: 520px;
     }
 }
 
@@ -877,4 +988,118 @@ body {
     .main-content.sidebar-collapsed {
         margin-left: 80px;
     }
+}
+
+/* ── Module Stat Cards (matches Dashboard style) ── */
+.module-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    min-height: 110px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+    border: 1.5px solid #e5e7eb;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+    transform: translateY(-2px);
+}
+
+.stat-card-blue, .stat-card-indigo { border-color: #3B82F6; }
+.stat-card-orange                  { border-color: #FACC15; }
+.stat-card-green, .stat-card-teal, .stat-card-yellow { border-color: #22C55E; }
+.stat-card-red, .stat-card-slate, .stat-card-rose    { border-color: #EF4444; }
+
+.stat-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.stat-card-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111827;
+    line-height: 1.1;
+    word-break: break-word;
+    flex: 1;
+    min-width: 0;
+    display: block;
+    text-align: left;
+}
+
+.stat-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-card-icon svg { width: 20px; height: 20px; }
+
+.stat-icon-blue, .stat-icon-indigo { background: #dbeafe; }
+.stat-icon-blue svg, .stat-icon-indigo svg { stroke: #2563eb; }
+.stat-icon-orange { background: #fef9c3; }
+.stat-icon-orange svg { stroke: #ca8a04; }
+.stat-icon-green, .stat-icon-teal, .stat-icon-yellow { background: #dcfce7; }
+.stat-icon-green svg, .stat-icon-teal svg, .stat-icon-yellow svg { stroke: #16a34a; }
+.stat-icon-red, .stat-icon-slate, .stat-icon-rose { background: #fee2e2; }
+.stat-icon-red svg, .stat-icon-slate svg, .stat-icon-rose svg { stroke: #dc2626; }
+
+.stat-card-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    line-height: 1.3;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    width: 100%;
+    margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+    .module-stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+    }
+    .stat-card { padding: 8px 8px 6px; min-height: 80px; }
+    .stat-card-icon { width: 26px; height: 26px; }
+    .stat-card-icon svg { width: 13px; height: 13px; }
+    .stat-card-value { font-size: 17px; }
+    .stat-card-label { font-size: 9px; }
+}
+
+@media (max-width: 480px) {
+    .module-stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 5px;
+    }
+    .stat-card { padding: 7px 6px 5px; min-height: 72px; }
+    .stat-card-icon { width: 22px; height: 22px; border-radius: 6px; }
+    .stat-card-icon svg { width: 11px; height: 11px; }
+    .stat-card-value { font-size: 15px; }
+    .stat-card-label { font-size: 8px; margin-top: 5px; }
 }

@@ -118,31 +118,31 @@ function renderStats() {
 
     row.innerHTML = `
         <div class="stat-card stat-card-red">
-            <div class="stat-card-body">
-                <div class="stat-card-label">Total Rejected</div>
-                <div class="stat-card-value">${total}</div>
+            <div class="stat-card-top">
+                <span class="stat-card-value">${total}</span>
+                <div class="stat-card-icon stat-icon-red">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                </div>
             </div>
-            <div class="stat-card-icon stat-icon-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-            </div>
+            <span class="stat-card-label">Total Rejected</span>
         </div>
-        <div class="stat-card stat-card-yellow">
-            <div class="stat-card-body">
-                <div class="stat-card-label">This Month</div>
-                <div class="stat-card-value">${month}</div>
+        <div class="stat-card stat-card-orange">
+            <div class="stat-card-top">
+                <span class="stat-card-value">${month}</span>
+                <div class="stat-card-icon stat-icon-orange">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                </div>
             </div>
-            <div class="stat-card-icon stat-icon-yellow">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
-            </div>
+            <span class="stat-card-label">This Month</span>
         </div>
         <div class="stat-card stat-card-blue">
-            <div class="stat-card-body">
-                <div class="stat-card-label">Today</div>
-                <div class="stat-card-value">${today}</div>
+            <div class="stat-card-top">
+                <span class="stat-card-value">${today}</span>
+                <div class="stat-card-icon stat-icon-blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
             </div>
-            <div class="stat-card-icon stat-icon-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            </div>
+            <span class="stat-card-label">Today</span>
         </div>`;
 }
 

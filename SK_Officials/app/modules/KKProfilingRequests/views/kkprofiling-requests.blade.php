@@ -26,7 +26,51 @@
                     Review, approve, or reject KK Profiling submissions from kabataan.
                 </p>
             </div>
-            <div class="page-header-right-with-search">
+        </section>
+
+        <!-- ── KK Profiling Stat Cards ── -->
+        <div class="module-stats-grid">
+            <div class="stat-card stat-card-orange">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kkStatPending">0</span>
+                    <div class="stat-card-icon stat-icon-orange">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Total Pending</span>
+            </div>
+            <div class="stat-card stat-card-green">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kkStatApproved">0</span>
+                    <div class="stat-card-icon stat-icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Approved</span>
+            </div>
+            <div class="stat-card stat-card-red">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kkStatRejected">0</span>
+                    <div class="stat-card-icon stat-icon-red">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Rejected</span>
+            </div>
+            <div class="stat-card stat-card-blue">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kkStatTotal">0</span>
+                    <div class="stat-card-icon stat-icon-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Total Submissions</span>
+            </div>
+        </div>
+
+        <section class="page-filters-section">
+            <!-- ── Action Bar: Search + Schedule KK ── -->
+            <div class="table-action-bar">
                 <div class="abyip-search-inline">
                     <label for="kkSearch" class="abyip-sr-only">Search KK profiling records</label>
                     <div class="abyip-search-wrapper">
@@ -40,9 +84,6 @@
                     Schedule KK
                 </button>
             </div>
-        </section>
-
-        <section class="page-filters-section">
             <div class="filters-row">
                 <div class="filter-item">
                     <label for="kkStatusFilter" class="filter-label">Status</label>

@@ -26,7 +26,51 @@
                     Central registry of youth in the Purok / Sitio for SK programs and events.
                 </p>
             </div>
-            <div class="page-header-right-with-search">
+        </section>
+
+        <!-- ── Kabataan Stat Cards ── -->
+        <div class="module-stats-grid">
+            <div class="stat-card stat-card-blue">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kabStatTotal">0</span>
+                    <div class="stat-card-icon stat-icon-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Total Registered</span>
+            </div>
+            <div class="stat-card stat-card-indigo">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kabStatMale">0</span>
+                    <div class="stat-card-icon stat-icon-indigo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Male</span>
+            </div>
+            <div class="stat-card stat-card-rose">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kabStatFemale">0</span>
+                    <div class="stat-card-icon stat-icon-rose">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Female</span>
+            </div>
+            <div class="stat-card stat-card-green">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kabStatVoters">0</span>
+                    <div class="stat-card-icon stat-icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Registered Voters</span>
+            </div>
+        </div>
+
+        <section class="page-filters-section">
+            <!-- ── Action Bar: Search + Add Kabataan ── -->
+            <div class="table-action-bar">
                 <div class="abyip-search-inline">
                     <label for="kabataanSearch" class="abyip-sr-only">Search kabataan records</label>
                     <div class="abyip-search-wrapper">
@@ -38,9 +82,6 @@
                 </div>
                 <button type="button" class="btn primary-btn" id="addKabataanBtn">Add Kabataan</button>
             </div>
-        </section>
-
-        <section class="page-filters-section">
             <div class="filters-row">
                 <div class="filter-item">
                     <label for="kabataanGenderFilter" class="filter-label">Sex</label>

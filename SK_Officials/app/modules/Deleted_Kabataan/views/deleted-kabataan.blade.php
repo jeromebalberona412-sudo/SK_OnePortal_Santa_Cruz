@@ -30,7 +30,7 @@
         </section>
 
         <!-- Stats Cards -->
-        <div class="stats-cards-row" id="dkStatsRow"></div>
+        <div class="module-stats-grid" id="dkStatsRow"></div>
 
         <!-- Restore Success Banner -->
         <div class="restore-success-banner" id="dkRestoreBanner" style="display:none;">

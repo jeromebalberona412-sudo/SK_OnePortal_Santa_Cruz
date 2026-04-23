@@ -308,7 +308,7 @@
             <div class="line-chart-filter-row">
                 <label class="line-chart-checkbox">
                     <input type="checkbox" id="filterAll" checked>
-                    <span class="line-chart-checkbox-box" style="background:#6b7280;"></span>
+                    <span class="line-chart-checkbox-box" style="background:#2c2c3e;"></span>
                     <span>All</span>
                 </label>
                 <label class="line-chart-checkbox">
