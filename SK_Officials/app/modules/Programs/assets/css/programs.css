@@ -630,6 +630,17 @@ body {
         margin-left: 260px;
         padding: 16px;
     }
+
+    .content-wrapper {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .programs-sidebar {
+        position: static;
+        max-height: none;
+        order: -1;
+    }
 }
 
 @media (max-width: 900px) {
@@ -646,8 +657,153 @@ body {
     }
 
     .page-header-section {
-        flex-direction: column;
+        flex-direction: row;
         align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .page-header-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .page-title {
+        font-size: 17px;
+    }
+
+    .page-subtitle {
+        font-size: 11px;
+    }
+
+    /* Filters: search upper right, committee + status on same line below */
+    .filters-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .filter-item:first-child {
+        /* Search stays upper right */
+        grid-column: 1;
+        max-width: 160px;
+        margin-left: auto;
+    }
+
+    .filter-item:nth-child(2),
+    .filter-item:nth-child(3) {
+        /* Committee and Status on same horizontal line */
+        grid-column: 1;
+    }
+
+    /* Make committee and status sit side by side */
+    .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .filter-item:first-child {
+        /* Search: upper right, smaller */
+        flex: 0 0 auto;
+        width: 140px;
+        margin-left: auto;
+        order: -1;
+        margin-bottom: 8px;
+    }
+
+    .filter-item:nth-child(2),
+    .filter-item:nth-child(3) {
+        /* Committee and Status: same line, equal width */
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .filter-label {
+        font-size: 10px;
+        margin-bottom: 3px;
+    }
+
+    .filter-input,
+    .filter-select {
+        font-size: 11px;
+        padding: 6px 8px;
+        border-radius: 7px;
+        height: 36px;
+    }
+
+    /* Program Portfolio Overview: smaller, no horizontal scroll */
+    .programs-sidebar {
+        order: 1;
+    }
+
+    .sidebar-card {
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .sidebar-title {
+        font-size: 14px;
+    }
+
+    .sidebar-subtitle {
+        font-size: 11px;
+        margin-bottom: 12px;
+    }
+
+    .summary-item {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .summary-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .summary-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .summary-content h3 {
+        font-size: 11px;
+    }
+
+    .summary-value {
+        font-size: 14px;
+    }
+
+    /* Table: scrollable, no horizontal overflow from sidebar */
+    .page-content-section {
+        padding: 14px 16px;
+        overflow: visible;
+    }
+
+    .main-content-area {
+        padding: 14px;
+        border-radius: 12px;
+        overflow-x: auto;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .programs-table {
+        font-size: 11px;
+        min-width: 600px;
+    }
+
+    .program-title-cell {
+        min-width: 100px;
+    }
+
+    .program-budget,
+    .program-duration {
+        min-width: 70px;
     }
 }
 
@@ -658,7 +814,62 @@ body {
     }
 
     .page-title {
-        font-size: 22px;
+        font-size: 15px;
+    }
+
+    .filter-item:first-child {
+        width: 120px;
+    }
+
+    .filter-input,
+    .filter-select {
+        font-size: 10px;
+        padding: 5px 6px;
+        height: 34px;
+    }
+
+    .page-content-section {
+        padding: 12px 14px;
+    }
+
+    .main-content-area {
+        padding: 12px;
+    }
+
+    .sidebar-card {
+        padding: 12px;
+    }
+
+    .sidebar-title {
+        font-size: 13px;
+    }
+
+    .summary-item {
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .summary-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .summary-icon svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .summary-content h3 {
+        font-size: 10px;
+    }
+
+    .summary-value {
+        font-size: 13px;
+    }
+
+    .programs-table {
+        font-size: 10px;
+        min-width: 550px;
     }
 }
 

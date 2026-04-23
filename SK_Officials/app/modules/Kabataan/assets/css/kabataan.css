@@ -781,30 +781,45 @@ body {
 
     .page-header-right-with-search {
         flex-shrink: 0;
+        flex-direction: column;
+        align-items: stretch;
         gap: 8px;
-        align-items: center;
         padding-top: 2px;
+        width: 160px;
     }
 
-    .kabataan-header-search {
-        width: 90px;
-        flex-shrink: 0;
-    }
-
-    .kabataan-header-search .kabataan-search-input {
+    .abyip-search-inline {
         width: 100%;
-        font-size: 11px;
-        padding: 6px 8px;
-        border-radius: 7px;
-        min-width: 0;
+        display: block;
+    }
+
+    .abyip-search-wrapper {
+        width: 100%;
+        display: flex;
+    }
+
+    .abyip-filter-search-inline {
+        width: 100%;
+        font-size: 12px;
+        padding: 0 10px 0 32px;
+        border-radius: 8px;
+        height: 40px;
+        min-height: 40px;
+        box-sizing: border-box;
     }
 
     .page-header-right-with-search .primary-btn {
-        font-size: 11px;
-        padding: 6px 10px;
-        border-radius: 7px;
+        font-size: 12px !important;
+        padding: 0 12px !important;
+        border-radius: 8px !important;
+        height: 40px !important;
+        min-height: 40px !important;
         white-space: nowrap;
-        flex-shrink: 0;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
     }
 
     /* Filters: all 3 dropdowns in ONE line */
@@ -882,21 +897,21 @@ body {
     }
 
     .page-header-right-with-search {
-        gap: 6px;
+        width: 145px;
     }
 
-    .kabataan-header-search {
-        width: 80px;
-    }
-
-    .kabataan-header-search .kabataan-search-input {
-        font-size: 10px;
-        padding: 5px 6px;
+    .abyip-filter-search-inline {
+        font-size: 11px;
+        padding: 0 8px 0 30px;
+        height: 38px;
+        min-height: 38px;
     }
 
     .page-header-right-with-search .primary-btn {
-        font-size: 10px;
-        padding: 5px 8px;
+        font-size: 11px !important;
+        padding: 0 10px !important;
+        height: 38px !important;
+        min-height: 38px !important;
     }
 
     .modal-box {

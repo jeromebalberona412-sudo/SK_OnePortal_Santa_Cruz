@@ -902,32 +902,46 @@ body {
     }
 
     .page-header-right-with-search {
-        flex-wrap: nowrap;
-        gap: 5px;
         flex-shrink: 0;
-        align-items: flex-start;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
         padding-top: 2px;
+        width: 160px;
     }
 
-    .header-search-wrap {
-        width: 90px;
-        flex-shrink: 0;
-    }
-
-    .header-search-wrap .kk-search-input {
+    .abyip-search-inline {
         width: 100%;
-        font-size: 11px;
-        padding: 6px 10px;
-        border-radius: 7px;
-        min-width: 0;
+        display: block;
     }
 
-    .page-header-right-with-search .kk-schedule-btn {
-        font-size: 11px;
-        padding: 6px 10px;
-        min-height: auto;
-        border-radius: 7px;
+    .abyip-search-wrapper {
+        width: 100%;
+        display: flex;
+    }
+
+    .abyip-filter-search-inline {
+        width: 100%;
+        font-size: 12px;
+        padding: 0 10px 0 32px;
+        border-radius: 8px;
+        height: 40px;
+        min-height: 40px;
+        box-sizing: border-box;
+    }
+
+    .page-header-right-with-search .primary-btn {
+        font-size: 12px !important;
+        padding: 0 12px !important;
+        border-radius: 8px !important;
+        height: 40px !important;
+        min-height: 40px !important;
         white-space: nowrap;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
     }
 
     /* Filters: all 3 dropdowns in ONE line */
@@ -1048,18 +1062,22 @@ body {
         font-size: 15px;
     }
 
-    .header-search-wrap {
-        width: 80px;
+    .page-header-right-with-search {
+        width: 145px;
     }
 
-    .header-search-wrap .kk-search-input {
-        font-size: 10px;
-        padding: 5px 6px;
+    .abyip-filter-search-inline {
+        font-size: 11px;
+        padding: 0 8px 0 30px;
+        height: 38px;
+        min-height: 38px;
     }
 
-    .page-header-right-with-search .kk-schedule-btn {
-        font-size: 10px;
-        padding: 5px 8px;
+    .page-header-right-with-search .primary-btn {
+        font-size: 11px !important;
+        padding: 0 10px !important;
+        height: 38px !important;
+        min-height: 38px !important;
     }
 
     .modal-box {
