@@ -13,7 +13,7 @@ import Chart from 'chart.js/auto';
 ══════════════════════════════════════════════════════════ */
 const YEAR_DATA = {
     2023: {
-        stats: { kabataan: 198, abyip: 34, pending: 8, approved: 87, rejected: 11, programs: 4, budget: '₱0.62M' },
+        stats: { kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0, budget: '₱0.00' },
         purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
         purokCounts:  [22, 18, 15, 20, 14, 19, 17, 16, 21, 16],
         monthlyApproved: [4,6,5,8,7,10,9,11,10,12,8,7],
@@ -35,7 +35,7 @@ const YEAR_DATA = {
         ],
     },
     2024: {
-        stats: { kabataan: 267, abyip: 58, pending: 11, approved: 143, rejected: 17, programs: 6, budget: '₱0.98M' },
+        stats: { kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0, budget: '₱0.00' },
         purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
         purokCounts:  [30, 25, 22, 28, 20, 27, 24, 23, 29, 19],
         monthlyApproved: [8,10,9,13,11,16,14,18,15,20,17,12],
@@ -60,7 +60,7 @@ const YEAR_DATA = {
         ],
     },
     2025: {
-        stats: { kabataan: 310, abyip: 74, pending: 12, approved: 172, rejected: 20, programs: 8, budget: '₱1.18M' },
+        stats: { kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0, budget: '₱0.00' },
         purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
         purokCounts:  [36, 30, 27, 34, 25, 32, 29, 28, 35, 24],
         monthlyApproved: [10,13,12,17,14,21,18,24,20,27,23,19],
@@ -86,7 +86,7 @@ const YEAR_DATA = {
         ],
     },
     2026: {
-        stats: { kabataan: 342, abyip: 87, pending: 14, approved: 198, rejected: 23, programs: 9, budget: '₱1.42M' },
+        stats: { kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0, budget: '₱0.00' },
         purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
         purokCounts:  [42, 35, 31, 38, 28, 36, 33, 32, 40, 27],
         monthlyApproved: [12,18,15,22,19,28,24,31,27,35,30,38],
@@ -188,21 +188,22 @@ function renderAll(year) {
 /* ── Stat cards ──────────────────────────────────────────── */
 function renderStats(d) {
     animateCount('statKabataan', d.stats.kabataan);
-    animateCount('statKkTotal',  d.stats.kkTotal  || 198);
+    animateCount('statKkTotal',  d.stats.kkTotal  || 0);
     animateCount('statPending',  d.stats.pending);
     animateCount('statApproved', d.stats.approved);
     animateCount('statRejected', d.stats.rejected);
     animateCount('statPrograms', d.stats.programs);
-    animateCount('statDeletedKabataan', d.stats.deletedKabataan || 7);
-    animateCount('statDeletedAbyip',    d.stats.deletedAbyip    || 3);
-    animateCount('statRejectedItems',   d.stats.rejectedItems   || 11);
-    animateCount('statRejectedKK',      d.stats.rejectedKK      || 5);
+    animateCount('statActivePrograms', d.stats.activePrograms || 0);
+    animateCount('statDeletedKabataan', d.stats.deletedKabataan || 0);
+    animateCount('statDeletedAbyip',    d.stats.deletedAbyip    || 0);
+    animateCount('statRejectedItems',   d.stats.rejectedItems   || 0);
+    animateCount('statRejectedKK',      d.stats.rejectedKK      || 0);
     const budgetEl    = document.getElementById('statBudget');
     const expensesEl  = document.getElementById('statExpenses');
     const remainingEl = document.getElementById('statRemaining');
-    if (budgetEl)    budgetEl.textContent    = d.stats.budget    || '₱270K';
-    if (expensesEl)  expensesEl.textContent  = d.stats.expenses  || '₱93K';
-    if (remainingEl) remainingEl.textContent = d.stats.remaining || '₱177K';
+    if (budgetEl)    budgetEl.textContent    = d.stats.budget    || '₱0.00';
+    if (expensesEl)  expensesEl.textContent  = d.stats.expenses  || '₱0.00';
+    if (remainingEl) remainingEl.textContent = d.stats.remaining || '₱0.00';
 }
 
 function animateCount(id, target) {

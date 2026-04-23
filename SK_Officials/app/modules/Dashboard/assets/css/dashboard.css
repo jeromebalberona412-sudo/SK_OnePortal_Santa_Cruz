@@ -301,7 +301,7 @@ html, body {
 .dash-reminder-link {
     font-size: 12px;
     font-weight: 700;
-    color: #1f3c6d;
+    color: #ffffff;
     text-decoration: none;
     white-space: nowrap;
     flex-shrink: 0;
@@ -310,7 +310,7 @@ html, body {
     border-radius: 8px;
 }
 
-.dash-reminder-link:hover { background: #e6b800; color: #1f3c6d; }
+.dash-reminder-link:hover { background: #e6b800; color: #ffffff; }
 
 /* ── Committees section ──────────────────────────────────── */
 .committee-card {

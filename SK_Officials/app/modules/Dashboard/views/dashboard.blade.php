@@ -81,7 +81,7 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Total Kabataan</span>
+            <span class="stat-card-label">Total Registered Kabataan</span>
         </div>
 
         <!-- 2. KK Total -->
@@ -97,7 +97,7 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">KK Total</span>
+            <span class="stat-card-label">Total KK Members</span>
         </div>
 
         <!-- 3. Pending KK -->
@@ -111,26 +111,41 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Pending KK</span>
+            <span class="stat-card-label">Pending KK Requests</span>
         </div>
 
         <!-- 4. Approved -->
         <div class="stat-card stat-card-green">
             <div class="stat-card-top">
-                <span class="stat-card-value" id="statApproved">23</span>
+                <span class="stat-card-value" id="statApproved">198</span>
                 <div class="stat-card-icon stat-icon-green">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Approved</span>
+            <span class="stat-card-label">Approved KK Requests</span>
         </div>
 
         <!-- 5. Active Programs -->
         <div class="stat-card stat-card-teal">
             <div class="stat-card-top">
-                <span class="stat-card-value" id="statPrograms">9</span>
+                <span class="stat-card-value" id="statPrograms">23</span>
+                <div class="stat-card-icon stat-icon-teal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Rejected KK Requests</span>
+        </div>
+
+        <!-- 6. Active Programs -->
+        <div class="stat-card stat-card-teal">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statActivePrograms">9</span>
                 <div class="stat-card-icon stat-icon-teal">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -141,10 +156,10 @@
             <span class="stat-card-label">Active Programs</span>
         </div>
 
-        <!-- 6. Total Budget -->
+        <!-- 7. Total Budget -->
         <div class="stat-card stat-card-yellow">
             <div class="stat-card-top">
-                <span class="stat-card-value" id="statBudget">₱270K</span>
+                <span class="stat-card-value" id="statBudget">₱1.42M</span>
                 <div class="stat-card-icon stat-icon-yellow">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 1v22"></path>
@@ -152,10 +167,10 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Total Budget</span>
+            <span class="stat-card-label">Total Budget Allocation</span>
         </div>
 
-        <!-- 7. Remaining Budget -->
+        <!-- 8. Remaining Budget -->
         <div class="stat-card stat-card-green">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statRemaining">₱177K</span>
@@ -166,10 +181,10 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Remaining Budget</span>
+            <span class="stat-card-label">Remaining Budget Balance</span>
         </div>
 
-        <!-- 8. Total Expenses -->
+        <!-- 9. Total Expenses -->
         <div class="stat-card stat-card-red">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statExpenses">₱93K</span>
@@ -180,22 +195,7 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Total Expenses</span>
-        </div>
-
-        <!-- 9. Rejected -->
-        <div class="stat-card stat-card-red">
-            <div class="stat-card-top">
-                <span class="stat-card-value" id="statRejected">23</span>
-                <div class="stat-card-icon stat-icon-red">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                </div>
-            </div>
-            <span class="stat-card-label">Rejected</span>
+            <span class="stat-card-label">Total Expenses Incurred</span>
         </div>
 
         <!-- 10. Deleted Kabataan -->
@@ -211,7 +211,7 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Deleted Kabataan</span>
+            <span class="stat-card-label">Deleted Kabataan Records</span>
         </div>
 
         <!-- 11. Deleted ABYIP -->
@@ -226,7 +226,7 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Deleted ABYIP</span>
+            <span class="stat-card-label">Deleted ABYIP Records</span>
         </div>
 
         <!-- 12. Rejected Items -->
@@ -241,7 +241,7 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Rejected Items</span>
+            <span class="stat-card-label">Total Rejected Items</span>
         </div>
 
         <!-- 13. Rejected KK -->
@@ -255,7 +255,7 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Rejected KK</span>
+            <span class="stat-card-label">Rejected KK Profiles</span>
         </div>
 
     </div><!-- /stats-2row-grid -->
