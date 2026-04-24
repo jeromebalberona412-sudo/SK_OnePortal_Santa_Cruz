@@ -476,18 +476,21 @@ function updateRecordStatus(id, status) {
 }
 
 function showNotification(message, type) {
-    if (window.__abyipToast) return;
+    const existing = document.querySelector('.abyip-toast');
+    if (existing) existing.remove();
+
     const n = document.createElement('div');
-    n.className = 'abyip-toast abyip-toast-' + (type || 'info');
-    n.textContent = message;
-    n.style.cssText =
-        'position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:8px;background:#111;color:#fff;z-index:2000;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.2)';
-    if (type === 'success') n.style.background = '#15803d';
+    n.className = 'abyip-toast abyip-toast-' + (type || 'info') + ' abyip-toast-show';
+
+    const icon = type === 'error' ? '✕' : '✓';
+    n.innerHTML = '<span class="abyip-toast-icon">' + icon + '</span> ' + message;
+
     document.body.appendChild(n);
-    window.__abyipToast = true;
+
     setTimeout(() => {
-        n.remove();
-        window.__abyipToast = false;
+        n.classList.remove('abyip-toast-show');
+        n.classList.add('abyip-toast-hide');
+        setTimeout(() => n.remove(), 300);
     }, 2800);
 }
 

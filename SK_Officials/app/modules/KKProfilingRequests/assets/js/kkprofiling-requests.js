@@ -2,6 +2,22 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeKKProfilingRequestsUI();
 });
 
+// Module-level toast — accessible by all functions in this file
+function showToast(message, type) {
+    const existing = document.querySelector('.app-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'app-toast app-toast-show app-toast-' + (type || 'success');
+    const icon = type === 'error' ? '✕' : '✓';
+    toast.innerHTML = '<span class="app-toast-icon">' + icon + '</span> ' + message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.remove('app-toast-show');
+        toast.classList.add('app-toast-hide');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 function initializeKKProfilingRequestsUI() {
     const tbody = document.getElementById('kkRequestsTableBody');
     const statusTabsContainer = document.getElementById('kkStatusTabs');
@@ -529,21 +545,6 @@ function initializeKKProfilingRequestsUI() {
 
     // Success modal close button - removed and replaced with toast
 
-    // Toast notification function (consistent with calendar)
-    function showToast(message, type = 'success') {
-        const existing = document.querySelector('.app-toast');
-        if (existing) existing.remove();
-        const toast = document.createElement('div');
-        toast.className = 'app-toast app-toast-show app-toast-' + (type || 'success');
-        toast.innerHTML = '<span class="app-toast-icon">✓</span> ' + message;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.classList.remove('app-toast-show');
-            toast.classList.add('app-toast-hide');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
     // Show success modal function - replaced with toast
     function showSuccessModal(action = 'Approved') {
         const message = action === 'Approved'
@@ -837,10 +838,19 @@ function initializeKKProfilingSchedule() {
     }
 
     function handleDateClick(date, element) {
-        const dateString = date.toISOString().split('T')[0];
-
         if (element.classList.contains('other-month')) {
             return; // Don't allow selection of other month dates
+        }
+
+        // Instant past-date validation on selection
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const clickedDate = new Date(date);
+        clickedDate.setHours(0, 0, 0, 0);
+
+        if (clickedDate < today) {
+            showToast('Cannot select a past date.', 'error');
+            return;
         }
 
         // Clear all existing selections first
@@ -858,19 +868,39 @@ function initializeKKProfilingSchedule() {
         renderCalendar();
     }
 
+    function showInlineError(message) {
+        showToast(message, 'error');
+    }
+
+    function clearInlineError() {
+        // No-op: toast auto-dismisses
+    }
+
     function isProfilingDate(date) {
         const dateString = date.toISOString().split('T')[0];
         return profilingDates.has(dateString);
     }
 
     function saveSchedule() {
-        // Save to localStorage
-        localStorage.setItem('kkProfilingSchedule', JSON.stringify(Array.from(profilingDates)));
-
         // Validate that we have complete 1-week periods
         if (profilingDates.size === 0) {
-            showSuccessMessage('Schedule cleared successfully!');
+            showToast('Schedule cleared successfully!', 'success');
             closeScheduleModal();
+            return;
+        }
+
+        // Check for past dates
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+        
+        const hasPastDates = Array.from(profilingDates).some(dateString => {
+            const date = new Date(dateString);
+            date.setHours(0, 0, 0, 0);
+            return date < today;
+        });
+
+        if (hasPastDates) {
+            showToast('Cannot schedule KK to past dates.', 'error');
             return;
         }
 
@@ -892,7 +922,9 @@ function initializeKKProfilingSchedule() {
         }
 
         if (isValid) {
-            showSuccessMessage('Schedule saved successfully!');
+            // Save to localStorage
+            localStorage.setItem('kkProfilingSchedule', JSON.stringify(Array.from(profilingDates)));
+            showToast('Schedule saved successfully!', 'success');
             closeScheduleModal();
         } else {
             alert('Invalid schedule detected. Please select complete 1-week periods.');
@@ -947,32 +979,6 @@ function initializeKKProfilingSchedule() {
         }
 
         return weeks;
-    }
-
-    function showSuccessMessage(message) {
-        // Create a simple success notification
-        const notification = document.createElement('div');
-        notification.className = 'success-notification';
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #16a34a;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            font-weight: 500;
-            animation: slideIn 0.3s ease;
-        `;
-
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
     }
 
     function openJumpModal() {

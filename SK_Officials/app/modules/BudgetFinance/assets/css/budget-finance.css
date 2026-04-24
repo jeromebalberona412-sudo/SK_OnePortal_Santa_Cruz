@@ -102,60 +102,97 @@ body {
     margin-bottom: 18px;
 }
 
-.summary-cards {
+/* ── Module Stat Cards (matches Kabataan / Programs style) ── */
+.module-stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+    width: 100%;
 }
 
-.summary-card {
-    border-radius: 16px;
-    padding: 16px;
-    color: #ffffff;
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    position: relative;
+/* Budget & Finance uses only 3 cards */
+.module-stats-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    min-height: 110px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+    border: 1.5px solid #e5e7eb;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    min-width: 0;
     overflow: hidden;
 }
 
-.summary-card::before {
-    content: "";
-    position: absolute;
-    inset: -50%;
-    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.25), transparent 55%);
-    opacity: 0.8;
-    pointer-events: none;
+.stat-card:hover {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+    transform: translateY(-2px);
 }
 
-.summary-card>* {
-    position: relative;
-    z-index: 1;
+.stat-card-blue, .stat-card-indigo { border-color: #3B82F6; }
+.stat-card-green                   { border-color: #22C55E; }
+.stat-card-red                     { border-color: #EF4444; }
+
+.stat-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
 }
 
-.summary-card-label {
-    font-size: 12px;
-    font-weight: 700;
-    opacity: 0.95;
-    margin-bottom: 8px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.summary-card-value {
-    font-size: 26px;
+.stat-card-value {
+    font-size: 22px;
     font-weight: 900;
+    color: #111827;
+    line-height: 1.1;
+    word-break: break-word;
+    flex: 1;
+    min-width: 0;
+    display: block;
+    text-align: left;
 }
 
-.summary-card.blue {
-    background: #3a3a4a;
+.stat-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-.summary-card.red {
-    background: #dc2626;
-}
+.stat-card-icon svg { width: 20px; height: 20px; }
 
-.summary-card.green {
-    background: #16a34a;
+.stat-icon-blue, .stat-icon-indigo { background: #dbeafe; }
+.stat-icon-blue svg, .stat-icon-indigo svg { stroke: #2563eb; }
+.stat-icon-green { background: #dcfce7; }
+.stat-icon-green svg { stroke: #16a34a; }
+.stat-icon-red { background: #fee2e2; }
+.stat-icon-red svg { stroke: #dc2626; }
+
+.stat-card-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    line-height: 1.3;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    width: 100%;
+    margin-top: 8px;
 }
 
 .budget-table-wrapper {
@@ -545,8 +582,9 @@ body {
 }
 
 @media (max-width: 900px) {
-    .summary-cards {
-        grid-template-columns: 1fr;
+    /* Keep 3-column stat cards in one row — do NOT collapse to 2 */
+    .module-stats-grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .modal-box {
@@ -572,6 +610,19 @@ body {
         flex-direction: column;
         align-items: flex-start;
     }
+
+    /* Always keep 3 stat cards in one horizontal row */
+    .module-stats-grid,
+    .module-stats-grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .stat-card { padding: 8px 6px 6px; min-height: 76px; }
+    .stat-card-icon { width: 26px; height: 26px; }
+    .stat-card-icon svg { width: 13px; height: 13px; }
+    .stat-card-value { font-size: 15px; }
+    .stat-card-label { font-size: 9px; }
 }
 
 @media (max-width: 480px) {
@@ -583,6 +634,32 @@ body {
     .page-title {
         font-size: 22px;
     }
+
+    /* Still one row of 3 on small phones — compact sizing */
+    .module-stats-grid,
+    .module-stats-grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .stat-card { padding: 7px 5px 5px; min-height: 68px; }
+    .stat-card-icon { width: 22px; height: 22px; border-radius: 6px; }
+    .stat-card-icon svg { width: 11px; height: 11px; }
+    .stat-card-value { font-size: 13px; }
+    .stat-card-label { font-size: 8px; margin-top: 4px; }
+}
+
+@media (max-width: 360px) {
+    .module-stats-grid,
+    .module-stats-grid-3 {
+        gap: 4px;
+    }
+
+    .stat-card { padding: 6px 4px 4px; min-height: 62px; }
+    .stat-card-icon { width: 20px; height: 20px; border-radius: 5px; }
+    .stat-card-icon svg { width: 10px; height: 10px; }
+    .stat-card-value { font-size: 12px; }
+    .stat-card-label { font-size: 7.5px; }
 }
 
 @media (min-width: 769px) {

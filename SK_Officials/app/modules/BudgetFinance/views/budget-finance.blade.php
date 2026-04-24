@@ -32,22 +32,36 @@
             </div>
         </section>
 
-        <section class="budget-summary-section no-print">
-            <div class="summary-cards">
-                <div class="summary-card blue">
-                    <div class="summary-card-label">Total Budget</div>
-                    <div class="summary-card-value" id="summaryTotalBudget">₱0</div>
+        <!-- ── Budget Stat Cards ── -->
+        <div class="module-stats-grid module-stats-grid-3 no-print">
+            <div class="stat-card stat-card-blue">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="summaryTotalBudget">₱0</span>
+                    <div class="stat-card-icon stat-icon-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    </div>
                 </div>
-                <div class="summary-card red">
-                    <div class="summary-card-label">Total Expenses</div>
-                    <div class="summary-card-value" id="summaryTotalExpenses">₱0</div>
-                </div>
-                <div class="summary-card green">
-                    <div class="summary-card-label">Remaining Budget</div>
-                    <div class="summary-card-value" id="summaryRemainingBudget">₱0</div>
-                </div>
+                <span class="stat-card-label">Total Budget</span>
             </div>
-        </section>
+            <div class="stat-card stat-card-red">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="summaryTotalExpenses">₱0</span>
+                    <div class="stat-card-icon stat-icon-red">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Total Expenses</span>
+            </div>
+            <div class="stat-card stat-card-green">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="summaryRemainingBudget">₱0</span>
+                    <div class="stat-card-icon stat-icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Remaining Budget</span>
+            </div>
+        </div>
 
         <section class="page-content-section no-print">
             <div class="section-heading-row">

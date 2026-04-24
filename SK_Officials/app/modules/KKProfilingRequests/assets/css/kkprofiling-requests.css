@@ -1210,6 +1210,11 @@ body {
     transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
+.app-toast.app-toast-error {
+    background: #ef4444;
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+}
+
 .app-toast.app-toast-show {
     transform: translateX(-50%) translateY(0);
     opacity: 1;
@@ -1489,11 +1494,12 @@ body {
 .kk-schedule-modal-box {
     max-width: 700px;
     width: 90%;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18), 0 8px 16px rgba(15, 23, 42, 0.08);
     max-height: 90vh;
     overflow-y: auto;
+    border: 1px solid rgba(229, 231, 235, 0.6);
 }
 
 .kk-schedule-modal-body {
@@ -1503,10 +1509,6 @@ body {
 /* Schedule Instructions */
 .schedule-instructions {
     margin-bottom: 20px;
-    padding: 16px;
-    background: #f0f9ff;
-    border-radius: 8px;
-    border: 1px solid #bae6fd;
 }
 
 .instruction-text {

@@ -39,38 +39,7 @@ function initializeBudgetFinanceUI() {
     if (!tableBody) return;
 
     // Standalone sample data for Budget & Finance.
-    const budgets = [
-        {
-            title: 'Youth Development Program',
-            allocatedBudget: 120000,
-            description: 'Youth leadership and skills training',
-            status: 'Planned',
-            expenses: [
-                { name: 'Training Materials', amount: 30000, date: '2026-03-01', remarks: 'Batch 1' },
-                { name: 'Snacks', amount: 10000, date: '2026-03-02', remarks: '2-day session' },
-            ],
-        },
-        {
-            title: 'Sports Development Program',
-            allocatedBudget: 90000,
-            description: 'League and sports equipment',
-            status: 'Ongoing',
-            expenses: [
-                { name: 'Uniforms', amount: 25000, date: '2026-02-10', remarks: 'Basketball' },
-                { name: 'Referee Fees', amount: 8000, date: '2026-02-12', remarks: '' },
-            ],
-        },
-        {
-            title: 'Environmental Program',
-            allocatedBudget: 60000,
-            description: 'Tree planting and clean-up drive',
-            status: 'Completed',
-            expenses: [
-                { name: 'Seedlings', amount: 15000, date: '2026-01-20', remarks: '' },
-                { name: 'Trash Bags and Gloves', amount: 5000, date: '2026-01-20', remarks: '' },
-            ],
-        },
-    ];
+    const budgets = [];
 
     // Internal selections for modals
     let modalExpenseProgramTitle = '';
