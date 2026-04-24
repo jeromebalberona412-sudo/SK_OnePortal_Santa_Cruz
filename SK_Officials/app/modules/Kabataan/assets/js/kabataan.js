@@ -2,6 +2,19 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeKabataanUI();
 });
 
+/**
+ * kkfSingleCheck — makes checkboxes behave like radio buttons (only one checked at a time)
+ * and syncs the selected value to a hidden input by id.
+ */
+function kkfSingleCheck(el, hiddenId) {
+    const group = document.querySelectorAll('input[type="checkbox"][name="' + el.name + '"]');
+    group.forEach(function(chk) {
+        if (chk !== el) chk.checked = false;
+    });
+    const hidden = document.getElementById(hiddenId);
+    if (hidden) hidden.value = el.checked ? el.value : '';
+}
+
 function initializeKabataanUI() {
     const tbody = document.getElementById('kabataanTableBody');
     const searchInput = document.getElementById('kabataanSearch');
@@ -15,9 +28,6 @@ function initializeKabataanUI() {
     const modalTitle = document.getElementById('kabataanModalTitle');
     const saveBtn = document.getElementById('kabataanSaveBtn');
     const toggleBtn = document.getElementById('kabataanModalToggle');
-    const fileInput = document.getElementById('kabataanFileInput');
-    const pasteInput = document.getElementById('kabataanPasteInput');
-    const importPasteBtn = document.getElementById('kabataanImportPasteBtn');
 
     const modeSelector = document.getElementById('kabataanAddModeSelector');
     const panelBulk = document.getElementById('kabataanPanelBulk');
@@ -31,38 +41,50 @@ function initializeKabataanUI() {
     const manualBlockHint = document.getElementById('kabataanManualBlockHint');
 
     const fieldIds = [
-        'kabataanFirstName', 'kabataanMiddleName', 'kabataanLastName', 'kabataanSuffix',
-        'kabataanDob', 'kabataanAgeInput', 'kabataanSex', 'kabataanCivilStatus',
-        'kabataanRegion', 'kabataanProvince', 'kabataanCity', 'kabataanBarangay', 'kabataanAddress',
-        'kabataanEmail', 'kabataanContactInput',
-        'kabataanHighestEducation', 'kabataanCurrentlyStudying',
-        'kabataanWorkStatus', 'kabataanOccupation',
-        'kabataanRegisteredVoter', 'kabataanVotedLastElection', 'kabataanYouthClassification'
+        'kabataanRespondentNumber', 'kabataanDate',
+        'kabataanLastName', 'kabataanFirstName', 'kabataanMiddleName', 'kabataanSuffix',
+        'kabataanRegion', 'kabataanProvince', 'kabataanCity', 'kabataanBarangay', 'kabataanPurokZone',
+        'kabataanSex', 'kabataanAgeInput', 'kabataanDob', 'kabataanEmail', 'kabataanContactInput',
+        'kabataanCivilStatus', 'kabataanYouthClassification', 'kabataanYouthAgeGroup',
+        'kabataanWorkStatus', 'kabataanEducationalBackground',
+        'kabataanRegisteredSKVoter', 'kabataanRegisteredNationalVoter',
+        'kabataanVotingHistory', 'kabataanVotingFrequency', 'kabataanVotingReason',
+        'kabataanAttendedKKAssembly',
+        'kabataanFacebookAccount', 'kabataanWillingToJoinGroupChat',
+        'kabataanSignature',
     ];
 
     const viewFieldLabels = [
+        ['Respondent #', 'respondentNumber'],
+        ['Date', 'date'],
+        ['Last Name', 'lastName'],
         ['First Name', 'firstName'],
         ['Middle Name', 'middleName'],
-        ['Last Name', 'lastName'],
         ['Suffix', 'suffix'],
-        ['Date of Birth', 'dob'],
-        ['Age', 'age'],
-        ['Sex Assigned at Birth', 'sex'],
-        ['Civil Status', 'civilStatus'],
         ['Region', 'region'],
         ['Province', 'province'],
-        ['City/Municipality', 'city'],
+        ['City / Municipality', 'city'],
         ['Barangay', 'barangay'],
-        ['Address', 'address'],
-        ['Email', 'email'],
-        ['Contact Number', 'contactNumber'],
-        ['Highest Educational Attainment', 'highestEducation'],
-        ['Currently Studying', 'currentlyStudying'],
-        ['Work Status', 'workStatus'],
-        ['Occupation', 'occupation'],
-        ['Registered Voter', 'registeredVoter'],
-        ['Voted in Last Election', 'votedLastElection'],
+        ['Purok / Zone', 'purokZone'],
+        ['Sex Assigned at Birth', 'sex'],
+        ['Age', 'age'],
+        ['Birthday (dd/mm/yy)', 'birthday'],
+        ['E-mail Address', 'emailAddress'],
+        ['Contact #', 'contactNumber'],
+        ['Civil Status', 'civilStatus'],
         ['Youth Classification', 'youthClassification'],
+        ['Youth Age Group', 'youthAgeGroup'],
+        ['Work Status', 'workStatus'],
+        ['Educational Background', 'educationalBackground'],
+        ['Registered SK Voter', 'registeredSKVoter'],
+        ['Registered National Voter', 'registeredNationalVoter'],
+        ['Did you vote last SK?', 'votingHistory'],
+        ['If Yes, How many times?', 'votingFrequency'],
+        ['If No, Why?', 'votingReason'],
+        ['Attended KK Assembly?', 'attendedKKAssembly'],
+        ['FB Account', 'facebookAccount'],
+        ['Willing to join group chat?', 'willingToJoinGroupChat'],
+        ['Name and Signature of Participant', 'signature'],
     ];
 
     if (!tbody) return;
@@ -72,13 +94,26 @@ function initializeKabataanUI() {
     function getFormData() {
         const o = {};
         const map = {
-            kabataanFirstName: 'firstName', kabataanMiddleName: 'middleName', kabataanLastName: 'lastName', kabataanSuffix: 'suffix',
-            kabataanDob: 'dob', kabataanAgeInput: 'age', kabataanSex: 'sex', kabataanCivilStatus: 'civilStatus',
-            kabataanRegion: 'region', kabataanProvince: 'province', kabataanCity: 'city', kabataanBarangay: 'barangay', kabataanAddress: 'address',
-            kabataanEmail: 'email', kabataanContactInput: 'contactNumber',
-            kabataanHighestEducation: 'highestEducation', kabataanCurrentlyStudying: 'currentlyStudying',
-            kabataanWorkStatus: 'workStatus', kabataanOccupation: 'occupation',
-            kabataanRegisteredVoter: 'registeredVoter', kabataanVotedLastElection: 'votedLastElection', kabataanYouthClassification: 'youthClassification',
+            kabataanRespondentNumber: 'respondentNumber',
+            kabataanDate: 'date',
+            kabataanLastName: 'lastName', kabataanFirstName: 'firstName', kabataanMiddleName: 'middleName', kabataanSuffix: 'suffix',
+            kabataanRegion: 'region', kabataanProvince: 'province', kabataanCity: 'city', kabataanBarangay: 'barangay', kabataanPurokZone: 'purokZone',
+            kabataanSex: 'sex', kabataanAgeInput: 'age', kabataanDob: 'birthday',
+            kabataanEmail: 'emailAddress', kabataanContactInput: 'contactNumber',
+            kabataanCivilStatus: 'civilStatus',
+            kabataanYouthClassification: 'youthClassification',
+            kabataanYouthAgeGroup: 'youthAgeGroup',
+            kabataanWorkStatus: 'workStatus',
+            kabataanEducationalBackground: 'educationalBackground',
+            kabataanRegisteredSKVoter: 'registeredSKVoter',
+            kabataanRegisteredNationalVoter: 'registeredNationalVoter',
+            kabataanVotingHistory: 'votingHistory',
+            kabataanVotingFrequency: 'votingFrequency',
+            kabataanVotingReason: 'votingReason',
+            kabataanAttendedKKAssembly: 'attendedKKAssembly',
+            kabataanFacebookAccount: 'facebookAccount',
+            kabataanWillingToJoinGroupChat: 'willingToJoinGroupChat',
+            kabataanSignature: 'signature',
         };
         fieldIds.forEach((id) => {
             const el = getField(id);
@@ -86,43 +121,71 @@ function initializeKabataanUI() {
             const key = map[id];
             if (key) o[key] = el.type === 'number' ? (el.value === '' ? '' : Number(el.value)) : el.value;
         });
-
-        // Map email to emailAddress for compatibility
-        if (o.email) o.emailAddress = o.email;
-
+        // Legacy compatibility aliases
+        o.email = o.emailAddress;
+        o.dob = o.birthday;
         return o;
     }
 
     function setFormData(k) {
         if (!k) return;
         const map = {
-            firstName: 'kabataanFirstName', middleName: 'kabataanMiddleName', lastName: 'kabataanLastName', suffix: 'kabataanSuffix',
-            dob: 'kabataanDob', age: 'kabataanAgeInput', sex: 'kabataanSex', civilStatus: 'kabataanCivilStatus',
-            region: 'kabataanRegion', province: 'kabataanProvince', city: 'kabataanCity', barangay: 'kabataanBarangay', address: 'kabataanAddress',
-            email: 'kabataanEmail', contactNumber: 'kabataanContactInput',
-            highestEducation: 'kabataanHighestEducation', currentlyStudying: 'kabataanCurrentlyStudying',
-            workStatus: 'kabataanWorkStatus', occupation: 'kabataanOccupation',
-            registeredVoter: 'kabataanRegisteredVoter', votedLastElection: 'kabataanVotedLastElection', youthClassification: 'kabataanYouthClassification',
+            respondentNumber: 'kabataanRespondentNumber',
+            date: 'kabataanDate',
+            lastName: 'kabataanLastName', firstName: 'kabataanFirstName', middleName: 'kabataanMiddleName', suffix: 'kabataanSuffix',
+            region: 'kabataanRegion', province: 'kabataanProvince', city: 'kabataanCity', barangay: 'kabataanBarangay', purokZone: 'kabataanPurokZone',
+            sex: 'kabataanSex', age: 'kabataanAgeInput',
+            emailAddress: 'kabataanEmail', contactNumber: 'kabataanContactInput',
+            civilStatus: 'kabataanCivilStatus',
+            youthClassification: 'kabataanYouthClassification',
+            youthAgeGroup: 'kabataanYouthAgeGroup',
+            workStatus: 'kabataanWorkStatus',
+            educationalBackground: 'kabataanEducationalBackground',
+            registeredSKVoter: 'kabataanRegisteredSKVoter',
+            registeredNationalVoter: 'kabataanRegisteredNationalVoter',
+            votingHistory: 'kabataanVotingHistory',
+            votingFrequency: 'kabataanVotingFrequency',
+            votingReason: 'kabataanVotingReason',
+            attendedKKAssembly: 'kabataanAttendedKKAssembly',
+            facebookAccount: 'kabataanFacebookAccount',
+            willingToJoinGroupChat: 'kabataanWillingToJoinGroupChat',
+            signature: 'kabataanSignature',
         };
+        // birthday field — stored as 'birthday', form id is kabataanDob
+        const birthdayEl = getField('kabataanDob');
+        if (birthdayEl) birthdayEl.value = k.birthday || k.dob || '';
+
         Object.keys(map).forEach((key) => {
             const id = map[key];
             const el = getField(id);
             if (!el) return;
-            // Use emailAddress if email is not available (new data structure)
-            const val = k[key] !== undefined ? k[key] : (key === 'email' ? k.emailAddress : undefined);
+            // email fallback
+            const val = k[key] !== undefined ? k[key] : (key === 'emailAddress' ? k.email : undefined);
             el.value = val === null || val === undefined ? '' : String(val);
         });
     }
 
     function clearForm() {
         setFormData({
-            firstName: '', middleName: '', lastName: '', suffix: '',
-            dob: '', age: '', sex: 'Male', civilStatus: 'Single',
-            region: '', province: '', city: '', barangay: '', address: '',
-            email: '', contactNumber: '',
-            highestEducation: '', currentlyStudying: 'Yes',
-            workStatus: '', occupation: '',
-            registeredVoter: 'Yes', votedLastElection: 'No', youthClassification: 'ISY',
+            respondentNumber: '', date: '',
+            lastName: '', firstName: '', middleName: '', suffix: '',
+            region: '', province: '', city: '', barangay: '', purokZone: '',
+            sex: 'Male', age: '', birthday: '',
+            emailAddress: '', contactNumber: '',
+            civilStatus: 'Single',
+            youthClassification: 'In School Youth',
+            youthAgeGroup: 'Child Youth (15-17 yrs old)',
+            workStatus: '',
+            educationalBackground: '',
+            registeredSKVoter: 'Yes',
+            registeredNationalVoter: 'Yes',
+            votingHistory: 'Yes',
+            votingFrequency: '',
+            votingReason: '',
+            attendedKKAssembly: 'Yes',
+            facebookAccount: '',
+            willingToJoinGroupChat: 'Yes',
+            signature: '',
         });
     }
 
@@ -151,8 +214,8 @@ function initializeKabataanUI() {
         sex: 'Male', age: 0, birthday: '',
         emailAddress: '', contactNumber: '',
         civilStatus: 'Single',
-        youthClassification: '',
-        youthAgeGroup: '',
+        youthClassification: 'In School Youth',
+        youthAgeGroup: 'Child Youth (15-17 yrs old)',
         workStatus: '',
         educationalBackground: '',
         registeredSKVoter: 'Yes',
@@ -164,9 +227,8 @@ function initializeKabataanUI() {
         facebookAccount: '',
         willingToJoinGroupChat: 'Yes',
         signature: '',
-        // Legacy fields for compatibility
-        dob: '', address: '', highestEducation: '', currentlyStudying: 'Yes',
-        occupation: '', registeredVoter: 'Yes', votedLastElection: 'No',
+        // Legacy aliases for compatibility
+        email: '', dob: '', address: '', highestEducation: '',
     });
 
     const kabataan = [];
@@ -337,64 +399,48 @@ function initializeKabataanUI() {
     }
 
     function populateViewRows(k) {
-        if (!viewColumnLeft || !viewColumnRight) return;
+        // Populate text/span fields
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
+        setVal('vRespondentNumber', k.respondentNumber);
+        setVal('vDate', k.date);
+        setVal('vLastName', k.lastName);
+        setVal('vFirstName', k.firstName);
+        setVal('vMiddleName', k.middleName);
+        setVal('vSuffix', k.suffix);
+        setVal('vRegion', k.region);
+        setVal('vProvince', k.province);
+        setVal('vCity', k.city);
+        setVal('vBarangay', k.barangay);
+        setVal('vPurokZone', k.purokZone);
+        setVal('vAge', k.age);
+        setVal('vDob', k.birthday || k.dob);
+        setVal('vEmail', k.emailAddress || k.email);
+        setVal('vContact', k.contactNumber);
+        setVal('vFacebook', k.facebookAccount);
+        setVal('vSignature', k.signature);
 
-        // Add section titles and fields to left column
-        viewColumnLeft.innerHTML = `
-            <div class="kabataan-view-section-title">General Information</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Respondent Number:</span><span class="kabataan-view-value">${k.respondentNumber || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Date:</span><span class="kabataan-view-value">${k.date || '-'}</span></div>
-            
-            <div class="kabataan-view-section-title">Profile - Name of Respondent</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Last Name:</span><span class="kabataan-view-value">${k.lastName || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">First Name:</span><span class="kabataan-view-value">${k.firstName || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Middle Name:</span><span class="kabataan-view-value">${k.middleName || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Suffix:</span><span class="kabataan-view-value">${k.suffix || '-'}</span></div>
-            
-            <div class="kabataan-view-section-title">Location</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Region:</span><span class="kabataan-view-value">${k.region || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Province:</span><span class="kabataan-view-value">${k.province || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">City / Municipality:</span><span class="kabataan-view-value">${k.city || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Barangay:</span><span class="kabataan-view-value">${k.barangay || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Purok / Zone:</span><span class="kabataan-view-value">${k.purokZone || '-'}</span></div>
-            
-            <div class="kabataan-view-section-title">Personal Information</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Sex Assigned at Birth:</span><span class="kabataan-view-value">${k.sex || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Age:</span><span class="kabataan-view-value">${k.age || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Birthday:</span><span class="kabataan-view-value">${k.birthday || k.dob || '-'}</span></div>
-        `;
-
-        // Add section titles and fields to right column
-        viewColumnRight.innerHTML = `
-            <div class="kabataan-view-section-title">Contact Information</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Email Address:</span><span class="kabataan-view-value">${k.emailAddress || k.email || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Contact Number:</span><span class="kabataan-view-value">${k.contactNumber || '-'}</span></div>
-            
-            <div class="kabataan-view-section-title">Demographic Characteristics</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Civil Status:</span><span class="kabataan-view-value">${k.civilStatus || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Youth Classification:</span><span class="kabataan-view-value">${k.youthClassification || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Youth Age Group:</span><span class="kabataan-view-value">${k.youthAgeGroup || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Work Status:</span><span class="kabataan-view-value">${k.workStatus || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Educational Background:</span><span class="kabataan-view-value">${k.educationalBackground || k.highestEducation || '-'}</span></div>
-            
-            <div class="kabataan-view-section-title">Voter & Participation Info</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Registered SK Voter:</span><span class="kabataan-view-value">${k.registeredSKVoter || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Registered National Voter:</span><span class="kabataan-view-value">${k.registeredNationalVoter || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Voting History (Last SK Election):</span><span class="kabataan-view-value">${k.votingHistory || '-'}</span></div>
-            ${k.votingHistory === 'Yes' ? `
-                <div class="kabataan-view-row"><span class="kabataan-view-label">Voting Frequency:</span><span class="kabataan-view-value">${k.votingFrequency || '-'}</span></div>
-            ` : k.votingReason ? `
-                <div class="kabataan-view-row"><span class="kabataan-view-label">Reason:</span><span class="kabataan-view-value">${k.votingReason || '-'}</span></div>
-            ` : ''}
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Attended KK Assembly:</span><span class="kabataan-view-value">${k.attendedKKAssembly || '-'}</span></div>
-            
-            <div class="kabataan-view-section-title">Social / Community</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Facebook Account:</span><span class="kabataan-view-value">${k.facebookAccount || '-'}</span></div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Willing to join group chat:</span><span class="kabataan-view-value">${k.willingToJoinGroupChat || '-'}</span></div>
-            
-            <div class="kabataan-view-section-title">Signature</div>
-            <div class="kabataan-view-row"><span class="kabataan-view-label">Name and Signature:</span><span class="kabataan-view-value">${k.signature || '-'}</span></div>
-        `;
+        // Populate view checkboxes — tick the one matching the stored value
+        const viewChks = document.querySelectorAll('.kkf-view-chk');
+        viewChks.forEach(chk => {
+            const field = chk.dataset.viewField;
+            const fieldMap = {
+                vSex: k.sex,
+                vCivilStatus: k.civilStatus,
+                vYouthAgeGroup: k.youthAgeGroup,
+                vEducation: k.educationalBackground || k.highestEducation,
+                vYouthClassification: k.youthClassification,
+                vWorkStatus: k.workStatus,
+                vSKVoter: k.registeredSKVoter,
+                vVotingHistory: k.votingHistory,
+                vVotingFrequency: k.votingFrequency,
+                vNatVoter: k.registeredNationalVoter,
+                vKKAssembly: k.attendedKKAssembly,
+                vVotingReason: k.votingReason,
+                vGroupChat: k.willingToJoinGroupChat,
+            };
+            const stored = fieldMap[field] || '';
+            chk.checked = stored.trim().toLowerCase() === chk.value.trim().toLowerCase();
+        });
     }
 
     function setModalReadonly(readonly) {
@@ -580,14 +626,18 @@ function initializeKabataanUI() {
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
             const d = getFormData();
+            const lastName  = (d.lastName  || '').trim();
             const firstName = (d.firstName || '').trim();
-            if (!firstName) {
-                alert('First Name is required.');
+            if (!lastName && !firstName) {
+                alert('First Name or Last Name is required.');
                 return;
             }
 
             const record = { ...defaultRecord(), ...d };
             record.age = record.age === '' ? 0 : Number(record.age) || 0;
+            // Keep legacy aliases in sync
+            record.email = record.emailAddress;
+            record.dob   = record.birthday;
 
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
@@ -595,11 +645,9 @@ function initializeKabataanUI() {
             setTimeout(() => {
                 if (editingIndex !== null && kabataan[editingIndex]) {
                     kabataan[editingIndex] = record;
-                    // Re-sort after editing to maintain alphabetical order
                     sortKabataanAlphabetically();
                 } else {
                     kabataan.push(record);
-                    // Re-sort after adding to maintain alphabetical order
                     sortKabataanAlphabetically();
                 }
                 closeModal();
@@ -629,41 +677,219 @@ function initializeKabataanUI() {
 
     function rowToKabataan(headers, row) {
         const get = (name) => {
-            const i = headers.findIndex((h) => String(h).toLowerCase().replace(/\s/g, '').includes(name.toLowerCase().replace(/\s/g, '')));
+            const i = headers.findIndex((h) => String(h).toLowerCase().replace(/[\s/]/g, '').includes(name.toLowerCase().replace(/[\s/]/g, '')));
             return i >= 0 && row[i] !== undefined ? String(row[i]).trim() : '';
         };
-        const firstName = get('firstname') || get('fname') || row[0] || '';
-        const middleName = get('middlename') || get('mname') || row[1] || '';
-        const lastName = get('lastname') || get('lname') || row[2] || '';
+        const respondentNumber = get('respondent') || get('respondentno') || get('respondent#') || '';
+        const date = get('date') || '';
+        const lastName  = get('lastname')  || get('lname')  || row[0] || '';
+        const firstName = get('firstname') || get('fname')  || row[1] || '';
+        const middleName = get('middlename') || get('mname') || row[2] || '';
         const suffix = get('suffix') || row[3] || '';
-        const age = parseInt(get('age') || row[4], 10) || 0;
-        const sex = (get('sex') || row[5] || 'Male').toLowerCase().startsWith('f') ? 'Female' : 'Male';
-        const barangay = get('barangay') || row[6] || '';
-        const highestEducation = get('highesteducation') || get('education') || row[7] || '';
-        const contactNumber = get('contact') || row[8] || '';
-        return { ...defaultRecord(), firstName, middleName, lastName, suffix, age, sex, barangay, highestEducation, contactNumber };
+        const region = get('region') || '';
+        const province = get('province') || '';
+        const city = get('city') || get('municipality') || '';
+        const barangay = get('barangay') || row[4] || '';
+        const purokZone = get('purok') || get('zone') || get('purokzone') || '';
+        const sex = (get('sex') || get('gender') || row[5] || 'Male').toLowerCase().startsWith('f') ? 'Female' : 'Male';
+        const age = parseInt(get('age') || row[6], 10) || 0;
+        const birthday = get('birthday') || get('birthdate') || get('dob') || '';
+        const emailAddress = get('email') || get('emailaddress') || '';
+        const contactNumber = get('contact') || get('contactnumber') || get('contact#') || '';
+        const civilStatus = get('civilstatus') || get('civil') || 'Single';
+        const youthClassification = get('youthclassification') || get('classification') || 'In School Youth';
+        const youthAgeGroup = get('youthagegroup') || get('agegroup') || '';
+        const workStatus = get('workstatus') || get('work') || '';
+        const educationalBackground = get('educationalbackground') || get('education') || get('educational') || '';
+        const registeredSKVoter = get('registeredskvoter') || get('skvoter') || 'Yes';
+        const registeredNationalVoter = get('registerednationalvoter') || get('nationalvoter') || 'Yes';
+        const votingHistory = get('votinghistory') || get('votedlastsk') || 'Yes';
+        const votingFrequency = get('votingfrequency') || get('howmanytimes') || '';
+        const votingReason = get('votingreason') || get('ifnowhy') || '';
+        const attendedKKAssembly = get('attendedkkassembly') || get('kkassembly') || 'Yes';
+        const facebookAccount = get('facebook') || get('fbaccount') || '';
+        const willingToJoinGroupChat = get('willingtojoin') || get('groupchat') || 'Yes';
+        const signature = get('signature') || '';
+        return {
+            ...defaultRecord(),
+            respondentNumber, date,
+            lastName, firstName, middleName, suffix,
+            region, province, city, barangay, purokZone,
+            sex, age, birthday,
+            emailAddress, email: emailAddress, contactNumber,
+            civilStatus, youthClassification, youthAgeGroup,
+            workStatus, educationalBackground,
+            registeredSKVoter, registeredNationalVoter,
+            votingHistory, votingFrequency, votingReason,
+            attendedKKAssembly,
+            facebookAccount, willingToJoinGroupChat,
+            signature,
+        };
+    }
+
+    // ── Import Preview State ──────────────────────────────────────────────────
+    let importPreviewRows = [];   // { record, issues[], valid }
+    let importPreviewPage = 1;
+    const importPreviewPerPage = 10;
+
+    function validateImportRecord(rec) {
+        const issues = [];
+        if (!rec.lastName && !rec.firstName) issues.push('Missing name');
+        const age = Number(rec.age);
+        if (!age || age < 15 || age > 30) issues.push('Age must be 15–30');
+        if (!rec.sex || !['Male','Female'].includes(rec.sex)) issues.push('Invalid sex');
+        return issues;
+    }
+
+    function buildPreviewRows(rows) {
+        if (!rows || rows.length < 2) return [];
+        const headers = rows[0].map((h) => String(h).trim());
+        const result = [];
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i].every(c => !String(c).trim())) continue; // skip blank rows
+            const record = rowToKabataan(headers, rows[i]);
+            const issues = validateImportRecord(record);
+            result.push({ record, issues, valid: issues.length === 0 });
+        }
+        return result;
+    }
+
+    function renderImportPreview() {
+        const previewSection = document.getElementById('kabImportPreviewSection');
+        const uploadSection  = document.getElementById('kabImportUploadSection');
+        const tbody          = document.getElementById('kabImportPreviewBody');
+        const pageInfo       = document.getElementById('kabImportPageInfo');
+        const prevBtn        = document.getElementById('kabImportPrevBtn');
+        const nextBtn        = document.getElementById('kabImportNextBtn');
+        const pageNumbers    = document.getElementById('kabImportPageNumbers');
+        const badgeValid     = document.getElementById('kabImportBadgeValid');
+        const badgeInvalid   = document.getElementById('kabImportBadgeInvalid');
+        const badgeTotal     = document.getElementById('kabImportBadgeTotal');
+        const errorBtn       = document.getElementById('kabImportErrorBtn');
+
+        if (!previewSection || !tbody) return;
+
+        const total   = importPreviewRows.length;
+        const valid   = importPreviewRows.filter(r => r.valid).length;
+        const invalid = total - valid;
+
+        if (badgeValid)   badgeValid.textContent   = `✅ ${valid} Valid`;
+        if (badgeInvalid) badgeInvalid.textContent = `⚠️ ${invalid} Invalid`;
+        if (badgeTotal)   badgeTotal.textContent   = `📋 ${total} Total`;
+        if (errorBtn)     errorBtn.style.display   = invalid > 0 ? 'inline-flex' : 'none';
+
+        const totalPages = Math.max(1, Math.ceil(total / importPreviewPerPage));
+        importPreviewPage = Math.min(importPreviewPage, totalPages);
+        const start = (importPreviewPage - 1) * importPreviewPerPage;
+        const end   = Math.min(start + importPreviewPerPage, total);
+        const slice = importPreviewRows.slice(start, end);
+
+        if (pageInfo) pageInfo.textContent = total === 0 ? 'No rows' : `Showing ${start + 1}–${end} of ${total} rows`;
+        if (prevBtn)  prevBtn.disabled = importPreviewPage === 1;
+        if (nextBtn)  nextBtn.disabled = importPreviewPage === totalPages;
+
+        if (pageNumbers) {
+            pageNumbers.innerHTML = '';
+            for (let p = 1; p <= totalPages; p++) {
+                const btn = document.createElement('button');
+                btn.className = 'kab-import-page-num' + (p === importPreviewPage ? ' active' : '');
+                btn.textContent = p;
+                btn.onclick = () => { importPreviewPage = p; renderImportPreview(); };
+                pageNumbers.appendChild(btn);
+            }
+        }
+
+        tbody.innerHTML = '';
+        if (slice.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="31" style="text-align:center;color:#6b7280;padding:20px;">No data to preview.</td>`;
+            tbody.appendChild(tr);
+        } else {
+            slice.forEach((item, idx) => {
+                const r = item.record;
+                const rowNum = start + idx + 1;
+                const statusHtml = item.valid
+                    ? `<span class="kab-import-status kab-status-valid">✅ Valid</span>`
+                    : `<span class="kab-import-status kab-status-invalid">⚠️ Invalid</span>`;
+                const issuesHtml = item.issues.length
+                    ? `<span class="kab-import-issues">${item.issues.join('; ')}</span>`
+                    : `<span style="color:#6b7280;font-size:11px;">—</span>`;
+                const tr = document.createElement('tr');
+                tr.className = item.valid ? '' : 'kab-import-row-invalid';
+                tr.innerHTML = `
+                    <td>${rowNum}</td>
+                    <td>${statusHtml}</td>
+                    <td>${r.lastName || '—'}</td>
+                    <td>${r.firstName || '—'}</td>
+                    <td>${r.middleName || '—'}</td>
+                    <td>${r.suffix || '—'}</td>
+                    <td>${r.region || '—'}</td>
+                    <td>${r.province || '—'}</td>
+                    <td>${r.city || '—'}</td>
+                    <td>${r.barangay || '—'}</td>
+                    <td>${r.purokZone || '—'}</td>
+                    <td>${r.sex || '—'}</td>
+                    <td>${r.age || '—'}</td>
+                    <td>${r.dateOfBirth || '—'}</td>
+                    <td>${r.email || '—'}</td>
+                    <td>${r.contactNumber || '—'}</td>
+                    <td>${r.civilStatus || '—'}</td>
+                    <td>${r.youthAgeGroup || '—'}</td>
+                    <td>${r.youthClassification || '—'}</td>
+                    <td>${r.educationalBackground || '—'}</td>
+                    <td>${r.workStatus || '—'}</td>
+                    <td>${r.registeredSKVoter || '—'}</td>
+                    <td>${r.votingHistory || '—'}</td>
+                    <td>${r.votingFrequency || '—'}</td>
+                    <td>${r.votingReason || '—'}</td>
+                    <td>${r.registeredNationalVoter || '—'}</td>
+                    <td>${r.attendedKKAssembly || '—'}</td>
+                    <td>${r.facebookAccount || '—'}</td>
+                    <td>${r.willingToJoinGroupChat || '—'}</td>
+                    <td>${r.signature || '—'}</td>
+                    <td>${issuesHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        if (uploadSection)  uploadSection.style.display  = 'none';
+        if (previewSection) previewSection.style.display = 'block';
+    }
+
+    function showImportUpload() {
+        const previewSection = document.getElementById('kabImportPreviewSection');
+        const uploadSection  = document.getElementById('kabImportUploadSection');
+        if (previewSection) previewSection.style.display = 'none';
+        if (uploadSection)  uploadSection.style.display  = 'block';
+        importPreviewRows = [];
+        importPreviewPage = 1;
+        const fileNameEl = document.getElementById('kabImportFileName');
+        if (fileNameEl) fileNameEl.textContent = 'No file selected';
+        const fileInput2 = document.getElementById('kabataanFileInput');
+        if (fileInput2) fileInput2.value = '';
+        const pasteInput2 = document.getElementById('kabataanPasteInput');
+        if (pasteInput2) pasteInput2.value = '';
     }
 
     function importRows(rows) {
-        if (!rows || rows.length < 2) return;
-        const headers = rows[0].map((h) => String(h).trim());
-        for (let i = 1; i < rows.length; i++) {
-            const obj = rowToKabataan(headers, rows[i]);
-            if (obj.firstName) kabataan.push(obj);
-        }
-        // Re-sort after importing to maintain alphabetical order
-        sortKabataanAlphabetically();
-        render();
+        importPreviewRows = buildPreviewRows(rows);
+        importPreviewPage = 1;
+        renderImportPreview();
     }
 
+    // File input handler
+    const fileInput = document.getElementById('kabataanFileInput');
     if (fileInput) {
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            const fileNameEl = document.getElementById('kabImportFileName');
+            if (fileNameEl) fileNameEl.textContent = file.name;
             const name = (file.name || '').toLowerCase();
             if (name.endsWith('.csv')) {
                 const reader = new FileReader();
-                reader.onload = (ev) => { const rows = parseCsvTsv(ev.target.result); importRows(rows); e.target.value = ''; };
+                reader.onload = (ev) => { importRows(parseCsvTsv(ev.target.result)); };
                 reader.readAsText(file, 'UTF-8');
             } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
                 const reader = new FileReader();
@@ -673,21 +899,139 @@ function initializeKabataanUI() {
                         const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
                         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
                         importRows(rows);
-                    } catch (err) { alert('Could not read Excel. Try CSV.'); }
-                    e.target.value = '';
+                    } catch (err) { alert('Could not read Excel file. Try CSV instead.'); }
                 };
                 reader.readAsArrayBuffer(file);
-            } else { alert('Use .csv or .xlsx'); e.target.value = ''; }
+            } else {
+                alert('Unsupported format. Please use .csv, .xlsx, or .xls');
+                e.target.value = '';
+            }
         });
     }
 
+    // Paste handler
+    const importPasteBtn = document.getElementById('kabataanImportPasteBtn');
+    const pasteInput = document.getElementById('kabataanPasteInput');
     if (importPasteBtn && pasteInput) {
         importPasteBtn.addEventListener('click', () => {
             const text = pasteInput.value.trim();
             if (!text) { alert('Paste data first.'); return; }
-            const rows = parseCsvTsv(text);
-            importRows(rows);
-            pasteInput.value = '';
+            importRows(parseCsvTsv(text));
+        });
+    }
+
+    // Drag & drop
+    const dropZone = document.getElementById('kabImportDropZone');
+    if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('kab-import-drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('kab-import-drag-over'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('kab-import-drag-over');
+            const file = e.dataTransfer.files[0];
+            if (!file) return;
+            const fileNameEl = document.getElementById('kabImportFileName');
+            if (fileNameEl) fileNameEl.textContent = file.name;
+            const name = (file.name || '').toLowerCase();
+            if (name.endsWith('.csv')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => importRows(parseCsvTsv(ev.target.result));
+                reader.readAsText(file, 'UTF-8');
+            } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        if (typeof XLSX === 'undefined') { alert('Excel support not loaded. Use CSV.'); return; }
+                        const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+                        const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
+                        importRows(rows);
+                    } catch (err) { alert('Could not read Excel file.'); }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert('Unsupported format. Use .csv, .xlsx, or .xls');
+            }
+        });
+    }
+
+    // Cancel button
+    const importCancelBtn = document.getElementById('kabImportCancelBtn');
+    if (importCancelBtn) {
+        importCancelBtn.addEventListener('click', showImportUpload);
+    }
+
+    // Pagination
+    const importPrevBtn = document.getElementById('kabImportPrevBtn');
+    const importNextBtn = document.getElementById('kabImportNextBtn');
+    if (importPrevBtn) importPrevBtn.addEventListener('click', () => { importPreviewPage--; renderImportPreview(); });
+    if (importNextBtn) importNextBtn.addEventListener('click', () => { importPreviewPage++; renderImportPreview(); });
+
+    // Download error report
+    const importErrorBtn = document.getElementById('kabImportErrorBtn');
+    if (importErrorBtn) {
+        importErrorBtn.addEventListener('click', () => {
+            const invalid = importPreviewRows.filter(r => !r.valid);
+            if (!invalid.length) return;
+            const headers = ['Row','Last Name','First Name','Middle Name','Suffix','Region','Province','City/Municipality','Barangay','Purok/Zone','Sex','Age','Birthday','Email','Contact #','Civil Status','Youth Age Group','Youth Classification','Educational Background','Work Status','SK Voter','Voted Last SK','Voting Frequency','Voting Reason','National Voter','KK Assembly','FB Account','Group Chat','Signature','Issues'];
+            const lines = [headers.join(',')];
+            invalid.forEach((item, idx) => {
+                const r = item.record;
+                const row = [
+                    idx + 1,
+                    `"${r.lastName || ''}"`,
+                    `"${r.firstName || ''}"`,
+                    `"${r.middleName || ''}"`,
+                    `"${r.suffix || ''}"`,
+                    `"${r.region || ''}"`,
+                    `"${r.province || ''}"`,
+                    `"${r.city || ''}"`,
+                    `"${r.barangay || ''}"`,
+                    `"${r.purokZone || ''}"`,
+                    `"${r.sex || ''}"`,
+                    r.age || '',
+                    `"${r.dateOfBirth || ''}"`,
+                    `"${r.email || ''}"`,
+                    `"${r.contactNumber || ''}"`,
+                    `"${r.civilStatus || ''}"`,
+                    `"${r.youthAgeGroup || ''}"`,
+                    `"${r.youthClassification || ''}"`,
+                    `"${r.educationalBackground || ''}"`,
+                    `"${r.workStatus || ''}"`,
+                    `"${r.registeredSKVoter || ''}"`,
+                    `"${r.votingHistory || ''}"`,
+                    `"${r.votingFrequency || ''}"`,
+                    `"${r.votingReason || ''}"`,
+                    `"${r.registeredNationalVoter || ''}"`,
+                    `"${r.attendedKKAssembly || ''}"`,
+                    `"${r.facebookAccount || ''}"`,
+                    `"${r.willingToJoinGroupChat || ''}"`,
+                    `"${r.signature || ''}"`,
+                    `"${item.issues.join('; ')}"`,
+                ];
+                lines.push(row.join(','));
+            });
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'kabataan_import_errors.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    // Confirm import
+    const importConfirmBtn = document.getElementById('kabImportConfirmBtn');
+    if (importConfirmBtn) {
+        importConfirmBtn.addEventListener('click', () => {
+            const validRows = importPreviewRows.filter(r => r.valid);
+            if (!validRows.length) { alert('No valid rows to import.'); return; }
+            validRows.forEach(item => kabataan.push(item.record));
+            sortKabataanAlphabetically();
+            closeModal();
+            render();
+            showImportUpload();
+            alert(`✅ Successfully imported ${validRows.length} record(s).`);
         });
     }
 

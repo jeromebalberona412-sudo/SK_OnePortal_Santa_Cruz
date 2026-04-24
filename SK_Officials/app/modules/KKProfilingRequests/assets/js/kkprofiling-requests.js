@@ -269,77 +269,106 @@ function initializeKKProfilingRequestsUI() {
             if (el) el.textContent = val ?? '';
         };
 
-        // General Information
+        // Helper: mark a checkbox item as checked (☑) or unchecked (☐)
+        const setCheck = (id, checked) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const text = el.textContent.replace(/^[☐☑]\s*/, '');
+            el.textContent = (checked ? '☑ ' : '☐ ') + text;
+            el.style.fontWeight = checked ? '700' : '400';
+            el.style.color = checked ? '#1a1a1a' : '#6b7280';
+        };
+
+        // General
         setVal('kkViewRespondentNumber', respondentNumber);
         setVal('kkViewDate', date);
 
-        // Profile - Name of Respondent
-        setVal('kkViewLastName', lastName);
-        setVal('kkViewFirstName', firstName);
-        setVal('kkViewMiddleName', middleName);
-        setVal('kkViewSuffix', suffix || 'None');
+        // Profile
+        setVal('kkViewLastName', lastName || '—');
+        setVal('kkViewFirstName', firstName || '—');
+        setVal('kkViewMiddleName', middleName || '—');
+        setVal('kkViewSuffix', suffix || '—');
 
         // Location
-        setVal('kkViewRegion', region);
-        setVal('kkViewProvince', province);
-        setVal('kkViewCity', city);
-        setVal('kkViewBarangay', barangay);
-        setVal('kkViewPurokZone', purokZone || 'N/A');
+        setVal('kkViewRegion', region || '—');
+        setVal('kkViewProvince', province || '—');
+        setVal('kkViewCity', city || '—');
+        setVal('kkViewBarangay', barangay || '—');
+        setVal('kkViewPurokZone', purokZone || '—');
 
-        // Personal Information
-        setVal('kkViewSexAssignedAtBirth', sex);
-        setVal('kkViewAge', age);
-        setVal('kkViewBirthday', birthday);
+        // Personal
+        setVal('kkViewSexAssignedAtBirth', sex || '—');
+        setVal('kkViewAge', age || '—');
+        setVal('kkViewBirthday', birthday || '—');
+        setVal('kkViewEmailAddress', emailAddress || '—');
+        setVal('kkViewContactNumber', contactNumber || '—');
 
-        // Contact Information
-        setVal('kkViewEmailAddress', emailAddress);
-        setVal('kkViewContactNumber', contactNumber);
+        // Civil Status checkboxes
+        const csMap = {
+            kkViewCS_Single: 'Single', kkViewCS_Married: 'Married', kkViewCS_Widowed: 'Widowed',
+            kkViewCS_Divorced: 'Divorced', kkViewCS_Separated: 'Separated', kkViewCS_Annulled: 'Annulled',
+            kkViewCS_Unknown: 'Unknown', kkViewCS_Livein: 'Live-in',
+        };
+        Object.entries(csMap).forEach(([id, val]) => setCheck(id, civilStatus === val));
 
-        // Demographic Characteristics
-        setVal('kkViewCivilStatus', civilStatus);
-        setVal('kkViewYouthClassification', youthClassification);
-        setVal('kkViewYouthAgeGroup', youthAgeGroup);
-        setVal('kkViewWorkStatus', workStatus);
-        setVal('kkViewEducationalBackground', educationalBackground);
+        // Youth Age Group
+        const yagMap = {
+            kkViewYAG_Child: 'Child Youth (15-17 yrs old)',
+            kkViewYAG_Core: 'Core Youth (18-24 yrs old)',
+            kkViewYAG_Young: 'Young Adult (15-30 yrs old)',
+        };
+        Object.entries(yagMap).forEach(([id, val]) => setCheck(id, youthAgeGroup === val));
 
-        // Voter & Participation Info
-        setVal('kkViewRegisteredSKVoter', registeredSKVoter);
-        setVal('kkViewRegisteredNationalVoter', registeredNationalVoter);
-        setVal('kkViewVotingHistory', votingHistory);
+        // Educational Background
+        const ebMap = {
+            kkViewEB_ElemLevel: 'Elementary Level', kkViewEB_ElemGrad: 'Elementary Grad',
+            kkViewEB_HSLevel: 'High School Level', kkViewEB_HSGrad: 'High School Grad',
+            kkViewEB_VocGrad: 'Vocational Grad', kkViewEB_ColLevel: 'College Level',
+            kkViewEB_ColGrad: 'College Grad', kkViewEB_MasLevel: 'Masters Level',
+            kkViewEB_MasGrad: 'Masters Grad', kkViewEB_DocLevel: 'Doctorate Level',
+            kkViewEB_DocGrad: 'Doctorate Graduate',
+        };
+        Object.entries(ebMap).forEach(([id, val]) => setCheck(id, educationalBackground === val));
 
-        // Show/hide voting frequency or reason based on voting history
-        const frequencyLabel = document.getElementById('kkViewVotingFrequencyLabel');
-        const frequencyValue = document.getElementById('kkViewVotingFrequency');
-        const reasonLabel = document.getElementById('kkViewVotingReasonLabel');
-        const reasonValue = document.getElementById('kkViewVotingReason');
+        // Youth Classification
+        const ycMap = {
+            kkViewYC_ISY: 'In School Youth', kkViewYC_OSY: 'Out of School Youth',
+            kkViewYC_Working: 'Working Youth', kkViewYC_Specific: 'Youth w/ Specific Needs',
+            kkViewYC_PWD: 'Person w/ Disability', kkViewYC_CICL: 'Children in Conflict w/ Law',
+            kkViewYC_IP: 'Indigenous People',
+        };
+        Object.entries(ycMap).forEach(([id, val]) => setCheck(id, youthClassification === val));
 
-        if (votingHistory === 'Yes') {
-            if (frequencyLabel) frequencyLabel.style.display = 'flex';
-            if (frequencyValue) {
-                frequencyValue.style.display = 'block';
-                frequencyValue.textContent = votingFrequency || 'N/A';
-            }
-            if (reasonLabel) reasonLabel.style.display = 'none';
-            if (reasonValue) reasonValue.style.display = 'none';
-        } else {
-            if (frequencyLabel) frequencyLabel.style.display = 'none';
-            if (frequencyValue) frequencyValue.style.display = 'none';
-            if (reasonLabel) reasonLabel.style.display = 'flex';
-            if (reasonValue) {
-                reasonValue.style.display = 'block';
-                reasonValue.textContent = votingReason || 'N/A';
-            }
-        }
+        // Work Status
+        const wsMap = {
+            kkViewWS_Employed: 'Employed', kkViewWS_Unemployed: 'Unemployed',
+            kkViewWS_SelfEmployed: 'Self-Employed', kkViewWS_Looking: 'Currently looking for a Job',
+            kkViewWS_NotInterested: 'Not Interested Looking for a Job',
+        };
+        Object.entries(wsMap).forEach(([id, val]) => setCheck(id, workStatus === val));
 
-        // Participation
-        setVal('kkViewAttendedKKAssembly', attendedKKAssembly);
+        // Voter boxes
+        setCheck('kkViewSKV_Yes', registeredSKVoter === 'Yes');
+        setCheck('kkViewSKV_No', registeredSKVoter === 'No');
+        setCheck('kkViewNV_Yes', registeredNationalVoter === 'Yes');
+        setCheck('kkViewNV_No', registeredNationalVoter === 'No');
+        setCheck('kkViewVH_Yes', votingHistory === 'Yes');
+        setCheck('kkViewVH_No', votingHistory === 'No');
+        setCheck('kkViewVF_12', votingFrequency === '1-2 Times');
+        setCheck('kkViewVF_34', votingFrequency === '3-4 Times');
+        setCheck('kkViewVF_5', votingFrequency === '5 and above');
+        setCheck('kkViewKK_Yes', attendedKKAssembly === 'Yes');
+        setCheck('kkViewKK_No', attendedKKAssembly === 'No');
+        setCheck('kkViewVR_NoKK', votingReason === 'There was no KK Assembly');
+        setCheck('kkViewVR_NotInt', votingReason === 'Not Interested to Attend');
 
-        // Social / Community
-        setVal('kkViewFacebookAccount', facebookAccount);
-        setVal('kkViewWillingToJoinGroupChat', willingToJoinGroupChat);
+        // Social
+        setVal('kkViewFacebookAccount', facebookAccount || '—');
+        setCheck('kkViewGC_Yes', willingToJoinGroupChat === 'Yes');
+        setCheck('kkViewGC_No', willingToJoinGroupChat === 'No');
 
         // Signature
-        setVal('kkViewSignature', signature);
+        setVal('kkViewSignature', signature || '—');
 
         const rejectionWrap = document.getElementById('kkViewRejectionWrap');
         const rejectionText = document.getElementById('kkViewRejectionText');

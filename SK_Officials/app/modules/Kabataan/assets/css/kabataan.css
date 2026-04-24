@@ -469,8 +469,8 @@ body {
     background: #ffffff;
     border-radius: 16px;
     width: 100%;
-    max-width: 550px;
-    max-height: 75vh;
+    max-width: 760px;
+    max-height: 85vh;
     overflow-y: auto;
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
     display: flex;
@@ -592,9 +592,10 @@ body {
 }
 
 .kabataan-form-scroll {
-    max-height: 60vh;
+    max-height: 65vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    padding-right: 4px;
 }
 
 .kabataan-modal-backdrop.modal-maximized .kabataan-form-scroll {
@@ -680,17 +681,12 @@ body {
     padding-top: 0;
 }
 
-.kabataan-block-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #2c2c3e;
-    margin-bottom: 6px;
+.kabataan-block-title-legacy {
+    /* replaced — see .kabataan-block-title below */
 }
 
-.kabataan-block-hint {
-    font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 12px;
+.kabataan-block-hint-legacy {
+    /* replaced — see .kabataan-block-hint below */
 }
 
 .kabataan-import-options {
@@ -1276,23 +1272,12 @@ body {
     font-size: 12px;
 }
 
-.kabataan-block-title {
-    font-size: 13px;
-    font-weight: 800;
-    color: #2c2c3e;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid #f4c20d;
-    display: inline-block;
+.kabataan-block-title-legacy2 {
+    /* replaced — see .kabataan-block-title below */
 }
 
-.kabataan-block-hint {
-    font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 14px;
-    font-style: italic;
+.kabataan-block-hint-legacy2 {
+    /* replaced — see .kabataan-block-hint below */
 }
 
 .modal-columns {
@@ -1305,14 +1290,80 @@ body {
 
 /* Section dividers inside form columns */
 .kabataan-form-section-title {
-    font-size: 10px;
-    font-weight: 800;
-    color: #2c2c3e;
+    font-size: 12px;
+    font-weight: 900;
+    color: #1a1a1a;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin: 14px 0 8px;
+    letter-spacing: 0.03em;
+    margin: 20px 0 12px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-bottom: 2px solid #1a1a1a;
     padding-bottom: 4px;
-    border-bottom: 1px solid #e5e7eb;
+}
+
+.kabataan-form-section-title:first-of-type {
+    margin-top: 0;
+}
+
+/* Modal field labels — match form style */
+.kabataan-panel-manual .modal-field label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Modal field inputs and selects — match form style */
+.kabataan-panel-manual .modal-field input,
+.kabataan-panel-manual .modal-field select {
+    border-radius: 6px;
+    border: 1.5px solid #9ca3af;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #1a1a1a;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.kabataan-panel-manual .modal-field input:focus,
+.kabataan-panel-manual .modal-field select:focus {
+    outline: none;
+    border-color: #1a1a1a;
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.08);
+}
+
+.kabataan-panel-manual .modal-field input::placeholder {
+    color: #9ca3af;
+    font-size: 12px;
+    font-style: italic;
+}
+
+/* Block title and hint */
+.kabataan-block-title {
+    font-size: 15px;
+    font-weight: 900;
+    color: #1a1a1a;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #1a1a1a;
+    display: block;
+}
+
+.kabataan-block-hint {
+    font-size: 12px;
+    color: #4b5563;
+    margin-bottom: 16px;
+    font-style: normal;
+    line-height: 1.5;
 }
 
 /* Footer save button */
@@ -1487,18 +1538,15 @@ body {
 .stat-icon-red svg, .stat-icon-slate svg, .stat-icon-rose svg { stroke: #dc2626; }
 
 .stat-card-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     color: #6b7280;
-    line-height: 1.3;
+    line-height: 1.35;
     text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
     width: 100%;
     margin-top: 8px;
+    word-break: break-word;
+    white-space: normal;
 }
 
 @media (max-width: 768px) {
@@ -1510,7 +1558,7 @@ body {
     .stat-card-icon { width: 26px; height: 26px; }
     .stat-card-icon svg { width: 13px; height: 13px; }
     .stat-card-value { font-size: 17px; }
-    .stat-card-label { font-size: 9px; }
+    .stat-card-label { font-size: 10px; }
 }
 
 @media (max-width: 480px) {
@@ -1522,5 +1570,1357 @@ body {
     .stat-card-icon { width: 22px; height: 22px; border-radius: 6px; }
     .stat-card-icon svg { width: 11px; height: 11px; }
     .stat-card-value { font-size: 15px; }
-    .stat-card-label { font-size: 8px; margin-top: 5px; }
+    .stat-card-label { font-size: 9px; margin-top: 5px; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   KK SURVEY QUESTIONNAIRE FORM STYLES
+   Mirrors the physical KK Survey Questionnaire layout
+   ═══════════════════════════════════════════════════════ */
+
+/* General info row (Respondent # + Date) */
+.kk-form-general-row {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.kk-form-general-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kk-form-general-field label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a1a1a;
+    white-space: nowrap;
+}
+
+.kk-form-general-field input {
+    border: none;
+    border-bottom: 1.5px solid #1a1a1a;
+    border-radius: 0;
+    padding: 4px 6px;
+    font-size: 13px;
+    background: transparent;
+    width: 140px;
+    outline: none;
+}
+
+.kk-form-general-field input:focus {
+    border-bottom-color: #2563eb;
+    background: #f0f7ff;
+}
+
+/* Section label row (e.g. "Name of Respondent:") */
+.kk-form-label-row {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 10px 0 4px;
+}
+
+/* Name row — 4 columns: Last, First, Middle, Suffix */
+.kk-form-name-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 2fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.kk-form-name-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.kk-form-name-field label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #4b5563;
+    text-align: center;
+    text-transform: none;
+}
+
+.kk-form-name-field--suffix {
+    max-width: 90px;
+}
+
+/* Underline-style inputs (like the physical form) */
+.kk-underline-input {
+    border: none !important;
+    border-bottom: 1.5px solid #1a1a1a !important;
+    border-radius: 0 !important;
+    padding: 5px 4px !important;
+    font-size: 13px !important;
+    background: transparent !important;
+    width: 100% !important;
+    outline: none !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1a1a1a;
+}
+
+.kk-underline-input:focus {
+    border-bottom-color: #2563eb !important;
+    background: #f0f7ff !important;
+}
+
+/* Location row — 5 columns */
+.kk-form-location-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.5fr 1.5fr 1.2fr;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.kk-form-loc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.kk-form-loc-field label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #4b5563;
+    text-align: center;
+    text-transform: none;
+}
+
+/* Personal info row (Sex + Age/Birthday + Email/Contact) */
+.kk-form-personal-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.kk-form-sex-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 140px;
+    padding: 6px 10px;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.kk-form-sex-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.kk-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #1a1a1a;
+    cursor: pointer;
+}
+
+.kk-radio-label input[type="radio"] {
+    width: 13px;
+    height: 13px;
+    accent-color: #1a1a1a;
+    cursor: pointer;
+}
+
+.kk-form-age-group,
+.kk-form-contact-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.kk-form-inline-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.kk-form-inline-field label,
+.kk-form-inline-field span.kk-form-sex-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a1a1a;
+    white-space: nowrap;
+}
+
+.kk-inline-input-short {
+    border: none;
+    border-bottom: 1.5px solid #1a1a1a;
+    border-radius: 0;
+    padding: 4px 4px;
+    font-size: 13px;
+    background: transparent;
+    width: 60px;
+    outline: none;
+    text-align: center;
+}
+
+.kk-inline-input-medium {
+    border: none;
+    border-bottom: 1.5px solid #1a1a1a;
+    border-radius: 0;
+    padding: 4px 4px;
+    font-size: 13px;
+    background: transparent;
+    width: 160px;
+    outline: none;
+}
+
+.kk-inline-input-short:focus,
+.kk-inline-input-medium:focus {
+    border-bottom-color: #2563eb;
+    background: #f0f7ff;
+}
+
+.kk-form-hint {
+    font-size: 10px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Demographic section instruction */
+.kk-form-instruction {
+    font-size: 11px;
+    color: #4b5563;
+    font-style: italic;
+    margin: 4px 0 12px;
+}
+
+/* Demographic grid — left + right columns */
+.kk-form-demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.kk-form-demo-left,
+.kk-form-demo-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Individual demographic block (Civil Status, Youth Classification, etc.) */
+.kk-demo-block {
+    border: 1.5px solid #1a1a1a;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.kk-demo-block-label {
+    background: #1a1a1a;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 10px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kk-demo-block-options {
+    padding: 8px 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.kk-demo-options-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+}
+
+.kk-demo-options-single {
+    flex-direction: column;
+    gap: 3px;
+}
+
+.kk-check-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #1a1a1a;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.kk-check-label input[type="radio"] {
+    width: 13px;
+    height: 13px;
+    accent-color: #1a1a1a;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.kk-check-indent {
+    padding-left: 18px;
+}
+
+/* Voter grid — 3x2 boxes */
+.kk-voter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+}
+
+.kk-voter-block {
+    border: 1.5px solid #1a1a1a;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.kk-voter-label {
+    background: #1a1a1a;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 8px;
+    text-align: center;
+    line-height: 1.3;
+}
+
+.kk-voter-block .kk-check-label {
+    padding: 3px 8px;
+    font-size: 11px;
+}
+
+/* Social / Community row */
+.kk-form-social-row {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 14px 0;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+/* Signature row */
+.kk-form-signature-row {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1.5px solid #1a1a1a;
+}
+
+.kk-form-sig-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 340px;
+}
+
+.kk-form-sig-field input {
+    border: none;
+    border-bottom: 1.5px solid #1a1a1a;
+    border-radius: 0;
+    padding: 6px 4px;
+    font-size: 13px;
+    background: transparent;
+    outline: none;
+    width: 100%;
+}
+
+.kk-form-sig-field input:focus {
+    border-bottom-color: #2563eb;
+    background: #f0f7ff;
+}
+
+.kk-form-sig-field label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .kk-form-name-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .kk-form-location-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .kk-form-demo-grid {
+        grid-template-columns: 1fr;
+    }
+    .kk-voter-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .kk-form-personal-row {
+        flex-direction: column;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+   KABATAAN IMPORT UI — Minimalist
+   ═══════════════════════════════════════════════════════ */
+
+/* Admin banner */
+.kab-import-admin-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #6b7280;
+    border-left: 3px solid #d1d5db;
+    padding: 6px 10px;
+    margin-bottom: 14px;
+    background: #f9fafb;
+    border-radius: 0 6px 6px 0;
+}
+
+.kab-import-admin-banner strong {
+    color: #374151;
+    font-weight: 700;
+}
+
+.kab-import-admin-banner svg {
+    flex-shrink: 0;
+    color: #9ca3af;
+}
+
+/* Section desc */
+.kab-import-section-desc {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+
+/* Collapsible columns */
+.kab-import-columns-toggle {
+    margin-bottom: 14px;
+    font-size: 12px;
+}
+
+.kab-import-columns-toggle summary {
+    cursor: pointer;
+    color: #6b7280;
+    font-weight: 600;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kab-import-columns-toggle summary::-webkit-details-marker { display: none; }
+
+.kab-import-columns-toggle summary::before {
+    content: '▶';
+    font-size: 9px;
+    transition: transform 0.15s;
+    color: #9ca3af;
+}
+
+.kab-import-columns-toggle[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.kab-import-col-count {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.kab-import-columns-list {
+    font-size: 11px;
+    color: #9ca3af;
+    margin: 6px 0 0 14px;
+    line-height: 1.7;
+}
+
+/* Upload drop zone */
+.kab-import-upload-box {
+    border: 1.5px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background: #fafafa;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+.kab-import-upload-box.kab-import-drag-over {
+    border-color: #2c2c3e;
+    background: #f3f4f6;
+}
+
+.kab-import-upload-box svg {
+    margin-bottom: 8px;
+    opacity: 0.5;
+}
+
+.kab-import-upload-text {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 4px;
+}
+
+.kab-import-choose-link {
+    color: #2c2c3e;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.kab-import-file-hidden { display: none; }
+
+.kab-import-file-name {
+    font-size: 11px;
+    color: #9ca3af;
+    margin: 6px 0 0;
+    font-style: italic;
+}
+
+/* Divider */
+.kab-import-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+    color: #d1d5db;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: lowercase;
+}
+
+.kab-import-divider::before,
+.kab-import-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+}
+
+/* Paste input */
+.kab-import-paste-input {
+    width: 100%;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 9px 11px;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 72px;
+    background: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #374151;
+    transition: border-color 0.2s;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.kab-import-paste-input:focus {
+    outline: none;
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 2px rgba(44,44,62,0.07);
+}
+
+.kab-import-paste-input::placeholder { color: #c4c9d4; }
+
+.kab-import-parse-btn {
+    background: #2c2c3e;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.kab-import-parse-btn:hover { background: #1a1a2e; }
+
+/* ── Preview Section ── */
+.kab-import-preview-section { margin-top: 2px; }
+
+.kab-import-preview-header { margin-bottom: 10px; }
+
+.kab-import-preview-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.kab-import-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    margin: 0;
+}
+
+.kab-import-summary { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.kab-import-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+}
+
+.kab-badge-valid   { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.kab-badge-invalid { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+.kab-badge-total   { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+.kab-import-preview-note {
+    font-size: 11px;
+    color: #9ca3af;
+    margin: 0;
+}
+
+/* Preview table */
+.kab-import-table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.kab-import-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    min-width: 860px;
+}
+
+.kab-import-table thead {
+    background: #2c2c3e;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.kab-import-table thead th {
+    color: #e5e7eb;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 10px;
+    text-align: left;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.07);
+}
+
+.kab-import-table thead th:last-child { border-right: none; }
+
+.kab-import-table tbody tr { border-bottom: 1px solid #f3f4f6; }
+.kab-import-table tbody tr:hover { background: #f9fafb; }
+.kab-import-table tbody tr.kab-import-row-invalid { background: #fffbeb; }
+.kab-import-table tbody tr.kab-import-row-invalid:hover { background: #fef9c3; }
+
+.kab-import-table td {
+    padding: 7px 10px;
+    color: #374151;
+    vertical-align: middle;
+    white-space: nowrap;
+    border-right: 1px solid #f3f4f6;
+}
+
+.kab-import-table td:last-child {
+    border-right: none;
+    white-space: normal;
+    min-width: 130px;
+}
+
+.kab-import-status {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.kab-status-valid   { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.kab-status-invalid { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+.kab-import-issues { font-size: 11px; color: #b45309; line-height: 1.4; }
+
+/* Pagination */
+.kab-import-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.kab-import-page-info { font-size: 11px; color: #9ca3af; }
+
+.kab-import-page-controls { display: flex; align-items: center; gap: 4px; }
+
+.kab-import-page-btn {
+    padding: 4px 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #6b7280;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.kab-import-page-btn:hover:not(:disabled) { background: #f3f4f6; color: #374151; }
+.kab-import-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.kab-import-page-numbers { display: flex; gap: 3px; }
+
+.kab-import-page-num {
+    padding: 3px 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #6b7280;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.kab-import-page-num:hover { background: #f3f4f6; }
+.kab-import-page-num.active { background: #2c2c3e; color: #fff; border-color: #2c2c3e; }
+
+/* Action buttons */
+.kab-import-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+    flex-wrap: wrap;
+}
+
+.kab-import-cancel-btn {
+    background: transparent;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+    padding: 7px 16px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.kab-import-cancel-btn:hover { background: #f3f4f6; color: #374151; }
+
+.kab-import-error-btn {
+    background: transparent;
+    color: #b45309;
+    border: 1px solid #fde68a;
+    padding: 7px 16px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.kab-import-error-btn:hover { background: #fffbeb; }
+
+.kab-import-confirm-btn {
+    background: #2c2c3e;
+    color: #fff;
+    border: none;
+    padding: 7px 20px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.kab-import-confirm-btn:hover { background: #1a1a2e; }
+
+
+/* ============================================================
+   KK PAPER FORM — Manual Entry (document-style questionnaire)
+   ============================================================ */
+
+/* ── Scrollable form container ── */
+.kabataan-panel-manual .kabataan-form-scroll {
+    max-height: 72vh;
+    overflow-y: auto;
+    padding: 0 2px 8px 2px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 12px;
+    color: #111;
+}
+
+/* ── HEADER: title left, respondent# + date right ── */
+.kkf-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 2px solid #111;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+
+.kkf-header-title-col {
+    flex: 1;
+}
+
+.kkf-main-title {
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #111;
+    line-height: 1.2;
+}
+
+.kkf-main-hint {
+    font-size: 10px;
+    color: #555;
+    margin-top: 2px;
+    line-height: 1.4;
+}
+
+.kkf-header-fields-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.kkf-header-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kkf-hdr-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #111;
+    white-space: nowrap;
+}
+
+.kkf-hdr-input {
+    border: none;
+    border-bottom: 1px solid #555;
+    background: transparent;
+    font-size: 11px;
+    color: #111;
+    padding: 1px 4px;
+    width: 120px;
+    outline: none;
+}
+
+.kkf-hdr-input:focus {
+    border-bottom-color: #2c2c3e;
+}
+
+/* ── Section title (I. Profile / II. Demographic) ── */
+.kkf-section-title {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #111;
+    border-bottom: 1.5px solid #111;
+    padding-bottom: 2px;
+    margin: 8px 0 5px;
+}
+
+/* ── TO THE RESPONDENT notice box (gray background, bordered) ── */
+.kkf-notice-box {
+    border: 2px solid #111;
+    background: #e8e8e8;
+    padding: 8px 10px;
+    margin: 8px 0;
+}
+
+.kkf-notice-title {
+    font-size: 11px;
+    font-weight: 900;
+    color: #111;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.kkf-notice-body {
+    font-size: 10px;
+    color: #111;
+    line-height: 1.5;
+    margin-bottom: 6px;
+    text-align: justify;
+}
+
+.kkf-notice-confidential {
+    font-size: 10px;
+    font-weight: 900;
+    color: #111;
+    text-align: center;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+/* ── Row label (Name of Respondent: / Location:) ── */
+.kkf-row-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 2px;
+}
+
+/* ── Underline input base ── */
+.kkf-uline {
+    display: block;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #555;
+    background: transparent;
+    font-size: 12px;
+    color: #111;
+    padding: 2px 2px 1px;
+    outline: none;
+    border-radius: 0;
+    transition: border-bottom-color 0.15s;
+}
+
+.kkf-uline:focus {
+    border-bottom-color: #2c2c3e;
+    background: rgba(44,44,62,0.03);
+}
+
+.kkf-uline-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+    background-size: 12px;
+    padding-right: 18px;
+    cursor: pointer;
+}
+
+.kkf-uline-short { width: 52px; }
+.kkf-uline-med   { width: 140px; }
+.kkf-uline-fb    { flex: 1; min-width: 0; }
+.kkf-uline-sig   { width: 100%; }
+
+/* ── Column label (below input, centered) ── */
+.kkf-col-label {
+    display: block;
+    font-size: 9.5px;
+    color: #555;
+    text-align: center;
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+/* ── NAME ROW: 4 columns ── */
+.kkf-name-row {
+    display: grid;
+    grid-template-columns: 3fr 3fr 3fr 1.2fr;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.kkf-name-col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── LOCATION ROW: 5 columns ── */
+.kkf-loc-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.kkf-loc-col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── PERSONAL INFO ROW: left (sex+age+dob) | right (email+contact) ── */
+.kkf-personal-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    border: 1px solid #bbb;
+    padding: 5px 7px;
+    margin-bottom: 6px;
+}
+
+.kkf-personal-left,
+.kkf-personal-right {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.kkf-sex-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    border: 1px solid #bbb;
+    padding: 3px 6px;
+    background: #f5f5f5;
+}
+
+.kkf-sex-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #111;
+    white-space: nowrap;
+}
+
+.kkf-age-dob-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.kkf-inline-pair {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+.kkf-inline-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #111;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.kkf-hint {
+    font-size: 9px;
+    color: #777;
+    white-space: nowrap;
+}
+
+.kkf-radio-lbl {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: #111;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.kkf-radio-lbl input[type="radio"] {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    accent-color: #2c2c3e;
+    cursor: pointer;
+}
+
+/* ── INSTRUCTION TEXT ── */
+.kkf-instruction {
+    font-size: 10px;
+    color: #555;
+    margin-bottom: 5px;
+    font-style: italic;
+}
+
+/* ── DEMOGRAPHIC 2-COLUMN GRID ── */
+.kkf-demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.kkf-demo-col {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* ── Demo block (bordered box like paper form) ── */
+/* Label is a LEFT gray sidebar, options are on the RIGHT — matches printed survey */
+.kkf-demo-block {
+    border: 1px solid #bbb;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 0;
+}
+
+.kkf-demo-block-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #111;
+    background: #e0e0e0;
+    border-right: 1px solid #bbb;
+    padding: 4px 5px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: horizontal-tb;
+    min-width: 68px;
+    max-width: 68px;
+    width: 68px;
+    flex-shrink: 0;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+/* Options area (right side of block) */
+.kkf-demo-block-options {
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Civil Status 2-col layout inside options */
+.kkf-demo-options-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 4px;
+    flex: 1;
+}
+
+/* ── Checkbox/radio label ── */
+.kkf-chk-lbl {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #111;
+    cursor: pointer;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+/* Square checkbox — paper form style with X mark */
+.kkf-sq-chk {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 11px;
+    height: 11px;
+    border: 1.5px solid #333;
+    background: #fff;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+    border-radius: 0;
+}
+
+.kkf-sq-chk:checked {
+    background: #fff;
+    border-color: #111;
+}
+
+.kkf-sq-chk:checked::after {
+    content: '✕';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 9px;
+    font-weight: 900;
+    color: #111;
+    line-height: 1;
+}
+
+.kkf-chk-indent {
+    padding-left: 14px;
+}
+
+/* ── VOTER SECTION (inside right demo col) ── */
+.kkf-voter-section {
+    border: 1px solid #bbb;
+    display: flex;
+    flex-direction: column;
+}
+
+.kkf-voter-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid #ddd;
+}
+
+.kkf-voter-row:last-child {
+    border-bottom: none;
+}
+
+.kkf-voter-cell {
+    padding: 4px 5px;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.kkf-voter-cell:last-child {
+    border-right: none;
+}
+
+.kkf-voter-cell-label {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #111;
+    background: #e8e8e8;
+    margin: -4px -5px 3px -5px;
+    padding: 2px 5px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* ── FOOTER ROW: FB + Group Chat ── */
+.kkf-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-top: 1px solid #bbb;
+    padding-top: 5px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.kkf-footer-fb {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+}
+
+.kkf-footer-chat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+}
+
+/* ── SIGNATURE ROW ── */
+.kkf-sig-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-top: 1px solid #bbb;
+    padding-top: 6px;
+    margin-top: 2px;
+}
+
+.kkf-uline-sig {
+    width: 260px !important;
+    max-width: 100%;
+}
+
+.kkf-sig-label {
+    font-size: 10px;
+    color: #555;
+    font-weight: 600;
+}
+
+/* ── Responsive: collapse to single column on small modals ── */
+@media (max-width: 600px) {
+    .kkf-name-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .kkf-loc-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .kkf-personal-row {
+        grid-template-columns: 1fr;
+    }
+    .kkf-demo-grid {
+        grid-template-columns: 1fr;
+    }
+    .kkf-voter-row {
+        grid-template-columns: 1fr;
+    }
+    .kkf-voter-cell {
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+    }
+    .kkf-voter-cell:last-child {
+        border-bottom: none;
+    }
+    .kkf-footer-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ── View-only span values (mimic underline input appearance) ── */
+.kkf-view-val {
+    display: inline-block;
+    min-height: 16px;
+    min-width: 20px;
+    color: #111;
+    font-size: 12px;
+    vertical-align: bottom;
+}
+
+/* Disabled square checkbox in view mode — still shows X if checked */
+.kkf-sq-chk:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.kkf-sq-chk:disabled:checked {
+    background: #fff;
+    border-color: #111;
+}
+
+.kkf-sq-chk:disabled:checked::after {
+    content: '✕';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 9px;
+    font-weight: 900;
+    color: #111;
+    line-height: 1;
 }
