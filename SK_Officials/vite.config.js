@@ -20,6 +20,10 @@ export default defineConfig({
                 // Profile module assets
                 'app/modules/Profile/assets/css/profile.css',
                 'app/modules/Profile/assets/js/profile.js',
+                'app/modules/Profile/assets/css/change-password.css',
+                'app/modules/Profile/assets/js/change-password.js',
+                'app/modules/Profile/assets/css/notification.css',
+                'app/modules/Profile/assets/js/notification.js',
                 // Calendar module assets
                 'app/modules/Calendar/assets/css/calendar.css',
                 'app/modules/Calendar/assets/js/calendar.js',

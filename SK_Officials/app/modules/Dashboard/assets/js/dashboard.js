@@ -100,7 +100,6 @@ const YEAR_DATA = {
             { type:'delete',  text:'Kabataan record deleted',         who:'Ana Lim',         time:'2 hrs ago' },
             { type:'restore', text:'Deleted record restored',         who:'Carlo Bautista',  time:'3 hrs ago' },
             { type:'approve', text:'Program budget approved',         who:'SK Treasurer',    time:'5 hrs ago' },
-            { type:'add',     text:'New ABYIP member added',          who:'Liza Mendoza',    time:'Yesterday' },
             { type:'delete',  text:'ABYIP record deleted',            who:'Mark Villanueva', time:'Yesterday' },
         ],
         announcements: [
@@ -671,12 +670,12 @@ function renderReminder() {
 
 /* ── Committees ──────────────────────────────────────────── */
 const COMMITTEES = [
-    { name:'Education Committee',       chair:'Maria Santos',    members:5, status:'Active' },
-    { name:'Sports Committee',          chair:'Juan Dela Cruz',  members:4, status:'Active' },
-    { name:'Health Committee',          chair:'Ana Lim',         members:6, status:'Active' },
-    { name:'Environment Committee',     chair:'Pedro Reyes',     members:4, status:'Active' },
-    { name:'Livelihood Committee',      chair:'Liza Mendoza',    members:5, status:'Active' },
-    { name:'Peace & Order Committee',   chair:'Carlo Bautista',  members:3, status:'Active' },
+    { name:'Education Committee',       head:'Maria Santos',    status:'Active' },
+    { name:'Sports Committee',          head:'Juan Dela Cruz',  status:'Active' },
+    { name:'Health Committee',          head:'Ana Lim',         status:'Active' },
+    { name:'Environment Committee',     head:'Pedro Reyes',     status:'Active' },
+    { name:'Livelihood Committee',      head:'Liza Mendoza',    status:'Active' },
+    { name:'Peace & Order Committee',   head:'Carlo Bautista',  status:'Active' },
 ];
 
 function renderCommittees() {
@@ -695,8 +694,7 @@ function renderCommittees() {
                 </div>
                 <div class="committee-card-body">
                     <div class="committee-card-name">${esc(c.name)}</div>
-                    <div class="committee-card-meta">Chair: ${esc(c.chair)}</div>
-                    <div class="committee-card-meta">${c.members} members</div>
+                    <div class="committee-card-meta">Head: ${esc(c.head)}</div>
                 </div>
                 <span class="committee-card-badge">${esc(c.status)}</span>
             </div>

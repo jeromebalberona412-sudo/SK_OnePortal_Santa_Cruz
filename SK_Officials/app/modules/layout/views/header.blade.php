@@ -23,8 +23,100 @@
             </div>
         </div>
 
-        <!-- Right: User Menu -->
+        <!-- Right: Notification Bell + User Menu -->
         <div class="header-right">
+
+            <!-- Notification Bell -->
+            <div class="notif-menu" id="notifMenu">
+                <button class="notification-btn" id="notificationBtn" aria-label="Notifications" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notification-badge" id="notifBadge">3</span>
+                </button>
+
+                <!-- Notification Dropdown -->
+                <div class="notif-dropdown" id="notifDropdown">
+
+                    <!-- Header -->
+                    <div class="notif-dropdown-header">
+                        <div class="notif-dropdown-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            Notifications
+                            <span class="notif-count-pill" id="notifCountPill">3</span>
+                        </div>
+                        <button class="notif-mark-all-btn" id="notifMarkAllBtn" title="Mark all as read">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Mark all as read
+                        </button>
+                    </div>
+
+                    <!-- Notification List -->
+                    <div class="notif-list" id="notifList">
+
+                        <div class="notif-item notif-unread" data-id="1">
+                            <div class="notif-item-body">
+                                <div class="notif-item-title">SK Federation General Assembly</div>
+                                <div class="notif-item-text">All SK officials are required to attend the General Assembly on May 5, 2026 at 9:00 AM.</div>
+                                <div class="notif-item-time">9:12 AM · Apr 24, 2026</div>
+                            </div>
+                            <span class="notif-unread-dot"></span>
+                        </div>
+
+                        <div class="notif-item notif-unread" data-id="2">
+                            <div class="notif-item-body">
+                                <div class="notif-item-title">Committee Meeting — Education</div>
+                                <div class="notif-item-text">Education Committee meeting scheduled for May 10, 2026 at 2:00 PM. Attendance is required.</div>
+                                <div class="notif-item-time">8:05 AM · Apr 24, 2026</div>
+                            </div>
+                            <span class="notif-unread-dot"></span>
+                        </div>
+
+                        <div class="notif-item notif-unread" data-id="3">
+                            <div class="notif-item-body">
+                                <div class="notif-item-title">KK Profiling Deadline Reminder</div>
+                                <div class="notif-item-text">KK Profiling submission deadline is on May 15, 2026. Please submit all pending requests.</div>
+                                <div class="notif-item-time">6:30 AM · Apr 24, 2026</div>
+                            </div>
+                            <span class="notif-unread-dot"></span>
+                        </div>
+
+                        <div class="notif-item" data-id="4">
+                            <div class="notif-item-body">
+                                <div class="notif-item-title">Youth Sports Festival Registration</div>
+                                <div class="notif-item-text">Registration for the Youth Sports Festival is now open. Register your team before April 30.</div>
+                                <div class="notif-item-time">3:45 PM · Apr 23, 2026</div>
+                            </div>
+                        </div>
+
+                        <div class="notif-item" data-id="5">
+                            <div class="notif-item-body">
+                                <div class="notif-item-title">Budget Review — Q2 2026</div>
+                                <div class="notif-item-text">Q2 budget review has been approved. Updated allocation is now available in Budget &amp; Finance.</div>
+                                <div class="notif-item-time">10:20 AM · Apr 22, 2026</div>
+                            </div>
+                        </div>
+
+                    </div><!-- /notif-list -->
+
+                    <!-- Empty state (hidden by default) -->
+                    <div class="notif-empty" id="notifEmpty" style="display:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <p>You're all caught up!</p>
+                    </div>
+
+                </div><!-- /notif-dropdown -->
+            </div><!-- /notif-menu -->
+
             <div class="user-menu">
                 <button class="user-menu-btn" id="userMenuToggle">
                     <img src="{{ asset('images/logo.png') }}" 
@@ -58,7 +150,7 @@
                     </a>
 
                     <!-- Change Password -->
-                    <a href="#" class="dropdown-item" id="changePasswordTrigger">
+                    <a href="{{ route('change-password') }}" class="dropdown-item" id="changePasswordTrigger">
                         <span class="dropdown-item-icon dropdown-item-icon--password">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>

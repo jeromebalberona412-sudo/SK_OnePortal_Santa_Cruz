@@ -439,10 +439,54 @@ html, body {
 .dash-view-all:hover { text-decoration: underline; }
 
 /* ── Quick Actions ───────────────────────────────────────── */
-.quick-actions-grid {
+
+/* Single horizontal scrollable row — no wrapping */
+.dash-section-card:has(.quick-actions-scroll) {
+    overflow: visible;
+}
+
+.quick-actions-scroll {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 10px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 8px;
+    /* Show a subtle scrollbar on desktop so users know it scrolls */
+    scrollbar-width: thin;
+    scrollbar-color: #e5e7eb transparent;
+    /* Smooth swipe on touch devices */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    /* Prevent the card from clipping the scroll area */
+    width: 100%;
+}
+
+.quick-actions-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Drag-scroll cursor feedback */
+.quick-actions-scroll {
+    cursor: grab;
+}
+
+.quick-actions-scroll.qa-dragging {
+    cursor: grabbing;
+    user-select: none;
 }
 
 .qa-btn {
@@ -458,6 +502,8 @@ html, body {
     transition: all 0.2s ease;
     white-space: nowrap;
     font-family: inherit;
+    flex-shrink: 0;
+    text-decoration: none;
 }
 
 .qa-btn svg {
@@ -466,17 +512,29 @@ html, body {
     flex-shrink: 0;
 }
 
-.qa-yellow { background: #f4c20d; color: #1f3c6d; box-shadow: 0 4px 12px rgba(244,194,13,.35); }
-.qa-yellow:hover { background: #e6b800; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(244,194,13,.5); }
-
-.qa-green  { background: #22c55e; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,.35); }
-.qa-green:hover  { background: #16a34a; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(34,197,94,.5); }
-
+/* 🔵 Blue — Records / Data */
 .qa-blue   { background: #3b82f6; color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,.35); }
-.qa-blue:hover   { background: #2563eb; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(59,130,246,.5); }
+.qa-blue:hover   { background: #2563eb; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(59,130,246,.5); }
 
+/* 🟢 Green — System / Tools */
+.qa-green  { background: #22c55e; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,.35); }
+.qa-green:hover  { background: #16a34a; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(34,197,94,.5); }
+
+/* 🟣 Purple — Management */
+.qa-purple { background: #a855f7; color: #fff; box-shadow: 0 4px 12px rgba(168,85,247,.35); }
+.qa-purple:hover { background: #9333ea; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(168,85,247,.5); }
+
+/* 🟡 Yellow/Gold — Finance */
+.qa-yellow { background: #f4c20d; color: #fff; box-shadow: 0 4px 12px rgba(244,194,13,.35); }
+.qa-yellow:hover { background: #e6b800; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(244,194,13,.5); }
+
+/* 🔴 Red — Archive / Danger */
+.qa-red    { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,.35); }
+.qa-red:hover    { background: #dc2626; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(239,68,68,.5); }
+
+/* Keep dark for backward compat */
 .qa-dark   { background: #2c2c3e; color: #fff; box-shadow: 0 4px 12px rgba(44,44,62,.3); }
-.qa-dark:hover   { background: #1a1a2e; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(44,44,62,.45); }
+.qa-dark:hover   { background: #1a1a2e; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(44,44,62,.45); }
 
 /* ── Chart grids ─────────────────────────────────────────── */
 .charts-grid-2 {
@@ -1053,7 +1111,7 @@ html, body {
     .charts-grid-2 { grid-template-columns: 1fr; gap: 12px; }
     .charts-grid-3 { grid-template-columns: 1fr; gap: 12px; }
 
-    .quick-actions-grid { gap: 8px; }
+    .quick-actions-scroll { gap: 8px; }
     .qa-btn { padding: 9px 14px; font-size: 12px; }
 
     .dash-form-row { grid-template-columns: 1fr; }

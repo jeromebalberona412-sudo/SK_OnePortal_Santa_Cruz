@@ -32,7 +32,7 @@
             </div>
             <div class="page-header-right">
                 <button type="button" class="btn primary-btn" id="addCommitteeBtn">
-                    + Assign Committee
+                    Assign Committee
                 </button>
             </div>
         </section>
@@ -40,16 +40,16 @@
         <section class="page-filters-section">
             <div class="filters-row">
                 <div class="filter-item">
-                    <label for="committeeSearch" class="filter-label">Search committee</label>
-                    <div class="filter-input-wrapper">
-                        <input type="text" id="committeeSearch" class="filter-input" placeholder="Search by name or member">
-                    </div>
-                </div>
-                <div class="filter-item">
                     <label for="committeeHeadFilter" class="filter-label">Committee head</label>
                     <select id="committeeHeadFilter" class="filter-select">
                         <option value="">All heads</option>
                     </select>
+                </div>
+                <div class="filter-item filter-item-search">
+                    <label for="committeeSearch" class="filter-label">Search committee</label>
+                    <div class="filter-input-wrapper">
+                        <input type="text" id="committeeSearch" class="filter-input" placeholder="Search by name or member">
+                    </div>
                 </div>
             </div>
         </section>
@@ -69,6 +69,7 @@
                             <tr>
                                 <th>Committee Name</th>
                                 <th>Assigned To</th>
+                                <th>Date Assigned</th>
                                 <th>Description</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
@@ -133,7 +134,7 @@
 
 <!-- Committee View Modal -->
 <div class="modal-backdrop" id="committeeViewModal" style="display:none;">
-    <div class="modal-box">
+    <div class="modal-box committee-view-box">
         <div class="modal-header">
             <h2 class="modal-title">Committee Summary</h2>
             <div class="modal-window-controls">
@@ -141,10 +142,51 @@
                 <button type="button" class="modal-close" data-view-close aria-label="Close">&times;</button>
             </div>
         </div>
-        <div class="modal-body">
-            <div class="modal-field"><label>Assigned To</label><input type="text" id="viewCommitteeHead" readonly></div>
+        <div class="modal-body committee-view-body">
+
+            {{-- Committee name banner --}}
+            <div class="cv-banner">
+                <div class="cv-banner-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="cv-banner-text">
+                    <div class="cv-committee-name" id="viewCommitteeName">—</div>
+                    <div class="cv-committee-status-row">
+                        <span class="cv-status-badge" id="viewCommitteeStatus">Active</span>
+                        <span class="cv-date-created" id="viewCommitteeDateCreated"></span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Info grid --}}
+            <div class="cv-info-grid">
+                <div class="cv-info-card">
+                    <div class="cv-info-label">Committee Head</div>
+                    <div class="cv-info-value" id="viewCommitteeHead">—</div>
+                </div>
+                <div class="cv-info-card">
+                    <div class="cv-info-label">Status</div>
+                    <div class="cv-info-value" id="viewCommitteeStatusText">Active</div>
+                </div>
+                <div class="cv-info-card">
+                    <div class="cv-info-label">Date Assigned</div>
+                    <div class="cv-info-value" id="viewCommitteeDateAssigned">—</div>
+                </div>
+            </div>
+
+            {{-- Description --}}
+            <div class="cv-section">
+                <div class="cv-section-title">Description</div>
+                <p class="cv-section-body" id="viewCommitteeDescription">—</p>
+            </div>
+
+            {{-- Responsibilities --}}
+            <div class="cv-section">
+                <div class="cv-section-title">Responsibilities</div>
+                <p class="cv-section-body" id="viewCommitteeResponsibilities">—</p>
+            </div>
+
         </div>
-        <!-- Footer intentionally removed (use top-right close button) -->
     </div>
 </div>
 

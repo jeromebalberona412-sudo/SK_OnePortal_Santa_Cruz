@@ -37,9 +37,8 @@ function initializeHeader() {
     const changePasswordTrigger = document.getElementById('changePasswordTrigger');
     if (changePasswordTrigger) {
         changePasswordTrigger.addEventListener('click', function (e) {
-            e.preventDefault();
             closeProfileDropdown();
-            // TODO: wire to change-password route or modal when ready
+            // Navigate to change-password page (let the href handle it)
         });
     }
 
@@ -70,6 +69,7 @@ function initializeHeader() {
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             closeProfileDropdown();
+            closeNotifDropdown();
             const logoutModal = document.getElementById('logoutModal');
             if (logoutModal && logoutModal.style.display === 'flex') {
                 logoutModal.style.display = 'none';
@@ -191,22 +191,97 @@ function performSearch() {
 
 // ── Notifications ────────────────────────────────────────────────────────────
 function initializeNotifications() {
-    const notificationBtn = document.querySelector('.notification-btn');
-    if (notificationBtn) {
-        notificationBtn.addEventListener('click', function () {
-            console.log('Toggle notifications panel');
+    const notifBtn      = document.getElementById('notificationBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const notifMenu     = document.getElementById('notifMenu');
+    const markAllBtn    = document.getElementById('notifMarkAllBtn');
+    const notifList     = document.getElementById('notifList');
+    const notifBadge    = document.getElementById('notifBadge');
+    const notifCountPill = document.getElementById('notifCountPill');
+    const notifEmpty    = document.getElementById('notifEmpty');
+
+    if (!notifBtn || !notifDropdown) return;
+
+    /* ── Toggle open/close ── */
+    notifBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isOpen = notifDropdown.classList.contains('open');
+
+        // Close profile dropdown if open
+        closeProfileDropdown();
+
+        if (isOpen) {
+            closeNotifDropdown();
+        } else {
+            notifDropdown.classList.add('open');
+            notifBtn.setAttribute('aria-expanded', 'true');
+        }
+    });
+
+    /* ── Close on outside click ── */
+    document.addEventListener('click', function (e) {
+        if (notifMenu && !notifMenu.contains(e.target)) {
+            closeNotifDropdown();
+        }
+    });
+
+    /* ── Escape closes it ── */
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeNotifDropdown();
+    });
+
+    /* ── Mark individual item as read on click ── */
+    if (notifList) {
+        notifList.addEventListener('click', function (e) {
+            const item = e.target.closest('.notif-item');
+            if (!item) return;
+            if (item.classList.contains('notif-unread')) {
+                item.classList.remove('notif-unread');
+                const dot = item.querySelector('.notif-unread-dot');
+                if (dot) dot.remove();
+                updateUnreadCount();
+            }
         });
     }
-    setInterval(updateNotificationBadge, 30000);
+
+    /* ── Mark all as read ── */
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const unreadItems = notifList ? notifList.querySelectorAll('.notif-unread') : [];
+            unreadItems.forEach(function (item) {
+                item.classList.remove('notif-unread');
+                const dot = item.querySelector('.notif-unread-dot');
+                if (dot) dot.remove();
+            });
+            updateUnreadCount();
+        });
+    }
+
+    /* ── Count helpers ── */
+    function updateUnreadCount() {
+        const unread = notifList ? notifList.querySelectorAll('.notif-unread').length : 0;
+
+        if (notifBadge) {
+            notifBadge.textContent = unread;
+            notifBadge.style.display = unread > 0 ? 'flex' : 'none';
+        }
+        if (notifCountPill) {
+            notifCountPill.textContent = unread;
+            notifCountPill.style.display = unread > 0 ? 'inline' : 'none';
+        }
+        if (notifEmpty && notifList) {
+            const hasItems = notifList.querySelectorAll('.notif-item').length > 0;
+            notifEmpty.style.display = hasItems ? 'none' : 'flex';
+        }
+    }
 }
 
-function updateNotificationBadge() {
-    const badge = document.querySelector('.notification-badge');
-    const count = Math.floor(Math.random() * 10);
-    if (badge) {
-        badge.textContent = count;
-        badge.style.display = count > 0 ? 'block' : 'none';
-    }
+function closeNotifDropdown() {
+    const notifDropdown = document.getElementById('notifDropdown');
+    const notifBtn      = document.getElementById('notificationBtn');
+    if (notifDropdown) notifDropdown.classList.remove('open');
+    if (notifBtn)      notifBtn.setAttribute('aria-expanded', 'false');
 }
 
 // ── Logout ───────────────────────────────────────────────────────────────────

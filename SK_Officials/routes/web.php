@@ -63,6 +63,20 @@ Route::middleware(['web'])->group(function () {
         return view('Profile::profile');
     })->name('profile');
 
+    Route::get('/change-password', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Profile::change-password');
+    })->name('change-password');
+
+    Route::get('/notifications', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Profile::notification');
+    })->name('notifications');
+
     Route::get('/calendar', function () {
         if (!session('authenticated')) {
             return redirect()->route('login');
@@ -143,6 +157,14 @@ Route::middleware(['web'])->group(function () {
         }
         return view('ABYIP::abyip');
     })->name('abyip.index');
+
+    // Kabataan
+    Route::get('/kabataan', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Kabataan::kabataan');
+    })->name('kabataan');
 
     // Deleted Kabataan
     Route::get('/deleted-kabataan', function () {

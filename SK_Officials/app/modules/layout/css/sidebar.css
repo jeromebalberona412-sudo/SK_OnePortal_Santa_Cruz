@@ -167,22 +167,6 @@
     box-shadow: 0 4px 12px rgba(244, 194, 13, 0.5);
 }
 
-.nav-link.active .nav-icon {
-    color: #1f3c6d;
-}
-
-.nav-link.active::before {
-    content: '';
-    position: absolute;
-    left: -10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 70%;
-    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
-    border-radius: 2px;
-}
-
 .nav-icon {
     font-size: 18px;
     width: 20px;
@@ -641,19 +625,6 @@
 
 .nav-sublink.active .nav-subicon {
     color: #1f3c6d;
-}
-
-/* Active left-bar indicator — same as top-level */
-.nav-sublink.active::before {
-    content: '';
-    position: absolute;
-    left: -10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 70%;
-    background: linear-gradient(135deg, #f4c20d, #1f3c6d);
-    border-radius: 2px;
 }
 
 .nav-subicon {

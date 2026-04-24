@@ -79,12 +79,19 @@ body {
 
 .filters-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
+    flex-wrap: nowrap;
+    gap: 12px;
+    align-items: flex-end;
 }
 
 .filter-item {
-    flex: 1 1 220px;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* Search sits on the right, slightly wider */
+.filter-item-search {
+    flex: 1.4 1 0;
 }
 
 .filter-label {
@@ -95,6 +102,7 @@ body {
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    white-space: nowrap;
 }
 
 .filter-input-wrapper {
@@ -200,14 +208,13 @@ body {
     border-right: 1px solid #d1d5db;
 }
 
-.committees-table th:nth-child(3),
-.committees-table td:nth-child(3) {
-    text-align: left;
+.committees-table th:nth-child(4),
+.committees-table td:nth-child(4) {
     max-width: 350px;
 }
 
 .committee-description {
-    text-align: left;
+    text-align: center;
     font-size: 12px;
     line-height: 1.4;
 }
@@ -567,35 +574,43 @@ body {
         justify-content: center;
     }
 
-    /* Filters: stack vertically, full width */
+    /* Filters: keep side-by-side on mobile, same as desktop */
     .filters-row {
-        flex-direction: column;
-        gap: 10px;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 8px;
+        align-items: flex-end;
     }
 
     .filter-item {
-        flex: none;
-        width: 100%;
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+    }
+
+    .filter-item-search {
+        flex: 1.4 1 0;
     }
 
     .filter-label {
-        font-size: 11px;
+        font-size: 10px;
         margin-bottom: 4px;
+        letter-spacing: 0.02em;
     }
 
     .filter-input,
     .filter-select {
         width: 100%;
-        height: 42px;
-        font-size: 13px;
-        padding: 0 12px;
+        height: 40px;
+        font-size: 12px;
+        padding: 0 10px;
         border-radius: 8px;
         border: 1.5px solid #d1d5db;
         background: #f9fafb;
     }
 
     .filter-input::placeholder {
-        font-size: 13px;
+        font-size: 12px;
         color: #9ca3af;
     }
 }
@@ -617,8 +632,9 @@ body {
 
     .filter-input,
     .filter-select {
-        height: 40px;
-        font-size: 12px;
+        height: 38px;
+        font-size: 11px;
+        padding: 0 8px;
     }
 
     .committee-card {
@@ -629,5 +645,236 @@ body {
 @media (min-width: 769px) {
     .main-content.sidebar-collapsed {
         margin-left: 80px;
+    }
+}
+
+/* ── Committee View Modal ── */
+.committee-view-box {
+    max-width: 500px;
+}
+
+.committee-view-body {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Banner: yellow accent top bar + white card below ── */
+.cv-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #ffffff;
+    padding: 20px 20px 16px 20px;
+    border-bottom: 3px solid #f4c20d;
+    position: relative;
+}
+
+.cv-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #f4c20d 0%, #d4a80a 100%);
+    border-radius: 0;
+}
+
+.cv-banner-icon {
+    width: 46px;
+    height: 46px;
+    background: #2c2c3e;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.cv-banner-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: #f4c20d;
+}
+
+.cv-banner-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.cv-committee-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.3;
+    word-break: break-word;
+    margin-bottom: 6px;
+}
+
+.cv-committee-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.cv-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1px solid #bbf7d0;
+}
+
+.cv-date-created {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* ── Info row: 3 equal cards ── */
+.cv-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cv-info-card {
+    padding: 12px 16px;
+    border-right: 1px solid #e5e7eb;
+}
+
+.cv-info-card:last-child {
+    border-right: none;
+}
+
+.cv-info-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 3px;
+}
+
+.cv-info-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+/* ── Content sections ── */
+.cv-section {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.cv-section:last-child {
+    border-bottom: none;
+    padding-bottom: 18px;
+}
+
+.cv-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #2c2c3e;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 7px;
+}
+
+.cv-section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 12px;
+    background: #f4c20d;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.cv-section-body {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* ── Mobile: Assign Committee button ── */
+@media (max-width: 768px) {
+    #addCommitteeBtn {
+        font-size: 12px;
+        padding: 0 12px;
+        height: 38px;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    #addCommitteeBtn .btn-plus {
+        display: none;
+    }
+
+    /* View modal responsive */
+    .cv-info-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cv-info-card:nth-child(2) {
+        border-right: none;
+    }
+
+    .cv-info-card:nth-child(3) {
+        grid-column: 1 / -1;
+        border-right: none;
+        border-top: 1px solid #e5e7eb;
+    }
+}
+
+@media (max-width: 480px) {
+    #addCommitteeBtn {
+        font-size: 11px;
+        padding: 0 10px;
+        height: 36px;
+    }
+
+    .cv-banner {
+        padding: 14px 16px;
+        gap: 10px;
+    }
+
+    .cv-committee-name {
+        font-size: 13px;
+    }
+
+    .cv-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cv-info-card {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 10px 16px;
+    }
+
+    .cv-info-card:last-child {
+        border-bottom: none;
+    }
+
+    .cv-section {
+        padding: 12px 16px;
     }
 }

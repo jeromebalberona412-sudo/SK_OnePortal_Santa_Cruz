@@ -157,7 +157,7 @@ function initializeCommitteesUI() {
 
         if (filtered.length === 0) {
             const empty = document.createElement('tr');
-            empty.innerHTML = '<td colspan="4" class="empty-state">No committees assigned yet. Click "+ Assign Committee".</td>';
+            empty.innerHTML = '<td colspan="5" class="empty-state">No committees assigned yet. Click "Assign Committee".</td>';
             grid.appendChild(empty);
             return;
         }
@@ -178,6 +178,7 @@ function initializeCommitteesUI() {
             row.innerHTML = `
                 <td>${c.name}</td>
                 <td>${c.head}</td>
+                <td>${c.dateCreated || '—'}</td>
                 <td>${descriptionHtml}</td>
                 <td>
                     <div class="committee-actions">
@@ -276,7 +277,24 @@ function initializeCommitteesUI() {
             const committee = committees[index];
 
             if (action === 'view') {
-                if (viewCommitteeHead) viewCommitteeHead.value = `${committee.name} - ${committee.head}`;
+                const viewName = document.getElementById('viewCommitteeName');
+                const viewHead = document.getElementById('viewCommitteeHead');
+                const viewStatus = document.getElementById('viewCommitteeStatus');
+                const viewStatusText = document.getElementById('viewCommitteeStatusText');
+                const viewDate = document.getElementById('viewCommitteeDateAssigned');
+                const viewDateCreated = document.getElementById('viewCommitteeDateCreated');
+                const viewDesc = document.getElementById('viewCommitteeDescription');
+                const viewResp = document.getElementById('viewCommitteeResponsibilities');
+
+                if (viewName) viewName.textContent = committee.name || '—';
+                if (viewHead) viewHead.textContent = committee.head || '—';
+                if (viewStatus) viewStatus.textContent = committee.status || 'Active';
+                if (viewStatusText) viewStatusText.textContent = committee.status || 'Active';
+                if (viewDate) viewDate.textContent = committee.dateCreated || '—';
+                if (viewDateCreated) viewDateCreated.textContent = committee.dateCreated ? 'Assigned ' + committee.dateCreated : '';
+                if (viewDesc) viewDesc.textContent = committee.description || committee.purpose || '—';
+                if (viewResp) viewResp.textContent = committee.responsibilities || '—';
+
                 if (viewModal) {
                     resetModalMaximize(viewModal);
                     viewModal.style.display = 'flex';
