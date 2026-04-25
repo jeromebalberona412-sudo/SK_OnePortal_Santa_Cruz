@@ -451,15 +451,15 @@
         <div class="dash-section-card">
             <div class="dash-section-header">
                 <div>
-                    <h2 class="dash-section-title">ABYIP Status Distribution</h2>
-                    <p class="dash-section-sub">Active, Inactive, Pending breakdown</p>
+                    <h2 class="dash-section-title">Kabataan Sex Distribution</h2>
+                    <p class="dash-section-sub">Male vs Female registered youth</p>
                 </div>
                 <span class="dash-chart-badge">Pie Chart</span>
             </div>
             <div class="chart-canvas-wrap chart-canvas-wrap--pie">
-                <canvas id="chartAbyipStatus"></canvas>
+                <canvas id="chartGenderPie"></canvas>
             </div>
-            <div class="pie-legend-row" id="abyipLegend"></div>
+            <div class="pie-legend-row" id="genderLegend"></div>
         </div>
 
         <div class="dash-section-card">

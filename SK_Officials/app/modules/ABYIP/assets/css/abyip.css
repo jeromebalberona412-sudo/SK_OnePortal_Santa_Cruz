@@ -1924,7 +1924,8 @@ html {
 
 .abyip-records-card {
     min-width: 0;
-    overflow: visible;
+    overflow: hidden;
+    width: 100%;
 }
 
 .abyip-records-wrap {
@@ -1991,11 +1992,11 @@ html {
 /* Records table: blue header, full grid */
 .abyip-records-table {
     width: 100%;
-    min-width: 720px;
     border-collapse: collapse;
     font-size: 14px;
     background: #fff;
     border: 1px solid #1e3a8a;
+    table-layout: fixed;
 }
 
 .abyip-records-table thead {
@@ -2058,7 +2059,8 @@ html {
 }
 
 .abyip-records-actions-col {
-    min-width: 220px;
+    min-width: 120px;
+    width: 120px;
 }
 
 .abyip-records-empty {

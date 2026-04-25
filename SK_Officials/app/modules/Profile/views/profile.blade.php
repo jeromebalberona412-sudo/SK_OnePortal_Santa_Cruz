@@ -47,362 +47,131 @@
 
         <!-- SK Chairman -->
         <section class="sk-chairman-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="icon"><i class="fa-solid fa-user-tie"></i></span>
-                    SK Chairman
-                </h2>
-            </div>
             <div class="official-card">
-                <div class="official-header">
-                    <div class="official-photo">
-                        <div class="profile-icon"><i class="fa-solid fa-user-tie"></i></div>
-                        <span class="status-badge active">Active</span>
+
+                <!-- Profile Picture Header -->
+                <div class="profile-pic-header">
+                    <div class="profile-pic-avatar">
+                        <i class="fa-solid fa-user-tie"></i>
+                        <span class="profile-pic-badge active">Active</span>
                     </div>
-                    <div class="official-info">
-                        <h3>Paula A Talais</h3>
-                        <p class="official-position">SK Chairman</p>
-                        <div class="official-meta">
-                            <span class="meta-item"><i class="fa-solid fa-venus"></i> Female</span>
-                            <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 20 years old</span>
-                        </div>
+                    <div class="profile-pic-info">
+                        <h3 class="profile-pic-name">Jerome Sanico Balberona</h3>
+                        <p class="profile-pic-role">SK Chairman</p>
                     </div>
                 </div>
+
+                <!-- Card Body -->
                 <div class="official-details">
-                    <div class="detail-row">
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-user"></i> Full Name (FN, MN LN, Suffix)</label>
-                            <p>Paula A Talais</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-envelope"></i> Email Address</label>
-                            <p>kianpaula4@gmail.com</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-location-dot"></i> Barangay</label>
-                            <p>Palasan</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-city"></i> Municipality</label>
-                            <p>Santa Cruz</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-briefcase"></i> Position (SK Role)</label>
-                            <p>Chairman</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-calendar-day"></i> Date of Birth</label>
-                            <p>Apr 2, 2005</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-person"></i> Age</label>
-                            <p>20</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
-                            <p>09169064515</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-envelope-circle-check"></i> Email Verification</label>
-                            <p>03/03/2026 04:04 PM</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-calendar-check"></i> Term Start</label>
-                            <p>Feb 28, 2026</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-calendar-xmark"></i> Term End</label>
-                            <p>Jan 7, 2030</p>
-                        </div>
-                        <div class="detail-item">
-                            <label><i class="fa-solid fa-circle-check"></i> Status</label>
-                            <p>Account Status: ACTIVE</p>
-                            <p>Term Status: ACTIVE</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- SK Secretary -->
-        <section class="sk-secretary-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="icon"><i class="fa-solid fa-pen-to-square"></i></span>
-                    SK Secretary
-                </h2>
-            </div>
-            <div class="official-card">
-                <div class="official-header">
-                    <div class="official-photo">
-                        <div class="profile-icon"><i class="fa-solid fa-user-pen"></i></div>
-                        <span class="status-badge active">Active</span>
-                    </div>
-                    <div class="official-info">
-                        <h3>Maria Clara Santos</h3>
-                        <p class="official-position">SK Secretary</p>
-                        <div class="official-meta">
-                            <span class="meta-item"><i class="fa-solid fa-venus"></i> Female</span>
-                            <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 23 years old</span>
+                    <!-- ── Personal Information ───────────────────── -->
+                    <div class="profile-field-group">
+                        <div class="profile-field-group-label profile-field-group-label--bold">
+                            <i class="fa-solid fa-user"></i> Personal Information
                         </div>
-                    </div>
-                </div>
-                <div class="official-details">
-                    <div class="detail-row">
-                        <div class="detail-item"><label><i class="fa-solid fa-user"></i> Full Name</label><p>Maria Clara Santos</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-envelope"></i> Email Address</label><p>maria.santos@email.com</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-location-dot"></i> Barangay</label><p>Palasan</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-city"></i> Municipality</label><p>Santa Cruz</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-briefcase"></i> Position (SK Role)</label><p>Secretary</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-calendar-day"></i> Date of Birth</label><p>March 15, 2002</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-person"></i> Age</label><p>23</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label><p>0919-012-3456</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-calendar-check"></i> Term Start</label><p>Feb 28, 2026</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-calendar-xmark"></i> Term End</label><p>Jan 7, 2030</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-circle-check"></i> Status</label><p>Account Status: ACTIVE</p><p>Term Status: ACTIVE</p></div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- SK Treasurer -->
-        <section class="sk-treasurer-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="icon"><i class="fa-solid fa-coins"></i></span>
-                    SK Treasurer
-                </h2>
-            </div>
-            <div class="official-card">
-                <div class="official-header">
-                    <div class="official-photo">
-                        <div class="profile-icon"><i class="fa-solid fa-user-shield"></i></div>
-                        <span class="status-badge active">Active</span>
-                    </div>
-                    <div class="official-info">
-                        <h3>Robert James Tan</h3>
-                        <p class="official-position">SK Treasurer</p>
-                        <div class="official-meta">
-                            <span class="meta-item"><i class="fa-solid fa-mars"></i> Male</span>
-                            <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 24 years old</span>
+                        <!-- Name row -->
+                        <div class="profile-field-row" style="margin-bottom: 14px;">
+                            <div class="profile-field">
+                                <label>First Name</label>
+                                <p>Jerome</p>
+                            </div>
+                            <div class="profile-field">
+                                <label>Middle Name</label>
+                                <p>Sanico</p>
+                            </div>
+                            <div class="profile-field">
+                                <label>Last Name</label>
+                                <p>Balberona</p>
+                            </div>
+                            <div class="profile-field">
+                                <label>Suffix</label>
+                                <p>None</p>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="official-details">
-                    <div class="detail-row">
-                        <div class="detail-item"><label><i class="fa-solid fa-user"></i> Full Name</label><p>Robert James Tan</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-envelope"></i> Email Address</label><p>robert.tan@email.com</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-location-dot"></i> Barangay</label><p>Palasan</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-city"></i> Municipality</label><p>Santa Cruz</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-briefcase"></i> Position (SK Role)</label><p>Treasurer</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-calendar-day"></i> Date of Birth</label><p>June 10, 2001</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-person"></i> Age</label><p>24</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label><p>0920-123-4567</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-calendar-check"></i> Term Start</label><p>Feb 28, 2026</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-calendar-xmark"></i> Term End</label><p>Jan 7, 2030</p></div>
-                        <div class="detail-item"><label><i class="fa-solid fa-circle-check"></i> Status</label><p>Account Status: ACTIVE</p><p>Term Status: ACTIVE</p></div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- SK Kagawad (bottom) -->
-        <section class="sk-kagawad-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="icon"><i class="fa-solid fa-users"></i></span>
-                    SK Kagawad Members
-                </h2>
-            </div>
-            <div class="kagawad-grid">
+                        <!-- Other personal fields -->
+                        <div class="profile-field-row">
+                            <div class="profile-field">
+                                <label><i class="fa-solid fa-venus-mars"></i> Sex</label>
+                                <p>Female</p>
+                            </div>
+                            <div class="profile-field">
+                                <label><i class="fa-solid fa-calendar-day"></i> Birthdate</label>
+                                <p>April 2, 2005</p>
+                            </div>
+                            <div class="profile-field">
+                                <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
+                                <p>09169064515</p>
+                            </div>
+                            <div class="profile-field">
+                                <label><i class="fa-solid fa-briefcase"></i> Position</label>
+                                <p>SK Chairman</p>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="official-card">
-                    <div class="official-header">
-                        <div class="official-photo">
-                            <div class="profile-icon"><i class="fa-regular fa-circle-user"></i></div>
-                            <span class="status-badge active">Active</span>
+                    <!-- ── Address ────────────────────────────────── -->
+                    <div class="profile-field-group">
+                        <div class="profile-field-group-label profile-field-group-label--bold">
+                            <i class="fa-solid fa-location-dot"></i> Address
                         </div>
-                        <div class="official-info">
-                            <h3>Juan Dela Cruz</h3>
-                            <p class="official-position">SK Kagawad</p>
-                            <div class="official-meta">
-                                <span class="meta-item"><i class="fa-solid fa-venus"></i> Female</span>
-                                <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 23 years old</span>
+                        <div class="profile-field-row">
+                            <div class="profile-field">
+                                <label>Region</label>
+                                <p>CALABARZON</p>
+                            </div>
+                            <div class="profile-field">
+                                <label>Province</label>
+                                <p>Laguna</p>
+                            </div>
+                            <div class="profile-field">
+                                <label>Municipality</label>
+                                <p>Santa Cruz</p>
+                            </div>
+                            <div class="profile-field">
+                                <label>Barangay</label>
+                                <p>Calios</p>
                             </div>
                         </div>
                     </div>
-                    <div class="official-details">
-                        <div class="detail-row">
-                            <div class="detail-item"><label><i class="fa-solid fa-cake-candles"></i> Birth Date</label><p>May 10, 2001</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-mobile-screen"></i> Contact</label><p>0913-456-7890</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-envelope"></i> Email</label><p>jerome.balberona@email.com</p></div>
-                        </div>
-                        <div class="committee-section">
-                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
-                            <div class="committee-tags">
-                                <span class="committee-tag">Health &amp; Nutrition</span>
-                                <span class="committee-tag">Women &amp; Children</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="official-card">
-                    <div class="official-header">
-                        <div class="official-photo">
-                            <div class="profile-icon"><i class="fa-regular fa-circle-user"></i></div>
-                            <span class="status-badge active">Active</span>
+                    <!-- ── Term & Committee Information ──────────── -->
+                    <div class="profile-field-group">
+                        <div class="profile-field-group-label profile-field-group-label--bold">
+                            <i class="fa-solid fa-calendar-check"></i> Term &amp; Committee Information
                         </div>
-                        <div class="official-info">
-                            <h3>Gabriel Garcia</h3>
-                            <p class="official-position">SK Kagawad</p>
-                            <div class="official-meta">
-                                <span class="meta-item"><i class="fa-solid fa-mars"></i> Male</span>
-                                <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 24 years old</span>
+                        <div class="profile-field-row">
+                            <div class="profile-field">
+                                <label><i class="fa-solid fa-calendar-check"></i> Term Start</label>
+                                <p>February 28, 2026</p>
+                            </div>
+                            <div class="profile-field">
+                                <label><i class="fa-solid fa-calendar-xmark"></i> Term End</label>
+                                <p>January 7, 2030</p>
+                            </div>
+                            <div class="profile-field">
+                                <label><i class="fa-solid fa-clipboard-list"></i> Committee</label>
+                                <p>Sports</p>
                             </div>
                         </div>
                     </div>
-                    <div class="official-details">
-                        <div class="detail-row">
-                            <div class="detail-item"><label><i class="fa-solid fa-cake-candles"></i> Birth Date</label><p>August 22, 2000</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-mobile-screen"></i> Contact</label><p>0914-567-8901</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-envelope"></i> Email</label><p>gabriel.garcia@email.com</p></div>
-                        </div>
-                        <div class="committee-section">
-                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
-                            <div class="committee-tags">
-                                <span class="committee-tag">Sports &amp; Recreation</span>
-                                <span class="committee-tag">Environment</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="official-card">
-                    <div class="official-header">
-                        <div class="official-photo">
-                            <div class="profile-icon"><i class="fa-regular fa-circle-user"></i></div>
-                            <span class="status-badge active">Active</span>
+                    <!-- ── Account ────────────────────────────────── -->
+                    <div class="profile-field-group">
+                        <div class="profile-field-group-label profile-field-group-label--bold">
+                            <i class="fa-solid fa-circle-user"></i> Account
                         </div>
-                        <div class="official-info">
-                            <h3>Frankien Belangoy</h3>
-                            <p class="official-position">SK Kagawad</p>
-                            <div class="official-meta">
-                                <span class="meta-item"><i class="fa-solid fa-venus"></i> Female</span>
-                                <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 22 years old</span>
+                        <div class="profile-field-row">
+                            <div class="profile-field">
+                                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                                <p>kianpaula4@gmail.com</p>
                             </div>
                         </div>
                     </div>
-                    <div class="official-details">
-                        <div class="detail-row">
-                            <div class="detail-item"><label><i class="fa-solid fa-cake-candles"></i> Birth Date</label><p>December 5, 2002</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-mobile-screen"></i> Contact</label><p>0915-678-9012</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-envelope"></i> Email</label><p>frankien.belangoy@email.com</p></div>
-                        </div>
-                        <div class="committee-section">
-                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
-                            <div class="committee-tags">
-                                <span class="committee-tag">Education</span>
-                                <span class="committee-tag">Arts &amp; Culture</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="official-card">
-                    <div class="official-header">
-                        <div class="official-photo">
-                            <div class="profile-icon"><i class="fa-regular fa-circle-user"></i></div>
-                            <span class="status-badge active">Active</span>
-                        </div>
-                        <div class="official-info">
-                            <h3>Jerome Balberona</h3>
-                            <p class="official-position">SK Kagawad</p>
-                            <div class="official-meta">
-                                <span class="meta-item"><i class="fa-solid fa-mars"></i> Male</span>
-                                <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 26 years old</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="official-details">
-                        <div class="detail-row">
-                            <div class="detail-item"><label><i class="fa-solid fa-cake-candles"></i> Birth Date</label><p>February 18, 1998</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-mobile-screen"></i> Contact</label><p>0916-789-0123</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-envelope"></i> Email</label><p>juan.delacruz@email.com</p></div>
-                        </div>
-                        <div class="committee-section">
-                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
-                            <div class="committee-tags">
-                                <span class="committee-tag">Peace &amp; Order</span>
-                                <span class="committee-tag">Infrastructure</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="official-card">
-                    <div class="official-header">
-                        <div class="official-photo">
-                            <div class="profile-icon"><i class="fa-regular fa-circle-user"></i></div>
-                            <span class="status-badge active">Active</span>
-                        </div>
-                        <div class="official-info">
-                            <h3>Jane Doe</h3>
-                            <p class="official-position">SK Kagawad</p>
-                            <div class="official-meta">
-                                <span class="meta-item"><i class="fa-solid fa-venus"></i> Female</span>
-                                <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 21 years old</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="official-details">
-                        <div class="detail-row">
-                            <div class="detail-item"><label><i class="fa-solid fa-cake-candles"></i> Birth Date</label><p>July 30, 2003</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-mobile-screen"></i> Contact</label><p>0917-890-1234</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-envelope"></i> Email</label><p>jane.doe@email.com</p></div>
-                        </div>
-                        <div class="committee-section">
-                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
-                            <div class="committee-tags">
-                                <span class="committee-tag">Social Services</span>
-                                <span class="committee-tag">Livelihood</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="official-card">
-                    <div class="official-header">
-                        <div class="official-photo">
-                            <div class="profile-icon"><i class="fa-regular fa-circle-user"></i></div>
-                            <span class="status-badge active">Active</span>
-                        </div>
-                        <div class="official-info">
-                            <h3>Mark Anthony Reyes</h3>
-                            <p class="official-position">SK Kagawad</p>
-                            <div class="official-meta">
-                                <span class="meta-item"><i class="fa-solid fa-mars"></i> Male</span>
-                                <span class="meta-item"><i class="fa-solid fa-cake-candles"></i> 25 years old</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="official-details">
-                        <div class="detail-row">
-                            <div class="detail-item"><label><i class="fa-solid fa-cake-candles"></i> Birth Date</label><p>September 12, 1999</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-mobile-screen"></i> Contact</label><p>0918-901-2345</p></div>
-                            <div class="detail-item"><label><i class="fa-solid fa-envelope"></i> Email</label><p>mark.reyes@email.com</p></div>
-                        </div>
-                        <div class="committee-section">
-                            <h4><i class="fa-solid fa-clipboard-list"></i> Committee</h4>
-                            <div class="committee-tags">
-                                <span class="committee-tag">Technology</span>
-                                <span class="committee-tag">Innovation</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
+                </div><!-- /official-details -->
+            </div><!-- /official-card -->
         </section>
 
     </div><!-- /tab-info -->
@@ -418,7 +187,6 @@
                 </h2>
             </div>
 
-            <!-- Change Password card only -->
             <div class="account-settings-card">
                 <div class="account-settings-row">
                     <div class="account-settings-info">

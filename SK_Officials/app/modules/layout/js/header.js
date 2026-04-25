@@ -74,6 +74,10 @@ function initializeHeader() {
             const logoutModal = document.getElementById('logoutModal');
             if (logoutModal && logoutModal.style.display === 'flex') {
                 logoutModal.style.display = 'none';
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+                const mainContent = document.getElementById('mainContent') || document.querySelector('.main-content');
+                if (mainContent) mainContent.style.overflow = '';
             }
         }
         // Ctrl/Cmd + K → focus search
@@ -296,26 +300,38 @@ function initializeLogout() {
         logoutTrigger.addEventListener('click', function (e) {
             e.preventDefault();
             closeProfileDropdown();
-            if (logoutModal) logoutModal.style.display = 'flex';
+            if (logoutModal) {
+                logoutModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+                const mainContent = document.getElementById('mainContent') || document.querySelector('.main-content');
+                if (mainContent) mainContent.style.overflow = 'hidden';
+            }
         });
     }
 
+    function closeLogoutModal() {
+        if (logoutModal) logoutModal.style.display = 'none';
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        const mainContent = document.getElementById('mainContent') || document.querySelector('.main-content');
+        if (mainContent) mainContent.style.overflow = '';
+    }
+
     if (cancelLogout) {
-        cancelLogout.addEventListener('click', function () {
-            if (logoutModal) logoutModal.style.display = 'none';
-        });
+        cancelLogout.addEventListener('click', closeLogoutModal);
     }
 
     if (confirmLogout) {
         confirmLogout.addEventListener('click', function () {
-            if (logoutModal) logoutModal.style.display = 'none';
+            closeLogoutModal();
             handleLogout();
         });
     }
 
     if (logoutModal) {
         logoutModal.addEventListener('click', function (e) {
-            if (e.target === logoutModal) logoutModal.style.display = 'none';
+            if (e.target === logoutModal) closeLogoutModal();
         });
     }
 }

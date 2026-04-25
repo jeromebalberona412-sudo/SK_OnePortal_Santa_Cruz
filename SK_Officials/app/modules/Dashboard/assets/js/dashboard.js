@@ -19,6 +19,7 @@ const YEAR_DATA = {
         monthlyApproved: [4,6,5,8,7,10,9,11,10,12,8,7],
         monthlyRejected: [1,2,1,2,1,3,2,3,1,2,2,1],
         abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[18,6,4,6] },
+        genderDist: { labels:['Male','Female'], values:[82, 76] },
         budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[140000,80000,70000,40000,50000,40000] },
         activity: [
             { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'Jan 5, 2023' },
@@ -41,6 +42,7 @@ const YEAR_DATA = {
         monthlyApproved: [8,10,9,13,11,16,14,18,15,20,17,12],
         monthlyRejected: [2,3,2,3,2,4,3,5,2,4,3,2],
         abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[30,9,6,13] },
+        genderDist: { labels:['Male','Female'], values:[118, 109] },
         budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[220000,120000,100000,65000,80000,60000] },
         activity: [
             { type:'approve', text:'KK Profiling request approved',  who:'Ana Lim',         time:'Jan 15, 2024' },
@@ -66,6 +68,7 @@ const YEAR_DATA = {
         monthlyApproved: [10,13,12,17,14,21,18,24,20,27,23,19],
         monthlyRejected: [2,4,3,4,3,5,4,6,3,5,4,3],
         abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[40,10,7,17] },
+        genderDist: { labels:['Male','Female'], values:[152, 136] },
         budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[280000,155000,130000,80000,100000,75000] },
         activity: [
             { type:'approve', text:'Program budget approved',         who:'SK Treasurer',    time:'Feb 3, 2025' },
@@ -92,6 +95,7 @@ const YEAR_DATA = {
         monthlyApproved: [12,18,15,22,19,28,24,31,27,35,30,38],
         monthlyRejected: [3, 5, 4, 6, 3, 7, 5, 8, 4, 6, 5, 4],
         abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[52,14,9,25] },
+        genderDist: { labels:['Male','Female'], values:[178, 164] },
         budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[340000,190000,160000,100000,130000,90000] },
         activity: [
             { type:'approve', text:'KK Profiling request approved',  who:'Juan Dela Cruz',  time:'2 min ago' },
@@ -483,14 +487,14 @@ function renderLineChart(d) {
     }
 }
 
-/* ── Pie Chart ───────────────────────────────────────────── */
+/* ── Pie Chart — Kabataan Sex Distribution ──────────────── */
 function renderPieChart(d) {
-    const ctx = document.getElementById('chartAbyipStatus');
+    const ctx = document.getElementById('chartGenderPie');
     if (!ctx) return;
     if (chartPie) { chartPie.destroy(); chartPie = null; }
 
-    const PIE_COLORS = ['#22c55e','#ef4444','#f59e0b','#3b82f6'];
-    const total = d.abyipStatus.values.reduce(function (a, b) { return a + b; }, 0);
+    const PIE_COLORS = ['#3b82f6', '#ec4899'];
+    const total = d.genderDist.values.reduce(function (a, b) { return a + b; }, 0);
 
     /* Inline label plugin — draws label+% directly on each slice */
     const pieLabelsPlugin = {
@@ -526,9 +530,9 @@ function renderPieChart(d) {
         type: 'pie',
         plugins: [pieLabelsPlugin],
         data: {
-            labels: d.abyipStatus.labels,
+            labels: d.genderDist.labels,
             datasets: [{
-                data: d.abyipStatus.values,
+                data: d.genderDist.values,
                 backgroundColor: PIE_COLORS,
                 borderWidth: 2,
                 borderColor: '#fff',
@@ -551,10 +555,10 @@ function renderPieChart(d) {
         },
     });
 
-    /* Update HTML legend — label + color box only, no % */
-    const legend = document.getElementById('abyipLegend');
+    /* Update HTML legend */
+    const legend = document.getElementById('genderLegend');
     if (legend) {
-        legend.innerHTML = d.abyipStatus.labels.map(function (label, i) {
+        legend.innerHTML = d.genderDist.labels.map(function (label, i) {
             return `<div class="pie-legend-item">
                 <span class="pie-legend-box" style="background:${PIE_COLORS[i]};"></span>
                 <span class="pie-legend-label">${esc(label)}</span>
