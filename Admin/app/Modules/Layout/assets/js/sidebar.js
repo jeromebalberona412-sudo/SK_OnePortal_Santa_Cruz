@@ -7,8 +7,6 @@ function getLayoutElements() {
         sidebar: document.querySelector('.sb-sidenav'),
         overlay: document.getElementById('sidebarOverlay'),
         topNav: document.getElementById('topNav'),
-        notifPopover: document.getElementById('notifPopover'),
-        notifToggle: document.getElementById('notifToggle'),
         profileMenu: document.getElementById('topbarUserMenu'),
         profileToggle: document.getElementById('topbarUserToggle'),
     };
@@ -42,16 +40,7 @@ function syncDesktopStretch() {
 }
 
 function closeTopbarMenus() {
-    const { notifPopover, notifToggle, profileMenu, profileToggle } = getLayoutElements();
-
-    if (notifPopover) {
-        notifPopover.classList.remove('show');
-        notifPopover.hidden = true;
-    }
-
-    if (notifToggle) {
-        notifToggle.setAttribute('aria-expanded', 'false');
-    }
+    const { profileMenu, profileToggle } = getLayoutElements();
 
     if (profileMenu) {
         profileMenu.classList.remove('show');
@@ -99,46 +88,18 @@ window.toggleSidebar = function () {
 };
 
 window.toggleNotifPopover = function (event) {
+    // Notification removed — no-op kept for backward compatibility
     event.stopPropagation();
-    const { notifPopover, notifToggle, profileMenu, profileToggle } = getLayoutElements();
-    if (!notifPopover || !notifToggle) {
-        return;
-    }
-
-    const shouldOpen = notifPopover.hidden;
-
-    if (profileMenu) {
-        profileMenu.classList.remove('show');
-        profileMenu.hidden = true;
-    }
-
-    if (profileToggle) {
-        profileToggle.classList.remove('open');
-        profileToggle.setAttribute('aria-expanded', 'false');
-    }
-
-    notifPopover.hidden = !shouldOpen;
-    notifPopover.classList.toggle('show', shouldOpen);
-    notifToggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
 };
 
 window.toggleProfileDropdown = function (event) {
     event.stopPropagation();
-    const { notifPopover, notifToggle, profileMenu, profileToggle } = getLayoutElements();
+    const { profileMenu, profileToggle } = getLayoutElements();
     if (!profileMenu || !profileToggle) {
         return;
     }
 
     const shouldOpen = profileMenu.hidden;
-
-    if (notifPopover) {
-        notifPopover.classList.remove('show');
-        notifPopover.hidden = true;
-    }
-
-    if (notifToggle) {
-        notifToggle.setAttribute('aria-expanded', 'false');
-    }
 
     profileMenu.hidden = !shouldOpen;
     profileMenu.classList.toggle('show', shouldOpen);
@@ -179,22 +140,14 @@ function bindNavClickState() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    const { overlay, profileMenu, profileToggle, notifPopover, notifToggle } = getLayoutElements();
+    const { overlay, profileMenu, profileToggle } = getLayoutElements();
 
     if (profileMenu) {
         profileMenu.hidden = true;
     }
 
-    if (notifPopover) {
-        notifPopover.hidden = true;
-    }
-
     if (profileToggle) {
         profileToggle.setAttribute('aria-expanded', 'false');
-    }
-
-    if (notifToggle) {
-        notifToggle.setAttribute('aria-expanded', 'false');
     }
 
     applyViewportMode();
@@ -209,14 +162,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('click', function (event) {
         const topbarUser = document.getElementById('topbarUser');
-        const notifButton = document.getElementById('notifToggle');
-        const notifPopoverEl = document.getElementById('notifPopover');
 
         const clickedUserArea = topbarUser ? topbarUser.contains(event.target) : false;
-        const clickedNotifArea = notifButton ? notifButton.contains(event.target) : false;
-        const clickedNotifPopover = notifPopoverEl ? notifPopoverEl.contains(event.target) : false;
 
-        if (!clickedUserArea && !clickedNotifArea && !clickedNotifPopover) {
+        if (!clickedUserArea) {
             closeTopbarMenus();
         }
     });

@@ -69,5 +69,5 @@
 </aside>
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
-@include('layout::layouts.logout-modal')
+@include('layout::logout-modal')
 @endauth

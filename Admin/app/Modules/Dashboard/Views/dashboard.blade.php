@@ -8,8 +8,8 @@
 @endsection
 
 @section('content')
-@include('layout::layouts.header')
-@include('layout::layouts.sidebar')
+@include('layout::header')
+@include('layout::sidebar')
 
 @php
 	$statCards = [

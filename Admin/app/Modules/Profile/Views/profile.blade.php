@@ -8,10 +8,9 @@
 
 @section('content')
 <!-- Include Header -->
-@include('layout::layouts.header')
-
+@include('layout::header')
 <!-- Include Sidebar -->
-@include('layout::layouts.sidebar')
+@include('layout::sidebar')
 
 <div id="mainContent" class="profile-page">
     <input type="hidden" id="defaultFullName" value="{{ $user->name ?? 'Admin' }}">

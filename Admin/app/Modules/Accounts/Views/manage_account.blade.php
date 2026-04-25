@@ -23,10 +23,10 @@
 
 @section('content')
 <!-- Include Header -->
-@include('layout::layouts.header')
+@include('layout::header')
 
 <!-- Include Sidebar -->
-@include('layout::layouts.sidebar')
+@include('layout::sidebar')
 <div class="main-content-modern accounts-page" id="mainContent">
     <div class="manage-account-container">
         <!-- Page Header with Search and Add Account Button -->

@@ -8,10 +8,9 @@
 
 @section('content')
 <!-- Include Header -->
-@include('layout::layouts.header')
-
+@include('layout::header')
 <!-- Include Sidebar -->
-@include('layout::layouts.sidebar')
+@include('layout::sidebar')
 
 <div class="main-content-modern auditlog-page" id="mainContent">
     <div class="auditlog-container auditlog-shell auditlog-prototype">
