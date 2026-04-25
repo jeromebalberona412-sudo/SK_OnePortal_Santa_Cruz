@@ -26,6 +26,7 @@ function initializeHeader() {
             e.stopPropagation();
             const isOpen = userDropdown.classList.contains('open');
             closeProfileDropdown(); // close first (handles any stale state)
+            closeNotifDropdown();   // close notification dropdown if open
             if (!isOpen) {
                 userDropdown.classList.add('open');
                 userMenuToggle.setAttribute('aria-expanded', 'true');

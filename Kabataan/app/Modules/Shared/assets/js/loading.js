@@ -34,8 +34,19 @@ window.hideLoading = hideLoading;
 document.addEventListener('DOMContentLoaded', () => {
 
     // ── Login form ────────────────────────────────────────────────────────
+    // Only show loading if both email and password are filled (validation passed)
     const loginForm = document.querySelector('form[action*="login"]:not([action*="logout"])');
-    loginForm?.addEventListener('submit', () => showLoading(MESSAGES.login));
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            const emailInput    = loginForm.querySelector('input[type="email"], input[name="email"]');
+            const passwordInput = loginForm.querySelector('input[type="password"], input[name="password"]');
+            const emailFilled    = emailInput    && emailInput.value.trim() !== '';
+            const passwordFilled = passwordInput && passwordInput.value !== '';
+            if (emailFilled && passwordFilled) {
+                showLoading(MESSAGES.login);
+            }
+        });
+    }
 
     // ── Register form ─────────────────────────────────────────────────────
     const registerForm = document.querySelector('form[action*="register"]');
@@ -71,6 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!href || href.startsWith('#') || href.startsWith('javascript') || href.startsWith('mailto')) return;
         // Skip links that have data-no-loading
         if (anchor.dataset.noLoading !== undefined) return;
+        // Skip on login/register/forgot-password pages — no redirect overlay needed
+        const currentPath = window.location.pathname;
+        if (currentPath === '/login' || currentPath.endsWith('/login') ||
+            currentPath === '/register' || currentPath.endsWith('/register') ||
+            currentPath.includes('forgot-password') || currentPath.includes('password/reset')) return;
         // Skip truly external links (different origin)
         if (href.startsWith('http') || href.startsWith('//')) {
             try {

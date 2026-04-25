@@ -19,12 +19,15 @@ html, body {
     padding: 0;
     width: calc(100% - 260px);
     overflow-x: hidden;
+    display: flex;
+    justify-content: center;
 }
 
 .notif-page-container {
     padding: 22px 24px;
     max-width: 860px;
     width: 100%;
+    margin: 0 auto;
     animation: notifFadeIn 0.35s ease both;
 }
 
@@ -44,16 +47,16 @@ html, body {
 }
 
 .notif-page-title {
-    font-size: 24px;
+    font-size: 30px;
     font-weight: 800;
     color: #111827;
     line-height: 1.2;
 }
 
 .notif-page-sub {
-    font-size: 13px;
+    font-size: 15px;
     color: #6b7280;
-    margin-top: 3px;
+    margin-top: 5px;
 }
 
 .notif-page-mark-all {

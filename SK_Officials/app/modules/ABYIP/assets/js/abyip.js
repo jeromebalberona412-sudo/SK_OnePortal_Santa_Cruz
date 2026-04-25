@@ -233,9 +233,6 @@ function renderRecordsTable() {
                 '<button type="button" class="btn-action-edit" data-action="edit" data-id="' +
                 record.id +
                 '">Edit</button>' +
-                '<button type="button" class="btn-action-delete" data-action="delete" data-id="' +
-                record.id +
-                '">Delete</button>' +
                 '</div></td></tr>'
             );
         })

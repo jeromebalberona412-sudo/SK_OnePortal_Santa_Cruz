@@ -479,14 +479,9 @@ html, body {
     background: #9ca3af;
 }
 
-/* Drag-scroll cursor feedback */
+/* Quick actions scroll — normal cursor, no drag */
 .quick-actions-scroll {
-    cursor: grab;
-}
-
-.quick-actions-scroll.qa-dragging {
-    cursor: grabbing;
-    user-select: none;
+    cursor: default;
 }
 
 .qa-btn {

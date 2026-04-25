@@ -239,13 +239,13 @@ body.portal-body {
 }
 
 .section-label {
-    font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--green);
     margin-bottom: 10px;
 }
 
 .section-title {
-    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 800; color: var(--gray-900);
     letter-spacing: -0.03em; margin-bottom: 14px; line-height: 1.2;
 }
@@ -253,6 +253,17 @@ body.portal-body {
 .section-desc {
     font-size: 1.05rem; color: var(--gray-500);
     max-width: 600px; line-height: 1.7; margin-bottom: 0;
+}
+
+/* Centered section header block */
+.section-header-centered {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.section-header-centered .section-desc {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* ============================================
@@ -512,8 +523,16 @@ body.portal-body {
    ============================================ */
 .contact-section { background: var(--white); }
 
+/* Force 4 columns on all screen sizes */
+.contact-section .row { flex-wrap: nowrap; }
+.contact-section .col-12 {
+    flex: 0 0 25%;
+    max-width: 25%;
+    width: 25%;
+}
+
 .contact-card {
-    padding: 28px 24px; border-radius: var(--radius-lg);
+    padding: 16px 10px; border-radius: var(--radius-lg);
     background: var(--gray-50); border: 1px solid var(--gray-200);
     text-align: center; transition: all var(--transition);
 }
@@ -521,16 +540,22 @@ body.portal-body {
 .contact-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--green); }
 
 .contact-icon {
-    width: 52px; height: 52px; border-radius: 50%;
+    width: 40px; height: 40px; border-radius: 50%;
     background: linear-gradient(135deg, var(--green), var(--green-light));
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px;
+    margin: 0 auto 10px;
 }
 
-.contact-icon svg { width: 24px; height: 24px; color: var(--white); }
+.contact-icon svg { width: 18px; height: 18px; color: var(--white); }
 
-.contact-card h3 { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; }
-.contact-card p  { font-size: 13.5px; color: var(--gray-500); line-height: 1.6; }
+.contact-card h3 { font-size: 12px; font-weight: 700; color: var(--gray-900); margin-bottom: 5px; }
+.contact-card p  { font-size: 11px; color: var(--gray-500); line-height: 1.5; margin: 0; word-break: break-word; }
+
+/* On very small screens, allow horizontal scroll rather than breaking layout */
+@media (max-width: 480px) {
+    .contact-section .container-xl { overflow-x: auto; }
+    .contact-section .row { min-width: 480px; }
+}
 
 /* ============================================
    FOOTER

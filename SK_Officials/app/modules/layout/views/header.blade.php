@@ -47,7 +47,6 @@
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                             </svg>
                             Notifications
-                            <span class="notif-count-pill" id="notifCountPill">3</span>
                         </div>
                         <button class="notif-mark-all-btn" id="notifMarkAllBtn" title="Mark all as read">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -112,6 +111,13 @@
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
                         <p>You're all caught up!</p>
+                    </div>
+
+                    <!-- See All Notifications -->
+                    <div class="notif-dropdown-footer">
+                        <a href="{{ route('notifications') }}" class="notif-see-all-btn">
+                            See All Notifications
+                        </a>
                     </div>
 
                 </div><!-- /notif-dropdown -->

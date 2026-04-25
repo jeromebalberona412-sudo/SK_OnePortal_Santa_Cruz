@@ -718,53 +718,5 @@
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Quick Actions — click-drag scroll (desktop mouse) -->
-<script>
-(function () {
-    const el = document.querySelector('.quick-actions-scroll');
-    if (!el) return;
-
-    let isDown   = false;
-    let startX   = 0;
-    let scrollLeft = 0;
-    let hasDragged = false;
-    const DRAG_THRESHOLD = 5; // px — below this = click, above = drag
-
-    el.addEventListener('mousedown', function (e) {
-        isDown     = true;
-        hasDragged = false;
-        startX     = e.pageX - el.offsetLeft;
-        scrollLeft = el.scrollLeft;
-        el.classList.add('qa-dragging');
-    });
-
-    document.addEventListener('mouseup', function () {
-        isDown = false;
-        el.classList.remove('qa-dragging');
-    });
-
-    document.addEventListener('mousemove', function (e) {
-        if (!isDown) return;
-        const x    = e.pageX - el.offsetLeft;
-        const walk = x - startX;
-
-        if (Math.abs(walk) > DRAG_THRESHOLD) {
-            hasDragged = true;
-            e.preventDefault();
-            el.scrollLeft = scrollLeft - walk * 1.2;
-        }
-    });
-
-    /* Block link navigation only when a real drag happened */
-    el.addEventListener('click', function (e) {
-        if (hasDragged) {
-            e.preventDefault();
-            e.stopPropagation();
-            hasDragged = false;
-        }
-    }, true);
-})();
-</script>
-
 </body>
 </html>

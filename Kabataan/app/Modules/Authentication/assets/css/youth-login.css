@@ -411,7 +411,7 @@ html {
 }
 
 .password-wrapper .youth-input {
-    padding-right: 3.5rem;
+    padding-right: 3rem;
 }
 
 .password-input::-ms-reveal,
@@ -426,6 +426,49 @@ html {
     position: absolute;
     right: 0;
 }
+
+/* Password visibility toggle button */
+.pw-toggle-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: var(--youth-gray-400);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.15s ease;
+    line-height: 0;
+    z-index: 2;
+}
+
+.pw-toggle-btn:hover  { color: var(--youth-green); }
+.pw-toggle-btn:focus-visible { outline: 2px solid var(--youth-green); outline-offset: 2px; }
+
+.pw-eye {
+    width: 20px;
+    height: 20px;
+    display: block;
+    transition: opacity 0.15s ease;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Wrapper needs relative so absolute eyes are contained */
+.pw-toggle-btn { position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; }
+
+.pw-eye-show { opacity: 1; }
+.pw-eye-hide { opacity: 0; }
+
+.pw-toggle-btn.pw-visible .pw-eye-show { opacity: 0; }
+.pw-toggle-btn.pw-visible .pw-eye-hide { opacity: 1; }
 
 .toggle-password {
     position: absolute;
@@ -457,17 +500,12 @@ html {
 .eye-icon {
     width: 22px;
     height: 22px;
-    transition: opacity var(--transition-base);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
 }
 
-.eye-open,
-.eye-closed {
-    position: absolute;
-    transition: opacity var(--transition-base);
-}
-
-.eye-open  { opacity: 1; }
-.eye-closed { opacity: 0; }
+.eye-open  { opacity: 1; transform: scale(1) rotate(0deg); }
+.eye-closed { opacity: 0; transform: scale(0.8) rotate(-10deg); }
 
 /* ============================================
    Form Options

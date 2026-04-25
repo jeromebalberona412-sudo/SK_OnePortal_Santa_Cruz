@@ -154,9 +154,11 @@
     ══════════════════════════════════════ --}}
     <section class="services-section" id="services">
         <div class="container-xl py-5">
-            <div class="section-label section-reveal">What We Offer</div>
-            <h2 class="section-title section-reveal">Portal Services</h2>
-            <p class="section-desc section-reveal">Access a range of youth-focused services through SK OnePortal.</p>
+            <div class="section-header-centered">
+                <div class="section-label section-reveal">What We Offer</div>
+                <h2 class="section-title section-reveal">Portal Services</h2>
+                <p class="section-desc section-reveal">Access a range of youth-focused services through SK OnePortal.</p>
+            </div>
             <div class="row g-4">
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="service-card fade-in-up h-100">
@@ -428,10 +430,12 @@
     ══════════════════════════════════════ --}}
     <section class="contact-section" id="contact">
         <div class="container-xl py-5">
-            <div class="section-label section-reveal">Get in Touch</div>
-            <h2 class="section-title section-reveal">Contact Us</h2>
-            <div class="row g-4">
-                <div class="col-12 col-sm-6 col-lg-3">
+            <div class="section-header-centered">
+                <div class="section-label section-reveal">Get in Touch</div>
+                <h2 class="section-title section-reveal">Contact Us</h2>
+            </div>
+            <div class="row g-2">
+                <div class="col-12">
                     <div class="contact-card fade-in-up h-100">
                         <div class="contact-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -443,7 +447,7 @@
                         <p>Municipal Hall, Santa Cruz, Laguna, Philippines</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-3">
+                <div class="col-12">
                     <div class="contact-card fade-in-up h-100">
                         <div class="contact-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -454,7 +458,7 @@
                         <p>+63 (049) 000-0000</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-3">
+                <div class="col-12">
                     <div class="contact-card fade-in-up h-100">
                         <div class="contact-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -466,7 +470,7 @@
                         <p>sk@santacruz.gov.ph</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-3">
+                <div class="col-12">
                     <div class="contact-card fade-in-up h-100">
                         <div class="contact-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -200,9 +200,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ============================================
     // Loading State on Submit (Only for login page)
+    // Only animate if inputs are valid (non-empty)
     // ============================================
     if (loginForm && !document.getElementById('resetPasswordForm')) {
-        loginForm.addEventListener('submit', function() {
+        loginForm.addEventListener('submit', function(e) {
+            // Do not show loading if validation will block the submit
+            const emailVal    = emailInput    ? emailInput.value.trim()    : '';
+            const passwordVal = passwordInput ? passwordInput.value.trim() : '';
+            if (!emailVal || !isValidEmail(emailVal) || !passwordVal) {
+                return; // validation listener already called e.preventDefault()
+            }
+
             const submitBtn = this.querySelector('.youth-submit-btn');
             if (submitBtn && !submitBtn.disabled) {
                 submitBtn.disabled = true;
@@ -213,16 +221,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     </svg>
                     <span>Logging in...</span>
                 `;
-                
-                // Add spinner animation
+
                 const style = document.createElement('style');
                 style.textContent = `
-                    @keyframes spin {
-                        to { transform: rotate(360deg); }
-                    }
-                    .spinner {
-                        animation: spin 1s linear infinite;
-                    }
+                    @keyframes spin { to { transform: rotate(360deg); } }
+                    .spinner { animation: spin 1s linear infinite; }
                 `;
                 document.head.appendChild(style);
             }

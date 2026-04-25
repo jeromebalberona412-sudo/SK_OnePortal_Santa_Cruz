@@ -253,19 +253,60 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
 .form-control:-webkit-autofill:not(.is-invalid):focus { border-color: var(--fed-blue) !important; -webkit-box-shadow: 0 0 0 4px rgba(33, 63, 153, 0.12), 0 0 0 30px white inset !important; }
 
 .password-input-container { position: relative; }
-.password-input-container .form-control { padding-right: 3.5rem; }
+.password-input-container .form-control { padding-right: 3rem; }
 input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display: none !important; }
 input[type="password"]::-webkit-credentials-auto-fill-button, input[type="password"]::-webkit-contacts-auto-fill-button { visibility: hidden !important; display: none !important; }
+
+/* Password visibility toggle button */
+.pw-toggle-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--fed-gray-400);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.15s ease;
+    z-index: 2;
+}
+.pw-toggle-btn:hover { color: var(--fed-blue); }
+.pw-toggle-btn:focus-visible { outline: 2px solid var(--fed-yellow); outline-offset: 2px; }
+
+.pw-eye {
+    width: 20px;
+    height: 20px;
+    display: block;
+    position: absolute;
+    transition: opacity 0.15s ease;
+}
+.pw-eye-show { opacity: 1; }
+.pw-eye-hide { opacity: 0; }
+.pw-toggle-btn.pw-visible .pw-eye-show { opacity: 0; }
+.pw-toggle-btn.pw-visible .pw-eye-hide { opacity: 1; }
 
 .password-toggle {
     position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
     background: none; border: none; cursor: pointer; color: var(--fed-gray-400);
     padding: 0.5rem; display: flex; align-items: center; justify-content: center;
-    transition: all var(--transition-base); border-radius: 8px; z-index: 10;
+    transition: color var(--transition-base), background var(--transition-base); border-radius: 8px; z-index: 10;
 }
 .password-toggle:hover { color: var(--fed-blue); background: rgba(33, 63, 153, 0.08); }
 .password-toggle:active { transform: translateY(-50%) scale(0.95); }
-.password-toggle svg { pointer-events: none; width: 22px; height: 22px; }
+/* Both SVGs positioned on top of each other — no layout shift */
+.password-toggle svg {
+    pointer-events: none; width: 22px; height: 22px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+#eye-icon     { opacity: 1; transform: scale(1) rotate(0deg); }
+#eye-off-icon { opacity: 0; transform: scale(0.8) rotate(-10deg); display: none; }
 
 .form-control.is-invalid, .form-control.is-invalid:hover, .form-control.is-invalid:focus,
 .form-control.is-invalid:valid, .form-control.is-invalid:-webkit-autofill {

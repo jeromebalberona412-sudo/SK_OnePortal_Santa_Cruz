@@ -1,17 +1,48 @@
-// Password Toggle Functionality
+// Password Toggle Functionality — same animation as Reset Password page
+var _fedEyeTransitionSet = false;
 function togglePassword() {
-    const passwordInput = document.getElementById('password');
-    const eyeIcon = document.getElementById('eye-icon');
-    const eyeOffIcon = document.getElementById('eye-off-icon');
+    var passwordInput = document.getElementById('password');
+    var eyeIcon    = document.getElementById('eye-icon');
+    var eyeOffIcon = document.getElementById('eye-off-icon');
+    var btn        = document.querySelector('.password-toggle');
+
+    // Set transition once on first click
+    if (!_fedEyeTransitionSet) {
+        eyeIcon.style.transition    = 'opacity 0.2s ease, transform 0.2s ease';
+        eyeOffIcon.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        _fedEyeTransitionSet = true;
+    }
 
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
-        eyeIcon.style.display = 'none';
+        if (btn) btn.setAttribute('aria-label', 'Hide password');
+
+        // Animate out eye-open
+        eyeIcon.style.opacity   = '0';
+        eyeIcon.style.transform = 'scale(0.8) rotate(10deg)';
+        setTimeout(function() { eyeIcon.style.display = 'none'; }, 200);
+
+        // Animate in eye-off
         eyeOffIcon.style.display = 'block';
+        setTimeout(function() {
+            eyeOffIcon.style.opacity   = '1';
+            eyeOffIcon.style.transform = 'scale(1) rotate(0deg)';
+        }, 10);
     } else {
         passwordInput.type = 'password';
+        if (btn) btn.setAttribute('aria-label', 'Show password');
+
+        // Animate out eye-off
+        eyeOffIcon.style.opacity   = '0';
+        eyeOffIcon.style.transform = 'scale(0.8) rotate(-10deg)';
+        setTimeout(function() { eyeOffIcon.style.display = 'none'; }, 200);
+
+        // Animate in eye-open
         eyeIcon.style.display = 'block';
-        eyeOffIcon.style.display = 'none';
+        setTimeout(function() {
+            eyeIcon.style.opacity   = '1';
+            eyeIcon.style.transform = 'scale(1) rotate(0deg)';
+        }, 10);
     }
 }
 
