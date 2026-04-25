@@ -8,6 +8,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css', 
                 'resources/js/app.js',
+                'resources/js/theme.js',
                 'app/Modules/Profile/assets/css/profile.css',
                 'app/Modules/Profile/assets/js/profile.js',
                 'app/Modules/Layout/assets/css/layout/sidebar.css',
@@ -32,10 +33,8 @@ export default defineConfig({
                 'app/Modules/AuditLog/assets/js/auditlogs.js',
                 'app/Modules/Dashboard/assets/css/dashboard.css',
                 'app/Modules/Dashboard/assets/js/dashboard.js',
-                'app/Modules/Authentication/assets/css/gov-auth.css',
-                'app/Modules/Authentication/assets/js/gov-auth.js',
-                'app/Modules/Authentication/assets/Oneportal_logo-removebg-preview.png',
-                'app/Modules/Authentication/assets/Flag_of_Santa_Cruz__Laguna-removebg-preview.png'
+                'app/Modules/Authentication/assets/css/login.css',
+                'app/Modules/Authentication/assets/js/login.js'
             ],
             refresh: true,
         }),
