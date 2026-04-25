@@ -89,10 +89,10 @@
                             id="email"
                             name="email"
                             class="youth-input"
-                            value="{{ old('email', 'youth@skportal.com') }}"
+                            value="{{ old('email') }}"
                             autofocus
                             autocomplete="email"
-                            placeholder="juan@example.com"
+                            placeholder="Enter your email"
                         >
                     </div>
 
@@ -143,9 +143,6 @@
                     <!-- Submit Button -->
                     <button type="submit" class="youth-submit-btn">
                         <span>Login</span>
-                        <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
                     </button>
                 </form>
 
@@ -154,6 +151,9 @@
                     <p class="register-text">
                         New here? 
                         <a href="{{ route('register') }}" class="register-link">Create an account</a>
+                    </p>
+                    <p class="register-text" style="margin-top: 0.75rem;">
+                        <a href="{{ route('portal') }}" class="register-link">Homepage</a>
                     </p>
                 </div>
             </div>

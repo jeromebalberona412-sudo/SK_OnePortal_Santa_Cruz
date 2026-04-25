@@ -6,5 +6,6 @@ return [
     App\Modules\Dashboard\Providers\DashboardServiceProvider::class,
     App\Modules\Profile\Providers\ProfileServiceProvider::class,
     App\Modules\Homepage\Providers\HomepageServiceProvider::class,
+    App\Modules\Kabataan_Portal\Providers\KabataanPortalServiceProvider::class,
     App\Modules\Chatbot\Providers\ChatbotServiceProvider::class,
 ];
