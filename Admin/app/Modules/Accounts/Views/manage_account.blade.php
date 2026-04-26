@@ -208,32 +208,33 @@
 <!-- View Account Modal -->
 @include('accounts::view_account')
 
-<!-- Delete Confirmation Modal (UI-only) -->
+<!-- Delete Confirmation Modal -->
 <div id="deleteAccountModal" class="modal-overlay" style="display:none;">
-    <div class="modal-content" style="max-width:420px;">
-        <div class="modal-header" style="background:linear-gradient(180deg,#dc2626 0%,#b91c1c 100%);">
-            <h3 class="modal-title">Delete Account</h3>
-            <button type="button" class="modal-close-btn" onclick="closeDeleteModal()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-            </button>
+    <div class="modal-content" style="max-width:360px;border-radius:14px;overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:13px 18px;text-align:center;">
+            <h3 style="margin:0;font-size:15px;font-weight:700;color:#ffffff;">Delete Account</h3>
         </div>
-        <div class="modal-body" style="text-align:center;padding:1.75rem 1.5rem 1rem;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5" style="margin-bottom:1rem;">
-                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-            </svg>
-            <p style="color:#1e293b;font-size:15px;font-weight:600;margin:0 0 0.5rem;">Are you sure?</p>
-            <p style="color:#64748b;font-size:13px;margin:0 0 1.5rem;">
-                You are about to delete <strong id="deleteAccountName"></strong>. This action cannot be undone.
+        <div style="padding:1.75rem 1.5rem 1.25rem;background:#ffffff;text-align:center;">
+            <div style="width:52px;height:52px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/><path d="M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+            </div>
+            <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#1e293b;">Are you sure?</p>
+            <p style="margin:0;font-size:13px;color:#64748b;line-height:1.55;">
+                You are about to delete <strong id="deleteAccountName" style="color:#1e293b;"></strong>. This action cannot be undone.
             </p>
         </div>
-        <div class="modal-footer" style="justify-content:center;gap:0.75rem;border-top:1px solid #fee2e2;background:#fff5f5;">
-            <button type="button" class="btn-secondary-modern" onclick="closeDeleteModal()">Cancel</button>
-            <button type="button" class="btn-delete-confirm" id="deleteConfirmBtn" onclick="confirmDeleteAccount()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                </svg>
+        <div style="padding:0 1.5rem 1.5rem;background:#ffffff;display:flex;gap:0.6rem;">
+            <button type="button" onclick="closeDeleteModal()"
+                style="flex:1;padding:9px 0;border-radius:8px;border:1.5px solid #e2e8f0;background:#ffffff;color:#475569;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">
+                Cancel
+            </button>
+            <button type="button" id="deleteConfirmBtn" onclick="confirmDeleteAccount()"
+                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:8px;border:none;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#ffffff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">
                 Delete
             </button>
         </div>
@@ -244,3 +245,29 @@
 @section('scripts')
     @vite(['app/Modules/Accounts/assets/js/account.js'])
 @endsection
+
+<!-- Global success toast (green — add) -->
+<div id="accountToast" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M20 6L9 17l-5-5"/>
+    </svg>
+    <span id="accountToastMsg">Account successfully created!</span>
+</div>
+
+<!-- Edit toast (yellow) -->
+<div id="accountToastEdit" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+    <span id="accountToastEditMsg">Account updated successfully!</span>
+</div>
+
+<!-- Delete toast (red) -->
+<div id="accountToastDelete" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+    </svg>
+    <span id="accountToastDeleteMsg">Account deleted successfully!</span>
+</div>

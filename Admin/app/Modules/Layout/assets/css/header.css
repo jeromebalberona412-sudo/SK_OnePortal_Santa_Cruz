@@ -600,3 +600,20 @@ body.modal-open {
 :root.dark .logout-btn--no:hover {
     background: #334155;
 }
+
+/* ── Dropdown item icons ────────────────────────────────── */
+.dd-item svg,
+.topbar-user-menu-link svg {
+    flex-shrink: 0;
+    opacity: 0.75;
+    transition: opacity 0.15s;
+}
+
+.dd-item:hover svg,
+.topbar-user-menu-link:hover svg {
+    opacity: 1;
+}
+
+.dd-item.danger svg {
+    opacity: 0.85;
+}

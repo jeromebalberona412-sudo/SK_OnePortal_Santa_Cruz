@@ -185,19 +185,6 @@
     </div>
 </div>
 
-<!-- SK Federation Add Success Modal -->
-<div id="addSuccessModal" class="modal-overlay" style="display:none;">
-    <div class="modal-content modal-light" style="max-width:360px;">
-        <div class="modal-header modal-header-blue-grad">
-            <h3 class="modal-title">Success</h3>
-        </div>
-        <div class="modal-body modal-body-light" style="text-align:center;padding:2rem 1.5rem;">
-            <p style="color:#1e293b;margin:0 0 1.5rem;">Account successfully created!</p>
-            <button type="button" class="btn-submit-light" onclick="closeAddSuccessModal()">OK</button>
-        </div>
-    </div>
-</div>
-
 {{-- ── EDIT SK FEDERATION MODAL ─────────────────────────────── --}}
 <div id="editAccountModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-large modal-themed">
@@ -397,21 +384,6 @@
         <div class="modal-footer edit-modal-footer">
             <button type="button" class="btn-secondary-modern" onclick="closeEditModal()">Cancel</button>
             <button type="submit" form="editAccountForm" class="btn-primary-modern btn-green">Update Account</button>
-        </div>
-    </div>
-</div>
-
-<!-- SK Federation Edit Success Modal -->
-<div id="editSuccessModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content modal-themed">
-        <div class="modal-header modal-header-green">
-            <h3 class="modal-title">Success</h3>
-        </div>
-        <div class="modal-body">
-            <p>Account has been updated successfully.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn-primary-modern btn-green" onclick="closeEditSuccessModal()">OK</button>
         </div>
     </div>
 </div>

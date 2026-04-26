@@ -78,15 +78,26 @@
                     <div class="dd-email">{{ $displayEmail }}</div>
                 </div>
                 <a href="{{ route('profile') }}" class="topbar-user-menu-link dd-item" id="nav-profile-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true">
+                        <circle cx="12" cy="7" r="4"></circle>
+                        <path d="M5.5 21a8.38 8.38 0 0 1 13 0"></path>
+                    </svg>
                     <span>Profile</span>
                 </a>
-                @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" class="topbar-user-menu-link dd-item" id="nav-change-pw-link">
-                        <span>Change Password</span>
-                    </a>
-                @endif
+                <a href="{{ route('profile.change-password') }}" class="topbar-user-menu-link dd-item" id="nav-change-pw-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Change Password</span>
+                </a>
                 <div class="dd-divider"></div>
                 <button type="button" class="topbar-user-menu-link dd-item danger" onclick="showLogoutModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true">
+                        <path d="M9 6V4h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9v-2"></path>
+                        <polyline points="12,8 8,12 12,16"></polyline>
+                        <line x1="8" y1="12" x2="20" y2="12"></line>
+                    </svg>
                     <span>Logout</span>
                 </button>
             </div>

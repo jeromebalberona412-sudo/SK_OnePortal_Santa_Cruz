@@ -19,6 +19,6 @@ class AccountsServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
 
         Route::middleware('web')
-            ->group(__DIR__.'/../Routes/accounts.php');
+            ->group(__DIR__.'/../Routes/web.php');
     }
 }

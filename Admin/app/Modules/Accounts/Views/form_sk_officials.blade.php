@@ -225,18 +225,6 @@
     </div>
 </div>
 
-<!-- SK Officials Add Success Modal -->
-<div id="skOfficialsSuccessModal" class="modal-overlay" style="display:none;">
-    <div class="modal-content modal-light" style="max-width:360px;">
-        <div class="modal-header modal-header-blue-grad">
-            <h3 class="modal-title">Success</h3>
-        </div>
-        <div class="modal-body modal-body-light" style="text-align:center;padding:2rem 1.5rem;">
-            <p style="color:#1e293b;margin:0 0 1.5rem;">SK Officials account successfully created!</p>
-            <button type="button" class="btn-submit-light" onclick="closeSkOfficialsSuccessModal()">OK</button>
-        </div>
-    </div>
-</div>
 
 {{-- ── EDIT SK OFFICIALS MODAL ─────────────────────────────── --}}
 <div id="editSkOfficialsModal" class="modal-overlay" style="display: none;">
@@ -421,21 +409,6 @@
         <div class="modal-footer edit-modal-footer">
             <button type="button" class="btn-secondary-modern" onclick="closeEditSkOfficialsModal()">Cancel</button>
             <button type="submit" form="editSkOfficialsForm" class="btn-primary-modern btn-green">Update Account</button>
-        </div>
-    </div>
-</div>
-
-<!-- SK Officials Edit Success Modal -->
-<div id="editSkOfficialsSuccessModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">Success</h3>
-        </div>
-        <div class="modal-body">
-            <p>SK Officials account has been updated successfully.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn-primary-modern btn-blue" onclick="closeEditSkOfficialsSuccessModal()">OK</button>
         </div>
     </div>
 </div>

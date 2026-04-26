@@ -13,6 +13,30 @@ function toggleModal(modalId, show) {
     document.documentElement.style.overflow = show ? 'hidden' : '';
 }
 
+// ── Top toast notification ─────────────────────────────────────
+let _toastTimer = null;
+function showAccountToast(msg, type) {
+    // type: 'success' | 'edit' | 'delete'
+    const idMap = { success: 'accountToast', edit: 'accountToastEdit', delete: 'accountToastDelete' };
+    const msgMap = { success: 'accountToastMsg', edit: 'accountToastEditMsg', delete: 'accountToastDeleteMsg' };
+    const toastId = idMap[type] || 'accountToast';
+    const msgId   = msgMap[type] || 'accountToastMsg';
+
+    // Hide all toasts first
+    ['accountToast','accountToastEdit','accountToastDelete'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('show');
+    });
+
+    const toast = document.getElementById(toastId);
+    const msgEl = document.getElementById(msgId);
+    if (!toast) return;
+    if (msgEl) msgEl.textContent = msg;
+    toast.classList.add('show');
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
 function getCurrentAccountType() {
     const filter = document.getElementById('accountTypeFilter');
     if (filter && filter.value) return filter.value;
@@ -145,8 +169,8 @@ window.closeAddSkOfficialsModal = function () {
     toggleModal('addSkOfficialsModal', false);
 };
 
-window.showSkOfficialsSuccessModal  = function () { toggleModal('skOfficialsSuccessModal', true); };
-window.closeSkOfficialsSuccessModal = function () { toggleModal('skOfficialsSuccessModal', false); };
+window.showSkOfficialsSuccessModal  = function () { showAccountToast('SK Officials account successfully created!', 'success'); };
+window.closeSkOfficialsSuccessModal = function () {};
 
 window.switchAddOfficialTab = function (tab) {
     const manual = document.getElementById('addOfficialManualPane');
@@ -184,8 +208,11 @@ window.closeEditSkOfficialsModal = function () {
     toggleModal('editSkOfficialsModal', false);
 };
 
-window.showEditSkOfficialsSuccessModal  = function () { toggleModal('editSkOfficialsSuccessModal', true); };
-window.closeEditSkOfficialsSuccessModal = function () { toggleModal('editSkOfficialsSuccessModal', false); window.location.reload(); };
+window.showEditSkOfficialsSuccessModal  = function () {
+    toggleModal('editSkOfficialsModal', false);
+    showAccountToast('SK Officials account updated successfully!', 'edit');
+};
+window.closeEditSkOfficialsSuccessModal = function () {};
 
 window.toggleFullscreenEditSkOfficialsModal = function () {
     const modal = document.getElementById('editSkOfficialsModal');
@@ -244,8 +271,8 @@ window.closeAddAccountModal = function () {
     toggleModal(ids.addModalId, false);
 };
 
-window.showAddSuccessModal  = function () { const ids = _getModalIds(getCurrentAccountType()); toggleModal(ids.successModalId, true); };
-window.closeAddSuccessModal = function () { const ids = _getModalIds(getCurrentAccountType()); toggleModal(ids.successModalId, false); window.location.reload(); };
+window.showAddSuccessModal  = function () { showAccountToast('Account successfully created!', 'success'); };
+window.closeAddSuccessModal = function () {};
 
 // ── Edit SK Federation modal ──────────────────────────────────
 window.openEditModal = function () { toggleModal('editAccountModal', true); };
@@ -262,8 +289,11 @@ window.closeEditModal = function () {
     toggleModal('editAccountModal', false);
 };
 
-window.showEditSuccessModal  = function () { toggleModal('editSuccessModal', true); };
-window.closeEditSuccessModal = function () { toggleModal('editSuccessModal', false); window.location.reload(); };
+window.showEditSuccessModal  = function () {
+    toggleModal('editAccountModal', false);
+    showAccountToast('Account updated successfully!', 'edit');
+};
+window.closeEditSuccessModal = function () {};
 
 window.toggleFullscreenEditAccountModal = function () {
     const modal = document.getElementById('editAccountModal');
@@ -553,36 +583,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (cFed) cFed.addEventListener('input', () => { cFed.value = cFed.value.replace(/\D/g, ''); });
     }
 
-    // ── Edit forms — backend submit ───────────────────────────
+    // ── Edit forms — UI-only submit (no backend) ─────────────
     function attachEditSubmit(form) {
         if (!form) return;
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-            clearAllErrors(form);
-            const accountId = form.dataset.accountId;
-            if (!accountId) { alert('Unable to update account. Missing account ID.'); return; }
-            const formData = new FormData(form);
-            const payload = {};
-            for (const [k, v] of formData.entries()) { if (k !== '_token' && k !== '_method') payload[k] = v; }
-            payload.term_status = payload.term_status || 'ACTIVE';
-            showLoadingOverlay();
-            fetch(`/accounts/${accountId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), 'Accept': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(async r => { const ct = r.headers.get('content-type') || ''; const data = ct.includes('application/json') ? await r.json() : {}; return { ok: r.ok, data }; })
-            .then(({ ok, data }) => {
-                hideLoadingOverlay();
-                if (!ok || !data.success) {
-                    if (data.errors) Object.keys(data.errors).forEach(f => showFieldError(form, f, data.errors[f][0]));
-                    else alert('Failed to update account. Please try again.');
-                    return;
-                }
-                _closeEditByType();
-                _showEditSuccessByType();
-            })
-            .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
+            _closeEditByType();
+            _showEditSuccessByType();
         });
     }
 
@@ -703,6 +710,7 @@ document.addEventListener('DOMContentLoaded', function () {
             updatePagination();
         }
         closeDeleteModal();
+        showAccountToast('Account deleted successfully!', 'delete');
     };
 
     // ── Batch upload (SK Officials) ───────────────────────────

@@ -369,7 +369,8 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
 
 .form-actions-light {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 0.75rem;
     padding-top: 1.2rem;
     margin-top: 1rem;
@@ -586,31 +587,32 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
 .text-center { text-align: center; color: var(--accounts-text-muted); }
 
 /* Action buttons */
-.action-buttons-container { display: flex; justify-content: center; align-items: center; gap: 0; }
+.action-buttons-container { display: flex; justify-content: center; align-items: center; gap: 5px; }
 .btn-view-modern,
 .btn-edit-modern,
 .btn-delete-modern {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.36rem 0.72rem;
+    width: 58px;
+    height: 28px;
+    padding: 0;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     border: none;
-    border-radius: 0;
-    transition: filter 0.15s ease;
+    border-radius: 6px;
+    transition: filter 0.15s ease, transform 0.15s ease;
     white-space: nowrap;
     letter-spacing: 0.01em;
-    line-height: 1.2;
-    min-width: 50px;
+    line-height: 1;
 }
-.btn-view-modern   { background: #1e3a5f; color: #ffffff !important; border-radius: 6px 0 0 6px; }
-.btn-view-modern:hover { background: #162d4a; transform: none; }
-.btn-edit-modern   { background: #f59e0b !important; color: #1a1a1a !important; border-left: 1px solid rgba(0,0,0,0.1) !important; border-right: 1px solid rgba(0,0,0,0.1) !important; border-radius: 0 !important; }
-.btn-edit-modern:hover { background: #d97706 !important; color: #1a1a1a !important; transform: none !important; }
-.btn-delete-modern { background: #ef4444; color: #ffffff; border-radius: 0 6px 6px 0; }
-.btn-delete-modern:hover { background: #dc2626; transform: none; }
+.btn-view-modern   { background: #1565c0; color: #ffffff !important; }
+.btn-view-modern:hover { background: #0d47a1; transform: translateY(-1px); }
+.btn-edit-modern   { background: #f59e0b !important; color: #ffffff !important; }
+.btn-edit-modern:hover { background: #d97706 !important; color: #ffffff !important; transform: translateY(-1px); }
+.btn-delete-modern { background: #ef4444; color: #ffffff !important; }
+.btn-delete-modern:hover { background: #dc2626; transform: translateY(-1px); }
 
 /* Pagination */
 .pagination-container { border-top: 1px solid var(--accounts-border); background: #f8fafc; padding: 1rem 1.1rem 1.25rem; }
@@ -685,7 +687,7 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
 @media (max-width: 480px) {
     .page-title-modern { font-size: 1.35rem; }
     .accounts-table { min-width: 700px; }
-    .btn-view-modern, .btn-edit-modern, .btn-delete-modern { min-width: 44px; font-size: 11px; padding: 0.34rem 0.55rem; }
+    .btn-view-modern, .btn-edit-modern, .btn-delete-modern { width: 50px; height: 26px; font-size: 11px; }
     .pagination-btn { height: 32px; min-width: 32px; font-size: 11px; }
 }
 
@@ -714,9 +716,93 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
 :root.dark .pagination-text strong { color: #f1f5f9; }
 :root.dark .status-badge.active   { color: #4ade80; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3); }
 :root.dark .status-badge.inactive { color: #f87171; background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); }
-:root.dark .btn-view-modern   { background: #1e3a5f; color: #ffffff !important; }
-:root.dark .btn-view-modern:hover { background: #162d4a; }
-:root.dark .btn-edit-modern   { background: #f59e0b !important; color: #1a1a1a !important; }
-:root.dark .btn-edit-modern:hover { background: #d97706 !important; color: #1a1a1a !important; }
-:root.dark .btn-delete-modern { background: #ef4444; color: #ffffff; }
+:root.dark .btn-view-modern   { background: #1565c0; color: #ffffff !important; }
+:root.dark .btn-view-modern:hover { background: #0d47a1; }
+:root.dark .btn-edit-modern   { background: #f59e0b !important; color: #ffffff !important; }
+:root.dark .btn-edit-modern:hover { background: #d97706 !important; color: #ffffff !important; }
+:root.dark .btn-delete-modern { background: #ef4444; color: #ffffff !important; }
 :root.dark .btn-delete-modern:hover { background: #dc2626; }
+
+/* ── Top success toast ───────────────────────────────────── */
+#accountToast,
+#accountToastEdit,
+#accountToastDelete {
+    position: fixed;
+    top: calc(var(--topbar-height, 64px) + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-12px);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* green — add/create */
+#accountToast {
+    border: 1px solid #bbf7d0;
+    border-left: 4px solid #16a34a;
+    color: #15803d;
+}
+
+/* yellow — edit/update */
+#accountToastEdit {
+    border: 1px solid #fde68a;
+    border-left: 4px solid #d97706;
+    color: #92400e;
+}
+
+/* red — delete */
+#accountToastDelete {
+    border: 1px solid #fecaca;
+    border-left: 4px solid #dc2626;
+    color: #991b1b;
+}
+
+#accountToast.show,
+#accountToastEdit.show,
+#accountToastDelete.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+#accountToast svg,
+#accountToastEdit svg,
+#accountToastDelete svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+:root.dark #accountToast {
+    background: #1e293b;
+    border-color: #166534;
+    border-left-color: #16a34a;
+    color: #4ade80;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+:root.dark #accountToastEdit {
+    background: #1e293b;
+    border-color: #78350f;
+    border-left-color: #d97706;
+    color: #fbbf24;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+:root.dark #accountToastDelete {
+    background: #1e293b;
+    border-color: #7f1d1d;
+    border-left-color: #dc2626;
+    color: #f87171;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}

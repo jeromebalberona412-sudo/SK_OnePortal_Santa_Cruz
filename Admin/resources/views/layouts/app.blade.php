@@ -35,23 +35,6 @@
 </head>
 <body class="min-h-screen admin-canvas">
     <div class="min-h-screen flex flex-col">
-        <!-- Flash Messages -->
-        @if (session('message'))
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="flash-success-modern px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline pr-8">{{ session('message') }}</span>
-            </div>
-        </div>
-        @endif
-
-        @if (session('error'))
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="flash-error-modern px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline pr-8">{{ session('error') }}</span>
-            </div>
-        </div>
-        @endif
-
         <!-- Main Content -->
         <main class="flex-grow">
             @yield('content')
