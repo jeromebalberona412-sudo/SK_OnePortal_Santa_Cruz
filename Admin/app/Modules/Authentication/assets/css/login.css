@@ -293,6 +293,44 @@ body.login-page {
     box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.12);
 }
 
+/* ── OTP digit inputs ──────────────────────────────────────── */
+.otp-input-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.otp-digit {
+    width: 48px;
+    height: 52px;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--op-text);
+    background: var(--op-input-bg);
+    border: 1.5px solid var(--op-border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    caret-color: var(--op-blue);
+    -moz-appearance: textfield;
+}
+
+.otp-digit::-webkit-outer-spin-button,
+.otp-digit::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.otp-digit:focus {
+    border-color: var(--op-blue);
+    background: var(--op-white);
+    box-shadow: 0 0 0 3px var(--op-focus-ring);
+}
+
 /* Password toggle */
 .login-toggle-pw {
     position: absolute;

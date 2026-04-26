@@ -4,7 +4,13 @@
         <div class="modal-header modal-header-yellow">
             <h3 class="modal-title">Edit SK Federation Account</h3>
             <div class="modal-controls">
-                <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenEditAccountModal()" title="Fullscreen">
+                <button type="button" class="modal-restore-btn" id="editFedRestoreBtn" onclick="toggleRestoreEditAccountModal()" title="Restore Down" style="display:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="7" width="11" height="11" rx="1.5"/>
+                        <path d="M7 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/>
+                    </svg>
+                </button>
+                <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenEditAccountModal()" title="Maximize">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
                     </svg>
@@ -198,18 +204,12 @@
                     </div>
                 </div>
                 
-                <!-- Form Action Buttons -->
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary-modern" onclick="closeEditModal()">Cancel</button>
-                    <button type="submit" form="editAccountForm" class="btn-primary-modern btn-yellow">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                        Update Account
-                    </button>
-                </div>
+                <!-- Form Action Buttons removed — see modal footer below -->
             </form>
+        </div>
+        <div class="modal-footer edit-modal-footer">
+            <button type="button" class="btn-secondary-modern" onclick="closeEditModal()">Cancel</button>
+            <button type="submit" form="editAccountForm" class="btn-primary-modern btn-green">Update Account</button>
         </div>
     </div>
 </div>

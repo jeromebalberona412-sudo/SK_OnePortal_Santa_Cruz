@@ -285,70 +285,44 @@ function closeEditSuccessModal() {
 // Fullscreen toggle function
 function toggleFullscreenEditAccountModal() {
     const modal = document.getElementById('editAccountModal');
-    if (modal) {
-        const isFullscreen = modal.classList.contains('modal-fullscreen');
-        
-        if (isFullscreen) {
-            // Exit fullscreen - show minimize state
-            modal.classList.remove('modal-fullscreen');
-            modal.classList.add('modal-minimized');
-            
-            // Update icon to maximize (restore)
-            const fullscreenBtn = modal.querySelector('.modal-fullscreen-btn svg');
-            fullscreenBtn.innerHTML = `
-                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-            `;
-            
-            // Update tooltip
-            modal.querySelector('.modal-fullscreen-btn').setAttribute('title', 'Maximize');
-            
-            // Add click to restore functionality
-            const header = modal.querySelector('.modal-header');
-            header.addEventListener('click', function() {
-                restoreEditAccountModal();
-            }, { once: true });
-        } else if (modal.classList.contains('modal-minimized')) {
-            // Restore from minimized
-            restoreEditAccountModal();
-        } else {
-            // Enter fullscreen
-            modal.classList.add('modal-fullscreen');
-            
-            // Update icon to minus (minimize)
-            const fullscreenBtn = modal.querySelector('.modal-fullscreen-btn svg');
-            fullscreenBtn.innerHTML = `
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            `;
-            
-            // Update tooltip
-            modal.querySelector('.modal-fullscreen-btn').setAttribute('title', 'Minimize');
-        }
+    if (!modal) return;
+    const isFullscreen = modal.classList.contains('modal-fullscreen');
+    if (isFullscreen) {
+        modal.classList.remove('modal-fullscreen');
+        _setEditFedBtns(modal, 'normal');
+    } else {
+        modal.classList.remove('modal-minimized');
+        modal.classList.add('modal-fullscreen');
+        _setEditFedBtns(modal, 'fullscreen');
     }
 }
 
-// Restore function
-function restoreEditAccountModal() {
+// Restore-down button handler
+function toggleRestoreEditAccountModal() {
     const modal = document.getElementById('editAccountModal');
-    if (modal) {
-        modal.classList.remove('modal-minimized');
-        modal.classList.remove('modal-fullscreen');
-        
-        // Update icon to fullscreen
-        const fullscreenBtn = modal.querySelector('.modal-fullscreen-btn svg');
-        fullscreenBtn.innerHTML = `
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-        `;
-        
-        // Update tooltip
-        const btnElement = modal.querySelector('.modal-fullscreen-btn');
-        if (btnElement) {
-            btnElement.setAttribute('title', 'Fullscreen');
-        }
+    if (!modal) return;
+    modal.classList.remove('modal-fullscreen');
+    _setEditFedBtns(modal, 'normal');
+}
+
+function _setEditFedBtns(modal, state) {
+    const fullscreenBtn = modal.querySelector('.modal-fullscreen-btn');
+    const restoreBtn = modal.querySelector('.modal-restore-btn');
+    if (state === 'fullscreen') {
+        if (fullscreenBtn) { fullscreenBtn.title = 'Restore Down'; fullscreenBtn.style.display = 'none'; }
+        if (restoreBtn)    { restoreBtn.style.display = 'inline-flex'; }
+    } else {
+        if (fullscreenBtn) { fullscreenBtn.title = 'Maximize'; fullscreenBtn.style.display = 'inline-flex'; }
+        if (restoreBtn)    { restoreBtn.style.display = 'none'; }
     }
 }
+
+// Legacy alias
+function restoreEditAccountModal() { toggleRestoreEditAccountModal(); }
 
 // Make functions globally accessible for onclick handlers
 window.toggleFullscreenEditAccountModal = toggleFullscreenEditAccountModal;
+window.toggleRestoreEditAccountModal = toggleRestoreEditAccountModal;
 window.restoreEditAccountModal = restoreEditAccountModal;
 window.closeEditModal = closeEditModal;
 window.closeEditSuccessModal = closeEditSuccessModal;

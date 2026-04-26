@@ -152,8 +152,6 @@
 .filter-dropdown:focus,
 .search-input:focus,
 .btn-primary-modern:focus,
-.btn-view-modern:focus,
-.btn-edit-modern:focus,
 .pagination-btn:focus {
   outline: none;
   border-color: var(--accounts-border-strong);
@@ -161,9 +159,7 @@
 }
 
 .btn-primary-modern,
-.btn-secondary-modern,
-.btn-view-modern,
-.btn-edit-modern {
+.btn-secondary-modern {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -260,6 +256,8 @@
   border-bottom: 1px solid #f1f5f9;
   border-right: 1px solid #f1f5f9;
   background: #ffffff;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .accounts-table tbody td:last-child {
@@ -283,40 +281,88 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
+  gap: 0;
 }
 
+/* ── Grouped pill button strip ── */
 .btn-view-modern,
-.btn-edit-modern {
-  min-width: 66px;
-  padding: 0.48rem 0.82rem;
+.btn-edit-modern,
+.btn-delete-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.36rem 0.72rem;
   font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  border-radius: 0;
+  transition: filter 0.15s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  min-width: 50px;
 }
 
 .btn-view-modern {
-  background: rgba(21, 101, 192, 0.08);
-  border-color: rgba(21, 101, 192, 0.4);
-  color: #1565c0;
+  background: #1e3a5f;
+  color: #ffffff !important;
+  border-radius: 6px 0 0 6px;
 }
 
 .btn-view-modern:hover {
-  background: rgba(21, 101, 192, 0.15);
-  color: #1251a3;
-  transform: translateY(-1px);
+  background: #162d4a;
+  transform: none;
 }
 
 .btn-edit-modern {
-  background: rgba(217, 119, 6, 0.08) !important;
-  border-color: rgba(217, 119, 6, 0.4) !important;
-  color: #d97706 !important;
+  background: #f59e0b !important;
+  color: #1a1a1a !important;
+  border-left: 1px solid rgba(0,0,0,0.1) !important;
+  border-right: 1px solid rgba(0,0,0,0.1) !important;
+  border-radius: 0 !important;
 }
 
 .btn-edit-modern:hover {
-  background: rgba(217, 119, 6, 0.15) !important;
-  border-color: rgba(217, 119, 6, 0.6) !important;
-  color: #b45309 !important;
-  transform: translateY(-1px);
+  background: #d97706 !important;
+  color: #1a1a1a !important;
+  transform: none !important;
+}
+
+.btn-delete-modern {
+  background: #ef4444;
+  color: #ffffff;
+  border-radius: 0 6px 6px 0;
+}
+
+.btn-delete-modern:hover {
+  background: #dc2626;
+  transform: none;
+}
+
+.btn-delete-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  border: 1px solid #dc2626;
+  padding: 0.68rem 1.18rem;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #dc2626;
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-confirm:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.btn-delete-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .status-badge {
@@ -498,10 +544,11 @@
   }
 
   .btn-view-modern,
-  .btn-edit-modern {
-    min-width: 58px;
+  .btn-edit-modern,
+  .btn-delete-modern {
+    min-width: 44px;
     font-size: 11px;
-    padding: 0.42rem 0.64rem;
+    padding: 0.34rem 0.55rem;
   }
 
   .pagination-btn {
@@ -621,23 +668,29 @@
 }
 
 :root.dark .btn-view-modern {
-  background: rgba(59, 130, 246, 0.12);
-  border-color: rgba(59, 130, 246, 0.4);
-  color: #60a5fa;
+  background: #1e3a5f;
+  color: #ffffff !important;
 }
 
 :root.dark .btn-view-modern:hover {
-  background: rgba(59, 130, 246, 0.22);
-  color: #93c5fd;
+  background: #162d4a;
 }
 
 :root.dark .btn-edit-modern {
-  background: rgba(251, 191, 36, 0.1) !important;
-  border-color: rgba(251, 191, 36, 0.35) !important;
-  color: #fbbf24 !important;
+  background: #f59e0b !important;
+  color: #1a1a1a !important;
 }
 
 :root.dark .btn-edit-modern:hover {
-  background: rgba(251, 191, 36, 0.2) !important;
-  color: #fde68a !important;
+  background: #d97706 !important;
+  color: #1a1a1a !important;
+}
+
+:root.dark .btn-delete-modern {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+:root.dark .btn-delete-modern:hover {
+  background: #dc2626;
 }

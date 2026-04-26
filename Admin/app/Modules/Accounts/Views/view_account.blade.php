@@ -1,10 +1,16 @@
 <!-- View Account Modal -->
 <div id="viewAccountModal" class="modal-overlay" style="display: none;">
     <div class="modal-content view-modal-container">
-        <div class="modal-header modal-header-green">
+        <div class="modal-header modal-header-deep-blue">
             <h3 class="modal-title">Account Details</h3>
             <div class="modal-controls">
-                <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenViewModal()" title="Fullscreen">
+                <button type="button" class="modal-restore-btn" id="viewRestoreBtn" onclick="toggleRestoreViewModal()" title="Restore Down" style="display:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="7" width="11" height="11" rx="1.5"/>
+                        <path d="M7 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/>
+                    </svg>
+                </button>
+                <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenViewModal()" title="Maximize">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
                     </svg>

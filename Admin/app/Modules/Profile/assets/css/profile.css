@@ -809,3 +809,18 @@ body.dark-mode #mainContent.profile-page {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
+
+/* ── Password feedback ───────────────────────────────────── */
+.pw-feedback {
+    margin: 0;
+    font-size: 0.88rem;
+    min-height: 1.2em;
+}
+
+.pw-feedback--success {
+    color: #16a34a;
+}
+
+.pw-feedback--error {
+    color: #dc2626;
+}

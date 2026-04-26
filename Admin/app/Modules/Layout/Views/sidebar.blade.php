@@ -38,12 +38,12 @@
             </a>
 
             <div class="menu-section-label">Modules</div>
-            <a href="{{ route('accounts.manage') }}" class="menu-item nav-link manage-account-btn" data-nav-key="manage-account" data-tooltip="Accounts" aria-label="Accounts">
+            <a href="{{ route('accounts.manage') }}" class="menu-item nav-link manage-account-btn" data-nav-key="manage-account" data-tooltip="Manage Accounts" aria-label="Manage Accounts">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle cx="12" cy="8" r="3"></circle>
                     <path d="M5 19c1.2-3 3.7-5 7-5s5.8 2 7 5"></path>
                 </svg>
-                <span>Accounts</span>
+                <span>Manage Accounts</span>
             </a>
             <a href="{{ route('auditlogs.index') }}" class="menu-item nav-link auditlogs-btn" data-nav-key="audit-logs" data-tooltip="Audit Log" aria-label="Audit Log">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -53,6 +53,15 @@
                     <line x1="9" y1="17" x2="15" y2="17"></line>
                 </svg>
                 <span>Audit Log</span>
+            </a>
+
+            <div class="menu-section-label">Account</div>
+            <a href="{{ route('profile') }}" class="menu-item nav-link profile-nav-btn" data-nav-key="profile" data-tooltip="My Profile" aria-label="My Profile">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="7" r="4"></circle>
+                    <path d="M5.5 21a8.38 8.38 0 0 1 13 0"></path>
+                </svg>
+                <span>My Profile</span>
             </a>
 
             <div class="menu-divider"></div>

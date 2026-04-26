@@ -148,13 +148,124 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (accountTypeFilter) {
         accountTypeFilter.addEventListener('change', function () {
-            const target = this.value === 'sk_officials' ? '/accounts/officials' : '/accounts/federation';
-            window.location.href = target;
+            // Update the form action to match the selected account type, then submit
+            const form = accountTypeFilter.closest('form');
+            if (form) {
+                if (this.value === 'sk_officials') {
+                    form.action = '/accounts/officials';
+                } else {
+                    form.action = '/accounts/federation';
+                }
+                // Clear barangay filter when switching types so it doesn't carry stale IDs
+                const barangaySelect = document.getElementById('barangayFilter');
+                if (barangaySelect) barangaySelect.value = '';
+                form.submit();
+            }
         });
     }
 
-    const attachSubmitHandler = function (form) {
-        if (!form) {
+    // Auto-submit when barangay filter changes
+    const barangayFilter = document.getElementById('barangayFilter');
+    if (barangayFilter) {
+        barangayFilter.addEventListener('change', function () {
+            const form = this.closest('form');
+            if (form) form.submit();
+        });
+    }
+
+    // ── SK Officials UI-only submit: inject row into table ───────
+    const attachSkOfficialsUISubmitHandler = function (form) {
+        if (!form) return;
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // Basic required-field check (mirrors add_sk_officials.js validation)
+            let valid = true;
+            form.querySelectorAll('[required]').forEach(el => {
+                if (!el.value.trim()) {
+                    valid = false;
+                    el.classList.add('is-invalid');
+                } else {
+                    el.classList.remove('is-invalid');
+                }
+            });
+            if (!valid) {
+                const first = form.querySelector('.is-invalid');
+                if (first) first.focus();
+                return;
+            }
+
+            // Collect values
+            const get = id => (document.getElementById(id)?.value ?? '').trim();
+
+            const firstName  = get('official_first_name');
+            const middleName = get('official_middle_name');
+            const lastName   = get('official_last_name');
+            const suffix     = get('official_suffix');
+            const email      = get('official_email');
+            const position   = get('official_position');
+            const status     = get('official_status');
+            const termEnd    = get('official_term_end');
+
+            // Barangay label from selected option text
+            const barangaySelect = document.getElementById('official_barangay_id');
+            const barangayName   = barangaySelect?.options[barangaySelect.selectedIndex]?.text ?? '-';
+
+            // Build display name: First MI. Last Suffix
+            const mi = middleName ? middleName.charAt(0).toUpperCase() + '.' : '';
+            const displayName = [firstName, mi, lastName, (suffix && suffix !== 'None') ? suffix : '']
+                .filter(Boolean).join(' ');
+
+            // Format term end date
+            let termEndDisplay = '-';
+            if (termEnd) {
+                const d = new Date(termEnd);
+                if (!isNaN(d)) {
+                    termEndDisplay = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+                }
+            }
+
+            const statusLower = status.toLowerCase();
+
+            // Build the new <tr>
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${displayName}</td>
+                <td>${email}</td>
+                <td>${barangayName}</td>
+                <td>${position}</td>
+                <td>${termEndDisplay}</td>
+                <td><span class="status-badge ${statusLower}">${status}</span></td>
+                <td>
+                    <div class="action-buttons-container">
+                        <button type="button" class="btn-view-modern">View</button>
+                        <button type="button" class="btn-edit-modern">Edit</button>
+                        <button type="button" class="btn-delete-modern">Delete</button>
+                    </div>
+                </td>
+            `;
+
+            // Remove "No accounts found" empty row if present
+            const emptyRow = tableBody?.querySelector('td[colspan]');
+            if (emptyRow) emptyRow.closest('tr').remove();
+
+            // Append to table body and refresh pagination
+            if (tableBody) {
+                tableBody.appendChild(tr);
+                allAccounts.push({ element: tr, index: allAccounts.length });
+                filteredAccounts = [...allAccounts];
+                currentPage = Math.ceil(filteredAccounts.length / recordsPerPage);
+                updatePagination();
+            }
+
+            // Close modal and show success
+            closeAddSkOfficialsModal();
+            showSkOfficialsSuccessModal();
+        });
+    };
+
+    const attachSubmitHandler = function (form) {        if (!form) {
             return;
         }
 
@@ -247,7 +358,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     attachSubmitHandler(federationForm);
-    attachSubmitHandler(officialsForm);
+    // SK Officials: UI-only — add row to table without backend call
+    attachSkOfficialsUISubmitHandler(officialsForm);
 
     attachDobAgeAutoFill(federationForm, 'date_of_birth', 'age');
     attachDobAgeAutoFill(federationEditForm, 'date_of_birth', 'age');
@@ -461,6 +573,7 @@ function toggleModal(modalId, show) {
 
     modal.style.display = show ? 'flex' : 'none';
     document.body.style.overflow = show ? 'hidden' : '';
+    document.documentElement.style.overflow = show ? 'hidden' : '';
 }
 
 window.openAddAccountModal = function () {
@@ -498,7 +611,6 @@ window.showSkOfficialsSuccessModal = function () {
 
 window.closeSkOfficialsSuccessModal = function () {
     toggleModal('skOfficialsSuccessModal', false);
-    window.location.reload();
 };
 
 window.openEditModal = function () {
@@ -506,6 +618,14 @@ window.openEditModal = function () {
 };
 
 window.closeEditModal = function () {
+    const modal = document.getElementById('editAccountModal');
+    if (modal) {
+        modal.classList.remove('modal-fullscreen', 'modal-minimized');
+        const fb = modal.querySelector('.modal-fullscreen-btn');
+        const rb = modal.querySelector('.modal-restore-btn');
+        if (fb) { fb.style.display = 'inline-flex'; fb.title = 'Maximize'; }
+        if (rb) rb.style.display = 'none';
+    }
     toggleModal('editAccountModal', false);
 };
 
@@ -523,6 +643,14 @@ window.openEditSkOfficialsModal = function () {
 };
 
 window.closeEditSkOfficialsModal = function () {
+    const modal = document.getElementById('editSkOfficialsModal');
+    if (modal) {
+        modal.classList.remove('modal-fullscreen', 'modal-minimized');
+        const fb = modal.querySelector('.modal-fullscreen-btn');
+        const rb = modal.querySelector('.modal-restore-btn');
+        if (fb) { fb.style.display = 'inline-flex'; fb.title = 'Maximize'; }
+        if (rb) rb.style.display = 'none';
+    }
     toggleModal('editSkOfficialsModal', false);
 };
 
@@ -672,5 +800,13 @@ window.openViewModal = function () {
 };
 
 window.closeViewModal = function () {
+    const modal = document.getElementById('viewAccountModal');
+    if (modal) {
+        modal.classList.remove('modal-fullscreen', 'modal-minimized');
+        const fb = modal.querySelector('.modal-fullscreen-btn');
+        const rb = modal.querySelector('.modal-restore-btn');
+        if (fb) { fb.style.display = 'inline-flex'; fb.title = 'Maximize'; }
+        if (rb) rb.style.display = 'none';
+    }
     toggleModal('viewAccountModal', false);
 };

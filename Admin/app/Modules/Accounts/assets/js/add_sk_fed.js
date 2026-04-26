@@ -414,3 +414,50 @@ window.toggleFullscreenAddAccountModal = toggleFullscreenAddAccountModal;
 window.restoreAddAccountModal = restoreAddAccountModal;
 window.closeAddAccountModal = closeAddAccountModal;
 window.closeAddSuccessModal = closeAddSuccessModal;
+
+// ── Resize toggle (maximize ↔ restore-down) ──────────────────
+let addFedIsMaximized = false;
+
+window.toggleAddFedSize = function () {
+    const overlay = document.getElementById('addAccountModal');
+    const content = document.getElementById('addSkFedModalContent');
+    const icon    = document.getElementById('addFedResizeIcon');
+    const btn     = document.getElementById('addFedResizeBtn');
+
+    if (!overlay || !content || !icon) return;
+
+    addFedIsMaximized = !addFedIsMaximized;
+
+    if (addFedIsMaximized) {
+        content.style.width        = '100vw';
+        content.style.maxWidth     = '100vw';
+        content.style.height       = '100vh';
+        content.style.maxHeight    = '100vh';
+        content.style.borderRadius = '0';
+        overlay.style.padding      = '0';
+        btn.title = 'Restore Down';
+        icon.innerHTML = `
+            <rect x="3" y="7" width="11" height="11" rx="1.5"/>
+            <path d="M10 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2"/>
+        `;
+    } else {
+        content.style.cssText = '';
+        overlay.style.padding = '';
+        btn.title = 'Maximize';
+        icon.innerHTML = `
+            <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+            <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+            <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+        `;
+    }
+};
+
+// Reset size state when modal closes
+const _origCloseAddAccountModal = window.closeAddAccountModal;
+window.closeAddAccountModal = function () {
+    addFedIsMaximized = false;
+    const content = document.getElementById('addSkFedModalContent');
+    if (content) content.style.cssText = '';
+    _origCloseAddAccountModal && _origCloseAddAccountModal();
+};
