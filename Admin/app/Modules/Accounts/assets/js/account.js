@@ -38,8 +38,6 @@ function showAccountToast(msg, type) {
 }
 
 function getCurrentAccountType() {
-    const filter = document.getElementById('accountTypeFilter');
-    if (filter && filter.value) return filter.value;
     return window.location.pathname.includes('/accounts/officials') ? 'sk_officials' : 'sk_federation';
 }
 
@@ -428,17 +426,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (tableBody) initPagination();
 
     // ── Filter dropdowns ──────────────────────────────────────
-    const accountTypeFilter = document.getElementById('accountTypeFilter');
-    if (accountTypeFilter) {
-        accountTypeFilter.addEventListener('change', function () {
-            const form = this.closest('form');
-            if (!form) return;
-            form.action = this.value === 'sk_officials' ? '/accounts/officials' : '/accounts/federation';
-            const bq = document.getElementById('barangayFilter');
-            if (bq) bq.value = '';
-            form.submit();
-        });
-    }
     const barangayFilter = document.getElementById('barangayFilter');
     if (barangayFilter) {
         barangayFilter.addEventListener('change', function () {

@@ -184,3 +184,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('resize', applyViewportMode);
 });
+
+window.toggleAccountDropdown = function (btn) {
+    const submenu = document.getElementById('accountDropdown');
+    const chevron = btn.querySelector('.dropdown-chevron');
+    if (!submenu) return;
+
+    const isOpen = submenu.classList.toggle('open');
+    if (chevron) chevron.classList.toggle('open', isOpen);
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+};

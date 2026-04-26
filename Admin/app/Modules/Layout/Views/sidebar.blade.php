@@ -45,13 +45,56 @@
             </a>
 
             <div class="menu-section-label">Modules</div>
-            <a href="{{ route('accounts.manage') }}" class="menu-item nav-link manage-account-btn" data-nav-key="manage-account" data-tooltip="Manage Accounts" aria-label="Manage Accounts">
+
+            {{-- Manage Accounts Dropdown --}}
+            @php
+                $isManageAccountActive = request()->routeIs('accounts.*');
+                $isFederationActive    = request()->routeIs('accounts.federation.index') || (request()->routeIs('accounts.manage') && (request('account_type', 'sk_federation') === 'sk_federation'));
+                $isOfficialsActive     = request()->routeIs('accounts.officials.index');
+            @endphp
+            <button type="button"
+                class="menu-item manage-account-btn {{ $isManageAccountActive ? 'active' : '' }}"
+                data-nav-key="manage-account"
+                data-tooltip="Manage Accounts"
+                aria-label="Manage Accounts"
+                aria-expanded="{{ $isManageAccountActive ? 'true' : 'false' }}"
+                onclick="toggleAccountDropdown(this)">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="8" r="3"></circle>
-                    <path d="M5 19c1.2-3 3.7-5 7-5s5.8 2 7 5"></path>
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
                 <span>Manage Accounts</span>
-            </a>
+                <svg class="dropdown-chevron {{ $isManageAccountActive ? 'open' : '' }}" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+            <div class="dropdown-submenu {{ $isManageAccountActive ? 'open' : '' }}" id="accountDropdown">
+                <a href="{{ route('accounts.federation.index') }}"
+                   class="menu-item submenu-item {{ $isFederationActive ? 'active' : '' }}"
+                   data-nav-key="accounts-federation"
+                   data-tooltip="SK Federation"
+                   aria-label="SK Federation">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 8v4l3 3"></path>
+                    </svg>
+                    <span>SK Federation</span>
+                </a>
+                <a href="{{ route('accounts.officials.index') }}"
+                   class="menu-item submenu-item {{ $isOfficialsActive ? 'active' : '' }}"
+                   data-nav-key="accounts-officials"
+                   data-tooltip="SK Officials"
+                   aria-label="SK Officials">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>SK Officials</span>
+                </a>
+            </div>
+
             <a href="{{ route('auditlogs.index') }}" class="menu-item nav-link auditlogs-btn" data-nav-key="audit-logs" data-tooltip="Audit Log" aria-label="Audit Log">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path>

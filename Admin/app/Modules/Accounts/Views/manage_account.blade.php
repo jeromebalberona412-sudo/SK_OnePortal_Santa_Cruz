@@ -32,12 +32,6 @@
             <div class="page-header-right">
                 <form method="GET" action="{{ $isOfficials ? route('accounts.officials.index') : route('accounts.federation.index') }}" class="search-add-container">
                     <div class="filter-dropdown-container">
-                        <select id="accountTypeFilter" class="filter-dropdown" name="account_type">
-                            <option value="sk_federation" {{ $isOfficials ? '' : 'selected' }}>SK Federation</option>
-                            <option value="sk_officials" {{ $isOfficials ? 'selected' : '' }}>SK Officials</option>
-                        </select>
-                    </div>
-                    <div class="filter-dropdown-container">
                         <select id="barangayFilter" class="filter-dropdown" name="barangay_id">
                             <option value="">All Barangays</option>
                             @foreach($barangays as $barangay)
@@ -246,7 +240,8 @@
     @vite(['app/Modules/Accounts/assets/js/account.js'])
 @endsection
 
-<!-- Global success toast (green — add) -->
+{{-- Toast notifications --}}
+@push('scripts')
 <div id="accountToast" role="status" aria-live="polite">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M20 6L9 17l-5-5"/>
@@ -254,7 +249,6 @@
     <span id="accountToastMsg">Account successfully created!</span>
 </div>
 
-<!-- Edit toast (yellow) -->
 <div id="accountToastEdit" role="status" aria-live="polite">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -263,7 +257,6 @@
     <span id="accountToastEditMsg">Account updated successfully!</span>
 </div>
 
-<!-- Delete toast (red) -->
 <div id="accountToastDelete" role="status" aria-live="polite">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="3 6 5 6 21 6"/>
@@ -271,3 +264,4 @@
     </svg>
     <span id="accountToastDeleteMsg">Account deleted successfully!</span>
 </div>
+@endpush
