@@ -144,12 +144,55 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 14px;
+    gap: 12px;
+    margin-bottom: 0;
+}
+
+.table-action-bar .abyip-search-inline {
+    flex: 1;
+    max-width: 350px;
 }
 
 .table-action-bar .abyip-filter-search-inline {
-    width: 220px;
+    width: 100%;
+}
+
+.filter-item-inline {
+    flex-shrink: 0;
+}
+
+.filter-select-inline {
+    min-width: 160px;
+    padding: 10px 36px 10px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background-color: #ffffff;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #374151;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    height: 38px;
+}
+
+.filter-select-inline:focus {
+    outline: none;
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
+    background-color: #ffffff;
+}
+
+.btn-create {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .filters-row {
@@ -279,8 +322,8 @@ body {
 }
 
 .col-actions {
-    width: 140px;
-    min-width: 140px;
+    width: 200px;
+    min-width: 200px;
 }
 
 /* ── Link cell ── */
@@ -295,6 +338,14 @@ body {
 .skkp-link:hover {
     text-decoration: underline;
     color: #1d4ed8;
+}
+
+.skkp-link-full {
+    display: inline-block;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
 }
 
 /* ── Remarks cell ── */
@@ -327,9 +378,10 @@ body {
 /* ── Action Buttons ── */
 .skkp-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 4px;
     justify-content: center;
+    align-items: center;
 }
 
 .skkp-btn {
@@ -341,19 +393,17 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.skkp-btn-view       { background: #3a3a4a; color: #fff; }
-.skkp-btn-view:hover { background: #2c2c3e; }
+.skkp-btn-view       { background: #1e3a8a; color: #fff; }
+.skkp-btn-view:hover { background: #1e2d6b; }
 
-.skkp-btn-edit       { background: #2563eb; color: #fff; }
-.skkp-btn-edit:hover { background: #1d4ed8; }
+.skkp-btn-edit       { background: #eab308; color: #fff; }
+.skkp-btn-edit:hover { background: #ca8a04; }
 
 .skkp-btn-delete       { background: #dc2626; color: #fff; }
 .skkp-btn-delete:hover { background: #b91c1c; }
-
-.skkp-btn-reschedule       { background: #f59e0b; color: #fff; }
-.skkp-btn-reschedule:hover { background: #d97706; }
 
 /* ── Buttons ── */
 .btn {
@@ -523,6 +573,37 @@ body {
     color: #ffffff;
 }
 
+.modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-restore-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+    padding: 2px 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.modal-restore-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-restore-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
 .modal-close {
     background: none;
     border: none;
@@ -530,7 +611,7 @@ body {
     font-weight: 700;
     cursor: pointer;
     color: #ffffff;
-    padding: 4px 8px;
+    padding: 2px 6px;
     line-height: 1;
 }
 
@@ -809,8 +890,22 @@ body {
     .skkp-form-modal-box, .skkp-view-modal-box { max-width: 95vw; }
     .skkp-delete-modal-box { max-width: 95vw; }
     .pagination-container { flex-direction: column; gap: 12px; }
-    .table-action-bar { flex-wrap: wrap; }
-    .abyip-filter-search-inline { width: 100%; }
+    .table-action-bar { 
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .table-action-bar .abyip-search-inline {
+        max-width: 100%;
+    }
+    .filter-item-inline {
+        width: 100%;
+    }
+    .filter-select-inline {
+        width: 100%;
+    }
+    .btn-create {
+        width: 100%;
+    }
 }
 
 @media (min-width: 769px) {

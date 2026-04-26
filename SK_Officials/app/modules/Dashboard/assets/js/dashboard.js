@@ -457,34 +457,17 @@ function renderLineChart(d) {
     const cbApproved = document.getElementById('filterApproved');
     const cbRejected = document.getElementById('filterRejected');
     const cbPending  = document.getElementById('filterPending');
-    const cbAll      = document.getElementById('filterAll');
-
-    function syncAllCheckbox() {
-        if (cbAll) {
-            cbAll.checked = [cbApproved, cbRejected, cbPending].every(function (cb) { return cb && cb.checked; });
-        }
-    }
 
     function applyFilter() {
         if (cbApproved) chartLine.data.datasets[0].hidden = !cbApproved.checked;
         if (cbRejected) chartLine.data.datasets[1].hidden = !cbRejected.checked;
         if (cbPending)  chartLine.data.datasets[2].hidden = !cbPending.checked;
         chartLine.update();
-        syncAllCheckbox();
     }
 
     [cbApproved, cbRejected, cbPending].forEach(function (cb) {
         if (cb) { cb.checked = true; cb.addEventListener('change', applyFilter); }
     });
-
-    if (cbAll) {
-        cbAll.checked = true;
-        cbAll.addEventListener('change', function () {
-            const state = cbAll.checked;
-            [cbApproved, cbRejected, cbPending].forEach(function (cb) { if (cb) cb.checked = state; });
-            applyFilter();
-        });
-    }
 }
 
 /* ── Pie Chart — Kabataan Sex Distribution ──────────────── */

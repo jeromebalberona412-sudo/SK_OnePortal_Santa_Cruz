@@ -191,6 +191,24 @@
                 <div class="account-settings-row">
                     <div class="account-settings-info">
                         <div class="account-settings-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div>
+                            <div class="account-settings-label">Email Address</div>
+                            <div class="account-settings-desc">Change your account email address via verification link.</div>
+                        </div>
+                    </div>
+                    <a href="{{ route('change-email') }}" class="account-settings-btn">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                        Change Email
+                    </a>
+                </div>
+
+                <div class="account-settings-divider"></div>
+
+                <div class="account-settings-row">
+                    <div class="account-settings-info">
+                        <div class="account-settings-icon">
                             <i class="fa-solid fa-lock"></i>
                         </div>
                         <div>

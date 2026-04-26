@@ -767,6 +767,12 @@ body {
     overflow: hidden;
 }
 
+.account-settings-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 0;
+}
+
 .account-settings-row {
     display: flex;
     align-items: center;
@@ -816,8 +822,10 @@ body {
 .account-settings-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 10px 20px;
+    min-width: 175px;
     border-radius: 10px;
     background: linear-gradient(135deg, #2c2c3e, #3a3a4a);
     color: #f4c20d;

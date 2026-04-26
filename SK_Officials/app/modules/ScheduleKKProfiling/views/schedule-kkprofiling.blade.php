@@ -89,22 +89,9 @@
                         <input type="text" id="skkpSearch" class="abyip-filter-search-inline" placeholder="Search schedules..." maxlength="80" autocomplete="off">
                     </div>
                 </div>
-                <button type="button" id="skkpCreateBtn" class="btn primary-btn">
+                <button type="button" id="skkpCreateBtn" class="btn primary-btn btn-create">
                     + Create Schedule
                 </button>
-            </div>
-            <div class="filters-row">
-                <div class="filter-item">
-                    <label for="skkpStatusFilter" class="filter-label">Status</label>
-                    <select id="skkpStatusFilter" class="filter-select">
-                        <option value="">All</option>
-                        <option value="Upcoming">Upcoming</option>
-                        <option value="Ongoing">Ongoing</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                        <option value="Rescheduled">Rescheduled</option>
-                    </select>
-                </div>
             </div>
         </section>
 
@@ -121,11 +108,8 @@
                             <tr>
                                 <th>Date Start</th>
                                 <th>Date Expiry</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
                                 <th>Link</th>
                                 <th>Status</th>
-                                <th>Remarks</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -155,7 +139,12 @@
     <div class="modal-box skkp-form-modal-box skkp-modal-animate">
         <div class="modal-header">
             <h2 class="modal-title" id="skkpFormModalTitle">Create Schedule</h2>
-            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            <div class="modal-header-actions">
+                <button type="button" class="modal-restore-btn" id="skkpFormRestoreBtn" title="Maximize / Restore">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                </button>
+                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            </div>
         </div>
         <div class="modal-body skkp-form-body">
             <input type="hidden" id="skkpEditId">
@@ -167,14 +156,6 @@
                 <div class="modal-field">
                     <label for="skkpFormDateExpiry">Date Expiry <span class="required">*</span></label>
                     <input type="date" id="skkpFormDateExpiry" class="skkp-input" required>
-                </div>
-                <div class="modal-field">
-                    <label for="skkpFormStartTime">Start Time <span class="required">*</span></label>
-                    <input type="time" id="skkpFormStartTime" class="skkp-input" required>
-                </div>
-                <div class="modal-field">
-                    <label for="skkpFormEndTime">End Time <span class="required">*</span></label>
-                    <input type="time" id="skkpFormEndTime" class="skkp-input" required>
                 </div>
                 <div class="modal-field modal-field-full">
                     <label for="skkpFormLink">Link</label>
@@ -190,10 +171,6 @@
                         <option value="Rescheduled">Rescheduled</option>
                     </select>
                 </div>
-                <div class="modal-field modal-field-full">
-                    <label for="skkpFormRemarks">Remarks</label>
-                    <textarea id="skkpFormRemarks" class="skkp-textarea" rows="3" maxlength="255" placeholder="Optional notes..."></textarea>
-                </div>
             </div>
         </div>
         <div class="modal-footer">
@@ -208,7 +185,12 @@
     <div class="modal-box skkp-view-modal-box skkp-modal-animate">
         <div class="modal-header">
             <h2 class="modal-title">Schedule Details</h2>
-            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            <div class="modal-header-actions">
+                <button type="button" class="modal-restore-btn" id="skkpViewRestoreBtn" title="Maximize / Restore">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                </button>
+                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            </div>
         </div>
         <div class="modal-body skkp-view-body">
             <div class="skkp-view-grid">
@@ -221,14 +203,6 @@
                     <span class="skkp-view-value" id="skkpViewDateExpiry">—</span>
                 </div>
                 <div class="skkp-view-row">
-                    <span class="skkp-view-label">Start Time</span>
-                    <span class="skkp-view-value" id="skkpViewStartTime">—</span>
-                </div>
-                <div class="skkp-view-row">
-                    <span class="skkp-view-label">End Time</span>
-                    <span class="skkp-view-value" id="skkpViewEndTime">—</span>
-                </div>
-                <div class="skkp-view-row">
                     <span class="skkp-view-label">Link</span>
                     <span class="skkp-view-value" id="skkpViewLink">—</span>
                 </div>
@@ -236,14 +210,7 @@
                     <span class="skkp-view-label">Status</span>
                     <span class="skkp-view-value" id="skkpViewStatus">—</span>
                 </div>
-                <div class="skkp-view-row skkp-view-row-full">
-                    <span class="skkp-view-label">Remarks</span>
-                    <span class="skkp-view-value" id="skkpViewRemarks">—</span>
-                </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-cancel-form" data-modal-close>Close</button>
         </div>
     </div>
 </div>
@@ -273,3 +240,4 @@
 
 </body>
 </html>
+<!-- PLACEHOLDER_KABATAAN_MODAL -->

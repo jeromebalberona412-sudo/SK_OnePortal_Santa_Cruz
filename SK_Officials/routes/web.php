@@ -70,6 +70,13 @@ Route::middleware(['web'])->group(function () {
         return view('Profile::change-password');
     })->name('change-password');
 
+    Route::get('/change-email', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Profile::change-email');
+    })->name('change-email');
+
     Route::get('/notifications', function () {
         if (!session('authenticated')) {
             return redirect()->route('login');

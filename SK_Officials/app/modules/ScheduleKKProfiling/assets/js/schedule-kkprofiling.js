@@ -57,10 +57,12 @@ function initializeScheduleKKProfiling() {
     const formTitle    = document.getElementById('skkpFormModalTitle');
     const formSaveBtn  = document.getElementById('skkpFormSaveBtn');
     const formCancelBtn = document.getElementById('skkpFormCancelBtn');
+    const formRestoreBtn = document.getElementById('skkpFormRestoreBtn');
     const editIdInput  = document.getElementById('skkpEditId');
 
     // View modal
     const viewModal = document.getElementById('skkpViewModal');
+    const viewRestoreBtn = document.getElementById('skkpViewRestoreBtn');
 
     // Delete modal
     const deleteModal      = document.getElementById('skkpDeleteModal');
@@ -73,7 +75,7 @@ function initializeScheduleKKProfiling() {
             if (filterStatus && s.status !== filterStatus) return false;
             if (filterSearch) {
                 const q = filterSearch.toLowerCase();
-                const match = [s.dateStart, s.dateExpiry, s.link, s.remarks, s.status]
+                const match = [s.dateStart, s.dateExpiry, s.link, s.status]
                     .some(v => v && String(v).toLowerCase().includes(q));
                 if (!match) return false;
             }
@@ -96,7 +98,7 @@ function initializeScheduleKKProfiling() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 8;
+            td.colSpan = 5;
             td.textContent = 'No schedules found.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -106,17 +108,14 @@ function initializeScheduleKKProfiling() {
                 const statusClass = s.status.toLowerCase().replace(/\s+/g, '-');
 
                 const linkHtml = s.link
-                    ? `<a href="${s.link}" target="_blank" rel="noopener noreferrer" class="skkp-link">Open Link</a>`
+                    ? `<a href="${s.link}" target="_blank" rel="noopener noreferrer" class="skkp-link skkp-link-full">${s.link}</a>`
                     : '—';
 
                 tr.innerHTML = `
                     <td>${formatDate(s.dateStart)}</td>
                     <td>${formatDate(s.dateExpiry)}</td>
-                    <td>${formatTime(s.startTime)}</td>
-                    <td>${formatTime(s.endTime)}</td>
                     <td>${linkHtml}</td>
                     <td><span class="skkp-status-badge ${statusClass}">${s.status}</span></td>
-                    <td class="skkp-remarks-cell">${s.remarks || '—'}</td>
                     <td>
                         <div class="skkp-actions">
                             <button class="skkp-btn skkp-btn-view"   data-action="view"   data-id="${s.id}">View</button>
@@ -176,11 +175,91 @@ function initializeScheduleKKProfiling() {
     function openModal(el)  { if (el) el.style.display = 'flex'; }
     function closeModal(el) { if (el) el.style.display = 'none'; }
 
+    // ── Maximize / Restore ──────────────────────────────────────────────────
+    let isMaximized = false;
+    const maximizeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
+    const restoreIcon  = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M3 16V5a2 2 0 0 1 2-2h11"/></svg>`;
+    const formModalBox = formModal ? formModal.querySelector('.skkp-form-modal-box') : null;
+
+    function resetModalSize() {
+        isMaximized = false;
+        if (formModalBox) {
+            formModalBox.style.maxWidth    = '';
+            formModalBox.style.maxHeight   = '';
+            formModalBox.style.width       = '';
+            formModalBox.style.height      = '';
+            formModalBox.style.borderRadius = '';
+        }
+        if (formRestoreBtn) {
+            formRestoreBtn.innerHTML = maximizeIcon;
+            formRestoreBtn.title = 'Maximize / Restore';
+        }
+    }
+
+    if (formRestoreBtn) {
+        formRestoreBtn.addEventListener('click', () => {
+            isMaximized = !isMaximized;
+            if (formModalBox) {
+                if (isMaximized) {
+                    formModalBox.style.maxWidth    = '100vw';
+                    formModalBox.style.maxHeight   = '100vh';
+                    formModalBox.style.width       = '100vw';
+                    formModalBox.style.height      = '100vh';
+                    formModalBox.style.borderRadius = '0';
+                    formRestoreBtn.innerHTML = restoreIcon;
+                    formRestoreBtn.title = 'Restore Down';
+                } else {
+                    resetModalSize();
+                }
+            }
+        });
+    }
+
+    // ── View modal maximize / restore ───────────────────────────────────────
+    let isViewMaximized = false;
+    const viewModalBox = viewModal ? viewModal.querySelector('.skkp-view-modal-box') : null;
+
+    function resetViewModalSize() {
+        isViewMaximized = false;
+        if (viewModalBox) {
+            viewModalBox.style.maxWidth    = '';
+            viewModalBox.style.maxHeight   = '';
+            viewModalBox.style.width       = '';
+            viewModalBox.style.height      = '';
+            viewModalBox.style.borderRadius = '';
+        }
+        if (viewRestoreBtn) {
+            viewRestoreBtn.innerHTML = maximizeIcon;
+            viewRestoreBtn.title = 'Maximize / Restore';
+        }
+    }
+
+    if (viewRestoreBtn) {
+        viewRestoreBtn.addEventListener('click', () => {
+            isViewMaximized = !isViewMaximized;
+            if (viewModalBox) {
+                if (isViewMaximized) {
+                    viewModalBox.style.maxWidth    = '100vw';
+                    viewModalBox.style.maxHeight   = '100vh';
+                    viewModalBox.style.width       = '100vw';
+                    viewModalBox.style.height      = '100vh';
+                    viewModalBox.style.borderRadius = '0';
+                    viewRestoreBtn.innerHTML = restoreIcon;
+                    viewRestoreBtn.title = 'Restore Down';
+                } else {
+                    resetViewModalSize();
+                }
+            }
+        });
+    }
+
     [formModal, viewModal, deleteModal].forEach(modal => {
         if (!modal) return;
         modal.addEventListener('click', e => {
             if (e.target === modal || e.target.hasAttribute('data-modal-close')) {
                 closeModal(modal);
+                if (modal === formModal) resetModalSize();
+                if (modal === viewModal) resetViewModalSize();
             }
         });
     });
@@ -197,8 +276,7 @@ function initializeScheduleKKProfiling() {
     }
 
     function clearForm() {
-        ['skkpFormDateStart', 'skkpFormDateExpiry', 'skkpFormStartTime',
-         'skkpFormEndTime', 'skkpFormLink', 'skkpFormRemarks'].forEach(id => setFormField(id, ''));
+        ['skkpFormDateStart', 'skkpFormDateExpiry', 'skkpFormLink'].forEach(id => setFormField(id, ''));
         setFormField('skkpFormStatus', 'Upcoming');
     }
 
@@ -213,31 +291,26 @@ function initializeScheduleKKProfiling() {
         });
     }
 
-    if (formCancelBtn) formCancelBtn.addEventListener('click', () => closeModal(formModal));
-
+    if (formCancelBtn) formCancelBtn.addEventListener('click', () => {
+        closeModal(formModal);
+        resetModalSize();
+    });
+    
     if (formSaveBtn) {
         formSaveBtn.addEventListener('click', () => {
             const dateStart  = getFormField('skkpFormDateStart');
             const dateExpiry = getFormField('skkpFormDateExpiry');
-            const startTime  = getFormField('skkpFormStartTime');
-            const endTime    = getFormField('skkpFormEndTime');
             const link       = getFormField('skkpFormLink');
             const status     = getFormField('skkpFormStatus') || 'Upcoming';
-            const remarks    = getFormField('skkpFormRemarks');
 
             // Validation
-            if (!dateStart || !dateExpiry || !startTime || !endTime) {
+            if (!dateStart || !dateExpiry || !status) {
                 showToast('Please fill in all required fields.', 'error');
                 return;
             }
 
             if (dateExpiry < dateStart) {
                 showToast('Date Expiry must be on or after Date Start.', 'error');
-                return;
-            }
-
-            if (startTime >= endTime) {
-                showToast('End Time must be after Start Time.', 'error');
                 return;
             }
 
@@ -251,11 +324,11 @@ function initializeScheduleKKProfiling() {
             if (id) {
                 const idx = schedules.findIndex(s => s.id === id);
                 if (idx !== -1) {
-                    schedules[idx] = { id, dateStart, dateExpiry, startTime, endTime, link, status, remarks };
+                    schedules[idx] = { id, dateStart, dateExpiry, link, status };
                     showToast('Schedule updated successfully!', 'success');
                 }
             } else {
-                schedules.push({ id: nextId++, dateStart, dateExpiry, startTime, endTime, link, status, remarks });
+                schedules.push({ id: nextId++, dateStart, dateExpiry, link, status });
                 showToast('Schedule created successfully!', 'success');
             }
 
@@ -278,6 +351,7 @@ function initializeScheduleKKProfiling() {
 
         if (action === 'view') {
             populateViewModal(sched);
+            resetViewModalSize();
             openModal(viewModal);
         } else if (action === 'edit') {
             editIdInput.value = sched.id;
@@ -285,11 +359,8 @@ function initializeScheduleKKProfiling() {
             formSaveBtn.textContent = 'Update Schedule';
             setFormField('skkpFormDateStart',  sched.dateStart);
             setFormField('skkpFormDateExpiry', sched.dateExpiry);
-            setFormField('skkpFormStartTime',  sched.startTime);
-            setFormField('skkpFormEndTime',    sched.endTime);
             setFormField('skkpFormLink',       sched.link);
             setFormField('skkpFormStatus',     sched.status);
-            setFormField('skkpFormRemarks',    sched.remarks);
             openModal(formModal);
         } else if (action === 'delete') {
             openModal(deleteModal);
@@ -305,9 +376,6 @@ function initializeScheduleKKProfiling() {
 
         set('skkpViewDateStart',  formatDate(s.dateStart));
         set('skkpViewDateExpiry', formatDate(s.dateExpiry));
-        set('skkpViewStartTime',  formatTime(s.startTime));
-        set('skkpViewEndTime',    formatTime(s.endTime));
-        set('skkpViewRemarks',    s.remarks);
 
         // Link
         const linkEl = document.getElementById('skkpViewLink');
@@ -318,7 +386,6 @@ function initializeScheduleKKProfiling() {
                 linkEl.textContent = '—';
             }
         }
-
         // Status badge
         const statusEl = document.getElementById('skkpViewStatus');
         if (statusEl) {

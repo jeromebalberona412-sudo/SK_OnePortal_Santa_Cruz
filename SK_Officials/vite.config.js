@@ -22,6 +22,8 @@ export default defineConfig({
                 'app/modules/Profile/assets/js/profile.js',
                 'app/modules/Profile/assets/css/change-password.css',
                 'app/modules/Profile/assets/js/change-password.js',
+                'app/modules/Profile/assets/css/change-email.css',
+                'app/modules/Profile/assets/js/change-email.js',
                 'app/modules/Profile/assets/css/notification.css',
                 'app/modules/Profile/assets/js/notification.js',
                 // Calendar module assets

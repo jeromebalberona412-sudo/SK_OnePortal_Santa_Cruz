@@ -421,11 +421,6 @@
             </div>
             <div class="line-chart-filter-row">
                 <label class="line-chart-checkbox">
-                    <input type="checkbox" id="filterAll" checked>
-                    <span class="line-chart-checkbox-box" style="background:#2c2c3e;"></span>
-                    <span>All</span>
-                </label>
-                <label class="line-chart-checkbox">
                     <input type="checkbox" id="filterApproved" checked>
                     <span class="line-chart-checkbox-box" style="background:#22c55e;"></span>
                     <span>Approved</span>
@@ -504,18 +499,6 @@
                 </div>
             </div>
             <div class="activity-list" id="activityList"></div>
-        </div>
-
-        <!-- Recent Announcements -->
-        <div class="dash-section-card">
-            <div class="dash-section-header">
-                <div>
-                    <h2 class="dash-section-title">Announcements</h2>
-                    <p class="dash-section-sub">Latest notices</p>
-                </div>
-                <a href="{{ route('announcements') }}" class="dash-view-all">View all</a>
-            </div>
-            <div class="announcements-list" id="announcementsList"></div>
         </div>
 
         <!-- Upcoming Events -->
