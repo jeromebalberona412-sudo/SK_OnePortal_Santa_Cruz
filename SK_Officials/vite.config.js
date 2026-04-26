@@ -54,6 +54,9 @@ export default defineConfig({
                 // Rejected KK Profiling module assets
                 'app/modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css',
                 'app/modules/Rejected_KKProfiling/assets/js/rejected-kkprofiling.js',
+                // Schedule KK Profiling module assets
+                'app/modules/ScheduleKKProfiling/assets/css/schedule-kkprofiling.css',
+                'app/modules/ScheduleKKProfiling/assets/js/schedule-kkprofiling.js',
                 // Layout module assets
                 'app/modules/layout/css/header.css',
                 'app/modules/layout/css/sidebar.css',

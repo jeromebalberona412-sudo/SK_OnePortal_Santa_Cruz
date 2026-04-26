@@ -190,6 +190,14 @@ Route::middleware(['web'])->group(function () {
         return view('Rejected_KKProfiling::rejected-kkprofiling');
     })->name('rejected-kkprofiling');
 
+    // Schedule KK Profiling
+    Route::get('/schedule-kk-profiling', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('ScheduleKKProfiling::schedule-kkprofiling');
+    })->name('schedule-kk-profiling');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 });
