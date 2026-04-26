@@ -110,4 +110,3 @@
     </div>
 </div>
 
-@vite(['app/Modules/Accounts/assets/js/view_account.js'])

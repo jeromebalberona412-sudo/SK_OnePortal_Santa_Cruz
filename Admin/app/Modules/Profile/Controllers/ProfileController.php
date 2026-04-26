@@ -3,10 +3,8 @@
 namespace App\Modules\Profile\Controllers;
 
 use App\Modules\Shared\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Password;
 
 class ProfileController extends Controller
 {
@@ -15,24 +13,26 @@ class ProfileController extends Controller
         return view('profile::profile', ['user' => $request->user()]);
     }
 
-    public function updatePassword(Request $request): JsonResponse
+    public function showChangePassword()
     {
-        $validated = $request->validate([
-            'current_password'      => ['required', 'string'],
-            'password'              => ['required', 'string', Password::min(8), 'confirmed'],
-        ]);
+        return view('profile::change-password');
+    }
 
-        $user = $request->user();
+    public function sendChangePasswordLink(Request $request)
+    {
+        $request->validate(['email' => ['required', 'email']]);
 
-        if (! Hash::check($validated['current_password'], $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Current password is incorrect.',
-            ], 422);
+        $status = Password::sendResetLink($request->only('email'));
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return back()->with('status', __($status));
         }
 
-        $user->forceFill(['password' => Hash::make($validated['password'])])->save();
+        return back()->withErrors(['email' => __($status)]);
+    }
 
-        return response()->json(['success' => true, 'message' => 'Password changed successfully.']);
+    public function showChangeEmail()
+    {
+        return view('profile::change-email');
     }
 }

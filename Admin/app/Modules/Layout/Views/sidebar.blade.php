@@ -36,6 +36,13 @@
                 </svg>
                 <span>Dashboard</span>
             </a>
+            <a href="{{ route('profile') }}" class="menu-item nav-link profile-nav-btn" data-nav-key="profile" data-tooltip="My Profile" aria-label="My Profile">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="7" r="4"></circle>
+                    <path d="M5.5 21a8.38 8.38 0 0 1 13 0"></path>
+                </svg>
+                <span>My Profile</span>
+            </a>
 
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('accounts.manage') }}" class="menu-item nav-link manage-account-btn" data-nav-key="manage-account" data-tooltip="Manage Accounts" aria-label="Manage Accounts">
@@ -54,25 +61,6 @@
                 </svg>
                 <span>Audit Log</span>
             </a>
-
-            <div class="menu-section-label">Account</div>
-            <a href="{{ route('profile') }}" class="menu-item nav-link profile-nav-btn" data-nav-key="profile" data-tooltip="My Profile" aria-label="My Profile">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="7" r="4"></circle>
-                    <path d="M5.5 21a8.38 8.38 0 0 1 13 0"></path>
-                </svg>
-                <span>My Profile</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <button type="button" class="menu-item nav-link logout-item" data-tooltip="Logout" aria-label="Logout" onclick="showLogoutModal()">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M9 6V4h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9v-2"></path>
-                    <polyline points="12,8 8,12 12,16"></polyline>
-                    <line x1="8" y1="12" x2="20" y2="12"></line>
-                </svg>
-                <span>Logout</span>
-            </button>
         </nav>
     </nav>
 </aside>

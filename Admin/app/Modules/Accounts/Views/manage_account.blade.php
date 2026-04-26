@@ -12,13 +12,7 @@
 @endphp
 
 @section('head')
-    @vite([
-        'app/Modules/Accounts/assets/css/manage_account.css',
-        'app/Modules/Accounts/assets/css/edit_account_base.css',
-        'app/Modules/Accounts/assets/css/add_sk_fed.css',
-        'app/Modules/Accounts/assets/css/add_sk_officials.css',
-        'app/Modules/Accounts/assets/css/view_account.css'
-    ])
+    @vite(['app/Modules/Accounts/assets/css/account.css'])
 @endsection
 
 @section('content')
@@ -137,9 +131,7 @@
                                             data-term-start="{{ $term?->term_start?->toDateString() ?? '' }}"
                                             data-term-end="{{ $term?->term_end?->toDateString() ?? '' }}"
                                             data-email-verified-at="{{ $account->email_verified_at?->format('m/d/Y h:i A') ?? '' }}"
-                                        >
-                                            View
-                                        </button>
+                                        >View</button>
                                         <button
                                             type="button"
                                             class="btn-edit-modern btn-edit-account"
@@ -158,9 +150,13 @@
                                             data-term-status="{{ $term?->status ?? 'ACTIVE' }}"
                                             data-term-start="{{ $term?->term_start?->toDateString() ?? '' }}"
                                             data-term-end="{{ $term?->term_end?->toDateString() ?? '' }}"
-                                        >
-                                            Edit
-                                        </button>
+                                        >Edit</button>
+                                        <button
+                                            type="button"
+                                            class="btn-delete-modern btn-delete-account"
+                                            data-account-id="{{ $account->id }}"
+                                            data-display-name="{{ $displayName }}"
+                                        >Delete</button>
                                     </div>
                                 </td>
                             </tr>
@@ -205,20 +201,46 @@
     </div>
 </div>
 
-<!-- Include Add SK Federation Modal -->
-@include('accounts::add_sk_fed')
-<!-- Include Add SK Officials Modal -->
-@include('accounts::add_sk_officials')
-<!-- Include Edit SK Federation Modal -->
-@include('accounts::edit_sk_fed')
-<!-- Include Edit SK Officials Modal -->
-@include('accounts::edit_sk_officials')
-<!-- Include View Account Modal -->
+<!-- SK Federation: Add + Edit modals (shared form) -->
+@include('accounts::form_sk_fed')
+<!-- SK Officials: Add + Edit modals (shared form) -->
+@include('accounts::form_sk_officials')
+<!-- View Account Modal -->
 @include('accounts::view_account')
+
+<!-- Delete Confirmation Modal (UI-only) -->
+<div id="deleteAccountModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:420px;">
+        <div class="modal-header" style="background:linear-gradient(180deg,#dc2626 0%,#b91c1c 100%);">
+            <h3 class="modal-title">Delete Account</h3>
+            <button type="button" class="modal-close-btn" onclick="closeDeleteModal()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body" style="text-align:center;padding:1.75rem 1.5rem 1rem;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5" style="margin-bottom:1rem;">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+            <p style="color:#1e293b;font-size:15px;font-weight:600;margin:0 0 0.5rem;">Are you sure?</p>
+            <p style="color:#64748b;font-size:13px;margin:0 0 1.5rem;">
+                You are about to delete <strong id="deleteAccountName"></strong>. This action cannot be undone.
+            </p>
+        </div>
+        <div class="modal-footer" style="justify-content:center;gap:0.75rem;border-top:1px solid #fee2e2;background:#fff5f5;">
+            <button type="button" class="btn-secondary-modern" onclick="closeDeleteModal()">Cancel</button>
+            <button type="button" class="btn-delete-confirm" id="deleteConfirmBtn" onclick="confirmDeleteAccount()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                </svg>
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
-    @vite([
-        'app/Modules/Accounts/assets/js/manage_account.js'
-    ])
+    @vite(['app/Modules/Accounts/assets/js/account.js'])
 @endsection

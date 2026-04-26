@@ -824,3 +824,78 @@ body.dark-mode #mainContent.profile-page {
 .pw-feedback--error {
     color: #dc2626;
 }
+
+/* ── System Info divider inside Basic Info ───────────────── */
+.profile-sysinfo-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 1.25rem 0 1rem;
+}
+
+:root.dark .profile-sysinfo-divider {
+    background: #334155;
+}
+
+/* ── Security option row ─────────────────────────────────── */
+.security-option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    min-height: 64px;
+}
+
+.security-option-info {
+    min-width: 0;
+}
+
+.security-option-title {
+    margin: 0 0 0.2rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.security-option-desc {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #64748b;
+}
+
+:root.dark .security-option-row {
+    background: rgba(15, 23, 42, 0.5);
+    border-color: #334155;
+}
+
+:root.dark .security-option-title {
+    color: #f1f5f9;
+}
+
+:root.dark .security-option-desc {
+    color: #64748b;
+}
+
+/* ── Security action buttons — fixed width, no extra border ─ */
+.security-action-btn {
+    flex-shrink: 0;
+    width: 140px;
+    min-height: 38px;
+    padding: 0.45rem 0.75rem;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    font-size: 0.84rem;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.2);
+}
+
+.security-action-btn:hover {
+    text-decoration: none;
+}
