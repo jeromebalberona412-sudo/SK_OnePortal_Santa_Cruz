@@ -7,54 +7,27 @@ document.addEventListener('DOMContentLoaded', function () {
 const dsfRecords = [
     {
         id: 'dsf-001',
-        firstName: 'Maria',
-        middleName: 'Cruz',
-        lastName: 'Reyes',
-        suffix: '',
-        position: 'SK Chairperson',
-        barangay: 'Alipit',
-        municipality: 'Santa Cruz',
-        contactNumber: '09171234567',
-        email: 'maria.reyes@example.com',
-        termStart: 'Jan 2022',
-        termEnd: 'Dec 2025',
-        deletedDate: 'Apr 18, 2026',
-        deletedTime: '10:30 AM',
-        _deletedTs: new Date('2026-04-18T10:30:00'),
-    },
-    {
-        id: 'dsf-002',
-        firstName: 'Jose',
-        middleName: 'Santos',
-        lastName: 'Dela Cruz',
+        firstName: 'Jerome',
+        middleName: 'Sanicoa',
+        lastName: 'Balberona',
         suffix: 'Jr.',
-        position: 'SK Secretary',
-        barangay: 'Bagumbayan',
+        position: 'Admin',
+        barangay: 'Poblacion III',
         municipality: 'Santa Cruz',
-        contactNumber: '09189876543',
-        email: 'jose.delacruz@example.com',
-        termStart: 'Jan 2022',
-        termEnd: 'Dec 2025',
-        deletedDate: 'Apr 10, 2026',
-        deletedTime: '02:15 PM',
-        _deletedTs: new Date('2026-04-10T14:15:00'),
-    },
-    {
-        id: 'dsf-003',
-        firstName: 'Ana',
-        middleName: 'Lim',
-        lastName: 'Villanueva',
-        suffix: '',
-        position: 'SK Treasurer',
-        barangay: 'Bubukal',
-        municipality: 'Santa Cruz',
-        contactNumber: '09201112233',
-        email: 'ana.villanueva@example.com',
-        termStart: 'Jan 2022',
-        termEnd: 'Dec 2025',
-        deletedDate: 'Mar 28, 2026',
-        deletedTime: '09:00 AM',
-        _deletedTs: new Date('2026-03-28T09:00:00'),
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09081137312',
+        email: 'jeromebalbepanget@gmail.com',
+        dateOfBirth: 'Jul 24, 2015',
+        age: 10,
+        emailVerification: '04/24/2026 02:57 PM',
+        termStart: 'Feb 9, 2023',
+        termEnd: 'Apr 24, 2026',
+        accountStatus: 'ACTIVE',
+        termStatus: 'ACTIVE',
+        deletedDate: 'Apr 24, 2026',
+        deletedTime: '03:00 PM',
+        _deletedTs: new Date('2026-04-24T15:00:00'),
     },
 ];
 
@@ -65,7 +38,7 @@ let dsfPendingId = null;
 let dsfActiveFilter = 'all';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
-function dsfNow() { return new Date('2026-04-20T12:00:00'); }
+function dsfNow() { return new Date('2026-04-26T12:00:00'); }
 
 function dsfIsToday(ts) {
     const n = dsfNow();
@@ -244,33 +217,98 @@ function openDsfViewModal(id) {
     if (!r) return;
     const body = document.getElementById('dsfViewBody');
     if (body) {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const statusBadge = (val) => {
+            const color = val === 'ACTIVE' ? 'dsf-badge-green' : 'dsf-badge-gray';
+            return `<span class="dsf-badge ${color}">${val}</span>`;
+        };
         body.innerHTML = `
-            <div class="dsf-view-grid">
-                <div class="dsf-view-col">
-                    <div class="dsf-view-section">
-                        <h3 class="dsf-view-section-title">Personal Information</h3>
-                        <div class="dsf-view-fullname">${fullName}</div>
-                        <div class="dsf-view-field"><span class="dsf-view-label">Position</span><span class="dsf-badge dsf-badge-blue">${r.position || '—'}</span></div>
-                        <div class="dsf-view-field"><span class="dsf-view-label">Barangay</span><span class="dsf-view-value">${r.barangay || '—'}</span></div>
-                        <div class="dsf-view-field"><span class="dsf-view-label">Municipality</span><span class="dsf-view-value">${r.municipality || '—'}</span></div>
-                        <div class="dsf-view-field"><span class="dsf-view-label">Contact Number</span><span class="dsf-view-value">${r.contactNumber || '—'}</span></div>
-                        <div class="dsf-view-field"><span class="dsf-view-label">Email</span><span class="dsf-view-value">${r.email || '—'}</span></div>
-                    </div>
+            <!-- Personal Information -->
+            <div class="dsf-view-section-block">
+                <div class="dsf-view-section-header">
+                    <span class="dsf-view-section-icon">👤</span>
+                    <span class="dsf-view-section-label">Personal Information</span>
                 </div>
-                <div class="dsf-view-col">
-                    <div class="dsf-view-section">
-                        <h3 class="dsf-view-section-title">Term Information</h3>
-                        <div class="dsf-view-field"><span class="dsf-view-label">Term Start</span><span class="dsf-view-value">${r.termStart || '—'}</span></div>
-                        <div class="dsf-view-field"><span class="dsf-view-label">Term End</span><span class="dsf-view-value">${r.termEnd || '—'}</span></div>
+                <div class="dsf-view-info-grid">
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Full Name</span>
+                        <span class="dsf-view-value dsf-view-fullname">${r.firstName} ${r.middleName || ''} ${r.lastName}${r.suffix ? ' ' + r.suffix : ''}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Email Address</span>
+                        <span class="dsf-view-value">${r.email || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Date of Birth</span>
+                        <span class="dsf-view-value">${r.dateOfBirth || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Age</span>
+                        <span class="dsf-view-value">${r.age || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Contact Number</span>
+                        <span class="dsf-view-value">${r.contactNumber || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Email Verification</span>
+                        <span class="dsf-view-value">${r.emailVerification || '—'}</span>
                     </div>
                 </div>
             </div>
-            <div class="dsf-view-deletion-section">
-                <h3 class="dsf-view-section-title dsf-view-section-title-danger">Deletion Information</h3>
-                <div class="dsf-view-inline">
-                    <div class="dsf-view-field"><span class="dsf-view-label">Deleted Date</span><span class="dsf-view-value-danger">${r.deletedDate}</span></div>
-                    <div class="dsf-view-field"><span class="dsf-view-label">Deleted Time</span><span class="dsf-view-value-danger">${r.deletedTime}</span></div>
+
+            <!-- Location Information -->
+            <div class="dsf-view-section-block">
+                <div class="dsf-view-section-header">
+                    <span class="dsf-view-section-icon">📍</span>
+                    <span class="dsf-view-section-label">Location Information</span>
+                </div>
+                <div class="dsf-view-info-grid">
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Barangay</span>
+                        <span class="dsf-view-value">${r.barangay || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Municipality</span>
+                        <span class="dsf-view-value">${r.municipality || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Province</span>
+                        <span class="dsf-view-value">${r.province || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Region</span>
+                        <span class="dsf-view-value">${r.region || '—'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Term Information -->
+            <div class="dsf-view-section-block">
+                <div class="dsf-view-section-header">
+                    <span class="dsf-view-section-icon">🏛</span>
+                    <span class="dsf-view-section-label">Term Information</span>
+                </div>
+                <div class="dsf-view-info-grid">
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Position</span>
+                        <span class="dsf-view-value">${r.position || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Term Start</span>
+                        <span class="dsf-view-value">${r.termStart || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Term End</span>
+                        <span class="dsf-view-value">${r.termEnd || '—'}</span>
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Account Status</span>
+                        ${statusBadge(r.accountStatus || '—')}
+                    </div>
+                    <div class="dsf-view-field">
+                        <span class="dsf-view-label">Term Status</span>
+                        ${statusBadge(r.termStatus || '—')}
+                    </div>
                 </div>
             </div>`;
     }
@@ -341,21 +379,35 @@ function bindDsfRestoreModal() {
             dsfCurrentPage = 1;
             renderDsfStats();
             renderDsfTable();
-            showDsfBanner(`${name} has been restored to the SK Federation list.`);
+            showDsfToast(`${name} has been restored to the SK Federation list.`);
         });
     }
 }
 
-// ── Restore Banner ────────────────────────────────────────────────────────────
-function showDsfBanner(message) {
-    const banner = document.getElementById('dsfRestoreBanner');
-    const text   = document.getElementById('dsfRestoreBannerText');
-    if (!banner || !text) return;
-    text.textContent = message;
-    banner.style.display = 'flex';
-    banner.classList.add('show');
+// ── Toast Notification (top-right) ───────────────────────────────────────────
+function showDsfToast(message) {
+    let container = document.getElementById('dsfToastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'dsfToastContainer';
+        container.style.cssText = 'position:fixed;top:20px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'dsf-toast';
+    toast.innerHTML = `
+        <div class="dsf-toast-icon">✓</div>
+        <span class="dsf-toast-text">${message}</span>
+    `;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add('dsf-toast-show'));
+    });
+
     setTimeout(() => {
-        banner.classList.remove('show');
-        setTimeout(() => { banner.style.display = 'none'; }, 400);
+        toast.classList.remove('dsf-toast-show');
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
     }, 4000);
 }

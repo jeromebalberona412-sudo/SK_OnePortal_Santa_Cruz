@@ -25,12 +25,6 @@
     <!-- Stats -->
     <div class="dsf-stats-row" id="dsfStatsRow"></div>
 
-    <!-- Restore Banner -->
-    <div class="dsf-restore-banner" id="dsfRestoreBanner" style="display:none;">
-        <span class="dsf-banner-icon">✓</span>
-        <span class="dsf-banner-text" id="dsfRestoreBannerText"></span>
-    </div>
-
     <!-- Filter Tabs -->
     <div class="dsf-filter-tabs">
         <button class="dsf-tab active" data-filter="all">All Deleted</button>
@@ -92,7 +86,7 @@
 <div class="dsf-modal-backdrop" id="dsfViewModal" style="display:none;">
     <div class="dsf-modal-box dsf-view-modal-box" id="dsfViewModalBox">
         <div class="dsf-modal-header dsf-view-modal-header">
-            <h2 class="dsf-modal-title">Record Details</h2>
+            <h2 class="dsf-modal-title">View Details</h2>
             <div class="dsf-view-controls">
                 <button type="button" class="dsf-view-toggle" id="dsfViewToggle" aria-label="Maximize">□</button>
                 <button type="button" class="dsf-view-close" id="dsfViewClose">&times;</button>

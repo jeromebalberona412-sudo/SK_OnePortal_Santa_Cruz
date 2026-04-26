@@ -7,23 +7,54 @@ document.addEventListener('DOMContentLoaded', function () {
 const dsoRecords = [
     {
         id: 'dso-001',
+        firstName: 'Jerome',
+        middleName: 'Sanicoa',
+        lastName: 'Balberona',
+        suffix: 'Jr.',
+        position: 'Chairman',
+        barangay: 'Poblacion III',
+        municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09081137312',
+        email: 'jeromebalbepanget@gmail.com',
+        dateOfBirth: 'Jul 24, 2015',
+        age: 10,
+        emailVerification: '04/24/2026 02:57 PM',
+        termStart: 'Feb 9, 2023',
+        termEnd: 'Apr 24, 2026',
+        accountStatus: 'ACTIVE',
+        termStatus: 'ACTIVE',
+        deletedDate: 'Apr 24, 2026',
+        deletedTime: '03:00 PM',
+        _deletedTs: new Date('2026-04-24T15:00:00'),
+    },
+    {
+        id: 'dso-002',
         firstName: 'Ramon',
         middleName: 'Jose',
         lastName: 'Villanueva',
         suffix: '',
-        position: 'SK Chairperson',
+        position: 'SK Secretary',
         barangay: 'Damayan',
         municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
         contactNumber: '09187654321',
         email: 'ramon.villanueva@example.com',
+        dateOfBirth: 'Mar 10, 2000',
+        age: 26,
+        emailVerification: '01/10/2026 10:00 AM',
         termStart: 'Jan 2022',
         termEnd: 'Dec 2025',
+        accountStatus: 'ACTIVE',
+        termStatus: 'INACTIVE',
         deletedDate: 'Apr 20, 2026',
         deletedTime: '09:45 AM',
         _deletedTs: new Date('2026-04-20T09:45:00'),
     },
     {
-        id: 'dso-002',
+        id: 'dso-003',
         firstName: 'Carla',
         middleName: 'Mae',
         lastName: 'Mendoza',
@@ -31,16 +62,23 @@ const dsoRecords = [
         position: 'SK Secretary',
         barangay: 'Imelda',
         municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
         contactNumber: '09201234567',
         email: 'carla.mendoza@example.com',
+        dateOfBirth: 'Jun 5, 2001',
+        age: 24,
+        emailVerification: '02/15/2026 08:30 AM',
         termStart: 'Jan 2022',
         termEnd: 'Dec 2025',
+        accountStatus: 'ACTIVE',
+        termStatus: 'INACTIVE',
         deletedDate: 'Apr 15, 2026',
         deletedTime: '03:00 PM',
         _deletedTs: new Date('2026-04-15T15:00:00'),
     },
     {
-        id: 'dso-003',
+        id: 'dso-004',
         firstName: 'Bong',
         middleName: 'Ramos',
         lastName: 'Garcia',
@@ -48,10 +86,17 @@ const dsoRecords = [
         position: 'SK Treasurer',
         barangay: 'Gatid',
         municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
         contactNumber: '09159876543',
         email: 'bong.garcia@example.com',
+        dateOfBirth: 'Sep 18, 1999',
+        age: 26,
+        emailVerification: '03/01/2026 11:00 AM',
         termStart: 'Jan 2022',
         termEnd: 'Dec 2025',
+        accountStatus: 'INACTIVE',
+        termStatus: 'INACTIVE',
         deletedDate: 'Mar 30, 2026',
         deletedTime: '11:20 AM',
         _deletedTs: new Date('2026-03-30T11:20:00'),
@@ -65,7 +110,7 @@ let dsoPendingId = null;
 let dsoActiveFilter = 'all';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
-function dsoNow() { return new Date('2026-04-20T12:00:00'); }
+function dsoNow() { return new Date('2026-04-26T12:00:00'); }
 
 function dsoIsToday(ts) {
     const n = dsoNow();
@@ -244,33 +289,98 @@ function openDsoViewModal(id) {
     if (!r) return;
     const body = document.getElementById('dsoViewBody');
     if (body) {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const statusBadge = (val) => {
+            const color = val === 'ACTIVE' ? 'dso-badge-green' : 'dso-badge-gray';
+            return `<span class="dso-badge ${color}">${val}</span>`;
+        };
         body.innerHTML = `
-            <div class="dso-view-grid">
-                <div class="dso-view-col">
-                    <div class="dso-view-section">
-                        <h3 class="dso-view-section-title">Personal Information</h3>
-                        <div class="dso-view-fullname">${fullName}</div>
-                        <div class="dso-view-field"><span class="dso-view-label">Position</span><span class="dso-badge dso-badge-blue">${r.position || '—'}</span></div>
-                        <div class="dso-view-field"><span class="dso-view-label">Barangay</span><span class="dso-view-value">${r.barangay || '—'}</span></div>
-                        <div class="dso-view-field"><span class="dso-view-label">Municipality</span><span class="dso-view-value">${r.municipality || '—'}</span></div>
-                        <div class="dso-view-field"><span class="dso-view-label">Contact Number</span><span class="dso-view-value">${r.contactNumber || '—'}</span></div>
-                        <div class="dso-view-field"><span class="dso-view-label">Email</span><span class="dso-view-value">${r.email || '—'}</span></div>
-                    </div>
+            <!-- Personal Information -->
+            <div class="dso-view-section-block">
+                <div class="dso-view-section-header">
+                    <span class="dso-view-section-icon">👤</span>
+                    <span class="dso-view-section-label">Personal Information</span>
                 </div>
-                <div class="dso-view-col">
-                    <div class="dso-view-section">
-                        <h3 class="dso-view-section-title">Term Information</h3>
-                        <div class="dso-view-field"><span class="dso-view-label">Term Start</span><span class="dso-view-value">${r.termStart || '—'}</span></div>
-                        <div class="dso-view-field"><span class="dso-view-label">Term End</span><span class="dso-view-value">${r.termEnd || '—'}</span></div>
+                <div class="dso-view-info-grid">
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Full Name</span>
+                        <span class="dso-view-value dso-view-fullname">${r.firstName} ${r.middleName || ''} ${r.lastName}${r.suffix ? ' ' + r.suffix : ''}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Email Address</span>
+                        <span class="dso-view-value">${r.email || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Date of Birth</span>
+                        <span class="dso-view-value">${r.dateOfBirth || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Age</span>
+                        <span class="dso-view-value">${r.age || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Contact Number</span>
+                        <span class="dso-view-value">${r.contactNumber || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Email Verification</span>
+                        <span class="dso-view-value">${r.emailVerification || '—'}</span>
                     </div>
                 </div>
             </div>
-            <div class="dso-view-deletion-section">
-                <h3 class="dso-view-section-title dso-view-section-title-danger">Deletion Information</h3>
-                <div class="dso-view-inline">
-                    <div class="dso-view-field"><span class="dso-view-label">Deleted Date</span><span class="dso-view-value-danger">${r.deletedDate}</span></div>
-                    <div class="dso-view-field"><span class="dso-view-label">Deleted Time</span><span class="dso-view-value-danger">${r.deletedTime}</span></div>
+
+            <!-- Location Information -->
+            <div class="dso-view-section-block">
+                <div class="dso-view-section-header">
+                    <span class="dso-view-section-icon">📍</span>
+                    <span class="dso-view-section-label">Location Information</span>
+                </div>
+                <div class="dso-view-info-grid">
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Barangay</span>
+                        <span class="dso-view-value">${r.barangay || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Municipality</span>
+                        <span class="dso-view-value">${r.municipality || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Province</span>
+                        <span class="dso-view-value">${r.province || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Region</span>
+                        <span class="dso-view-value">${r.region || '—'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Term Information -->
+            <div class="dso-view-section-block">
+                <div class="dso-view-section-header">
+                    <span class="dso-view-section-icon">🏛</span>
+                    <span class="dso-view-section-label">Term Information</span>
+                </div>
+                <div class="dso-view-info-grid">
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Position</span>
+                        <span class="dso-view-value">${r.position || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Term Start</span>
+                        <span class="dso-view-value">${r.termStart || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Term End</span>
+                        <span class="dso-view-value">${r.termEnd || '—'}</span>
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Account Status</span>
+                        ${statusBadge(r.accountStatus || '—')}
+                    </div>
+                    <div class="dso-view-field">
+                        <span class="dso-view-label">Term Status</span>
+                        ${statusBadge(r.termStatus || '—')}
+                    </div>
                 </div>
             </div>`;
     }
@@ -341,21 +451,35 @@ function bindDsoRestoreModal() {
             dsoCurrentPage = 1;
             renderDsoStats();
             renderDsoTable();
-            showDsoBanner(`${name} has been restored to the SK Officials list.`);
+            showDsoToast(`${name} has been restored to the SK Officials list.`);
         });
     }
 }
 
-// ── Restore Banner ────────────────────────────────────────────────────────────
-function showDsoBanner(message) {
-    const banner = document.getElementById('dsoRestoreBanner');
-    const text   = document.getElementById('dsoRestoreBannerText');
-    if (!banner || !text) return;
-    text.textContent = message;
-    banner.style.display = 'flex';
-    banner.classList.add('show');
+// ── Toast Notification (top-right) ───────────────────────────────────────────
+function showDsoToast(message) {
+    let container = document.getElementById('dsoToastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'dsoToastContainer';
+        container.style.cssText = 'position:fixed;top:20px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'dso-toast';
+    toast.innerHTML = `
+        <div class="dso-toast-icon">✓</div>
+        <span class="dso-toast-text">${message}</span>
+    `;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add('dso-toast-show'));
+    });
+
     setTimeout(() => {
-        banner.classList.remove('show');
-        setTimeout(() => { banner.style.display = 'none'; }, 400);
+        toast.classList.remove('dso-toast-show');
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
     }, 4000);
 }

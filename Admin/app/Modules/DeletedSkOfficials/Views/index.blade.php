@@ -25,12 +25,6 @@
     <!-- Stats -->
     <div class="dso-stats-row" id="dsoStatsRow"></div>
 
-    <!-- Restore Banner -->
-    <div class="dso-restore-banner" id="dsoRestoreBanner" style="display:none;">
-        <span class="dso-banner-icon">✓</span>
-        <span class="dso-banner-text" id="dsoRestoreBannerText"></span>
-    </div>
-
     <!-- Filter Tabs -->
     <div class="dso-filter-tabs">
         <button class="dso-tab active" data-filter="all">All Deleted</button>
@@ -92,7 +86,7 @@
 <div class="dso-modal-backdrop" id="dsoViewModal" style="display:none;">
     <div class="dso-modal-box dso-view-modal-box" id="dsoViewModalBox">
         <div class="dso-modal-header dso-view-modal-header">
-            <h2 class="dso-modal-title">Record Details</h2>
+            <h2 class="dso-modal-title">View Details</h2>
             <div class="dso-view-controls">
                 <button type="button" class="dso-view-toggle" id="dsoViewToggle" aria-label="Maximize">□</button>
                 <button type="button" class="dso-view-close" id="dsoViewClose">&times;</button>
