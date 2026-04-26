@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeSidebar();
     isolateSidebarScroll();
     initArchivedDropdown();
+    initYouthManagementDropdown();
+    initPlanningDevDropdown();
     initNavClickExpand();
 });
 
@@ -91,6 +93,73 @@ function initNavClickExpand() {
             }
         });
     });
+}
+
+// ── Planning & Development dropdown — click-only ─────────────────────────────
+function initPlanningDevDropdown() {
+    const toggleLink = document.getElementById('planningDevToggleLink');
+    const dropdown   = document.getElementById('planningDevDropdown');
+    if (!toggleLink || !dropdown) return;
+
+    toggleLink.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const sidebar     = document.getElementById('mainSidebar');
+        const mainContent = document.querySelector('.main-content');
+        const toggle      = document.getElementById('sidebarToggle');
+        if (sidebar && window.innerWidth > 768 && sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            if (mainContent) mainContent.classList.remove('sidebar-collapsed');
+            if (toggle) toggle.classList.add('active');
+        }
+
+        const isNowOpen = !dropdown.classList.contains('open');
+        dropdown.classList.toggle('open', isNowOpen);
+        sessionStorage.setItem('planningDevDropdownOpen', isNowOpen ? '1' : '0');
+    });
+
+    const isActive = dropdown.querySelector('.nav-sublink.active') !== null;
+    const wasOpen  = sessionStorage.getItem('planningDevDropdownOpen') === '1';
+
+    if (isActive || wasOpen) {
+        dropdown.classList.add('open');
+        sessionStorage.setItem('planningDevDropdownOpen', '1');
+    }
+}
+
+// ── Youth Management dropdown — click-only ───────────────────────────────────
+function initYouthManagementDropdown() {
+    const toggleLink = document.getElementById('youthManagementToggleLink');
+    const dropdown   = document.getElementById('youthManagementDropdown');
+
+    if (!toggleLink || !dropdown) return;
+
+    toggleLink.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        // Also expand the sidebar if collapsed (desktop)
+        const sidebar     = document.getElementById('mainSidebar');
+        const mainContent = document.querySelector('.main-content');
+        const toggle      = document.getElementById('sidebarToggle');
+        if (sidebar && window.innerWidth > 768 && sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            if (mainContent) mainContent.classList.remove('sidebar-collapsed');
+            if (toggle) toggle.classList.add('active');
+        }
+
+        const isNowOpen = !dropdown.classList.contains('open');
+        dropdown.classList.toggle('open', isNowOpen);
+        sessionStorage.setItem('youthManagementDropdownOpen', isNowOpen ? '1' : '0');
+    });
+
+    // Restore dropdown open state on page load
+    const isActive = dropdown.querySelector('.nav-sublink.active') !== null;
+    const wasOpen  = sessionStorage.getItem('youthManagementDropdownOpen') === '1';
+
+    if (isActive || wasOpen) {
+        dropdown.classList.add('open');
+        sessionStorage.setItem('youthManagementDropdownOpen', '1');
+    }
 }
 
 // ── Archived dropdown — click-only, no inline onclick ───────────────────────
