@@ -104,6 +104,53 @@
                 </svg>
                 <span>Audit Log</span>
             </a>
+
+            {{-- Archived Dropdown --}}
+            @php
+                $isArchivedActive = request()->routeIs('archived.*');
+            @endphp
+            <div class="menu-section-label">Archived</div>
+            <button type="button"
+                class="menu-item archived-dropdown-btn {{ $isArchivedActive ? 'active' : '' }}"
+                data-nav-key="archived"
+                data-tooltip="Archived"
+                aria-label="Archived"
+                aria-expanded="{{ $isArchivedActive ? 'true' : 'false' }}"
+                onclick="toggleArchivedDropdown(this)">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                    <rect x="1" y="3" width="22" height="5"></rect>
+                    <line x1="10" y1="12" x2="14" y2="12"></line>
+                </svg>
+                <span>Archived</span>
+                <svg class="dropdown-chevron {{ $isArchivedActive ? 'open' : '' }}" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+            <div class="dropdown-submenu {{ $isArchivedActive ? 'open' : '' }}" id="archivedDropdown">
+                <a href="{{ route('archived.deleted-sk-federation') }}"
+                   class="menu-item submenu-item {{ request()->routeIs('archived.deleted-sk-federation') ? 'active' : '' }}"
+                   data-nav-key="archived-deleted-sk-federation"
+                   data-tooltip="Deleted SK Federation"
+                   aria-label="Deleted SK Federation">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 8v4l3 3"></path>
+                    </svg>
+                    <span>Deleted SK Federation</span>
+                </a>
+                <a href="{{ route('archived.deleted-sk-officials') }}"
+                   class="menu-item submenu-item {{ request()->routeIs('archived.deleted-sk-officials') ? 'active' : '' }}"
+                   data-nav-key="archived-deleted-sk-officials"
+                   data-tooltip="Deleted SK Officials"
+                   aria-label="Deleted SK Officials">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>Deleted SK Officials</span>
+                </a>
+            </div>
         </nav>
     </nav>
 </aside>

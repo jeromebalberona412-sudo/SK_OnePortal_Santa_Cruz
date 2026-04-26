@@ -39,6 +39,14 @@ export default defineConfig({
                 // Authentication Module
                 'app/Modules/Authentication/assets/css/login.css',
                 'app/Modules/Authentication/assets/js/login.js',
+
+                // Deleted SK Federation Module
+                'app/Modules/DeletedSkFederation/assets/css/deleted-sk-federation.css',
+                'app/Modules/DeletedSkFederation/assets/js/deleted-sk-federation.js',
+
+                // Deleted SK Officials Module
+                'app/Modules/DeletedSkOfficials/assets/css/deleted-sk-officials.css',
+                'app/Modules/DeletedSkOfficials/assets/js/deleted-sk-officials.js',
             ],
             refresh: true,
         }),

@@ -530,3 +530,31 @@ body.sidebar-collapsed .dropdown-submenu {
     background: rgba(96, 165, 250, 0.12);
     color: #60a5fa;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ARCHIVED DROPDOWN
+══════════════════════════════════════════════════════════════ */
+.archived-dropdown-btn {
+    width: 100%;
+    text-align: left;
+}
+
+#archivedDropdown {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#archivedDropdown.open {
+    max-height: 200px;
+}
+
+/* Collapsed sidebar — hide archived submenu */
+body.sidebar-collapsed #archivedDropdown {
+    max-height: 0 !important;
+}
+
+:root.dark .archived-dropdown-btn.active {
+    background: rgba(96, 165, 250, 0.12);
+    color: #60a5fa;
+}
