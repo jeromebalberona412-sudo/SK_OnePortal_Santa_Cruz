@@ -83,17 +83,17 @@
 
                     <ul class="nav-submenu" id="youthManagementSubmenu">
 
-                        <!-- KK Profiling Requests -->
-                        <li class="nav-subitem">
-                            <a href="{{ route('kk-profiling-requests') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('kk-profiling-requests') ? 'active' : '' }}">
-                                <span>KK Profiling Requests</span>
-                            </a>
-                        </li>
-
                         <!-- Schedule KK Profiling -->
                         <li class="nav-subitem">
                             <a href="{{ route('schedule-kk-profiling') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-kk-profiling') ? 'active' : '' }}">
                                 <span>Schedule KK Profiling</span>
+                            </a>
+                        </li>
+
+                        <!-- KK Profiling Requests -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('kk-profiling-requests') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('kk-profiling-requests') ? 'active' : '' }}">
+                                <span>KK Profiling Requests</span>
                             </a>
                         </li>
 

@@ -163,8 +163,17 @@
 
 .nav-link.active {
     background: #f4c20d;
-    color: #1f3c6d;
+    color: #ffffff;
     box-shadow: 0 4px 12px rgba(244, 194, 13, 0.5);
+}
+
+.nav-link.active .nav-icon {
+    color: #ffffff;
+    stroke: #ffffff;
+}
+
+.nav-link.active .nav-text {
+    color: #ffffff;
 }
 
 .nav-icon {
@@ -629,6 +638,7 @@
 
 .nav-sublink.active .nav-subicon {
     color: #ffffff;
+    stroke: #ffffff;
 }
 
 .nav-subicon {
