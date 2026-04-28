@@ -167,4 +167,51 @@ class HomepageController extends Controller
     {
         return view('homepage::about');
     }
+
+    public function kkProfiling(string $barangay)
+    {
+        $validBarangays = [
+            'alipit', 'bagumbayan', 'barangay-i', 'barangay-ii', 'barangay-iii',
+            'barangay-iv', 'barangay-v', 'bubukal', 'calios', 'duhat', 'gatid',
+            'jasaan', 'labuin', 'malinao', 'oogong', 'pagsawitan', 'palasan',
+            'patimbao', 'san-jose', 'san-juan', 'san-pablo-norte', 'san-pablo-sur',
+            'santisima-cruz', 'santo-angel-central', 'santo-angel-norte', 'santo-angel-sur',
+        ];
+
+        $slug = strtolower($barangay);
+
+        if (!in_array($slug, $validBarangays)) {
+            abort(404);
+        }
+
+        // Convert slug to display name
+        $displayName = ucwords(str_replace('-', ' ', $slug));
+        // Fix special cases
+        $displayName = str_replace(['Barangay I', 'Barangay Ii', 'Barangay Iii', 'Barangay Iv', 'Barangay V'],
+                                   ['Barangay I (Poblacion I)', 'Barangay II (Poblacion II)', 'Barangay III (Poblacion III)', 'Barangay IV (Poblacion IV)', 'Barangay V (Poblacion V)'],
+                                   $displayName);
+
+        return view('homepage::kkprofiling', [
+            'barangay' => $displayName,
+            'slug'     => $slug,
+        ]);
+    }
+
+    public function kkProfilingSubmit(\Illuminate\Http\Request $request, string $barangay)
+    {
+        $request->validate([
+            'last_name'    => 'required|string|max:100',
+            'first_name'   => 'required|string|max:100',
+            'age'          => 'required|integer|min:15|max:30',
+            'birthday'     => 'required|date',
+            'sex'          => 'required|in:Male,Female',
+            'civil_status' => 'required|string',
+            'purok_zone'   => 'required|string|max:100',
+        ]);
+
+        // Prototype: just flash success and redirect back
+        return redirect()
+            ->route('kkprofiling', ['barangay' => $barangay])
+            ->with('success', 'Your KK Profiling submission has been received! It will be reviewed by your barangay SK officials.');
+    }
 }

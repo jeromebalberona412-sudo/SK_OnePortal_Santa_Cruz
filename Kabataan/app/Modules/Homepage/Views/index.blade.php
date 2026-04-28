@@ -19,35 +19,39 @@
     {{-- ── TOP NAVBAR ── --}}
     <nav class="top-navbar">
         <div class="navbar-container">
-            <div class="navbar-left">
+            <a href="{{ route('homepage') }}" class="navbar-left">
                 <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="navbar-logo">
                 <span class="navbar-title">SK OnePortal</span>
-            </div>
+            </a>
 
-            <div class="navbar-center">
-                <div class="search-bar">
-                    <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                    </svg>
-                    <input type="text" id="searchInput" placeholder="Search posts, programs, announcements..." class="search-input">
-                </div>
+            <div class="navbar-links">
+                <a href="{{ route('homepage') }}" class="nav-link active">Home</a>
+                <a href="{{ route('about') }}" class="nav-link">About</a>
+                <a href="{{ route('about') }}#services" class="nav-link">Services</a>
+                <a href="{{ route('about') }}#barangay" class="nav-link">Barangay</a>
+                <a href="{{ route('about') }}#contact" class="nav-link">Contact</a>
             </div>
 
             <div class="navbar-right">
-                <a href="{{ route('homepage') }}" class="nav-icon-btn" title="Home" aria-label="Home">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                    </svg>
-                </a>
-                <a href="{{ route('about') }}" class="nav-icon-btn" title="About" aria-label="About">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                </a>
-                <button type="button" class="nav-auth-btn solid" id="navLoginBtn">Login / Sign Up</button>
+                <button type="button" class="nav-btn solid" id="navLoginBtn">Login</button>
+                <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
         </div>
     </nav>
+
+    {{-- Mobile drawer --}}
+    <div class="nav-drawer" id="navDrawer">
+        <a href="{{ route('homepage') }}" class="nav-link active">Home</a>
+        <a href="{{ route('about') }}" class="nav-link">About</a>
+        <a href="{{ route('about') }}#services" class="nav-link">Services</a>
+        <a href="{{ route('about') }}#barangay" class="nav-link">Barangay</a>
+        <a href="{{ route('about') }}#contact" class="nav-link">Contact</a>
+        <div class="nav-drawer-actions">
+            <button type="button" class="nav-btn solid" id="navDrawerLoginBtn">Login</button>
+        </div>
+    </div>
 
     {{-- ── MAIN ── --}}
     <main class="dashboard-main">
@@ -105,17 +109,6 @@
                     <div class="post-content">
                         <h2 class="post-title">{{ $item['title'] }}</h2>
                         <p class="post-text">{{ $item['summary'] }}</p>
-
-                        <div class="post-image">
-                            <div class="image-placeholder" role="img" aria-label="Image placeholder">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <rect x="3" y="3" width="18" height="18" rx="3"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <path d="M21 15l-5-5L5 21"/>
-                                </svg>
-                                <span>No image uploaded yet</span>
-                            </div>
-                        </div>
 
                         <div class="post-details">
                             <div class="detail-item">
@@ -233,39 +226,35 @@
     {{-- ── LOGIN REQUIRED MODAL (programs / barangay) ── --}}
     <div id="loginRequiredModal" class="program-modal">
         <div class="modal-overlay" id="loginRequiredOverlay"></div>
-        <div class="modal-container" style="max-width:460px;overflow:hidden;">
-            {{-- Gradient banner --}}
-            <div style="background:linear-gradient(135deg,#022a54 0%,#0450a8 55%,#667eea 100%);padding:32px 24px 24px;text-align:center;position:relative;overflow:hidden;">
-                <div style="position:absolute;inset:0;background-image:url('/images/Background.png');background-size:cover;opacity:0.07;pointer-events:none;"></div>
-                <button class="modal-close" id="loginRequiredClose" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.15);">
+        <div class="modal-container" style="max-width:440px;overflow:hidden;">
+            <div class="community-modal-banner">
+                <div style="position:absolute;inset:0;background-image:url('/images/Background.png');background-size:cover;opacity:0.08;pointer-events:none;border-radius:20px 20px 0 0;"></div>
+                <button class="modal-close" id="loginRequiredClose">
                     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
-                <div style="font-size:48px;margin-bottom:12px;position:relative;z-index:1;">🎉</div>
-                <h2 style="color:#fff;font-size:22px;font-weight:800;margin-bottom:6px;position:relative;z-index:1;">Join the Community!</h2>
-                <p style="color:rgba(255,255,255,0.8);font-size:14px;position:relative;z-index:1;">Be part of the SK OnePortal youth community in Santa Cruz, Laguna.</p>
+                <div class="community-modal-emoji">🎉</div>
+                <h2 class="community-modal-title">Join the Community!</h2>
+                <p class="community-modal-sub">Be part of the SK OnePortal youth community in Santa Cruz, Laguna.</p>
             </div>
-            <div class="modal-body" style="padding:24px;">
-                <p style="text-align:center;color:#555;font-size:15px;line-height:1.65;margin-bottom:8px;">
-                    Want to explore <strong id="loginRequiredCategory" style="color:#0450a8;"></strong>? Login or create a free account to get full access.
+            <div class="modal-body community-modal-body">
+                <p class="community-modal-desc">
+                    Want to explore <strong id="loginRequiredCategory" class="community-modal-highlight"></strong>? Login to get full access.
                 </p>
-                <div style="display:flex;flex-direction:column;gap:10px;margin:20px 0;">
-                    <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#555;">
-                        <span style="width:28px;height:28px;border-radius:50%;background:#e8f0ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✅</span>
+                <div class="community-modal-perks">
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">✅</span>
                         Apply for SK programs and track your applications
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#555;">
-                        <span style="width:28px;height:28px;border-radius:50%;background:#e8f0ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">💬</span>
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">💬</span>
                         Like and comment on community posts
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#555;">
-                        <span style="width:28px;height:28px;border-radius:50%;background:#e8f0ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🏘️</span>
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">🏘️</span>
                         Browse barangay SK profiles and officers
                     </div>
                 </div>
-                <div style="display:flex;gap:10px;">
-                    <a href="{{ route('register') }}" class="btn-primary" style="text-decoration:none;padding:13px 0;flex:1;text-align:center;font-size:15px;">Sign Up — It's Free!</a>
-                    <a href="{{ route('login') }}" class="btn-secondary" style="text-decoration:none;padding:13px 0;flex:1;text-align:center;font-size:15px;">Login</a>
-                </div>
+                <a href="{{ route('login') }}" class="community-modal-login-btn">Login</a>
             </div>
         </div>
     </div>
@@ -273,23 +262,35 @@
     {{-- ── ACTION LOGIN MODAL (like / comment) ── --}}
     <div id="actionLoginModal" class="program-modal">
         <div class="modal-overlay" id="actionLoginOverlay"></div>
-        <div class="modal-container" style="max-width:420px;overflow:hidden;">
-            <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:28px 24px 20px;text-align:center;position:relative;">
-                <button class="modal-close" id="actionLoginClose" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.15);">
+        <div class="modal-container" style="max-width:440px;overflow:hidden;">
+            <div class="community-modal-banner">
+                <div style="position:absolute;inset:0;background-image:url('/images/Background.png');background-size:cover;opacity:0.08;pointer-events:none;border-radius:20px 20px 0 0;"></div>
+                <button class="modal-close" id="actionLoginClose">
                     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
-                <div style="font-size:44px;margin-bottom:10px;">💬</div>
-                <h2 style="color:#fff;font-size:20px;font-weight:800;margin-bottom:4px;">Join the Conversation!</h2>
-                <p style="color:rgba(255,255,255,0.8);font-size:13px;">Your voice matters in the community.</p>
+                <div class="community-modal-emoji">🎉</div>
+                <h2 class="community-modal-title">Join the Community!</h2>
+                <p class="community-modal-sub">Be part of the SK OnePortal youth community in Santa Cruz, Laguna.</p>
             </div>
-            <div class="modal-body" style="padding:22px 24px;text-align:center;">
-                <p style="color:#555;font-size:14px;line-height:1.65;margin-bottom:20px;">
-                    Login or sign up to like posts, drop comments, and connect with SK officials and fellow youth in Santa Cruz.
+            <div class="modal-body community-modal-body">
+                <p class="community-modal-desc">
+                    Login to like posts, drop comments, and connect with SK officials and fellow youth in Santa Cruz.
                 </p>
-                <div style="display:flex;gap:10px;">
-                    <a href="{{ route('register') }}" class="btn-primary" style="text-decoration:none;padding:12px 0;flex:1;text-align:center;">Sign Up Free</a>
-                    <a href="{{ route('login') }}" class="btn-secondary" style="text-decoration:none;padding:12px 0;flex:1;text-align:center;">Login</a>
+                <div class="community-modal-perks">
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">✅</span>
+                        Apply for SK programs and track your applications
+                    </div>
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">💬</span>
+                        Like and comment on community posts
+                    </div>
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">🏘️</span>
+                        Browse barangay SK profiles and officers
+                    </div>
                 </div>
+                <a href="{{ route('login') }}" class="community-modal-login-btn">Login</a>
             </div>
         </div>
     </div>
@@ -297,30 +298,51 @@
     {{-- ── PROGRAM APPLY MODAL ── --}}
     <div id="programApplyModal" class="program-modal">
         <div class="modal-overlay" id="programApplyOverlay"></div>
-        <div class="modal-container" style="max-width:460px;overflow:hidden;">
-            <div style="background:linear-gradient(135deg,#16a34a 0%,#0d9488 100%);padding:28px 24px 20px;text-align:center;position:relative;">
-                <button class="modal-close" id="programApplyClose" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.15);">
+        <div class="modal-container" style="max-width:440px;overflow:hidden;">
+            <div class="community-modal-banner">
+                <div style="position:absolute;inset:0;background-image:url('/images/Background.png');background-size:cover;opacity:0.08;pointer-events:none;border-radius:20px 20px 0 0;"></div>
+                <button class="modal-close" id="programApplyClose">
                     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
-                <div style="font-size:44px;margin-bottom:10px;">🎓</div>
-                <h2 style="color:#fff;font-size:20px;font-weight:800;margin-bottom:4px;">Ready to Apply?</h2>
-                <p style="color:rgba(255,255,255,0.85);font-size:13px;">One account, all SK programs at your fingertips.</p>
+                <div class="community-modal-emoji">🎉</div>
+                <h2 class="community-modal-title">Join the Community!</h2>
+                <p class="community-modal-sub">Be part of the SK OnePortal youth community in Santa Cruz, Laguna.</p>
             </div>
-            <div class="modal-body" style="padding:22px 24px;text-align:center;">
-                <p style="color:#555;font-size:14px;line-height:1.65;margin-bottom:6px;">
-                    You're one step away from applying for
+            <div class="modal-body community-modal-body">
+                <p class="community-modal-desc">
+                    You're one step away from applying for <strong id="programApplyName" class="community-modal-highlight"></strong>. Login to submit your application.
                 </p>
-                <p id="programApplyName" style="font-size:16px;font-weight:700;color:#0450a8;margin-bottom:16px;"></p>
-                <p style="color:#888;font-size:13px;margin-bottom:20px;">
-                    Create a free account or login to submit your application and track its status anytime.
-                </p>
-                <div style="display:flex;gap:10px;">
-                    <a href="{{ route('register') }}" class="btn-primary" style="text-decoration:none;padding:12px 0;flex:1;text-align:center;">Sign Up — It's Free!</a>
-                    <a href="{{ route('login') }}" class="btn-secondary" style="text-decoration:none;padding:12px 0;flex:1;text-align:center;">Login</a>
+                <div class="community-modal-perks">
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">✅</span>
+                        Apply for SK programs and track your applications
+                    </div>
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">💬</span>
+                        Like and comment on community posts
+                    </div>
+                    <div class="community-perk-item">
+                        <span class="community-perk-icon">🏘️</span>
+                        Browse barangay SK profiles and officers
+                    </div>
                 </div>
+                <a href="{{ route('login') }}" class="community-modal-login-btn">Login</a>
             </div>
         </div>
     </div>
 
+    <script>
+    (function() {
+        var btn    = document.getElementById('navHamburger');
+        var drawer = document.getElementById('navDrawer');
+        if (!btn || !drawer) return;
+        btn.addEventListener('click', function() { drawer.classList.toggle('open'); });
+        document.addEventListener('click', function(e) {
+            if (!btn.contains(e.target) && !drawer.contains(e.target)) {
+                drawer.classList.remove('open');
+            }
+        });
+    })();
+    </script>
 </body>
 </html>

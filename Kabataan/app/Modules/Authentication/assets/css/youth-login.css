@@ -71,7 +71,7 @@ html {
     display: flex;
     flex-direction: column;
     position: relative;
-    background: #0a1628;
+    background: linear-gradient(135deg, #022a54, #0450a8 55%, #1a6fd4);
     overflow: hidden;
 }
 
@@ -89,7 +89,7 @@ html {
         display: none;
     }
     .youth-gradient-overlay {
-        background: linear-gradient(160deg, #022a54 0%, #0450a8 60%, #022a54 100%);
+        background: linear-gradient(135deg, #022a54, #0450a8 55%, #1a6fd4);
     }
 }
 
@@ -113,15 +113,13 @@ html {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 1;
-    filter: blur(2px) brightness(0.85);
-    transform: scale(1.04);
+    opacity: 0.25;
     animation: subtleZoom 30s ease-in-out infinite alternate;
 }
 
 @keyframes subtleZoom {
-    0%   { transform: scale(1.04); }
-    100% { transform: scale(1.07); }
+    0%   { transform: scale(1); }
+    100% { transform: scale(1.03); }
 }
 
 .youth-gradient-overlay {
@@ -130,12 +128,7 @@ html {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-        160deg,
-        rgba(2, 42, 84, 0.72) 0%,
-        rgba(4, 80, 168, 0.60) 50%,
-        rgba(2, 42, 84, 0.75) 100%
-    );
+    background: linear-gradient(135deg, rgba(2,42,84,0.55), rgba(4,80,168,0.45) 55%, rgba(26,111,212,0.50));
 }
 
 /* Floating shapes — hidden, kept for HTML compatibility */

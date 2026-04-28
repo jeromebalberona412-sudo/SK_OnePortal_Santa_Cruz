@@ -397,7 +397,10 @@ html {
 .card-title {
     font-size: 2rem;
     font-weight: 800;
-    color: #2c2c3e;
+    background: linear-gradient(135deg, var(--sk-dark) 0%, var(--sk-dark-3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0.625rem;
     letter-spacing: -0.03em;
     line-height: 1.2;
@@ -405,8 +408,7 @@ html {
     align-items: center;
     gap: 0.5rem;
     flex-wrap: nowrap;
-    justify-content: center;
-    text-align: center;
+    white-space: nowrap;
 }
 
 .wave-emoji {
@@ -457,7 +459,6 @@ html {
     color: var(--sk-gray-600);
     font-weight: 500;
     letter-spacing: 0.01em;
-    text-align: center;
 }
 
 /* Alerts */
@@ -521,6 +522,17 @@ html {
     font-weight: 600;
     color: var(--sk-gray-700);
     letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.sk-label .label-icon,
+.label-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--sk-yellow-dark);
+    flex-shrink: 0;
 }
 
 .input-wrapper {
@@ -540,7 +552,7 @@ html {
 
 .sk-input {
     width: 100%;
-    padding: 0.875rem 1.125rem 0.875rem 3rem;
+    padding: 0.875rem 1.125rem;
     font-size: 0.95rem;
     border: 2px solid var(--sk-gray-200);
     border-radius: 12px;
@@ -991,7 +1003,7 @@ html {
     }
 
     .sk-input {
-        padding: 0.875rem 1rem 0.875rem 3.5rem;
+        padding: 0.875rem 1rem;
         font-size: 0.95rem;
     }
 

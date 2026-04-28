@@ -19,25 +19,35 @@
     {{-- ── NAVBAR ── --}}
     <nav class="top-navbar">
         <div class="navbar-container">
-            <div class="navbar-left">
+            <a href="{{ route('homepage') }}" class="navbar-left">
                 <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="navbar-logo">
                 <span class="navbar-title">SK OnePortal</span>
+            </a>
+            <div class="navbar-links">
+                <a href="{{ route('homepage') }}" class="nav-link">Home</a>
+                <a href="{{ route('about') }}" class="nav-link active">About</a>
+                <a href="#services" class="nav-link">Services</a>
+                <a href="#barangay" class="nav-link">Barangay</a>
+                <a href="#contact" class="nav-link">Contact</a>
             </div>
             <div class="navbar-right">
-                <a href="{{ route('homepage') }}" class="nav-icon-btn" title="Home" aria-label="Home">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                    </svg>
-                </a>
-                <a href="{{ route('about') }}" class="nav-icon-btn" title="About" aria-label="About">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                </a>
-                <button type="button" class="nav-auth-btn solid" id="navLoginBtn">Login / Sign Up</button>
+                <button type="button" class="nav-btn solid" onclick="document.getElementById('joinCommunityModal').classList.add('active')">Login</button>
+                <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
         </div>
     </nav>
+    <div class="nav-drawer" id="navDrawer">
+        <a href="{{ route('homepage') }}" class="nav-link">Home</a>
+        <a href="{{ route('about') }}" class="nav-link active">About</a>
+        <a href="#services" class="nav-link">Services</a>
+        <a href="#barangay" class="nav-link">Barangay</a>
+        <a href="#contact" class="nav-link">Contact</a>
+        <div class="nav-drawer-actions">
+            <button type="button" class="nav-btn solid" onclick="document.getElementById('joinCommunityModal').classList.add('active');document.getElementById('navDrawer').classList.remove('open')">Login</button>
+        </div>
+    </div>
 
     <main class="about-main">
 
@@ -50,7 +60,7 @@
                 <p>A unified digital platform connecting the Sangguniang Kabataan with the youth it serves — making programs, events, and community updates accessible to every kabataan.</p>
                 <div class="about-hero-actions">
                     <a href="{{ route('homepage') }}" class="btn-hero-primary">View Community Feed</a>
-                    <a href="{{ route('register') }}" class="btn-hero-ghost">Create an Account</a>
+                    <a href="{{ route('login') }}" class="btn-hero-ghost">Login</a>
                 </div>
             </div>
         </section>
@@ -58,7 +68,7 @@
         {{-- ── WHAT IS SK ── --}}
         <section class="about-section">
             <div class="about-section-inner">
-                <div class="section-label">What is the SK?</div>
+                <div class="section-eyebrow">What is the SK?</div>
                 <h2>Sangguniang Kabataan</h2>
                 <p class="section-lead">The Sangguniang Kabataan (SK) is the official youth council of every barangay in the Philippines, established under Republic Act 10742 or the Sangguniang Kabataan Reform Act of 2015.</p>
 
@@ -96,9 +106,9 @@
         </section>
 
         {{-- ── ABOUT THE PORTAL ── --}}
-        <section class="about-section alt-bg">
+        <section class="about-section alt-bg" id="services">
             <div class="about-section-inner">
-                <div class="section-label">The Platform</div>
+                <div class="section-eyebrow">The Platform</div>
                 <h2>What is SK OnePortal?</h2>
                 <p class="section-lead">SK OnePortal is a web-based management system built to digitize and streamline the operations of the Sangguniang Kabataan in Santa Cruz, Laguna.</p>
 
@@ -140,7 +150,7 @@
         {{-- ── SK FEDERATION OFFICERS ── --}}
         <section class="about-section">
             <div class="about-section-inner">
-                <div class="section-label">Leadership</div>
+                <div class="section-eyebrow">Leadership</div>
                 <h2>SK Federation Officers</h2>
                 <p class="section-lead">The SK Federation of Santa Cruz, Laguna oversees and coordinates the activities of all barangay-level SK councils in the municipality.</p>
 
@@ -198,7 +208,7 @@
         {{-- ── DEVELOPMENT TEAM ── --}}
         <section class="about-section alt-bg">
             <div class="about-section-inner">
-                <div class="section-label">The Team</div>
+                <div class="section-eyebrow">The Team</div>
                 <h2>Meet the Developers</h2>
                 <p class="section-lead">SK OnePortal was built by a dedicated team of student developers from Santa Cruz, Laguna as a capstone project to modernize SK operations.</p>
 
@@ -255,13 +265,156 @@
             </div>
         </section>
 
+        {{-- ── BARANGAY SECTION ── --}}
+        <section class="about-section" id="barangay">
+            <div class="about-section-inner">
+                <div class="section-eyebrow">Explore</div>
+                <h2>Select a Barangay</h2>
+                <p class="section-lead">Choose a barangay to view its SK officials, accomplishments, programs, and budget transparency.</p>
+
+                <div class="brgy-search-wrapper">
+                    <svg class="brgy-search-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                    </svg>
+                    <input type="text" id="brgySearch" class="brgy-search-input" placeholder="Search barangay...">
+                </div>
+
+                @php
+                $barangays = [
+                    ['name'=>'Alipit','color'=>'#44a53e'],['name'=>'Bagumbayan','color'=>'#0450a8'],
+                    ['name'=>'Barangay I (Poblacion I)','color'=>'#fdc020'],['name'=>'Barangay II (Poblacion II)','color'=>'#e53e3e'],
+                    ['name'=>'Barangay III (Poblacion III)','color'=>'#9c27b0'],['name'=>'Barangay IV (Poblacion IV)','color'=>'#00897b'],
+                    ['name'=>'Barangay V (Poblacion V)','color'=>'#f57c00'],['name'=>'Bubukal','color'=>'#1565c0'],
+                    ['name'=>'Calios','color'=>'#2e7d32'],['name'=>'Duhat','color'=>'#6a1b9a'],
+                    ['name'=>'Gatid','color'=>'#00838f'],['name'=>'Jasaan','color'=>'#c62828'],
+                    ['name'=>'Labuin','color'=>'#558b2f'],['name'=>'Malinao','color'=>'#1976d2'],
+                    ['name'=>'Oogong','color'=>'#6d4c41'],['name'=>'Pagsawitan','color'=>'#4527a0'],
+                    ['name'=>'Palasan','color'=>'#00695c'],['name'=>'Patimbao','color'=>'#e65100'],
+                    ['name'=>'San Jose','color'=>'#0277bd'],['name'=>'San Juan','color'=>'#283593'],
+                    ['name'=>'San Pablo Norte','color'=>'#33691e'],['name'=>'San Pablo Sur','color'=>'#827717'],
+                    ['name'=>'Santisima Cruz','color'=>'#bf360c'],['name'=>'Santo Angel Central','color'=>'#37474f'],
+                    ['name'=>'Santo Angel Norte','color'=>'#4e342e'],['name'=>'Santo Angel Sur','color'=>'#1a237e'],
+                ];
+                @endphp
+
+                <div class="about-brgy-grid" id="brgyGrid">
+                    @foreach($barangays as $brgy)
+                    <button class="about-brgy-card" data-brgy="{{ $brgy['name'] }}" data-color="{{ $brgy['color'] }}" onclick="selectBarangay(this)">
+                        <div class="about-brgy-avatar" style="background:{{ $brgy['color'] }};">{{ strtoupper(substr($brgy['name'],0,2)) }}</div>
+                        <span class="about-brgy-name">{{ $brgy['name'] }}</span>
+                        <svg class="about-brgy-arrow" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                    </button>
+                    @endforeach
+                </div>
+                <p class="brgy-no-results" id="brgyNoResults" style="display:none;">No barangay found.</p>
+            </div>
+        </section>
+
+        {{-- ── BARANGAY DETAILS ── --}}
+        <section class="about-section alt-bg about-brgy-details" id="brgyDetails" style="display:none;">
+            <div class="about-section-inner">
+                <div class="about-brgy-details-header">
+                    <div class="about-brgy-details-avatar" id="brgyDetailsAvatar">AL</div>
+                    <div class="about-brgy-details-info">
+                        <div class="section-eyebrow">Barangay Profile</div>
+                        <h2 class="about-brgy-details-name" id="brgyDetailsName">Alipit</h2>
+                        <p id="brgyDetailsDesc">A barangay in Santa Cruz, Laguna under the Sangguniang Kabataan.</p>
+                    </div>
+                    <button class="about-brgy-close" onclick="closeBarangayDetails()" title="Close">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                </div>
+                <div class="about-brgy-stats">
+                    <div class="about-brgy-stat"><span class="about-brgy-stat-num" id="statKabataan">—</span><span class="about-brgy-stat-lbl">Registered Kabataan</span></div>
+                    <div class="about-brgy-stat"><span class="about-brgy-stat-num" id="statPrograms">—</span><span class="about-brgy-stat-lbl">Active Programs</span></div>
+                    <div class="about-brgy-stat"><span class="about-brgy-stat-num" id="statCompleted">—</span><span class="about-brgy-stat-lbl">Completed Projects</span></div>
+                    <div class="about-brgy-stat"><span class="about-brgy-stat-num" id="statBudget">—</span><span class="about-brgy-stat-lbl">Total Budget</span></div>
+                </div>
+                <div class="about-details-tabs">
+                    <button class="about-details-tab active" data-tab="accomplishments">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Accomplishments
+                    </button>
+                    <button class="about-details-tab" data-tab="budget">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                        Budget Transparency
+                    </button>
+                    <button class="about-details-tab" data-tab="kk-profiling">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+                        KK Profiling
+                    </button>
+                </div>
+                <div class="about-tab-panel active" id="tab-accomplishments">
+                    <div class="about-empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+                        <h3>No Data Available Yet</h3>
+                        <p>Accomplishments and programs will appear here once SK officials submit their records.</p>
+                    </div>
+                </div>
+                <div class="about-tab-panel" id="tab-budget">
+                    <div class="about-empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                        <h3>No Budget Data Yet</h3>
+                        <p>Budget breakdown and project allocations will be displayed here once records are submitted.</p>
+                    </div>
+                </div>
+
+                <div class="about-tab-panel" id="tab-kk-profiling">
+                    <div class="about-kk-cta">
+                        <div class="about-kk-cta-left">
+                            <div class="about-kk-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                            <div>
+                                <h3>KK Profiling</h3>
+                                <p>Register your Katipunan ng Kabataan profile to participate in programs and activities. No login required.</p>
+                            </div>
+                        </div>
+                        <a id="kkpFormLink" href="/kkprofiling/palasan" class="btn-hero-primary" style="white-space:nowrap;flex-shrink:0;" onclick="if(this.dataset.ready!=='1'){alert('Please select a barangay first.');return false;}">
+                            Fill Out KK Form →
+                        </a>
+                    </div>
+                </div>            </div>
+        </section>
+
+        {{-- ── CONTACT SECTION ── --}}
+        <section class="about-section alt-bg" id="contact">
+            <div class="about-section-inner">
+                <div class="section-eyebrow">Get in Touch</div>
+                <h2>Contact Us</h2>
+                <p class="section-lead">Have questions about SK OnePortal or want to know more about SK programs in Santa Cruz, Laguna? Reach out to us.</p>
+                <div class="about-contact-grid">
+                    <div class="about-contact-card">
+                        <div class="about-contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+                        <h3>Address</h3>
+                        <p>Municipal Hall, Santa Cruz, Laguna, Philippines</p>
+                    </div>
+                    <div class="about-contact-card">
+                        <div class="about-contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .84h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+                        <h3>Phone</h3>
+                        <p>+63 (049) 000-0000</p>
+                    </div>
+                    <div class="about-contact-card">
+                        <div class="about-contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                        <h3>Email</h3>
+                        <p>sk@santacruz.gov.ph</p>
+                    </div>
+                    <div class="about-contact-card">
+                        <div class="about-contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                        <h3>Office Hours</h3>
+                        <p>Mon–Fri: 8:00 AM – 5:00 PM</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         {{-- ── CTA ── --}}
         <section class="about-cta">
             <div class="about-cta-inner">
                 <h2>Ready to get involved?</h2>
-                <p>Create your account and start exploring programs, events, and activities from SK officials across Santa Cruz, Laguna.</p>
+                <p>Explore programs, events, and activities from SK officials across Santa Cruz, Laguna.</p>
                 <div class="about-hero-actions">
-                    <a href="{{ route('register') }}" class="btn-hero-primary">Sign Up Now</a>
+                    <a href="{{ route('login') }}" class="btn-hero-primary">Login Now</a>
                     <a href="{{ route('homepage') }}" class="btn-hero-ghost">Browse the Feed</a>
                 </div>
             </div>
@@ -288,8 +441,7 @@
                     <div class="about-modal-perk">🏘️ Browse barangay SK profiles and officers</div>
                 </div>
                 <div class="about-modal-actions">
-                    <a href="{{ route('register') }}" class="btn-hero-primary" style="flex:1;text-align:center;padding:13px 0;font-size:15px;">Sign Up — It's Free!</a>
-                    <a href="{{ route('login') }}" class="btn-hero-ghost" style="flex:1;text-align:center;padding:13px 0;font-size:15px;border-color:#0450a8;color:#0450a8;">Login</a>
+                    <a href="{{ route('login') }}" class="btn-hero-primary" style="flex:1;text-align:center;padding:13px 0;font-size:15px;">Login</a>
                 </div>
             </div>
         </div>
@@ -310,18 +462,76 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const modal   = document.getElementById('joinCommunityModal');
-        const overlay = document.getElementById('joinModalOverlay');
-        const close   = document.getElementById('joinModalClose');
-        const open    = () => modal.classList.add('active');
-        const shut    = () => modal.classList.remove('active');
-
-        document.getElementById('navLoginBtn')?.addEventListener('click', open);
-        document.getElementById('navSignupBtn')?.addEventListener('click', open);
-        close?.addEventListener('click', shut);
-        overlay?.addEventListener('click', shut);
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') shut(); });
+        const modal=document.getElementById('joinCommunityModal');
+        const overlay=document.getElementById('joinModalOverlay');
+        const close=document.getElementById('joinModalClose');
+        const shut=()=>modal?.classList.remove('active');
+        close?.addEventListener('click',shut);
+        overlay?.addEventListener('click',shut);
+        document.addEventListener('keydown',(e)=>{if(e.key==='Escape')shut();});
+        const hamburger=document.getElementById('navHamburger');
+        const drawer=document.getElementById('navDrawer');
+        if(hamburger&&drawer){
+            hamburger.addEventListener('click',()=>drawer.classList.toggle('open'));
+            document.addEventListener('click',(e)=>{if(!hamburger.contains(e.target)&&!drawer.contains(e.target))drawer.classList.remove('open');});
+        }
+        document.querySelectorAll('a[href^="#"]').forEach(a=>{
+            if(a.id==='kkpFormLink') return; // skip — this is a dynamic nav link
+            a.addEventListener('click',function(e){
+                const target=document.querySelector(this.getAttribute('href'));
+                if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});drawer?.classList.remove('open');}
+            });
+        });
     });
+    window.selectBarangay=function(btn){
+        document.querySelectorAll('.about-brgy-card').forEach(c=>c.classList.remove('active'));
+        btn.classList.add('active');
+        const name=btn.dataset.brgy;
+        const color=btn.dataset.color;
+        const avatar=document.getElementById('brgyDetailsAvatar');
+        const nameEl=document.getElementById('brgyDetailsName');
+        const descEl=document.getElementById('brgyDetailsDesc');
+        if(avatar){avatar.textContent=name.substring(0,2).toUpperCase();avatar.style.background=color;}
+        if(nameEl)nameEl.textContent='Barangay '+name;
+        if(descEl)descEl.textContent='A barangay in Santa Cruz, Laguna under the Sangguniang Kabataan. Data will be available once SK officials submit their records.';
+        ['statKabataan','statPrograms','statCompleted','statBudget'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+        // Build slug and update KK Profiling link
+        var slugMap={'Alipit':'alipit','Bagumbayan':'bagumbayan','Barangay I (Poblacion I)':'barangay-i','Barangay II (Poblacion II)':'barangay-ii','Barangay III (Poblacion III)':'barangay-iii','Barangay IV (Poblacion IV)':'barangay-iv','Barangay V (Poblacion V)':'barangay-v','Bubukal':'bubukal','Calios':'calios','Duhat':'duhat','Gatid':'gatid','Jasaan':'jasaan','Labuin':'labuin','Malinao':'malinao','Oogong':'oogong','Pagsawitan':'pagsawitan','Palasan':'palasan','Patimbao':'patimbao','San Jose':'san-jose','San Juan':'san-juan','San Pablo Norte':'san-pablo-norte','San Pablo Sur':'san-pablo-sur','Santisima Cruz':'santisima-cruz','Santo Angel Central':'santo-angel-central','Santo Angel Norte':'santo-angel-norte','Santo Angel Sur':'santo-angel-sur'};
+        var slug=slugMap[name]||name.toLowerCase().replace(/\s+/g,'-');
+        var kkpLink=document.getElementById('kkpFormLink');
+        if(kkpLink){kkpLink.href='/kkprofiling/'+slug;kkpLink.dataset.ready='1';}
+        const details=document.getElementById('brgyDetails');
+        if(details){
+            details.style.display='block';
+            switchBrgyTab('accomplishments');
+            setTimeout(()=>details.scrollIntoView({behavior:'smooth',block:'start'}),100);
+        }
+    };
+    window.closeBarangayDetails=function(){
+        const details=document.getElementById('brgyDetails');
+        if(details)details.style.display='none';
+        document.querySelectorAll('.about-brgy-card').forEach(c=>c.classList.remove('active'));
+    };
+    function switchBrgyTab(tabName){
+        document.querySelectorAll('.about-details-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tabName));
+        document.querySelectorAll('.about-tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+tabName));
+    }
+    document.querySelectorAll('.about-details-tab').forEach(tab=>{tab.addEventListener('click',()=>switchBrgyTab(tab.dataset.tab));});
+    const brgySearch=document.getElementById('brgySearch');
+    const brgyGrid=document.getElementById('brgyGrid');
+    const brgyNoRes=document.getElementById('brgyNoResults');
+    if(brgySearch&&brgyGrid){
+        brgySearch.addEventListener('input',()=>{
+            const q=brgySearch.value.trim().toLowerCase();
+            let visible=0;
+            brgyGrid.querySelectorAll('.about-brgy-card').forEach(card=>{
+                const show=card.dataset.brgy.toLowerCase().includes(q);
+                card.style.display=show?'':'none';
+                if(show)visible++;
+            });
+            if(brgyNoRes)brgyNoRes.style.display=visible===0?'block':'none';
+        });
+    }
     </script>
 </body>
 </html>

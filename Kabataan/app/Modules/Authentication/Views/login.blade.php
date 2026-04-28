@@ -149,15 +149,7 @@
                 </form>
 
                 <!-- Registration Link -->
-                <div class="youth-register-section">
-                    <p class="register-text">
-                        New here? 
-                        <a href="{{ route('register') }}" class="register-link">Create an account</a>
-                    </p>
-                    <p class="register-text" style="margin-top: 0.75rem;">
-                        <a href="{{ route('portal') }}" class="register-link">Homepage</a>
-                    </p>
-                </div>
+                <div class="youth-register-section" style="display:none;"></div>
             </div>
         </div>
     </main>
