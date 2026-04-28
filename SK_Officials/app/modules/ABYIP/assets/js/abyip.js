@@ -274,17 +274,32 @@ function setMainModalFooterMode(mode) {
 
     if (mode === 'view') {
         footer?.classList.add('abyip-modal-footer-view');
+        footer?.classList.remove('abyip-modal-footer-import');
         // Show only Print and Export buttons in view mode (no cancel button)
         if (exportBtn) exportBtn.style.display = 'inline-block';
         if (printBtn) printBtn.style.display = 'inline-block';
         if (saveBtn) saveBtn.style.display = 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
-    } else {
+    } else if (mode === 'import') {
+        footer?.classList.add('abyip-modal-footer-import');
         footer?.classList.remove('abyip-modal-footer-view');
+        // Show Save and Cancel buttons for import mode
+        if (exportBtn) exportBtn.style.display = 'none';
+        if (printBtn) printBtn.style.display = 'none';
+        if (saveBtn) {
+            saveBtn.style.display = 'inline-block';
+            saveBtn.textContent = 'Save Imported ABYIP';
+        }
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    } else {
+        footer?.classList.remove('abyip-modal-footer-view', 'abyip-modal-footer-import');
         // Show Save and Cancel buttons in create/edit modes
         if (exportBtn) exportBtn.style.display = 'none';
         if (printBtn) printBtn.style.display = 'none';
-        if (saveBtn) saveBtn.style.display = 'inline-block';
+        if (saveBtn) {
+            saveBtn.style.display = 'inline-block';
+            saveBtn.textContent = 'Save ABYIP';
+        }
         if (cancelBtn) cancelBtn.style.display = 'inline-block';
     }
 }
@@ -388,7 +403,7 @@ function saveAbyip() {
         return;
     }
 
-    if (abyipModalMode === 'create') {
+    if (abyipModalMode === 'create' || abyipModalMode === 'import') {
         pendingCreateDocumentHtml = documentHtml;
         closeAbyipModal();
         openMetaModalForCreate();
@@ -705,6 +720,136 @@ function confirmDeleteRecord() {
     showNotification('Record deleted.', 'success');
 }
 
+function openCreateOptionsModal() {
+    const m = document.getElementById('createOptionsModal');
+    if (m) {
+        m.classList.add('active');
+        m.setAttribute('aria-hidden', 'false');
+    }
+}
+
+function closeCreateOptionsModal() {
+    const m = document.getElementById('createOptionsModal');
+    if (m) {
+        m.classList.remove('active');
+        m.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function openImportWordFilePicker() {
+    closeCreateOptionsModal();
+    const fileInput = document.getElementById('wordFileInput');
+    if (fileInput) {
+        fileInput.click();
+    }
+}
+
+function handleWordImport(event) {
+    const fileInput = event.target;
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
+            const content = e.target.result;
+            // Parse HTML content from Word document
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(content, 'text/html');
+            
+            // Extract table content
+            const tables = doc.querySelectorAll('table');
+            if (tables.length === 0) {
+                showNotification('No table found in the Word document.', 'error');
+                fileInput.value = ''; // Reset file input
+                return;
+            }
+
+            // Use the first table found
+            const importedTable = tables[0];
+            
+            // Open ABYIP modal in preview mode
+            openAbyipModalWithImport(importedTable);
+            
+            // Reset file input
+            fileInput.value = '';
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            showNotification('Error importing Word document. Please try again.', 'error');
+            fileInput.value = ''; // Reset file input
+        }
+    };
+
+    reader.onerror = function() {
+        showNotification('Error reading file. Please try again.', 'error');
+        fileInput.value = ''; // Reset file input
+    };
+
+    reader.readAsText(file);
+}
+
+function openAbyipModalWithImport(importedTable) {
+    abyipModalMode = 'import';
+    currentEditId = null;
+
+    const modal = document.getElementById('abyipModal');
+    const titleEl = document.getElementById('abyipModalTitle');
+    const header = document.getElementById('abyipModalHeader');
+
+    if (!modal || !titleEl) return;
+
+    header.classList.remove('edit-mode', 'view-mode');
+    header.classList.add('import-mode');
+    titleEl.textContent = 'Preview Imported ABYIP Document';
+
+    // Load default template first
+    setFormRootHtml(getDefaultDocumentHtml());
+    
+    // Replace table content with imported data
+    setTimeout(() => {
+        const modalTable = document.getElementById('abyipModalTable');
+        if (modalTable && importedTable) {
+            const tbody = modalTable.querySelector('tbody');
+            const importedTbody = importedTable.querySelector('tbody');
+            
+            if (tbody && importedTbody) {
+                tbody.innerHTML = importedTbody.innerHTML;
+                
+                // Make cells editable
+                tbody.querySelectorAll('td').forEach(cell => {
+                    if (!cell.hasAttribute('contenteditable')) {
+                        cell.setAttribute('contenteditable', 'true');
+                    }
+                });
+                
+                updateTotals();
+            }
+        }
+        
+        // Show import preview footer
+        setMainModalFooterMode('import');
+        setMountContentEditable(true);
+        
+        showNotification('Word document imported successfully! You can now edit the content.', 'success');
+    }, 100);
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    requestAnimationFrame(() => updateTotals());
+}
+
+function useTemplate() {
+    closeCreateOptionsModal();
+    openAbyipModal('create', null);
+    showNotification('Template loaded successfully!', 'success');
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     loadRecords();
     renderRecordsTable();
@@ -715,7 +860,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const printBtn = document.getElementById('abyipModalPrint');
     if (printBtn) printBtn.style.display = 'none';
 
-    document.getElementById('addAbyipBtn')?.addEventListener('click', () => openAbyipModal('create', null));
+    document.getElementById('addAbyipBtn')?.addEventListener('click', openCreateOptionsModal);
+
+    document.getElementById('selectTemplateBtn')?.addEventListener('click', useTemplate);
+    document.getElementById('selectImportBtn')?.addEventListener('click', openImportWordFilePicker);
+    document.getElementById('createOptionsClose')?.addEventListener('click', closeCreateOptionsModal);
+    document.getElementById('createOptionsModal')?.addEventListener('click', function (e) {
+        if (e.target === e.currentTarget) closeCreateOptionsModal();
+    });
+
+    // File input change listener for Word import
+    document.getElementById('wordFileInput')?.addEventListener('change', handleWordImport);
 
     document.getElementById('abyipModalClose')?.addEventListener('click', closeAbyipModal);
     document.getElementById('abyipModalCancel')?.addEventListener('click', closeAbyipModal);

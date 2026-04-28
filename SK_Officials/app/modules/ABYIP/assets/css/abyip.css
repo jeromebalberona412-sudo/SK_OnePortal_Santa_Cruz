@@ -1271,6 +1271,19 @@ html {
     color: #ffffff;
 }
 
+.modal-header.import-mode {
+    background: linear-gradient(135deg, #2c2c3e 0%, #3a3a4a 100%);
+    color: #ffffff;
+}
+
+.modal-header.import-mode h3 {
+    color: #ffffff;
+}
+
+.modal-header.import-mode .modal-btn {
+    color: #ffffff;
+}
+
 .modal-header h3 {
     margin: 0;
     font-size: 18px;
@@ -2611,5 +2624,395 @@ html {
 
     .abyip-toast.abyip-toast-hide {
         transform: translateX(0) translateY(-100px);
+    }
+}
+
+/* Secondary Button Styles */
+.secondary-btn {
+    background: #6366f1;
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+}
+
+.secondary-btn:hover {
+    background: #4f46e5;
+    box-shadow: 0 12px 26px rgba(79, 70, 229, 0.45);
+}
+
+/* Create Options Modal Styles */
+.create-options-modal-box {
+    max-width: 600px;
+}
+
+.create-options-modal-header {
+    background: linear-gradient(135deg, #2c2c3e 0%, #3a3a4a 100%);
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 12px 12px 0 0;
+}
+
+.create-options-modal-header h4 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #ffffff;
+    padding: 0;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.create-options-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+}
+
+.btn-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.btn-option:hover {
+    border-color: #6366f1;
+    background: #f9fafb;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
+}
+
+.btn-option svg {
+    color: #6366f1;
+    margin-bottom: 16px;
+}
+
+.btn-option-title {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.btn-option-desc {
+    display: block;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.btn-template:hover svg {
+    color: #4f46e5;
+}
+
+.btn-import:hover svg {
+    color: #4f46e5;
+}
+
+/* Responsive for create options */
+@media (max-width: 480px) {
+    .create-options-buttons {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .btn-option {
+        padding: 24px 16px;
+    }
+
+    .btn-option svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .btn-option-title {
+        font-size: 15px;
+    }
+
+    .btn-option-desc {
+        font-size: 12px;
+    }
+}
+
+/* Import Word Modal Styles */
+.abyip-file-input {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.abyip-file-input:hover {
+    border-color: #6366f1;
+    background: #f9fafb;
+}
+
+.abyip-file-input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* Meta Modal Styles */
+.abyip-meta-modal-box {
+    max-width: 500px;
+}
+
+.abyip-meta-modal-inner {
+    padding: 24px;
+}
+
+.abyip-meta-modal-inner h4 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 12px;
+}
+
+.abyip-meta-hint {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+.abyip-meta-field {
+    margin-bottom: 16px;
+}
+
+.abyip-meta-field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.abyip-meta-input,
+.abyip-meta-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.abyip-meta-input:focus,
+.abyip-meta-textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.abyip-meta-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Responsive adjustments for buttons */
+@media (max-width: 768px) {
+    .page-header-right {
+        flex-direction: column;
+        width: 160px;
+    }
+
+    .page-header-right .secondary-btn,
+    .page-header-right .primary-btn {
+        width: 100%;
+        font-size: 12px;
+        padding: 0 12px;
+        height: 40px;
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header-right {
+        width: 145px;
+    }
+
+    .page-header-right .secondary-btn,
+    .page-header-right .primary-btn {
+        font-size: 11px;
+        padding: 0 10px;
+        height: 38px;
+        min-height: 38px;
+    }
+}
+
+/* Import Preview Banner */
+.import-preview-banner {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border: 2px solid #10b981;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.import-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.import-banner-content svg {
+    flex-shrink: 0;
+    color: #059669;
+    width: 28px;
+    height: 28px;
+}
+
+.import-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.import-banner-text strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: #065f46;
+}
+
+.import-banner-text span {
+    font-size: 13px;
+    color: #047857;
+    line-height: 1.4;
+}
+
+/* Import mode footer styling */
+.abyip-modal-footer-import {
+    background: #ffffff;
+    border-top: 1px solid #e9ecef;
+}
+
+.abyip-modal-footer-import .btn-save {
+    background: #22c55e;
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.45);
+    font-weight: 600;
+}
+
+.abyip-modal-footer-import .btn-save:hover {
+    background: #16a34a;
+    box-shadow: 0 12px 26px rgba(22, 163, 74, 0.55);
+}
+
+/* Responsive for import banner */
+@media (max-width: 768px) {
+    .import-preview-banner {
+        margin: 15px;
+        padding: 14px 16px;
+    }
+
+    .import-banner-content {
+        gap: 12px;
+    }
+
+    .import-banner-content svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .import-banner-text strong {
+        font-size: 14px;
+    }
+
+    .import-banner-text span {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .import-preview-banner {
+        margin: 12px;
+        padding: 12px 14px;
+    }
+
+    .import-banner-content {
+        gap: 10px;
+    }
+
+    .import-banner-content svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .import-banner-text strong {
+        font-size: 13px;
+    }
+
+    .import-banner-text span {
+        font-size: 11px;
+    }
+}
+
+/* Override padding for create options modal */
+.create-options-modal-box .abyip-meta-modal-inner {
+    padding-top: 0;
+}
+
+/* Responsive for create options modal header */
+@media (max-width: 480px) {
+    .create-options-modal-header {
+        padding: 16px 20px;
+    }
+
+    .create-options-modal-header h4 {
+        font-size: 18px;
+    }
+
+    .modal-close-btn {
+        font-size: 24px;
+        width: 28px;
+        height: 28px;
     }
 }

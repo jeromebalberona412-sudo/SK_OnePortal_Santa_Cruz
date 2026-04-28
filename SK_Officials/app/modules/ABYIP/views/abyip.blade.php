@@ -563,6 +563,44 @@
             </div>
         </div>
     </div>
+
+    <!-- Create ABYIP Options Modal -->
+    <div class="modal-backdrop" id="createOptionsModal" aria-hidden="true">
+        <div class="modal-box create-options-modal-box" role="dialog" aria-labelledby="createOptionsHeading">
+            <div class="create-options-modal-header">
+                <h4 id="createOptionsHeading">Create New ABYIP</h4>
+                <button type="button" class="modal-close-btn" id="createOptionsClose">&times;</button>
+            </div>
+            <div class="abyip-meta-modal-inner">
+                <p class="abyip-meta-hint">Choose how you want to create your ABYIP document.</p>
+                <div class="create-options-buttons">
+                    <button type="button" class="btn-option btn-template" id="selectTemplateBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span class="btn-option-title">Use Template</span>
+                        <span class="btn-option-desc">Start with default ABYIP template</span>
+                    </button>
+                    <button type="button" class="btn-option btn-import" id="selectImportBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span class="btn-option-title">Import MS Word</span>
+                        <span class="btn-option-desc">Import from existing Word document</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="wordFileInput" accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display: none;">
 </main>
 
 @vite([
