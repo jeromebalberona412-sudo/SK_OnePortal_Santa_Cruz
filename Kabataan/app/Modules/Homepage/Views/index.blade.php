@@ -110,6 +110,17 @@
                         <h2 class="post-title">{{ $item['title'] }}</h2>
                         <p class="post-text">{{ $item['summary'] }}</p>
 
+                        <div class="post-image">
+                            <div class="image-placeholder" role="img" aria-label="Image placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <path d="M21 15l-5-5L5 21"/>
+                                </svg>
+                                <span>No image uploaded yet</span>
+                            </div>
+                        </div>
+
                         <div class="post-details">
                             <div class="detail-item">
                                 <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>

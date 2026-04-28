@@ -370,8 +370,8 @@
                                 <p>Register your Katipunan ng Kabataan profile to participate in programs and activities. No login required.</p>
                             </div>
                         </div>
-                        <a id="kkpFormLink" href="/kkprofiling/palasan" class="btn-hero-primary" style="white-space:nowrap;flex-shrink:0;" onclick="if(this.dataset.ready!=='1'){alert('Please select a barangay first.');return false;}">
-                            Fill Out KK Form →
+                        <a id="kkpFormLink" href="#" class="btn-hero-primary" style="white-space:nowrap;flex-shrink:0;">
+                            Fill Out KK Form ?
                         </a>
                     </div>
                 </div>            </div>
@@ -476,7 +476,6 @@
             document.addEventListener('click',(e)=>{if(!hamburger.contains(e.target)&&!drawer.contains(e.target))drawer.classList.remove('open');});
         }
         document.querySelectorAll('a[href^="#"]').forEach(a=>{
-            if(a.id==='kkpFormLink') return; // skip — this is a dynamic nav link
             a.addEventListener('click',function(e){
                 const target=document.querySelector(this.getAttribute('href'));
                 if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});drawer?.classList.remove('open');}
@@ -495,16 +494,18 @@
         if(nameEl)nameEl.textContent='Barangay '+name;
         if(descEl)descEl.textContent='A barangay in Santa Cruz, Laguna under the Sangguniang Kabataan. Data will be available once SK officials submit their records.';
         ['statKabataan','statPrograms','statCompleted','statBudget'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
-        // Build slug and update KK Profiling link
-        var slugMap={'Alipit':'alipit','Bagumbayan':'bagumbayan','Barangay I (Poblacion I)':'barangay-i','Barangay II (Poblacion II)':'barangay-ii','Barangay III (Poblacion III)':'barangay-iii','Barangay IV (Poblacion IV)':'barangay-iv','Barangay V (Poblacion V)':'barangay-v','Bubukal':'bubukal','Calios':'calios','Duhat':'duhat','Gatid':'gatid','Jasaan':'jasaan','Labuin':'labuin','Malinao':'malinao','Oogong':'oogong','Pagsawitan':'pagsawitan','Palasan':'palasan','Patimbao':'patimbao','San Jose':'san-jose','San Juan':'san-juan','San Pablo Norte':'san-pablo-norte','San Pablo Sur':'san-pablo-sur','Santisima Cruz':'santisima-cruz','Santo Angel Central':'santo-angel-central','Santo Angel Norte':'santo-angel-norte','Santo Angel Sur':'santo-angel-sur'};
-        var slug=slugMap[name]||name.toLowerCase().replace(/\s+/g,'-');
-        var kkpLink=document.getElementById('kkpFormLink');
-        if(kkpLink){kkpLink.href='/kkprofiling/'+slug;kkpLink.dataset.ready='1';}
         const details=document.getElementById('brgyDetails');
         if(details){
             details.style.display='block';
-            switchBrgyTab('accomplishments');
+            if(name==='Palasan')switchBrgyTab('kk-profiling');else switchBrgyTab('accomplishments');
             setTimeout(()=>details.scrollIntoView({behavior:'smooth',block:'start'}),100);
+        }
+        // Set KK Profiling form link
+        const kkpLink=document.getElementById('kkpFormLink');
+        if(kkpLink){
+            const slug=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+            kkpLink.href='/kkprofiling/'+slug;
+            kkpLink.textContent='Fill Out KK Form for '+name;
         }
     };
     window.closeBarangayDetails=function(){
