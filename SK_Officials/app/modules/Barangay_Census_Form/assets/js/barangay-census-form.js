@@ -32,9 +32,11 @@ function initializeCensusModule() {
     const removeFileBtn = document.getElementById('censusRemoveFileBtn');
     const previewModal = document.getElementById('censusPreviewModal');
     const uploadConfirmBtn = document.getElementById('censusUploadConfirmBtn');
+    const viewModal = document.getElementById('censusViewModal');
 
     let selectedFile = null;
     let previewData = [];
+    let activeCensusId = null;
 
     if (!tbody) return;
 
@@ -603,6 +605,12 @@ function initializeCensusModule() {
         });
     }
 
+    function populateViewModal(census) {
+        // Placeholder for view modal population
+        // This function would populate a view modal with census details
+        console.log('View census record:', census);
+    }
+
     // View Census
     if (tbody) {
         tbody.addEventListener('click', (e) => {
@@ -638,14 +646,21 @@ function initializeCensusModule() {
 
     // Load sample data from JSON then render
     fetch('/sample-data/barangay-census.json')
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) {
+                throw new Error('Failed to load census data');
+            }
+            return r.json();
+        })
         .then(data => {
+            console.log('Census data loaded:', data.length, 'records');
             censusData.push(...data);
             sortCensusAlphabetically();
             updateStats();
             renderTable();
         })
-        .catch(() => {
+        .catch((error) => {
+            console.error('Error loading census data:', error);
             // JSON unavailable — render empty state
             updateStats();
             renderTable();
