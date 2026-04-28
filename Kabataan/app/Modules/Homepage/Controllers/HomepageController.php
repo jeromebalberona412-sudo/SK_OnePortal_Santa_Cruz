@@ -170,26 +170,53 @@ class HomepageController extends Controller
 
     public function kkProfiling(string $barangay)
     {
-        $validBarangays = [
-            'alipit', 'bagumbayan', 'barangay-i', 'barangay-ii', 'barangay-iii',
-            'barangay-iv', 'barangay-v', 'bubukal', 'calios', 'duhat', 'gatid',
-            'jasaan', 'labuin', 'malinao', 'oogong', 'pagsawitan', 'palasan',
-            'patimbao', 'san-jose', 'san-juan', 'san-pablo-norte', 'san-pablo-sur',
-            'santisima-cruz', 'santo-angel-central', 'santo-angel-norte', 'santo-angel-sur',
+        // Normalize slug — strip poblacion suffix if present
+        $slug = strtolower(trim($barangay));
+        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+        $slug = trim($slug, '-');
+
+        // Map display names
+        $barangayMap = [
+            'alipit'                    => 'Alipit',
+            'bagumbayan'                => 'Bagumbayan',
+            'barangay-i'                => 'Barangay I (Poblacion I)',
+            'barangay-i-poblacion-i'    => 'Barangay I (Poblacion I)',
+            'barangay-ii'               => 'Barangay II (Poblacion II)',
+            'barangay-ii-poblacion-ii'  => 'Barangay II (Poblacion II)',
+            'barangay-iii'              => 'Barangay III (Poblacion III)',
+            'barangay-iii-poblacion-iii'=> 'Barangay III (Poblacion III)',
+            'barangay-iv'               => 'Barangay IV (Poblacion IV)',
+            'barangay-iv-poblacion-iv'  => 'Barangay IV (Poblacion IV)',
+            'barangay-v'                => 'Barangay V (Poblacion V)',
+            'barangay-v-poblacion-v'    => 'Barangay V (Poblacion V)',
+            'bubukal'                   => 'Bubukal',
+            'calios'                    => 'Calios',
+            'duhat'                     => 'Duhat',
+            'gatid'                     => 'Gatid',
+            'jasaan'                    => 'Jasaan',
+            'labuin'                    => 'Labuin',
+            'malinao'                   => 'Malinao',
+            'oogong'                    => 'Oogong',
+            'pagsawitan'                => 'Pagsawitan',
+            'palasan'                   => 'Palasan',
+            'patimbao'                  => 'Patimbao',
+            'san-jose'                  => 'San Jose',
+            'san-juan'                  => 'San Juan',
+            'san-pablo-norte'           => 'San Pablo Norte',
+            'san-pablo-sur'             => 'San Pablo Sur',
+            'santisima-cruz'            => 'Santisima Cruz',
+            'santo-angel-central'       => 'Santo Angel Central',
+            'santo-angel-norte'         => 'Santo Angel Norte',
+            'santo-angel-sur'           => 'Santo Angel Sur',
         ];
 
-        $slug = strtolower($barangay);
-
-        if (!in_array($slug, $validBarangays)) {
+        if (!array_key_exists($slug, $barangayMap)) {
             abort(404);
         }
 
-        // Convert slug to display name
-        $displayName = ucwords(str_replace('-', ' ', $slug));
-        // Fix special cases
-        $displayName = str_replace(['Barangay I', 'Barangay Ii', 'Barangay Iii', 'Barangay Iv', 'Barangay V'],
-                                   ['Barangay I (Poblacion I)', 'Barangay II (Poblacion II)', 'Barangay III (Poblacion III)', 'Barangay IV (Poblacion IV)', 'Barangay V (Poblacion V)'],
-                                   $displayName);
+        $displayName = $barangayMap[$slug];
+        // Canonical slug (for form action)
+        $canonicalSlug = array_search($displayName, $barangayMap);
 
         return view('homepage::kkprofiling', [
             'barangay' => $displayName,
@@ -205,8 +232,9 @@ class HomepageController extends Controller
             'age'          => 'required|integer|min:15|max:30',
             'birthday'     => 'required|date',
             'sex'          => 'required|in:Male,Female',
-            'civil_status' => 'required|string',
+            'civil_status' => 'nullable|array',
             'purok_zone'   => 'required|string|max:100',
+            'signature'    => 'required|string|max:150',
         ]);
 
         // Prototype: just flash success and redirect back
