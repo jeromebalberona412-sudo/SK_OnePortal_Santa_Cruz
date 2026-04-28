@@ -23,191 +23,12 @@ function initializeKKProfilingRequestsUI() {
     const viewModal = document.getElementById('kkViewModal');
     const approveModal = document.getElementById('kkApproveModal');
     const rejectModal = document.getElementById('kkRejectModal');
+    const compareModal = null; // removed — Compare button is now a direct link
 
     if (!tbody) return;
 
-    const requests = [
-        {
-            id: 1,
-            respondentNumber: 'KK-2026-001',
-            date: '2026-04-20',
-            firstName: 'Juan',
-            middleName: 'Santos',
-            lastName: 'Dela Cruz',
-            suffix: '',
-            age: 22,
-            birthday: '2004-03-15',
-            sex: 'Male',
-            civilStatus: 'Single',
-            region: 'Region IV-A (CALABARZON)',
-            province: 'Laguna',
-            city: 'Santa Cruz',
-            barangay: 'Calios',
-            purokZone: 'Purok 1',
-            emailAddress: 'juan.delacruz@email.com',
-            contactNumber: '09171234567',
-            youthClassification: 'In School Youth',
-            youthAgeGroup: 'Core Youth (18-24 yrs old)',
-            workStatus: 'Unemployed',
-            educationalBackground: 'College Level',
-            registeredSKVoter: 'Yes',
-            registeredNationalVoter: 'Yes',
-            registeredVoter: 'Yes',
-            votingHistory: 'Yes',
-            votingFrequency: '1-2 Times',
-            votingReason: '',
-            attendedKKAssembly: 'Yes',
-            facebookAccount: 'juan.delacruz',
-            willingToJoinGroupChat: 'Yes',
-            signature: 'Juan Dela Cruz',
-            status: 'Pending',
-            rejectionReason: ''
-        },
-        {
-            id: 2,
-            respondentNumber: 'KK-2026-002',
-            date: '2026-04-21',
-            firstName: 'Maria',
-            middleName: 'Garcia',
-            lastName: 'Reyes',
-            suffix: '',
-            age: 19,
-            birthday: '2007-07-22',
-            sex: 'Female',
-            civilStatus: 'Single',
-            region: 'Region IV-A (CALABARZON)',
-            province: 'Laguna',
-            city: 'Santa Cruz',
-            barangay: 'Calios',
-            purokZone: 'Purok 2',
-            emailAddress: 'maria.reyes@email.com',
-            contactNumber: '09281234567',
-            youthClassification: 'In School Youth',
-            youthAgeGroup: 'Core Youth (18-24 yrs old)',
-            workStatus: 'Currently looking for a Job',
-            educationalBackground: 'College Level',
-            registeredSKVoter: 'Yes',
-            registeredNationalVoter: 'Yes',
-            registeredVoter: 'Yes',
-            votingHistory: 'No',
-            votingFrequency: '',
-            votingReason: 'Not Interested to Attend',
-            attendedKKAssembly: 'No',
-            facebookAccount: 'maria.reyes22',
-            willingToJoinGroupChat: 'Yes',
-            signature: 'Maria G. Reyes',
-            status: 'Approved',
-            rejectionReason: ''
-        },
-        {
-            id: 3,
-            respondentNumber: 'KK-2026-003',
-            date: '2026-04-22',
-            firstName: 'Pedro',
-            middleName: 'Ramos',
-            lastName: 'Santos',
-            suffix: 'Jr.',
-            age: 24,
-            birthday: '2002-11-10',
-            sex: 'Male',
-            civilStatus: 'Married',
-            region: 'Region IV-A (CALABARZON)',
-            province: 'Laguna',
-            city: 'Santa Cruz',
-            barangay: 'Calios',
-            purokZone: 'Purok 3',
-            emailAddress: 'pedro.santos@email.com',
-            contactNumber: '09391234567',
-            youthClassification: 'Working Youth',
-            youthAgeGroup: 'Core Youth (18-24 yrs old)',
-            workStatus: 'Employed',
-            educationalBackground: 'College Grad',
-            registeredSKVoter: 'Yes',
-            registeredNationalVoter: 'Yes',
-            registeredVoter: 'Yes',
-            votingHistory: 'Yes',
-            votingFrequency: '3-4 Times',
-            votingReason: '',
-            attendedKKAssembly: 'Yes',
-            facebookAccount: 'pedro.santos.jr',
-            willingToJoinGroupChat: 'Yes',
-            signature: 'Pedro R. Santos Jr.',
-            status: 'Approved',
-            rejectionReason: ''
-        },
-        {
-            id: 4,
-            respondentNumber: 'KK-2026-004',
-            date: '2026-04-23',
-            firstName: 'Ana',
-            middleName: 'Lopez',
-            lastName: 'Cruz',
-            suffix: '',
-            age: 17,
-            birthday: '2009-01-05',
-            sex: 'Female',
-            civilStatus: 'Single',
-            region: 'Region IV-A (CALABARZON)',
-            province: 'Laguna',
-            city: 'Santa Cruz',
-            barangay: 'Calios',
-            purokZone: 'Purok 4',
-            emailAddress: 'ana.cruz@email.com',
-            contactNumber: '09451234567',
-            youthClassification: 'In School Youth',
-            youthAgeGroup: 'Child Youth (15-17 yrs old)',
-            workStatus: 'Unemployed',
-            educationalBackground: 'High School Level',
-            registeredSKVoter: 'No',
-            registeredNationalVoter: 'No',
-            registeredVoter: 'No',
-            votingHistory: 'No',
-            votingFrequency: '',
-            votingReason: 'There was no KK Assembly',
-            attendedKKAssembly: 'No',
-            facebookAccount: 'ana.cruz05',
-            willingToJoinGroupChat: 'Yes',
-            signature: 'Ana L. Cruz',
-            status: 'Pending',
-            rejectionReason: ''
-        },
-        {
-            id: 5,
-            respondentNumber: 'KK-2026-005',
-            date: '2026-04-24',
-            firstName: 'Carlos',
-            middleName: 'Mendoza',
-            lastName: 'Bautista',
-            suffix: '',
-            age: 21,
-            birthday: '2005-09-18',
-            sex: 'Male',
-            civilStatus: 'Single',
-            region: 'Region IV-A (CALABARZON)',
-            province: 'Laguna',
-            city: 'Santa Cruz',
-            barangay: 'Calios',
-            purokZone: 'Purok 5',
-            emailAddress: 'carlos.bautista@email.com',
-            contactNumber: '09561234567',
-            youthClassification: 'Out of School Youth',
-            youthAgeGroup: 'Core Youth (18-24 yrs old)',
-            workStatus: 'Self-Employed',
-            educationalBackground: 'High School Grad',
-            registeredSKVoter: 'Yes',
-            registeredNationalVoter: 'Yes',
-            registeredVoter: 'Yes',
-            votingHistory: 'Yes',
-            votingFrequency: '5 and above',
-            votingReason: '',
-            attendedKKAssembly: 'Yes',
-            facebookAccount: 'carlos.bautista18',
-            willingToJoinGroupChat: 'No',
-            signature: 'Carlos M. Bautista',
-            status: 'Rejected',
-            rejectionReason: 'Incomplete Information; Invalid Contact Number'
-        }
-    ];
+    // Sample data loaded from JSON (storage/app/sample-data/kkprofiling-requests.json)
+    const requests = [];
 
     function sortRequestsAlphabetically() {
         return requests.sort((a, b) => {
@@ -233,8 +54,6 @@ function initializeKKProfilingRequestsUI() {
         else if (firstMiddle) return `${firstMiddle}${suffix}`;
         else return '-';
     }
-
-    sortRequestsAlphabetically();
 
     let currentFilterStatus = 'All';
     let currentSearchQuery = '';
@@ -278,7 +97,12 @@ function initializeKKProfilingRequestsUI() {
 
         paginatedData.forEach((r) => {
             const tr = document.createElement('tr');
-            const statusClass = r.status === 'Pending' ? 'pending' : r.status === 'Approved' ? 'approved' : 'rejected';
+            const statusClass = r.status === 'Valid' ? 'approved'
+                : r.status === 'Duplicate' ? 'duplicate'
+                : r.status === 'Incomplete' ? 'pending'
+                : r.status === 'Wrong Credential' ? 'rejected'
+                : r.status === 'New Applicant' ? 'new-applicant'
+                : 'pending';
             const fullName = formatFullName(r);
             const voterStatus = r.registeredVoter || 'No';
             tr.innerHTML = `
@@ -364,14 +188,86 @@ function initializeKKProfilingRequestsUI() {
     function closeModal(modalElement) { if (modalElement) modalElement.style.display = 'none'; }
     function closeAllModals() { [viewModal, approveModal, rejectModal].forEach((m) => { if (m) m.style.display = 'none'; }); }
 
-    function populateViewModal(request) {
+    function populateViewModal(request, skipErrorPanel = false) {
         const { respondentNumber, date, firstName, middleName, lastName, suffix, age, birthday, sex, civilStatus,
             region, province, city, barangay, purokZone, emailAddress, contactNumber,
             youthClassification, youthAgeGroup, workStatus, educationalBackground,
             registeredSKVoter, registeredNationalVoter, votingHistory, votingFrequency, votingReason, attendedKKAssembly,
             facebookAccount, willingToJoinGroupChat, signature, status, rejectionReason } = request;
 
-        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? ''; };
+        // Build a map of field → error info for quick lookup
+        const errors = request.censusErrors || [];
+        const errorMap = {};
+        errors.forEach((e, idx) => { errorMap[e.field] = { ...e, idx }; });
+        const isEditable = (status === 'Wrong Credential' || status === 'Incomplete') && errors.length > 0;
+
+        // Track which fields have been corrected (persists across re-renders via closure on request object)
+        if (!request._fixedFields) request._fixedFields = new Set();
+        const fixedFields = request._fixedFields;
+
+        // Helper: set a plain text value
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val ?? '';
+        };
+
+        // Helper: render a field — either plain text or editable inline input if it has an error
+        const setField = (id, fieldKey, val) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            if (isEditable && errorMap[fieldKey] && !skipErrorPanel) {
+                const e = errorMap[fieldKey];
+                const isFixed = fixedFields.has(fieldKey);
+
+                if (isFixed) {
+                    // Show corrected value as plain text with green underline
+                    el.innerHTML = '';
+                    el.className = el.className.replace(/\s*kk-field-error\s*/g, '') + ' kk-field-corrected';
+                    el.textContent = e.census;
+                } else {
+                    // Render editable input with red error state
+                    const submitted = e.submitted || '';
+                    el.innerHTML = `<span class="kk-inline-field-wrap">
+                        <input
+                            type="text"
+                            class="kk-inline-edit-input kk-inline-edit-error"
+                            data-field="${fieldKey}"
+                            data-census="${(e.census || '').replace(/"/g, '&quot;')}"
+                            value="${submitted.replace(/"/g, '&quot;')}"
+                            placeholder="${e.census ? 'Should be: ' + e.census : 'Enter value…'}"
+                            autocomplete="off"
+                            spellcheck="false"
+                        />
+                        <span class="kk-inline-error-badge" title="${e.note}">✕ ${e.note}</span>
+                    </span>`;
+                    el.className = el.className.replace(/\s*kk-field-corrected\s*/g, '');
+
+                    // Wire input listener
+                    const input = el.querySelector('.kk-inline-edit-input');
+                    if (input) {
+                        input.addEventListener('input', () => {
+                            const census = input.dataset.census.trim().toLowerCase();
+                            const typed  = input.value.trim().toLowerCase();
+                            if (typed === census && census !== '') {
+                                fixedFields.add(fieldKey);
+                                request[fieldKey] = e.census;
+                                // Re-render just this field as corrected
+                                setField(id, fieldKey, e.census);
+                                // Update the save button visibility
+                                updateInlineSaveBtn(request);
+                            }
+                        });
+                    }
+                }
+            } else {
+                // Plain text display
+                el.innerHTML = '';
+                el.className = el.className.replace(/\s*kk-field-error\s*/g, '').replace(/\s*kk-field-corrected\s*/g, '');
+                el.textContent = val ?? '';
+            }
+        };
+
         const setCheck = (id, checked) => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -382,13 +278,50 @@ function initializeKKProfilingRequestsUI() {
         };
 
         setVal('kkViewRespondentNumber', respondentNumber); setVal('kkViewDate', date);
-        setVal('kkViewLastName', lastName || '—'); setVal('kkViewFirstName', firstName || '—');
-        setVal('kkViewMiddleName', middleName || '—'); setVal('kkViewSuffix', suffix || '—');
-        setVal('kkViewRegion', region || '—'); setVal('kkViewProvince', province || '—');
-        setVal('kkViewCity', city || '—'); setVal('kkViewBarangay', barangay || '—');
-        setVal('kkViewPurokZone', purokZone || '—'); setVal('kkViewSexAssignedAtBirth', sex || '—');
-        setVal('kkViewAge', age || '—'); setVal('kkViewBirthday', birthday || '—');
-        setVal('kkViewEmailAddress', emailAddress || '—'); setVal('kkViewContactNumber', contactNumber || '—');
+        setField('kkViewLastName',      'lastName',      lastName      || '—');
+        setField('kkViewFirstName',     'firstName',     firstName     || '—');
+        setField('kkViewMiddleName',    'middleName',    middleName    || '—');
+        setField('kkViewSuffix',        'suffix',        suffix        || '—');
+        setVal('kkViewRegion',   region   || '—');
+        setVal('kkViewProvince', province || '—');
+        setVal('kkViewCity',     city     || '—');
+        setField('kkViewBarangay',      'barangay',      barangay      || '—');
+        setField('kkViewPurokZone',     'purokZone',     purokZone     || '—');
+        setVal('kkViewSexAssignedAtBirth', sex || '—');
+        setField('kkViewAge',           'age',           age           || '—');
+        setField('kkViewBirthday',      'birthday',      birthday      || '—');
+        setField('kkViewEmailAddress',  'emailAddress',  emailAddress  || '—');
+        setField('kkViewContactNumber', 'contactNumber', contactNumber || '—');
+
+        // Civil Status — also handle as editable if it's an error field
+        if (isEditable && errorMap['civilStatus'] && !skipErrorPanel) {
+            const e = errorMap['civilStatus'];
+            const isFixed = fixedFields.has('civilStatus');
+            // Highlight the civil status block header
+            const csBlock = document.querySelector('.kk-qs-demo-block-label');
+            // We'll show an inline error note below the civil status block
+            let csErrEl = document.getElementById('kkViewCS_ErrorNote');
+            if (!csErrEl) {
+                const csOptions = document.querySelector('.kk-qs-demo-options.kk-qs-options-2col');
+                if (csOptions) {
+                    csErrEl = document.createElement('div');
+                    csErrEl.id = 'kkViewCS_ErrorNote';
+                    csErrEl.className = 'kk-inline-cs-error';
+                    csOptions.parentElement.appendChild(csErrEl);
+                }
+            }
+            if (csErrEl) {
+                if (isFixed) {
+                    csErrEl.style.display = 'none';
+                } else {
+                    csErrEl.style.display = 'flex';
+                    csErrEl.innerHTML = `<span class="kk-inline-error-badge kk-inline-error-badge--cs">✕ ${e.note} — Census value: <strong>${e.census}</strong></span>`;
+                }
+            }
+        } else {
+            const csErrEl = document.getElementById('kkViewCS_ErrorNote');
+            if (csErrEl) csErrEl.style.display = 'none';
+        }
 
         const csMap = { kkViewCS_Single:'Single', kkViewCS_Married:'Married', kkViewCS_Widowed:'Widowed', kkViewCS_Divorced:'Divorced', kkViewCS_Separated:'Separated', kkViewCS_Annulled:'Annulled', kkViewCS_Unknown:'Unknown', kkViewCS_Livein:'Live-in' };
         Object.entries(csMap).forEach(([id, val]) => setCheck(id, civilStatus === val));
@@ -414,9 +347,69 @@ function initializeKKProfilingRequestsUI() {
         const rejectionWrap = document.getElementById('kkViewRejectionWrap');
         const rejectionText = document.getElementById('kkViewRejectionText');
         if (rejectionWrap && rejectionText) {
-            if (status === 'Rejected' && rejectionReason) { rejectionWrap.style.display = 'block'; rejectionText.textContent = rejectionReason; }
+            if (rejectionReason) { rejectionWrap.style.display = 'block'; rejectionText.textContent = rejectionReason; }
             else { rejectionWrap.style.display = 'none'; }
         }
+
+        // Show/hide inline save button
+        if (!skipErrorPanel) updateInlineSaveBtn(request);
+
+        // Hide the old bottom error panel — errors are now inline on the form
+        const errorsWrap = document.getElementById('kkViewCensusErrorsWrap');
+        if (errorsWrap) errorsWrap.style.display = 'none';
+    }
+
+    // Renders or updates the inline "Save Corrections" button inside the form
+    function updateInlineSaveBtn(request) {
+        const errors = request.censusErrors || [];
+        const fixedFields = request._fixedFields || new Set();
+        const isEditable = (request.status === 'Wrong Credential' || request.status === 'Incomplete') && errors.length > 0;
+
+        let saveRow = document.getElementById('kkInlineSaveRow');
+
+        if (isEditable && fixedFields.size === errors.length && errors.length > 0) {
+            if (!saveRow) {
+                saveRow = document.createElement('div');
+                saveRow.id = 'kkInlineSaveRow';
+                saveRow.className = 'kk-inline-save-row';
+                // Insert after signature row
+                const sigRow = document.querySelector('.kk-qs-signature-row');
+                if (sigRow && sigRow.parentNode) {
+                    sigRow.parentNode.insertBefore(saveRow, sigRow.nextSibling);
+                }
+            }
+            saveRow.innerHTML = `
+                <div class="kk-inline-save-banner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    All fields corrected — record matches census data.
+                    <button type="button" class="kk-inline-save-btn" id="kkInlineSaveBtn">
+                        Save &amp; Mark as Valid
+                    </button>
+                </div>`;
+            const saveBtn = document.getElementById('kkInlineSaveBtn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    request.status = 'Valid';
+                    request.censusErrors = [];
+                    request._fixedFields = new Set();
+                    renderTable();
+                    showToast('Corrections saved — record marked as Valid', 'success');
+                    closeAllModals();
+                });
+            }
+        } else {
+            if (saveRow) saveRow.remove();
+        }
+    }
+    function fieldLabel(field) {
+        const map = {
+            firstName: 'First Name', middleName: 'Middle Name', lastName: 'Last Name',
+            suffix: 'Suffix', birthday: 'Date of Birth', age: 'Age', sex: 'Sex',
+            civilStatus: 'Civil Status', contactNumber: 'Contact Number',
+            emailAddress: 'Email Address', barangay: 'Barangay', purokZone: 'Purok/Zone',
+            respondentNumber: 'Respondent Number', fullName: 'Full Name'
+        };
+        return map[field] || field;
     }
 
     if (searchInput) { searchInput.addEventListener('input', () => { currentSearchQuery = searchInput.value.trim(); currentPage = 1; renderTable(); }); }
@@ -469,6 +462,11 @@ function initializeKKProfilingRequestsUI() {
         activeRequestId = id;
         if (action === 'view') {
             resetModalMaximize(viewModal);
+            // Reset correction state for a fresh open
+            request._fixedFields = new Set();
+            // Remove any leftover inline save row from a previous open
+            const oldSaveRow = document.getElementById('kkInlineSaveRow');
+            if (oldSaveRow) oldSaveRow.remove();
             populateViewModal(request);
             openModal(viewModal);
         } else if (action === 'approve') {
@@ -578,8 +576,34 @@ function initializeKKProfilingRequestsUI() {
         });
     }
 
-    // Initial render
-    setStatusFilter('All');
+    function updateStatCards() {
+        const valid      = requests.filter(r => r.status === 'Valid').length;
+        const duplicate  = requests.filter(r => r.status === 'Duplicate').length;
+        const incomplete = requests.filter(r => r.status === 'Incomplete').length;
+        const wrong      = requests.filter(r => r.status === 'Wrong Credential').length;
+        const newApp     = requests.filter(r => r.status === 'New Applicant').length;
+        const total      = requests.length;
+        const el = (id) => document.getElementById(id);
+        if (el('kkStatApproved'))  el('kkStatApproved').textContent  = valid;
+        if (el('kkStatPending'))   el('kkStatPending').textContent   = duplicate + incomplete + newApp;
+        if (el('kkStatRejected'))  el('kkStatRejected').textContent  = wrong;
+        if (el('kkStatTotal'))     el('kkStatTotal').textContent     = total;
+    }
+
+    // Compare with Census button — now just a link, no JS needed
+
+    // Load sample data from JSON then render
+    fetch('/sample-data/kkprofiling-requests.json')
+        .then(r => r.json())
+        .then(data => {
+            requests.push(...data);
+            sortRequestsAlphabetically();
+            updateStatCards();
+            setStatusFilter('All');
+        })
+        .catch(() => {
+            setStatusFilter('All');
+        });
 }
 
 // ═══════════════════════════════════════════════════════

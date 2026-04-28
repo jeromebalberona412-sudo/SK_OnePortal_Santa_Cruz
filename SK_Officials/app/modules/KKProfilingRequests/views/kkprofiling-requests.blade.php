@@ -69,7 +69,7 @@
         </div>
 
         <section class="page-filters-section">
-            <!-- ── Action Bar: Search ── -->
+            <!-- ── Action Bar: Search + Compare ── -->
             <div class="table-action-bar">
                 <div class="abyip-search-inline">
                     <label for="kkSearch" class="abyip-sr-only">Search KK profiling records</label>
@@ -80,22 +80,30 @@
                         <input type="text" id="kkSearch" class="abyip-filter-search-inline" placeholder="Search KK profiling..." maxlength="80" autocomplete="off">
                     </div>
                 </div>
+                <a href="/barangay-census-form" class="btn kk-compare-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+                    Compare with Census
+                </a>
             </div>
             <div class="filters-row">
                 <div class="filter-item">
                     <label for="kkStatusFilter" class="filter-label">Status</label>
                     <select id="kkStatusFilter" class="filter-select" onchange="document.querySelectorAll('.status-tab').forEach(t=>t.classList.remove('active')); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.classList.add('active'); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.click();">
                         <option value="All">All</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
+                        <option value="Valid">Valid Records</option>
+                        <option value="Duplicate">Duplicate Records</option>
+                        <option value="Incomplete">Incomplete Records</option>
+                        <option value="Wrong Credential">Wrong Credential</option>
+                        <option value="New Applicant">New Applicant (Not in Census)</option>
                     </select>
                     {{-- Hidden tabs still used by JS logic --}}
                     <div class="status-tabs d-none" id="kkStatusTabs" style="display:none!important;">
                         <button type="button" class="status-tab active" data-status-filter="All">All</button>
-                        <button type="button" class="status-tab" data-status-filter="Pending">Pending</button>
-                        <button type="button" class="status-tab" data-status-filter="Approved">Approved</button>
-                        <button type="button" class="status-tab" data-status-filter="Rejected">Rejected</button>
+                        <button type="button" class="status-tab" data-status-filter="Valid">Valid Records</button>
+                        <button type="button" class="status-tab" data-status-filter="Duplicate">Duplicate Records</button>
+                        <button type="button" class="status-tab" data-status-filter="Incomplete">Incomplete Records</button>
+                        <button type="button" class="status-tab" data-status-filter="Wrong Credential">Wrong Credential</button>
+                        <button type="button" class="status-tab" data-status-filter="New Applicant">New Applicant</button>
                     </div>
                 </div>
                 <div class="filter-item">
@@ -401,6 +409,12 @@
             <div class="kk-view-rejection-wrap" id="kkViewRejectionWrap" style="display:none;">
                 <span class="kk-view-label">Rejection reason:</span>
                 <p class="kk-view-rejection-text" id="kkViewRejectionText"></p>
+            </div>
+
+            {{-- Census Comparison Errors --}}
+            <div class="kk-census-errors-wrap" id="kkViewCensusErrorsWrap" style="display:none;">
+                <div class="kk-census-errors-header" id="kkViewCensusErrorsHeader"></div>
+                <div class="kk-census-errors-body" id="kkViewCensusErrorsBody"></div>
             </div>
             </div>{{-- end kk-qs-scroll-wrapper --}}
         </div>

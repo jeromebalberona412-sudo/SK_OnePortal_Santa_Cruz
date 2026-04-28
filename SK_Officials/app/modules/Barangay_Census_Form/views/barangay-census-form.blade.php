@@ -27,7 +27,7 @@
                 </p>
             </div>
             <div class="page-header-right">
-                <button type="button" class="btn primary-btn" id="censusUploadBtn">
+                <button type="button" class="btn census-upload-btn-green" id="censusUploadBtn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                     Upload Census
                 </button>
@@ -128,18 +128,44 @@
             </div>
 
             <div class="table-card">
-                <div class="table-wrapper">
+                <div class="table-wrapper census-table-scroll">
                     <table class="census-table">
                         <thead>
                             <tr>
                                 <th>Form No.</th>
-                                <th>Control Number</th>
-                                <th>Full Name</th>
-                                <th>Purok/Sitio</th>
+                                <th>Control No.</th>
+                                <th>CY</th>
+                                <th>
+                                    FULL NAME
+                                    <div style="font-size:10px;font-weight:400;opacity:0.75;margin-top:2px;">LN, FN, MN, Suffix</div>
+                                </th>
+                                <th>House/Block/Lot No.</th>
+                                <th>Street/Purok/Sitio</th>
+                                <th>Barangay</th>
+                                <th>City/Municipality</th>
+                                <th>Province</th>
                                 <th>Ownership</th>
+                                <th>Prov. House No.</th>
+                                <th>Prov. Street/Purok</th>
+                                <th>Prov. Barangay</th>
+                                <th>Prov. City</th>
+                                <th>Prov. Province</th>
+                                <th>Length of Stay</th>
+                                <th>Sex</th>
                                 <th>Civil Status</th>
                                 <th>Date of Birth</th>
-                                <th class="col-actions">Actions</th>
+                                <th>Place of Birth</th>
+                                <th>Height</th>
+                                <th>Weight</th>
+                                <th>Contact No.</th>
+                                <th>Email</th>
+                                <th>Religion</th>
+                                <th>Education Level</th>
+                                <th>Elementary</th>
+                                <th>High School</th>
+                                <th>Vocational</th>
+                                <th>College</th>
+                                <th>Signature</th>
                             </tr>
                         </thead>
                         <tbody id="censusTableBody">
@@ -216,15 +242,15 @@
             </div>
         </div>
         <div class="modal-footer" style="padding: 16px 24px; background: #f9fafb; border-radius: 0 0 12px 12px;">
-            <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
-            <button type="button" class="btn primary-btn" id="censusPreviewBtn" disabled>Preview Data</button>
+            <button type="button" class="btn btn-outline" id="censusUploadCancelBtn" data-modal-close style="display:none;">Cancel</button>
+            <button type="button" class="btn census-preview-btn-green" id="censusPreviewBtn" style="display:none;" disabled>Preview Data</button>
         </div>
     </div>
 </div>
 
 <!-- Preview Census Data Modal -->
 <div class="modal-backdrop census-modal-backdrop" id="censusPreviewModal" style="display:none;">
-    <div class="modal-box census-modal-box census-modal-animate census-modal-no-border" style="max-width: 1200px;">
+    <div class="modal-box census-modal-box census-modal-animate census-modal-no-border census-view-modal-wide">
         <div class="modal-header">
             <div>
                 <h2 class="modal-title">Preview Census Data</h2>
@@ -235,260 +261,16 @@
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
-        <div class="modal-body census-view-modal-body">
-            <div id="censusPreviewStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                <div style="padding: 16px; background: #eff6ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                    <p style="font-size: 13px; color: #6b7280; margin: 0 0 4px 0;">Total Records</p>
-                    <p id="previewTotalRecords" style="font-size: 24px; font-weight: 700; color: #1f2937; margin: 0;">0</p>
-                </div>
-                <div style="padding: 16px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
-                    <p style="font-size: 13px; color: #6b7280; margin: 0 0 4px 0;">Valid Records</p>
-                    <p id="previewValidRecords" style="font-size: 24px; font-weight: 700; color: #1f2937; margin: 0;">0</p>
-                </div>
-                <div style="padding: 16px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
-                    <p style="font-size: 13px; color: #6b7280; margin: 0 0 4px 0;">Invalid Records</p>
-                    <p id="previewInvalidRecords" style="font-size: 24px; font-weight: 700; color: #1f2937; margin: 0;">0</p>
-                </div>
-            </div>
-            
-            <div class="table-card">
-                <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
-                    <table class="census-table">
-                        <thead>
-                            <tr>
-                                <th>Row</th>
-                                <th>Form No.</th>
-                                <th>Control Number</th>
-                                <th>Full Name</th>
-                                <th>Purok/Sitio</th>
-                                <th>Ownership</th>
-                                <th>Civil Status</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="censusPreviewTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="modal-body census-view-modal-body" id="censusPreviewBody" style="padding: 20px 24px;">
+            {{-- Preview table rendered by JS --}}
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
-            <button type="button" class="btn primary-btn" id="censusUploadConfirmBtn">Upload Data</button>
+            <button type="button" class="btn census-upload-btn-green" id="censusUploadConfirmBtn">Upload Data</button>
         </div>
     </div>
 </div>
 
-<!-- View Census Modal -->
-<div class="modal-backdrop census-modal-backdrop" id="censusViewModal" style="display:none;">
-    <div class="modal-box census-modal-box census-modal-animate census-modal-no-border census-view-modal-wide">
-        <div class="modal-header">
-            <div>
-                <h2 class="modal-title">Barangay Census Form (CMP-04)</h2>
-                <span class="census-modal-subtitle">Please write LEGIBLY (Pakisulat ng Mababasa)</span>
-            </div>
-            <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
-                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
-            </div>
-        </div>
-        <div class="modal-body census-view-modal-body census-form-body">
-            
-            {{-- Header Info --}}
-            <div class="census-form-header">
-                <div class="census-form-field-inline">
-                    <span class="census-label">Form No.:</span>
-                    <span class="census-value" id="viewFormNo"></span>
-                </div>
-                <div class="census-form-field-inline">
-                    <span class="census-label">Control Number:</span>
-                    <span class="census-value" id="viewControlNumber"></span>
-                </div>
-                <div class="census-form-field-inline">
-                    <span class="census-label">CY:</span>
-                    <span class="census-value" id="viewCY"></span>
-                </div>
-            </div>
-
-            {{-- Name Section --}}
-            <div class="census-section-title">NAME</div>
-            <div class="census-name-row">
-                <div class="census-name-col">
-                    <span class="census-value census-underline" id="viewLastName"></span>
-                    <span class="census-col-label">Last Name</span>
-                </div>
-                <div class="census-name-col">
-                    <span class="census-value census-underline" id="viewFirstName"></span>
-                    <span class="census-col-label">First Name</span>
-                </div>
-                <div class="census-name-col">
-                    <span class="census-value census-underline" id="viewMiddleName"></span>
-                    <span class="census-col-label">Middle Name</span>
-                </div>
-            </div>
-
-            {{-- Present Address --}}
-            <div class="census-section-title">PRESENT ADDRESS</div>
-            <div class="census-address-row">
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewHouseNo"></span>
-                    <span class="census-col-label">House/Block/Lot No.</span>
-                </div>
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewStreet"></span>
-                    <span class="census-col-label">St./Purok/Sitio/Subd.</span>
-                </div>
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewBarangay"></span>
-                    <span class="census-col-label">Barangay</span>
-                </div>
-            </div>
-            <div class="census-address-row">
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewCity"></span>
-                    <span class="census-col-label">City/Municipality</span>
-                </div>
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewProvince"></span>
-                    <span class="census-col-label">Province</span>
-                </div>
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewOwnership"></span>
-                    <span class="census-col-label">Owner / Boarder/Rentee</span>
-                </div>
-            </div>
-
-            {{-- Provincial Address --}}
-            <div class="census-section-title">PROVINCIAL ADDRESS</div>
-            <div class="census-address-row">
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewProvHouseNo"></span>
-                    <span class="census-col-label">House/Block/Lot No.</span>
-                </div>
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewProvStreet"></span>
-                    <span class="census-col-label">St./Purok/Sitio/Subd.</span>
-                </div>
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewProvBarangay"></span>
-                    <span class="census-col-label">Barangay</span>
-                </div>
-            </div>
-            <div class="census-address-row">
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewProvCity"></span>
-                    <span class="census-col-label">City/Municipality</span>
-                </div>
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewProvProvince"></span>
-                    <span class="census-col-label">Province</span>
-                </div>
-                <div class="census-address-col">
-                    <span class="census-value census-underline" id="viewLengthOfStay"></span>
-                    <span class="census-col-label">Length of Stay</span>
-                </div>
-            </div>
-
-            {{-- Personal Details --}}
-            <div class="census-section-title">PERSONAL DETAILS</div>
-            <div class="census-details-grid">
-                <div class="census-detail-field">
-                    <span class="census-label">Sex:</span>
-                    <span class="census-value" id="viewSex"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">Civil Status:</span>
-                    <span class="census-value" id="viewCivilStatus"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">Date of Birth:</span>
-                    <span class="census-value" id="viewDateOfBirth"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">Place of Birth:</span>
-                    <span class="census-value" id="viewPlaceOfBirth"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">Height:</span>
-                    <span class="census-value" id="viewHeight"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">Weight:</span>
-                    <span class="census-value" id="viewWeight"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">Contact Number:</span>
-                    <span class="census-value" id="viewContactNumber"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">E-Mail Address:</span>
-                    <span class="census-value" id="viewEmail"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">Religion:</span>
-                    <span class="census-value" id="viewReligion"></span>
-                </div>
-                <div class="census-detail-field">
-                    <span class="census-label">Level of Education:</span>
-                    <span class="census-value" id="viewEducationLevel"></span>
-                </div>
-            </div>
-
-            {{-- Educational Attainment --}}
-            <div class="census-section-title">EDUCATIONAL ATTAINMENT</div>
-            <div class="census-education-grid">
-                <div class="census-education-item">
-                    <span class="census-label">Elementary:</span>
-                    <span class="census-value" id="viewElementary"></span>
-                </div>
-                <div class="census-education-item">
-                    <span class="census-label">High School:</span>
-                    <span class="census-value" id="viewHighSchool"></span>
-                </div>
-                <div class="census-education-item">
-                    <span class="census-label">Vocational:</span>
-                    <span class="census-value" id="viewVocational"></span>
-                </div>
-                <div class="census-education-item">
-                    <span class="census-label">College/Course:</span>
-                    <span class="census-value" id="viewCollege"></span>
-                </div>
-            </div>
-
-            {{-- Employment Record --}}
-            <div class="census-section-title">EMPLOYMENT RECORD</div>
-            <div id="viewEmploymentRecords" class="census-employment-list">
-            </div>
-
-            {{-- Other House Occupants --}}
-            <div class="census-section-title">OTHER HOUSE OCCUPANTS</div>
-            <div id="viewHouseOccupants" class="census-occupants-list">
-            </div>
-
-            {{-- Character References --}}
-            <div class="census-section-title">CHARACTER REFERENCES</div>
-            <div id="viewCharacterReferences" class="census-references-list">
-            </div>
-
-            {{-- Vehicles --}}
-            <div class="census-section-title">VEHICLE/S</div>
-            <div id="viewVehicles" class="census-vehicles-list">
-            </div>
-
-            {{-- Declaration --}}
-            <div class="census-declaration">
-                <p>I swear under the penalty of perjury that all information written above are true and correct and in my own free will.</p>
-                <div class="census-signature-field">
-                    <span class="census-value census-underline" id="viewSignature"></span>
-                    <span class="census-col-label">Head of the Family/Representative's Signature over Printed Name</span>
-                </div>
-            </div>
-
-        </div>
-        <div class="modal-footer">
-        </div>
-    </div>
-</div>
 
 @vite([
     'app/modules/layout/js/header.js',
