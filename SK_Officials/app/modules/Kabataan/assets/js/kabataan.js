@@ -290,7 +290,7 @@ function initializeKabataanUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 6;
+            td.colSpan = 7;
             td.textContent = 'No kabataan match current filters.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -306,6 +306,7 @@ function initializeKabataanUI() {
                 <td class="kabataan-fullname-cell">
                     <span class="kabataan-fullname">${full}</span>
                 </td>
+                <td>${k.respondentNumber || '-'}</td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
                 <td>${k.barangay || '-'}</td>

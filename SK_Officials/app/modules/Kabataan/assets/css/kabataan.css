@@ -2737,7 +2737,7 @@ body {
     white-space: nowrap;
 }
 
-/* Square checkbox — paper form style with X mark */
+/* Square checkbox — paper form style with checkmark */
 .kkf-sq-chk {
     appearance: none;
     -webkit-appearance: none;
@@ -2758,7 +2758,7 @@ body {
 }
 
 .kkf-sq-chk:checked::after {
-    content: '✕';
+    content: '✓';
     position: absolute;
     top: 50%;
     left: 50%;
@@ -2902,7 +2902,7 @@ body {
     vertical-align: bottom;
 }
 
-/* Disabled square checkbox in view mode — still shows X if checked */
+/* Disabled square checkbox in view mode — still shows checkmark if checked */
 .kkf-sq-chk:disabled {
     cursor: default;
     opacity: 1;
@@ -2914,7 +2914,7 @@ body {
 }
 
 .kkf-sq-chk:disabled:checked::after {
-    content: '✕';
+    content: '✓';
     position: absolute;
     top: 50%;
     left: 50%;

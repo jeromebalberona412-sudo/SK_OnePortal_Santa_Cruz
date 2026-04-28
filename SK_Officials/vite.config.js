@@ -44,6 +44,8 @@ export default defineConfig({
                 // Kabataan module assets
                 'app/modules/Kabataan/assets/css/kabataan.css',
                 'app/modules/Kabataan/assets/js/kabataan.js',
+                'app/modules/Kabataan/assets/css/kabataan-manual-entry.css',
+                'app/modules/Kabataan/assets/js/kabataan-manual-entry.js',
                 // KK Profiling Requests module assets
                 'app/modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
                 'app/modules/KKProfilingRequests/assets/js/kkprofiling-requests.js',

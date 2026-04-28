@@ -138,6 +138,7 @@
                                     Full Name
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
+                                <th>Respondent #</th>
                                 <th>Age</th>
                                 <th>Sex</th>
                                 <th>Purok / Sitio</th>
