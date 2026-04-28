@@ -335,95 +335,91 @@ html {
     }
 
     .page-container.abyip-page {
-        padding: 14px;
+        padding: 16px;
     }
 
-    /* Header: title left, search+button right — one compact row */
+    /* Keep desktop layout - no changes to header structure */
     .page-header-section {
-        flex-direction: row;
-        align-items: flex-start;
-        flex-wrap: nowrap;
-        gap: 8px;
-        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
     }
 
     .page-header-left {
         flex: 1;
-        min-width: 0;
     }
 
     .page-title {
-        font-size: 17px;
-        margin-bottom: 4px;
+        font-size: 20px;
+        margin-bottom: 8px;
     }
 
     .page-subtitle {
-        font-size: 11px;
-        margin-bottom: 0;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        font-size: 13px;
+        margin-bottom: 16px;
     }
 
     .page-header-right {
         flex-shrink: 0;
-        flex-direction: column;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        gap: 8px;
-        padding-top: 2px;
-        width: 160px;
-    }
-
-    .abyip-search-inline {
-        width: 100%;
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
     .abyip-search-wrapper {
-        width: 100%;
+        position: relative;
         display: flex;
+        align-items: center;
     }
 
     .abyip-filter-search-inline {
-        width: 100%;
-        font-size: 12px;
-        padding: 0 10px 0 32px;
+        padding-left: 32px;
+        border: 1.5px solid #d1d5db;
         border-radius: 8px;
-        height: 40px;
-        min-height: 40px;
-        box-sizing: border-box;
+        font-size: 13px;
+        height: 38px;
+        width: 200px;
     }
 
     .page-header-right .primary-btn {
-        font-size: 12px !important;
-        padding: 0 12px !important;
-        border-radius: 8px !important;
-        height: 40px !important;
-        min-height: 40px !important;
-        white-space: nowrap;
-        width: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-sizing: border-box !important;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
     }
 
-    .abyip-table {
-        min-width: 600px;
+    /* Table with horizontal scroll */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-    .action-buttons-cell {
-        flex-direction: column;
-        gap: 4px;
+    .abyip-records-table {
+        min-width: 900px;
     }
 
-    .btn-action-view,
-    .btn-action-edit,
-    .btn-action-delete {
-        width: 100%;
-        text-align: center;
+    /* Page content section - keep desktop padding */
+    .page-content-section {
+        padding: 22px;
+    }
+
+    /* Modal adjustments for mobile */
+    .modal-container {
+        width: 95%;
+        max-width: 95%;
+        max-height: 95vh;
+    }
+
+    .modal-body {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* ABYIP document table with horizontal scroll */
+    .abyip-document-table {
+        min-width: 1200px;
     }
 }
 
@@ -435,19 +431,23 @@ html {
     }
 
     .page-container.abyip-page {
-        padding: 10px;
+        padding: 12px;
     }
 
     .page-title {
-        font-size: 15px;
+        font-size: 18px;
+    }
+
+    .page-subtitle {
+        font-size: 12px;
     }
 
     .page-header-right {
-        width: 145px;
+        gap: 10px;
     }
 
     .abyip-filter-search-inline {
-        font-size: 11px;
+        font-size: 12px;
         padding: 0 8px 0 30px;
         height: 38px;
         min-height: 38px;
@@ -969,11 +969,20 @@ html {
     letter-spacing: 0.04em;
 }
 
+.abyip-records-table thead th:first-child {
+    border-top-left-radius: 16px;
+}
+
+.abyip-records-table thead th:last-child {
+    border-top-right-radius: 16px;
+    border-right: none !important;
+}
+
 .abyip-records-table th:nth-last-child(1) {
     border: none !important;
     border-right: none !important;
-    width: 120px;
-    min-width: 120px;
+    width: 140px;
+    min-width: 140px;
     text-align: center;
 }
 
@@ -1709,12 +1718,12 @@ html {
     }
 
     .action-buttons-cell {
-        flex-direction: column;
-        gap: 4px;
+        flex-wrap: nowrap;
+        gap: 6px;
     }
 
     .action-btn {
-        width: 100%;
+        flex: 1;
         text-align: center;
     }
 

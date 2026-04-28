@@ -97,6 +97,13 @@
                             </a>
                         </li>
 
+                        <!-- Barangay Census Form -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('barangay-census-form') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('barangay-census-form') ? 'active' : '' }}">
+                                <span>Barangay Census Form</span>
+                            </a>
+                        </li>
+
                         <!-- Kabataan -->
                         <li class="nav-subitem">
                             <a href="{{ route('kabataan') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('kabataan') ? 'active' : '' }}">

@@ -213,6 +213,14 @@ Route::middleware(['web'])->group(function () {
         return view('schedule_programs::schedule-programs');
     })->name('schedule-programs');
 
+    // Barangay Census Form
+    Route::get('/barangay-census-form', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('Barangay_Census_Form::barangay-census-form');
+    })->name('barangay-census-form');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 });

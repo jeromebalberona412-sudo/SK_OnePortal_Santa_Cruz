@@ -452,26 +452,8 @@ function printAbyipDocument() {
 }
 
 function loadRecords() {
-    try {
-        const raw = localStorage.getItem(ABYIP_STORAGE_KEY);
-        if (raw) {
-            abyipRecords = JSON.parse(raw);
-            return;
-        }
-    } catch {
-        abyipRecords = [];
-    }
-
-    abyipRecords = [
-        {
-            id: 1,
-            title: DEFAULT_RECORD_TITLE,
-            dateCreated: new Date().toISOString(),
-            status: STATIC_STATUS,
-            statusRemarks: '',
-            documentHtml: ''
-        }
-    ];
+    // Clear all existing records and start fresh
+    abyipRecords = [];
     persistRecords();
 }
 

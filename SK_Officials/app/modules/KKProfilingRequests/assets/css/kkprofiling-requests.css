@@ -416,9 +416,17 @@ body {
 
 .kk-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    gap: 4px;
     justify-content: center;
+    align-items: center;
+}
+
+.kk-btn-view,
+.kk-btn-approve,
+.kk-btn-reject {
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .kk-table .col-actions {
@@ -638,6 +646,17 @@ body {
     animation: kkModalScaleIn 0.18s ease-out;
 }
 
+.kk-reject-modal-box {
+    max-width: 500px;
+    overflow: hidden;
+}
+
+.kk-reject-modal-box .modal-body {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(75vh - 120px);
+}
+
 @keyframes kkModalScaleIn {
     from {
         opacity: 0;
@@ -693,14 +712,17 @@ body {
 .kk-modal-backdrop.modal-maximized {
     align-items: stretch;
     justify-content: stretch;
+    padding: 0;
 }
 
 .kk-modal-backdrop.modal-maximized .kk-modal-box {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    max-height: none;
-    border-radius: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    flex: 1;
 }
 
 .kk-modal-box {
@@ -1099,6 +1121,21 @@ body {
         padding: 8px 16px !important;
         font-size: 13px !important;
         min-width: auto !important;
+    }
+
+    /* View modal footer: keep Approve/Reject side by side */
+    .kk-view-modal-footer {
+        flex-direction: row !important;
+        justify-content: stretch;
+        gap: 10px;
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .kk-view-modal-footer .btn {
+        flex: 1;
+        width: auto !important;
+        text-align: center;
     }
 }
 
@@ -2730,12 +2767,113 @@ body {
         grid-template-columns: 1fr 1fr;
     }
     .kk-qs-demo-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
     .kk-qs-voter-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
     }
     .kk-qs-personal-row {
         flex-direction: column;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   CENSUS UPLOAD STYLES
+   ═══════════════════════════════════════════════════════ */
+
+#kkCensusFile {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#kkCensusFile:hover {
+    border-color: #2c2c3e;
+    background: #ffffff;
+}
+
+#kkCensusFile::file-selector-button {
+    padding: 8px 16px;
+    background: #2c2c3e;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    margin-right: 12px;
+    transition: all 0.2s ease;
+}
+
+#kkCensusFile::file-selector-button:hover {
+    background: #3a3a4a;
+}
+
+/* Census table specific styles */
+#kkCensusTableBody tr:hover {
+    background: rgba(34, 197, 94, 0.08);
+}
+
+/* Responsive census section */
+@media (max-width: 768px) {
+    .section-heading-row > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+    
+    #kkUploadCensusBtn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Mobile: keep Approve/Reject on one line */
+@media (max-width: 480px) {
+    .kk-actions {
+        gap: 3px;
+    }
+
+    .kk-btn-view,
+    .kk-btn-approve,
+    .kk-btn-reject {
+        padding: 5px 7px;
+        font-size: 11px;
+        border-radius: 6px;
+    }
+
+    .kk-table .col-actions {
+        width: auto;
+        min-width: 0;
+    }
+}
+
+/* ── KK QS Scroll Wrapper (mobile horizontal scroll) ── */
+.kk-qs-scroll-wrapper {
+    width: 100%;
+}
+
+@media (max-width: 640px) {
+    .kk-view-modal-body.kk-qs-body {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .kk-qs-scroll-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 0;
+        padding: 12px 16px;
+        /* Preserve desktop min-width so layout doesn't collapse */
+        min-width: 600px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Outer body must allow horizontal scroll */
+    .kk-view-modal-body.kk-qs-body {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 !important;
     }
 }

@@ -175,11 +175,12 @@
                 <span class="kk-modal-subtitle">KK Profiling Submission Details</span>
             </div>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" id="kkViewModalToggle" aria-label="Maximize">□</button>
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
         <div class="modal-body kk-view-modal-body kk-qs-body">
+            <div class="kk-qs-scroll-wrapper">
 
             {{-- General Info --}}
             <div class="kk-qs-general-row">
@@ -401,10 +402,11 @@
                 <span class="kk-view-label">Rejection reason:</span>
                 <p class="kk-view-rejection-text" id="kkViewRejectionText"></p>
             </div>
+            </div>{{-- end kk-qs-scroll-wrapper --}}
         </div>
         <div class="modal-footer kk-view-modal-footer">
-            <button type="button" class="btn btn-approve" id="kkViewApproveBtn">Approve</button>
             <button type="button" class="btn btn-reject" id="kkViewRejectBtn">Reject</button>
+            <button type="button" class="btn btn-approve" id="kkViewApproveBtn">Approve</button>
         </div>
     </div>
 </div>
@@ -427,7 +429,7 @@
 
 <!-- Reject Reason Modal -->
 <div class="modal-backdrop kk-modal-backdrop" id="kkRejectModal" style="display:none;">
-    <div class="modal-box kk-modal-box kk-modal-animate kk-modal-no-border">
+    <div class="modal-box kk-modal-box kk-modal-animate kk-modal-no-border kk-reject-modal-box">
         <div class="modal-header">
             <h2 class="modal-title">Reject KK Profiling Submission</h2>
             <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
