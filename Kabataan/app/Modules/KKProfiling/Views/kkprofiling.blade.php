@@ -55,7 +55,7 @@
         <div class="kkp-page-wrap">
 
             {{-- Back link --}}
-            <a href="{{ route('about') }}#barangay" class="kkp-back-link">
+            <a href="{{ route('about') }}#barangay" class="kkp-back-link" id="kkpBackLink">
                 <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
                 Back to Barangays
             </a>
@@ -68,22 +68,134 @@
                 </div>
             @endif
 
+            {{-- Email Verification Card (Hidden by default) --}}
+            <div class="verify-card" id="emailVerifyCard" style="display:none;">
+                <div class="verify-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+                <h1 class="verify-title">Verify Your Email</h1>
+                <p class="verify-message">
+                    Thank you for submitting your KK Profiling form! We've sent a verification link to:
+                </p>
+                <p class="verify-email" id="displayEmail">your-email@example.com</p>
+                <p class="verify-instruction">
+                    Please check your email and click the verification link to complete your registration.
+                </p>
+                <div class="verify-actions">
+                    <button type="button" class="verify-btn verify-btn-secondary" id="backToFormBtn">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+                        Back to KK Profiling
+                    </button>
+                </div>
+                <div class="verify-help">
+                    <p>Didn't receive the email?</p>
+                    <button type="button" class="verify-link-btn" id="resendEmailBtn">Resend verification email</button>
+                    <p style="margin-top: 16px; font-size: 12px; color: #999;">
+                        (For demo: <button type="button" class="verify-link-btn" id="simulateVerifyBtn">Click here to simulate email verification</button>)
+                    </p>
+                </div>
+            </div>
+
+            {{-- Set Password Card (Hidden by default) --}}
+            <div class="setpw-card" id="setPasswordCard" style="display:none;">
+                <div class="setpw-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <h1 class="setpw-title">Set Your Password</h1>
+                <p class="setpw-message">
+                    Your email has been verified! Please create a secure password for your account.
+                </p>
+                <form id="setPasswordForm" class="setpw-form">
+                    <div class="setpw-field">
+                        <label for="password" class="setpw-label">Password</label>
+                        <div class="setpw-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="setpw-input" 
+                                placeholder="Enter your password"
+                                required
+                                minlength="8"
+                            >
+                            <button type="button" class="setpw-toggle-btn" id="togglePassword" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off-icon" style="display:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="setpw-hint">Minimum 8 characters</div>
+                    </div>
+                    <div class="setpw-field">
+                        <label for="password_confirmation" class="setpw-label">Confirm Password</label>
+                        <div class="setpw-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password_confirmation" 
+                                name="password_confirmation" 
+                                class="setpw-input" 
+                                placeholder="Confirm your password"
+                                required
+                                minlength="8"
+                            >
+                            <button type="button" class="setpw-toggle-btn" id="togglePasswordConfirm" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off-icon" style="display:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="setpw-submit-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                            <polyline points="10 17 15 12 10 7"></polyline>
+                            <line x1="15" y1="12" x2="3" y2="12"></line>
+                        </svg>
+                        Complete Registration
+                    </button>
+                </form>
+                <div class="setpw-footer">
+                    <button type="button" class="setpw-back-link" id="backToFormBtn2">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+                        Back to KK Profiling
+                    </button>
+                </div>
+            </div>
+
             {{-- Paper Form Card --}}
-            <div class="kkp-paper">
-                <form method="POST" action="{{ route('kkprofiling.submit', ['barangay' => $slug]) }}" id="kkProfilingForm">
+            <div class="kkp-paper" id="kkpFormCard">
+                <form method="POST" action="{{ route('kkprofiling.submit', ['barangay' => $slug]) }}" id="kkProfilingForm" onsubmit="return handleFormSubmit(event)">
                     @csrf
 
                     {{-- ── FORM HEADER ── --}}
                     <div class="kkp-form-header">
-                        <div class="kkp-form-title">KK Survey Questionnaire</div>
-                        <div class="kkp-form-meta">
-                            <div class="kkp-meta-row">
-                                <span class="kkp-meta-label">Respondent #:</span>
-                                <input type="text" name="respondent_number" class="kkp-underline-input" placeholder="________________" readonly>
-                            </div>
-                            <div class="kkp-meta-row">
-                                <span class="kkp-meta-label">Date:</span>
-                                <input type="text" class="kkp-underline-input" value="{{ date('m/d/Y') }}" readonly>
+                        <div class="kkp-form-title-col">
+                            <div class="kkp-form-main-title">KK Survey Questionnaire</div>
+                            <div class="kkp-form-header-fields">
+                                <div class="kkp-hdr-field">
+                                    <span class="kkp-hdr-label">Respondent #:</span>
+                                    <input type="text" name="respondent_number" class="kkp-hdr-input" placeholder="________________" readonly>
+                                </div>
+                                <div class="kkp-hdr-field">
+                                    <span class="kkp-hdr-label">Date:</span>
+                                    <input type="text" class="kkp-hdr-input" value="{{ date('m/d/Y') }}" readonly>
+                                </div>
                             </div>
                         </div>
                         <div class="kkp-form-logo">
@@ -340,10 +452,12 @@
                     </div>
 
                     {{-- ── SUBMIT ── --}}
-                    <button type="submit" class="kkp-submit-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/></svg>
-                        Submit KK Profiling
-                    </button>
+                    <div class="kkp-submit-wrapper">
+                        <button type="submit" class="kkp-submit-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/></svg>
+                            Submit KK Profiling
+                        </button>
+                    </div>
 
                 </form>
             </div>{{-- end kkp-paper --}}
@@ -389,22 +503,6 @@
             </div>
         </div>
     </div>
-
-        </div>
-    </main>
-
-    <footer class="about-footer">
-        <div class="about-footer-inner">
-            <div class="footer-brand">
-                <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="footer-logo">
-                <div>
-                    <p class="footer-title">SK OnePortal Kabataan</p>
-                    <p class="footer-sub">Santa Cruz, Laguna</p>
-                </div>
-            </div>
-            <p class="footer-copy">&copy; {{ date('Y') }} SK OnePortal. Built for the youth of Santa Cruz, Laguna.</p>
-        </div>
-    </footer>
 
 </body>
 </html>

@@ -105,6 +105,157 @@
 })();
 
 /* ═══════════════════════════════════════════════════════════════
+   FORM SUBMISSION HANDLER - Show Email Verification
+═══════════════════════════════════════════════════════════════ */
+window.handleFormSubmit = function(event) {
+    event.preventDefault();
+    
+    // Get email from form
+    const emailInput = document.querySelector('input[name="email"]');
+    const email = emailInput ? emailInput.value : 'your-email@example.com';
+    
+    if (!email || email.trim() === '') {
+        alert('Please provide an email address to continue.');
+        emailInput.focus();
+        return false;
+    }
+    
+    // Hide form card
+    const formCard = document.getElementById('kkpFormCard');
+    const emailVerifyCard = document.getElementById('emailVerifyCard');
+    const displayEmail = document.getElementById('displayEmail');
+    
+    if (formCard) formCard.style.display = 'none';
+    if (emailVerifyCard) {
+        emailVerifyCard.style.display = 'block';
+        if (displayEmail) displayEmail.textContent = email;
+    }
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    return false;
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   EMAIL VERIFICATION HANDLERS
+═══════════════════════════════════════════════════════════════ */
+(function() {
+    // Back to form button
+    const backToFormBtn = document.getElementById('backToFormBtn');
+    const backToFormBtn2 = document.getElementById('backToFormBtn2');
+    
+    function showForm() {
+        const formCard = document.getElementById('kkpFormCard');
+        const emailVerifyCard = document.getElementById('emailVerifyCard');
+        const setPasswordCard = document.getElementById('setPasswordCard');
+        
+        if (formCard) formCard.style.display = 'block';
+        if (emailVerifyCard) emailVerifyCard.style.display = 'none';
+        if (setPasswordCard) setPasswordCard.style.display = 'none';
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    if (backToFormBtn) backToFormBtn.addEventListener('click', showForm);
+    if (backToFormBtn2) backToFormBtn2.addEventListener('click', showForm);
+    
+    // Resend email button
+    const resendEmailBtn = document.getElementById('resendEmailBtn');
+    if (resendEmailBtn) {
+        resendEmailBtn.addEventListener('click', function() {
+            alert('Verification email has been resent! Please check your inbox.');
+        });
+    }
+    
+    // Simulate email verification (for demo)
+    const simulateVerifyBtn = document.getElementById('simulateVerifyBtn');
+    if (simulateVerifyBtn) {
+        simulateVerifyBtn.addEventListener('click', function() {
+            const emailVerifyCard = document.getElementById('emailVerifyCard');
+            const setPasswordCard = document.getElementById('setPasswordCard');
+            
+            if (emailVerifyCard) emailVerifyCard.style.display = 'none';
+            if (setPasswordCard) setPasswordCard.style.display = 'block';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   SET PASSWORD HANDLERS
+═══════════════════════════════════════════════════════════════ */
+(function() {
+    // Password toggle
+    function setupPasswordToggle(toggleBtnId, inputId) {
+        const toggleBtn = document.getElementById(toggleBtnId);
+        const input = document.getElementById(inputId);
+        
+        if (!toggleBtn || !input) return;
+
+        const eyeIcon = toggleBtn.querySelector('.eye-icon');
+        const eyeOffIcon = toggleBtn.querySelector('.eye-off-icon');
+
+        toggleBtn.addEventListener('click', function () {
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            
+            if (eyeIcon && eyeOffIcon) {
+                eyeIcon.style.display = isPassword ? 'none' : 'block';
+                eyeOffIcon.style.display = isPassword ? 'block' : 'none';
+            }
+        });
+    }
+
+    setupPasswordToggle('togglePassword', 'password');
+    setupPasswordToggle('togglePasswordConfirm', 'password_confirmation');
+
+    // Form validation
+    const setPasswordForm = document.getElementById('setPasswordForm');
+    if (setPasswordForm) {
+        setPasswordForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password');
+            const passwordConfirm = document.getElementById('password_confirmation');
+
+            if (!password || !passwordConfirm) return;
+
+            // Check if passwords match
+            if (password.value !== passwordConfirm.value) {
+                alert('Passwords do not match. Please try again.');
+                passwordConfirm.focus();
+                return false;
+            }
+
+            // Check minimum length
+            if (password.value.length < 8) {
+                alert('Password must be at least 8 characters long.');
+                password.focus();
+                return false;
+            }
+            
+            // Success!
+            alert('Registration completed successfully! You can now login with your credentials.');
+            
+            // Show form again
+            const formCard = document.getElementById('kkpFormCard');
+            const setPasswordCard = document.getElementById('setPasswordCard');
+            
+            if (formCard) formCard.style.display = 'block';
+            if (setPasswordCard) setPasswordCard.style.display = 'none';
+            
+            // Reset forms
+            document.getElementById('kkProfilingForm').reset();
+            setPasswordForm.reset();
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+})();
+
+/* ═══════════════════════════════════════════════════════════════
    SIGNATURE PAD — mirrors SK Officials Kabataan module pattern
    Signature image overlaid on top of printed name
 ═══════════════════════════════════════════════════════════════ */
@@ -119,7 +270,6 @@
     const sigInput    = document.getElementById('kkpSignatureData');
     const sigPreview  = document.getElementById('kkpSignaturePreview');
     const sigOverlay  = document.getElementById('kkpSignatureOverlay');
-    const nameInput   = document.getElementById('kkpSignatureName');
 
     if (!canvas || !overlay) return;
 
