@@ -107,12 +107,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ── Navbar Login / Sign Up → open join community modal ───────────────────
-    document.getElementById('navLoginBtn')?.addEventListener('click', () => {
-        const titleEl = document.getElementById('loginRequiredTitle');
-        const catEl   = document.getElementById('loginRequiredCategory');
-        if (titleEl) titleEl.textContent = 'the Community';
-        if (catEl)   catEl.textContent   = 'the community';
+    const openLoginModal = () => {
+        const catEl = document.getElementById('loginRequiredCategory');
+        if (catEl) catEl.textContent = 'the community';
         openModal('loginRequiredModal');
+    };
+
+    document.getElementById('navLoginBtn')?.addEventListener('click', openLoginModal);
+    document.getElementById('navDrawerLoginBtn')?.addEventListener('click', () => {
+        document.getElementById('navDrawer')?.classList.remove('open');
+        openLoginModal();
     });
 
     applyFilters();

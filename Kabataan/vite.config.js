@@ -26,6 +26,7 @@ export default defineConfig({
                 'app/Modules/Homepage/assets/css/homepage.css',
                 'app/Modules/Homepage/assets/js/homepage.js',
                 'app/Modules/Homepage/assets/css/about.css',
+                'app/Modules/Homepage/assets/css/kkprofiling.css',
                 'app/Modules/Kabataan_Portal/assets/css/portal.css',
                 'app/Modules/Kabataan_Portal/assets/js/portal.js',
                 'app/Modules/Shared/assets/css/loading.css',

@@ -8,9 +8,13 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 
-    // Registration routes
-    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
+    // Registration routes — disabled, redirect to login
+    Route::get('/register', function () {
+        return redirect()->route('login');
+    })->name('register');
+    Route::post('/register', function () {
+        return redirect()->route('login');
+    });
 
     // Password Reset Routes
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])

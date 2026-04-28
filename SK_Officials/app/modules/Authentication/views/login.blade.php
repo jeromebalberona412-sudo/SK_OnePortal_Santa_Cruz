@@ -67,34 +67,36 @@
 
                     <!-- Email Field -->
                     <div class="sk-form-group">
-                        <label for="email" class="sk-label">Email Address</label>
-                        <div class="input-wrapper">
-                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <label for="email" class="sk-label">
+                            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                             </svg>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                class="sk-input"
-                                value="{{ old('email') }}"
-                                autofocus
-                                autocomplete="email"
-                                placeholder="Enter your email"
-                                maxlength="150"
-                            >
-                        </div>
+                            Email Address
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            class="sk-input"
+                            value="{{ old('email') }}"
+                            autofocus
+                            autocomplete="email"
+                            placeholder="Enter your email"
+                            maxlength="150"
+                        >
                         <div class="sk-field-error" id="email-error" hidden></div>
                     </div>
 
                     <!-- Password Field -->
                     <div class="sk-form-group">
-                        <label for="password" class="sk-label">Password</label>
-                        <div class="password-wrapper">
-                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <label for="password" class="sk-label">
+                            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                             </svg>
+                            Password
+                        </label>
+                        <div class="password-wrapper">
                             <input
                                 type="password"
                                 id="password"
