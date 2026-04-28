@@ -84,7 +84,6 @@ function initializeKabataanUI() {
         ['Attended KK Assembly?', 'attendedKKAssembly'],
         ['FB Account', 'facebookAccount'],
         ['Willing to join group chat?', 'willingToJoinGroupChat'],
-        ['Name and Signature of Participant', 'signature'],
     ];
 
     if (!tbody) return;
@@ -262,10 +261,6 @@ function initializeKabataanUI() {
     let currentEducation = '';
     let editingIndex = null;
 
-    // Pagination variables
-    let currentPage = 1;
-    const recordsPerPage = 10;
-
     function render() {
         tbody.innerHTML = '';
 
@@ -280,13 +275,7 @@ function initializeKabataanUI() {
             return matchSearch && matchGender && matchPurok && matchEducation;
         });
 
-        // Calculate pagination
-        const totalPages = Math.ceil(filtered.length / recordsPerPage);
-        const startIndex = (currentPage - 1) * recordsPerPage;
-        const endIndex = Math.min(startIndex + recordsPerPage, filtered.length);
-        const paginatedData = filtered.slice(startIndex, endIndex);
-
-        if (paginatedData.length === 0) {
+        if (filtered.length === 0) {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
@@ -294,19 +283,18 @@ function initializeKabataanUI() {
             td.textContent = 'No kabataan match current filters.';
             tr.appendChild(td);
             tbody.appendChild(tr);
-            updatePaginationInfo(0, 0, 1);
             return;
         }
 
-        paginatedData.forEach((k) => {
+        filtered.forEach((k) => {
             const index = kabataan.indexOf(k);
             const full = fullNameFrom(k);
             const tr = document.createElement('tr');
             tr.innerHTML = `
+                <td>${k.respondentNumber || '-'}</td>
                 <td class="kabataan-fullname-cell">
                     <span class="kabataan-fullname">${full}</span>
                 </td>
-                <td>${k.respondentNumber || '-'}</td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
                 <td>${k.barangay || '-'}</td>
@@ -321,82 +309,6 @@ function initializeKabataanUI() {
             `;
             tbody.appendChild(tr);
         });
-
-        updatePaginationInfo(startIndex + 1, endIndex, currentPage, totalPages);
-        updatePaginationControls(currentPage, totalPages);
-    }
-
-    function updatePaginationInfo(start, end, page, totalPages) {
-        const info = document.getElementById('kabataanPaginationInfo');
-        if (info) {
-            const total = kabataan.filter((k) => {
-                const q = currentQuery;
-                const full = fullNameFrom(k).toLowerCase();
-                const education = k.educationalBackground || k.highestEducation || '';
-                const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (education && education.toLowerCase().includes(q));
-                const matchGender = !currentGender || k.sex === currentGender;
-                const matchPurok = !currentPurok || k.barangay === currentPurok;
-                return matchSearch && matchGender && matchPurok;
-            }).length;
-
-            info.textContent = total === 0 ? 'No records found' : `Showing ${start}-${end} of ${total} records`;
-        }
-    }
-
-    function updatePaginationControls(page, totalPages) {
-        const prevBtn = document.getElementById('kabataanPrevBtn');
-        const nextBtn = document.getElementById('kabataanNextBtn');
-        const pageNumbers = document.getElementById('kabataanPageNumbers');
-
-        if (prevBtn) prevBtn.disabled = page === 1;
-        if (nextBtn) nextBtn.disabled = page === totalPages;
-
-        if (pageNumbers) {
-            pageNumbers.innerHTML = '';
-
-            // Show max 5 page numbers
-            let startPage = Math.max(1, page - 2);
-            let endPage = Math.min(totalPages, page + 2);
-
-            // Adjust if we're near the beginning
-            if (endPage - startPage < 5) {
-                endPage = Math.min(5, totalPages);
-                startPage = 1;
-            }
-
-            // Adjust if we're near the end
-            if (endPage - startPage < 5 && page > totalPages - 2) {
-                startPage = Math.max(1, totalPages - 4);
-                endPage = totalPages;
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.className = `page-number ${i === page ? 'active' : ''}`;
-                pageBtn.textContent = i;
-                pageBtn.onclick = () => goToPage(i);
-                pageNumbers.appendChild(pageBtn);
-            }
-        }
-    }
-
-    function goToPage(page) {
-        const total = kabataan.filter((k) => {
-            const q = currentQuery;
-            const full = fullNameFrom(k).toLowerCase();
-            const education = k.educationalBackground || k.highestEducation || '';
-            const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (education && education.toLowerCase().includes(q));
-            const matchGender = !currentGender || k.sex === currentGender;
-            const matchPurok = !currentPurok || k.barangay === currentPurok;
-            return matchSearch && matchGender && matchPurok;
-        }).length / recordsPerPage;
-
-        const totalPages = Math.ceil(total);
-
-        if (page >= 1 && page <= totalPages) {
-            currentPage = page;
-            render();
-        }
     }
 
     function populateViewRows(k) {
@@ -418,7 +330,48 @@ function initializeKabataanUI() {
         setVal('vEmail', k.emailAddress || k.email);
         setVal('vContact', k.contactNumber);
         setVal('vFacebook', k.facebookAccount);
-        setVal('vSignature', k.signature);
+        
+        // Handle signature display - show image overlaid on name
+        const vSignatureImg = document.getElementById('vSignature');
+        const vSignatureOverlay = document.getElementById('vSignatureOverlay');
+        const vSignatureText = document.getElementById('vSignatureText');
+        
+        if (k.signature && k.signature.startsWith('data:image')) {
+            // It's a base64 image - display signature overlay on name
+            if (vSignatureImg && vSignatureOverlay) {
+                vSignatureImg.src = k.signature;
+                vSignatureOverlay.style.display = 'flex';
+            }
+            if (vSignatureText) {
+                // Get the full name from the record (FirstName MiddleName LastName Suffix)
+                const nameParts = [];
+                if (k.firstName) nameParts.push(k.firstName);
+                if (k.middleName) nameParts.push(k.middleName);
+                if (k.lastName) nameParts.push(k.lastName);
+                if (k.suffix && k.suffix !== 'None') nameParts.push(k.suffix);
+                
+                const fullName = nameParts.join(' ');
+                vSignatureText.textContent = fullName;
+                vSignatureText.style.display = 'block';
+            }
+        } else {
+            // No signature - just display name
+            if (vSignatureOverlay) {
+                vSignatureOverlay.style.display = 'none';
+            }
+            if (vSignatureText) {
+                // Get the full name from the record
+                const nameParts = [];
+                if (k.firstName) nameParts.push(k.firstName);
+                if (k.middleName) nameParts.push(k.middleName);
+                if (k.lastName) nameParts.push(k.lastName);
+                if (k.suffix && k.suffix !== 'None') nameParts.push(k.suffix);
+                
+                const fullName = nameParts.join(' ');
+                vSignatureText.textContent = fullName || '';
+                vSignatureText.style.display = 'block';
+            }
+        }
 
         // Populate view checkboxes — tick the one matching the stored value
         const viewChks = document.querySelectorAll('.kkf-view-chk');
@@ -1038,3 +991,290 @@ function initializeKabataanUI() {
 
     render();
 }
+
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * SIGNATURE PAD OVERLAY FUNCTIONALITY
+ * ═══════════════════════════════════════════════════════════════
+ */
+(function initializeSignaturePad() {
+    const overlay = document.getElementById('signaturePadOverlay');
+    const triggerBtn = document.getElementById('kabataanSignatureTrigger');
+    const closeBtn = document.getElementById('signaturePadClose');
+    const cancelBtn = document.getElementById('signaturePadCancel');
+    const clearBtn = document.getElementById('signaturePadClear');
+    const saveBtn = document.getElementById('signaturePadSave');
+    const canvas = document.getElementById('signaturePadCanvas');
+    const placeholder = document.getElementById('signatureCanvasPlaceholder');
+    const signatureInput = document.getElementById('kabataanSignature');
+    const signaturePreview = document.getElementById('kabataanSignaturePreview');
+    
+    // New elements
+    const nameInput = document.getElementById('kabataanSignatureName');
+    const signatureDisplayContainer = document.getElementById('kabataanSignatureDisplayContainer');
+    const signaturePrintedName = document.getElementById('kabataanSignaturePrintedName');
+    
+    if (!canvas || !overlay) return;
+    
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let hasSignature = false;
+    let strokes = [];
+    let currentStroke = [];
+    
+    // Show sign button only after name is entered and no signature yet
+    if (nameInput && triggerBtn) {
+        nameInput.addEventListener('input', function() {
+            const nameValue = this.value.trim();
+            const hasSignatureValue = signatureInput && signatureInput.value;
+            
+            if (nameValue.length > 0 && !hasSignatureValue) {
+                triggerBtn.style.display = 'inline-flex';
+            } else {
+                triggerBtn.style.display = 'none';
+            }
+        });
+    }
+    
+    // Setup canvas
+    function setupCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+    
+    // Open signature pad
+    function openSignaturePad() {
+        overlay.style.display = 'flex';
+        setupCanvas();
+        
+        // Restore existing signature if any
+        if (signatureInput.value) {
+            const img = new Image();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                hasSignature = true;
+                hidePlaceholder();
+            };
+            img.src = signatureInput.value;
+        }
+    }
+    
+    // Close signature pad
+    function closeSignaturePad() {
+        overlay.style.display = 'none';
+        clearCanvas();
+    }
+    
+    // Clear canvas
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        strokes = [];
+        currentStroke = [];
+        hasSignature = false;
+        showPlaceholder();
+    }
+    
+    // Hide placeholder
+    function hidePlaceholder() {
+        if (placeholder) placeholder.style.display = 'none';
+    }
+    
+    // Show placeholder
+    function showPlaceholder() {
+        if (placeholder && !hasSignature) placeholder.style.display = 'block';
+    }
+    
+    // Get mouse/touch position
+    function getPosition(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    }
+    
+    // Start drawing
+    function startDrawing(e) {
+        isDrawing = true;
+        hasSignature = true;
+        currentStroke = [];
+        const pos = getPosition(e);
+        currentStroke.push(pos);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        hidePlaceholder();
+    }
+    
+    // Draw
+    function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPosition(e);
+        currentStroke.push(pos);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    }
+    
+    // Stop drawing
+    function stopDrawing() {
+        if (isDrawing && currentStroke.length > 0) {
+            strokes.push([...currentStroke]);
+        }
+        isDrawing = false;
+    }
+    
+    // Save signature
+    function saveSignature() {
+        if (!hasSignature) {
+            alert('Please provide a signature before saving.');
+            return;
+        }
+        
+        // Convert canvas to base64
+        const signatureData = canvas.toDataURL('image/png');
+        
+        // Save to hidden input
+        signatureInput.value = signatureData;
+        
+        // Show signature overlay (centered on top of name)
+        const signatureOverlay = document.getElementById('kabataanSignatureOverlay');
+        if (signaturePreview && signatureOverlay) {
+            signaturePreview.src = signatureData;
+            signatureOverlay.style.display = 'flex';
+        }
+        
+        // Hide the sign button
+        if (triggerBtn) {
+            triggerBtn.style.display = 'none';
+        }
+        
+        // Close modal
+        closeSignaturePad();
+    }
+    
+    // Event listeners
+    if (triggerBtn) {
+        triggerBtn.addEventListener('click', openSignaturePad);
+    }
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSignaturePad);
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeSignaturePad);
+    }
+    
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearCanvas);
+    }
+    
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveSignature);
+    }
+    
+    // Close on overlay click
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                closeSignaturePad();
+            }
+        });
+    }
+    
+    // Canvas drawing events
+    if (canvas) {
+        // Mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+        
+        // Touch events
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            startDrawing(e);
+        });
+        
+        canvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            draw(e);
+        });
+        
+        canvas.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            stopDrawing();
+        });
+    }
+    
+    // Window resize handler
+    window.addEventListener('resize', function() {
+        if (overlay.style.display === 'flex') {
+            setupCanvas();
+        }
+    });
+})();
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * AUTO-POPULATE SIGNATURE NAME FROM RESPONDENT NAME
+ * ═══════════════════════════════════════════════════════════════
+ */
+(function autoPopulateSignatureName() {
+    const firstNameInput = document.getElementById('kabataanFirstName');
+    const middleNameInput = document.getElementById('kabataanMiddleName');
+    const lastNameInput = document.getElementById('kabataanLastName');
+    const suffixSelect = document.getElementById('kabataanSuffix');
+    const signatureNameInput = document.getElementById('kabataanSignatureName');
+    
+    if (!firstNameInput || !middleNameInput || !lastNameInput || !suffixSelect || !signatureNameInput) {
+        return;
+    }
+    
+    function updateSignatureName() {
+        const firstName = firstNameInput.value.trim();
+        const middleName = middleNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        const suffix = suffixSelect.value.trim();
+        
+        // Format: FirstName MiddleName LastName Suffix (if suffix exists)
+        let fullName = '';
+        
+        if (firstName) {
+            fullName += firstName;
+        }
+        
+        if (middleName) {
+            fullName += (fullName ? ' ' : '') + middleName;
+        }
+        
+        if (lastName) {
+            fullName += (fullName ? ' ' : '') + lastName;
+        }
+        
+        if (suffix && suffix !== 'None' && suffix !== '') {
+            fullName += (fullName ? ' ' : '') + suffix;
+        }
+        
+        signatureNameInput.value = fullName;
+        
+        // Trigger the input event to show/hide the Sign button
+        const event = new Event('input', { bubbles: true });
+        signatureNameInput.dispatchEvent(event);
+    }
+    
+    // Add event listeners to all name fields
+    firstNameInput.addEventListener('input', updateSignatureName);
+    middleNameInput.addEventListener('input', updateSignatureName);
+    lastNameInput.addEventListener('input', updateSignatureName);
+    suffixSelect.addEventListener('change', updateSignatureName);
+})();

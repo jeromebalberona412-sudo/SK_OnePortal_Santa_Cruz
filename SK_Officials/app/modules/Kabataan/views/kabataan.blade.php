@@ -134,11 +134,11 @@
                     <table class="kabataan-table">
                         <thead>
                             <tr>
+                                <th>Respondent #</th>
                                 <th>
                                     Full Name
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
-                                <th>Respondent #</th>
                                 <th>Age</th>
                                 <th>Sex</th>
                                 <th>Purok / Sitio</th>
@@ -154,18 +154,6 @@
         </section>
     </div>
 </main>
-
-<!-- Pagination Controls -->
-<div class="pagination-container">
-    <div class="pagination-info">
-        <span id="kabataanPaginationInfo">Showing 1-10 of 12 records</span>
-    </div>
-    <div class="pagination-controls">
-        <button type="button" id="kabataanPrevBtn" class="pagination-btn" disabled>Previous</button>
-        <div class="pagination-numbers" id="kabataanPageNumbers"></div>
-        <button type="button" id="kabataanNextBtn" class="pagination-btn">Next</button>
-    </div>
-</div>
 
 <!-- Kabataan Modal -->
 <div class="modal-backdrop kabataan-modal-backdrop" id="kabataanModal" style="display:none;">
@@ -484,9 +472,21 @@
                         </div>
                     </div>
 
-                    <div class="kkf-sig-row">
-                        <span class="kkf-view-val kkf-uline kkf-uline-sig" id="vSignature"></span>
-                        <label class="kkf-sig-label">Name and Signature of Participant</label>
+                    <div class="kkf-sig-section">
+                        <div class="kkf-sig-container">
+                            <!-- Signature overlay (centered on top of name) -->
+                            <div class="kkf-sig-overlay" id="vSignatureOverlay" style="display: none;">
+                                <img id="vSignature" class="kkf-sig-overlay-img" alt="Signature">
+                            </div>
+                            
+                            <!-- Name field with underline -->
+                            <div class="kkf-sig-name-wrapper">
+                                <span id="vSignatureText" class="kkf-sig-name-input" style="display: block;"></span>
+                            </div>
+                            
+                            <!-- Label below the underline -->
+                            <div class="kkf-sig-label-bottom">Name and Signature of Participant</div>
+                        </div>
                     </div>
 
                 </div>
@@ -528,20 +528,20 @@
                     <div class="kkf-row-label">Name of Respondent:</div>
                     <div class="kkf-name-row">
                         <div class="kkf-name-col">
-                            <input type="text" id="kabataanLastName" class="kkf-uline" placeholder=" ">
+                            <input type="text" id="kabataanLastName" class="kkf-uline" placeholder=" " required>
                             <label for="kabataanLastName" class="kkf-col-label">Last Name *</label>
                         </div>
                         <div class="kkf-name-col">
-                            <input type="text" id="kabataanFirstName" class="kkf-uline" placeholder=" ">
+                            <input type="text" id="kabataanFirstName" class="kkf-uline" placeholder=" " required>
                             <label for="kabataanFirstName" class="kkf-col-label">First Name *</label>
                         </div>
                         <div class="kkf-name-col">
-                            <input type="text" id="kabataanMiddleName" class="kkf-uline" placeholder=" ">
-                            <label for="kabataanMiddleName" class="kkf-col-label">Middle Name</label>
+                            <input type="text" id="kabataanMiddleName" class="kkf-uline" placeholder=" " required>
+                            <label for="kabataanMiddleName" class="kkf-col-label">Middle Name *</label>
                         </div>
                         <div class="kkf-name-col kkf-name-col--sm">
                             <select id="kabataanSuffix" class="kkf-uline kkf-uline-select">
-                                <option value="">—</option>
+                                <option value="">None</option>
                                 <option value="Jr.">Jr.</option>
                                 <option value="Sr.">Sr.</option>
                                 <option value="II">II</option>
@@ -768,16 +768,46 @@
                     </div>
 
                     {{-- SIGNATURE --}}
-                    <div class="kkf-sig-row">
-                        <input type="text" id="kabataanSignature" class="kkf-uline kkf-uline-sig" placeholder=" ">
-                        <label for="kabataanSignature" class="kkf-sig-label">Name and Signature of Participant</label>
+                    <div class="kkf-sig-section">
+                        <div class="kkf-sig-container">
+                            <!-- Signature overlay (centered on top of name) -->
+                            <div class="kkf-sig-overlay" id="kabataanSignatureOverlay" style="display: none;">
+                                <img id="kabataanSignaturePreview" class="kkf-sig-overlay-img" alt="Signature">
+                            </div>
+                            
+                            <!-- Name field with underline -->
+                            <div class="kkf-sig-name-wrapper">
+                                <input type="text" id="kabataanSignatureName" placeholder="" readonly class="kkf-sig-name-input">
+                            </div>
+                            
+                            <!-- Label below the underline -->
+                            <div class="kkf-sig-label-bottom">Name and Signature of Participant</div>
+                            
+                            <!-- Sign button (shown when no signature) -->
+                            <button type="button" class="kkf-sig-trigger-btn" id="kabataanSignatureTrigger" title="Sign here">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg>
+                                Sign
+                            </button>
+                            
+                            <!-- Hidden signature input -->
+                            <input type="hidden" id="kabataanSignature" value="">
+                        </div>
                     </div>
 
                 </div>
             </div>
         </div>
-        <div class="modal-footer kabataan-modal-footer">
+        <div class="modal-footer kabataan-modal-footer" style="display: flex; justify-content: flex-end; align-items: center;">
             <button type="button" class="btn primary-btn" id="kabataanSaveBtn">Save</button>
+
+</content>
+</invoke>
+<invoke name="strReplace">
+<parameter name="newStr">
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1027,7 +1057,6 @@
                     {{-- SIGNATURE --}}
                     <div class="kkf-sig-row">
                         <span class="kkf-view-val kkf-uline kkf-uline-sig" id="vSignature"></span>
-                        <label class="kkf-sig-label">Name and Signature of Participant</label>
                     </div>
 
             </div>
@@ -1059,6 +1088,37 @@
         <div class="kabataan-delete-footer">
             <button type="button" class="btn kabataan-cancel-btn" id="kabataanDeleteCancelBtn">Cancel</button>
             <button type="button" class="btn kabataan-confirm-delete-btn" id="kabataanDeleteConfirmBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Signature Pad Modal -->
+<div class="signature-pad-overlay" id="signaturePadOverlay" style="display:none;">
+    <div class="signature-pad-modal">
+        <div class="signature-pad-header">
+            <h3 class="signature-pad-title">✍️ Please Sign Here</h3>
+            <button type="button" class="signature-pad-close" id="signaturePadClose" aria-label="Close">×</button>
+        </div>
+        <div class="signature-pad-body">
+            <div class="signature-canvas-container">
+                <canvas id="signaturePadCanvas" class="signature-canvas"></canvas>
+                <div class="signature-canvas-placeholder" id="signatureCanvasPlaceholder">Sign here with your mouse or finger</div>
+            </div>
+        </div>
+        <div class="signature-pad-footer">
+            <button type="button" class="btn signature-btn-clear" id="signaturePadClear">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Clear
+            </button>
+            <button type="button" class="btn signature-btn-save" id="signaturePadSave">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Save Signature
+            </button>
         </div>
     </div>
 </div>
