@@ -482,8 +482,9 @@ function initializeCalendar() {
                 return;
             }
 
-            const ok = await showConfirm({ title: 'Edit Note', message: 'Edit this note?', confirmText: 'OK', cancelText: 'Cancel', confirmClass: 'confirm-edit', theme: 'edit' });
-            if (ok) { switchToEditMode(); titleInput.focus(); showToast('Edit successful'); }
+            switchToEditMode(); 
+            titleInput.focus(); 
+            showToast('Edit successful');
         }
 
         async function onDelete() {

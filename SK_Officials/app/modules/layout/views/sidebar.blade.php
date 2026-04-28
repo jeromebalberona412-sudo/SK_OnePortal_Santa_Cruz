@@ -5,7 +5,7 @@
             
             <div class="admin-avatar">
                 <!-- Admin Logo Image -->
-                <img src="{{ asset('images/logo.png') }}" alt="Admin Logo" class="admin-logo">
+                <img src="{{ asset('images/barangay_logo.png') }}" alt="Admin Logo" class="admin-logo">
             </div>
 
             <div class="admin-info">

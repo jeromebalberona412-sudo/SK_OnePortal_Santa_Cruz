@@ -16,8 +16,8 @@
             </button>
 
             <div class="logo">
-                <img src="{{ asset('images/logo.png') }}" 
-                     alt="SK Officials Logo" 
+                <img src="{{ asset('images/SK_OnePortal_logo.png') }}" 
+                     alt="SK OnePortal Logo" 
                      class="logo-img">
                 <span class="logo-text">SK Officials Portal</span>
             </div>
@@ -125,7 +125,7 @@
 
             <div class="user-menu">
                 <button class="user-menu-btn" id="userMenuToggle">
-                    <img src="{{ asset('images/logo.png') }}" 
+                    <img src="{{ asset('images/barangay_logo.png') }}" 
                          alt="User Avatar" 
                          class="user-avatar">
                     <span class="dropdown-arrow">&#9662;</span>
@@ -135,7 +135,7 @@
 
                     <!-- User Card -->
                     <div class="dropdown-user-card">
-                        <img src="{{ asset('images/logo.png') }}" alt="User Avatar" class="dropdown-user-avatar">
+                        <img src="{{ asset('images/barangay_logo.png') }}" alt="User Avatar" class="dropdown-user-avatar">
                         <div class="dropdown-user-info">
                             <span class="dropdown-user-name">SK Officials User</span>
                             <span class="dropdown-user-role">Calios</span>

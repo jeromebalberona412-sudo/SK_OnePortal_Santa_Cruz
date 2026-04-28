@@ -73,7 +73,7 @@
         </div>
 
         <section class="page-filters-section">
-            <!-- ── Action Bar: Search + Add Program ── -->
+            <!-- ── Action Bar: Search ── -->
             <div class="table-action-bar">
                 <div class="abyip-search-inline">
                     <label for="programSearch" class="abyip-sr-only">Search programs</label>
@@ -84,7 +84,6 @@
                         <input type="text" id="programSearch" class="abyip-filter-search-inline" placeholder="Search by title or objective" autocomplete="off">
                     </div>
                 </div>
-                <button type="button" class="btn primary-btn" id="addProgramBtn">Add Program</button>
             </div>
             <div class="filters-row">
                 <div class="filter-item">
