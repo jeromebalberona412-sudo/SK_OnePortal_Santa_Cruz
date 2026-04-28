@@ -288,7 +288,7 @@ body {
 
 @media (max-width: 768px) {
     .kk-table {
-        min-width: 700px;
+        min-width: 900px;
     }
 }
 
@@ -347,6 +347,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     padding-bottom: 4px;
+    white-space: nowrap;
 }
 
 .column-hint {
@@ -1393,8 +1394,9 @@ body {
 /* Pagination Styles */
 .pagination-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    gap: 40px;
     margin-top: 16px;
     padding: 12px 16px;
     background: #f9fafb;
@@ -2880,7 +2882,7 @@ body {
 
 /* ── Compare with Census Button ───────────────────────────────────── */
 .kk-compare-btn {
-    background: #2c2c3e;
+    background: #16a34a;
     color: #ffffff;
     border: none;
     border-radius: 10px;
@@ -2892,13 +2894,14 @@ body {
     align-items: center;
     white-space: nowrap;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(44,44,62,0.25);
+    box-shadow: 0 4px 12px rgba(22,163,74,0.30);
     flex-shrink: 0;
+    text-decoration: none;
 }
 .kk-compare-btn:hover {
-    background: #3a3a4a;
+    background: #15803d;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(44,44,62,0.35);
+    box-shadow: 0 6px 16px rgba(22,163,74,0.40);
 }
 
 /* ── Duplicate status pill ─────────────────────────────────────────── */
@@ -3359,4 +3362,191 @@ body {
 .kk-inline-cs-error {
     margin-top: 4px;
     padding: 0 10px 6px;
+}
+
+/* ── Duplicate Alert Panel ────────────────────────────────────────── */
+.kk-duplicate-panel {
+    margin-top: 16px;
+    border: 2px solid #c4b5fd;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.kk-dup-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ede9fe;
+    color: #6d28d9;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 16px;
+    flex-wrap: wrap;
+}
+.kk-dup-ref {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 500;
+    color: #7c3aed;
+    background: #ddd6fe;
+    border-radius: 6px;
+    padding: 2px 8px;
+}
+.kk-dup-body {
+    padding: 12px 16px 14px;
+    background: #faf5ff;
+}
+.kk-dup-intro {
+    font-size: 12px;
+    color: #4b5563;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+.kk-dup-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.kk-dup-item {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 4px 10px;
+    background: #fff;
+    border: 1px solid #ddd6fe;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+.kk-dup-field {
+    font-weight: 700;
+    color: #6d28d9;
+    grid-row: 1;
+    grid-column: 1;
+}
+.kk-dup-value {
+    font-weight: 600;
+    color: #111827;
+    grid-row: 1;
+    grid-column: 2;
+}
+.kk-dup-note {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* ── Inline duplicate field badges ───────────────────────────────── */
+.kk-inline-dup-value {
+    display: block;
+    font-weight: 600;
+    color: #111827;
+    font-size: 13px;
+    padding-bottom: 2px;
+    border-bottom: 2px solid #c4b5fd;
+}
+.kk-inline-dup-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #6d28d9;
+    background: #ede9fe;
+    border-radius: 4px;
+    padding: 2px 6px;
+    line-height: 1.4;
+    white-space: normal;
+    word-break: break-word;
+    max-width: 100%;
+    margin-top: 2px;
+}
+.kk-inline-dup-email-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #b91c1c;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 4px;
+    padding: 2px 6px;
+    line-height: 1.4;
+    white-space: normal;
+    word-break: break-word;
+    max-width: 100%;
+    margin-top: 2px;
+}
+
+/* ── Inline correct state (after user types the right value) ─────── */
+.kk-inline-edit-input.kk-inline-edit-correct {
+    border-bottom: 2px solid #16a34a;
+    background: #f0fdf4;
+    color: #15803d;
+    font-weight: 700;
+}
+.kk-inline-correct-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #15803d;
+    background: #dcfce7;
+    border-radius: 4px;
+    padding: 2px 6px;
+    line-height: 1.4;
+    margin-top: 2px;
+}
+
+/* ── Duplicate link badge in table ───────────────────────────────── */
+.kk-dup-link-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #6d28d9;
+    background: #ede9fe;
+    border: 1px solid #c4b5fd;
+    border-radius: 4px;
+    padding: 2px 6px;
+    white-space: nowrap;
+    cursor: default;
+}
+.kk-dup-link-badge--original {
+    color: #0369a1;
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+}
+
+/* ── Right-side suggestion for Wrong Credential fields ──────────── */
+.kk-inline-field-with-suggestion {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+}
+.kk-inline-suggestion {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 500;
+    padding: 3px 8px;
+    background: #f9fafb;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+    align-self: flex-start;
+    white-space: nowrap;
+}
+.kk-inline-suggestion strong {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+/* ── Respondent # column ─────────────────────────────────────────── */
+.kk-respondent-cell {
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    min-width: 110px;
 }

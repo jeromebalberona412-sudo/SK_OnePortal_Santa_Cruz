@@ -121,7 +121,7 @@ function initializeCensusModule() {
             const pa  = c.presentAddress    || {};
             const pra = c.provincialAddress || {};
             const ea  = c.educationalAttainment || {};
-            const v   = (val) => val ?? '—';
+        const v   = (val) => (val && val !== 'N/A') ? val : '—';
             tr.innerHTML = `
                 <td>${v(c.formNo)}</td>
                 <td>${v(c.controlNumber)}</td>
@@ -432,7 +432,7 @@ function initializeCensusModule() {
         const previewBody = document.getElementById('censusPreviewBody');
         if (!previewBody) return;
 
-        const v = (val) => (val !== undefined && val !== null && val !== '') ? val : '—';
+        const v = (val) => (val !== undefined && val !== null && val !== '' && val !== 'N/A') ? val : '—';
 
         // Build one row per record; sub-arrays (occupants, refs, vehicles, employment) are joined with line breaks
         const rows = data.map(record => {
@@ -603,11 +603,29 @@ function initializeCensusModule() {
         });
     }
 
-    // Wire toggle button for preview modal
+    // View Census
+    if (tbody) {
+        tbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action="view"]');
+            if (!btn) return;
+            const id = parseInt(btn.getAttribute('data-id') || '', 10);
+            if (Number.isNaN(id)) return;
+            const census = censusData.find((c) => c.id === id);
+            if (!census) return;
+            
+            activeCensusId = id;
+            populateViewModal(census);
+            resetModalMaximize(viewModal);
+            openModal(viewModal);
+        });
+    }
+
+    // Wire toggle buttons after modals exist in DOM
+    wireModalToggle(viewModal);
     wireModalToggle(previewModal);
 
     // Close modals
-    [uploadModal, previewModal].forEach((modal) => {
+    [uploadModal, previewModal, viewModal].forEach((modal) => {
         if (!modal) return;
         modal.addEventListener('click', (e) => {
             const target = e.target;

@@ -73,7 +73,7 @@ function initializeKKProfilingRequestsUI() {
                 const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
                 if (!match) return false;
             }
-            if (currentBarangayFilter && r.barangay !== currentBarangayFilter) return false;
+            if (currentBarangayFilter && r.purokZone !== currentBarangayFilter) return false;
             if (currentVoterFilter && r.registeredVoter !== currentVoterFilter) return false;
             return true;
         });
@@ -87,7 +87,7 @@ function initializeKKProfilingRequestsUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 6;
+            td.colSpan = 8;
             td.textContent = 'No KK Profiling requests for this status.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -97,18 +97,56 @@ function initializeKKProfilingRequestsUI() {
 
         paginatedData.forEach((r) => {
             const tr = document.createElement('tr');
-            const statusClass = r.status === 'Valid' ? 'approved'
+            const statusClass = r.status === 'Not in Census' ? 'approved'
                 : r.status === 'Duplicate' ? 'duplicate'
-                : r.status === 'Incomplete' ? 'pending'
                 : r.status === 'Wrong Credential' ? 'rejected'
                 : r.status === 'New Applicant' ? 'new-applicant'
                 : 'pending';
             const fullName = formatFullName(r);
             const voterStatus = r.registeredVoter || 'No';
+            const purokZone = r.purokZone || '—';
+
+            // ── Duplicate linking: find the original record this duplicates ──
+            let dupLinkBadge = '';
+            if (r.status === 'Duplicate') {
+                const refError = (r.censusErrors || []).find(e => e.field === 'respondentNumber');
+                const refId = refError ? refError.census : null;
+                if (refId) {
+                    const linked = requests.find(x => x.respondentNumber === refId);
+                    const linkedName = linked ? formatFullName(linked) : refId;
+                    const linkedStatus = linked ? linked.status : '';
+                    const badgeLabel = linkedStatus === 'Duplicate'
+                        ? `Linked Duplicate · ${refId}`
+                        : `Duplicate (KK) · Same as ${refId}`;
+                    dupLinkBadge = `<div class="kk-dup-link-badge" title="Linked with ${refId}: ${linkedName}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        ${badgeLabel}
+                    </div>`;
+                }
+            }
+            // Also mark non-Duplicate records that have a duplicate pointing to them
+            if (!dupLinkBadge) {
+                const dupOfThis = requests.find(x =>
+                    x.status === 'Duplicate' &&
+                    (x.censusErrors || []).some(e => e.field === 'respondentNumber' && e.census === r.respondentNumber)
+                );
+                if (dupOfThis) {
+                    dupLinkBadge = `<div class="kk-dup-link-badge kk-dup-link-badge--original" title="Has duplicate submission: ${dupOfThis.respondentNumber}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        Duplicate (KK) · Duplicated by ${dupOfThis.respondentNumber}
+                    </div>`;
+                }
+            }
+
             tr.innerHTML = `
-                <td class="kk-fullname-cell"><span class="kk-fullname">${fullName}</span></td>
+                <td class="kk-respondent-cell">${r.respondentNumber || '—'}</td>
+                <td class="kk-fullname-cell">
+                    <span class="kk-fullname">${fullName}</span>
+                    ${dupLinkBadge}
+                </td>
                 <td>${r.age}</td>
                 <td>${r.barangay}</td>
+                <td>${purokZone}</td>
                 <td>${voterStatus}</td>
                 <td><span class="kk-status-pill ${statusClass}">${r.status}</span></td>
                 <td><div class="kk-actions"><button type="button" class="kk-btn-view" data-action="view" data-id="${r.id}">View</button></div></td>
@@ -199,7 +237,8 @@ function initializeKKProfilingRequestsUI() {
         const errors = request.censusErrors || [];
         const errorMap = {};
         errors.forEach((e, idx) => { errorMap[e.field] = { ...e, idx }; });
-        const isEditable = (status === 'Wrong Credential' || status === 'Incomplete') && errors.length > 0;
+        const isEditable = (status === 'Wrong Credential') && errors.length > 0;
+        const isDuplicate = (status === 'Duplicate') && errors.length > 0;
 
         // Track which fields have been corrected (persists across re-renders via closure on request object)
         if (!request._fixedFields) request._fixedFields = new Set();
@@ -211,39 +250,50 @@ function initializeKKProfilingRequestsUI() {
             if (el) el.textContent = val ?? '';
         };
 
-        // Helper: render a field — either plain text or editable inline input if it has an error
+        // Helper: render a field — either plain text, editable inline (Wrong Credential), or duplicate badge
         const setField = (id, fieldKey, val) => {
             const el = document.getElementById(id);
             if (!el) return;
 
             if (isEditable && errorMap[fieldKey] && !skipErrorPanel) {
+                // ── Wrong Credential: editable inline input with right-side suggestion ──
                 const e = errorMap[fieldKey];
                 const isFixed = fixedFields.has(fieldKey);
 
                 if (isFixed) {
-                    // Show corrected value as plain text with green underline
-                    el.innerHTML = '';
-                    el.className = el.className.replace(/\s*kk-field-error\s*/g, '') + ' kk-field-corrected';
-                    el.textContent = e.census;
+                    // Show corrected input still visible but green — user can see what they typed + suggestion
+                    el.innerHTML = `<span class="kk-inline-field-wrap kk-inline-field-with-suggestion">
+                        <input
+                            type="text"
+                            class="kk-inline-edit-input kk-inline-edit-correct"
+                            data-field="${fieldKey}"
+                            data-census="${(e.census || '').replace(/"/g, '&quot;')}"
+                            value="${(e.census || '').replace(/"/g, '&quot;')}"
+                            autocomplete="off"
+                            spellcheck="false"
+                            readonly
+                        />
+                        <span class="kk-inline-suggestion">Should be: <strong>${e.census}</strong></span>
+                        <span class="kk-inline-correct-badge">✓ Correct!</span>
+                    </span>`;
+                    el.className = el.className.replace(/\s*kk-field-error\s*/g, '').replace(/\s*kk-field-corrected\s*/g, '');
                 } else {
-                    // Render editable input with red error state
                     const submitted = e.submitted || '';
-                    el.innerHTML = `<span class="kk-inline-field-wrap">
+                    el.innerHTML = `<span class="kk-inline-field-wrap kk-inline-field-with-suggestion">
                         <input
                             type="text"
                             class="kk-inline-edit-input kk-inline-edit-error"
                             data-field="${fieldKey}"
                             data-census="${(e.census || '').replace(/"/g, '&quot;')}"
                             value="${submitted.replace(/"/g, '&quot;')}"
-                            placeholder="${e.census ? 'Should be: ' + e.census : 'Enter value…'}"
                             autocomplete="off"
                             spellcheck="false"
                         />
+                        <span class="kk-inline-suggestion">Should be: <strong>${e.census}</strong></span>
                         <span class="kk-inline-error-badge" title="${e.note}">✕ ${e.note}</span>
                     </span>`;
                     el.className = el.className.replace(/\s*kk-field-corrected\s*/g, '');
 
-                    // Wire input listener
                     const input = el.querySelector('.kk-inline-edit-input');
                     if (input) {
                         input.addEventListener('input', () => {
@@ -252,16 +302,31 @@ function initializeKKProfilingRequestsUI() {
                             if (typed === census && census !== '') {
                                 fixedFields.add(fieldKey);
                                 request[fieldKey] = e.census;
-                                // Re-render just this field as corrected
                                 setField(id, fieldKey, e.census);
-                                // Update the save button visibility
                                 updateInlineSaveBtn(request);
                             }
                         });
                     }
                 }
+            } else if (isDuplicate && errorMap[fieldKey] && !skipErrorPanel) {
+                // ── Duplicate: only show inline badge on name fields (lastName, firstName, middleName, suffix) ──
+                const nameFields = ['lastName', 'firstName', 'middleName', 'suffix'];
+                if (nameFields.includes(fieldKey)) {
+                    const e = errorMap[fieldKey];
+                    const displayVal = val ?? '';
+                    el.innerHTML = `<span class="kk-inline-field-wrap">
+                        <span class="kk-inline-dup-value">${displayVal}</span>
+                        <span class="kk-inline-error-badge kk-inline-dup-badge">⚠ ${e.note}</span>
+                    </span>`;
+                    el.className = el.className.replace(/\s*kk-field-error\s*/g, '').replace(/\s*kk-field-corrected\s*/g, '');
+                } else {
+                    // All other fields: plain text, no badge
+                    el.innerHTML = '';
+                    el.className = el.className.replace(/\s*kk-field-error\s*/g, '').replace(/\s*kk-field-corrected\s*/g, '');
+                    el.textContent = val ?? '';
+                }
             } else {
-                // Plain text display
+                // ── Plain text display ──
                 el.innerHTML = '';
                 el.className = el.className.replace(/\s*kk-field-error\s*/g, '').replace(/\s*kk-field-corrected\s*/g, '');
                 el.textContent = val ?? '';
@@ -281,7 +346,7 @@ function initializeKKProfilingRequestsUI() {
         setField('kkViewLastName',      'lastName',      lastName      || '—');
         setField('kkViewFirstName',     'firstName',     firstName     || '—');
         setField('kkViewMiddleName',    'middleName',    middleName    || '—');
-        setField('kkViewSuffix',        'suffix',        suffix        || '—');
+        setField('kkViewSuffix',        'suffix',        suffix        || 'None');
         setVal('kkViewRegion',   region   || '—');
         setVal('kkViewProvince', province || '—');
         setVal('kkViewCity',     city     || '—');
@@ -347,8 +412,13 @@ function initializeKKProfilingRequestsUI() {
         const rejectionWrap = document.getElementById('kkViewRejectionWrap');
         const rejectionText = document.getElementById('kkViewRejectionText');
         if (rejectionWrap && rejectionText) {
-            if (rejectionReason) { rejectionWrap.style.display = 'block'; rejectionText.textContent = rejectionReason; }
-            else { rejectionWrap.style.display = 'none'; }
+            // Never show rejection reason for Wrong Credential — it's shown inline on the form
+            if (rejectionReason && status !== 'Wrong Credential') {
+                rejectionWrap.style.display = 'block';
+                rejectionText.textContent = rejectionReason;
+            } else {
+                rejectionWrap.style.display = 'none';
+            }
         }
 
         // Show/hide inline save button
@@ -357,13 +427,17 @@ function initializeKKProfilingRequestsUI() {
         // Hide the old bottom error panel — errors are now inline on the form
         const errorsWrap = document.getElementById('kkViewCensusErrorsWrap');
         if (errorsWrap) errorsWrap.style.display = 'none';
+
+        // Remove any leftover bottom duplicate panel (errors are now inline)
+        const oldDupPanel = document.getElementById('kkViewDuplicatePanel');
+        if (oldDupPanel) oldDupPanel.remove();
     }
 
     // Renders or updates the inline "Save Corrections" button inside the form
     function updateInlineSaveBtn(request) {
         const errors = request.censusErrors || [];
         const fixedFields = request._fixedFields || new Set();
-        const isEditable = (request.status === 'Wrong Credential' || request.status === 'Incomplete') && errors.length > 0;
+        const isEditable = (request.status === 'Wrong Credential') && errors.length > 0;
 
         let saveRow = document.getElementById('kkInlineSaveRow');
 
@@ -383,17 +457,17 @@ function initializeKKProfilingRequestsUI() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     All fields corrected — record matches census data.
                     <button type="button" class="kk-inline-save-btn" id="kkInlineSaveBtn">
-                        Save &amp; Mark as Valid
+                        Save &amp; Mark as Not in Census
                     </button>
                 </div>`;
             const saveBtn = document.getElementById('kkInlineSaveBtn');
             if (saveBtn) {
                 saveBtn.addEventListener('click', () => {
-                    request.status = 'Valid';
+                    request.status = 'Not in Census';
                     request.censusErrors = [];
                     request._fixedFields = new Set();
                     renderTable();
-                    showToast('Corrections saved — record marked as Valid', 'success');
+                    showToast('Corrections saved — record marked as Not in Census', 'success');
                     closeAllModals();
                 });
             }
@@ -491,7 +565,14 @@ function initializeKKProfilingRequestsUI() {
         viewApproveBtn.addEventListener('click', () => {
             if (activeRequestId) {
                 const request = requests.find(r => r.id === activeRequestId);
-                if (request) { request.status = 'Approved'; renderTable(); closeAllModals(); showSuccessModal(); }
+                if (request) {
+                    const idx = requests.indexOf(request);
+                    if (idx !== -1) requests.splice(idx, 1);
+                    closeAllModals();
+                    renderTable();
+                    updateStatCards();
+                    showToast('KK Profiling Request Approved Successfully', 'success');
+                }
             }
         });
     }
@@ -538,11 +619,12 @@ function initializeKKProfilingRequestsUI() {
             if (activeRequestId === null) { closeModal(approveModal); return; }
             const request = requests.find((r) => r.id === activeRequestId);
             if (!request) { closeModal(approveModal); return; }
-            request.status = 'Approved';
-            request.rejectionReason = '';
+            const idx = requests.indexOf(request);
+            if (idx !== -1) requests.splice(idx, 1);
             closeModal(approveModal);
             renderTable();
-            showSuccessModal();
+            updateStatCards();
+            showToast('KK Profiling Request Approved Successfully', 'success');
         });
     }
 
@@ -577,15 +659,14 @@ function initializeKKProfilingRequestsUI() {
     }
 
     function updateStatCards() {
-        const valid      = requests.filter(r => r.status === 'Valid').length;
+        const valid      = requests.filter(r => r.status === 'Not in Census').length;
         const duplicate  = requests.filter(r => r.status === 'Duplicate').length;
-        const incomplete = requests.filter(r => r.status === 'Incomplete').length;
         const wrong      = requests.filter(r => r.status === 'Wrong Credential').length;
         const newApp     = requests.filter(r => r.status === 'New Applicant').length;
         const total      = requests.length;
         const el = (id) => document.getElementById(id);
         if (el('kkStatApproved'))  el('kkStatApproved').textContent  = valid;
-        if (el('kkStatPending'))   el('kkStatPending').textContent   = duplicate + incomplete + newApp;
+        if (el('kkStatPending'))   el('kkStatPending').textContent   = duplicate + newApp;
         if (el('kkStatRejected'))  el('kkStatRejected').textContent  = wrong;
         if (el('kkStatTotal'))     el('kkStatTotal').textContent     = total;
     }

@@ -90,20 +90,16 @@
                     <label for="kkStatusFilter" class="filter-label">Status</label>
                     <select id="kkStatusFilter" class="filter-select" onchange="document.querySelectorAll('.status-tab').forEach(t=>t.classList.remove('active')); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.classList.add('active'); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.click();">
                         <option value="All">All</option>
-                        <option value="Valid">Valid Records</option>
+                        <option value="Not in Census">Not in Census</option>
                         <option value="Duplicate">Duplicate Records</option>
-                        <option value="Incomplete">Incomplete Records</option>
                         <option value="Wrong Credential">Wrong Credential</option>
-                        <option value="New Applicant">New Applicant (Not in Census)</option>
                     </select>
                     {{-- Hidden tabs still used by JS logic --}}
                     <div class="status-tabs d-none" id="kkStatusTabs" style="display:none!important;">
                         <button type="button" class="status-tab active" data-status-filter="All">All</button>
-                        <button type="button" class="status-tab" data-status-filter="Valid">Valid Records</button>
+                        <button type="button" class="status-tab" data-status-filter="Not in Census">Not in Census</button>
                         <button type="button" class="status-tab" data-status-filter="Duplicate">Duplicate Records</button>
-                        <button type="button" class="status-tab" data-status-filter="Incomplete">Incomplete Records</button>
                         <button type="button" class="status-tab" data-status-filter="Wrong Credential">Wrong Credential</button>
-                        <button type="button" class="status-tab" data-status-filter="New Applicant">New Applicant</button>
                     </div>
                 </div>
                 <div class="filter-item">
@@ -116,9 +112,9 @@
                         <option value="LUPANG PANGAKO">LUPANG PANGAKO</option>
                         <option value="DAMAYAN">DAMAYAN</option>
                         <option value="MARCELO">MARCELO</option>
-                        <option value="BIGAYANVILLA ROSA">BIGAYANVILLA ROSA</option>
-                        <option value="PHASE3">PHASE3</option>
-                        <option value="BIGAYANSANLUIS">BIGAYANSANLUIS</option>
+                        <option value="BIGAYAN VILLA ROSA">BIGAYAN VILLA ROSA</option>
+                        <option value="PHASE 3">PHASE 3</option>
+                        <option value="BIGAYAN SAN LUIS">BIGAYAN SAN LUIS</option>
                     </select>
                 </div>
                 <div class="filter-item">
@@ -142,12 +138,14 @@
                     <table class="kk-table">
                         <thead>
                             <tr>
+                                <th>Respondent #</th>
                                 <th>
                                     FULLNAME
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
                                 <th>Age</th>
                                 <th>Barangay</th>
+                                <th>Purok/Zone</th>
                                 <th>Registered Voter</th>
                                 <th>Status</th>
                                 <th class="col-actions">Actions</th>

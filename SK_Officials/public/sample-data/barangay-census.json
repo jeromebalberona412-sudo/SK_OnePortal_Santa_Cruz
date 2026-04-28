@@ -36,7 +36,7 @@
         "educationalAttainment": {
             "elementary": "Calios Elementary School, Calios, Santa Cruz, Laguna",
             "highSchool": "Santa Cruz National High School, Santa Cruz, Laguna",
-            "vocational": "N/A",
+            "vocational": "",
             "college": "Laguna State Polytechnic University - BS Education (Ongoing)"
         },
         "employmentRecords": [],
@@ -88,7 +88,7 @@
         "educationalAttainment": {
             "elementary": "Pagsanjan Elementary School, Pagsanjan, Laguna",
             "highSchool": "Pagsanjan National High School, Pagsanjan, Laguna",
-            "vocational": "N/A",
+            "vocational": "",
             "college": "Laguna State Polytechnic University - BS Nursing (Ongoing)"
         },
         "employmentRecords": [],
@@ -136,7 +136,7 @@
         "educationalAttainment": {
             "elementary": "Calios Elementary School, Calios, Santa Cruz, Laguna",
             "highSchool": "Santa Cruz National High School, Santa Cruz, Laguna",
-            "vocational": "N/A",
+            "vocational": "",
             "college": "Laguna State Polytechnic University - BS Information Technology"
         },
         "employmentRecords": [
@@ -191,8 +191,8 @@
         "educationalAttainment": {
             "elementary": "Calios Elementary School, Calios, Santa Cruz, Laguna",
             "highSchool": "Santa Cruz National High School, Santa Cruz, Laguna",
-            "vocational": "N/A",
-            "college": "N/A"
+            "vocational": "",
+            "college": ""
         },
         "employmentRecords": [],
         "houseOccupants": [
@@ -242,8 +242,8 @@
         "educationalAttainment": {
             "elementary": "Lumban Elementary School, Lumban, Laguna",
             "highSchool": "Lumban National High School, Lumban, Laguna",
-            "vocational": "N/A",
-            "college": "N/A"
+            "vocational": "",
+            "college": ""
         },
         "employmentRecords": [
             { "duration": "2023-Present", "company": "Bautista Sari-Sari Store", "address": "Purok 5, Calios, Santa Cruz, Laguna" }
