@@ -1,0 +1,722 @@
+/* ═══════════════════════════════════════════════
+   KK PROFILING — Matches SK Officials Kabataan Form Layout
+   ═══════════════════════════════════════════════ */
+
+:root {
+    --nav-h: 68px;
+    --brand: #0450a8;
+}
+
+/* ── PAGE ── */
+.kkp-main {
+    padding-top: calc(var(--nav-h) + 24px);
+    padding-bottom: 48px;
+    min-height: 100vh;
+    background: #e8ecf0;
+}
+
+.kkp-page-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* ── BACK LINK ── */
+.kkp-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color 0.15s;
+}
+.kkp-back-link svg { width: 14px; height: 14px; }
+.kkp-back-link:hover { color: #003070; }
+
+/* ── ALERT ── */
+.kkp-alert {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 6px;
+    font-size: 13px; font-weight: 500;
+    margin-bottom: 14px;
+}
+.kkp-alert svg { width: 18px; height: 18px; flex-shrink: 0; }
+.kkp-alert-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+
+/* ── PAPER CARD ── */
+.kkp-paper {
+    background: #fff;
+    border: 1px solid #b0b8c1;
+    border-radius: 6px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    padding: 20px 24px 28px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 12px;
+    color: #111;
+}
+
+/* ── FORM HEADER ── */
+.kkp-form-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 2px solid #111;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+
+.kkp-form-title-col { flex: 1; }
+
+.kkp-form-main-title {
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #111;
+    line-height: 1.2;
+}
+
+.kkp-form-header-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.kkp-hdr-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kkp-hdr-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #111;
+    white-space: nowrap;
+}
+
+.kkp-hdr-input {
+    border: none;
+    border-bottom: 1px solid #555;
+    background: transparent;
+    font-size: 11px;
+    color: #111;
+    padding: 1px 4px;
+    width: 120px;
+    outline: none;
+}
+
+.kkp-form-logo { flex-shrink: 0; }
+.kkp-form-logo img {
+    width: 50px; height: 50px;
+    object-fit: contain; border-radius: 50%;
+}
+
+/* ── NOTICE BOX ── */
+.kkp-notice-box {
+    border: 2px solid #111;
+    background: #e8e8e8;
+    padding: 8px 10px;
+    margin: 8px 0;
+}
+
+.kkp-notice-title {
+    font-size: 11px;
+    font-weight: 900;
+    color: #111;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    text-decoration: underline;
+}
+
+.kkp-notice-body {
+    font-size: 10px;
+    color: #111;
+    line-height: 1.5;
+    margin-bottom: 6px;
+    text-align: justify;
+}
+
+.kkp-notice-confidential {
+    font-size: 10px;
+    font-weight: 900;
+    color: #111;
+    text-align: center;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+/* ── SECTION HEADING ── */
+.kkp-section-heading {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #111;
+    border-bottom: 1.5px solid #111;
+    padding-bottom: 2px;
+    margin: 8px 0 5px;
+}
+
+/* ── ROW LABEL ── */
+.kkp-row-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 2px;
+}
+
+/* ── UNDERLINE INPUT ── */
+.kkp-uline {
+    display: block;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #555;
+    background: transparent;
+    font-size: 12px;
+    color: #111;
+    padding: 2px 2px 1px;
+    outline: none;
+    border-radius: 0;
+    transition: border-bottom-color 0.15s;
+    font-family: inherit;
+}
+.kkp-uline:focus { border-bottom-color: #2c2c3e; background: rgba(44,44,62,0.03); }
+.kkp-uline.kkp-readonly { color: #555; }
+
+.kkp-uline-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+    background-size: 12px;
+    padding-right: 18px;
+    cursor: pointer;
+}
+
+.kkp-uline-short { width: 52px; }
+.kkp-uline-med   { width: 140px; }
+.kkp-uline-fb    { flex: 1; min-width: 0; }
+
+/* ── COLUMN LABEL ── */
+.kkp-col-label {
+    display: block;
+    font-size: 9.5px;
+    color: #555;
+    text-align: center;
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+/* ── NAME ROW: 4 columns ── */
+.kkp-name-row {
+    display: grid;
+    grid-template-columns: 3fr 3fr 3fr 1.2fr;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.kkp-name-col { display: flex; flex-direction: column; }
+
+/* ── LOCATION ROW: 5 columns ── */
+.kkp-loc-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.kkp-loc-col { display: flex; flex-direction: column; }
+
+/* ── PERSONAL INFO ROW ── */
+.kkp-personal-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    margin: 6px 0;
+}
+
+.kkp-personal-left,
+.kkp-personal-right {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.kkp-sex-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kkp-sex-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #111;
+    white-space: nowrap;
+}
+
+.kkp-age-dob-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.kkp-inline-pair {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kkp-inline-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #111;
+    white-space: nowrap;
+}
+
+.kkp-hint {
+    font-size: 9px;
+    color: #777;
+    font-style: italic;
+}
+
+/* ── INSTRUCTION ── */
+.kkp-demo-instruction {
+    font-size: 10px;
+    color: #555;
+    margin-bottom: 5px;
+    font-style: italic;
+}
+
+/* ── DEMOGRAPHIC 2-COLUMN GRID ── */
+.kkp-demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.kkp-demo-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ── DEMO BLOCK: label sidebar + options ── */
+.kkp-demo-block {
+    border: 1px solid #bbb;
+    display: flex;
+    flex-direction: row;
+}
+
+.kkp-demo-block-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #111;
+    background: #d0d7de;
+    min-width: 80px;
+    max-width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4px 5px;
+    line-height: 1.3;
+    border-right: 1px solid #bbb;
+    flex-shrink: 0;
+}
+
+.kkp-demo-block-options {
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+}
+
+.kkp-demo-options-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 6px;
+}
+
+/* ── CHECKBOX LABEL ── */
+.kkp-chk-lbl {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #111;
+    cursor: pointer;
+    line-height: 1.4;
+    padding: 1px 0;
+}
+
+.kkp-chk-indent { padding-left: 14px; }
+
+/* ── SQUARE CHECKBOX — paper form style ── */
+.kkp-sq-chk {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid #555;
+    background: #fff;
+    flex-shrink: 0;
+    position: relative;
+    cursor: pointer;
+    border-radius: 1px;
+}
+
+.kkp-sq-chk:checked {
+    background: #fff;
+    border-color: #111;
+}
+
+.kkp-sq-chk:checked::after {
+    content: '✓';
+    position: absolute;
+    top: -2px;
+    left: 0px;
+    font-size: 11px;
+    font-weight: 900;
+    color: #111;
+    line-height: 1;
+}
+
+/* ── VOTER SECTION ── */
+.kkp-voter-section {
+    border: 1px solid #bbb;
+    display: flex;
+    flex-direction: column;
+}
+
+.kkp-voter-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid #ddd;
+}
+.kkp-voter-row:last-child { border-bottom: none; }
+
+.kkp-voter-cell {
+    padding: 4px 5px;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.kkp-voter-cell:last-child { border-right: none; }
+
+.kkp-voter-cell-label {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #111;
+    background: #e8e8e8;
+    margin: -4px -5px 3px -5px;
+    padding: 2px 5px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* ── FOOTER ROW: FB + Group Chat ── */
+.kkp-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-top: 1px solid #bbb;
+    padding-top: 5px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.kkp-footer-fb {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+}
+
+.kkp-footer-chat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+}
+
+/* ── THANK YOU ── */
+.kkp-thankyou {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: underline;
+    margin: 8px 0 14px;
+    color: #111;
+}
+
+/* ══════════════════════════════════════════
+   SIGNATURE SECTION — mirrors SK Officials
+══════════════════════════════════════════ */
+.kkp-sig-section {
+    margin-top: 16px;
+    padding-top: 10px;
+}
+
+.kkp-sig-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 280px;
+}
+
+/* Signature image overlay — floats above printed name */
+.kkp-sig-overlay {
+    position: absolute;
+    top: -28px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.kkp-sig-overlay-img {
+    max-width: 200px;
+    max-height: 40px;
+    object-fit: contain;
+}
+
+/* Printed name with underline */
+.kkp-sig-name-wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+}
+
+.kkp-sig-name-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1.5px solid #1a1a1a;
+    outline: none;
+    font-size: 12px;
+    font-family: inherit;
+    color: #111;
+    background: transparent;
+    padding: 4px 2px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+/* Label below */
+.kkp-sig-label-bottom {
+    font-size: 9px;
+    font-weight: 400;
+    color: #666;
+    margin-top: 4px;
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+/* Sign button */
+.kkp-sig-trigger-btn {
+    margin-top: 8px;
+    padding: 5px 12px;
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.15s, transform 0.15s;
+}
+.kkp-sig-trigger-btn:hover { background: #15803d; transform: translateY(-1px); }
+.kkp-sig-trigger-btn svg { width: 13px; height: 13px; }
+
+/* ── SUBMIT BUTTON ── */
+.kkp-submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    background: var(--brand);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 3px 10px rgba(4,80,168,0.25);
+    margin-top: 16px;
+    font-family: inherit;
+}
+.kkp-submit-btn svg { width: 18px; height: 18px; }
+.kkp-submit-btn:hover { background: #003070; transform: translateY(-1px); }
+
+/* ══════════════════════════════════════════
+   SIGNATURE PAD MODAL
+══════════════════════════════════════════ */
+.kkp-sig-pad-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.kkp-sig-pad-modal {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.kkp-sig-pad-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.kkp-sig-pad-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.kkp-sig-pad-close {
+    width: 32px; height: 32px;
+    border: none; background: #f1f3f5;
+    border-radius: 50%; font-size: 1.2rem;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    color: #555; transition: background 0.15s;
+}
+.kkp-sig-pad-close:hover { background: #e9ecef; color: #111; }
+
+.kkp-sig-pad-body { padding: 1.5rem; flex: 1; }
+
+.kkp-sig-canvas-wrap {
+    position: relative;
+    width: 100%;
+    border: 3px solid var(--brand);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.kkp-sig-canvas {
+    display: block;
+    width: 100%;
+    height: 260px;
+    cursor: crosshair;
+    touch-action: none;
+    border-radius: 6px;
+}
+
+.kkp-sig-canvas-placeholder {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #adb5bd;
+    font-size: 1rem;
+    pointer-events: none;
+    opacity: 0.7;
+    text-align: center;
+}
+
+.kkp-sig-pad-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-top: 2px solid #e9ecef;
+    gap: 1rem;
+}
+
+.kkp-sig-btn-clear,
+.kkp-sig-btn-save {
+    padding: 0.6rem 1.4rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 2px solid;
+    font-family: inherit;
+}
+
+.kkp-sig-btn-clear { background: #fff; color: #dc3545; border-color: #dc3545; }
+.kkp-sig-btn-clear:hover { background: #dc3545; color: #fff; transform: translateY(-1px); }
+
+.kkp-sig-btn-save {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    color: #fff; border-color: #198754;
+}
+.kkp-sig-btn-save:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(25,135,84,0.3); }
+
+/* ── FOOTER ── */
+.about-footer { background: #011a36; padding: 24px; }
+.about-footer-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 14px;
+}
+.footer-brand { display: flex; align-items: center; gap: 10px; }
+.footer-logo { width: 34px; height: 34px; border-radius: 50%; background: white; padding: 3px; }
+.footer-title { font-size: 13px; font-weight: 700; color: #fff; }
+.footer-sub   { font-size: 11px; color: rgba(255,255,255,0.5); }
+.footer-copy  { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+    .kkp-paper { padding: 14px 12px; }
+    .kkp-demo-grid { grid-template-columns: 1fr; }
+    .kkp-personal-row { grid-template-columns: 1fr; }
+    .kkp-name-row { grid-template-columns: 1fr 1fr; }
+    .kkp-loc-row { grid-template-columns: 1fr 1fr; }
+    .kkp-voter-row { grid-template-columns: 1fr; }
+    .about-footer-inner { flex-direction: column; text-align: center; }
+}
+
+@media (max-width: 480px) {
+    .kkp-page-wrap { padding: 0 8px; }
+    .kkp-sig-pad-footer { flex-direction: column; }
+    .kkp-sig-btn-clear, .kkp-sig-btn-save { width: 100%; justify-content: center; }
+    .kkp-sig-canvas { height: 180px; }
+}
