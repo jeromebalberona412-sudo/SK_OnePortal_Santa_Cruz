@@ -205,6 +205,14 @@ Route::middleware(['web'])->group(function () {
         return view('ScheduleKKProfiling::schedule-kkprofiling');
     })->name('schedule-kk-profiling');
 
+    // Schedule Programs
+    Route::get('/schedule-programs', function () {
+        if (!session('authenticated')) {
+            return redirect()->route('login');
+        }
+        return view('schedule_programs::schedule-programs');
+    })->name('schedule-programs');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 });

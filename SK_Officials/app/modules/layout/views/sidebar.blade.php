@@ -108,7 +108,7 @@
                 </li>
 
                 <!-- ── Planning & Development (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('abyip.*', 'committees', 'programs', 'budget-finance') ? 'open' : '' }}" id="planningDevDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('abyip.*', 'committees', 'programs', 'budget-finance', 'schedule-programs') ? 'open' : '' }}" id="planningDevDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="planningDevToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -148,6 +148,13 @@
                         <li class="nav-subitem">
                             <a href="{{ route('budget-finance') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('budget-finance') ? 'active' : '' }}">
                                 <span>Budget &amp; Finance</span>
+                            </a>
+                        </li>
+
+                        <!-- Schedule Programs -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('schedule-programs') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-programs') ? 'active' : '' }}">
+                                <span>Schedule Programs</span>
                             </a>
                         </li>
 

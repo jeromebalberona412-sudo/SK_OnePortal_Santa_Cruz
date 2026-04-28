@@ -59,6 +59,9 @@ export default defineConfig({
                 // Schedule KK Profiling module assets
                 'app/modules/ScheduleKKProfiling/assets/css/schedule-kkprofiling.css',
                 'app/modules/ScheduleKKProfiling/assets/js/schedule-kkprofiling.js',
+                // Schedule Programs module assets
+                'app/modules/schedule_programs/assets/css/schedule-programs.css',
+                'app/modules/schedule_programs/assets/js/schedule-programs.js',
                 // Layout module assets
                 'app/modules/layout/css/header.css',
                 'app/modules/layout/css/sidebar.css',
