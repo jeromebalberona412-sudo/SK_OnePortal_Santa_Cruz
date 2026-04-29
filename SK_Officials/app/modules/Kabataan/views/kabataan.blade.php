@@ -166,123 +166,6 @@
             </div>
         </div>
         <div class="modal-body kabataan-modal-body">
-            <!-- Add mode selector (only when adding) -->
-            <div class="kabataan-add-mode-selector" id="kabataanAddModeSelector" style="display:none;">
-                <p class="kabataan-mode-label">How do you want to add?</p>
-                <div class="kabataan-mode-buttons">
-                    <button type="button" class="btn kabataan-mode-btn active" data-mode="manual">Manual entry</button>
-                    <button type="button" class="btn kabataan-mode-btn" data-mode="bulk">Batch Upload</button>
-                </div>
-            </div>
-
-            <!-- Panel: Bulk upload -->
-            <div class="kabataan-mode-panel kabataan-panel-bulk" id="kabataanPanelBulk" style="display:none;">
-
-                {{-- Step 1: Upload Section --}}
-                <div class="kab-import-section" id="kabImportUploadSection">
-
-                    <p class="kab-import-section-desc">Upload Excel/CSV or paste from Google Sheets. First row must be headers. Supported: <strong>.xlsx, .xls, .csv</strong></p>
-
-                    <details class="kab-import-columns-toggle">
-                        <summary>Expected columns <span class="kab-import-col-count">(28)</span></summary>
-                        <p class="kab-import-columns-list">Last Name, First Name, Middle Name, Suffix, Region, Province, City/Municipality, Barangay, Purok/Zone, Sex, Age, Birthday, Email, Contact Number, Civil Status, Youth Classification, Youth Age Group, Work Status, Educational Background, Registered SK Voter, Registered National Voter, Voting History, Voting Frequency, Voting Reason, Attended KK Assembly, Facebook Account, Willing to Join Group Chat, Signature</p>
-                    </details>
-
-                    <div class="kab-import-upload-box" id="kabImportDropZone">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        <p class="kab-import-upload-text">Drop file here or <label for="kabataanFileInput" class="kab-import-choose-link">browse</label></p>
-                        <input type="file" id="kabataanFileInput" class="kab-import-file-hidden" accept=".csv,.xlsx,.xls">
-                        <p class="kab-import-file-name" id="kabImportFileName">No file selected</p>
-                    </div>
-
-                    <div class="kab-import-divider"><span>or</span></div>
-
-                    <textarea id="kabataanPasteInput" class="kab-import-paste-input" rows="3" placeholder="Paste from Google Sheets (CSV / tab-separated)…"></textarea>
-                    <button type="button" class="btn kab-import-parse-btn" id="kabataanImportPasteBtn">Parse &amp; Preview</button>
-
-                </div>
-
-                {{-- Step 2: Preview Table (hidden until data is parsed) --}}
-                <div class="kab-import-preview-section" id="kabImportPreviewSection" style="display:none;">
-                    <div class="kab-import-preview-header">
-                        <div class="kab-import-preview-title-row">
-                            <h4 class="kab-import-section-title">📊 Import Preview</h4>
-                            <div class="kab-import-summary" id="kabImportSummary">
-                                <span class="kab-import-badge kab-badge-valid" id="kabImportBadgeValid">✅ 0 Valid</span>
-                                <span class="kab-import-badge kab-badge-invalid" id="kabImportBadgeInvalid">⚠️ 0 Invalid</span>
-                                <span class="kab-import-badge kab-badge-total" id="kabImportBadgeTotal">📋 0 Total</span>
-                            </div>
-                        </div>
-                        <p class="kab-import-preview-note">Review all imported records below. Only <strong>Valid</strong> rows will be committed on Confirm Import.</p>
-                    </div>
-
-                    <div class="kab-import-table-wrap">
-                        <table class="kab-import-table" id="kabImportPreviewTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Status</th>
-                                    <th>Last Name</th>
-                                    <th>First Name</th>
-                                    <th>Middle Name</th>
-                                    <th>Suffix</th>
-                                    <th>Region</th>
-                                    <th>Province</th>
-                                    <th>City/Municipality</th>
-                                    <th>Barangay</th>
-                                    <th>Purok/Zone</th>
-                                    <th>Sex</th>
-                                    <th>Age</th>
-                                    <th>Birthday</th>
-                                    <th>Email</th>
-                                    <th>Contact #</th>
-                                    <th>Civil Status</th>
-                                    <th>Youth Age Group</th>
-                                    <th>Youth Classification</th>
-                                    <th>Educational Background</th>
-                                    <th>Work Status</th>
-                                    <th>SK Voter</th>
-                                    <th>Voted Last SK</th>
-                                    <th>Voting Frequency</th>
-                                    <th>Voting Reason</th>
-                                    <th>National Voter</th>
-                                    <th>KK Assembly</th>
-                                    <th>FB Account</th>
-                                    <th>Group Chat</th>
-                                    <th>Signature</th>
-                                    <th>Issues</th>
-                                </tr>
-                            </thead>
-                            <tbody id="kabImportPreviewBody">
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {{-- Pagination --}}
-                    <div class="kab-import-pagination" id="kabImportPagination">
-                        <span class="kab-import-page-info" id="kabImportPageInfo">Showing 1–10 of 0 rows</span>
-                        <div class="kab-import-page-controls">
-                            <button type="button" class="kab-import-page-btn" id="kabImportPrevBtn" disabled>Previous</button>
-                            <div class="kab-import-page-numbers" id="kabImportPageNumbers"></div>
-                            <button type="button" class="kab-import-page-btn" id="kabImportNextBtn" disabled>Next</button>
-                        </div>
-                    </div>
-
-                    {{-- Action Buttons --}}
-                    <div class="kab-import-actions">
-                        <button type="button" class="btn kab-import-cancel-btn" id="kabImportCancelBtn">
-                            ✕ Cancel
-                        </button>
-                        <button type="button" class="btn kab-import-error-btn" id="kabImportErrorBtn" style="display:none;">
-                            ⬇ Download Error Report
-                        </button>
-                        <button type="button" class="btn kab-import-confirm-btn" id="kabImportConfirmBtn">
-                            ✔ Confirm Import
-                        </button>
-                    </div>
-                </div>
-
-            </div>
 
             <!-- View-only: paper form layout -->
             <div class="kabataan-view-details" id="kabataanViewDetails" style="display:none;">
@@ -499,8 +382,7 @@
                     {{-- PAPER FORM HEADER --}}
                     <div class="kkf-header">
                         <div class="kkf-header-title-col">
-                            <div class="kkf-main-title">ADD ENTRY MANUALLY</div>
-                            <div class="kkf-main-hint">KK Survey Questionnaire &mdash; Fill in all applicable fields. Fields marked * are required.</div>
+                            <div class="kkf-main-title">KK Survey Questionnaire</div>
                         </div>
                         <div class="kkf-header-fields-col">
                             <div class="kkf-header-field">
@@ -546,6 +428,7 @@
                                 <option value="Sr.">Sr.</option>
                                 <option value="II">II</option>
                                 <option value="III">III</option>
+                                <option value="Other">Other</option>
                             </select>
                             <label for="kabataanSuffix" class="kkf-col-label">Suffix</label>
                         </div>
@@ -753,12 +636,13 @@
                         </div>
                     </div>
 
-                    {{-- FOOTER: FB + Group Chat --}}
+                    {{-- FOOTER: FB Account + Group Chat (with spacing) --}}
                     <div class="kkf-footer-row">
                         <div class="kkf-footer-fb">
                             <label class="kkf-inline-label" for="kabataanFacebookAccount">FB Account:</label>
                             <input type="text" id="kabataanFacebookAccount" class="kkf-uline kkf-uline-fb" placeholder=" ">
                         </div>
+                        <div class="kkf-footer-spacer"></div>
                         <div class="kkf-footer-chat">
                             <span class="kkf-inline-label">Willing to join the group chat?</span>
                             <label class="kkf-chk-lbl"><input type="checkbox" class="kkf-sq-chk" name="kabataanWillingToJoinGroupChat" value="Yes" onchange="kkfSingleCheck(this,'kabataanWillingToJoinGroupChat')"> Yes</label>
