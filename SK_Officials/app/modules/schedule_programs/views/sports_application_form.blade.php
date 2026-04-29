@@ -12,7 +12,7 @@
     ])
 </head>
 <body>
-
+//sample
 @include('layout::header')
 @include('layout::sidebar')
 

@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteModal = document.getElementById('deleteModal');
     const cancelDelete = document.getElementById('cancelDelete');
     const confirmDelete = document.getElementById('confirmDelete');
-
+//123
     let questionCounter = 0;
     let isMaximized = false;
     let questionToDelete = null;
