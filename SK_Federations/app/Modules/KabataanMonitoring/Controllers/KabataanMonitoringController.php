@@ -22,4 +22,12 @@ class KabataanMonitoringController extends Controller
             'kabataan' => $kabataan,
         ]);
     }
+
+    public function barangayDetail(Request $request, string $barangay): View
+    {
+        return view('kabataan_monitoring::barangay-detail', [
+            'user' => $request->user(),
+            'barangay' => urldecode($barangay),
+        ]);
+    }
 }

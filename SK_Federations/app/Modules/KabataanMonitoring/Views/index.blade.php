@@ -40,7 +40,7 @@
         </div>
         <div class="navbar-search">
             <i class="fas fa-search search-icon"></i>
-            <input id="km-search" type="text" placeholder="Search kabataan, barangay, or focus area..." aria-label="Search kabataan">
+            <input id="km-search" type="text" placeholder="Search name, barangay, or focus area..." aria-label="Search kabataan">
         </div>
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
@@ -58,16 +58,10 @@
                         <div class="dd-name">{{ $user->name ?? 'User' }}</div>
                         <div class="dd-email">{{ $user->email ?? '' }}</div>
                     </div>
-                    <a href="{{ route('profile') }}" class="dd-item" id="nav-profile-link">
-                        <i class="fas fa-user"></i> Profile
-                    </a>
-                    <a href="{{ route('password.request') }}" class="dd-item" id="nav-change-pw-link">
-                        <i class="fas fa-lock"></i> Change Password
-                    </a>
+                    <a href="{{ route('profile') }}" class="dd-item" id="nav-profile-link"><i class="fas fa-user"></i> Profile</a>
+                    <a href="{{ route('password.request') }}" class="dd-item" id="nav-change-pw-link"><i class="fas fa-lock"></i> Change Password</a>
                     <div class="dd-divider"></div>
-                    <button class="dd-item danger" onclick="showLogoutModal()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
+                    <button class="dd-item danger" onclick="showLogoutModal()"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
             </div>
         </div>
@@ -98,96 +92,91 @@
         </a>
         <nav class="sidebar-nav">
             <div class="menu-section-label">Main</div>
-            <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link">
-                <i class="fas fa-home"></i><span>Dashboard</span>
-            </a>
+            <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
             <div class="menu-section-label">Modules</div>
-            <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed">
-                <i class="fas fa-rss"></i><span>SK Community Feed</span>
-            </a>
-            <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring">
-                <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
-            </a>
-            <a href="{{ route('kabataan-monitoring') }}" class="menu-item active" data-tooltip="Kabataan Monitoring">
-                <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
-            </a>
+            <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed"><i class="fas fa-rss"></i><span>SK Community Feed</span></a>
+            <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring"><i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span></a>
+            <a href="{{ route('kabataan-monitoring') }}" class="menu-item active" data-tooltip="Kabataan Monitoring"><i class="fas fa-users"></i><span>Kabataan Monitoring</span></a>
             <div class="menu-divider"></div>
-            <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()">
-                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
-            </button>
+            <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
         </nav>
     </aside>
 
     <main class="main-content km-main" data-detail-base="{{ url('/kabataan-monitoring') }}">
         <div class="km-container">
+
             <section class="km-hero">
-                <div class="km-hero-overlay"></div>
                 <img src="{{ url('/modules/kabataan-monitoring/images/sk-fed-logo.png') }}" alt="SK Federation logo" class="km-hero-logo">
                 <div class="km-hero-copy">
                     <h1>Kabataan Monitoring</h1>
-                    <p>Prototype dashboard for tracking youth engagement, participation status, and support interventions across Santa Cruz barangays.</p>
+                    <p>KKK Profiling Masterlist — Track youth engagement, participation status, and support interventions across all barangays of Santa Cruz, Laguna.</p>
                 </div>
             </section>
 
-            <section class="km-kpi-grid" aria-label="Kabataan monitoring summary">
-                <article class="km-kpi-card">
-                    <div class="km-kpi-label">Total Kabataan Profiles</div>
-                    <div class="km-kpi-value" id="km-kpi-total">0</div>
-                    <div class="km-kpi-note">Prototype records currently monitored</div>
+            {{-- Summary Cards --}}
+            <section class="km-summary-grid" aria-label="Summary statistics">
+                <article class="km-summary-card km-summary-total">
+                    <div class="km-summary-icon"><i class="fas fa-users"></i></div>
+                    <div class="km-summary-body">
+                        <div class="km-summary-label">Total Kabataan</div>
+                        <div class="km-summary-value" id="km-kpi-total">0</div>
+                        <div class="km-summary-note">Registered youth profiles</div>
+                    </div>
                 </article>
-                <article class="km-kpi-card">
-                    <div class="km-kpi-label">High Participation</div>
-                    <div class="km-kpi-value" id="km-kpi-high">0</div>
-                    <div class="km-kpi-note">Youth with sustained attendance</div>
+                <article class="km-summary-card km-summary-active">
+                    <div class="km-summary-icon"><i class="fas fa-user-check"></i></div>
+                    <div class="km-summary-body">
+                        <div class="km-summary-label">Active Youth</div>
+                        <div class="km-summary-value" id="km-kpi-active">0</div>
+                        <div class="km-summary-note">High &amp; moderate engagement</div>
+                    </div>
                 </article>
-                <article class="km-kpi-card">
-                    <div class="km-kpi-label">Needs Follow-up</div>
-                    <div class="km-kpi-value" id="km-kpi-followup">0</div>
-                    <div class="km-kpi-note">Profiles tagged for intervention</div>
+                <article class="km-summary-card km-summary-inactive">
+                    <div class="km-summary-icon"><i class="fas fa-user-times"></i></div>
+                    <div class="km-summary-body">
+                        <div class="km-summary-label">Inactive Youth</div>
+                        <div class="km-summary-value" id="km-kpi-inactive">0</div>
+                        <div class="km-summary-note">Needs follow-up &amp; intervention</div>
+                    </div>
                 </article>
-                <article class="km-kpi-card">
-                    <div class="km-kpi-label">Avg. Engagement Score</div>
-                    <div class="km-kpi-value" id="km-kpi-score">0</div>
-                    <div class="km-kpi-note">Based on participation and attendance</div>
+                <article class="km-summary-card km-summary-rate">
+                    <div class="km-summary-icon"><i class="fas fa-chart-pie"></i></div>
+                    <div class="km-summary-body">
+                        <div class="km-summary-label">Participation Rate</div>
+                        <div class="km-summary-value" id="km-kpi-rate">0%</div>
+                        <div class="km-summary-note">Active vs total registered</div>
+                    </div>
                 </article>
             </section>
 
-            <section class="km-panel" aria-label="Kabataan by barangay">
-                <div class="km-panel-head">
-                    <h2>Barangay Kabataan Lists</h2>
-                    <p>Each barangay contains its kabataan roster. Use search and participation status filters, then open details per person.</p>
+            {{-- Masterlist --}}
+            <section class="km-masterlist-top">
+                <div class="km-masterlist-topbar">
+                    <div>
+                        <h2><i class="fas fa-list-alt" style="color:#213F99;margin-right:8px;"></i>KKK Profiling Masterlist</h2>
+                        <p>Youth profiling records grouped by barangay</p>
+                    </div>
+                    <div class="km-masterlist-actions">
+                        <button class="km-export-btn" onclick="exportCSV()">
+                            <i class="fas fa-download"></i> Export CSV
+                        </button>
+                    </div>
                 </div>
                 <div class="km-filter-row">
                     <div class="km-chip-row" id="km-status-filter">
                         <button type="button" class="km-chip active" data-status="all">All</button>
-                        <button type="button" class="km-chip" data-status="high">High</button>
+                        <button type="button" class="km-chip" data-status="active">Active</button>
                         <button type="button" class="km-chip" data-status="moderate">Moderate</button>
-                        <button type="button" class="km-chip" data-status="low">Low</button>
+                        <button type="button" class="km-chip" data-status="inactive">Inactive</button>
                     </div>
+                    <div class="km-result-count" id="km-result-count"></div>
                 </div>
-                <div id="km-card-grid" class="km-barangay-grid"></div>
-                <p id="km-empty" class="km-empty" hidden>No profiles match your current filters.</p>
             </section>
 
-            <section class="km-panel" aria-label="Monitoring notes">
-                <div class="km-panel-head">
-                    <h2>Monitoring Focus This Quarter</h2>
-                </div>
-                <div class="km-focus-grid">
-                    <article class="km-focus-card">
-                        <h3>School Continuity</h3>
-                        <p>Track enrolled youth with declining attendance and route them to peer tutoring and mentoring support.</p>
-                    </article>
-                    <article class="km-focus-card">
-                        <h3>Civic Participation</h3>
-                        <p>Identify barangays with low youth volunteer turnout and coordinate youth council activities.</p>
-                    </article>
-                    <article class="km-focus-card">
-                        <h3>Health and Wellness</h3>
-                        <p>Surface at-risk profiles and connect them to wellness caravans and local health outreach programs.</p>
-                    </article>
-                </div>
-            </section>
+            {{-- Per-barangay cards --}}
+            <div id="km-brgy-cards"></div>
+            <p id="km-empty" class="km-empty" hidden>No profiles match your current filters.</p>
+
         </div>
     </main>
 
@@ -198,24 +187,19 @@
     <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}"></script>
     <script>
         window.logoutRoute = "{{ route('logout') }}";
-        window.loginRoute = "{{ route('login') }}";
-        window.kmPageMode = 'index';
+        window.loginRoute  = "{{ route('login') }}";
+        window.kmPageMode  = 'index';
 
         document.getElementById('sidebar-profile-link')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Loading Profile', 'Please wait...');
+            e.preventDefault(); LoadingScreen.show('Loading Profile', 'Please wait...');
             setTimeout(() => { window.location.href = this.href; }, 300);
         });
-
         document.getElementById('nav-profile-link')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Loading Profile', 'Please wait...');
+            e.preventDefault(); LoadingScreen.show('Loading Profile', 'Please wait...');
             setTimeout(() => { window.location.href = this.href; }, 300);
         });
-
         document.getElementById('nav-change-pw-link')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Loading', 'Please wait...');
+            e.preventDefault(); LoadingScreen.show('Loading', 'Please wait...');
             setTimeout(() => { window.location.href = this.href; }, 300);
         });
     </script>
