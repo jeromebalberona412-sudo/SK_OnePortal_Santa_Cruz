@@ -124,6 +124,7 @@ function _validateField(input) {
     if (input.hasAttribute('required') && !val) { _showErr(input, 'This field is required'); return false; }
     if (input.type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { _showErr(input, 'Enter a valid email address'); return false; }
     if ((input.id === 'official_contact_number' || input.id === 'contact_number') && val && val.length < 10) { _showErr(input, 'Contact number must be at least 10 digits'); return false; }
+    if (input.tagName === 'SELECT' && input.hasAttribute('required') && (!val || val === '')) { _showErr(input, 'Please select an option'); return false; }
     _clearErr(input);
     if (val) input.classList.add('is-valid');
     return true;
@@ -509,11 +510,27 @@ document.addEventListener('DOMContentLoaded', function () {
     if (fedForm) {
         fedForm.addEventListener('submit', function (e) {
             e.preventDefault();
+            
+            // Validate all required fields first
+            let valid = true;
+            fedForm.querySelectorAll('[required]').forEach(el => { 
+                if (!_validateField(el)) valid = false; 
+            });
+            
+            if (!valid) { 
+                const first = fedForm.querySelector('.is-invalid'); 
+                if (first) first.focus(); 
+                return; 
+            }
+            
             clearAllErrors(fedForm);
+            fedForm.querySelectorAll('.validation-error').forEach(err => err.remove());
+            
             const formData = new FormData(fedForm);
             const payload = {};
             for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
             payload.term_status = payload.term_status || (payload.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
+            
             showLoadingOverlay();
             fetch('/accounts', {
                 method: 'POST',
@@ -524,12 +541,28 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(({ ok, data }) => {
                 hideLoadingOverlay();
                 if (!ok || !data.success) {
-                    if (data.errors) Object.keys(data.errors).forEach(f => showFieldError(fedForm, f, data.errors[f][0]));
-                    else alert('Failed to create account. Please try again.');
+                    if (data.errors) {
+                        let handledError = false;
+                        Object.keys(data.errors).forEach(f => {
+                            const input = fedForm.querySelector(`[name="${f}"]`);
+                            if (input) {
+                                _showErr(input, data.errors[f][0]);
+                                handledError = true;
+                            }
+                        });
+                        if (!handledError) {
+                            const firstError = Object.values(data.errors).flat()[0] || 'Failed to create account. Please try again.';
+                            alert(firstError);
+                        }
+                    } else {
+                        alert('Failed to create account. Please try again.');
+                    }
                     return;
                 }
                 closeAddAccountModal();
                 showAddSuccessModal();
+                // Reload page to show new account
+                setTimeout(() => window.location.reload(), 1000);
             })
             .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
         });
@@ -538,10 +571,19 @@ document.addEventListener('DOMContentLoaded', function () {
         ['first_name','last_name','middle_name'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
-            el.addEventListener('input', () => { el.value = el.value.replace(/[^a-zA-Z\s\-']/g, ''); });
+            el.addEventListener('input', () => { 
+                el.value = el.value.replace(/[^a-zA-Z\s\-']/g, ''); 
+                if (el.classList.contains('is-invalid')) _validateField(el);
+            });
         });
         const cFed = document.getElementById('contact_number');
-        if (cFed) cFed.addEventListener('input', () => { cFed.value = cFed.value.replace(/\D/g, ''); });
+        if (cFed) cFed.addEventListener('input', () => { 
+            cFed.value = cFed.value.replace(/\D/g, ''); 
+            if (cFed.classList.contains('is-invalid')) _validateField(cFed);
+        });
+        
+        // Blur validation for all required fields
+        fedForm.querySelectorAll('[required]').forEach(el => el.addEventListener('blur', () => _validateField(el)));
     }
 
     // ── Edit forms — backend submit ─────────────────────────

@@ -95,6 +95,15 @@
                 </a>
             </div>
 
+            <a href="{{ route('barangay-logos.index') }}" class="menu-item nav-link barangay-logos-btn" data-nav-key="barangay-logos" data-tooltip="SK Barangay Logos" aria-label="SK Barangay Logos">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span>SK Barangay Logos</span>
+            </a>
+
             <a href="{{ route('auditlogs.index') }}" class="menu-item nav-link auditlogs-btn" data-nav-key="audit-logs" data-tooltip="Audit Log" aria-label="Audit Log">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path>
@@ -150,6 +159,32 @@
                     </svg>
                     <span>Deleted SK Officials</span>
                 </a>
+                <div class="submenu-section-label">Archived Data</div>
+                <a href="{{ route('archived.sk-federation-records') }}"
+                   class="menu-item submenu-item {{ request()->routeIs('archived.sk-federation-records') ? 'active' : '' }}"
+                   data-nav-key="archived-sk-federation-records"
+                   data-tooltip="SK Federation Records"
+                   aria-label="SK Federation Records">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>SK Federation Records</span>
+                </a>
+                <a href="{{ route('archived.sk-officials-records') }}"
+                   class="menu-item submenu-item {{ request()->routeIs('archived.sk-officials-records') ? 'active' : '' }}"
+                   data-nav-key="archived-sk-officials-records"
+                   data-tooltip="SK Officials Records"
+                   aria-label="SK Officials Records">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>SK Officials Records</span>
+                </a>
+                <div class="archived-dropdown-spacer"></div>
             </div>
         </nav>
     </nav>

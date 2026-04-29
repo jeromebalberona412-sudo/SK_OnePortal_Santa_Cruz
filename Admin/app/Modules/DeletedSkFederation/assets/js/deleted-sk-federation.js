@@ -225,7 +225,9 @@ function openDsfViewModal(id) {
             <!-- Personal Information -->
             <div class="dsf-view-section-block">
                 <div class="dsf-view-section-header">
-                    <span class="dsf-view-section-icon">👤</span>
+                    <span class="dsf-view-section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
+                    </span>
                     <span class="dsf-view-section-label">Personal Information</span>
                 </div>
                 <div class="dsf-view-info-grid">
@@ -259,7 +261,9 @@ function openDsfViewModal(id) {
             <!-- Location Information -->
             <div class="dsf-view-section-block">
                 <div class="dsf-view-section-header">
-                    <span class="dsf-view-section-icon">📍</span>
+                    <span class="dsf-view-section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </span>
                     <span class="dsf-view-section-label">Location Information</span>
                 </div>
                 <div class="dsf-view-info-grid">
@@ -285,7 +289,9 @@ function openDsfViewModal(id) {
             <!-- Term Information -->
             <div class="dsf-view-section-block">
                 <div class="dsf-view-section-header">
-                    <span class="dsf-view-section-icon">🏛</span>
+                    <span class="dsf-view-section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    </span>
                     <span class="dsf-view-section-label">Term Information</span>
                 </div>
                 <div class="dsf-view-info-grid">
@@ -384,30 +390,52 @@ function bindDsfRestoreModal() {
     }
 }
 
-// ── Toast Notification (top-right) ───────────────────────────────────────────
+// ── Toast Notification (top-center, slide-down) ──────────────────────────────
 function showDsfToast(message) {
-    let container = document.getElementById('dsfToastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'dsfToastContainer';
-        container.style.cssText = 'position:fixed;top:20px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
-        document.body.appendChild(container);
+    const existing = document.getElementById('dsf-toast');
+    if (existing) {
+        clearTimeout(existing._timer);
+        existing.remove();
     }
 
     const toast = document.createElement('div');
-    toast.className = 'dsf-toast';
-    toast.innerHTML = `
-        <div class="dsf-toast-icon">✓</div>
-        <span class="dsf-toast-text">${message}</span>
-    `;
-    container.appendChild(toast);
+    toast.id = 'dsf-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
 
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => toast.classList.add('dsf-toast-show'));
+    Object.assign(toast.style, {
+        position:      'fixed',
+        top:           '72px',
+        left:          '50%',
+        transform:     'translateX(-50%) translateY(-18px)',
+        zIndex:        '99999',
+        padding:       '11px 28px',
+        borderRadius:  '8px',
+        fontSize:      '0.875rem',
+        fontWeight:    '600',
+        fontFamily:    'inherit',
+        color:         '#fff',
+        background:    '#16a34a',
+        boxShadow:     '0 4px 18px rgba(0,0,0,.18)',
+        opacity:       '0',
+        whiteSpace:    'nowrap',
+        pointerEvents: 'none',
+        transition:    'opacity 0.22s ease, transform 0.22s ease',
     });
 
-    setTimeout(() => {
-        toast.classList.remove('dsf-toast-show');
-        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
-    }, 4000);
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            toast.style.opacity   = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+        });
+    });
+
+    toast._timer = setTimeout(() => {
+        toast.style.opacity   = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-10px)';
+        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
+    }, 3000);
 }

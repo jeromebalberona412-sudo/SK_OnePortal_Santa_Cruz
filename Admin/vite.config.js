@@ -47,6 +47,16 @@ export default defineConfig({
                 // Deleted SK Officials Module
                 'app/Modules/DeletedSkOfficials/assets/css/deleted-sk-officials.css',
                 'app/Modules/DeletedSkOfficials/assets/js/deleted-sk-officials.js',
+
+                // Barangay Logos Module
+                'app/Modules/BarangayLogos/assets/css/barangay-logos.css',
+                'app/Modules/BarangayLogos/assets/js/barangay-logos.js',
+
+                // Archived Records Module
+                'app/Modules/ArchivedRecords/assets/css/SK_federation.css',
+                'app/Modules/ArchivedRecords/assets/js/SK_federation.js',
+                'app/Modules/ArchivedRecords/assets/css/SK_officials.css',
+                'app/Modules/ArchivedRecords/assets/js/SK_officials.js',
             ],
             refresh: true,
         }),

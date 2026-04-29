@@ -145,16 +145,30 @@ body.admin-dark-canvas main.flex-grow {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 8px 0;
+    padding: 8px 0 32px;
+    scrollbar-width: none; /* Firefox — hidden by default */
 }
 
+/* Hide scrollbar by default (Webkit) */
 .sidebar-nav::-webkit-scrollbar {
     width: 3px;
+    background: transparent;
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: transparent;
     border-radius: 2px;
+    transition: background 0.2s;
+}
+
+/* Show scrollbar only when sidebar is hovered */
+.sb-sidenav:hover .sidebar-nav {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.sb-sidenav:hover .sidebar-nav::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
 }
 
 .menu-section-label {
@@ -412,6 +426,14 @@ body.sidebar-collapsed .menu-item span {
 }
 
 :root.dark .sidebar-nav::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+:root.dark .sb-sidenav:hover .sidebar-nav {
+    scrollbar-color: #334155 transparent;
+}
+
+:root.dark .sb-sidenav:hover .sidebar-nav::-webkit-scrollbar-thumb {
     background: #334155;
 }
 
@@ -506,14 +528,30 @@ body.sidebar-collapsed .menu-item span {
 }
 
 .submenu-item.active {
-    background: rgba(59, 130, 246, 0.25);
-    color: #93c5fd;
+    background: #3B82F6;
+    color: #FFFFFF;
     font-weight: 600;
 }
 
 /* Collapsed sidebar — hide submenu */
 body.sidebar-collapsed .dropdown-submenu {
     max-height: 0 !important;
+}
+
+/* ── Dropdown parent buttons: never highlight blue, only subtle open state ── */
+.manage-account-btn.active,
+.archived-dropdown-btn.active {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #E5E7EB !important;
+    font-weight: 500 !important;
+    border-left: 3px solid rgba(59, 130, 246, 0.5);
+    padding-left: 17px;
+}
+
+.manage-account-btn.active:hover,
+.archived-dropdown-btn.active:hover {
+    background: #2C5282 !important;
+    color: #FFFFFF !important;
 }
 
 /* Dark mode */
@@ -529,6 +567,20 @@ body.sidebar-collapsed .dropdown-submenu {
 :root.dark .submenu-item.active {
     background: rgba(96, 165, 250, 0.12);
     color: #60a5fa;
+    font-weight: 600;
+}
+
+:root.dark .manage-account-btn.active,
+:root.dark .archived-dropdown-btn.active {
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #94a3b8 !important;
+    border-left-color: rgba(96, 165, 250, 0.4);
+}
+
+:root.dark .manage-account-btn.active:hover,
+:root.dark .archived-dropdown-btn.active:hover {
+    background: rgba(96, 165, 250, 0.1) !important;
+    color: #93c5fd !important;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -546,7 +598,7 @@ body.sidebar-collapsed .dropdown-submenu {
 }
 
 #archivedDropdown.open {
-    max-height: 200px;
+    max-height: 360px;
 }
 
 /* Collapsed sidebar — hide archived submenu */
@@ -554,7 +606,22 @@ body.sidebar-collapsed #archivedDropdown {
     max-height: 0 !important;
 }
 
-:root.dark .archived-dropdown-btn.active {
-    background: rgba(96, 165, 250, 0.12);
-    color: #60a5fa;
+/* ── Submenu section label (e.g. "Archived Data" inside a dropdown) ── */
+.submenu-section-label {
+    color: rgba(229, 231, 235, 0.35);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 10px 20px 3px 36px;
+    white-space: nowrap;
+    overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 4px;
+}
+
+/* ── Spacer inside archived dropdown — visible when open, hidden when collapsed ── */
+.archived-dropdown-spacer {
+    height: 20px;
+    flex-shrink: 0;
 }
