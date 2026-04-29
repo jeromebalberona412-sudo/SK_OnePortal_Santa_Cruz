@@ -28,7 +28,7 @@ class UpdateAccountRequest extends FormRequest
             'middle_name' => ['nullable', 'string', 'max:100'],
             'suffix' => ['nullable', Rule::in(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'])],
             'date_of_birth' => [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'],
-            'age' => [$requiresDemographics ? 'required' : 'nullable', 'integer', 'min:0', 'max:150'],
+            'age' => ['nullable', 'integer', 'min:0', 'max:150'],
             'contact_number' => [$requiresDemographics ? 'required' : 'nullable', 'string', 'max:20'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'status' => ['required', Rule::in([

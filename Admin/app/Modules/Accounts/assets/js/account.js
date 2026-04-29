@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ── Add SK Officials — UI-only submit (injects row) ───────
+    // ── Add SK Officials — backend submit ───────────────────
     const officialsForm = document.getElementById('addSkOfficialsForm');
     if (officialsForm) {
         officialsForm.addEventListener('submit', function (e) {
@@ -443,78 +443,52 @@ document.addEventListener('DOMContentLoaded', function () {
             officialsForm.querySelectorAll('[required]').forEach(el => { if (!_validateField(el)) valid = false; });
             if (!valid) { const first = officialsForm.querySelector('.is-invalid'); if (first) first.focus(); return; }
 
-            const get = id => (document.getElementById(id)?.value ?? '').trim();
-            const firstName  = get('official_first_name');
-            const middleName = get('official_middle_name');
-            const lastName   = get('official_last_name');
-            const suffix     = get('official_suffix');
-            const email      = get('official_email');
-            const position   = get('official_position');
-            const status     = get('official_status');
-            const termEnd    = get('official_term_end');
-            const bqSel      = document.getElementById('official_barangay_id');
-            const bqName     = bqSel?.options[bqSel.selectedIndex]?.text ?? '-';
-            const mi         = middleName ? middleName.charAt(0).toUpperCase() + '.' : '';
-            const displayName = [firstName, mi, lastName, (suffix && suffix !== 'None') ? suffix : ''].filter(Boolean).join(' ');
-            let termEndDisplay = '-';
-            if (termEnd) { const d = new Date(termEnd); if (!isNaN(d)) termEndDisplay = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }); }
+            officialsForm.querySelectorAll('.validation-error').forEach(err => err.remove());
+            const formData = new FormData(officialsForm);
+            const payload = {};
+            for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
+            payload.term_status = payload.term_status || (payload.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${displayName}</td>
-                <td>${email}</td>
-                <td>${bqName}</td>
-                <td>${position}</td>
-                <td>${termEndDisplay}</td>
-                <td><span class="status-badge ${status.toLowerCase()}">${status}</span></td>
-                <td><div class="action-buttons-container">
-                    <button type="button" class="btn-view-modern btn-view-account"
-                        data-first-name="${get('official_first_name')}"
-                        data-last-name="${get('official_last_name')}"
-                        data-middle-name="${get('official_middle_name')}"
-                        data-suffix="${get('official_suffix')}"
-                        data-email="${email}"
-                        data-contact-number="${get('official_contact_number')}"
-                        data-date-of-birth="${get('official_date_of_birth')}"
-                        data-age=""
-                        data-position="${position}"
-                        data-barangay-name="${bqName}"
-                        data-municipality="Santa Cruz"
-                        data-status="${status}"
-                        data-term-status="ACTIVE"
-                        data-term-start="${get('official_term_start')}"
-                        data-term-end="${termEnd}"
-                        data-email-verified-at="">View</button>
-                    <button type="button" class="btn-edit-modern btn-edit-account"
-                        data-first-name="${get('official_first_name')}"
-                        data-last-name="${get('official_last_name')}"
-                        data-middle-name="${get('official_middle_name')}"
-                        data-suffix="${get('official_suffix')}"
-                        data-email="${email}"
-                        data-contact-number="${get('official_contact_number')}"
-                        data-date-of-birth="${get('official_date_of_birth')}"
-                        data-age=""
-                        data-position="${position}"
-                        data-barangay-id="${bqSel?.value ?? ''}"
-                        data-status="${status}"
-                        data-term-status="ACTIVE"
-                        data-term-start="${get('official_term_start')}"
-                        data-term-end="${termEnd}">Edit</button>
-                    <button type="button" class="btn-delete-modern btn-delete-account"
-                        data-display-name="${displayName}">Delete</button>
-                </div></td>`;
-
-            const emptyRow = tableBody?.querySelector('td[colspan]');
-            if (emptyRow) emptyRow.closest('tr').remove();
-            if (tableBody) {
-                tableBody.appendChild(tr);
-                allAccounts.push({ element: tr, index: allAccounts.length });
-                filteredAccounts = [...allAccounts];
-                currentPage = Math.ceil(filteredAccounts.length / recordsPerPage);
-                updatePagination();
-            }
-            closeAddSkOfficialsModal();
-            showSkOfficialsSuccessModal();
+            showLoadingOverlay();
+            fetch('/accounts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(async r => {
+                const ct = r.headers.get('content-type') || '';
+                const data = ct.includes('application/json') ? await r.json() : {};
+                return { ok: r.ok, data };
+            })
+            .then(({ ok, data }) => {
+                hideLoadingOverlay();
+                if (!ok || !data.success) {
+                    if (data.errors) {
+                        let handledError = false;
+                        Object.keys(data.errors).forEach(f => {
+                            const input = officialsForm.querySelector(`[name="${f}"]`);
+                            if (input) {
+                                _showErr(input, data.errors[f][0]);
+                                handledError = true;
+                            }
+                        });
+                        if (!handledError) {
+                            const firstError = Object.values(data.errors).flat()[0] || 'Failed to create account. Please try again.';
+                            alert(firstError);
+                        }
+                    } else {
+                        alert('Failed to create account. Please try again.');
+                    }
+                    return;
+                }
+                closeAddSkOfficialsModal();
+                showSkOfficialsSuccessModal();
+            })
+            .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
         });
 
         // Text-only name fields
@@ -570,13 +544,60 @@ document.addEventListener('DOMContentLoaded', function () {
         if (cFed) cFed.addEventListener('input', () => { cFed.value = cFed.value.replace(/\D/g, ''); });
     }
 
-    // ── Edit forms — UI-only submit (no backend) ─────────────
+    // ── Edit forms — backend submit ─────────────────────────
     function attachEditSubmit(form) {
         if (!form) return;
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-            _closeEditByType();
-            _showEditSuccessByType();
+            clearAllErrors(form);
+            const accountId = form.dataset.accountId || '';
+            if (!accountId) {
+                alert('Missing account id. Please refresh and try again.');
+                return;
+            }
+
+            const formData = new FormData(form);
+            const payload = {};
+            for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
+
+            showLoadingOverlay();
+            fetch(`/accounts/${accountId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(async r => {
+                const ct = r.headers.get('content-type') || '';
+                const data = ct.includes('application/json') ? await r.json() : {};
+                return { ok: r.ok, data };
+            })
+            .then(({ ok, data }) => {
+                hideLoadingOverlay();
+                if (!ok || !data.success) {
+                    if (data.errors) {
+                        let handledError = false;
+                        Object.keys(data.errors).forEach(f => {
+                            const input = form.querySelector(`[name="${f}"]`);
+                            if (input) {
+                                _showErr(input, data.errors[f][0]);
+                                handledError = true;
+                            }
+                        });
+                        if (!handledError) {
+                            const firstError = Object.values(data.errors).flat()[0] || 'Failed to update account. Please try again.';
+                            alert(firstError);
+                        }
+                    } else alert('Failed to update account. Please try again.');
+                    return;
+                }
+                _closeEditByType();
+                _showEditSuccessByType();
+            })
+            .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
         });
     }
 
