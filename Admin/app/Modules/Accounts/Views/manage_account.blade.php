@@ -13,6 +13,8 @@
 
 @section('head')
     @vite(['app/Modules/Accounts/assets/css/account.css'])
+    {{-- SheetJS must load before account.js so XLSX is defined when the batch upload handler runs --}}
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 @endsection
 
 @section('content')
@@ -178,7 +180,7 @@
                             <!-- Page numbers will be dynamically generated here -->
                         </div>
                         
-                        <button type="button" class="pagination-btn pagination-btn-next" id="nextBtn">
+                        <button type="button" class="pagination-btn pagination-btn-next" id="nextBtn" disabled>
                             Next
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M9 18l6-6-6-6"/>
@@ -234,14 +236,8 @@
         </div>
     </div>
 </div>
-@endsection
 
-@section('scripts')
-    @vite(['app/Modules/Accounts/assets/js/account.js'])
-@endsection
-
-{{-- Toast notifications --}}
-@push('scripts')
+{{-- Toast notifications — placed in body so they render as proper HTML elements --}}
 <div id="accountToast" role="status" aria-live="polite">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M20 6L9 17l-5-5"/>
@@ -264,4 +260,8 @@
     </svg>
     <span id="accountToastDeleteMsg">Account deleted successfully!</span>
 </div>
-@endpush
+@endsection
+
+@section('scripts')
+    @vite(['app/Modules/Accounts/assets/js/account.js'])
+@endsection

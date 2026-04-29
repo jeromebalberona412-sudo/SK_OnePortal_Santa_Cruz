@@ -34,7 +34,7 @@
             <div class="add-mode-tabs">
                 <button type="button" class="add-mode-tab active" id="tabManual"
                         onclick="switchAddOfficialTab('manual')">Manual entry</button>
-                <button type="button" class="add-mode-tab" id="tabBatch" style="display:none;"
+                <button type="button" class="add-mode-tab" id="tabBatch"
                     onclick="switchAddOfficialTab('batch')">Batch Upload</button>
             </div>
 
@@ -237,25 +237,39 @@
 
             {{-- ── BATCH UPLOAD ── --}}
             <div id="addOfficialBatchPane" style="display:none;">
-                <p class="batch-hint">Upload Excel/CSV. First row must be headers. Supported: <strong>.xlsx</strong>, <strong>.xls</strong>, <strong>.csv</strong></p>
+                <p class="batch-hint">Upload an Excel file (.xlsx or .xls). First row must be column headers.</p>
                 <details class="expected-cols-toggle">
                     <summary>Expected columns</summary>
-                    <p class="expected-cols-list">first_name, middle_name, last_name, suffix, sex, date_of_birth, contact_number, position, status, region, province, municipality, barangay, term_start, term_end, committee, email</p>
+                    <p class="expected-cols-list">
+                        First Name, Middle Name, Last Name, Suffix, Sex, Birthdate, Age, Contact Number,
+                        Position, Status, Region, Province, Municipality, Barangay,
+                        Term Start Date, Term End Date, Committee, Email Address
+                    </p>
                 </details>
+
                 <div class="batch-dropzone" id="officialDropzone">
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="17 8 12 3 7 8"/>
                         <line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
                     <p class="dropzone-text">Drop file here or <label for="officialBatchFile" class="dropzone-browse">browse</label></p>
-                    <p class="dropzone-sub" id="officialFileName">No file selected</p>
-                    <input type="file" id="officialBatchFile" accept=".xlsx,.xls,.csv" style="display:none;">
+                    <p class="dropzone-sub" id="officialFileName">Supported: .xlsx, .xls</p>
+                    <input type="file" id="officialBatchFile" accept=".xlsx,.xls" style="display:none;">
                 </div>
+
+                {{-- Preview table rendered by JS --}}
                 <div id="officialBatchPreview" style="display:none;" class="batch-preview-always"></div>
+
                 <div class="batch-footer">
-                    <button type="button" class="btn-cancel-light" onclick="closeAddSkOfficialsModal()">Cancel</button>
-                    <button type="button" class="btn-submit-light" id="officialBatchSaveBtn">Save</button>
+                    <button type="button" class="btn-cancel-light" id="officialBatchCancelBtn"
+                            onclick="resetBatchUpload()">Cancel</button>
+                    <button type="button" class="btn-submit-light" id="officialBatchConfirmBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        Confirm Import
+                    </button>
                 </div>
             </div>
         </div>

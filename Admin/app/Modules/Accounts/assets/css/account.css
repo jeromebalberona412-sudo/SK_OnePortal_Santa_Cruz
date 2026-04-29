@@ -294,6 +294,7 @@
     transition: background 0.15s;
 }
 .btn-submit-light:hover { background: #15803d; }
+.btn-submit-light:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.6; }
 
 /* Delete confirm button */
 .btn-delete-confirm {
@@ -524,7 +525,15 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
 .dropzone-browse { color: #3B82F6; text-decoration: underline; cursor: pointer; }
 .dropzone-sub    { font-size: 12px; color: #94a3b8; margin: 0; }
 
-.batch-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; padding-bottom: 0; }
+.batch-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    padding: 1rem 0 0.5rem;
+    border-top: 1px solid #e2e8f0;
+}
 .batch-preview-always { margin-top: 1rem; overflow-x: auto; }
 .batch-preview-wrap { margin-top: 1rem; overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
 .batch-preview-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
@@ -835,4 +844,64 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
     border-left-color: #dc2626;
     color: #f87171;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* ── Batch Upload Enhancements ─────────────────────────────── */
+
+/* Row count label above preview */
+.batch-row-count {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #475569;
+    margin: 10px 0 6px;
+}
+
+/* Missing required cell highlight */
+.batch-cell-missing {
+    background: #fef2f2 !important;
+    border-color: #fca5a5 !important;
+}
+.batch-missing-label {
+    color: #ef4444;
+    font-size: 11px;
+    font-style: italic;
+    font-weight: 600;
+}
+
+/* Confirm Import button — disabled state */
+#officialBatchConfirmBtn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* Batch footer spacing */
+.batch-footer {
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 0.5rem;
+}
+
+/* Batch preview scroll container */
+.batch-preview-wrap {
+    max-height: 340px;
+    overflow: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+/* Sticky header inside scrollable preview */
+.batch-preview-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    white-space: nowrap;
+}
+
+/* Batch dropzone file-name text */
+#officialFileName {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    word-break: break-all;
 }

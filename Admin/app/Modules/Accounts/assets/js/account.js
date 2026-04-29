@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const rows = Array.from(tableBody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
         allAccounts = rows.map((el, i) => ({ element: el, index: i }));
         filteredAccounts = [...allAccounts];
-        if (allAccounts.length > 0) updatePagination();
+        updatePagination();
     }
 
     function updatePagination() {
@@ -763,44 +763,265 @@ document.addEventListener('DOMContentLoaded', function () {
         showAccountToast('Account deleted successfully!', 'delete');
     };
 
-    // ── Batch upload (SK Officials) ───────────────────────────
-    const BATCH_COLS = ['Full Name','First Name','Middle Name','Last Name','Suffix','Sex','Birthdate','Contact Number','Position','Status','Region','Province','Municipality','Barangay','Term Start Date','Term End Date','Committee','Email Address'];
-    const fileInput = document.getElementById('officialBatchFile');
-    const dropzone  = document.getElementById('officialDropzone');
-    const fileLabel = document.getElementById('officialFileName');
-    const preview   = document.getElementById('officialBatchPreview');
 
-    function renderPreview(rows) {
-        if (!preview) return;
-        const thead = `<thead><tr>${BATCH_COLS.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
-        const tbody = `<tbody>${rows.map(r => `<tr>${BATCH_COLS.map((_, i) => `<td>${r[i] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>`;
-        preview.innerHTML = `<div class="batch-preview-wrap"><table class="batch-preview-table">${thead}${tbody}</table></div>`;
-        preview.style.display = '';
-    }
+    // -- Batch upload (SK Officials) ---------------------------
 
-    function parseCSV(text) {
-        const lines = text.trim().split(/\r?\n/);
-        const start = lines[0] && /[a-zA-Z]/.test(lines[0]) ? 1 : 0;
-        return lines.slice(start).map(l => l.split(/\t|,/).map(c => c.replace(/^"|"$/g,'').trim())).filter(r => r.some(c => c));
-    }
+    // Fixed column order — matches the Excel template exactly
+    const BATCH_LABELS = [
+        'First Name', 'Middle Name', 'Last Name', 'Suffix', 'Sex',
+        'Birthdate', 'Age', 'Contact Number', 'Position', 'Status',
+        'Region', 'Province', 'Municipality', 'Barangay',
+        'Term Start Date', 'Term End Date', 'Committee', 'Email Address'
+    ];
 
-    if (fileInput && dropzone) {
-        fileInput.addEventListener('change', () => {
-            const file = fileInput.files[0];
-            if (fileLabel) fileLabel.textContent = file?.name || 'No file selected';
-            if (file) { const r = new FileReader(); r.onload = e => renderPreview(parseCSV(e.target.result)); r.readAsText(file); }
-        });
-        dropzone.addEventListener('click', e => { if (!e.target.classList.contains('dropzone-browse')) fileInput.click(); });
-        dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
-        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
-        dropzone.addEventListener('drop', e => {
-            e.preventDefault(); dropzone.classList.remove('drag-over');
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                const dt = new DataTransfer(); dt.items.add(file); fileInput.files = dt.files;
-                if (fileLabel) fileLabel.textContent = file.name;
-                const r = new FileReader(); r.onload = ev => renderPreview(parseCSV(ev.target.result)); r.readAsText(file);
+    const fileInput  = document.getElementById('officialBatchFile');
+    const dropzone   = document.getElementById('officialDropzone');
+    const fileLabel  = document.getElementById('officialFileName');
+    const preview    = document.getElementById('officialBatchPreview');
+    const confirmBtn = document.getElementById('officialBatchConfirmBtn');
+
+    // Stores the parsed batch rows so Confirm Import can use them
+    var _batchParsedRows = [];
+    var _batchParsedHeaders = [];
+
+    // Read the Excel file and render preview immediately
+    function handleBatchFile(file) {
+        if (!file) return;
+        if (fileLabel) fileLabel.textContent = file.name;
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                var data = new Uint8Array(e.target.result);
+                var wb   = XLSX.read(data, { type: 'array', raw: false });
+                var ws   = wb.Sheets[wb.SheetNames[0]];
+
+                var allRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+                var dataRows = allRows.filter(function (row) {
+                    return row.some(function (cell) {
+                        return String(cell).trim() !== '';
+                    });
+                });
+
+                if (dataRows.length === 0) {
+                    _batchParsedHeaders = [];
+                    _batchParsedRows    = [];
+                    renderBatchPreview([], []);
+                    return;
+                }
+
+                _batchParsedHeaders = dataRows[0].map(function (h) { return String(h).trim(); });
+                _batchParsedRows    = dataRows.slice(1);
+
+                renderBatchPreview(_batchParsedHeaders, _batchParsedRows);
+            } catch (err) {
+                console.error('Batch upload read error:', err);
+                _batchParsedHeaders = [];
+                _batchParsedRows    = [];
+                renderBatchPreview([], []);
             }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // Sample row shown when the file has no data rows
+    var SAMPLE_ROW = [
+        'Juan', 'Dela', 'Cruz', 'Jr.', 'Male',
+        '01/01/2000', '24', '09171234567', 'SK Chairman', 'Active',
+        'IV-A CALABARZON', 'Laguna', 'Santa Cruz', 'Alipit',
+        '01/01/2023', '12/31/2025', 'Youth Dev', 'juan@email.com'
+    ];
+
+    // Render the preview table using whatever headers + rows came from the file
+    function renderBatchPreview(headers, rows) {
+        if (!preview) return;
+
+        // If no headers at all, use the fixed template columns
+        var displayHeaders = headers.length > 0 ? headers : BATCH_LABELS;
+
+        var theadCells = displayHeaders.map(function (h) {
+            return '<th>' + h + '</th>';
+        }).join('');
+
+        var displayRows  = rows;
+        var isSample     = false;
+
+        // If no data rows, inject one sample row so the table is never empty
+        if (rows.length === 0) {
+            displayRows = [SAMPLE_ROW];
+            isSample    = true;
+        }
+
+        var tbodyRows = displayRows.map(function (row) {
+            var cells = displayHeaders.map(function (_, i) {
+                var val = row[i] !== undefined ? String(row[i]).trim() : '';
+                return '<td>' + (val || '&mdash;') + '</td>';
+            }).join('');
+            return '<tr>' + cells + '</tr>';
+        }).join('');
+
+        var rowCount = isSample
+            ? '<p class="batch-row-count" style="color:#94a3b8;">Showing sample row — no data found in file</p>'
+            : '<p class="batch-row-count">' + rows.length + ' row' + (rows.length !== 1 ? 's' : '') + ' found</p>';
+
+        preview.innerHTML = rowCount +
+            '<div class="batch-preview-wrap">' +
+            '<table class="batch-preview-table">' +
+            '<thead><tr>' + theadCells + '</tr></thead>' +
+            '<tbody>' + tbodyRows + '</tbody>' +
+            '</table></div>';
+
+        preview.style.display = '';
+        if (confirmBtn) confirmBtn.disabled = false;
+    }
+
+    // Reset batch pane to initial state
+    window.resetBatchUpload = function () {
+        if (fileInput)  { fileInput.value = ''; }
+        if (fileLabel)  { fileLabel.textContent = 'Supported: .xlsx, .xls'; }
+        if (preview)    { preview.innerHTML = ''; preview.style.display = 'none'; }
+        switchAddOfficialTab('manual');
+    };
+
+    // Confirm Import — injects actual uploaded rows into the main table
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+            var tbody = document.querySelector('.accounts-table tbody');
+            if (!tbody) { closeAddSkOfficialsModal(); showAccountToast('SK Officials imported successfully!', 'success'); return; }
+
+            // Use parsed rows from the uploaded file; fall back to SAMPLE_ROW if none
+            var rowsToInsert = _batchParsedRows.length > 0 ? _batchParsedRows : [SAMPLE_ROW];
+            var hdrs         = _batchParsedHeaders.length > 0 ? _batchParsedHeaders : BATCH_LABELS;
+
+            // Build a header→index map (case-insensitive)
+            var hdrMap = {};
+            hdrs.forEach(function (h, i) { hdrMap[h.toLowerCase().trim()] = i; });
+
+            function col(row, name) {
+                var idx = hdrMap[name.toLowerCase()];
+                return idx !== undefined && row[idx] !== undefined ? String(row[idx]).trim() : '';
+            }
+
+            // Remove "No accounts found" empty row if present
+            var emptyRow = tbody.querySelector('td[colspan]');
+            if (emptyRow) emptyRow.closest('tr').remove();
+
+            rowsToInsert.forEach(function (row) {
+                var firstName  = col(row, 'first name')   || col(row, 'first_name')  || (row[0]  ? String(row[0]).trim()  : '');
+                var middleName = col(row, 'middle name')  || col(row, 'middle_name') || (row[1]  ? String(row[1]).trim()  : '');
+                var lastName   = col(row, 'last name')    || col(row, 'last_name')   || (row[2]  ? String(row[2]).trim()  : '');
+                var suffix     = col(row, 'suffix')                                  || (row[3]  ? String(row[3]).trim()  : '');
+                var sex        = col(row, 'sex')                                     || (row[4]  ? String(row[4]).trim()  : '');
+                var birthdate  = col(row, 'birthdate')                               || (row[5]  ? String(row[5]).trim()  : '');
+                var age        = col(row, 'age')                                     || (row[6]  ? String(row[6]).trim()  : '');
+                var contact    = col(row, 'contact number') || col(row, 'contact_number') || (row[7] ? String(row[7]).trim() : '');
+                var position   = col(row, 'position')                                || (row[8]  ? String(row[8]).trim()  : '');
+                var status     = col(row, 'status')                                  || (row[9]  ? String(row[9]).trim()  : 'Active');
+                var barangay   = col(row, 'barangay')                                || (row[13] ? String(row[13]).trim() : '');
+                var termStart  = col(row, 'term start date') || col(row, 'term_start') || (row[14] ? String(row[14]).trim() : '');
+                var termEnd    = col(row, 'term end date')   || col(row, 'term_end')   || (row[15] ? String(row[15]).trim() : '');
+                var committee  = col(row, 'committee')                               || (row[16] ? String(row[16]).trim() : '');
+                var email      = col(row, 'email address')  || col(row, 'email')      || (row[17] ? String(row[17]).trim() : '');
+
+                // Build display name
+                var nameParts = [firstName, middleName ? middleName.charAt(0) + '.' : '', lastName, suffix].filter(Boolean);
+                var displayName = nameParts.join(' ');
+
+                var statusLower = status.toLowerCase();
+                var statusClass = statusLower === 'active' ? 'active' : 'inactive';
+
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td>' + (displayName || '—') + '</td>' +
+                    '<td>' + (email || '—') + '</td>' +
+                    '<td>' + (barangay || '—') + '</td>' +
+                    '<td>' + (position || '—') + '</td>' +
+                    '<td>' + (termEnd || '—') + '</td>' +
+                    '<td><span class="status-badge ' + statusClass + '">' + status + '</span></td>' +
+                    '<td><div class="action-buttons-container">' +
+                        '<button type="button" class="btn-view-modern btn-view-account"' +
+                            ' data-first-name="' + firstName + '"' +
+                            ' data-middle-name="' + middleName + '"' +
+                            ' data-last-name="' + lastName + '"' +
+                            ' data-suffix="' + suffix + '"' +
+                            ' data-date-of-birth="' + birthdate + '"' +
+                            ' data-age="' + age + '"' +
+                            ' data-contact-number="' + contact + '"' +
+                            ' data-email="' + email + '"' +
+                            ' data-position="' + position + '"' +
+                            ' data-barangay-name="' + barangay + '"' +
+                            ' data-status="' + status + '"' +
+                            ' data-term-status="ACTIVE"' +
+                            ' data-term-start="' + termStart + '"' +
+                            ' data-term-end="' + termEnd + '"' +
+                            ' data-email-verified-at="">View</button>' +
+                        '<button type="button" class="btn-edit-modern btn-edit-account"' +
+                            ' data-account-id=""' +
+                            ' data-first-name="' + firstName + '"' +
+                            ' data-middle-name="' + middleName + '"' +
+                            ' data-last-name="' + lastName + '"' +
+                            ' data-suffix="' + suffix + '"' +
+                            ' data-date-of-birth="' + birthdate + '"' +
+                            ' data-age="' + age + '"' +
+                            ' data-contact-number="' + contact + '"' +
+                            ' data-email="' + email + '"' +
+                            ' data-position="' + position + '"' +
+                            ' data-status="' + status + '"' +
+                            ' data-term-status="ACTIVE"' +
+                            ' data-term-start="' + termStart + '"' +
+                            ' data-term-end="' + termEnd + '">Edit</button>' +
+                        '<button type="button" class="btn-delete-modern btn-delete-account"' +
+                            ' data-account-id=""' +
+                            ' data-display-name="' + displayName + '">Delete</button>' +
+                    '</div></td>';
+
+                tbody.appendChild(tr);
+            });
+
+            // Re-init pagination
+            allAccounts = Array.from(tbody.querySelectorAll('tr'))
+                .filter(function (r) { return !r.querySelector('td[colspan]'); })
+                .map(function (el, i) { return { element: el, index: i }; });
+            filteredAccounts = allAccounts.slice();
+            currentPage = 1;
+            updatePagination();
+
+            closeAddSkOfficialsModal();
+            showAccountToast('SK Officials imported successfully!', 'success');
+        });
+    }
+
+    // File input change
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            var file = fileInput.files[0];
+            if (!file) return;
+            handleBatchFile(file);
+        });
+    }
+
+    // Dropzone interactions
+    if (dropzone) {
+        dropzone.addEventListener('click', function (e) {
+            if (!e.target.classList.contains('dropzone-browse') && fileInput) fileInput.click();
+        });
+        dropzone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropzone.classList.add('drag-over');
+        });
+        dropzone.addEventListener('dragleave', function () {
+            dropzone.classList.remove('drag-over');
+        });
+        dropzone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+            var file = e.dataTransfer.files[0];
+            if (!file) return;
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            if (fileInput) fileInput.files = dt.files;
+            handleBatchFile(file);
         });
     }
 });
