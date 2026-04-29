@@ -1,6 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
     initializeSchedulePrograms();
+    initializeCommitteeCards();
 });
+
+// ── Committee Cards Handler ────────────────────────────────────────────────
+function initializeCommitteeCards() {
+    const committeeCards = document.querySelectorAll('.committee-card');
+    
+    committeeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Check if card is disabled
+            if (this.classList.contains('committee-disabled')) {
+                showToast('This committee is coming soon!', 'error');
+                return;
+            }
+            
+            const committee = this.getAttribute('data-committee');
+            
+            // Only sports is active for now
+            if (committee === 'sports') {
+                window.location.href = '/sports-application-form';
+            }
+        });
+    });
+}
 
 // ── Toast ──────────────────────────────────────────────────────────────────
 function showToast(message, type) {

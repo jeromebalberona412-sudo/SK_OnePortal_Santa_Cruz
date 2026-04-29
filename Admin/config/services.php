@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    'sk_officials_app_url' => env('SK_OFFICIALS_APP_URL'),
+    'sk_fed_app_url' => env('SK_FED_APP_URL'),
+
 ];

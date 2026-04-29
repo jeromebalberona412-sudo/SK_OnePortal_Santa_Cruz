@@ -30,7 +30,7 @@
         </div>
 
         <div class="modal-body modal-body-light">
-            <form id="addSkFedForm" class="sk-officials-form">
+            <form id="addSkFedForm" class="sk-officials-form" novalidate>
                 @csrf
                 <input type="hidden" name="role" value="sk_fed">
                 <input type="hidden" name="term_status" value="ACTIVE">
@@ -79,6 +79,11 @@
                         <div class="form-group-light">
                             <label class="form-label-light required">Birthdate</label>
                             <input type="date" id="date_of_birth" name="date_of_birth" class="form-input-light" required>
+                            <span class="form-error-light"></span>
+                        </div>
+                        <div class="form-group-light">
+                            <label class="form-label-light required">Age</label>
+                            <input type="number" id="age" name="age" class="form-input-light" min="0" max="150" readonly>
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
@@ -210,7 +215,7 @@
             </div>
         </div>
         <div class="modal-body">
-            <form id="editAccountForm" class="sk-fed-form" data-account-id="">
+            <form id="editAccountForm" class="sk-fed-form" data-account-id="" novalidate>
                 @csrf
                 <input type="hidden" name="term_status" id="edit_term_status" value="ACTIVE">
 
@@ -283,7 +288,7 @@
                         <div class="col-md-6">
                             <div class="form-group-modern">
                                 <label for="edit_age" class="form-label-modern required">Age</label>
-                                <input type="number" id="edit_age" name="age" class="form-input-modern" min="0" max="150" readonly required>
+                                <input type="number" id="edit_age" name="age" class="form-input-modern" min="0" max="150" readonly>
                                 <span class="form-error"></span>
                             </div>
                         </div>
