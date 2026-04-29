@@ -30,7 +30,7 @@
                     View the official SK committee structure and member assignments.
                 </p>
             </div>
-            <div class="page-header-right">
+            <div class="page-header-right page-header-right-desktop">
                 <button type="button" class="btn primary-btn" id="addCommitteeBtn">
                     Assign Committee
                 </button>
@@ -38,17 +38,32 @@
         </section>
 
         <section class="page-filters-section">
+            <!-- Mobile: Button and Search on top -->
+            <div class="mobile-top-row">
+                <button type="button" class="btn primary-btn mobile-assign-btn" id="addCommitteeBtnMobile">
+                    Assign Committee
+                </button>
+                <input type="text" id="committeeSearchMobile" class="filter-input mobile-search" placeholder="Search">
+            </div>
+            
+            <!-- Filters row -->
             <div class="filters-row">
                 <div class="filter-item">
-                    <label for="committeeHeadFilter" class="filter-label">Committee head</label>
+                    <label for="committeeNameFilter" class="filter-label">Committee Name</label>
+                    <select id="committeeNameFilter" class="filter-select">
+                        <option value="">All Committees</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="committeeHeadFilter" class="filter-label">Assigned To</label>
                     <select id="committeeHeadFilter" class="filter-select">
-                        <option value="">All heads</option>
+                        <option value="">All Members</option>
                     </select>
                 </div>
                 <div class="filter-item filter-item-search">
-                    <label for="committeeSearch" class="filter-label">Search committee</label>
+                    <label for="committeeSearch" class="filter-label">Search</label>
                     <div class="filter-input-wrapper">
-                        <input type="text" id="committeeSearch" class="filter-input" placeholder="Search by name or member">
+                        <input type="text" id="committeeSearch" class="filter-input" placeholder="Search by name, member, or description">
                     </div>
                 </div>
             </div>
@@ -69,7 +84,8 @@
                             <tr>
                                 <th>Committee Name</th>
                                 <th>Assigned To</th>
-                                <th>Date Assigned</th>
+                                <th>Assigned Date</th>
+                                <th>Assigned Time</th>
                                 <th>Description</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
@@ -186,22 +202,6 @@
                 <p class="cv-section-body" id="viewCommitteeResponsibilities">—</p>
             </div>
 
-        </div>
-    </div>
-</div>
-
-<!-- Success Modal -->
-<div class="modal-backdrop" id="committeeSuccessModal" style="display:none;">
-    <div class="modal-box success-modal-box">
-        <div class="modal-header success-modal-header">
-            <h2 class="modal-title">Success</h2>
-            <button type="button" class="modal-close" data-success-close aria-label="Close">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p class="success-modal-message" id="committeeSuccessMessage">Add successful.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn primary-btn" data-success-close>OK</button>
         </div>
     </div>
 </div>

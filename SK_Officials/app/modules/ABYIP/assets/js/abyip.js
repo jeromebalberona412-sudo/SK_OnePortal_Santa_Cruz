@@ -1081,7 +1081,8 @@ function renderAllPdfPages(pdfDoc) {
     if (!container) return;
     
     const totalPages = pdfDoc.numPages;
-    const scale = 1.5;
+    // Use higher scale for better quality while maintaining aspect ratio
+    const scale = 2.0;
     
     // Render each page sequentially
     let renderPromise = Promise.resolve();
@@ -1097,6 +1098,10 @@ function renderAllPdfPages(pdfDoc) {
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
                 canvas.className = 'pdf-page-canvas';
+                
+                // Store original dimensions as data attributes for print reference
+                canvas.setAttribute('data-original-width', viewport.width);
+                canvas.setAttribute('data-original-height', viewport.height);
                 
                 // Add page number label
                 const pageWrapper = document.createElement('div');

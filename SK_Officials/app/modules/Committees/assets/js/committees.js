@@ -5,8 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeCommitteesUI() {
     const grid = document.getElementById('committeeGrid');
     const searchInput = document.getElementById('committeeSearch');
+    const searchInputMobile = document.getElementById('committeeSearchMobile');
+    const nameFilter = document.getElementById('committeeNameFilter');
     const headFilter = document.getElementById('committeeHeadFilter');
     const addBtn = document.getElementById('addCommitteeBtn');
+    const addBtnMobile = document.getElementById('addCommitteeBtnMobile');
     const modal = document.getElementById('committeeModal');
     const nameInput = document.getElementById('committeeNameInput');
     const otherCommitteeField = document.getElementById('otherCommitteeField');
@@ -15,10 +18,43 @@ function initializeCommitteesUI() {
     const dateInput = document.getElementById('committeeDateInput');
     const descInput = document.getElementById('committeeDescriptionInput');
     const saveBtn = document.getElementById('committeeSaveBtn');
-    const successModal = document.getElementById('committeeSuccessModal');
-    const successMessage = document.getElementById('committeeSuccessMessage');
     const viewModal = document.getElementById('committeeViewModal');
     const viewCommitteeHead = document.getElementById('viewCommitteeHead');
+
+    // Toast notification function (like calendar module)
+    function showToast(message, type = 'success') {
+        // Remove existing toast if any
+        const existingToast = document.querySelector('.committee-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `committee-toast committee-toast-${type}`;
+        toast.innerHTML = `
+            <div class="committee-toast-icon">
+                ${type === 'success' ? '✓' : '✕'}
+            </div>
+            <div class="committee-toast-message">${message}</div>
+        `;
+
+        // Add to body
+        document.body.appendChild(toast);
+
+        // Trigger animation
+        setTimeout(() => {
+            toast.classList.add('committee-toast-show');
+        }, 10);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('committee-toast-show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
 
     // Modal maximize/minimize (restore) controls
     function resetModalMaximize(backdropEl) {
@@ -52,6 +88,7 @@ function initializeCommitteesUI() {
     let editingIndex = -1;
 
     let currentQuery = '';
+    let currentNameFilter = '';
     let currentHeadFilter = '';
     const officialMembers = [
         'Paula A Talais',
@@ -69,16 +106,31 @@ function initializeCommitteesUI() {
         const assignedHeads = committees.map(c => c.head);
         const assignedCommittees = committees.map(c => c.name);
 
-        if (headFilter) {
-            headFilter.innerHTML = '<option value="">All heads</option>';
-            officialMembers.forEach((name) => {
+        // Populate Committee Name filter
+        if (nameFilter) {
+            const uniqueNames = [...new Set(committees.map(c => c.name))].sort();
+            nameFilter.innerHTML = '<option value="">All Committees</option>';
+            uniqueNames.forEach((name) => {
                 const option = document.createElement('option');
                 option.value = name;
                 option.textContent = name;
+                nameFilter.appendChild(option);
+            });
+        }
+
+        // Populate Assigned To (Head) filter
+        if (headFilter) {
+            const uniqueHeads = [...new Set(committees.map(c => c.head))].sort();
+            headFilter.innerHTML = '<option value="">All Members</option>';
+            uniqueHeads.forEach((head) => {
+                const option = document.createElement('option');
+                option.value = head;
+                option.textContent = head;
                 headFilter.appendChild(option);
             });
         }
 
+        // Populate committee head input dropdown
         if (headInput) {
             headInput.innerHTML = '<option value="">Select Committee Head</option>';
             officialMembers.forEach((name) => {
@@ -146,18 +198,23 @@ function initializeCommitteesUI() {
             const matchesSearch =
                 !currentQuery ||
                 c.name.toLowerCase().includes(currentQuery) ||
-                c.head.toLowerCase().includes(currentQuery);
+                c.head.toLowerCase().includes(currentQuery) ||
+                (c.description && c.description.toLowerCase().includes(currentQuery));
+
+            const matchesName =
+                !currentNameFilter ||
+                c.name === currentNameFilter;
 
             const matchesHead =
                 !currentHeadFilter ||
-                c.head.toLowerCase() === currentHeadFilter.toLowerCase();
+                c.head === currentHeadFilter;
 
-            return matchesSearch && matchesHead;
+            return matchesSearch && matchesName && matchesHead;
         });
 
         if (filtered.length === 0) {
             const empty = document.createElement('tr');
-            empty.innerHTML = '<td colspan="5" class="empty-state">No committees assigned yet. Click "Assign Committee".</td>';
+            empty.innerHTML = '<td colspan="6" class="empty-state">No committees assigned yet. Click "Assign Committee".</td>';
             grid.appendChild(empty);
             return;
         }
@@ -178,7 +235,8 @@ function initializeCommitteesUI() {
             row.innerHTML = `
                 <td>${c.name}</td>
                 <td>${c.head}</td>
-                <td>${c.dateCreated || '—'}</td>
+                <td>${c.assignedDate || '—'}</td>
+                <td>${c.assignedTime || '—'}</td>
                 <td>${descriptionHtml}</td>
                 <td>
                     <div class="committee-actions">
@@ -194,6 +252,28 @@ function initializeCommitteesUI() {
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             currentQuery = searchInput.value.trim().toLowerCase();
+            // Sync with mobile search
+            if (searchInputMobile) {
+                searchInputMobile.value = searchInput.value;
+            }
+            render();
+        });
+    }
+
+    if (searchInputMobile) {
+        searchInputMobile.addEventListener('input', () => {
+            currentQuery = searchInputMobile.value.trim().toLowerCase();
+            // Sync with desktop search
+            if (searchInput) {
+                searchInput.value = searchInputMobile.value;
+            }
+            render();
+        });
+    }
+
+    if (nameFilter) {
+        nameFilter.addEventListener('change', () => {
+            currentNameFilter = nameFilter.value;
             render();
         });
     }
@@ -241,21 +321,12 @@ function initializeCommitteesUI() {
         if (descInput) descInput.value = '';
     }
 
-    function openSuccessModal(message) {
-        if (!successModal) return;
-        if (successMessage) {
-            successMessage.textContent = message || 'Add successful.';
-        }
-        successModal.style.display = 'flex';
-    }
-
-    function closeSuccessModal() {
-        if (!successModal) return;
-        successModal.style.display = 'none';
-    }
-
     if (addBtn) {
         addBtn.addEventListener('click', openModal);
+    }
+
+    if (addBtnMobile) {
+        addBtnMobile.addEventListener('click', openModal);
     }
 
 
@@ -368,6 +439,11 @@ function initializeCommitteesUI() {
 
             // Simulated AJAX
             setTimeout(() => {
+                // Get current date and time
+                const now = new Date();
+                const assignedDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                const assignedTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                
                 const payload = {
                     name,
                     head,
@@ -375,14 +451,19 @@ function initializeCommitteesUI() {
                     // Additional fields for completeness
                     purpose: desc || 'To serve the youth and community through dedicated programs and initiatives.',
                     responsibilities: 'Organize activities, coordinate with members, and report progress to SK council.',
-                    dateCreated: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+                    dateCreated: assignedDate,
+                    assignedDate: assignedDate,
+                    assignedTime: assignedTime,
                     status: 'Active' // Default status
                 };
                 if (editingIndex >= 0 && committees[editingIndex]) {
-                    // Preserve existing description fields when editing
+                    // Preserve existing description fields and timestamps when editing
                     committees[editingIndex] = {
                         ...committees[editingIndex],
-                        ...payload
+                        ...payload,
+                        // Keep original assignment date/time when editing
+                        assignedDate: committees[editingIndex].assignedDate || assignedDate,
+                        assignedTime: committees[editingIndex].assignedTime || assignedTime
                     };
                 } else {
                     committees.push(payload);
@@ -393,27 +474,11 @@ function initializeCommitteesUI() {
                 populateDropdowns(); // Refresh dropdowns after saving
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
-                openSuccessModal(editingIndex >= 0 ? 'Update successful.' : 'Assignment successful.');
+                showToast(editingIndex >= 0 ? 'Update successful.' : 'Assignment successful.');
                 editingIndex = -1;
             }, 500);
         });
 
-    }
-
-    if (successModal) {
-        successModal.addEventListener('click', (e) => {
-            if (e.target === successModal || e.target.hasAttribute('data-success-close')) {
-                closeSuccessModal();
-            }
-        });
-    }
-
-    if (successModal) {
-        successModal.addEventListener('click', (e) => {
-            if (e.target === successModal || e.target.hasAttribute('data-success-close')) {
-                closeSuccessModal();
-            }
-        });
     }
 
     populateDropdowns();
