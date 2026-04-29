@@ -1,70 +1,220 @@
-@extends('layouts.auth')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>SK OnePortal Admin — Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @vite([
+        'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Authentication/assets/js/login.js',
+    ])
+</head>
+<body class="login-page">
 
-@section('title', 'OnePortal Admin — Login')
-
-@section('content')
-    <div class="login-card-header">
-        <h2 class="login-heading">OnePortal Login</h2>
-        <p class="login-subheading">Municipality of Santa Cruz, Laguna</p>
+    {{-- Sign-in loading overlay --}}
+    <div id="signin-overlay" class="signin-overlay" aria-hidden="true" hidden>
+        <div class="signin-overlay-inner">
+            <div class="signin-spinner">
+                <div class="signin-spinner-ring"></div>
+                <div class="signin-spinner-ring signin-spinner-ring--2"></div>
+                <div class="signin-spinner-dot"></div>
+            </div>
+            <p class="signin-overlay-title">Signing In</p>
+            <p class="signin-overlay-sub">Verifying credentials...</p>
+        </div>
     </div>
 
-    @if (session('success'))
-        <div class="login-alert login-alert--success" role="alert">{{ session('success') }}</div>
-    @endif
-
-    @if ($errors->any())
-        <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
-    @endif
-
-    <form method="POST" action="{{ route('login') }}" novalidate>
-        @csrf
-
-        {{-- Email --}}
-        <div class="login-field-group">
-            <label class="login-label" for="email">Email</label>
-            <div class="login-input-wrap">
-                <span class="login-input-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.029 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
-                    </svg>
-                </span>
-                <input type="email" id="email" name="email"
-                    class="login-input @error('email') is-invalid @enderror"
-                    value="{{ old('email') }}" placeholder="admin@sccl.gov.ph"
-                    required autofocus autocomplete="email">
+    <div class="login-page">
+        {{-- Background --}}
+        <div class="bg-wrapper">
+            <div class="bg-image"></div>
+            <div class="gradient-overlay"></div>
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
             </div>
         </div>
 
-        {{-- Password --}}
-        <div class="login-field-group">
-            <label class="login-label" for="password">Password</label>
-            <div class="login-input-wrap">
-                <span class="login-input-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M5.338 1.59a61 61 0 0 0-2.837.856.48.48 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.7 10.7 0 0 0 2.287 2.233c.346.244.652.42.893.533q.18.085.293.118a1 1 0 0 0 .201 0q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56"/>
-                        <path d="M9.5 6.5a1.5 1.5 0 0 1-1 1.415l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 1 1 9.5 6.5"/>
-                    </svg>
-                </span>
-                <input type="password" id="password" name="password"
-                    class="login-input @error('password') is-invalid @enderror"
-                    placeholder="Enter your password" required autocomplete="current-password">
-                <button type="button" class="login-toggle-pw" aria-label="Toggle password visibility" tabindex="-1">
-                    <svg class="pw-icon-show" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
-                    <svg class="pw-icon-hide d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7 7 0 0 0-2.79.588l.77.771A6 6 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755q-.247.248-.517.486z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829"/><path d="M3.35 5.47q-.27.24-.518.487A13 13 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7 7 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12z"/></svg>
-                </button>
+        <div class="login-container">
+            {{-- LEFT: Logo --}}
+            <div class="logo-container">
+                <div class="logo-glow-wrapper">
+                    <img src="{{ asset('Images/image.png') }}" alt="SK OnePortal Admin Logo" class="large-logo">
+                </div>
+                <h1 class="brand-title">SK OnePortal Admin</h1>
+                <p class="brand-subtitle">Municipality of Santa Cruz, Laguna</p>
+            </div>
+
+            {{-- RIGHT: Card --}}
+            <div class="login-form-container">
+                <div class="login-card-inner">
+
+                    <div class="form-header">
+                        <h2>Welcome, Admin <span class="wave-emoji">👋</span></h2>
+                        <p>Sign in to SK OnePortal Admin</p>
+                    </div>
+
+                    <form method="POST" action="{{ route('login') }}" novalidate>
+                        @csrf
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email"
+                                class="form-control @error('email') is-invalid @enderror"
+                                value="{{ old('email') }}" placeholder="admin@sccl.gov.ph"
+                                required autofocus autocomplete="email">
+                            @error('email')
+                                <div class="invalid-feedback" data-server-error="true">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="password-input-container">
+                                <input type="password" id="password" name="password"
+                                    class="form-control @error('password') is-invalid @enderror"
+                                    placeholder="Enter your password"
+                                    required autocomplete="current-password"
+                                    minlength="8" maxlength="64">
+                                <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                                    <svg id="pw-show" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    <svg id="pw-hide" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                        <line x1="1" y1="1" x2="23" y2="23"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            @error('password')
+                                <div class="invalid-feedback" data-server-error="true">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-options">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="remember">Remember this device</label>
+                            </div>
+                            <a class="forgot-password" href="{{ route('password.request') }}">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" id="login-submit-btn" class="login-btn w-100" disabled>Sign In</button>
+                    </form>
+
+                    <div class="form-footer">
+                        <p>Accounts are provisioned by Admin only.</p>
+                    </div>
+
+                </div>
             </div>
         </div>
+    </div>
 
-        {{-- Remember + Forgot --}}
-        <div class="login-row-between">
-            <label class="login-check-label">
-                <input type="checkbox" class="login-checkbox" id="remember" name="remember"
-                    {{ old('remember') ? 'checked' : '' }}>
-                <span>Keep this device trusted</span>
-            </label>
-            <a class="login-forgot" href="{{ route('password.request') }}">Forgot password?</a>
-        </div>
+    <script>
+        (function () {
+            var emailInput = document.getElementById('email');
+            var passwordInput = document.getElementById('password');
+            var submitBtn = document.getElementById('login-submit-btn');
 
-        <button type="submit" class="login-btn">Sign In to Admin Portal</button>
-    </form>
-@endsection
+            function validateEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+
+            function showError(input, message) {
+                input.classList.add('is-invalid');
+                var parent = input.closest('.password-input-container')
+                    ? input.closest('.password-input-container').parentElement
+                    : input.parentElement;
+                var existing = parent.querySelector('.invalid-feedback:not([data-server-error])');
+                if (existing) existing.remove();
+                var div = document.createElement('div');
+                div.className = 'invalid-feedback';
+                div.textContent = message;
+                parent.appendChild(div);
+            }
+
+            function clearError(input) {
+                input.classList.remove('is-invalid');
+                var parent = input.closest('.password-input-container')
+                    ? input.closest('.password-input-container').parentElement
+                    : input.parentElement;
+                var existing = parent.querySelector('.invalid-feedback:not([data-server-error])');
+                if (existing) existing.remove();
+            }
+
+            function toggleSubmitBtn() {
+                submitBtn.disabled = !(emailInput.value.trim() && passwordInput.value);
+            }
+
+            emailInput.addEventListener('input', function () { clearError(this); toggleSubmitBtn(); });
+            passwordInput.addEventListener('input', function () { clearError(this); toggleSubmitBtn(); });
+
+            // Validate on blur (when user leaves the field)
+            emailInput.addEventListener('blur', function () {
+                if (!this.value.trim()) {
+                    showError(this, 'Email address is required.');
+                } else if (!validateEmail(this.value.trim())) {
+                    showError(this, 'Please enter a valid email address.');
+                }
+            });
+
+            passwordInput.addEventListener('blur', function () {
+                if (!this.value) {
+                    showError(this, 'Password is required.');
+                } else if (this.value.length < 8) {
+                    showError(this, 'Password must be at least 8 characters.');
+                }
+            });
+
+            document.querySelector('form').addEventListener('submit', function (e) {
+                var valid = true;
+                clearError(emailInput);
+                clearError(passwordInput);
+
+                if (!emailInput.value.trim()) {
+                    showError(emailInput, 'Email address is required.');
+                    valid = false;
+                } else if (!validateEmail(emailInput.value.trim())) {
+                    showError(emailInput, 'Please enter a valid email address.');
+                    valid = false;
+                }
+
+                if (!passwordInput.value) {
+                    showError(passwordInput, 'Password is required.');
+                    valid = false;
+                } else if (passwordInput.value.length < 8) {
+                    showError(passwordInput, 'Password must be at least 8 characters.');
+                    valid = false;
+                }
+
+                if (!valid) { e.preventDefault(); return false; }
+            });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.invalid-feedback').forEach(function (el) {
+                    el.setAttribute('data-server-error', 'true');
+                });
+                toggleSubmitBtn();
+            });
+
+            document.querySelector('.password-toggle').addEventListener('click', function () {
+                var input = document.getElementById('password');
+                var show = document.getElementById('pw-show');
+                var hide = document.getElementById('pw-hide');
+                if (input.type === 'password') {
+                    input.type = 'text'; show.style.display = 'none'; hide.style.display = '';
+                } else {
+                    input.type = 'password'; show.style.display = ''; hide.style.display = 'none';
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>
