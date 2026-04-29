@@ -14,6 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\PreventBackHistory::class,
         ]);
+
+        $middleware->alias([
+            'sk_official.access' => \App\Modules\Authentication\Middleware\EnsureSkOfficialAccess::class,
+            'trusted.device' => \App\Modules\Authentication\Middleware\EnsureTrustedDevice::class,
+            'single.session' => \App\Modules\Authentication\Middleware\EnsureSingleSession::class,
+            'turnstile' => \App\Modules\Authentication\Middleware\VerifyTurnstile::class,
+            'must.change.password' => \App\Modules\Authentication\Middleware\EnsurePasswordChanged::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

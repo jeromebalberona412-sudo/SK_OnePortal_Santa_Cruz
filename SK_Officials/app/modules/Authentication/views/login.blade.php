@@ -53,7 +53,7 @@
                 </div>
 
                 <!-- Login Form -->
-                <form class="sk-login-form" id="loginForm" method="POST" action="{{ route('login.post') }}" novalidate>
+                <form class="sk-login-form" id="loginForm" method="POST" action="{{ route('login', [], false) }}" novalidate>
                     @csrf
 
                     @if ($errors->any())
