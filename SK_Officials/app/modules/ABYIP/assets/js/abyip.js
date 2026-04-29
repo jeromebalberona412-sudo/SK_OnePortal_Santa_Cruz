@@ -10,6 +10,7 @@ let abyipModalMode = 'create';
 let currentEditId = null;
 let recordPendingDeleteId = null;
 let pendingCreateDocumentHtml = null;
+let pendingPdfData = null; // Store PDF data temporarily
 
 let filterSearchText = '';
 let searchDebounceTimer = null;
@@ -274,7 +275,7 @@ function setMainModalFooterMode(mode) {
 
     if (mode === 'view') {
         footer?.classList.add('abyip-modal-footer-view');
-        footer?.classList.remove('abyip-modal-footer-import');
+        footer?.classList.remove('abyip-modal-footer-import', 'abyip-modal-footer-pdf-view');
         // Show only Print and Export buttons in view mode (no cancel button)
         if (exportBtn) exportBtn.style.display = 'inline-block';
         if (printBtn) printBtn.style.display = 'inline-block';
@@ -282,7 +283,7 @@ function setMainModalFooterMode(mode) {
         if (cancelBtn) cancelBtn.style.display = 'none';
     } else if (mode === 'import') {
         footer?.classList.add('abyip-modal-footer-import');
-        footer?.classList.remove('abyip-modal-footer-view');
+        footer?.classList.remove('abyip-modal-footer-view', 'abyip-modal-footer-pdf-view');
         // Show Save and Cancel buttons for import mode
         if (exportBtn) exportBtn.style.display = 'none';
         if (printBtn) printBtn.style.display = 'none';
@@ -291,8 +292,19 @@ function setMainModalFooterMode(mode) {
             saveBtn.textContent = 'Save Imported ABYIP';
         }
         if (cancelBtn) cancelBtn.style.display = 'inline-block';
-    } else {
+    } else if (mode === 'pdf-view') {
+        footer?.classList.add('abyip-modal-footer-pdf-view');
         footer?.classList.remove('abyip-modal-footer-view', 'abyip-modal-footer-import');
+        // Show only Save and Cancel buttons for PDF view mode (no Print or Export)
+        if (exportBtn) exportBtn.style.display = 'none';
+        if (printBtn) printBtn.style.display = 'none';
+        if (saveBtn) {
+            saveBtn.style.display = 'inline-block';
+            saveBtn.textContent = 'Save PDF';
+        }
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    } else {
+        footer?.classList.remove('abyip-modal-footer-view', 'abyip-modal-footer-import', 'abyip-modal-footer-pdf-view');
         // Show Save and Cancel buttons in create/edit modes
         if (exportBtn) exportBtn.style.display = 'none';
         if (printBtn) printBtn.style.display = 'none';
@@ -332,15 +344,30 @@ function openAbyipModal(mode, recordId) {
     } else {
         const record = abyipRecords.find((r) => r.id === recordId);
         if (!record) return;
-        const html = record.documentHtml && record.documentHtml.length > 0 ? record.documentHtml : getDefaultDocumentHtml();
-        setFormRootHtml(html);
-
-        if (mode === 'view') {
-            setMainModalFooterMode('view');
-            setMountContentEditable(false);
+        
+        // Check if this is a PDF record
+        if (record.isPdf && record.pdfData) {
+            // Render PDF from stored data
+            renderStoredPdf(record.pdfData, record.title);
+            
+            if (mode === 'view') {
+                setMainModalFooterMode('view');
+            } else {
+                // PDF records are view-only, even in "edit" mode
+                setMainModalFooterMode('view');
+            }
         } else {
-            setMainModalFooterMode('edit');
-            setMountContentEditable(true);
+            // Regular ABYIP document
+            const html = record.documentHtml && record.documentHtml.length > 0 ? record.documentHtml : getDefaultDocumentHtml();
+            setFormRootHtml(html);
+
+            if (mode === 'view') {
+                setMainModalFooterMode('view');
+                setMountContentEditable(false);
+            } else {
+                setMainModalFooterMode('edit');
+                setMountContentEditable(true);
+            }
         }
     }
 
@@ -403,7 +430,7 @@ function saveAbyip() {
         return;
     }
 
-    if (abyipModalMode === 'create' || abyipModalMode === 'import') {
+    if (abyipModalMode === 'create' || abyipModalMode === 'import' || abyipModalMode === 'pdf-view') {
         pendingCreateDocumentHtml = documentHtml;
         closeAbyipModal();
         openMetaModalForCreate();
@@ -422,16 +449,26 @@ function confirmMetaSave() {
     const statusRemarks = (remIn && remIn.value.trim()) || '';
 
     const nextId = abyipRecords.length ? Math.max(...abyipRecords.map((r) => r.id)) + 1 : 1;
-    abyipRecords.push({
+    
+    const newRecord = {
         id: nextId,
         title,
         dateCreated: new Date().toISOString(),
         status: STATIC_STATUS,
         statusRemarks,
         documentHtml: pendingCreateDocumentHtml
-    });
+    };
+    
+    // If this is a PDF record, store the PDF data
+    if (pendingPdfData) {
+        newRecord.isPdf = true;
+        newRecord.pdfData = pendingPdfData;
+    }
+    
+    abyipRecords.push(newRecord);
 
     pendingCreateDocumentHtml = null;
+    pendingPdfData = null;
     closeMetaModalOnly();
     persistRecords();
     renderRecordsTable();
@@ -440,14 +477,26 @@ function confirmMetaSave() {
 
 function cancelMetaSave() {
     pendingCreateDocumentHtml = null;
+    pendingPdfData = null;
     closeMetaModal();
 }
 
 function printAbyipDocument() {
+    // Hide PDF notice message before printing
+    const pdfNotice = document.querySelector('.pdf-viewer-notice');
+    if (pdfNotice) {
+        pdfNotice.style.display = 'none';
+    }
+    
     document.body.classList.add('abyip-printing');
     window.print();
     setTimeout(function () {
         document.body.classList.remove('abyip-printing');
+        
+        // Restore PDF notice message after printing
+        if (pdfNotice) {
+            pdfNotice.style.display = '';
+        }
     }, 500);
 }
 
@@ -509,6 +558,15 @@ function closeDeleteModal() {
 function exportToWord() {
     const modalContent = document.getElementById('abyipModalContentMount');
     if (!modalContent) return;
+
+    // Check if this is a PDF document
+    const isPdfDocument = modalContent.querySelector('.pdf-viewer-container') !== null;
+    
+    if (isPdfDocument) {
+        // Export PDF as images in Word document
+        exportPdfToWord();
+        return;
+    }
 
     // Create a temporary container for the content
     const tempDiv = document.createElement('div');
@@ -693,6 +751,77 @@ function exportToWord() {
     showNotification('Document exported to MS Word successfully!', 'success');
 }
 
+function exportPdfToWord() {
+    // Get all PDF canvas elements
+    const canvases = document.querySelectorAll('.pdf-page-canvas');
+    
+    if (canvases.length === 0) {
+        showNotification('No PDF pages found to export.', 'error');
+        return;
+    }
+    
+    // Convert canvases to images
+    let imagesHtml = '';
+    canvases.forEach((canvas, index) => {
+        const imageData = canvas.toDataURL('image/png');
+        imagesHtml += `
+            <div style="page-break-after: always; text-align: center; margin-bottom: 20px;">
+                <img src="${imageData}" style="max-width: 100%; height: auto;" />
+            </div>
+        `;
+    });
+    
+    // Create Word document with images
+    const wordContent = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta charset="utf-8">
+            <title>ABYIP PDF Document</title>
+            <!--[if gte mso 9]>
+            <xml>
+                <w:WordDocument>
+                    <w:View>Print</w:View>
+                    <w:Zoom>90</w:Zoom>
+                </w:WordDocument>
+            </xml>
+            <![endif]-->
+            <style>
+                @page {
+                    margin: 0.5in;
+                    size: A4;
+                }
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+                img {
+                    max-width: 100%;
+                    height: auto;
+                    display: block;
+                    margin: 0 auto;
+                }
+            </style>
+        </head>
+        <body>
+            ${imagesHtml}
+        </body>
+        </html>
+    `;
+    
+    // Create blob and download
+    const blob = new Blob([wordContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ABYIP_PDF_${new Date().toISOString().split('T')[0]}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification('PDF exported to MS Word successfully!', 'success');
+}
+
 function confirmDeleteRecord() {
     if (recordPendingDeleteId == null) return;
     abyipRecords = abyipRecords.filter((r) => r.id !== recordPendingDeleteId);
@@ -832,6 +961,212 @@ function useTemplate() {
     showNotification('Template loaded successfully!', 'success');
 }
 
+// PDF Import Functions
+function openImportPdfFilePicker() {
+    closeCreateOptionsModal();
+    const fileInput = document.getElementById('pdfFileInput');
+    if (fileInput) {
+        fileInput.click();
+    }
+}
+
+function handlePdfImport(event) {
+    const fileInput = event.target;
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        return;
+    }
+
+    const file = fileInput.files[0];
+    
+    // Show loading notification
+    showNotification('Loading PDF document...', 'info');
+    
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
+            const arrayBuffer = e.target.result;
+            
+            // Store the PDF data as base64 for later retrieval
+            const base64String = btoa(
+                new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+            );
+            
+            // Use PDF.js to render PDF
+            const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+            
+            loadingTask.promise.then(function(pdf) {
+                // Store PDF data temporarily
+                pendingPdfData = base64String;
+                
+                // Render all pages in continuous scroll
+                openAbyipModalWithPdfPreview(pdf, file.name);
+                
+                // Reset file input
+                fileInput.value = '';
+            }).catch(function(error) {
+                console.error('PDF loading error:', error);
+                showNotification('Error loading PDF document. Please try again.', 'error');
+                fileInput.value = '';
+            });
+            
+        } catch (error) {
+            console.error('PDF import error:', error);
+            showNotification('Error importing PDF document. Please try again.', 'error');
+            fileInput.value = '';
+        }
+    };
+
+    reader.onerror = function() {
+        showNotification('Error reading file. Please try again.', 'error');
+        fileInput.value = '';
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
+function openAbyipModalWithPdfPreview(pdfDoc, filename) {
+    abyipModalMode = 'pdf-view';
+    currentEditId = null;
+
+    const modal = document.getElementById('abyipModal');
+    const titleEl = document.getElementById('abyipModalTitle');
+    const header = document.getElementById('abyipModalHeader');
+
+    if (!modal || !titleEl) return;
+
+    header.classList.remove('edit-mode', 'import-mode');
+    header.classList.add('view-mode');
+    titleEl.textContent = 'PDF Preview: ' + filename;
+
+    // Create PDF viewer container
+    const mount = document.getElementById('abyipModalContentMount');
+    if (mount) {
+        mount.innerHTML = `
+            <div class="pdf-viewer-container">
+                <div class="pdf-viewer-header">
+                    <p class="pdf-viewer-notice">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        PDF documents are displayed in view-only mode and cannot be edited. Scroll to view all pages.
+                    </p>
+                </div>
+                <div class="pdf-viewer-canvas-container" id="pdfCanvasContainer">
+                    <div class="pdf-pages-wrapper">
+                        <!-- All pages will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Render all pages
+        renderAllPdfPages(pdfDoc);
+    }
+
+    // Set footer to PDF view mode (only Save and Cancel buttons)
+    setMainModalFooterMode('pdf-view');
+    
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    showNotification('PDF loaded successfully! Scroll to view all pages.', 'success');
+}
+
+function renderAllPdfPages(pdfDoc) {
+    const container = document.querySelector('.pdf-pages-wrapper');
+    if (!container) return;
+    
+    const totalPages = pdfDoc.numPages;
+    const scale = 1.5;
+    
+    // Render each page sequentially
+    let renderPromise = Promise.resolve();
+    
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        renderPromise = renderPromise.then(() => {
+            return pdfDoc.getPage(pageNum).then(function(page) {
+                const viewport = page.getViewport({scale: scale});
+                
+                // Create canvas for this page
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                canvas.className = 'pdf-page-canvas';
+                
+                // Add page number label
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = 'pdf-page-wrapper';
+                
+                const pageLabel = document.createElement('div');
+                pageLabel.className = 'pdf-page-label';
+                pageLabel.textContent = `Page ${pageNum} of ${totalPages}`;
+                
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                return page.render(renderContext).promise.then(function() {
+                    pageWrapper.appendChild(pageLabel);
+                    pageWrapper.appendChild(canvas);
+                    container.appendChild(pageWrapper);
+                });
+            });
+        });
+    }
+}
+
+function renderStoredPdf(base64Data, filename) {
+    // Convert base64 back to array buffer
+    const binaryString = atob(base64Data);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    const arrayBuffer = bytes.buffer;
+    
+    // Create PDF viewer container
+    const mount = document.getElementById('abyipModalContentMount');
+    if (mount) {
+        mount.innerHTML = `
+            <div class="pdf-viewer-container">
+                <div class="pdf-viewer-header">
+                    <p class="pdf-viewer-notice">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        PDF documents are displayed in view-only mode and cannot be edited. Scroll to view all pages.
+                    </p>
+                </div>
+                <div class="pdf-viewer-canvas-container" id="pdfCanvasContainer">
+                    <div class="pdf-pages-wrapper">
+                        <!-- All pages will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Use PDF.js to render the stored PDF
+        const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+        
+        loadingTask.promise.then(function(pdf) {
+            renderAllPdfPages(pdf);
+        }).catch(function(error) {
+            console.error('Error rendering stored PDF:', error);
+            mount.innerHTML = '<div class="pdf-error">Error loading PDF document.</div>';
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     loadRecords();
     renderRecordsTable();
@@ -846,6 +1181,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('selectTemplateBtn')?.addEventListener('click', useTemplate);
     document.getElementById('selectImportBtn')?.addEventListener('click', openImportWordFilePicker);
+    document.getElementById('selectImportPdfBtn')?.addEventListener('click', openImportPdfFilePicker);
     document.getElementById('createOptionsClose')?.addEventListener('click', closeCreateOptionsModal);
     document.getElementById('createOptionsModal')?.addEventListener('click', function (e) {
         if (e.target === e.currentTarget) closeCreateOptionsModal();
@@ -853,6 +1189,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // File input change listener for Word import
     document.getElementById('wordFileInput')?.addEventListener('change', handleWordImport);
+    
+    // File input change listener for PDF import
+    document.getElementById('pdfFileInput')?.addEventListener('change', handlePdfImport);
 
     document.getElementById('abyipModalClose')?.addEventListener('click', closeAbyipModal);
     document.getElementById('abyipModalCancel')?.addEventListener('click', closeAbyipModal);

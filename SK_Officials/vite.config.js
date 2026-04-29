@@ -69,7 +69,7 @@ export default defineConfig({
                 'app/modules/layout/css/header.css',
                 'app/modules/layout/css/sidebar.css',
                 'app/modules/layout/js/header.js',
-                'app/modules/layout/js/sidebar.js'
+                'app/modules/layout/js/sidebar.js',
             ],
             refresh: true,
         }),

@@ -5,10 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Annual Barangay Youth Investment Program (ABYIP) — SK Officials Portal</title>
 
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
     @vite([
         'app/modules/layout/css/header.css',
         'app/modules/layout/css/sidebar.css',
-        'app/modules/ABYIP/assets/css/abyip.css'
+        'app/modules/ABYIP/assets/css/abyip.css',
+        'app/modules/ABYIP/assets/js/abyip.js'
     ])
 </head>
 <body>
@@ -83,8 +90,14 @@
     </header>
 
     <div class="abyip-doc-budget">
-        <p><span class="abyip-doc-budget-label">Barangay Estimated Budget:</span> ₱14,199,466.00</p>
-        <p><span class="abyip-doc-budget-label">Sangguniang Kabataan Fund (10%):</span> ₱1,419,946.60</p>
+        <p>
+            <span class="abyip-doc-budget-label">Barangay Estimated Budget:</span> 
+            ₱<input type="text" class="abyip-budget-input" placeholder="0.00" />
+        </p>
+        <p>
+            <span class="abyip-doc-budget-label">Sangguniang Kabataan Fund (10%):</span> 
+            ₱<input type="text" class="abyip-budget-input" placeholder="0.00" />
+        </p>
     </div>
 
     <div class="table-wrapper abyip-doc-table-wrap">
@@ -108,16 +121,28 @@
             </thead>
             <tbody>
                 <tr class="section-header">
-                    <td colspan="10"><strong>I. RECEIPTS PROGRAM</strong></td>
-                </tr>
-                <tr class="receipts-note">
-                    <td></td>
-                    <td colspan="9">10% of the General Fund of the Barangay</td>
+                    <td colspan="2"><strong>I. RECEIPTS PROGRAM</strong></td>
+                    <td colspan="8">10% of the General Fund of the Barangay</td>
                 </tr>
 
                 <tr class="section-header">
-                    <td colspan="10"><strong>II. EXPENDITURE PROGRAM</strong></td>
+                    <td colspan="2"><strong>II. EXPENDITURE PROGRAM</strong></td>
+                    <td colspan="8"></td>
                 </tr>
+                
+                <tr>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true">Honoraria</td>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true" class="number"></td>
+                    <td contenteditable="true" class="number"></td>
+                    <td contenteditable="true" class="number"></td>
+                    <td contenteditable="true"></td>
+                </tr>
+                
                 <tr class="subsection-header">
                     <td colspan="10"><strong>GENERAL ADMINISTRATION PROGRAM — CURRENT OPERATING EXPENDITURES</strong></td>
                 </tr>
@@ -137,77 +162,10 @@
                     <td contenteditable="true" class="number"></td>
                     <td contenteditable="true"></td>
                 </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
+
+                <tr class="subsection-header">
+                    <td colspan="2"><strong>Capital Outlay</strong></td>
+                    <td colspan="8"></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -223,50 +181,12 @@
                 </tr>
 
                 <tr class="subsection-header">
-                    <td colspan="10"><strong>Capital Outlay</strong></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-
-                <tr class="subsection-header">
-                    <td colspan="10"><strong>B. SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS</strong></td>
+                    <td colspan="2"><strong>B. SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS</strong></td>
+                    <td colspan="8"></td>
                 </tr>
                 <tr class="category-header">
-                    <td colspan="10"><strong>A. Equitable Access to Quality Education</strong></td>
-                </tr>
-                <tr>
                     <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Equitable Access to Quality Education</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -282,47 +202,8 @@
                 </tr>
 
                 <tr class="category-header">
-                    <td colspan="10"><strong>B. Environmental Protection</strong></td>
-                </tr>
-                <tr>
                     <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
-                </tr>
-
-                <tr class="category-header">
-                    <td colspan="10"><strong>C. Disaster Risk Reduction and Resiliency</strong></td>
-                </tr>
-                <tr>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Environmental Protection</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -338,7 +219,8 @@
                 </tr>
 
                 <tr class="category-header">
-                    <td colspan="10"><strong>D. Youth Employment and Livelihood</strong></td>
+                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Disaster Risk Reduction and Resiliency</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -354,7 +236,8 @@
                 </tr>
 
                 <tr class="category-header">
-                    <td colspan="10"><strong>E. Health</strong></td>
+                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Youth Employment and Livelihood</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -370,7 +253,8 @@
                 </tr>
 
                 <tr class="category-header">
-                    <td colspan="10"><strong>F. Anti-Drug and Peace and Order</strong></td>
+                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Health</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -386,7 +270,8 @@
                 </tr>
 
                 <tr class="category-header">
-                    <td colspan="10"><strong>G. Gender Sensitivity</strong></td>
+                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Anti-Drug and Peace and Order</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -402,7 +287,8 @@
                 </tr>
 
                 <tr class="category-header">
-                    <td colspan="10"><strong>H. Feeding Program for KK Members</strong></td>
+                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Gender Sensitivity</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -418,7 +304,8 @@
                 </tr>
 
                 <tr class="category-header">
-                    <td colspan="10"><strong>I. Sports Development</strong></td>
+                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Feeding Program for KK Members</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -434,7 +321,8 @@
                 </tr>
 
                 <tr class="category-header">
-                    <td colspan="10"><strong>J. Other Programs</strong></td>
+                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Sports Development</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -448,17 +336,10 @@
                     <td contenteditable="true" class="number"></td>
                     <td contenteditable="true"></td>
                 </tr>
-                <tr>
+
+                <tr class="category-header">
                     <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true" class="number"></td>
-                    <td contenteditable="true"></td>
+                    <td colspan="9" contenteditable="true"><strong>Other Programs</strong></td>
                 </tr>
                 <tr>
                     <td contenteditable="true"></td>
@@ -474,11 +355,9 @@
                 </tr>
 
                 <tr class="total-row">
-                    <td colspan="6"><strong>TOTAL</strong></td>
-                    <td class="number abyip-mooe-total"><strong></strong></td>
-                    <td class="number abyip-co-total"><strong></strong></td>
-                    <td class="number abyip-grand-total"><strong></strong></td>
-                    <td></td>
+                    <td colspan="6" contenteditable="true"><strong>Total</strong></td>
+                    <td colspan="3" class="number" contenteditable="true"><strong></strong></td>
+                    <td contenteditable="true"></td>
                 </tr>
             </tbody>
         </table>
@@ -487,14 +366,14 @@
     <footer class="document-footer abyip-doc-footer">
         <div class="signature-blocks">
             <div class="signature-left">
-                <p>Prepared by:</p>
-                <p contenteditable="true" class="signature-name"></p>
-                <p contenteditable="true" class="signature-title"></p>
+                <p><strong>Prepared by:</strong></p>
+                <p contenteditable="true" class="signature-name" data-placeholder="HON. NAME NG SK CHAIRMAN"></p>
+                <p class="signature-title">SK Chairperson</p>
             </div>
             <div class="signature-right">
-                <p>Approved by:</p>
-                <p contenteditable="true" class="signature-name"></p>
-                <p contenteditable="true" class="signature-title"></p>
+                <p><strong>Approved by:</strong></p>
+                <p contenteditable="true" class="signature-name" data-placeholder="HON. NAME NG SK CHAIRPERSON"></p>
+                <p class="signature-title">Barangay Chairman</p>
             </div>
         </div>
     </footer>
@@ -592,15 +471,26 @@
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
                         <span class="btn-option-title">Import MS Word</span>
-                        <span class="btn-option-desc">Import from existing Word document</span>
+                        <span class="btn-option-desc">Import from existing Word document (Editable)</span>
+                    </button>
+                    <button type="button" class="btn-option btn-import-pdf" id="selectImportPdfBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        <span class="btn-option-title">Import PDF</span>
+                        <span class="btn-option-desc">Upload PDF document (View Only)</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Hidden file input for import -->
+    <!-- Hidden file inputs for import -->
     <input type="file" id="wordFileInput" accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display: none;">
+    <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" style="display: none;">
 </main>
 
 @vite([
