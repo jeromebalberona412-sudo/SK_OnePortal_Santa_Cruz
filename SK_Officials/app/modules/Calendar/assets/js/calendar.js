@@ -61,7 +61,13 @@ function showToast(message, type) {
     if (existing) existing.remove();
     const toast = document.createElement('div');
     toast.className = 'app-toast app-toast-show app-toast-' + (type || 'success');
-    toast.innerHTML = '<span class="app-toast-icon">✓</span> ' + message;
+
+    let icon = '✓';
+    if (type === 'error') {
+        icon = '✕';
+    }
+
+    toast.innerHTML = '<span class="app-toast-icon">' + icon + '</span> ' + message;
     document.body.appendChild(toast);
     setTimeout(() => {
         toast.classList.remove('app-toast-show');
@@ -86,6 +92,20 @@ function initializeCalendar() {
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const notes = {};
+
+    // Function to check if a date is in the past
+    function isDateInPast(year, month, day) {
+        const checkDate = new Date(year, month, day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+        checkDate.setHours(0, 0, 0, 0);
+        return checkDate < today;
+    }
+
+    // Function to check if a date is today or in the future
+    function isDateCurrentOrFuture(year, month, day) {
+        return !isDateInPast(year, month, day);
+    }
 
     prevBtn.addEventListener('click', () => {
         current.setMonth(current.getMonth() - 1);
@@ -129,32 +149,14 @@ function initializeCalendar() {
             const isSaturday = dayOfWeek === 6;
             const note = notes[dateKey];
             const hasNote = note && (note.title || note.content);
+            const isPastDate = isDateInPast(year, monthIndex, day);
+            const canEdit = isDateCurrentOrFuture(year, monthIndex, day);
 
             cell.className = 'calendar-day';
             if (dateKey === todayKey) cell.classList.add('is-today');
             if (hasNote) cell.classList.add('has-notes');
+            if (isPastDate) cell.classList.add('is-past');
 
-            if (isSaturday && hasNote) {
-                const cellActions = document.createElement('div');
-                cellActions.className = 'calendar-day-cell-actions';
-                cellActions.addEventListener('click', (e) => e.stopPropagation());
-                const editCellBtn = document.createElement('button');
-                editCellBtn.type = 'button';
-                editCellBtn.className = 'cell-edit';
-                editCellBtn.textContent = 'Edit';
-                editCellBtn.addEventListener('click', () => openEditor(dateKey, day, monthName));
-                const delCellBtn = document.createElement('button');
-                delCellBtn.type = 'button';
-                delCellBtn.className = 'cell-delete';
-                delCellBtn.textContent = 'Delete';
-                delCellBtn.addEventListener('click', async () => {
-                    const ok = await showConfirm({ title: 'Delete Note', message: 'Delete this note?', confirmText: 'Delete', cancelText: 'Cancel', confirmClass: 'confirm-danger', theme: 'delete' });
-                    if (ok) { delete notes[dateKey]; render(); showToast('Delete successful'); }
-                });
-                cellActions.appendChild(editCellBtn);
-                cellActions.appendChild(delCellBtn);
-                cell.appendChild(cellActions);
-            }
 
             const dayNumber = document.createElement('div');
             dayNumber.className = 'calendar-day-number';
@@ -168,7 +170,15 @@ function initializeCalendar() {
 
             const addLabel = document.createElement('div');
             addLabel.className = 'calendar-day-add';
-            addLabel.textContent = hasNote ? 'Edit note' : 'Add note';
+            if (isPastDate && hasNote) {
+                addLabel.textContent = 'View note';
+            } else if (isPastDate) {
+                addLabel.textContent = 'Past date';
+            } else if (hasNote) {
+                addLabel.textContent = 'Edit note';
+            } else {
+                addLabel.textContent = 'Add note';
+            }
             cell.appendChild(addLabel);
 
             cell.addEventListener('click', (e) => {
@@ -340,6 +350,11 @@ function initializeCalendar() {
         const note = notes[dateKey];
         const hasNote = note && (note.title || note.content);
 
+        // Parse the dateKey to get year, month, day
+        const [year, month, dayNum] = dateKey.split('-').map(Number);
+        const isPastDate = isDateInPast(year, month, dayNum);
+        const canEdit = isDateCurrentOrFuture(year, month, dayNum);
+
         let backdropEl = document.querySelector('.calendar-modal-backdrop');
         if (!backdropEl) {
             backdropEl = document.createElement('div');
@@ -388,21 +403,40 @@ function initializeCalendar() {
         originalNote = note ? { title: note.title || '', content: note.content || '' } : { title: '', content: '' };
 
         if (hasNote) {
-            titleInput.readOnly = true;
-            contentArea.readOnly = true;
-            isEditMode = false;
-            cancelBtn.style.display = 'none';
-            saveBtn.style.display = 'none';
-            editBtn.style.display = '';
-            delBtn.style.display = '';
+            if (canEdit) {
+                // Can edit existing note
+                titleInput.readOnly = true;
+                contentArea.readOnly = true;
+                isEditMode = false;
+                cancelBtn.style.display = 'none';
+                saveBtn.style.display = 'none';
+                editBtn.style.display = '';
+                delBtn.style.display = '';
+            } else {
+                // Past date - can only view
+                titleInput.readOnly = true;
+                contentArea.readOnly = true;
+                isEditMode = false;
+                cancelBtn.style.display = 'none';
+                saveBtn.style.display = 'none';
+                editBtn.style.display = 'none';
+                delBtn.style.display = 'none';
+            }
         } else {
-            titleInput.readOnly = false;
-            contentArea.readOnly = false;
-            isEditMode = true;
-            cancelBtn.style.display = '';
-            saveBtn.style.display = '';
-            editBtn.style.display = 'none';
-            delBtn.style.display = 'none';
+            if (canEdit) {
+                // Can add new note
+                titleInput.readOnly = false;
+                contentArea.readOnly = false;
+                isEditMode = true;
+                cancelBtn.style.display = '';
+                saveBtn.style.display = '';
+                editBtn.style.display = 'none';
+                delBtn.style.display = 'none';
+            } else {
+                // Past date - cannot add note
+                showToast('Cannot add notes to past dates', 'error');
+                return;
+            }
         }
 
         backdrop.classList.remove('modal-maximized');
@@ -439,11 +473,30 @@ function initializeCalendar() {
         }
 
         async function onEditClick() {
-            const ok = await showConfirm({ title: 'Edit Note', message: 'Edit this note?', confirmText: 'OK', cancelText: 'Cancel', confirmClass: 'confirm-edit', theme: 'edit' });
-            if (ok) { switchToEditMode(); titleInput.focus(); showToast('Edit successful'); }
+            // Re-check if editing is still allowed
+            const [year, month, dayNum] = dateKey.split('-').map(Number);
+            const canEdit = isDateCurrentOrFuture(year, month, dayNum);
+
+            if (!canEdit) {
+                showToast('Cannot edit notes on past dates', 'error');
+                return;
+            }
+
+            switchToEditMode(); 
+            titleInput.focus(); 
+            showToast('Edit successful');
         }
 
         async function onDelete() {
+            // Re-check if deletion is still allowed
+            const [year, month, dayNum] = dateKey.split('-').map(Number);
+            const canEdit = isDateCurrentOrFuture(year, month, dayNum);
+
+            if (!canEdit) {
+                showToast('Cannot delete notes on past dates', 'error');
+                return;
+            }
+
             const ok = await showConfirm({ title: 'Delete Note', message: 'Delete this note?', confirmText: 'Delete', cancelText: 'Cancel', confirmClass: 'confirm-danger', theme: 'delete' });
             if (ok) { delete notes[dateKey]; hide(); showToast('Delete successful'); }
         }

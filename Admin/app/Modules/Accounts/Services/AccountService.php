@@ -5,10 +5,13 @@ namespace App\Modules\Accounts\Services;
 use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Models\OfficialTerm;
+use App\Modules\Accounts\Notifications\AccountResetPasswordNotification;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AccountService
@@ -20,8 +23,9 @@ class AccountService
     public function createAccount(array $data, User $admin): User
     {
         $normalizedData = $this->withNormalizedMiddleName($data);
+        $shouldSendReset = empty($normalizedData['password']);
 
-        return DB::transaction(function () use ($normalizedData, $admin) {
+        $user = DB::transaction(function () use ($normalizedData, $admin) {
             $user = $this->createUser($normalizedData, $admin);
             $this->assignRole($user, $normalizedData['role']);
             $this->assignBarangay($user, (int) $normalizedData['barangay_id']);
@@ -43,6 +47,16 @@ class AccountService
 
             return $user;
         });
+
+        if ($shouldSendReset) {
+            try {
+                $this->sendInitialResetLink($user);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        return $user;
     }
 
     public function updateAccount(User $account, array $data, User $admin): User
@@ -124,16 +138,44 @@ class AccountService
     public function createUser(array $data, User $admin): User
     {
         $fullName = $this->buildFullName($data);
+        $password = $data['password'] ?? '';
+
+        if ($password === '') {
+            $password = Str::random(16);
+        }
 
         return User::create([
             'tenant_id' => $admin->tenant_id,
             'name' => $fullName,
             'email' => $data['email'],
-            'password' => $data['password'],
+            'password' => $password,
             'role' => User::ROLE_USER,
             'status' => $data['status'] ?? User::STATUS_PENDING_APPROVAL,
             'must_change_password' => true,
         ]);
+    }
+
+    private function sendInitialResetLink(User $user): void
+    {
+        $token = Password::broker()->createToken($user);
+        $label = null;
+        $baseUrl = null;
+
+        if ($user->role === User::ROLE_SK_OFFICIAL) {
+            $label = 'SK Official';
+            $baseUrl = config('services.sk_officials_app_url');
+        } elseif ($user->role === User::ROLE_SK_FED) {
+            $label = 'SK Federation';
+            $baseUrl = config('services.sk_fed_app_url');
+        }
+
+        if (is_string($baseUrl) && $baseUrl !== '' && is_string($label) && $label !== '') {
+            $user->notify(new AccountResetPasswordNotification($token, $baseUrl, $label));
+
+            return;
+        }
+
+        $user->sendPasswordResetNotification($token);
     }
 
     public function assignRole(User $user, string $role): void

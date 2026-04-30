@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SK OnePortal - Kabataan Login</title>
+    <title>OnePortal Youth Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
         'app/Modules/Authentication/assets/js/youth-login.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
 </head>
 <body class="youth-login-page">
-    @include('dashboard::loading')
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -89,10 +86,11 @@
                             id="email"
                             name="email"
                             class="youth-input"
-                            value="{{ old('email', 'youth@skportal.com') }}"
+                            value="{{ old('email') }}"
                             autofocus
                             autocomplete="email"
-                            placeholder="juan@example.com"
+                            placeholder="Enter your email"
+                            required
                         >
                     </div>
 
@@ -112,15 +110,19 @@
                                 class="youth-input password-input"
                                 autocomplete="current-password"
                                 placeholder="Enter your password"
+                                required
                             >
-                            <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                                <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
+                            <button type="button" class="pw-toggle-btn" id="pwToggleBtn" aria-label="Show password" tabindex="-1">
+                                {{-- Eye open (password hidden) --}}
+                                <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
                                 </svg>
-                                <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
-                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                {{-- Eye closed (password visible) --}}
+                                <svg class="pw-eye pw-eye-hide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                                    <path d="M1 1l22 22"/>
                                 </svg>
                             </button>
                         </div>
@@ -143,21 +145,27 @@
                     <!-- Submit Button -->
                     <button type="submit" class="youth-submit-btn">
                         <span>Login</span>
-                        <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
                     </button>
                 </form>
 
                 <!-- Registration Link -->
-                <div class="youth-register-section">
-                    <p class="register-text">
-                        New here? 
-                        <a href="{{ route('register') }}" class="register-link">Create an account</a>
-                    </p>
-                </div>
+                <div class="youth-register-section" style="display:none;"></div>
             </div>
         </div>
     </main>
+
+    <script>
+        (function () {
+            var btn   = document.getElementById('pwToggleBtn');
+            var input = document.getElementById('password');
+            if (!btn || !input) return;
+            btn.addEventListener('click', function () {
+                var show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                btn.classList.toggle('pw-visible', show);
+            });
+        })();
+    </script>
 </body>
 </html>

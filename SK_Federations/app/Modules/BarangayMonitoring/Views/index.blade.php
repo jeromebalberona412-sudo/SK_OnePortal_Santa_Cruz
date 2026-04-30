@@ -122,29 +122,29 @@
         <div class="bm-container">
             <section class="bm-kpi-grid" aria-label="Monitoring summary">
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Total Barangay</div>
-                    <div class="bm-kpi-value">{{ $stats['total_barangays'] }}</div>
+                    <div class="bm-kpi-label">Reporting Barangays</div>
+                    <div class="bm-kpi-value">{{ $stats['total_barangays'] }}/26</div>
                     <div class="bm-kpi-note">Configured barangays in this prototype</div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Total Programs</div>
-                    <div class="bm-kpi-value">{{ $stats['active_programs'] }}</div>
-                    <div class="bm-kpi-note">Cross-barangay total</div>
-                </article>
-                <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Average Participation Rate</div>
+                    <div class="bm-kpi-label">Reporting Rate</div>
                     <div class="bm-kpi-value">{{ $stats['reporting_rate'] }}%</div>
                     <div class="bm-kpi-note">Based on total barangays in municipality</div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Compliance Rate</div>
-                    <div class="bm-kpi-value">{{ $stats['compliant'] }}%</div>
-                    <div class="bm-kpi-note">Compliant barangays</div>
+                    <div class="bm-kpi-label">Active Programs</div>
+                    <div class="bm-kpi-value">{{ $stats['active_programs'] }}</div>
+                    <div class="bm-kpi-note">Cross-barangay total</div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Non-Compliance Rate</div>
-                    <div class="bm-kpi-value">{{ $stats['non_compliant'] }}%</div>
-                    <div class="bm-kpi-note">Non-compliant barangays</div>
+                    <div class="bm-kpi-label">On-Time Submission Rate</div>
+                    <div class="bm-kpi-value">{{ $stats['ontime_rate'] }}%</div>
+                    <div class="bm-kpi-note">Filed within expected cycle</div>
+                </article>
+                <article class="bm-kpi-card">
+                    <div class="bm-kpi-label">Compliance Mix</div>
+                    <div class="bm-kpi-value">{{ $stats['compliant'] }} / {{ $stats['partial'] }} / {{ $stats['non_compliant'] }}</div>
+                    <div class="bm-kpi-note">Compliant · Partial · Non-compliant</div>
                 </article>
             </section>
 
@@ -172,17 +172,15 @@
                                     <span class="bm-status {{ $barangay['status'] }}">{{ ucfirst(str_replace('-', ' ', $barangay['status'])) }}</span>
                                 </div>
                                 <div class="bm-list-meta">
-                                    <span><i class="fas fa-user-tie"></i> <strong>SK Chairman:</strong> {{ $barangay['sk_chairman'] }}</span>
+                                    <span><i class="fas fa-file-alt"></i> {{ $barangay['reports'] }} reports</span>
+                                    <span><i class="fas fa-clock"></i> {{ $barangay['on_time'] }} on time</span>
                                 </div>
                                 <div class="bm-list-meta">
-                                    <span><i class="fas fa-chart-pie"></i> <strong>Annual Program:</strong> {{ $barangay['active_programs'] }} active</span>
-                                    <span><i class="fas fa-users"></i> <strong>Participation Rate:</strong> {{ $barangay['participation_rate'] }}%</span>
-                                </div>
-                                <div class="bm-list-meta">
-                                    <span><i class="fas fa-file-check"></i> <strong>Report Rate:</strong> {{ $barangay['report_rate'] }}%</span>
+                                    <span><i class="fas fa-layer-group"></i> {{ $barangay['active_programs'] }} active programs</span>
+                                    <span><i class="fas fa-users"></i> {{ $barangay['participation_rate'] }}% participation</span>
                                 </div>
                                 <div class="bm-list-foot">
-                                    <span>Last Update: {{ $barangay['last_update'] }}</span>
+                                    <span>Last update: {{ $barangay['last_update'] }}</span>
                                     <span class="bm-link-cta">View full details <i class="fas fa-arrow-right"></i></span>
                                 </div>
                             </a>

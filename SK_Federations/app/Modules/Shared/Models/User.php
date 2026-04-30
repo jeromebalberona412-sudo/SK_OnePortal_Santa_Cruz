@@ -3,8 +3,12 @@
 namespace App\Modules\Shared\Models;
 
 use App\Modules\Authentication\Notifications\SkFedResetPasswordNotification;
-use App\Modules\Authentication\Notifications\SkFedVerifyEmailNotification;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -147,7 +151,27 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new SkFedVerifyEmailNotification);
+        $notification = new VerifyEmail;
+        $notification->createUrlUsing(function ($notifiable) {
+            return URL::temporarySignedRoute(
+                'skfed.verification.verify',
+                Carbon::now()->addMinutes(Config::get('auth.verification.expire', 10)),
+                [
+                    'id' => $notifiable->getKey(),
+                    'hash' => sha1($notifiable->getEmailForVerification()),
+                ]
+            );
+        });
+        $notification->toMailUsing(function ($notifiable, $url) {
+            return (new MailMessage)
+                ->subject('Verify Your SK Federation Account')
+                ->greeting('Hello!')
+                ->line('Please verify your SK Federation account to complete secure access setup.')
+                ->action('Verify Email Address', $url)
+                ->line('This verification link expires shortly for your security.')
+                ->line('If you did not request this, no further action is required.');
+        });
+        $this->notify($notification);
     }
 
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void

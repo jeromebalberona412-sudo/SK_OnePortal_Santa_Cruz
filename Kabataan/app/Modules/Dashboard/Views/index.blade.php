@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SK OnePortal - Home</title>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Home</title>
     @vite([
         'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Dashboard/assets/js/dashboard.js',
@@ -129,9 +132,11 @@
                 <!-- Sample Post 1 - Activity -->
                 <article class="post-card">
                     <div class="post-header">
-                        <img src="https://ui-avatars.com/api/?name=SK+Barangay+1&background=4CAF50&color=fff" alt="SK Official" class="post-avatar">
+                        <a href="{{ route('barangay', 'alipit') }}" class="post-author-link">
+                            <img src="https://ui-avatars.com/api/?name=SK+Barangay+1&background=4CAF50&color=fff" alt="SK Official" class="post-avatar">
+                        </a>
                         <div class="post-info">
-                            <h3 class="post-author">SK Barangay 1 - Poblacion</h3>
+                            <h3 class="post-author"><a href="{{ route('barangay', 'alipit') }}" class="post-author-link">SK Barangay 1 - Poblacion</a></h3>
                             <p class="post-meta">
                                 <span class="post-type activity">Activity</span>
                                 <span class="post-time">2 hours ago</span>
@@ -200,9 +205,11 @@
                 <!-- Sample Post 2 - Event -->
                 <article class="post-card">
                     <div class="post-header">
-                        <img src="https://ui-avatars.com/api/?name=SK+Barangay+5&background=FF9800&color=fff" alt="SK Official" class="post-avatar">
+                        <a href="{{ route('barangay', 'san-jose') }}" class="post-author-link">
+                            <img src="https://ui-avatars.com/api/?name=SK+Barangay+5&background=FF9800&color=fff" alt="SK Official" class="post-avatar">
+                        </a>
                         <div class="post-info">
-                            <h3 class="post-author">SK Barangay 5 - San Jose</h3>
+                            <h3 class="post-author"><a href="{{ route('barangay', 'san-jose') }}" class="post-author-link">SK Barangay 5 - San Jose</a></h3>
                             <p class="post-meta">
                                 <span class="post-type event">Event</span>
                                 <span class="post-time">5 hours ago</span>
@@ -251,9 +258,11 @@
                 <!-- Sample Post 3 - Announcement -->
                 <article class="post-card">
                     <div class="post-header">
-                        <img src="https://ui-avatars.com/api/?name=SK+Barangay+3&background=2196F3&color=fff" alt="SK Official" class="post-avatar">
+                        <a href="{{ route('barangay', 'duhat') }}" class="post-author-link">
+                            <img src="https://ui-avatars.com/api/?name=SK+Barangay+3&background=2196F3&color=fff" alt="SK Official" class="post-avatar">
+                        </a>
                         <div class="post-info">
-                            <h3 class="post-author">SK Barangay 3 - Duhat</h3>
+                            <h3 class="post-author"><a href="{{ route('barangay', 'duhat') }}" class="post-author-link">SK Barangay 3 - Duhat</a></h3>
                             <p class="post-meta">
                                 <span class="post-type announcement">Announcement</span>
                                 <span class="post-time">1 day ago</span>
@@ -285,9 +294,11 @@
                 <!-- Sample Post 4 - Youth Program -->
                 <article class="post-card">
                     <div class="post-header">
-                        <img src="https://ui-avatars.com/api/?name=SK+Barangay+7&background=9C27B0&color=fff" alt="SK Official" class="post-avatar">
+                        <a href="{{ route('barangay', 'pagsawitan') }}" class="post-author-link">
+                            <img src="https://ui-avatars.com/api/?name=SK+Barangay+7&background=9C27B0&color=fff" alt="SK Official" class="post-avatar">
+                        </a>
                         <div class="post-info">
-                            <h3 class="post-author">SK Barangay 7 - Pagsawitan</h3>
+                            <h3 class="post-author"><a href="{{ route('barangay', 'pagsawitan') }}" class="post-author-link">SK Barangay 7 - Pagsawitan</a></h3>
                             <p class="post-meta">
                                 <span class="post-type program">Youth Program</span>
                                 <span class="post-time">2 days ago</span>
@@ -340,7 +351,7 @@
                 </article>
             </div>
 
-            <!-- Right Sidebar - Programs in User's Barangay -->
+            <!-- Right Sidebar -->
             <aside class="programs-sidebar">
                 <div class="sidebar-card">
                     <h2 class="sidebar-title">Programs in Your Barangay</h2>
@@ -476,11 +487,53 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Barangay SK Profiles --}}
+                <div class="sidebar-card" style="margin-top:16px;">
+                    <h2 class="sidebar-title">Barangay SK Profiles</h2>
+                    <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
+                    <div class="barangay-profiles-list">
+                        @php
+                        $brgyList = [
+                            ['name'=>'Alipit',        'chairman'=>'[SK Chairman]','color'=>'#4CAF50','programs'=>2,'events'=>3,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                            ['name'=>'Bagumbayan',    'chairman'=>'[SK Chairman]','color'=>'#2196F3','programs'=>1,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                            ['name'=>'Bubukal',       'chairman'=>'[SK Chairman]','color'=>'#9C27B0','programs'=>0,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                            ['name'=>'Duhat',         'chairman'=>'[SK Chairman]','color'=>'#FF9800','programs'=>1,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                            ['name'=>'Gatid',         'chairman'=>'[SK Chairman]','color'=>'#009688','programs'=>1,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                            ['name'=>'Labuin',        'chairman'=>'[SK Chairman]','color'=>'#f44336','programs'=>2,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                            ['name'=>'Pagsawitan',    'chairman'=>'[SK Chairman]','color'=>'#673AB7','programs'=>1,'events'=>3,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                            ['name'=>'San Jose',      'chairman'=>'[SK Chairman]','color'=>'#0450a8','programs'=>0,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                            ['name'=>'Santisima Cruz','chairman'=>'[SK Chairman]','color'=>'#FF5722','programs'=>2,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                        ];
+                        @endphp
+                        @foreach ($brgyList as $brgy)
+                        <div class="brgy-profile-item"
+                            data-brgy-name="{{ $brgy['name'] }}"
+                            data-brgy-chairman="{{ $brgy['chairman'] }}"
+                            data-brgy-members="{{ implode('|', $brgy['members']) }}"
+                            data-brgy-color="{{ $brgy['color'] }}"
+                            data-brgy-programs="{{ $brgy['programs'] }}"
+                            data-brgy-events="{{ $brgy['events'] }}"
+                            style="cursor:pointer;"
+                        >
+                            <div class="brgy-avatar" style="background:{{ $brgy['color'] }};">
+                                {{ strtoupper(substr($brgy['name'], 0, 2)) }}
+                            </div>
+                            <div class="brgy-info">
+                                <p class="brgy-name">Brgy. {{ $brgy['name'] }}</p>
+                                <p class="brgy-chair">{{ $brgy['chairman'] }}</p>
+                            </div>
+                            <svg style="width:16px;height:16px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
             </aside>
         </div>
     </main>
 
-    <!-- Education Program Modal (Example) -->
     <div id="educationModal" class="program-modal">
         <div class="modal-overlay"></div>
         <div class="modal-container">
@@ -788,5 +841,12 @@
         });
     </script>
 
+    <script>
+    // Disqualify page from bfcache — back button will always hit the server
+    window.addEventListener('unload', function () {});
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) { window.location.replace('/dashboard'); }
+    });
+    </script>
 </body>
 </html>

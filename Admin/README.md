@@ -57,3 +57,22 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Frontend and Backend JS Boundary
+
+Project rule:
+
+- JavaScript is for frontend UI and UX behavior only.
+- Backend authorization, validation, business rules, and persistence logic must stay in PHP.
+- Do not move policy checks or trust decisions into frontend JavaScript.
+
+Run this command to enforce the boundary in this repository:
+
+```bash
+npm run check:boundary
+```
+
+What it checks:
+
+- Backend PHP files do not contain browser runtime APIs like `document`, `window`, `fetch`, or `<script>` usage.
+- Frontend JS files do not contain obvious authorization conditionals (for example `isAdmin`, `permission`, `authorize`, `tenant_id`, role-gating conditions).

@@ -6,39 +6,63 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/css/app.css', 
+                // Core
+                'resources/css/app.css',
                 'resources/js/app.js',
+                'resources/js/theme.js',
+
+                // Profile Module
                 'app/Modules/Profile/assets/css/profile.css',
+                'app/Modules/Profile/assets/css/change-email.css',
                 'app/Modules/Profile/assets/js/profile.js',
-                'app/Modules/Layout/assets/css/layout/sidebar.css',
-                'app/Modules/Layout/assets/css/layout/header.css',
-                'app/Modules/Layout/assets/js/layout/sidebar.js',
-                'app/Modules/Layout/assets/js/layout/header.js',
-                'app/Modules/Layout/assets/js/layout/logout.js',
-                'app/Modules/Accounts/assets/css/manage_account.css',
-                'app/Modules/Accounts/assets/css/add_sk_fed.css',
-                'app/Modules/Accounts/assets/css/add_sk_officials.css',
-                'app/Modules/Accounts/assets/css/edit_sk_fed.css',
-                'app/Modules/Accounts/assets/css/edit_sk_officials.css',
-                'app/Modules/Accounts/assets/js/manage_account.js',
-                'app/Modules/Accounts/assets/js/add_sk_fed.js',
-                'app/Modules/Accounts/assets/js/add_sk_officials.js',
-                'app/Modules/Accounts/assets/js/edit_sk_fed.js',
-                'app/Modules/Accounts/assets/js/edit_sk_officials.js',
-                'app/Modules/Accounts/assets/js/view_account.js',
+                'app/Modules/Profile/assets/js/change-email.js',
+
+                // Layout Module
+                'app/Modules/Layout/assets/css/sidebar.css',
+                'app/Modules/Layout/assets/css/header.css',
+                'app/Modules/Layout/assets/js/sidebar.js',
+                'app/Modules/Layout/assets/js/header.js',
+                'app/Modules/Layout/assets/js/logout.js',
+
+                // Accounts Module
+                'app/Modules/Accounts/assets/css/account.css',
+                'app/Modules/Accounts/assets/js/account.js',
+
+                // Audit Log Module
                 'app/Modules/AuditLog/assets/css/auditlogs.css',
                 'app/Modules/AuditLog/assets/js/auditlogs.js',
+
+                // Dashboard Module
                 'app/Modules/Dashboard/assets/css/dashboard.css',
                 'app/Modules/Dashboard/assets/js/dashboard.js',
-                'app/Modules/Authentication/assets/css/gov-auth.css',
-                'app/Modules/Authentication/assets/js/gov-auth.js',
-                'app/Modules/Authentication/assets/Oneportal_logo-removebg-preview.png',
-                'app/Modules/Authentication/assets/Flag_of_Santa_Cruz__Laguna-removebg-preview.png'
+
+                // Authentication Module
+                'app/Modules/Authentication/assets/css/login.css',
+                'app/Modules/Authentication/assets/js/login.js',
+
+                // Deleted SK Federation Module
+                'app/Modules/DeletedSkFederation/assets/css/deleted-sk-federation.css',
+                'app/Modules/DeletedSkFederation/assets/js/deleted-sk-federation.js',
+
+                // Deleted SK Officials Module
+                'app/Modules/DeletedSkOfficials/assets/css/deleted-sk-officials.css',
+                'app/Modules/DeletedSkOfficials/assets/js/deleted-sk-officials.js',
+
+                // Barangay Logos Module
+                'app/Modules/BarangayLogos/assets/css/barangay-logos.css',
+                'app/Modules/BarangayLogos/assets/js/barangay-logos.js',
+
+                // Archived Records Module
+                'app/Modules/ArchivedRecords/assets/css/SK_federation.css',
+                'app/Modules/ArchivedRecords/assets/js/SK_federation.js',
+                'app/Modules/ArchivedRecords/assets/css/SK_officials.css',
+                'app/Modules/ArchivedRecords/assets/js/SK_officials.js',
             ],
             refresh: true,
         }),
         tailwindcss(),
     ],
+
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

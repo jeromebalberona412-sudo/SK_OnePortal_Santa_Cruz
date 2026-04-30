@@ -108,17 +108,11 @@
             <a href="{{ route('community-feed') }}" class="menu-item active" data-tooltip="SK Community Feed">
                 <i class="fas fa-rss"></i><span>SK Community Feed</span>
             </a>
-            <a href="#" class="menu-item" data-tooltip="Barangay Monitoring">
+            <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring">
                 <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
             </a>
-            <a href="#" class="menu-item" data-tooltip="Program Monitoring">
-                <i class="fas fa-tasks"></i><span>Program Monitoring</span>
-            </a>
-            <a href="#" class="menu-item" data-tooltip="Kabataan Monitoring">
+            <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
-            </a>
-            <a href="#" class="menu-item" data-tooltip="Reports">
-                <i class="fas fa-chart-bar"></i><span>Reports</span>
             </a>
             <div class="menu-divider"></div>
             <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()">
@@ -135,19 +129,13 @@
             <div class="feed-section">
 
                 {{-- SK Federation Info Card --}}
-                <div class="sk-fed-card">
+                <div class="sk-fed-card" style="cursor:pointer;" onclick="window.location.href='{{ route('sk-fed-profile') }}'">
                     <div class="sk-fed-card-banner">
                         <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed Logo" class="sk-fed-card-logo">
                         <div class="sk-fed-card-info">
                             <h2 class="sk-fed-card-name">SK Federation Santa Cruz</h2>
                             <p class="sk-fed-card-sub">Sangguniang Kabataan Federation · Santa Cruz, Laguna</p>
-                            <div class="sk-fed-card-stats">
-                                <div class="sk-fed-stat"><span class="sk-fed-stat-val">26</span><span class="sk-fed-stat-label">Barangays</span></div>
-                                <div class="sk-fed-stat-divider"></div>
-                                <div class="sk-fed-stat"><span class="sk-fed-stat-val">1,248</span><span class="sk-fed-stat-label">Youth Members</span></div>
-                                <div class="sk-fed-stat-divider"></div>
-                                <div class="sk-fed-stat"><span class="sk-fed-stat-val">34</span><span class="sk-fed-stat-label">Programs</span></div>
-                            </div>
+                            <p style="font-size:11px;color:#ffffff;font-weight:600;margin-top:4px;">View Profile →</p>
                         </div>
                     </div>
                 </div>
@@ -242,6 +230,43 @@
                             <div class="category-content"><h3>Others</h3><p>0 active programs</p></div>
                             <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
                         </div>
+                    </div>
+                </div>
+
+                {{-- Barangay SK Profiles --}}
+                <div class="sidebar-card" style="margin-top:16px;">
+                    <h2 class="sidebar-title">Barangay SK Profiles</h2>
+                    <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        @php
+                        $brgyList = [
+                            ['name'=>'Alipit',        'slug'=>'alipit',        'color'=>'#4CAF50'],
+                            ['name'=>'Bagumbayan',    'slug'=>'bagumbayan',    'color'=>'#2196F3'],
+                            ['name'=>'Bubukal',       'slug'=>'bubukal',       'color'=>'#9C27B0'],
+                            ['name'=>'Duhat',         'slug'=>'duhat',         'color'=>'#FF9800'],
+                            ['name'=>'Gatid',         'slug'=>'gatid',         'color'=>'#009688'],
+                            ['name'=>'Labuin',        'slug'=>'labuin',        'color'=>'#f44336'],
+                            ['name'=>'Pagsawitan',    'slug'=>'pagsawitan',    'color'=>'#673AB7'],
+                            ['name'=>'San Jose',      'slug'=>'san-jose',      'color'=>'#0450a8'],
+                            ['name'=>'Santisima Cruz','slug'=>'santisima-cruz','color'=>'#FF5722'],
+                        ];
+                        @endphp
+                        @foreach($brgyList as $brgy)
+                        <a href="{{ route('skfed.barangay-profile', ['slug' => $brgy['slug']]) }}"
+                           style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f5f7fa;border-radius:12px;text-decoration:none;transition:background 0.2s;"
+                           onmouseover="this.style.background='#eef1fb'" onmouseout="this.style.background='#f5f7fa'">
+                            <div style="width:38px;height:38px;border-radius:50%;background:{{ $brgy['color'] }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;">
+                                {{ strtoupper(substr($brgy['name'], 0, 2)) }}
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <p style="font-size:13px;font-weight:700;color:#1a1d25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Brgy. {{ $brgy['name'] }}</p>
+                                <p style="font-size:11px;color:#999;">SK Officials</p>
+                            </div>
+                            <svg style="width:14px;height:14px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </a>
+                        @endforeach
                     </div>
                 </div>
             </aside>

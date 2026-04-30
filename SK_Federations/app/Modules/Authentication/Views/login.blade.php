@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>SK Federations Login</title>
+    <title>OnePortal SK Federation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -46,22 +46,28 @@
                          alt="SK Federations Logo"
                          class="large-logo">
                 </div>
-                <h1 class="brand-title">SK Federations</h1>
-                <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
+                <h1 class="brand-title">SK OnePortal</h1>
+                <p class="brand-subtitle">SK Federation Portal – Santa Cruz, Laguna</p>
             </div>
 
             {{-- RIGHT: Login Card --}}
             <div class="login-form-container">
                 <div class="login-card-inner">
                     <div class="form-header">
-                        <h2 class="nowrap">Welcome, SK Federation <span class="wave-emoji">👋</span></h2>
+                        <h2 class="nowrap">Welcome Back! <span class="wave-emoji">👋</span></h2>
                         <p>Sign in to your account</p>
                     </div>
 
                     <form method="POST" action="{{ route('login', [], false) }}" class="login-form" novalidate>
                         @csrf
                         <div class="form-group">
-                            <label for="email">Email Address</label>
+                            <label for="email">
+                                <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                                </svg>
+                                Email Address
+                            </label>
                             <input
                                 type="email"
                                 id="email"
@@ -80,7 +86,12 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="password">Password</label>
+                            <label for="password">
+                                <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Password
+                            </label>
                             <div class="password-input-container">
                                 <input
                                     type="password"
@@ -93,14 +104,15 @@
                                     minlength="8"
                                     maxlength="64"
                                 >
-                                <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Toggle password visibility">
-                                    <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
+                                <button type="button" class="pw-toggle-btn" id="pwToggleBtn" aria-label="Show password" tabindex="-1">
+                                    <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
                                     </svg>
-                                    <svg id="eye-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
-                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    <svg class="pw-eye pw-eye-hide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                                        <path d="M1 1l22 22"/>
                                     </svg>
                                 </button>
                             </div>
@@ -112,7 +124,7 @@
                         <div class="form-options">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
-                                <label class="form-check-label" for="remember">Remember this device</label>
+                                <label class="form-check-label" for="remember">Remember me</label>
                             </div>
                             <a href="{{ url('/forgot-password') }}" class="forgot-password">Forgot Password?</a>
                         </div>
@@ -122,9 +134,7 @@
                         </button>
                     </form>
 
-                    <div class="form-footer">
-                        <p>Accounts are provisioned by Admin only.</p>
-                    </div>
+
                 </div>
             </div>
 
@@ -206,6 +216,18 @@
             document.querySelectorAll('.invalid-feedback').forEach(function(el) {
                 el.setAttribute('data-server-error', 'true');
             });
+
+            // Password visibility toggle
+            var btn   = document.getElementById('pwToggleBtn');
+            var input = document.getElementById('password');
+            if (btn && input) {
+                btn.addEventListener('click', function () {
+                    var show = input.type === 'password';
+                    input.type = show ? 'text' : 'password';
+                    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                    btn.classList.toggle('pw-visible', show);
+                });
+            }
         });
     </script>
 </body>

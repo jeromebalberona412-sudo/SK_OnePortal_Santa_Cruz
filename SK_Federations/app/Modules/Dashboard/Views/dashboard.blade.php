@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Dashboard - SK Federation</title>
+    <title>Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
@@ -107,17 +107,11 @@
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed" id="sidebar-community-feed-link">
                 <i class="fas fa-rss"></i><span>SK Community Feed</span>
             </a>
-            <a href="#" class="menu-item" data-tooltip="Barangay Monitoring">
+            <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring">
                 <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
             </a>
-            <a href="#" class="menu-item" data-tooltip="Program Monitoring">
-                <i class="fas fa-tasks"></i><span>Program Monitoring</span>
-            </a>
-            <a href="#" class="menu-item" data-tooltip="Kabataan Monitoring">
+            <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
-            </a>
-            <a href="#" class="menu-item" data-tooltip="Reports">
-                <i class="fas fa-chart-bar"></i><span>Reports</span>
             </a>
             <div class="menu-divider"></div>
             <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()">
@@ -181,55 +175,50 @@
             </a>
         </div>
 
-        {{-- ── QUICK ACTIONS ── --}}
-        <div class="content-card" style="margin-bottom:24px;">
-            <div class="card-header">
-                <h3><i class="fas fa-bolt" style="color:#213F99;margin-right:8px;"></i>Quick Actions</h3>
+        {{-- ── ROW: Upcoming Events + Calendar ── --}}
+        <div class="dash-row" style="align-items:stretch;">
+            {{-- Upcoming Programs --}}
+            <div class="content-card dash-col-6" style="display:flex;flex-direction:column;">
+                <div class="card-header">
+                    <h3><i class="fas fa-calendar-week" style="color:#213F99;margin-right:8px;"></i>Upcoming Events</h3>
+                    <button onclick="clearAllCalEvents()" style="background:none;border:none;color:#94a3b8;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color 0.15s;" title="Clear all events" onmouseover="this.style.color='#d0242b'" onmouseout="this.style.color='#94a3b8'">
+                        <i class="fas fa-trash-alt"></i> Clear all
+                    </button>
+                </div>
+                <div class="card-body" style="padding:0;flex:1;overflow-y:auto;">
+                    <div class="upcoming-list" id="upcoming-list"></div>
+                    <div class="pagination-bar" id="upcoming-pagination"></div>
+                </div>
             </div>
-            <div class="card-body" style="padding:16px 20px;">
-                <div class="quick-actions-grid">
-                <button class="quick-action-btn blue" onclick="showQuickActionModal('new-program')">
-                    <i class="fas fa-plus-circle"></i><span>New Program</span>
-                </button>
-                <button class="quick-action-btn red" onclick="showQuickActionModal('submit-report')">
-                    <i class="fas fa-file-alt"></i><span>Submit Report</span>
-                </button>
-                <button class="quick-action-btn yellow" onclick="showQuickActionModal('post-announcement')">
-                    <i class="fas fa-bullhorn"></i><span>Post Announcement</span>
-                </button>
-                <button class="quick-action-btn teal" onclick="showQuickActionModal('schedule-event')">
-                    <i class="fas fa-calendar-plus"></i><span>Schedule Event</span>
-                </button>
-                <button class="quick-action-btn indigo" onclick="showQuickActionModal('export-data')">
-                    <i class="fas fa-download"></i><span>Export Data</span>
-                </button>
+
+            {{-- Calendar --}}
+            <div class="content-card dash-col-6" style="display:flex;flex-direction:column;">
+                <div class="card-header">
+                    <h3><i class="fas fa-calendar-alt" style="color:#213F99;margin-right:8px;"></i>My Schedule</h3>
+                    <button class="btn-add-event" onclick="openAddEventModal()">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+                <div class="card-body" style="padding:12px 16px;flex:1;">
+                    <div class="cal-nav">
+                        <button class="cal-nav-btn" id="cal-prev" onclick="calChangeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <span class="cal-month-label" id="cal-month-label"></span>
+                        <button class="cal-nav-btn" id="cal-next" onclick="calChangeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="cal-grid" id="cal-grid"></div>
                 </div>
             </div>
         </div>
 
-        {{-- ── ROW: Recent Activity + Upcoming Programs ── --}}
-        <div class="dash-row">
-            {{-- Recent Program Activities --}}
-            <div class="content-card dash-col-6">
-                <div class="card-header">
-                    <h3><i class="fas fa-history" style="color:#213F99;margin-right:8px;"></i>Recent Program Activities</h3>
-                    <span class="card-badge">Live</span>
-                </div>
-                <div class="card-body" style="padding:0;">
-                    <div class="activity-list" id="activity-list"></div>
-                    <div class="pagination-bar" id="activity-pagination"></div>
-                </div>
+        {{-- ── Recent Program Activities (full width) ── --}}
+        <div class="content-card" style="margin-bottom:24px;">
+            <div class="card-header">
+                <h3><i class="fas fa-history" style="color:#213F99;margin-right:8px;"></i>Recent Program Activities</h3>
+                <span class="card-badge">Live</span>
             </div>
-
-            {{-- Upcoming Programs --}}
-            <div class="content-card dash-col-4">
-                <div class="card-header">
-                    <h3><i class="fas fa-calendar-week" style="color:#213F99;margin-right:8px;"></i>Upcoming Programs</h3>
-                </div>
-                <div class="card-body" style="padding:0;">
-                    <div class="upcoming-list" id="upcoming-list"></div>
-                    <div class="pagination-bar" id="upcoming-pagination"></div>
-                </div>
+            <div class="card-body" style="padding:0;">
+                <div class="activity-list" id="activity-list"></div>
+                <div class="pagination-bar" id="activity-pagination"></div>
             </div>
         </div>
 
@@ -308,17 +297,65 @@
 
     </main>
 
-    {{-- ── QUICK ACTION MODAL ── --}}
-    <div class="modal" id="quickActionModal">
-        <div class="modal-content">
+    {{-- ── CALENDAR EVENT MODAL ── --}}
+    <div class="modal" id="calEventModal">
+        <div class="modal-content" style="max-width:480px;">
             <div class="modal-header">
-                <h3 id="qa-modal-title"></h3>
-                <button class="modal-close-btn" onclick="closeQuickActionModal()"><i class="fas fa-times"></i></button>
+                <h3 id="cal-modal-title">Add Event</h3>
+                <button class="modal-close-btn" onclick="closeCalEventModal()"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-body" id="qa-modal-body"></div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Event Title <span style="color:#d0242b;">*</span></label>
+                    <input type="text" id="cal-event-title" class="form-input" placeholder="e.g. SK Meeting, Program Launch..." maxlength="100">
+                    <div class="cal-field-error" id="err-title"></div>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Date <span style="color:#d0242b;">*</span></label>
+                    <input type="date" id="cal-event-date" class="form-input">
+                    <div class="cal-field-error" id="err-date"></div>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:16px;">
+                    <div class="form-group" style="flex:1;">
+                        <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Start Time</label>
+                        <input type="time" id="cal-event-start" class="form-input" min="07:00" max="22:00">
+                        <div class="cal-field-error" id="err-start"></div>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">End Time</label>
+                        <input type="time" id="cal-event-end" class="form-input" min="07:00" max="22:00">
+                        <div class="cal-field-error" id="err-end"></div>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Type</label>
+                    <select id="cal-event-type" class="form-input">
+                        <option value="event">📅 Event</option>
+                        <option value="task">✅ Task</option>
+                        <option value="meeting">🤝 Meeting</option>
+                        <option value="deadline">⚠️ Deadline</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Location</label>
+                    <input type="text" id="cal-event-location" class="form-input" placeholder="e.g. Barangay Hall, Municipal Hall..." maxlength="150">
+                </div>
+                <div class="form-group" id="cal-status-group" style="margin-bottom:16px;display:none;">
+                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Status</label>
+                    <select id="cal-event-status" class="form-input">
+                        <option value="upcoming">🔵 Upcoming</option>
+                        <option value="done">✅ Done</option>
+                        <option value="cancelled">❌ Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Notes</label>
+                    <textarea id="cal-event-notes" class="form-input" rows="2" placeholder="Optional notes..." maxlength="300" style="resize:vertical;"></textarea>
+                </div>
+            </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeQuickActionModal()">Cancel</button>
-                <button class="btn-primary" id="qa-modal-submit">Submit</button>
+                <button class="btn-secondary" onclick="closeCalEventModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveCalEvent()">Save Event</button>
             </div>
         </div>
     </div>
@@ -518,20 +555,7 @@
             { dot:'yellow', title:'SK Assembly — Brgy. II (Poblacion)',             meta:'Upcoming · 300 slots · Apr 5, 2026',           tag:'Soon',     tagColor:'yellow' },
         ];
 
-        const upcomingPrograms = [
-            { day:'25', month:'MAR', title:'Leadership Summit',        sub:'Brgy. Labuin · 80 slots' },
-            { day:'28', month:'MAR', title:'Youth Congress 2026',      sub:'Municipal Hall · 200 slots' },
-            { day:'02', month:'APR', title:'Livelihood Workshop',      sub:'Brgy. San Juan · 60 slots' },
-            { day:'10', month:'APR', title:'SK Sportsfest Finals',     sub:'Covered Court · 500 slots' },
-            { day:'18', month:'APR', title:'Environmental Seminar',    sub:'Brgy. Bubukal · 45 slots' },
-            { day:'22', month:'APR', title:'Anti-Drug Forum',          sub:'Brgy. Gatid · 100 slots' },
-            { day:'30', month:'APR', title:'Gender & Dev. Workshop',   sub:'Brgy. Santo Angel Central · 75 slots' },
-            { day:'05', month:'MAY', title:'Health Awareness Day',     sub:'Brgy. Calios · 90 slots' },
-            { day:'12', month:'MAY', title:'Disaster Drill 2026',      sub:'Brgy. Alipit · 120 slots' },
-            { day:'20', month:'MAY', title:'SK Leadership Camp',       sub:'Brgy. Malinao · 60 slots' },
-            { day:'28', month:'MAY', title:'Livelihood Fair',          sub:'Brgy. I (Poblacion) · 200 slots' },
-            { day:'05', month:'JUN', title:'Youth Summit 2026',        sub:'Municipal Hall · 350 slots' },
-        ];
+        const upcomingPrograms = [];
 
         const barangays = [
             { name:'Alipit',                programs:3, reports:3, status:'compliant' },
@@ -609,14 +633,91 @@
                 </div>`).join('');
         }
 
-        // Upcoming renderer
+        // Upcoming renderer — handles both static programs and calendar events
         function renderUpcoming(items) {
-            return items.map(u => `
-                <div class="upcoming-item">
-                    <div class="upcoming-date"><span class="up-day">${u.day}</span><span class="up-month">${u.month}</span></div>
-                    <div class="upcoming-info"><p>${u.title}</p><span>${u.sub}</span></div>
-                </div>`).join('');
+            if (!items.length) {
+                return '<div style="padding:24px;text-align:center;color:#94a3b8;font-size:13px;"><i class="fas fa-calendar-check" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.4;"></i>No upcoming events.<br>Add one from the calendar.</div>';
+            }
+            var typeIcons = {event:'📅',task:'✅',meeting:'🤝',deadline:'⚠️'};
+            var statusBadge = {
+                upcoming:  '<span class="ev-badge ev-badge-upcoming">Upcoming</span>',
+                done:      '<span class="ev-badge ev-badge-done">Done</span>',
+                cancelled: '<span class="ev-badge ev-badge-cancelled">Cancelled</span>'
+            };
+            var rows = items.map(function(u) {
+                var icon = u.isCalEvent ? (typeIcons[u.type] || '📅') : '📋';
+                var isPast = u.status === 'done' || u.status === 'cancelled';
+                var status = u.isCalEvent ? (statusBadge[u.status] || statusBadge.upcoming) : '';
+                var editBtn = (u.isCalEvent && !isPast)
+                    ? '<button onclick="openEditEventModal(\'' + u.id + '\')" class="ev-action-btn" title="Edit"><i class="fas fa-pen"></i></button>'
+                    : (isPast ? '<span style="color:#cbd5e1;font-size:11px;">—</span>' : '');
+                var deleteBtn = u.isCalEvent
+                    ? '<button onclick="deleteCalEvent(\'' + u.id + '\')" class="ev-action-btn ev-action-del" title="Delete"><i class="fas fa-trash-alt"></i></button>'
+                    : '';
+                var opacity = isPast ? 'opacity:0.55;' : '';
+                var date = u.isCalEvent && u.fullDate ? u.fullDate : (u.day + ' ' + u.month);
+                var time = u.isCalEvent && u.time ? u.time : (u.sub || '—');
+                return '<tr style="' + opacity + '">' +
+                    '<td class="ev-td">' + u.title + '</td>' +
+                    '<td class="ev-td ev-td-sm">' + u.type.charAt(0).toUpperCase() + u.type.slice(1) + '</td>' +
+                    '<td class="ev-td ev-td-sm">' + date + '</td>' +
+                    '<td class="ev-td ev-td-sm">' + time + '</td>' +
+                    '<td class="ev-td ev-td-sm">' + (u.isCalEvent && u.location ? '<i class="fas fa-map-marker-alt" style="color:#94a3b8;margin-right:3px;font-size:10px;"></i>' + u.location : '—') + '</td>' +
+                    '<td class="ev-td ev-td-sm">' + status + '</td>' +
+                    '<td class="ev-td ev-td-action">' + editBtn + deleteBtn + '</td>' +
+                    '</tr>';
+            }).join('');
+            return '<div class="ev-table-wrap"><table class="ev-table"><thead><tr>' +
+                '<th class="ev-th">Name</th>' +
+                '<th class="ev-th ev-td-sm">Type</th>' +
+                '<th class="ev-th ev-td-sm">Date</th>' +
+                '<th class="ev-th ev-td-sm">Time</th>' +
+                '<th class="ev-th ev-td-sm">Location</th>' +
+                '<th class="ev-th ev-td-sm">Status</th>' +
+                '<th class="ev-th ev-td-action">Action</th>' +
+                '</tr></thead><tbody>' + rows + '</tbody></table></div>';
         }
+
+        // Merge calendar events into upcoming list
+        function buildUpcomingList() {
+            const calEvents = JSON.parse(localStorage.getItem('skfed_calendar_events') || '[]');
+            const today = new Date(); today.setHours(0,0,0,0);
+            const monthAbbr = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            const fullMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            const calItems = calEvents
+                .filter(e => { const d = new Date(e.date + 'T00:00:00'); return d >= today; })
+                .sort((a,b) => a.date.localeCompare(b.date))
+                .map(e => {
+                    const d = new Date(e.date + 'T00:00:00');
+                    var fullDate = fullMonths[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+                    var time = e.start ? e.start + (e.end ? ' – ' + e.end : '') : '';
+                    return {
+                        id: e.id,
+                        day: String(d.getDate()).padStart(2,'0'),
+                        month: monthAbbr[d.getMonth()],
+                        title: e.title,
+                        fullDate: fullDate,
+                        time: time,
+                        location: e.location || '',
+                        type: e.type,
+                        status: e.status || 'upcoming',
+                        isCalEvent: true
+                    };
+                });
+            return [...calItems, ...upcomingPrograms];
+        }
+
+        window.refreshUpcomingList = function() {
+            paginators['upcoming-list'] = makePaginator(buildUpcomingList(), 10, renderUpcoming, 'upcoming-list', 'upcoming-pagination');
+            paginators['upcoming-list'].init();
+        };
+
+        window.clearAllCalEvents = function() {
+            if (!confirm('Remove all scheduled events?')) return;
+            localStorage.removeItem('skfed_calendar_events');
+            if (window.refreshUpcomingList) window.refreshUpcomingList();
+            if (typeof renderCalendar === 'function') renderCalendar();
+        };
 
         // Compliance renderer
         function renderCompliance(items) {
@@ -632,7 +733,7 @@
         }
 
         paginators['activity-list']   = makePaginator(activities,       10, renderActivities, 'activity-list',   'activity-pagination');
-        paginators['upcoming-list']   = makePaginator(upcomingPrograms, 10, renderUpcoming,   'upcoming-list',   'upcoming-pagination');
+        paginators['upcoming-list']   = makePaginator(buildUpcomingList(), 10, renderUpcoming,   'upcoming-list',   'upcoming-pagination');
         paginators['compliance-list'] = makePaginator(barangays,        10, renderCompliance, 'compliance-list', 'compliance-pagination');
 
         paginators['activity-list'].init();

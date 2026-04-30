@@ -3,7 +3,7 @@
 use App\Modules\Authentication\Models\EmailVerifiedDevice;
 use App\Modules\Authentication\Models\FeatureFlag;
 use App\Modules\Authentication\Models\TrustedDevice;
-use App\Modules\Authentication\Notifications\SkFedVerifyEmailNotification;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use App\Modules\Shared\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -62,7 +62,7 @@ it('blocks unverified user and sends verification email', function () {
     $response->assertRedirect('/login');
     assertGuest();
 
-    Notification::assertSentTo($user, SkFedVerifyEmailNotification::class);
+    Notification::assertSentTo($user, VerifyEmail::class);
 });
 
 it('registers the current device as trusted when device verification feature is enabled', function () {
@@ -118,7 +118,7 @@ it('requires email verification again when login device differs from the last ve
     assertGuest();
     expect(session()->has('sk_fed_email_verification_pending'))->toBeTrue();
 
-    Notification::assertSentTo($user, SkFedVerifyEmailNotification::class);
+    Notification::assertSentTo($user, VerifyEmail::class);
 });
 
 it('redirects to dashboard from wait-status once an unverified user verifies email', function () {

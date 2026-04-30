@@ -17,4 +17,19 @@ document.addEventListener('DOMContentLoaded', function () {
             outcomeFilter.form.submit();
         });
     }
+
+    const dismissButtons = document.querySelectorAll('[data-dismiss-alert]');
+    dismissButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const alertItem = button.closest('.alert-item');
+            if (!alertItem) {
+                return;
+            }
+
+            alertItem.classList.add('is-dismissing');
+            window.setTimeout(function () {
+                alertItem.remove();
+            }, 200);
+        });
+    });
 });

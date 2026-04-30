@@ -18,6 +18,6 @@ class DashboardServiceProvider extends ServiceProvider
     protected function loadRoutes(): void
     {
         Route::middleware('web')
-            ->group(__DIR__ . '/../Routes/dashboard.php');
+            ->group(__DIR__ . '/../routes/web.php');
     }
 }

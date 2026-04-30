@@ -1,16 +1,33 @@
 <section class="gov-card panel platform-health-panel">
     <header class="panel__header">
         <div>
-            <h2 class="gov-card__title">Platform Health</h2>
-            <p class="gov-card__subtitle">Operational dependency checklist</p>
+            <h2 class="gov-card__title">Platform Health: Real-Time Display</h2>
+            <p class="gov-card__subtitle">Live uptime score and service pulse monitor</p>
         </div>
+
+        <span class="live-pill" :class="'live-pill--' + platformHealthTelemetry.statusTone" x-text="platformHealthTelemetry.statusLabel"></span>
     </header>
 
-    <ul class="health-list">
-        <template x-for="check in platformHealth" :key="check.key">
-            <li class="health-item" :class="`status-${check.status}`">
-                <span class="health-item__label" x-text="check.label"></span>
-                <span class="health-item__status" x-text="check.status.toUpperCase()"></span>
+    <div class="health-graph-grid">
+        <div class="health-gauge-wrap">
+            <canvas id="platformHealthGaugeChart" aria-label="Platform health gauge"></canvas>
+
+            <div class="health-gauge-center">
+                <span class="health-gauge-center__label">HEALTH SCORE</span>
+                <strong class="health-gauge-center__value" x-text="platformHealthTelemetry.score + '%'">0%</strong>
+            </div>
+        </div>
+
+        <div class="health-pulse-wrap">
+            <canvas id="platformHealthPulseChart" aria-label="Platform health pulse"></canvas>
+        </div>
+    </div>
+
+    <ul class="health-metric-list">
+        <template x-for="metric in platformHealthTelemetry.metrics" :key="metric.key">
+            <li class="health-metric-item">
+                <span class="health-metric-item__label" x-text="metric.label"></span>
+                <strong class="health-metric-item__value" x-text="metric.value"></strong>
             </li>
         </template>
     </ul>

@@ -1,5 +1,9 @@
 Email:jeromebalberona412@gmail.com
 Password:Jerome123!
+primary color 
+yellow
+blue
+red
 
 Bright Yellow: #f4c20d
 Golden Yellow: #d4a80a
@@ -12,3 +16,104 @@ calendar announcement inprove pa
 
 The Sangguniang Kabataan (SK) was established under the Local Government Code of 1991 (Republic Act No. 7160), which took effect on January 1, 1992.  It replaced the Kabataang Barangay (KB), a youth organization created during martial law by Presidential Decree No. 684 on April 15, 1975, under President Ferdinand Marcos.  The SK was created to provide a genuine platform for youth participation in local governance, with the Katipunan ng Kabataan (KK) as its electoral base.
 
+sa kk profiling registration
+☑ I agree that my personal information will be used by the SK Officials
+for youth profiling and program planning in accordance with the
+Data Privacy Act of 2012.
+
+
+sk chairman set status in abyip rstricted other sk officials 
+
+#2F4E85;
+https://www.scribd.com/document/707004073/KK-Profiling-Form
+
+May mga **official sources at guidelines** na pwede mong gamitin para suportahan yung data retention (hindi lang opinion). Hindi kasi fixed number sa batas, pero may **principles at recommended practices**.
+
+---
+
+## 📚 1. Philippine Law (Primary Basis)
+
+### Data Privacy Act of 2012
+
+* Walang exact years na binigay
+* Pero malinaw ang principle:
+
+> 📌 **“Personal data shall not be retained longer than necessary”**
+
+👉 Ito ang pinaka-base mo sa retention policy
+
+---
+
+## 🏛️ 2. Official Guidelines (Very Important)
+
+### National Privacy Commission
+
+Ito ang nag-iimplement ng Data Privacy Act sa PH.
+
+#### Key guidance nila:
+
+* **Storage Limitation Principle**
+* **Data Minimization**
+* Dapat may:
+
+  * Retention policy
+  * Disposal policy
+
+📌 Sabi nila:
+
+> Keep data only for as long as necessary for the purpose it was collected
+
+---
+
+## 📄 3. Supporting Study / Global Standard
+
+### General Data Protection Regulation
+
+Kahit EU ito, ginagamit siya worldwide as reference.
+
+* Same principle:
+
+  * **“No longer than necessary”**
+* Maraming systems sumusunod dito
+
+---
+
+## 🧠 4. Real-world Practice (System Design Standard)
+
+Sa IT / government systems, common retention:
+
+| Data Type             | Common Retention |
+| --------------------- | ---------------- |
+| Deleted records       | 1–2 years        |
+| Rejected applications | 6–12 months      |
+| Audit logs            | 1–5 years        |
+
+👉 Ito ang ginagamit sa:
+
+* Government systems
+* School systems
+* HR systems
+
+---
+
+## 📊 5. Pwede mong gawing justification (for thesis / system doc)
+
+You can say:
+
+> “The system follows the Data Privacy Act of 2012 and adheres to the data minimization and storage limitation principles recommended by the National Privacy Commission, ensuring that personal data is retained only for a necessary period and automatically deleted after a defined retention timeframe.”
+
+---
+
+## ✅ Conclusion (Evidence-based ka na)
+
+Walang exact number sa batas, pero meron:
+
+* ✔ Legal principle (RA 10173)
+* ✔ NPC guidelines
+* ✔ Global standard (GDPR)
+* ✔ Industry practice
+
+👉 Kaya valid yung:
+
+* **Deleted = 2 years**
+* **Rejected = 1 year**

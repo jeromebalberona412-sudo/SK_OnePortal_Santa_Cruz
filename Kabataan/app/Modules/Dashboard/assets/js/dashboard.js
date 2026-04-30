@@ -252,4 +252,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.innerWidth <= 1200) closeDrawer();
         });
     });
+
+    // ── Barangay Profile — navigate to page ──────────────────────────────────
+    document.querySelectorAll('.brgy-profile-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            const name = item.dataset.brgyName;
+            const slug = name.toLowerCase().replace(/\s+/g, '-');
+            showLoading('Loading');
+            window.location.href = `/barangay/${slug}`;
+        });
+    });
 });

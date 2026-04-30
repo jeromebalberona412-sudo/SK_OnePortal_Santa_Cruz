@@ -4,76 +4,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>One-Time Password Verification</title>
+    <title>OnePortal Admin — Two-Factor Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite([
-        'app/Modules/Authentication/assets/css/gov-auth.css',
-        'app/Modules/Authentication/assets/js/gov-auth.js',
+        'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Authentication/assets/js/login.js',
     ])
 </head>
-<body class="gov-auth-page gov-auth-challenge">
-    <div class="gov-auth-bg" aria-hidden="true"></div>
-    <div class="gov-auth-tint" aria-hidden="true"></div>
-    <div class="gov-auth-vignette" aria-hidden="true"></div>
-    <div class="scanline-overlay" aria-hidden="true"></div>
+<body class="login-page">
 
-    <main class="gov-auth-shell">
-        <section class="gov-auth-panel" aria-labelledby="portal-heading">
-            <header class="auth-header">
-                <h1 id="portal-heading" class="auth-title">Use the Authentication App</h1>
-            </header>
-
-            <div class="challenge-timer-wrap" data-challenge-expiry-seconds="600">
-                <span class="challenge-timer-value" id="challenge-timer" aria-live="polite">10:00</span>
+    <div id="signin-overlay" class="signin-overlay" aria-hidden="true" hidden>
+        <div class="signin-overlay-inner">
+            <div class="signin-spinner">
+                <div class="signin-spinner-ring"></div>
+                <div class="signin-spinner-ring signin-spinner-ring--2"></div>
+                <div class="signin-spinner-dot"></div>
             </div>
-            <p class="auth-alert error challenge-expired-message" id="challenge-expired-message" hidden>
-                This verification window has expired. Please return to login and start again.
-            </p>
+            <p class="signin-overlay-title">Signing In</p>
+            <p class="signin-overlay-sub" id="signin-overlay-sub">Verifying credentials...</p>
+        </div>
+    </div>
 
-            @if ($errors->any())
-                <p class="auth-alert error">{{ $errors->first() }}</p>
-            @endif
+    <div class="login-page">
+        <div class="bg-wrapper">
+            <div class="bg-image"></div>
+            <div class="gradient-overlay"></div>
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+        </div>
 
-            <section class="auth-section">
-                <form class="auth-form" method="POST" action="{{ url('/two-factor-challenge') }}">
-                    @csrf
-                    @php($oldCode = preg_replace('/\D/', '', (string) old('code', '')))
+        <div class="login-container">
+            <div class="logo-container">
+                <div class="logo-glow-wrapper">
+                    <img src="{{ asset('Images/image.png') }}" alt="SK OnePortal Admin Logo" class="large-logo">
+                </div>
+                <h1 class="brand-title">SK OnePortal Admin</h1>
+                <p class="brand-subtitle">Municipality of Santa Cruz, Laguna</p>
+            </div>
 
-                    <div class="auth-form-row challenge-otp-row">
-                        <div class="field-wrap otp-input-group" data-otp-group>
-                            <input type="hidden" id="code" name="code" value="{{ $oldCode }}">
-                            @for ($i = 0; $i < 6; $i++)
-                                <input
-                                    class="otp-digit"
-                                    type="text"
-                                    id="otp-digit-{{ $i + 1 }}"
-                                    inputmode="numeric"
-                                    pattern="[0-9]*"
-                                    maxlength="1"
-                                    autocomplete="{{ $i === 0 ? 'one-time-code' : 'off' }}"
-                                    value="{{ $oldCode[$i] ?? '' }}"
-                                    aria-label="OTP digit {{ $i + 1 }}"
-                                    required
-                                >
-                            @endfor
+            <div class="login-form-container">
+                <div class="login-card-inner">
+
+                    <div class="form-header">
+                        <h2>Two-Factor Authentication</h2>
+                        <p>Enter the 6-digit code from your authenticator app.</p>
+                    </div>
+
+                    {{-- Timer --}}
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-3 challenge-timer-wrap"
+                         data-challenge-expiry-seconds="600">
+                        <span style="font-size:0.8rem;color:#6b7a99;">Session expires in</span>
+                        <span id="challenge-timer"
+                              style="background:var(--op-blue-pale);color:var(--op-blue);font-size:0.85rem;padding:5px 10px;border-radius:6px;font-weight:600;"
+                              aria-live="polite">10:00</span>
+                    </div>
+
+                    <div class="login-alert login-alert--danger" id="challenge-expired-message" hidden role="alert">
+                        This verification window has expired. Please
+                        <a href="{{ route('login') }}" class="login-forgot">return to login</a> and try again.
+                    </div>
+
+                    @if ($errors->any())
+                        <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
+                    @endif
+
+                    <form method="POST" action="{{ url('/two-factor-challenge') }}" novalidate>
+                        @csrf
+                        @php($oldCode = preg_replace('/\D/', '', (string) old('code', '')))
+
+                        <div class="form-group">
+                            <label style="text-align:center;display:block;">Authentication Code</label>
+                            <div class="otp-input-group" data-otp-group>
+                                <input type="hidden" id="code" name="code" value="{{ $oldCode }}">
+                                @for ($i = 0; $i < 6; $i++)
+                                    <input class="otp-digit" type="text" inputmode="numeric" pattern="[0-9]*"
+                                        maxlength="1" autocomplete="{{ $i === 0 ? 'one-time-code' : 'off' }}"
+                                        value="{{ $oldCode[$i] ?? '' }}" aria-label="OTP digit {{ $i + 1 }}" required>
+                                @endfor
+                            </div>
                         </div>
+
+                        <button type="submit" class="login-btn">Authenticate</button>
+                    </form>
+
+                    <div class="form-footer">
+                        <p><a href="{{ route('login') }}">Back to Login</a></p>
                     </div>
 
-                    <div class="auth-actions">
-                        <button class="auth-button" type="submit">Authenticate</button>
-                    </div>
-                </form>
-            </section>
-
-            <div class="auth-links">
-                <a class="auth-link" href="{{ route('login') }}">Back to login</a>
+                </div>
             </div>
-        </section>
-    </main>
+        </div>
+    </div>
 
-    <footer class="gov-auth-warning">
-        You are accessing an official information system of the Municipality of Santa Cruz, Laguna.
-        Unauthorized access is prohibited. All activities are monitored and logged.
-        Use of this system constitutes consent to monitoring and auditing.
-    </footer>
 </body>
 </html>

@@ -1,0 +1,119 @@
+SAMPLE 
+
+Homepage to
+WELCOME TO SK BARANGAY PORTAL
+
+Buttons / Links:
+[Complete KK Profiling]   for new kabataan (for new kabataan)
+[Register Account]        for existing kabataan (already in Kabataan List)
+[Login]                   if already has account
+ 
+KK Profiling page
+
+First Name	Juan
+Middle Name	D.
+Last Name	Cruz
+Suffix	Jr. / III / None
+Gender	Male / Female
+Birthdate	2006-05-10
+Age	17
+Purok	3
+Contact Number	0917-xxxxxxx
+Education	High School
+Occupation	Student / Unemployed
+
+Registration Page (Existing Kabataan)
+Field	Notes
+First Name	
+Middle Name	
+Last Name	
+Suffix	
+Birthdate	
+Email	
+Password	Create password
+Confirm Password	Confirm password
+  Register → DIRECT TO EMAIL VERIFICATION
+
+
+Kabataan visits Homepage
+        ↓
+Case 1: Not yet profiled → Click KK Profiling
+        ↓
+Fill KK Profiling Form → Submit → Pending SK Officials Verification
+        ↓
+Approved → Added to Kabataan List
+        ↓
+Kabataan receives email invitation → Create Account → Login
+
+Case 2: Already in Kabataan List → Click Register Account
+        ↓
+Pre-filled data from Kabataan List
+        ↓
+Input Email + Password → System matches record
+        ↓
+Optional SK approval / email verification
+        ↓
+Account Created → Login Allowed
+
+notes 
+KK Profiling page = public, simple, pending verification
+Registration page = protected by identity matching, secure
+Use simplified names in DB and forms: First Name, Middle Name, Last Name, Suffix
+Do not allow multiple accounts per kabataan
+
+
+according to https://www.slideshare.net/slideshow/dilg-mc-2022033-kk-profilingpdf/251468649
+
+- Region
+- Province
+- City/Municipality
+- Barangay Name
+- Age
+- Date of Birth (Month/Day/Year)
+- Sex Assigned at Birth
+- Civil Status
+- Youth Classification (ISY/OSY/NEET/WY/YSN, including PWD/IP)
+- Youth Age Group
+- Email Address
+- Contact Number
+- Home Address
+- Highest Educational Attainment
+- Work Status
+- Registered Voter? (Yes/No)
+- Voted in Last Election? (Yes/No)
+- Attended KK Assembly? (Yes/No)
+- If Yes, Number of Times Attended
+
+
+
+
+Location Information
+REGION
+PROVINCE
+CITY/MUNICIPALITY
+BARANGAY
+Personal Information
+NAME (combined full name: First + Middle + Last + Suffix)
+AGE
+BIRTHDAY
+SEX ASSIGNED AT BIRTH
+CIVIL STATUS
+HOME ADDRESS
+Right Column:
+
+Youth Information
+YOUTH CLASSIFICATION
+YOUTH AGE GROUP
+CONTACT NUMBER
+HIGHEST EDUCATIONAL ATTAINMENT
+WORK STATUS
+Civic Participation
+REGISTERED VOTER?
+VOTED LAST ELECTION?
+ATTENDED KK ASSEMBLY?
+IF YES, HOW MANY TIMES?		
+
+ purok sitio sa calios like BAYSIDE ,VILLA GRACIA,IMELDA,LUPANG PANGAKO,DAMAYAN,MARCELO,BIGAYANVILLA ROSA, PHASE3, BIGAYANSANLUIS
+
+ 4/18/2026
+ the kk profiling.png yan yung format ng kk profiling sa kabataan check mo na lang
