@@ -107,20 +107,17 @@ class PasswordResetService
             ]);
         }
 
-        $updates = [
-            'password' => Hash::make($password),
+        $userUpdates = [
+            'password' => $password,
             'remember_token' => null,
         ];
 
         if ($this->usersTableHasColumn('active_session_id')) {
-            $updates['active_session_id'] = null;
+            $userUpdates['active_session_id'] = null;
         }
 
-        if ($this->usersTableHasColumn('must_change_password')) {
-            $updates['must_change_password'] = false;
-        }
+        $user->forceFill($userUpdates)->save();
 
-        $user->forceFill($updates)->save();
         $this->broker()->deleteToken($user);
         $this->invalidateUserSessions($user);
 

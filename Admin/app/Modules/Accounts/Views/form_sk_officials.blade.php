@@ -65,7 +65,7 @@
                                 <label class="form-label-light">Suffix</label>
                                 <select name="suffix" id="official_suffix" class="form-input-light">
                                     <option value="" disabled selected>Select Suffix</option>
-                                    <option value="None">None</option>
+                                    <option value="">None</option>
                                     <option value="Jr.">Jr.</option>
                                     <option value="Sr.">Sr.</option>
                                     <option value="II">II</option>
@@ -129,8 +129,8 @@
                                 <label class="form-label-light required">Status</label>
                                 <select name="status" id="official_status" class="form-input-light" required>
                                     <option value="" disabled selected>Select Status</option>
-                                    <option value="ACTIVE">Active</option>
-                                    <option value="INACTIVE">Inactive</option>
+                                    <option value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}">Active</option>
+                                    <option value="{{ \App\Modules\Shared\Models\User::STATUS_INACTIVE }}">Inactive</option>
                                 </select>
                                 <span class="form-error-light"></span>
                             </div>

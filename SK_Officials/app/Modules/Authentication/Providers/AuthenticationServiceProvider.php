@@ -41,8 +41,7 @@ class AuthenticationServiceProvider extends ServiceProvider
     {
         $this->configurePasswordResetRateLimiters();
         $this->loadRoutes();
-        $this->loadViewsFrom(app_path('modules/Authentication/views'), 'Authentication');
-        $this->loadViewsFrom(__DIR__.'/../Views', 'authentication');
+        $this->loadViewsFrom(__DIR__.'/../views', 'authentication');
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
     }
 

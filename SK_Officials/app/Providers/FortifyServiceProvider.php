@@ -17,7 +17,7 @@ class FortifyServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Fortify::loginView(fn () => view('Authentication::login'));
+        Fortify::loginView(fn () => view('authentication::login'));
         Fortify::verifyEmailView(fn () => view('authentication::verify-notice'));
 
         Fortify::authenticateUsing(function (Request $request) {

@@ -32,11 +32,11 @@ class AccountResetPasswordNotification extends Notification
         $expiry = (int) config('auth.passwords.'.config('auth.defaults.passwords', 'users').'.expire');
 
         return (new MailMessage)
-            ->subject('Reset Your '.$this->audienceLabel.' Password')
+            ->subject('Set up your '.$this->audienceLabel.' account password')
             ->greeting('Hello!')
-            ->line('We received a request to reset the password for your '.$this->audienceLabel.' account.')
-            ->action('Create New Password', $resetUrl)
-            ->line('This password reset link will expire in '.$expiry.' minutes.')
-            ->line('If you did not request a password reset, no further action is required.');
+            ->line('You have been invited to set up a password for your '.$this->audienceLabel.' account.')
+            ->action('Set Up Password', $resetUrl)
+            ->line('This link will expire in '.$expiry.' minutes.')
+            ->line('If you did not expect this email, you can ignore it.');
     }
 }

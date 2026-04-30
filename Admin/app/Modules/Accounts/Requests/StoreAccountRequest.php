@@ -14,6 +14,15 @@ class StoreAccountRequest extends FormRequest
         return $this->user()?->isAdmin() ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $suffix = $this->input('suffix');
+
+        if ($suffix === '' || $suffix === 'None') {
+            $this->merge(['suffix' => null]);
+        }
+    }
+
     public function rules(): array
     {
         $requiresDemographics = in_array($this->input('role'), [
@@ -25,7 +34,7 @@ class StoreAccountRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
-            'suffix' => ['nullable', Rule::in(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V']), 'not_in:'],
+            'suffix' => ['nullable', Rule::in(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'])],
             'sex' => [$requiresDemographics ? 'required' : 'nullable', Rule::in(['Male', 'Female']), 'not_in:'],
             'date_of_birth' => [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'],
             'age' => ['nullable', 'integer', 'min:0', 'max:150'],

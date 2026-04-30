@@ -44,6 +44,8 @@ create index IF not exists users_status_index on public.users using btree (statu
 
 create index IF not exists users_tenant_id_index on public.users using btree (tenant_id) TABLESPACE pg_default;
 
+create index IF not exists users_barangay_id_index on public.users using btree (barangay_id) TABLESPACE pg_default;
+
 create table public.tenants (
   id bigserial not null,
   name character varying(150) not null,
@@ -326,3 +328,93 @@ create table public.sk_fed_email_verified_devices (
 ) TABLESPACE pg_default;
 
 create index IF not exists sk_fed_verified_device_verified_at_idx on public.sk_fed_email_verified_devices using btree (verified_at) TABLESPACE pg_default;
+
+create table public.sk_official_trusted_devices (
+  id bigserial not null,
+  user_id bigint not null,
+  fingerprint character varying(128) not null,
+  ip_address character varying(45) null,
+  user_agent text null,
+  last_used_at timestamp without time zone null,
+  expires_at timestamp without time zone null,
+  metadata json null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint sk_official_trusted_devices_pkey primary key (id),
+  constraint sk_official_trusted_devices_user_id_foreign foreign KEY (user_id) references users (id) on delete CASCADE,
+  constraint sk_official_trusted_device_unique unique (user_id, fingerprint)
+) TABLESPACE pg_default;
+
+create index IF not exists sk_official_trusted_device_exp_idx on public.sk_official_trusted_devices using btree (user_id, expires_at) TABLESPACE pg_default;
+
+create table public.sk_official_login_attempts (
+  id bigserial not null,
+  user_id bigint null,
+  email character varying(255) not null,
+  ip_address character varying(45) not null,
+  successful boolean not null default false,
+  user_agent text null,
+  attempted_at timestamp without time zone not null default CURRENT_TIMESTAMP,
+  metadata json null,
+  constraint sk_official_login_attempts_pkey primary key (id),
+  constraint sk_official_login_attempts_user_id_foreign foreign KEY (user_id) references users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists sk_official_login_attempts_email_index on public.sk_official_login_attempts using btree (email) TABLESPACE pg_default;
+create index IF not exists sk_official_login_attempts_ip_address_index on public.sk_official_login_attempts using btree (ip_address) TABLESPACE pg_default;
+create index IF not exists sk_official_login_attempt_email_idx on public.sk_official_login_attempts using btree (email, successful, attempted_at) TABLESPACE pg_default;
+create index IF not exists sk_official_login_attempt_ip_idx on public.sk_official_login_attempts using btree (ip_address, successful, attempted_at) TABLESPACE pg_default;
+
+create table public.sk_official_auth_audit_logs (
+  id bigserial not null,
+  user_id bigint null,
+  tenant_id bigint null,
+  actor_email character varying(255) null,
+  event character varying(120) not null,
+  outcome character varying(20) null,
+  resource_type character varying(120) null,
+  resource_id character varying(120) null,
+  ip_address character varying(45) null,
+  user_agent text null,
+  metadata json null,
+  created_at timestamp without time zone not null default CURRENT_TIMESTAMP,
+  constraint sk_official_auth_audit_logs_pkey primary key (id),
+  constraint sk_official_auth_audit_logs_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete set null,
+  constraint sk_official_auth_audit_logs_user_id_foreign foreign KEY (user_id) references users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists sk_official_auth_audit_event_idx on public.sk_official_auth_audit_logs using btree (event, created_at) TABLESPACE pg_default;
+create index IF not exists sk_official_auth_audit_user_idx on public.sk_official_auth_audit_logs using btree (user_id, created_at) TABLESPACE pg_default;
+create index IF not exists sk_official_auth_audit_tenant_idx on public.sk_official_auth_audit_logs using btree (tenant_id, created_at) TABLESPACE pg_default;
+create index IF not exists sk_official_auth_audit_outcome_idx on public.sk_official_auth_audit_logs using btree (outcome, created_at) TABLESPACE pg_default;
+create index IF not exists sk_official_auth_resource_idx on public.sk_official_auth_audit_logs using btree (resource_type, resource_id) TABLESPACE pg_default;
+
+create table public.sk_official_feature_flags (
+  id bigserial not null,
+  flag_key character varying(190) not null,
+  enabled boolean not null default false,
+  description character varying(255) null,
+  rollout_percentage smallint null,
+  metadata json null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint sk_official_feature_flags_pkey primary key (id),
+  constraint sk_official_feature_flags_flag_key_unique unique (flag_key)
+) TABLESPACE pg_default;
+
+create table public.sk_official_email_verified_devices (
+  id bigserial not null,
+  user_id bigint not null,
+  fingerprint character varying(128) not null,
+  verified_at timestamp without time zone null,
+  ip_address character varying(45) null,
+  user_agent text null,
+  metadata json null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint sk_official_email_verified_devices_pkey primary key (id),
+  constraint sk_official_email_verified_devices_user_id_unique unique (user_id),
+  constraint sk_official_email_verified_devices_user_id_foreign foreign KEY (user_id) references users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists sk_official_verified_device_verified_at_idx on public.sk_official_email_verified_devices using btree (verified_at) TABLESPACE pg_default;
