@@ -6,9 +6,9 @@
     <title>Rejected KK Profiling - SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css'
     ])
 </head>
 <body>
@@ -120,9 +120,9 @@
 <div class="dk-toast" id="rkkToast"></div>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/Rejected_KKProfiling/assets/js/rejected-kkprofiling.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Rejected_KKProfiling/assets/js/rejected-kkprofiling.js'
 ])
 
 </body>

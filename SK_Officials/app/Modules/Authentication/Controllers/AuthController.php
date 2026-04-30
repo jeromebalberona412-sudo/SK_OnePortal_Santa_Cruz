@@ -29,7 +29,7 @@ class AuthController extends Controller
 
     public function showLogin(): View
     {
-        return view('Authentication::login');
+        return view('authentication::login');
     }
 
     public function showVerifyNotice(Request $request): View
@@ -235,7 +235,7 @@ class AuthController extends Controller
 
     public function showForgotPassword(): View
     {
-        return view('Authentication::forgot-password');
+        return view('authentication::forgot-password');
     }
 
     public function sendPasswordResetLink(Request $request): RedirectResponse
@@ -333,16 +333,14 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->forceFill([
-            'password' => Hash::make((string) $validated['password']),
-            'remember_token' => null,
-        ])->save();
+        $user->password = (string) $validated['password'];
+        $user->remember_token = null;
+        $user->save();
 
+        // Update must_change_password to false using raw query with PostgreSQL casting
         User::query()
             ->whereKey($user->getKey())
-            ->update(['must_change_password' => false]);
-
-        $user->forceFill(['must_change_password' => false]);
+            ->update(['must_change_password' => \DB::raw("'false'::boolean")]);
 
         Auth::logout();
         $request->session()->invalidate();

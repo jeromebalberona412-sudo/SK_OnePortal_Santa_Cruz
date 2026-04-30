@@ -7,9 +7,9 @@
     <title>SK Barangay {{ $name }} - SK Officials</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Announcement/assets/css/announcement.css',
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Announcement/assets/css/announcement.css',
     ])
     <style>
         .bfp-wrap { padding: 24px; }
@@ -320,8 +320,8 @@
 </div>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
 ])
 
 <script>

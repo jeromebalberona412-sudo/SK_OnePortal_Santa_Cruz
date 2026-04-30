@@ -6,9 +6,9 @@
     <title>Barangay Census Form - SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Barangay_Census_Form/assets/css/barangay-census-form.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Barangay_Census_Form/assets/css/barangay-census-form.css'
     ])
 </head>
 <body>
@@ -273,9 +273,9 @@
 
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/Barangay_Census_Form/assets/js/barangay-census-form.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Barangay_Census_Form/assets/js/barangay-census-form.js'
 ])
 
 </body>

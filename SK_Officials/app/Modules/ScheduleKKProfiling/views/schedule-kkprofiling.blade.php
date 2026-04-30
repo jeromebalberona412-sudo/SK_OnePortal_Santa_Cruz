@@ -6,9 +6,9 @@
     <title>Schedule KK Profiling - SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/ScheduleKKProfiling/assets/css/schedule-kkprofiling.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/ScheduleKKProfiling/assets/css/schedule-kkprofiling.css'
     ])
 </head>
 <body>
@@ -233,9 +233,9 @@
 </div>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/ScheduleKKProfiling/assets/js/schedule-kkprofiling.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/ScheduleKKProfiling/assets/js/schedule-kkprofiling.js'
 ])
 
 </body>

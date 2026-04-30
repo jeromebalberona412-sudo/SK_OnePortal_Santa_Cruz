@@ -6,9 +6,9 @@
     <title>Programs - SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Programs/assets/css/programs.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Programs/assets/css/programs.css'
     ])
 </head>
 <body>
@@ -232,9 +232,9 @@
 </div>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/Programs/assets/js/programs.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Programs/assets/js/programs.js'
 ])
 
 </body>

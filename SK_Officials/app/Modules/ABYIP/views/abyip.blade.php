@@ -12,10 +12,10 @@
     </script>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/ABYIP/assets/css/abyip.css',
-        'app/modules/ABYIP/assets/js/abyip.js'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/ABYIP/assets/css/abyip.css',
+        'app/Modules/ABYIP/assets/js/abyip.js'
     ])
 </head>
 <body>
@@ -494,9 +494,9 @@
 </main>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/ABYIP/assets/js/abyip.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/ABYIP/assets/js/abyip.js'
 ])
 
 </body>

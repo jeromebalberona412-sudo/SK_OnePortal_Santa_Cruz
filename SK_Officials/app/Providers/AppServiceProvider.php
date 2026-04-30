@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
      */
     private function loadModuleRoutes(): void
     {
-        $modulesPath = app_path('modules');
+        $modulesPath = app_path('Modules');
         
         if (is_dir($modulesPath)) {
             $modules = scandir($modulesPath);
@@ -60,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
      */
     private function loadModuleViews(): void
     {
-        $modulesPath = app_path('modules');
+        $modulesPath = app_path('Modules');
         
         if (is_dir($modulesPath)) {
             $modules = scandir($modulesPath);

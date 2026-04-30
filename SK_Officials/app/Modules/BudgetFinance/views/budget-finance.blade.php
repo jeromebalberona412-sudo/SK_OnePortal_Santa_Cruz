@@ -6,9 +6,9 @@
     <title>Budget & Finance - SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/BudgetFinance/assets/css/budget-finance.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/BudgetFinance/assets/css/budget-finance.css'
     ])
 </head>
 <body>
@@ -232,9 +232,9 @@
 </div>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/BudgetFinance/assets/js/budget-finance.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/BudgetFinance/assets/js/budget-finance.js'
 ])
 </body>
 </html>

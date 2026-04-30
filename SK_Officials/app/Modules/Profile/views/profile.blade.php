@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Profile/assets/css/profile.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Profile/assets/css/profile.css'
     ])
 </head>
 <body>
@@ -216,7 +216,7 @@
                             <div class="account-settings-desc">Change your account password via email reset link.</div>
                         </div>
                     </div>
-                    <a href="{{ route('change-password') }}" class="account-settings-btn">
+                    <a href="{{ route('password.change') }}" class="account-settings-btn">
                         <i class="fa-solid fa-key"></i>
                         Change Password
                     </a>
@@ -231,9 +231,9 @@
 </main>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/Profile/assets/js/profile.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Profile/assets/js/profile.js'
 ])
 
 </body>

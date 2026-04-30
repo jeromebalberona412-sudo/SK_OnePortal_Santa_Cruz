@@ -6,9 +6,9 @@
     <title>KK Profiling Requests - SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/KKProfilingRequests/assets/css/kkprofiling-requests.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css'
     ])
 </head>
 <body>
@@ -490,9 +490,9 @@
 <!-- Success Modal - Removed and replaced with toast notification -->
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/KKProfilingRequests/assets/js/kkprofiling-requests.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/KKProfilingRequests/assets/js/kkprofiling-requests.js'
 ])
 
 </body>

@@ -6,9 +6,9 @@
     <title>Kabataan List - SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Kabataan/assets/css/kabataan.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Kabataan/assets/css/kabataan.css'
     ])
 </head>
 <body>
@@ -1009,9 +1009,9 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/Kabataan/assets/js/kabataan.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Kabataan/assets/js/kabataan.js'
 ])
 
 </body>

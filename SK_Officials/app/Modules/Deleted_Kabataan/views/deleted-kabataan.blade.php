@@ -6,9 +6,9 @@
     <title>Deleted Kabataan - SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Deleted_Kabataan/assets/css/deleted-kabataan.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css'
     ])
 </head>
 <body>
@@ -119,9 +119,9 @@
 <div class="dk-toast" id="dkToast"></div>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/Deleted_Kabataan/assets/js/deleted-kabataan.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Deleted_Kabataan/assets/js/deleted-kabataan.js'
 ])
 
 </body>

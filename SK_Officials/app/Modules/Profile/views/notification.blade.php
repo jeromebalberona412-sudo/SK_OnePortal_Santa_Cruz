@@ -6,9 +6,9 @@
     <title>Notifications — SK Officials Portal</title>
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Profile/assets/css/notification.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Profile/assets/css/notification.css'
     ])
 </head>
 <body>
@@ -188,9 +188,9 @@
 </main>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/Profile/assets/js/notification.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Profile/assets/js/notification.js'
 ])
 
 </body>

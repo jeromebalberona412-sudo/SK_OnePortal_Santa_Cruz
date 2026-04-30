@@ -9,9 +9,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     @vite([
-        'app/modules/layout/css/header.css',
-        'app/modules/layout/css/sidebar.css',
-        'app/modules/Dashboard/assets/css/dashboard.css'
+        'app/Modules/layout/css/header.css',
+        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Dashboard/assets/css/dashboard.css'
     ])
 </head>
 <body>
@@ -693,9 +693,9 @@
 </div>
 
 @vite([
-    'app/modules/layout/js/header.js',
-    'app/modules/layout/js/sidebar.js',
-    'app/modules/Dashboard/assets/js/dashboard.js'
+    'app/Modules/layout/js/header.js',
+    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Dashboard/assets/js/dashboard.js'
 ])
 
 <!-- Bootstrap 5 JS -->
