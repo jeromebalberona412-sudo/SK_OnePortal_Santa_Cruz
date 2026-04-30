@@ -190,13 +190,23 @@ body.sidebar-collapsed .toggle-icon-collapse {
     height: 34px;
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.7);
-    background: rgba(255, 255, 255, 0.2);
+    background: #ffffff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 700;
     color: #ffffff;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.topbar-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
 }
 
 .topbar-user-name,

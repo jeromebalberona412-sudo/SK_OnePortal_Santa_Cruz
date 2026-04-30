@@ -181,7 +181,7 @@ function renderArfedTable() {
         const term = `${r.termStart} – ${r.termEnd}`;
         return `
         <tr>
-            <td style="font-weight:600;color:#111827;text-align:center;">${fullName}</td>
+            <td class="arfed-name-cell">${fullName}</td>
             <td style="text-align:center;">${r.position || '—'}</td>
             <td style="text-align:center;"><span class="arfed-term-badge">${term}</span></td>
             <td style="text-align:center;"><span class="arfed-completed-badge">Completed Term</span></td>

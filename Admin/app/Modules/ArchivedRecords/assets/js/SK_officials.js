@@ -200,7 +200,7 @@ function renderAroffTable() {
         const term = `${r.termStart} – ${r.termEnd}`;
         return `
         <tr>
-            <td style="font-weight:600;color:#111827;text-align:center;">${fullName}</td>
+            <td class="aroff-name-cell">${fullName}</td>
             <td style="text-align:center;">${r.position || '—'}</td>
             <td style="text-align:center;"><span class="aroff-term-badge">${term}</span></td>
             <td style="text-align:center;"><span class="aroff-completed-badge">Completed Term</span></td>

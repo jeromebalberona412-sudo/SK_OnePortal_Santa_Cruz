@@ -35,7 +35,6 @@
                 <table class="contact-table" id="contactTable">
                     <thead>
                         <tr>
-                            <th>Type</th>
                             <th>Platform</th>
                             <th>Contact Detail</th>
                             <th>Actions</th>
@@ -79,26 +78,12 @@
             <form id="addContactForm">
 
                 <div class="form-group-modern">
-                    <label for="addType" class="form-label-modern">Contact Type <span class="required-star">*</span></label>
-                    <select id="addType" class="form-input-modern form-select-modern" required>
-                        <option value="" disabled selected>Select type...</option>
-                        <option value="Phone">Phone</option>
-                        <option value="Email">Email</option>
-                        <option value="Address">Address</option>
-                        <option value="Facebook">Facebook</option>
-                        <option value="Office Hours">Office Hours</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <span class="field-error" id="addTypeError">Please select a contact type.</span>
-                </div>
-
-                <div class="form-group-modern">
                     <label for="addLabel" class="form-label-modern">Platform <span class="required-star">*</span> <span class="form-hint">(e.g. "Main Office", "Facebook Page")</span></label>
                     <input type="text" id="addLabel" class="form-input-modern" placeholder="Enter platform name" required>
                     <span class="field-error" id="addLabelError">Platform name is required.</span>
                 </div>
 
-                <div class="form-group-dynamic" id="addValueGroup">
+                <div class="form-group-dynamic visible" id="addValueGroup">
                     <label for="addValue" class="form-label-modern">Contact Detail <span class="required-star">*</span></label>
                     <input type="text" id="addValue" class="form-input-modern" placeholder="Enter the contact detail">
                     <span class="field-error" id="addValueError">Contact detail is required.</span>
@@ -137,18 +122,6 @@
         <div class="modal-body">
             <form id="editContactForm" onsubmit="return false;">
                 <input type="hidden" id="editContactId">
-
-                <div class="form-group-modern">
-                    <label for="editType" class="form-label-modern">Contact Type <span class="required-star">*</span></label>
-                    <select id="editType" class="form-input-modern form-select-modern" required>
-                        <option value="Phone">Phone</option>
-                        <option value="Email">Email</option>
-                        <option value="Address">Address</option>
-                        <option value="Facebook">Facebook</option>
-                        <option value="Office Hours">Office Hours</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
 
                 <div class="form-group-modern">
                     <label for="editLabel" class="form-label-modern">Platform <span class="required-star">*</span> <span class="form-hint">(e.g. "Main Office", "Facebook Page")</span></label>

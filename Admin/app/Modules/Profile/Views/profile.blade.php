@@ -34,7 +34,7 @@
         {{-- ── Hero ─────────────────────────────────────────── --}}
         <header class="profile-hero">
             <div class="profile-avatar-frame" aria-hidden="true">
-                <span class="profile-avatar-fallback" style="display:grid;">{{ $initials }}</span>
+                <img src="{{ asset('Images/image.png') }}" alt="Profile" class="profile-avatar-img">
             </div>
             <div class="profile-hero__identity">
                 <p class="profile-eyebrow">System User</p>

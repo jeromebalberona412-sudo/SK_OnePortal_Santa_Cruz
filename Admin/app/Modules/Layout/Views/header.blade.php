@@ -65,7 +65,9 @@
                 aria-controls="topbarUserMenu"
                 onclick="toggleProfileDropdown(event)"
             >
-                <span class="topbar-user-avatar nav-avatar" aria-hidden="true">{{ $initials }}</span>
+                <span class="topbar-user-avatar nav-avatar" aria-hidden="true">
+                    <img src="{{ asset('Images/image.png') }}" alt="Profile" class="topbar-avatar-img">
+                </span>
                 <span class="topbar-user-name nav-name">{{ $displayName }}</span>
                 <svg class="topbar-user-caret nav-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <polyline points="7,10 12,15 17,10"></polyline>

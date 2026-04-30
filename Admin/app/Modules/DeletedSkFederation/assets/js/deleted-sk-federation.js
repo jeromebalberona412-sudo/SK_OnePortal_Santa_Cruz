@@ -150,7 +150,7 @@ function renderDsfTable() {
         const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
         return `
         <tr>
-            <td style="font-weight:600;color:#111827;">${fullName}</td>
+            <td class="dsf-name-cell">${fullName}</td>
             <td>${r.position || '—'}</td>
             <td>${r.barangay ? r.barangay + (r.municipality ? ', ' + r.municipality : '') : '—'}</td>
             <td><span class="dsf-deleted-badge">${r.deletedDate}</span></td>

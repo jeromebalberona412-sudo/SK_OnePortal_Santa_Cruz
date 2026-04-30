@@ -17,6 +17,7 @@
 		['label' => 'Federation Accounts Count', 'metricKey' => 'federationAccounts', 'tone' => 'teal', 'icon' => 'federation'],
 		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials'],
 		['label' => 'Current Active Accounts', 'metricKey' => 'currentActiveAccounts', 'tone' => 'indigo', 'icon' => 'activity'],
+		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan'],
 	];
 @endphp
 

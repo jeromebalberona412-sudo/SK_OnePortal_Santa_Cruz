@@ -651,3 +651,135 @@
     .dsf-search-input { min-width: 110px; max-width: 130px; }
     .dsf-btn-view, .dsf-btn-restore { min-width: 70px; font-size: 11px; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE — Deleted SK Federation
+══════════════════════════════════════════════════════════════ */
+:root.dark .deleted-sk-fed-page { background: #0f172a; color: #cbd5e1; }
+
+:root.dark .dsf-page-title    { color: #f1f5f9; }
+:root.dark .dsf-page-subtitle { color: #64748b; }
+:root.dark .dsf-search-input {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+:root.dark .dsf-search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Stat cards */
+:root.dark .dsf-stat-card {
+    background: #1e293b;
+    border-color: #334155 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+:root.dark .dsf-stat-value { color: #f1f5f9; }
+:root.dark .dsf-stat-label { color: #64748b; }
+:root.dark .dsf-icon-red    { background: rgba(220, 38, 38, 0.15); }
+:root.dark .dsf-icon-orange { background: rgba(217, 119, 6, 0.15); }
+:root.dark .dsf-icon-blue   { background: rgba(59, 130, 246, 0.15); }
+
+/* Filter tabs */
+:root.dark .dsf-tab {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+:root.dark .dsf-tab:hover {
+    border-color: #ef4444;
+    color: #f87171;
+    background: rgba(220, 38, 38, 0.08);
+}
+:root.dark .dsf-tab.active {
+    background: #1e3a5f;
+    border-color: #1e3a5f;
+    color: #f1f5f9;
+}
+
+/* Table card */
+:root.dark .dsf-table-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+:root.dark .dsf-section-heading { border-bottom-color: #334155; }
+:root.dark .dsf-section-title   { color: #f1f5f9; }
+:root.dark .dsf-table tbody tr:nth-child(even) { background: #172033; }
+:root.dark .dsf-table tbody tr:hover { background: rgba(220, 38, 38, 0.06); }
+:root.dark .dsf-table th,
+:root.dark .dsf-table td {
+    border-bottom-color: #334155;
+    border-right-color: #334155;
+    color: #cbd5e1;
+}
+:root.dark .dsf-deleted-badge {
+    background: rgba(220, 38, 38, 0.12);
+    border-color: rgba(220, 38, 38, 0.3);
+    color: #f87171;
+}
+:root.dark .dsf-time-badge {
+    background: #334155;
+    border-color: #475569;
+    color: #94a3b8;
+}
+
+/* Pagination */
+:root.dark .dsf-pagination {
+    background: #172033;
+    border-top-color: #334155;
+}
+:root.dark .dsf-pagination-info { color: #64748b; }
+:root.dark .dsf-page-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+:root.dark .dsf-page-btn:hover:not(:disabled) {
+    background: #1e3a5f;
+    border-color: #1e3a5f;
+    color: #f1f5f9;
+}
+:root.dark .dsf-page-btn.active {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+/* Modals */
+:root.dark .dsf-modal-box {
+    background: #1e293b;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+:root.dark .dsf-modal-body { background: #1e293b; }
+:root.dark .dsf-modal-message { color: #94a3b8; }
+:root.dark .dsf-modal-name    { color: #f1f5f9; }
+:root.dark .dsf-modal-footer  { border-top-color: #334155; }
+:root.dark .dsf-view-section-block {
+    background: #172033;
+    border-color: #334155;
+}
+:root.dark .dsf-view-section-header {
+    background: #0f172a;
+    border-bottom-color: #334155;
+}
+:root.dark .dsf-view-section-icon {
+    background: #334155;
+    color: #94a3b8;
+}
+:root.dark .dsf-view-section-label { color: #94a3b8; }
+:root.dark .dsf-view-field { border-bottom-color: #334155; }
+:root.dark .dsf-view-label { color: #64748b; }
+:root.dark .dsf-view-value,
+:root.dark .dsf-view-fullname { color: #e2e8f0; }
+:root.dark .dsf-badge-blue  { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); }
+:root.dark .dsf-badge-green { background: rgba(74, 222, 128, 0.1);  color: #4ade80; border-color: rgba(74, 222, 128, 0.3); }
+:root.dark .dsf-badge-gray  { background: #334155; color: #94a3b8; border-color: #475569; }
+
+/* ── Name column cell ── */
+.dsf-name-cell {
+    font-weight: 600;
+    color: #111827;
+}
+:root.dark .dsf-name-cell { color: #ffffff; }

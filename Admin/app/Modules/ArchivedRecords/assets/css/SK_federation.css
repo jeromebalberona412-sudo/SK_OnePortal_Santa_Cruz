@@ -555,3 +555,126 @@
     .arfed-search-input { min-width: 110px; max-width: 130px; }
     .arfed-btn-view { min-width: 60px; font-size: 11px; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE — Archived SK Federation Records
+══════════════════════════════════════════════════════════════ */
+:root.dark .arfed-page { background: #0f172a; color: #cbd5e1; }
+
+:root.dark .arfed-page-title    { color: #f1f5f9; }
+:root.dark .arfed-page-subtitle { color: #64748b; }
+:root.dark .arfed-search-input {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+:root.dark .arfed-search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Stat cards */
+:root.dark .arfed-stat-card {
+    background: #1e293b;
+    border-color: #334155 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+:root.dark .arfed-stat-value { color: #f1f5f9; }
+:root.dark .arfed-stat-label { color: #64748b; }
+:root.dark .arfed-icon-blue   { background: rgba(59, 130, 246, 0.15); }
+:root.dark .arfed-icon-green  { background: rgba(74, 222, 128, 0.1); }
+:root.dark .arfed-icon-indigo { background: rgba(129, 140, 248, 0.12); }
+
+/* Table card */
+:root.dark .arfed-table-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+:root.dark .arfed-section-heading { border-bottom-color: #334155; }
+:root.dark .arfed-section-title   { color: #f1f5f9; }
+:root.dark .arfed-filter-select {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+:root.dark .arfed-filter-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+:root.dark .arfed-table tbody td {
+    background: #1e293b;
+    color: #cbd5e1;
+    border-bottom-color: #334155;
+    border-right-color: #334155;
+}
+:root.dark .arfed-table tbody tr:nth-child(even) td { background: #172033; }
+:root.dark .arfed-table tbody tr:hover td { background: rgba(59, 130, 246, 0.06); }
+:root.dark .arfed-completed-badge,
+:root.dark .arfed-term-badge { color: #cbd5e1; }
+
+/* Pagination */
+:root.dark .arfed-pagination {
+    background: #172033;
+    border-top-color: #334155;
+}
+:root.dark .arfed-pagination-info { color: #64748b; }
+:root.dark .arfed-page-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+:root.dark .arfed-page-btn:hover:not(:disabled) {
+    background: #1e3a5f;
+    border-color: #1e3a5f;
+    color: #f1f5f9;
+}
+:root.dark .arfed-page-btn.active {
+    background: #1e3a5f;
+    border-color: #1e3a5f;
+    color: #fff;
+}
+
+/* View modal */
+:root.dark .arfed-modal-box {
+    background: #1e293b;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+:root.dark .arfed-view-section-block {
+    background: #172033;
+    border-color: #334155;
+}
+:root.dark .arfed-view-section-header {
+    background: #0f172a;
+    border-bottom-color: #334155;
+}
+:root.dark .arfed-view-section-icon {
+    background: #334155;
+    color: #94a3b8;
+}
+:root.dark .arfed-view-section-label { color: #94a3b8; }
+:root.dark .arfed-view-field { border-bottom-color: #334155; }
+:root.dark .arfed-view-label { color: #64748b; }
+:root.dark .arfed-view-value,
+:root.dark .arfed-view-fullname { color: #e2e8f0; }
+:root.dark .arfed-badge-green { background: rgba(74, 222, 128, 0.1);  color: #4ade80; border-color: rgba(74, 222, 128, 0.3); }
+:root.dark .arfed-badge-blue  { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); }
+:root.dark .arfed-badge-gray  { background: #334155; color: #94a3b8; border-color: #475569; }
+
+/* ── Name column cell ── */
+.arfed-name-cell {
+    font-weight: 600;
+    color: #111827;
+    text-align: center;
+}
+:root.dark .arfed-name-cell { color: #ffffff; }
+
+/* ── Column hint sub-label ── */
+.arfed-col-hint {
+    font-size: 9px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.75);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+}

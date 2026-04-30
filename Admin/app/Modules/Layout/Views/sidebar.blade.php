@@ -21,7 +21,9 @@
         </button>
 
         <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link">
-            <span class="sidebar-avatar" aria-hidden="true">{{ $initials }}</span>
+            <span class="sidebar-avatar" aria-hidden="true">
+                <img src="{{ asset('Images/image.png') }}" alt="Profile" class="sidebar-avatar-img">
+            </span>
             <div class="sidebar-user-info">
                 <div class="s-name">{{ $displayName }}</div>
                 <div class="s-role">Admin Member</div>

@@ -789,3 +789,133 @@
     .bl-page-title { font-size: 1.3rem; }
     .bl-modal { max-width: 95vw; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE — Barangay Logos
+══════════════════════════════════════════════════════════════ */
+:root.dark .barangay-logos-page { background: #0f172a; }
+
+:root.dark .bl-page-title    { color: #f1f5f9; }
+:root.dark .bl-page-subtitle { color: #64748b; }
+
+:root.dark .bl-counter-pill {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+:root.dark #uploadedCount { color: #60a5fa; }
+:root.dark .bl-counter-sep   { color: #475569; }
+:root.dark .bl-counter-label { color: #64748b; }
+
+:root.dark .bl-search-input {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+:root.dark .bl-search-input::placeholder { color: #475569; }
+:root.dark .bl-search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+:root.dark .bl-search-clear:hover { background: rgba(220, 38, 38, 0.15); }
+
+:root.dark .bl-no-results { color: #64748b; }
+
+/* Cards */
+:root.dark .bl-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+:root.dark .bl-card:hover {
+    border-color: rgba(96, 165, 250, 0.5);
+    box-shadow: 0 8px 28px rgba(96, 165, 250, 0.12);
+}
+:root.dark .bl-preview-box {
+    background: #172033;
+    border-bottom-color: #334155;
+}
+:root.dark .bl-logo-img { background: #ffffff; }
+:root.dark .bl-placeholder-icon { color: #475569; }
+:root.dark .bl-placeholder-text { color: #475569; }
+:root.dark .bl-card-footer { background: #1e293b; }
+:root.dark .bl-barangay-name { color: #e2e8f0; }
+
+/* Upload button */
+:root.dark .bl-upload-btn {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+    border-color: rgba(96, 165, 250, 0.3);
+}
+:root.dark .bl-upload-btn:hover {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+:root.dark .bl-card.has-logo .bl-upload-btn {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.3);
+}
+:root.dark .bl-card.has-logo .bl-upload-btn:hover {
+    background: #16a34a;
+    color: #fff;
+    border-color: #16a34a;
+}
+
+/* Confirmation modal */
+:root.dark .bl-modal {
+    background: #1e293b;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+:root.dark .bl-modal-header {
+    border-bottom-color: #334155;
+}
+:root.dark .bl-modal-header-icon {
+    background: rgba(96, 165, 250, 0.1);
+}
+:root.dark .bl-modal-header-icon svg { color: #60a5fa; }
+:root.dark .bl-modal-title    { color: #f1f5f9; }
+:root.dark .bl-modal-subtitle { color: #64748b; }
+:root.dark .bl-modal-close {
+    background: #334155;
+    color: #94a3b8;
+}
+:root.dark .bl-modal-close:hover {
+    background: rgba(220, 38, 38, 0.15);
+    color: #f87171;
+}
+:root.dark .bl-modal-preview-wrap {
+    background: #172033;
+    border-color: #334155;
+}
+:root.dark .bl-modal-file-info {
+    background: #172033;
+    border-color: #334155;
+}
+:root.dark #blModalFileName { color: #e2e8f0; }
+:root.dark .bl-modal-file-size { color: #64748b; }
+:root.dark .bl-modal-btn-cancel {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+:root.dark .bl-modal-btn-cancel:hover {
+    background: #334155;
+    color: #f1f5f9;
+}
+
+/* Action modal */
+:root.dark .bl-action-modal { background: #1e293b; }
+:root.dark .bl-action-icon-blue {
+    background: rgba(96, 165, 250, 0.1);
+    border-color: rgba(96, 165, 250, 0.2);
+}
+:root.dark .bl-action-icon-blue svg { color: #60a5fa; }
+:root.dark .bl-action-icon-red {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.2);
+}
+:root.dark .bl-action-icon-red svg { color: #f87171; }
+:root.dark .bl-action-modal-title { color: #f1f5f9; }
+:root.dark .bl-action-modal-msg   { color: #94a3b8; }
+:root.dark .bl-action-modal-barangay { color: #60a5fa; }
