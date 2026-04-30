@@ -221,21 +221,29 @@
         wireTypeSelect('addType', 'addValueGroup', 'addValue', 'addLabel');
         wireTypeSelect('editType', 'editValueGroup', 'editValue', 'editLabel');
 
-        /* ── Maximize / Restore — exact same pattern as Archived/Deleted modules ── */
+        /* ── Maximize / Restore — true full screen ── */
         function wireMaximize(toggleBtnId, overlayId, boxId) {
             var toggleBtn = document.getElementById(toggleBtnId);
             var overlay   = document.getElementById(overlayId);
             var box       = document.getElementById(boxId);
             if (!toggleBtn || !overlay || !box) return;
 
-            toggleBtn.textContent = '□';
+            toggleBtn.textContent = '\u25A1'; // □
 
             toggleBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 var isMax = !box.classList.contains('contact-maximized');
-                overlay.classList.toggle('contact-maximized', isMax);
-                box.classList.toggle('contact-maximized', isMax);
-                toggleBtn.textContent = isMax ? '⧉' : '□';
+                if (isMax) {
+                    overlay.classList.add('contact-maximized');
+                    overlay.style.padding = '0';
+                    box.classList.add('contact-maximized');
+                    toggleBtn.textContent = '\u29C9'; // ⧉
+                } else {
+                    overlay.classList.remove('contact-maximized');
+                    overlay.style.padding = '';
+                    box.classList.remove('contact-maximized');
+                    toggleBtn.textContent = '\u25A1'; // □
+                }
             });
         }
 
@@ -267,9 +275,9 @@
             var overlay = document.getElementById('addContactModal');
             var box = document.getElementById('addModalContainer');
             var tb = document.getElementById('btnMaxAdd');
-            if (overlay) overlay.classList.remove('contact-maximized');
+            if (overlay) { overlay.classList.remove('contact-maximized'); overlay.style.padding = ''; }
             if (box) box.classList.remove('contact-maximized');
-            if (tb) tb.textContent = '□';
+            if (tb) tb.textContent = '\u25A1';
         }
 
         if (btnCloseAdd)  btnCloseAdd.addEventListener('click',  closeAdd);
@@ -307,9 +315,9 @@
             var overlay = document.getElementById('editContactModal');
             var box = document.getElementById('editModalContainer');
             var tb = document.getElementById('btnMaxEdit');
-            if (overlay) overlay.classList.remove('contact-maximized');
+            if (overlay) { overlay.classList.remove('contact-maximized'); overlay.style.padding = ''; }
             if (box) box.classList.remove('contact-maximized');
-            if (tb) tb.textContent = '□';
+            if (tb) tb.textContent = '\u25A1';
         }
 
         if (btnCloseEdit)  btnCloseEdit.addEventListener('click',  closeEdit);

@@ -276,7 +276,7 @@
 }
 
 .dsf-btn-view {
-    background: #1E3A5F;
+    background: #1565c0;
     color: #fff;
     border: none;
     border-radius: 7px;
@@ -290,7 +290,7 @@
 }
 
 .dsf-btn-view:hover {
-    background: #2C5282;
+    background: #0d47a1;
     transform: translateY(-1px);
 }
 

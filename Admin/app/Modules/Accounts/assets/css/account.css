@@ -783,7 +783,7 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
 :root.dark .btn-delete-modern { background: #ef4444; color: #ffffff !important; }
 :root.dark .btn-delete-modern:hover { background: #dc2626; }
 
-/* ── Top success toast ───────────────────────────────────── */
+/* ── Top success toast — solid background, white text, no icon ── */
 #accountToast,
 #accountToastEdit,
 #accountToastDelete {
@@ -794,14 +794,13 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
     z-index: 3000;
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: #ffffff;
     border-radius: 10px;
-    padding: 12px 18px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    padding: 12px 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
     font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
+    color: #ffffff;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease, transform 0.3s ease;
@@ -809,23 +808,17 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
 
 /* green — add/create */
 #accountToast {
-    border: 1px solid #bbf7d0;
-    border-left: 4px solid #16a34a;
-    color: #15803d;
+    background: #16a34a;
 }
 
-/* yellow — edit/update */
+/* amber — edit/update */
 #accountToastEdit {
-    border: 1px solid #fde68a;
-    border-left: 4px solid #d97706;
-    color: #92400e;
+    background: #d97706;
 }
 
 /* red — delete */
 #accountToastDelete {
-    border: 1px solid #fecaca;
-    border-left: 4px solid #dc2626;
-    color: #991b1b;
+    background: #dc2626;
 }
 
 #accountToast.show,
@@ -836,36 +829,9 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
     pointer-events: auto;
 }
 
-#accountToast svg,
-#accountToastEdit svg,
-#accountToastDelete svg {
-    flex-shrink: 0;
-    opacity: 0.85;
-}
-
-:root.dark #accountToast {
-    background: #1e293b;
-    border-color: #166534;
-    border-left-color: #16a34a;
-    color: #4ade80;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-
-:root.dark #accountToastEdit {
-    background: #1e293b;
-    border-color: #78350f;
-    border-left-color: #d97706;
-    color: #fbbf24;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-
-:root.dark #accountToastDelete {
-    background: #1e293b;
-    border-color: #7f1d1d;
-    border-left-color: #dc2626;
-    color: #f87171;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
+:root.dark #accountToast    { background: #15803d; }
+:root.dark #accountToastEdit   { background: #b45309; }
+:root.dark #accountToastDelete { background: #b91c1c; }
 
 /* ── Batch Upload Enhancements ─────────────────────────────── */
 
