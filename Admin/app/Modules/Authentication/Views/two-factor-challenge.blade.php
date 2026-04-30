@@ -73,7 +73,7 @@
                         <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
                     @endif
 
-                    <form method="POST" action="{{ url('/two-factor-challenge') }}" novalidate>
+                    <form method="POST" action="{{ url('/two-factor-challenge') }}" novalidate id="twoFactorForm">
                         @csrf
                         @php($oldCode = preg_replace('/\D/', '', (string) old('code', '')))
 
@@ -89,7 +89,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="login-btn">Authenticate</button>
+                        <button type="submit" class="login-btn" id="twoFactorSubmitBtn">Authenticate</button>
                     </form>
 
                     <div class="form-footer">

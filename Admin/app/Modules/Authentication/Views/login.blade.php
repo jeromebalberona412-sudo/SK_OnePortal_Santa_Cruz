@@ -117,10 +117,15 @@
     </div>
 
     <script>
-        (function () {
-            var emailInput = document.getElementById('email');
+        document.addEventListener('DOMContentLoaded', function () {
+            var emailInput   = document.getElementById('email');
             var passwordInput = document.getElementById('password');
-            var submitBtn = document.getElementById('login-submit-btn');
+            var submitBtn    = document.getElementById('login-submit-btn');
+
+            // Mark any server-side errors so they are not removed by clearError
+            document.querySelectorAll('.invalid-feedback').forEach(function (el) {
+                el.setAttribute('data-server-error', 'true');
+            });
 
             function validateEmail(email) {
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -152,10 +157,11 @@
                 submitBtn.disabled = !(emailInput.value.trim() && passwordInput.value);
             }
 
+            toggleSubmitBtn();
+
             emailInput.addEventListener('input', function () { clearError(this); toggleSubmitBtn(); });
             passwordInput.addEventListener('input', function () { clearError(this); toggleSubmitBtn(); });
 
-            // Validate on blur (when user leaves the field)
             emailInput.addEventListener('blur', function () {
                 if (!this.value.trim()) {
                     showError(this, 'Email address is required.');
@@ -196,24 +202,25 @@
                 if (!valid) { e.preventDefault(); return false; }
             });
 
-            document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('.invalid-feedback').forEach(function (el) {
-                    el.setAttribute('data-server-error', 'true');
+            // Password visibility toggle
+            var toggleBtn = document.querySelector('.password-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    var input = document.getElementById('password');
+                    var show  = document.getElementById('pw-show');
+                    var hide  = document.getElementById('pw-hide');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        show.style.display = 'none';
+                        hide.style.display = '';
+                    } else {
+                        input.type = 'password';
+                        show.style.display = '';
+                        hide.style.display = 'none';
+                    }
                 });
-                toggleSubmitBtn();
-            });
-
-            document.querySelector('.password-toggle').addEventListener('click', function () {
-                var input = document.getElementById('password');
-                var show = document.getElementById('pw-show');
-                var hide = document.getElementById('pw-hide');
-                if (input.type === 'password') {
-                    input.type = 'text'; show.style.display = 'none'; hide.style.display = '';
-                } else {
-                    input.type = 'password'; show.style.display = ''; hide.style.display = 'none';
-                }
-            });
-        })();
+            }
+        });
     </script>
 
 </body>

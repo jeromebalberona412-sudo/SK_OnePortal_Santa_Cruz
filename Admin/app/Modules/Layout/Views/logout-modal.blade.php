@@ -4,8 +4,8 @@
         <h2 id="logoutModalTitle" class="logout-box__title">Confirm Logout</h2>
         <p class="logout-box__text">Are you sure you want to logout?</p>
         <div class="logout-box__actions">
-            <button type="button" class="logout-btn logout-btn--no" onclick="closeLogoutModal()">No</button>
-            <button type="button" class="logout-btn logout-btn--yes" onclick="confirmLogout()">Yes</button>
+            <button type="button" class="logout-btn logout-btn--no btn-cancel-modern" onclick="closeLogoutModal()">No</button>
+            <button type="button" class="logout-btn logout-btn--yes btn-logout-modern" onclick="confirmLogout()">Yes</button>
         </div>
     </div>
 </div>

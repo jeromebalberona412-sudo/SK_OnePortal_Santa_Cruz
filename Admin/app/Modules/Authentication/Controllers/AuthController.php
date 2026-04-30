@@ -158,4 +158,26 @@ class AuthController extends Controller
         // For now, just show a success message (UI-only implementation)
         return redirect('/login')->with('status', 'Your password has been reset successfully.');
     }
+
+    /**
+     * Show the email verification notice
+     */
+    public function showVerifyEmail()
+    {
+        return view('authentication::verify-email');
+    }
+
+    /**
+     * Send email verification notification
+     */
+    public function sendVerificationEmail(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('status', 'verification-link-sent');
+    }
 }

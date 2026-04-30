@@ -57,6 +57,10 @@ export default defineConfig({
                 'app/Modules/ArchivedRecords/assets/js/SK_federation.js',
                 'app/Modules/ArchivedRecords/assets/css/SK_officials.css',
                 'app/Modules/ArchivedRecords/assets/js/SK_officials.js',
+
+                // Contact Us Module
+                'app/Modules/ContactUs/assets/css/contact.css',
+                'app/Modules/ContactUs/assets/js/contact.js',
             ],
             refresh: true,
         }),

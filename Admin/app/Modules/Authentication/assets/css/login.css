@@ -73,10 +73,8 @@ body.login-page {
     background-image: url('/Images/Background.png');
     background-size: cover; background-position: center; background-repeat: no-repeat;
     opacity: 0.07; mix-blend-mode: luminosity;
-    animation: subtleZoom 30s ease-in-out infinite alternate;
+    /* No zoom animation — static background */
 }
-
-@keyframes subtleZoom { 0% { transform: scale(1); } 100% { transform: scale(1.04); } }
 
 .gradient-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -93,17 +91,11 @@ body.login-page {
 .shape {
     position: absolute; border-radius: 50%;
     filter: blur(100px); opacity: 0.12;
-    animation: floatShape 25s ease-in-out infinite;
+    /* No float animation — static shapes */
 }
-.shape-1 { width: 500px; height: 500px; background: var(--op-blue-deeper); top: -15%; left: -10%; animation-delay: 0s; }
-.shape-2 { width: 400px; height: 400px; background: var(--op-blue-light); bottom: -10%; right: 5%; animation-delay: 8s; }
-.shape-3 { width: 350px; height: 350px; background: var(--op-yellow); top: 20%; left: 30%; animation-delay: 16s; }
-
-@keyframes floatShape {
-    0%, 100% { transform: translate(0, 0); }
-    33% { transform: translate(25px, -25px); }
-    66% { transform: translate(-15px, 15px); }
-}
+.shape-1 { width: 500px; height: 500px; background: var(--op-blue-deeper); top: -15%; left: -10%; }
+.shape-2 { width: 400px; height: 400px; background: var(--op-blue-light); bottom: -10%; right: 5%; }
+.shape-3 { width: 350px; height: 350px; background: var(--op-yellow); top: 20%; left: 30%; }
 
 /* ── Main container ── */
 .login-container {
@@ -146,10 +138,8 @@ body.login-page {
     width: 320px; height: 320px;
     background: radial-gradient(circle, rgba(253,192,32,0.2) 0%, rgba(21,101,192,0.15) 50%, transparent 70%);
     border-radius: 50%;
-    animation: glowPulse 3s ease-in-out infinite;
+    /* No pulse animation — prevents flickering */
 }
-
-@keyframes glowPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 0.9; } }
 
 .large-logo {
     width: 260px; height: 260px;
@@ -158,11 +148,8 @@ body.login-page {
     padding: 1.25rem;
     border: 4px solid rgba(253,192,32,0.35);
     position: relative; z-index: 1;
-    animation: logoFloat 4s ease-in-out infinite;
     filter: drop-shadow(0 20px 40px rgba(0,0,0,0.35));
 }
-
-@keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
 
 .brand-title {
     font-size: 3.5rem;
@@ -223,11 +210,7 @@ body.login-page {
     content: '';
     position: absolute; top: 0; left: 0; right: 0; height: 5px;
     background: linear-gradient(90deg, var(--op-blue-deeper) 0%, var(--op-yellow) 50%, var(--op-blue-light) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 3s linear infinite;
 }
-
-@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
 /* Form header */
 .form-header { margin-bottom: 1.75rem; }
@@ -252,18 +235,7 @@ body.login-page {
     display: inline-block;
     font-size: 1.6rem;
     -webkit-text-fill-color: initial;
-    animation: wave 2s ease-in-out infinite;
-    transform-origin: 70% 70%;
-}
-
-@keyframes wave {
-    0%, 100% { transform: rotate(0deg); }
-    10%, 30% { transform: rotate(14deg); }
-    20%, 40% { transform: rotate(-8deg); }
-    50% { transform: rotate(14deg); }
-    60% { transform: rotate(-4deg); }
-    70% { transform: rotate(10deg); }
-    80% { transform: rotate(0deg); }
+    /* No animation — prevents the flickering "tibok" effect */
 }
 
 .form-header p { font-size: 0.9rem; color: var(--op-gray-500); font-weight: 500; }
@@ -418,12 +390,17 @@ input[type="password"]::-ms-clear { display: none !important; }
     transition: border-color var(--transition-base), box-shadow var(--transition-base) !important;
     caret-color: var(--op-blue) !important;
     -moz-appearance: textfield !important;
+    appearance: textfield !important;
     padding: 0 !important;
     flex: 0 0 auto !important;
 }
 
 .otp-digit::-webkit-outer-spin-button,
-.otp-digit::-webkit-inner-spin-button { -webkit-appearance: none !important; margin: 0 !important; }
+.otp-digit::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    margin: 0 !important;
+}
 
 .otp-digit:focus {
     border-color: var(--op-blue) !important;

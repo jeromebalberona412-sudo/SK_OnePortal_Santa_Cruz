@@ -31,6 +31,15 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout')
     ->middleware('auth');
 
+// Email Verification routes (authenticated, unverified)
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [AuthController::class, 'showVerifyEmail'])
+        ->name('verification.notice');
+    Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail'])
+        ->name('verification.send')
+        ->middleware('throttle:6,1');
+});
+
 // Two-Factor Authentication routes (authenticated users)
 Route::middleware('auth')->group(function () {
     Route::get('/user/two-factor-authentication', [TwoFactorAuthController::class, 'show'])

@@ -26,6 +26,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ── Two-Factor Challenge form — show loading overlay on submit ─────────
+    const twoFactorForm = document.getElementById('twoFactorForm');
+    const twoFactorBtn = document.getElementById('twoFactorSubmitBtn');
+
+    if (twoFactorForm && overlay) {
+        twoFactorForm.addEventListener('submit', (e) => {
+            // Check if form is expired
+            if (twoFactorForm.classList.contains('is-expired')) {
+                e.preventDefault();
+                return;
+            }
+
+            // Disable button to prevent multiple clicks
+            if (twoFactorBtn) {
+                twoFactorBtn.disabled = true;
+            }
+
+            // Show overlay
+            overlay.hidden = false;
+            overlay.classList.add('is-visible');
+
+            // Update overlay text for 2FA
+            const overlayTitle = overlay.querySelector('.signin-overlay-title');
+            if (overlayTitle) overlayTitle.textContent = 'Authenticating';
+            if (overlaySub) overlaySub.textContent = 'Verifying your code...';
+        });
+    }
+
+    // ── Confirm Password form — show loading overlay on submit ─────────
+    const confirmPasswordForm = document.querySelector('form[action*="password.confirm"]');
+    
+    if (confirmPasswordForm && overlay) {
+        confirmPasswordForm.addEventListener('submit', () => {
+            // Show overlay
+            overlay.hidden = false;
+            overlay.classList.add('is-visible');
+
+            // Update overlay text for password confirmation
+            const overlayTitle = overlay.querySelector('.signin-overlay-title');
+            if (overlayTitle) overlayTitle.textContent = 'Confirming';
+            if (overlaySub) overlaySub.textContent = 'Verifying your password...';
+        });
+    }
+
     // ── Password visibility toggle ──────────────────────────
     document.querySelectorAll('.login-toggle-pw').forEach((btn) => {
         const input   = btn.closest('.login-input-wrap')?.querySelector('input[type="password"], input[type="text"]');
