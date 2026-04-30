@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Log;
 
 class AdminAccountController extends Controller
 {
@@ -126,21 +127,49 @@ class AdminAccountController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $tenantId = $this->resolveTenantId($request->user());
-        $this->ensureTenantBarangays($tenantId);
+        Log::info('AdminAccountController@store: Request received.');
+        try {
+            $validatedData = $request->validated();
+            Log::info('AdminAccountController@store: Validation passed.', $validatedData);
 
-        $account = $this->accountService->createAccount($request->validated(), $request->user());
+            $tenantId = $this->resolveTenantId($request->user());
+            $this->ensureTenantBarangays($tenantId);
 
-        if ($request->expectsJson()) {
-            return response([
-                'success' => true,
-                'message' => 'Account created successfully.',
-                'data' => ['id' => $account->id],
+            $user = $this->accountService->createAccount(
+                $validatedData,
+                $request->user()
+            );
+            Log::info('AdminAccountController@store: Account created successfully.', ['user_id' => $user->id]);
+
+            if ($request->expectsJson()) {
+                return response([
+                    'success' => true,
+                    'message' => 'Account created successfully.',
+                    'data' => ['id' => $user->id],
+                ]);
+            }
+
+            $redirectRoute = $user->role === User::ROLE_SK_OFFICIAL
+                ? 'accounts.officials.index'
+                : 'accounts.federation.index';
+
+            return redirect()->route($redirectRoute)
+                ->with('status', 'Account created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('AdminAccountController@store: Validation failed.', [
+                'errors' => $e->errors(),
+                'input' => $request->all(),
             ]);
-        }
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('AdminAccountController@store: Error creating account.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $request->all(),
+            ]);
 
-        return redirect()->route('accounts.federation.index')
-            ->with('status', 'Account created successfully.');
+            return back()->with('error', 'Failed to create account. Please try again.');
+        }
     }
 
     public function update(UpdateAccountRequest $request, User $user): RedirectResponse|JsonResponse
@@ -161,13 +190,20 @@ class AdminAccountController extends Controller
         return back()->with('status', 'Account updated successfully.');
     }
 
-    public function deactivate(Request $request, User $user): RedirectResponse
+    public function deactivate(Request $request, User $user): RedirectResponse|JsonResponse
     {
         $this->resolveTenantId($request->user());
 
         $this->authorize('deactivate', $user);
 
         $this->accountService->deactivate($user, $request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Account deactivated successfully.',
+            ]);
+        }
 
         return back()->with('status', 'Account deactivated successfully.');
     }

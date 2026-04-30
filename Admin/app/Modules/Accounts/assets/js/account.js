@@ -488,6 +488,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 closeAddSkOfficialsModal();
                 showSkOfficialsSuccessModal();
+                setTimeout(() => window.location.reload(), 1000);
             })
             .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
         });
@@ -730,11 +731,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // static view bindings handled by delegated listener above
 
-    // ── Delete modal (UI-only) ────────────────────────────────
+    // ── Delete modal ─────────────────────────────────────────
     let _deleteTargetRow = null;
+    let _deleteTargetId = null;
 
     function openDeleteModal(btn) {
         _deleteTargetRow = btn.closest('tr');
+        _deleteTargetId = btn.dataset.accountId || null;
         const name = btn.dataset.displayName || 'this account';
         const nameEl = document.getElementById('deleteAccountName');
         if (nameEl) nameEl.textContent = name;
@@ -744,23 +747,57 @@ document.addEventListener('DOMContentLoaded', function () {
     window.closeDeleteModal = function () {
         toggleModal('deleteAccountModal', false);
         _deleteTargetRow = null;
+        _deleteTargetId = null;
     };
 
     window.confirmDeleteAccount = function () {
-        if (_deleteTargetRow) {
-            _deleteTargetRow.remove();
-            // Rebuild pagination arrays
-            allAccounts = Array.from(tableBody.querySelectorAll('tr'))
-                .filter(r => !r.querySelector('td[colspan]'))
-                .map((el, i) => ({ element: el, index: i }));
-            filteredAccounts = [...allAccounts];
-            if (currentPage > Math.ceil(filteredAccounts.length / recordsPerPage)) {
-                currentPage = Math.max(1, Math.ceil(filteredAccounts.length / recordsPerPage));
-            }
-            updatePagination();
+        if (!_deleteTargetId) {
+            alert('Unable to delete account. Please refresh and try again.');
+            closeDeleteModal();
+            return;
         }
-        closeDeleteModal();
-        showAccountToast('Account deleted successfully!', 'delete');
+
+        showLoadingOverlay();
+        fetch(`/accounts/${_deleteTargetId}/deactivate`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+            .then(async r => {
+                const ct = r.headers.get('content-type') || '';
+                const hasJson = ct.includes('application/json');
+                const data = hasJson ? await r.json() : {};
+                return { ok: r.ok, data, hasJson };
+            })
+            .then(({ ok, data, hasJson }) => {
+                hideLoadingOverlay();
+                if (!ok || !hasJson || data.success === false) {
+                    const msg = data.message || 'Failed to delete account. Please try again.';
+                    alert(msg);
+                    return;
+                }
+
+                if (_deleteTargetRow) {
+                    _deleteTargetRow.remove();
+                    // Rebuild pagination arrays
+                    allAccounts = Array.from(tableBody.querySelectorAll('tr'))
+                        .filter(r => !r.querySelector('td[colspan]'))
+                        .map((el, i) => ({ element: el, index: i }));
+                    filteredAccounts = [...allAccounts];
+                    if (currentPage > Math.ceil(filteredAccounts.length / recordsPerPage)) {
+                        currentPage = Math.max(1, Math.ceil(filteredAccounts.length / recordsPerPage));
+                    }
+                    updatePagination();
+                }
+                closeDeleteModal();
+                showAccountToast('Account deleted successfully!', 'delete');
+            })
+            .catch(() => {
+                hideLoadingOverlay();
+                alert('An unexpected error occurred. Please try again.');
+            });
     };
 
 

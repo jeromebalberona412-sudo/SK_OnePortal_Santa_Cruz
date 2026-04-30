@@ -9,9 +9,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Change Email - SK Officials</title>
     @vite([
-        'app/modules/Authentication/assets/css/forgot-password.css',
-        'app/modules/Profile/assets/css/change-email.css',
-        'app/modules/Profile/assets/js/change-email.js',
+        'app/Modules/Authentication/assets/css/forgot-password.css',
+        'app/Modules/Profile/assets/css/change-email.css',
+        'app/Modules/Profile/assets/js/change-email.js',
     ])
 </head>
 <body class="sk-login-page">
@@ -222,6 +222,6 @@
 
     </main>
 
-    @vite(['app/modules/Authentication/assets/js/loader.js'])
+    @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>

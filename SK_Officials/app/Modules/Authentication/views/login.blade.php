@@ -9,8 +9,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>SK Officials Portal</title>
     @vite([
-        'app/modules/Authentication/assets/css/login.css',
-        'app/modules/Authentication/assets/js/login.js',
+        'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Authentication/assets/js/login.js',
     ])
 </head>
 <body class="sk-login-page">
@@ -156,6 +156,6 @@
         }
     </script>
 
-    @vite(['app/modules/Authentication/assets/js/loader.js'])
+    @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>

@@ -32,17 +32,27 @@ class LoginAttempt extends Model
 
     public function scopeRecentFailedByEmail(Builder $query, string $email, int $windowMinutes): Builder
     {
-        return $query
-            ->where('email', $email)
-            ->where('successful', false)
-            ->where('attempted_at', '>=', now()->subMinutes($windowMinutes));
+        $query->where('email', $email);
+
+        if ($query->getConnection()->getDriverName() === 'pgsql') {
+            $query->whereRaw('"successful" = false');
+        } else {
+            $query->where('successful', false);
+        }
+
+        return $query->where('attempted_at', '>=', now()->subMinutes($windowMinutes));
     }
 
     public function scopeRecentFailedByIp(Builder $query, string $ipAddress, int $windowMinutes): Builder
     {
-        return $query
-            ->where('ip_address', $ipAddress)
-            ->where('successful', false)
-            ->where('attempted_at', '>=', now()->subMinutes($windowMinutes));
+        $query->where('ip_address', $ipAddress);
+
+        if ($query->getConnection()->getDriverName() === 'pgsql') {
+            $query->whereRaw('"successful" = false');
+        } else {
+            $query->where('successful', false);
+        }
+
+        return $query->where('attempted_at', '>=', now()->subMinutes($windowMinutes));
     }
 }

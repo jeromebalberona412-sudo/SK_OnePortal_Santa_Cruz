@@ -5,16 +5,24 @@ namespace App\Modules\Authentication\Services;
 use App\Models\User;
 use App\Modules\Authentication\Models\LoginAttempt;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LoginSecurityService
 {
     public function recordAttempt(?User $user, string $email, bool $successful, Request $request, array $metadata = []): void
     {
+        $driver = LoginAttempt::query()->getConnection()->getDriverName();
+        $successfulValue = $successful;
+
+        if ($driver === 'pgsql') {
+            $successfulValue = DB::raw($successful ? 'true' : 'false');
+        }
+
         LoginAttempt::query()->create([
             'user_id' => $user?->getKey(),
             'email' => $email,
             'ip_address' => $request->ip(),
-            'successful' => $successful,
+            'successful' => $successfulValue,
             'user_agent' => $request->userAgent(),
             'attempted_at' => now(),
             'metadata' => $metadata,

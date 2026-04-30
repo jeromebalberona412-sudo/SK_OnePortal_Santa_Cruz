@@ -25,10 +25,19 @@ class AccountService
         $normalizedData = $this->withNormalizedMiddleName($data);
         $shouldSendReset = empty($normalizedData['password']);
 
-        $user = DB::transaction(function () use ($normalizedData, $admin) {
+        return DB::transaction(function () use ($normalizedData, $admin, $shouldSendReset) {
             $user = $this->createUser($normalizedData, $admin);
             $this->assignRole($user, $normalizedData['role']);
             $this->assignBarangay($user, (int) $normalizedData['barangay_id']);
+
+            // Send the initial password setup email immediately after creating
+            // the account record and assigning role/barangay. This matches the
+            // SK Federations flow where users receive a "set up password" email
+            // as soon as the account exists, before additional profile data is
+            // created.
+            if ($shouldSendReset) {
+                $this->sendInitialResetLinkOrFail($user);
+            }
 
             $profile = $this->createOfficialProfile($user, $normalizedData);
             $this->createTermRecord($profile, [
@@ -47,16 +56,6 @@ class AccountService
 
             return $user;
         });
-
-        if ($shouldSendReset) {
-            try {
-                $this->sendInitialResetLink($user);
-            } catch (\Throwable $exception) {
-                report($exception);
-            }
-        }
-
-        return $user;
     }
 
     public function updateAccount(User $account, array $data, User $admin): User
@@ -135,6 +134,19 @@ class AccountService
         });
     }
 
+    private function sendInitialResetLinkOrFail(User $user): void
+    {
+        try {
+            $this->sendInitialResetLink($user);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            throw ValidationException::withMessages([
+                'email' => 'Unable to send password setup email. Please check mail settings and try again.',
+            ]);
+        }
+    }
+
     public function createUser(array $data, User $admin): User
     {
         $fullName = $this->buildFullName($data);
@@ -144,6 +156,17 @@ class AccountService
             $password = Str::random(16);
         }
 
+        // Postgres can be strict about boolean literals when the query
+        // builder substitutes values. To avoid datatype mismatch errors
+        // (seen when a boolean column receives an integer literal), emit
+        // a database boolean literal for Postgres connections.
+        $defaultMustChange = true;
+        $driver = config('database.connections.'.config('database.default').'.driver');
+
+        if ($driver === 'pgsql') {
+            $defaultMustChange = DB::raw('true');
+        }
+
         return User::create([
             'tenant_id' => $admin->tenant_id,
             'name' => $fullName,
@@ -151,13 +174,13 @@ class AccountService
             'password' => $password,
             'role' => User::ROLE_USER,
             'status' => $data['status'] ?? User::STATUS_PENDING_APPROVAL,
-            'must_change_password' => true,
+            'must_change_password' => $defaultMustChange,
         ]);
     }
 
     private function sendInitialResetLink(User $user): void
     {
-        $token = Password::broker()->createToken($user);
+        $token = Password::createToken($user);
         $label = null;
         $baseUrl = null;
 
@@ -264,9 +287,16 @@ class AccountService
             ]);
         }
 
+        $driver = config('database.connections.'.config('database.default').'.driver');
+        $mustChange = true;
+
+        if ($driver === 'pgsql') {
+            $mustChange = DB::raw('true');
+        }
+
         $target->forceFill([
             'password' => $newPassword,
-            'must_change_password' => true,
+            'must_change_password' => $mustChange,
         ])->save();
 
         $this->logAuditAction(

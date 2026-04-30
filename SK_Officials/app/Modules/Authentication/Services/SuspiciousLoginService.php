@@ -22,11 +22,17 @@ class SuspiciousLoginService
         }
 
         $failureThreshold = (int) config('sk_official_auth.suspicious.failure_threshold', 3);
-        $recentFailures = LoginAttempt::query()
+        $recentFailuresQuery = LoginAttempt::query()
             ->where('user_id', $user->getKey())
-            ->where('successful', false)
-            ->where('attempted_at', '>=', now()->subHour())
-            ->count();
+            ->where('attempted_at', '>=', now()->subHour());
+
+        if ($recentFailuresQuery->getConnection()->getDriverName() === 'pgsql') {
+            $recentFailuresQuery->whereRaw('"successful" = false');
+        } else {
+            $recentFailuresQuery->where('successful', false);
+        }
+
+        $recentFailures = $recentFailuresQuery->count();
 
         if ($recentFailures >= $failureThreshold) {
             $signals[] = 'recent_failed_attempts';

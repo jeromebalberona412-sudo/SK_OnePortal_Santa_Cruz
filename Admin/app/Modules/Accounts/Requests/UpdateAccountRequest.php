@@ -14,6 +14,15 @@ class UpdateAccountRequest extends FormRequest
         return $this->user()?->isAdmin() ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $suffix = $this->input('suffix');
+
+        if ($suffix === '' || $suffix === 'None') {
+            $this->merge(['suffix' => null]);
+        }
+    }
+
     public function rules(): array
     {
         $userId = $this->route('user')?->id;

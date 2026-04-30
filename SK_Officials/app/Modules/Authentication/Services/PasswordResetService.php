@@ -110,6 +110,7 @@ class PasswordResetService
         $updates = [
             'password' => Hash::make($password),
             'remember_token' => null,
+            'email_verified_at' => now(),
         ];
 
         if ($this->usersTableHasColumn('active_session_id')) {

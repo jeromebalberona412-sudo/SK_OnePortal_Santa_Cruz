@@ -7,13 +7,14 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Forgot Password - SK Officials</title>
+    <title>Change Password - SK Officials</title>
     @vite([
-        'app/modules/Authentication/assets/css/forgot-password.css',
-        'app/modules/Authentication/assets/js/forgot-password.js',
+        'app/Modules/Authentication/assets/css/forgot-password.css',
+        'app/Modules/Profile/assets/js/change-password.js',
     ])
 </head>
 <body class="sk-login-page">
+
     <!-- Animated Background -->
     <div class="sk-bg-wrapper">
         <div class="sk-bg-image"></div>
@@ -26,66 +27,52 @@
     </div>
 
     <main class="sk-login-container">
-        <!-- Left Side - Logo & Branding -->
+
+        <!-- Left Side — Logo & Branding -->
         <div class="sk-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
-                    <img
-                        src="{{ asset('images/logo.png') }}"
-                        alt="SK Officials Logo"
-                        class="sk-logo"
-                    >
+                    <img src="{{ asset('images/logo.png') }}"
+                         alt="SK Officials Logo"
+                         class="sk-logo">
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
                 <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
             </div>
         </div>
 
-        <!-- Right Side - Card -->
+        <!-- Right Side — Card -->
         <div class="sk-login-section">
             <div class="sk-login-card">
 
                 {{-- ── STEP 1: Email form ─────────────────────────── --}}
-                <div id="fpStep1">
+                <div id="cpStep1">
                     <div class="card-header">
-                        <h2 class="card-title">Forgot Password? 🔑</h2>
-                        <p class="card-subtitle">Enter the email address associated with your account and we'll send you a link to reset your password.</p>
+                        <h2 class="card-title">Change Password 🔐</h2>
+                        <p class="card-subtitle">Enter your email address and we'll send you a link to reset your password.</p>
                     </div>
 
-                    <!-- Server-side success (e.g. after page reload) -->
-                    @if (session('status'))
-                        <div class="sk-alert sk-alert-success">
-                            <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    <!-- JS-driven success alert (step 1) -->
-                    <div class="sk-alert sk-alert-success" id="fpSuccess" style="display:none;">
+                    <!-- Success alert (step 1) -->
+                    <div class="sk-alert sk-alert-success" id="cpSuccess" style="display:none;">
                         <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
-                        <span id="fpSuccessText">If that email exists, a reset link has been sent.</span>
+                        <span id="cpSuccessText">Reset password link has been sent to your email.</span>
                     </div>
 
-                    <!-- Server-side / JS-driven error alert (step 1) -->
-                    @if ($errors->any())
-                        <div class="sk-alert sk-alert-error">
-                            <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                            </svg>
-                            {{ $errors->first() }}
-                        </div>
-                    @endif
+                    <!-- Error alert (step 1) -->
+                    <div class="sk-alert sk-alert-error" id="cpError" style="display:none;">
+                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <span id="cpErrorText">No account found with that email address.</span>
+                    </div>
 
-                    <!-- Forgot Password Form -->
-                    <form class="sk-login-form" id="forgotPasswordForm" method="POST" action="{{ route('password.email') }}" novalidate>
+                    <!-- Email form -->
+                    <form class="sk-login-form" id="cpForm" novalidate>
                         @csrf
-
                         <div class="sk-form-group">
-                            <label for="email" class="sk-label">Email Address</label>
+                            <label for="cpEmail" class="sk-label">Email Address</label>
                             <div class="input-wrapper">
                                 <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
@@ -93,61 +80,65 @@
                                 </svg>
                                 <input
                                     type="email"
-                                    id="email"
+                                    id="cpEmail"
                                     name="email"
                                     class="sk-input"
-                                    value="{{ old('email') }}"
-                                    autofocus
                                     placeholder="Enter your email address"
-                                    maxlength="100"
                                     autocomplete="email"
+                                    maxlength="100"
+                                    autofocus
+                                    required
                                 >
                             </div>
-                            <div class="sk-field-error" id="email-error" @if(! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
+                            <div class="sk-field-error" id="cpEmailError" hidden></div>
                         </div>
 
-                        <button type="submit" class="sk-submit-btn" id="submitBtn">
-                            <span id="fpBtnText">Send Reset Link</span>
+                        <button type="submit" class="sk-submit-btn" id="cpSubmitBtn">
+                            <span id="cpBtnText">Send Reset Password Link</span>
+                            <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                            </svg>
                         </button>
                     </form>
 
                     <div class="youth-register-section">
                         <p class="register-text">
-                            Remember your password?
-                            <a href="{{ route('login') }}" class="register-link">Back to Login</a>
+                            Back to profile?
+                            <a href="{{ route('profile') }}" class="register-link">Go to Profile</a>
                         </p>
                     </div>
                 </div>
 
-                {{-- ── STEP 2: Set new password (shown after email sent) ── --}}
-                <div id="fpStep2" style="display:none;">
+                {{-- ── STEP 2: Reset password form (shown after email verified) ── --}}
+                <div id="cpStep2" style="display:none;">
                     <div class="card-header">
-                        <h2 class="card-title">Set New Password 🔐</h2>
+                        <h2 class="card-title">Set New Password 🔑</h2>
                         <p class="card-subtitle">Create a strong new password for your account.</p>
                     </div>
 
                     <!-- Success alert (step 2) -->
-                    <div class="sk-alert sk-alert-success" id="fpResetSuccess" style="display:none;">
+                    <div class="sk-alert sk-alert-success" id="cpResetSuccess" style="display:none;">
                         <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
-                        <span>Password changed successfully! Redirecting to login…</span>
+                        <span>Password changed successfully! Logging you out…</span>
                     </div>
 
                     <!-- Reset form -->
-                    <form class="sk-login-form" id="fpResetForm" novalidate>
+                    <form class="sk-login-form" id="cpResetForm" novalidate>
                         @csrf
 
                         <!-- New Password -->
                         <div class="sk-form-group">
-                            <label for="fpNewPassword" class="sk-label">New Password</label>
+                            <label for="cpNewPassword" class="sk-label">New Password</label>
                             <div class="password-wrapper">
                                 <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                                 </svg>
                                 <input
                                     type="password"
-                                    id="fpNewPassword"
+                                    id="cpNewPassword"
                                     name="password"
                                     class="sk-input password-input"
                                     placeholder="Enter new password"
@@ -156,7 +147,7 @@
                                     maxlength="64"
                                     required
                                 >
-                                <button type="button" class="pw-toggle-btn" data-target="fpNewPassword" aria-label="Show password" tabindex="-1">
+                                <button type="button" class="pw-toggle-btn" data-target="cpNewPassword" aria-label="Show password" tabindex="-1">
                                     <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                         <circle cx="12" cy="12" r="3"/>
@@ -168,24 +159,24 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div class="sk-field-error" id="fpNewPasswordError" hidden></div>
+                            <div class="sk-field-error" id="cpNewPasswordError" hidden></div>
                             <!-- Password strength bar -->
-                            <div class="cp-strength-bar" id="fpStrengthBar" style="display:none;">
-                                <div class="cp-strength-fill" id="fpStrengthFill"></div>
+                            <div class="cp-strength-bar" id="cpStrengthBar" style="display:none;">
+                                <div class="cp-strength-fill" id="cpStrengthFill"></div>
                             </div>
-                            <div class="cp-strength-label" id="fpStrengthLabel"></div>
+                            <div class="cp-strength-label" id="cpStrengthLabel"></div>
                         </div>
 
                         <!-- Confirm Password -->
                         <div class="sk-form-group">
-                            <label for="fpConfirmPassword" class="sk-label">Confirm New Password</label>
+                            <label for="cpConfirmPassword" class="sk-label">Confirm New Password</label>
                             <div class="password-wrapper">
                                 <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                                 </svg>
                                 <input
                                     type="password"
-                                    id="fpConfirmPassword"
+                                    id="cpConfirmPassword"
                                     name="password_confirmation"
                                     class="sk-input password-input"
                                     placeholder="Re-enter new password"
@@ -194,7 +185,7 @@
                                     maxlength="64"
                                     required
                                 >
-                                <button type="button" class="pw-toggle-btn" data-target="fpConfirmPassword" aria-label="Show password" tabindex="-1">
+                                <button type="button" class="pw-toggle-btn" data-target="cpConfirmPassword" aria-label="Show password" tabindex="-1">
                                     <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                         <circle cx="12" cy="12" r="3"/>
@@ -206,11 +197,11 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div class="sk-field-error" id="fpConfirmPasswordError" hidden></div>
+                            <div class="sk-field-error" id="cpConfirmPasswordError" hidden></div>
                         </div>
 
-                        <button type="submit" class="sk-submit-btn" id="fpResetBtn">
-                            <span id="fpResetBtnText">Change Password</span>
+                        <button type="submit" class="sk-submit-btn" id="cpResetBtn">
+                            <span id="cpResetBtnText">Change Password</span>
                             <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                             </svg>
@@ -219,15 +210,16 @@
 
                     <div class="youth-register-section">
                         <p class="register-text">
-                            <a href="#" id="fpBackToEmail" class="register-link">← Use a different email</a>
+                            <a href="#" id="cpBackToEmail" class="register-link">← Use a different email</a>
                         </p>
                     </div>
                 </div>
 
             </div>
         </div>
+
     </main>
 
-    @vite(['app/modules/Authentication/assets/js/loader.js'])
+    @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>
