@@ -11,7 +11,7 @@ const dsfRecords = [
         middleName: 'Sanicoa',
         lastName: 'Balberona',
         suffix: 'Jr.',
-        position: 'Admin',
+        position: 'Chairman',
         barangay: 'Poblacion III',
         municipality: 'Santa Cruz',
         province: 'Laguna',

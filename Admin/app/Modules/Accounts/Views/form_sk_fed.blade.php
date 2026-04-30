@@ -106,12 +106,6 @@
                             <select id="position" name="position" class="form-input-light" required>
                                 <option value="" disabled selected>Select Position</option>
                                 <option value="Chairman">SK Chairman</option>
-                                <option value="Councilor">SK Councilor</option>
-                                <option value="Kagawad">SK Kagawad</option>
-                                <option value="Treasurer">SK Treasurer</option>
-                                <option value="Secretary">SK Secretary</option>
-                                <option value="Auditor">SK Auditor</option>
-                                <option value="PIO">SK PIO</option>
                             </select>
                             <span class="form-error-light"></span>
                         </div>
@@ -360,12 +354,6 @@
                                 <select id="edit_position" name="position" class="form-input-modern" required>
                                     <option value="">Select Position</option>
                                     <option value="Chairman">SK Chairman</option>
-                                    <option value="Councilor">SK Councilor</option>
-                                    <option value="Kagawad">SK Kagawad</option>
-                                    <option value="Treasurer">SK Treasurer</option>
-                                    <option value="Secretary">SK Secretary</option>
-                                    <option value="Auditor">SK Auditor</option>
-                                    <option value="PIO">SK PIO</option>
                                 </select>
                                 <span class="form-error"></span>
                             </div>

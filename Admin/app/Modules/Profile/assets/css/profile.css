@@ -203,10 +203,10 @@
 }
 
 .tab-button.active {
-    background: #e8f0fe;
-    border-color: rgba(21, 101, 192, 0.5);
-    color: #1565c0;
-    box-shadow: 0 2px 8px rgba(21, 101, 192, 0.12);
+    background: #1565c0;
+    border-color: #1565c0;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(21, 101, 192, 0.3);
 }
 
 .profile-panel__body {
@@ -683,10 +683,10 @@ body.dark-mode #mainContent.profile-page {
 }
 
 :root.dark .tab-button.active {
-    background: rgba(96, 165, 250, 0.12);
-    border-color: rgba(96, 165, 250, 0.5);
-    color: #60a5fa;
-    box-shadow: 0 2px 8px rgba(96, 165, 250, 0.1);
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 :root.dark .profile-pane h3 {

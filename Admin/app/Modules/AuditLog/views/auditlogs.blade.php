@@ -21,9 +21,9 @@
                 <p class="page-subtitle-modern">Monitor and track system activities</p>
             </div>
             <div class="page-header-right">
-                <form method="GET" action="{{ route('auditlogs.index') }}" class="search-add-container audit-filter-grid">
-                    <div class="filter-dropdown-container event-control">
-                        <select id="eventFilter" class="filter-dropdown" name="event">
+                <form method="GET" action="{{ route('auditlogs.index') }}" class="search-add-container audit-filter-row">
+                    <div class="filter-dropdown-container">
+                        <select id="eventFilter" class="filter-control" name="event">
                             <option value="">All Events</option>
                             @foreach($events as $eventOption)
                                 <option value="{{ $eventOption }}" {{ ($filters['event'] ?? '') === $eventOption ? 'selected' : '' }}>
@@ -32,8 +32,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="filter-dropdown-container outcome-control">
-                        <select id="outcomeFilter" class="filter-dropdown" name="outcome">
+                    <div class="filter-dropdown-container">
+                        <select id="outcomeFilter" class="filter-control" name="outcome">
                             <option value="">All Outcomes</option>
                             @foreach(($outcomes ?? collect()) as $outcomeOption)
                                 <option value="{{ $outcomeOption }}" {{ ($filters['outcome'] ?? '') === $outcomeOption ? 'selected' : '' }}>
@@ -42,38 +42,22 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="date-range-container audit-date-control">
-                        <div class="date-field-wrapper">
-                            <label for="dateFrom" class="date-range-label">From</label>
-                            <input
-                                type="date"
-                                id="dateFrom"
-                                name="date_from"
-                                class="date-input"
-                                value="{{ $filters['date_from'] ?? '' }}"
-                            >
-                        </div>
-                        <span class="date-separator">to</span>
-                        <div class="date-field-wrapper">
-                            <label for="dateTo" class="date-range-label">To</label>
-                            <input
-                                type="date"
-                                id="dateTo"
-                                name="date_to"
-                                class="date-input"
-                                value="{{ $filters['date_to'] ?? '' }}"
-                            >
-                        </div>
+                    <div class="date-inline-group">
+                        <label for="dateFrom" class="date-inline-label">From</label>
+                        <input type="date" id="dateFrom" name="date_from" class="filter-control date-control" value="{{ $filters['date_from'] ?? '' }}">
                     </div>
-                    <div class="search-container audit-search-control">
-                        <input type="text" id="searchInput" name="search" class="search-input" value="{{ $filters['search'] ?? '' }}" placeholder="Search by actor, event, resource, IP, or user agent...">
-                        <button type="submit" class="search-btn" id="searchBtn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <div class="date-inline-group">
+                        <label for="dateTo" class="date-inline-label">To</label>
+                        <input type="date" id="dateTo" name="date_to" class="filter-control date-control" value="{{ $filters['date_to'] ?? '' }}">
+                    </div>
+                    <div class="search-inline-container">
+                        <button type="submit" class="search-btn" id="searchBtn" aria-label="Search">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.35-4.35"></path>
                             </svg>
                         </button>
-                        <a href="{{ route('auditlogs.index') }}" class="reset-inline">Reset</a>
+                        <input type="text" id="searchInput" name="search" class="filter-control search-control" value="{{ $filters['search'] ?? '' }}" placeholder="Search…">
                     </div>
                 </form>
             </div>
