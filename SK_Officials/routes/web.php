@@ -104,6 +104,14 @@ Route::middleware([
         return view('schedule_programs::schedule-programs');
     })->name('schedule-programs');
 
+    Route::get('/schedule-programs/sports-application-form', function () {
+        return view('schedule_programs::sports_application_form');
+    })->name('schedule-programs.sports-application-form');
+
+    Route::get('/sports-application-form', function () {
+        return view('schedule_programs::sports_application_form');
+    })->name('sports-application-form');
+
     Route::get('/barangay-census-form', function () {
         return view('Barangay_Census_Form::barangay-census-form');
     })->name('barangay-census-form');
