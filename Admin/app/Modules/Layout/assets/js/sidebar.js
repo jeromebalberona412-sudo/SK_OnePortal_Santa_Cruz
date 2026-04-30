@@ -186,6 +186,23 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 window.toggleAccountDropdown = function (btn) {
+    // If sidebar is collapsed on desktop, expand it first then open dropdown
+    if (!isMobileViewport() && document.body.classList.contains('sidebar-collapsed')) {
+        document.body.classList.remove('sidebar-collapsed');
+        localStorage.setItem('adminSidebarCollapsed', '0');
+        syncDesktopStretch();
+        // Open the dropdown after the transition
+        setTimeout(function () {
+            const submenu = document.getElementById('accountDropdown');
+            const chevron = btn.querySelector('.dropdown-chevron');
+            if (!submenu) return;
+            submenu.classList.add('open');
+            if (chevron) chevron.classList.add('open');
+            btn.setAttribute('aria-expanded', 'true');
+        }, 260);
+        return;
+    }
+
     const submenu = document.getElementById('accountDropdown');
     const chevron = btn.querySelector('.dropdown-chevron');
     if (!submenu) return;
@@ -196,6 +213,23 @@ window.toggleAccountDropdown = function (btn) {
 };
 
 window.toggleArchivedDropdown = function (btn) {
+    // If sidebar is collapsed on desktop, expand it first then open dropdown
+    if (!isMobileViewport() && document.body.classList.contains('sidebar-collapsed')) {
+        document.body.classList.remove('sidebar-collapsed');
+        localStorage.setItem('adminSidebarCollapsed', '0');
+        syncDesktopStretch();
+        // Open the dropdown after the transition
+        setTimeout(function () {
+            const submenu = document.getElementById('archivedDropdown');
+            const chevron = btn.querySelector('.dropdown-chevron');
+            if (!submenu) return;
+            submenu.classList.add('open');
+            if (chevron) chevron.classList.add('open');
+            btn.setAttribute('aria-expanded', 'true');
+        }, 260);
+        return;
+    }
+
     const submenu = document.getElementById('archivedDropdown');
     const chevron = btn.querySelector('.dropdown-chevron');
     if (!submenu) return;

@@ -100,10 +100,29 @@ body.admin-dark-canvas main.flex-grow {
     color: inherit;
     transition: background var(--transition);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    border-radius: 10px;
+    padding: 4px 6px;
 }
 
 .sidebar-profile-link:hover {
     background: rgba(255, 255, 255, 0.08);
+}
+
+/* Center avatar when collapsed */
+body.sidebar-collapsed .sidebar-profile {
+    justify-content: center;
+    padding: 14px 0;
+}
+
+body.sidebar-collapsed .sidebar-profile-link {
+    justify-content: center;
+    width: auto;
+    padding: 4px;
+    gap: 0;
 }
 
 .sidebar-avatar {
@@ -281,6 +300,14 @@ body.admin-dark-canvas main.flex-grow {
 body.sidebar-collapsed #layoutSidenav_nav,
 body.sidebar-collapsed .sb-sidenav {
     width: var(--sidebar-collapsed-width);
+}
+
+body.sidebar-collapsed .sb-sidenav {
+    overflow-y: hidden;
+}
+
+body.sidebar-collapsed .sidebar-nav {
+    overflow-y: hidden;
 }
 
 body.sidebar-collapsed .main-content-modern,
