@@ -99,7 +99,7 @@
     flex-shrink: 0;
 }
 
-.modal-header.modal-header-deep-blue  { background: linear-gradient(180deg, #2a6dc5 0%, #245da7 100%); }
+.modal-header.modal-header-deep-blue  { background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%); }
 .modal-header.modal-header-teal       { background: linear-gradient(180deg, #238699 0%, #1f7485 100%); }
 .modal-header.modal-header-green      { background: linear-gradient(180deg, #359964 0%, #2b7f53 100%); }
 .modal-header.modal-header-yellow     { background: linear-gradient(180deg, #f5c842 0%, #e8b800 100%); }

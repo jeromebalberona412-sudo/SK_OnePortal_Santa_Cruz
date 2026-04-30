@@ -491,7 +491,7 @@
 }
 
 .dso-view-modal-header {
-    background: #2563eb;
+    background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
     justify-content: space-between !important;
     flex-shrink: 0;
 }

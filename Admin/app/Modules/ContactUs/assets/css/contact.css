@@ -319,7 +319,7 @@
 }
 
 .modal-header-blue {
-    background: linear-gradient(135deg, #083080, #0d47a1);
+    background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
     border-bottom: none;
 }
 

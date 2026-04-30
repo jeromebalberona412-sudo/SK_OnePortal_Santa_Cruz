@@ -381,7 +381,7 @@
 }
 
 .aroff-modal-header {
-    background: #0f766e;
+    background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
     padding: 18px 22px;
     display: flex;
     align-items: center;

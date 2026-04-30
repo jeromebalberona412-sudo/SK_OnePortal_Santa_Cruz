@@ -381,7 +381,7 @@
 }
 
 .arfed-modal-header {
-    background: #1E3A5F;
+    background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
     padding: 18px 22px;
     display: flex;
     align-items: center;
