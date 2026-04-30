@@ -82,7 +82,7 @@
                     ══════════════════════════════════════════ --}}
                     <div id="ce-step1">
                         <div class="form-header">
-                            <h2>📧 Change Email</h2>
+                            <h2>Change Email</h2>
                             <p>Enter your new email address. A verification link will be sent to confirm it.</p>
                         </div>
 
@@ -113,12 +113,10 @@
                             Send Verification Link
                         </button>
 
-                        <div class="form-footer">
-                            <p>
-                                <a href="{{ route('profile') }}" style="color:var(--op-blue);font-weight:600;text-decoration:none;">
-                                    ← Back to Profile
-                                </a>
-                            </p>
+                        <div class="back-to-profile-wrap">
+                            <a href="{{ route('profile') }}" class="back-to-profile-btn">
+                                ← Back to Profile
+                            </a>
                         </div>
                     </div>
 
@@ -183,12 +181,10 @@
                             </button>
                         </div>
 
-                        <div class="form-footer">
-                            <p>
-                                <a href="{{ route('profile') }}" style="color:var(--op-blue);font-weight:600;text-decoration:none;">
-                                    ← Back to Profile
-                                </a>
-                            </p>
+                        <div class="back-to-profile-wrap">
+                            <a href="{{ route('profile') }}" class="back-to-profile-btn">
+                                ← Back to Profile
+                            </a>
                         </div>
                     </div>
 
@@ -204,9 +200,11 @@
                         <h2 style="font-size:1.875rem;font-weight:800;color:var(--op-blue-dark);margin-bottom:0.5rem;">Email Updated!</h2>
                         <p style="font-size:0.9rem;color:var(--op-gray-500);margin-bottom:0.25rem;">Your email address has been successfully changed.</p>
                         <p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1.5rem;">A notification has been sent to your old email address.</p>
-                        <a href="{{ route('profile') }}" class="login-btn" style="display:block;text-decoration:none;text-align:center;">
-                            Back to Profile
-                        </a>
+                        <div class="back-to-profile-wrap">
+                            <a href="{{ route('profile') }}" class="back-to-profile-btn">
+                                ← Back to Profile
+                            </a>
+                        </div>
                     </div>
 
                 </div>

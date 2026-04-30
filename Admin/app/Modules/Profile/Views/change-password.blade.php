@@ -58,7 +58,7 @@
                     <div id="cp-step1" @if(session('status')) style="display:none;" @endif>
 
                         <div class="form-header">
-                            <h2>🔒 Change Password</h2>
+                            <h2>Change Password</h2>
                             <p>Enter your email to receive a password reset link</p>
                         </div>
 
@@ -88,12 +88,10 @@
                             </button>
                         </form>
 
-                        <div class="form-footer">
-                            <p>
-                                <a href="{{ route('profile') }}" style="color:var(--op-blue);font-weight:600;text-decoration:none;">
-                                    ← Back to Profile
-                                </a>
-                            </p>
+                        <div class="back-to-profile-wrap">
+                            <a href="{{ route('profile') }}" class="back-to-profile-btn">
+                                ← Back to Profile
+                            </a>
                         </div>
                     </div>
 
@@ -118,9 +116,11 @@
                             </div>
                         @endif
 
-                        <a href="{{ route('profile') }}" class="login-btn" style="display:block;text-decoration:none;text-align:center;margin-top:1rem;">
-                            ← Back to Profile
-                        </a>
+                        <div class="back-to-profile-wrap">
+                            <a href="{{ route('profile') }}" class="back-to-profile-btn">
+                                ← Back to Profile
+                            </a>
+                        </div>
                     </div>
 
                 </div>
