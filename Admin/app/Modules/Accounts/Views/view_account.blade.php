@@ -4,8 +4,13 @@
         <div class="modal-header modal-header-deep-blue">
             <h3 class="modal-title">Account Details</h3>
             <div class="modal-controls">
-                <button type="button" class="dsf-view-toggle" id="viewToggleBtn" aria-label="Maximize">□</button>
-                <button type="button" class="dsf-view-close" onclick="closeViewModal()">&times;</button>
+                <button type="button" class="modal-win-btn modal-win-btn-maximize" id="viewToggleBtn"
+                        onclick="toggleFullscreenViewModal()" title="Maximize">
+                    <span id="viewResizeIcon" class="modal-win-icon">&#9633;</span>
+                </button>
+                <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeViewModal()" title="Close">
+                    &times;
+                </button>
             </div>
         </div>
         

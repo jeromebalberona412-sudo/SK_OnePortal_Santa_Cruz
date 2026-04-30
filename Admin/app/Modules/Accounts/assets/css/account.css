@@ -115,7 +115,8 @@
 .modal-header-yellow .modal-title,
 .modal-header-yellow .modal-close-btn,
 .modal-header-yellow .modal-fullscreen-btn,
-.modal-header-yellow .modal-restore-btn { color: #ffffff; }
+.modal-header-yellow .modal-restore-btn,
+.modal-header-yellow .modal-win-btn { color: #ffffff; }
 
 .modal-header-blue-grad .modal-title { color: #ffffff; }
 
@@ -149,9 +150,10 @@
 
 .modal-header-yellow .modal-close-btn:hover,
 .modal-header-yellow .modal-fullscreen-btn:hover,
-.modal-header-yellow .modal-restore-btn:hover { background: rgba(255, 255, 255, 0.22); }
+.modal-header-yellow .modal-restore-btn:hover,
+.modal-header-yellow .modal-win-btn:hover { background: rgba(255, 255, 255, 0.22); }
 
-/* Window-style resize/close buttons (add modals) */
+/* Window-style resize/close buttons (all modals) */
 .modal-win-btn {
     width: 28px;
     height: 28px;
@@ -165,9 +167,28 @@
     cursor: pointer;
     transition: background 0.15s;
     flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
 }
 .modal-win-btn:hover { background: rgba(255, 255, 255, 0.18); }
 .modal-win-btn svg   { pointer-events: none; }
+
+/* Maximize / restore icon — square character */
+.modal-win-icon {
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Close button — same size as maximize */
+.modal-win-btn-close {
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+}
 
 .modal-body {
     padding: 1.2rem 1.25rem 1rem;

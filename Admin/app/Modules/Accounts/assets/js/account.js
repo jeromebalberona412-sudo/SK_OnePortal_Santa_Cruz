@@ -132,8 +132,8 @@ function _validateField(input) {
 
 // ── Add SK Officials modal ────────────────────────────────────
 let addOfficialsIsMaximized = false;
-const ICON_MAXIMIZE = `<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>`;
-const ICON_RESTORE  = `<rect x="3" y="7" width="11" height="11" rx="1.5"/><path d="M10 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2"/>`;
+const ICON_MAXIMIZE = '\u25A1';   // □  empty square  (maximize)
+const ICON_RESTORE  = '\u29C9';   // ⧉  overlapping squares (restore down)
 
 window.toggleAddOfficialsSize = function () {
     const overlay = document.getElementById('addSkOfficialsModal');
@@ -145,10 +145,10 @@ window.toggleAddOfficialsSize = function () {
     if (addOfficialsIsMaximized) {
         content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
         overlay.style.padding = '0';
-        btn.title = 'Restore Down'; icon.innerHTML = ICON_RESTORE;
+        btn.title = 'Restore Down'; icon.textContent = ICON_RESTORE;
     } else {
         content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize'; icon.innerHTML = ICON_MAXIMIZE;
+        btn.title = 'Maximize'; icon.textContent = ICON_MAXIMIZE;
     }
 };
 
@@ -158,6 +158,10 @@ window.closeAddSkOfficialsModal = function () {
     addOfficialsIsMaximized = false;
     const content = document.getElementById('addSkOfficialsModalContent');
     if (content) content.style.cssText = '';
+    const icon = document.getElementById('addOfficialsResizeIcon');
+    const btn  = document.getElementById('addOfficialsResizeBtn');
+    if (icon) icon.textContent = ICON_MAXIMIZE;
+    if (btn)  btn.title = 'Maximize';
     const form = document.getElementById('addSkOfficialsForm');
     if (form) {
         form.reset();
@@ -190,14 +194,20 @@ window.switchAddOfficialTab = function (tab) {
 };
 
 // ── Edit SK Officials modal ───────────────────────────────────
+let editOfficialsIsMaximized = false;
+
 window.openEditSkOfficialsModal = function () { toggleModal('editSkOfficialsModal', true); };
 
 window.closeEditSkOfficialsModal = function () {
-    const modal = document.getElementById('editSkOfficialsModal');
-    if (modal) {
-        modal.classList.remove('modal-fullscreen', 'modal-minimized');
-        _setModalBtns(modal, 'normal');
-    }
+    editOfficialsIsMaximized = false;
+    const overlay = document.getElementById('editSkOfficialsModal');
+    const content = overlay ? overlay.querySelector('.modal-content') : null;
+    if (overlay) overlay.style.padding = '';
+    if (content) content.style.cssText = '';
+    const icon = document.getElementById('editOfficialsResizeIcon');
+    const btn  = document.getElementById('editOfficialsResizeBtn');
+    if (icon) icon.textContent = ICON_MAXIMIZE;
+    if (btn)  btn.title = 'Maximize';
     const form = document.getElementById('editSkOfficialsForm');
     if (form) {
         form.reset();
@@ -213,21 +223,26 @@ window.showEditSkOfficialsSuccessModal  = function () {
 };
 window.closeEditSkOfficialsSuccessModal = function () {};
 
-window.toggleFullscreenEditSkOfficialsModal = function () {
-    const modal = document.getElementById('editSkOfficialsModal');
-    if (!modal) return;
-    if (modal.classList.contains('modal-fullscreen')) {
-        modal.classList.remove('modal-fullscreen'); _setModalBtns(modal, 'normal');
+window.toggleEditOfficialsSize = function () {
+    const overlay = document.getElementById('editSkOfficialsModal');
+    const content = overlay ? overlay.querySelector('.modal-content') : null;
+    const icon    = document.getElementById('editOfficialsResizeIcon');
+    const btn     = document.getElementById('editOfficialsResizeBtn');
+    if (!overlay || !content || !icon) return;
+    editOfficialsIsMaximized = !editOfficialsIsMaximized;
+    if (editOfficialsIsMaximized) {
+        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
+        overlay.style.padding = '0';
+        btn.title = 'Restore Down'; icon.textContent = ICON_RESTORE;
     } else {
-        modal.classList.remove('modal-minimized'); modal.classList.add('modal-fullscreen'); _setModalBtns(modal, 'fullscreen');
+        content.style.cssText = ''; overlay.style.padding = '';
+        btn.title = 'Maximize'; icon.textContent = ICON_MAXIMIZE;
     }
 };
-window.toggleRestoreEditSkOfficialsModal = function () {
-    const modal = document.getElementById('editSkOfficialsModal');
-    if (!modal) return;
-    modal.classList.remove('modal-fullscreen'); _setModalBtns(modal, 'normal');
-};
-window.restoreEditSkOfficialsModal = window.toggleRestoreEditSkOfficialsModal;
+// Keep legacy aliases so any remaining references don't break
+window.toggleFullscreenEditSkOfficialsModal = window.toggleEditOfficialsSize;
+window.toggleRestoreEditSkOfficialsModal    = window.toggleEditOfficialsSize;
+window.restoreEditSkOfficialsModal          = window.toggleEditOfficialsSize;
 
 // ── Add SK Federation modal ───────────────────────────────────
 let addFedIsMaximized = false;
@@ -243,11 +258,11 @@ window.toggleAddFedSize = function () {
         content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
         overlay.style.padding = '0';
         btn.title = 'Restore Down';
-        icon.innerHTML = `<rect x="3" y="7" width="11" height="11" rx="1.5"/><path d="M10 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2"/>`;
+        icon.textContent = ICON_RESTORE;
     } else {
         content.style.cssText = ''; overlay.style.padding = '';
         btn.title = 'Maximize';
-        icon.innerHTML = `<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>`;
+        icon.textContent = ICON_MAXIMIZE;
     }
 };
 
@@ -260,6 +275,10 @@ window.closeAddAccountModal = function () {
     addFedIsMaximized = false;
     const content = document.getElementById('addSkFedModalContent');
     if (content) content.style.cssText = '';
+    const icon = document.getElementById('addFedResizeIcon');
+    const btn  = document.getElementById('addFedResizeBtn');
+    if (icon) icon.textContent = ICON_MAXIMIZE;
+    if (btn)  btn.title = 'Maximize';
     const form = document.getElementById('addSkFedForm');
     if (form) {
         form.reset();
@@ -274,11 +293,20 @@ window.showAddSuccessModal  = function () { showAccountToast('Account successful
 window.closeAddSuccessModal = function () {};
 
 // ── Edit SK Federation modal ──────────────────────────────────
+let editFedIsMaximized = false;
+
 window.openEditModal = function () { toggleModal('editAccountModal', true); };
 
 window.closeEditModal = function () {
-    const modal = document.getElementById('editAccountModal');
-    if (modal) { modal.classList.remove('modal-fullscreen','modal-minimized'); _setModalBtns(modal, 'normal'); }
+    editFedIsMaximized = false;
+    const overlay = document.getElementById('editAccountModal');
+    const content = overlay ? overlay.querySelector('.modal-content') : null;
+    if (overlay) overlay.style.padding = '';
+    if (content) content.style.cssText = '';
+    const icon = document.getElementById('editFedResizeIcon');
+    const btn  = document.getElementById('editFedResizeBtn');
+    if (icon) icon.textContent = ICON_MAXIMIZE;
+    if (btn)  btn.title = 'Maximize';
     const form = document.getElementById('editAccountForm');
     if (form) {
         form.reset();
@@ -294,53 +322,60 @@ window.showEditSuccessModal  = function () {
 };
 window.closeEditSuccessModal = function () {};
 
-window.toggleFullscreenEditAccountModal = function () {
-    const modal = document.getElementById('editAccountModal');
-    if (!modal) return;
-    if (modal.classList.contains('modal-fullscreen')) {
-        modal.classList.remove('modal-fullscreen'); _setModalBtns(modal, 'normal');
+window.toggleEditFedSize = function () {
+    const overlay = document.getElementById('editAccountModal');
+    const content = overlay ? overlay.querySelector('.modal-content') : null;
+    const icon    = document.getElementById('editFedResizeIcon');
+    const btn     = document.getElementById('editFedResizeBtn');
+    if (!overlay || !content || !icon) return;
+    editFedIsMaximized = !editFedIsMaximized;
+    if (editFedIsMaximized) {
+        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
+        overlay.style.padding = '0';
+        btn.title = 'Restore Down'; icon.textContent = ICON_RESTORE;
     } else {
-        modal.classList.remove('modal-minimized'); modal.classList.add('modal-fullscreen'); _setModalBtns(modal, 'fullscreen');
+        content.style.cssText = ''; overlay.style.padding = '';
+        btn.title = 'Maximize'; icon.textContent = ICON_MAXIMIZE;
     }
 };
-window.toggleRestoreEditAccountModal = function () {
-    const modal = document.getElementById('editAccountModal');
-    if (!modal) return;
-    modal.classList.remove('modal-fullscreen'); _setModalBtns(modal, 'normal');
-};
-window.restoreEditAccountModal = window.toggleRestoreEditAccountModal;
+// Keep legacy aliases so any remaining references don't break
+window.toggleFullscreenEditAccountModal = window.toggleEditFedSize;
+window.toggleRestoreEditAccountModal    = window.toggleEditFedSize;
+window.restoreEditAccountModal          = window.toggleEditFedSize;
 
 // ── View modal ────────────────────────────────────────────────
+let viewIsMaximized = false;
+
 window.openViewModal  = function () {
-    // Wire toggle button on first open
-    const tb = document.getElementById('viewToggleBtn');
-    if (tb && !tb._wired) {
-        tb._wired = true;
-        tb.addEventListener('click', function (e) {
-            e.stopPropagation();
-            window.toggleFullscreenViewModal();
-        });
-    }
     toggleModal('viewAccountModal', true);
 };
 window.closeViewModal = function () {
-    const modal = document.getElementById('viewAccountModal');
-    const box   = document.getElementById('viewAccountModalBox');
-    const tb    = document.getElementById('viewToggleBtn');
-    if (modal) { modal.classList.remove('dsf-maximized'); }
-    if (box)   { box.classList.remove('dsf-maximized'); }
-    if (tb)    { tb.textContent = '□'; }
+    viewIsMaximized = false;
+    const overlay = document.getElementById('viewAccountModal');
+    const content = overlay ? overlay.querySelector('.modal-content') : null;
+    if (overlay) overlay.style.padding = '';
+    if (content) content.style.cssText = '';
+    const icon = document.getElementById('viewResizeIcon');
+    const btn  = document.getElementById('viewToggleBtn');
+    if (icon) icon.textContent = ICON_MAXIMIZE;
+    if (btn)  btn.title = 'Maximize';
     toggleModal('viewAccountModal', false);
 };
 window.toggleFullscreenViewModal = function () {
-    const modal = document.getElementById('viewAccountModal');
-    const box   = document.getElementById('viewAccountModalBox');
-    const tb    = document.getElementById('viewToggleBtn');
-    if (!modal || !box) return;
-    const isMax = !box.classList.contains('dsf-maximized');
-    modal.classList.toggle('dsf-maximized', isMax);
-    box.classList.toggle('dsf-maximized', isMax);
-    if (tb) tb.textContent = isMax ? '⧉' : '□';
+    const overlay = document.getElementById('viewAccountModal');
+    const content = overlay ? overlay.querySelector('.modal-content') : null;
+    const icon    = document.getElementById('viewResizeIcon');
+    const btn     = document.getElementById('viewToggleBtn');
+    if (!overlay || !content || !icon) return;
+    viewIsMaximized = !viewIsMaximized;
+    if (viewIsMaximized) {
+        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
+        overlay.style.padding = '0';
+        btn.title = 'Restore Down'; icon.textContent = ICON_RESTORE;
+    } else {
+        content.style.cssText = ''; overlay.style.padding = '';
+        btn.title = 'Maximize'; icon.textContent = ICON_MAXIMIZE;
+    }
 };
 window.toggleRestoreViewModal = window.toggleFullscreenViewModal;
 window.restoreViewModal = window.toggleFullscreenViewModal;

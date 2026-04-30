@@ -11,20 +11,12 @@
         <div class="modal-header modal-header-blue-grad">
             <h3 class="modal-title">Add SK Official Account</h3>
             <div class="modal-controls">
-                <button type="button" class="modal-win-btn" id="addOfficialsResizeBtn"
+                <button type="button" class="modal-win-btn modal-win-btn-maximize" id="addOfficialsResizeBtn"
                         onclick="toggleAddOfficialsSize()" title="Maximize">
-                    <svg id="addOfficialsResizeIcon" width="16" height="16" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
-                        <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
-                        <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
-                        <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
-                    </svg>
+                    <span id="addOfficialsResizeIcon" class="modal-win-icon">&#9633;</span>
                 </button>
-                <button type="button" class="modal-win-btn" onclick="closeAddSkOfficialsModal()" title="Close">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
+                <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeAddSkOfficialsModal()" title="Close">
+                    &times;
                 </button>
             </div>
         </div>
@@ -283,21 +275,12 @@
         <div class="modal-header modal-header-yellow">
             <h3 class="modal-title">Edit SK Officials Account</h3>
             <div class="modal-controls">
-                <button type="button" class="modal-restore-btn" id="editOfficialsRestoreBtn" onclick="toggleRestoreEditSkOfficialsModal()" title="Restore Down" style="display:none;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="7" width="11" height="11" rx="1.5"/>
-                        <path d="M7 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/>
-                    </svg>
+                <button type="button" class="modal-win-btn modal-win-btn-maximize" id="editOfficialsResizeBtn"
+                        onclick="toggleEditOfficialsSize()" title="Maximize">
+                    <span id="editOfficialsResizeIcon" class="modal-win-icon">&#9633;</span>
                 </button>
-                <button type="button" class="modal-fullscreen-btn" onclick="toggleFullscreenEditSkOfficialsModal()" title="Maximize">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                    </svg>
-                </button>
-                <button type="button" class="modal-close-btn" onclick="closeEditSkOfficialsModal()">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
+                <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeEditSkOfficialsModal()" title="Close">
+                    &times;
                 </button>
             </div>
         </div>
