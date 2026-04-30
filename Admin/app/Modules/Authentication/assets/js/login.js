@@ -38,6 +38,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Validate all 6 OTP digits are filled
+            const digitInputs = Array.from(twoFactorForm.querySelectorAll('.otp-digit'));
+            const allFilled = digitInputs.every((d) => d.value.trim() !== '');
+            if (!allFilled) {
+                e.preventDefault();
+                // Highlight empty digits
+                digitInputs.forEach((d) => {
+                    if (!d.value.trim()) {
+                        d.classList.add('is-invalid');
+                    } else {
+                        d.classList.remove('is-invalid');
+                    }
+                });
+                // Show or create inline error
+                let errEl = twoFactorForm.querySelector('.otp-required-error');
+                if (!errEl) {
+                    errEl = document.createElement('p');
+                    errEl.className = 'otp-required-error';
+                    errEl.style.cssText = 'color:#dc2626;font-size:0.82rem;font-weight:600;text-align:center;margin:0.5rem 0 0;';
+                    const otpGroup = twoFactorForm.querySelector('[data-otp-group]');
+                    if (otpGroup) otpGroup.after(errEl);
+                }
+                errEl.textContent = 'Please enter all 6 digits of your authentication code.';
+                // Focus first empty digit
+                const firstEmpty = digitInputs.find((d) => !d.value.trim());
+                if (firstEmpty) firstEmpty.focus();
+                return;
+            }
+
+            // Clear any previous error
+            const errEl = twoFactorForm.querySelector('.otp-required-error');
+            if (errEl) errEl.remove();
+            digitInputs.forEach((d) => d.classList.remove('is-invalid'));
+
             // Disable button to prevent multiple clicks
             if (twoFactorBtn) {
                 twoFactorBtn.disabled = true;
@@ -108,6 +142,14 @@ document.addEventListener('DOMContentLoaded', () => {
         digitInputs.forEach((input, index) => {
             input.addEventListener('input', () => {
                 input.value = input.value.replace(/\D/g, '').slice(-1);
+                input.classList.remove('is-invalid');
+                // Clear error message if all digits now filled
+                const allFilled = digitInputs.every((d) => d.value.trim() !== '');
+                if (allFilled) {
+                    const errEl = group.closest('form')?.querySelector('.otp-required-error');
+                    if (errEl) errEl.remove();
+                    digitInputs.forEach((d) => d.classList.remove('is-invalid'));
+                }
                 if (input.value && index < digitInputs.length - 1) {
                     digitInputs[index + 1].focus();
                     digitInputs[index + 1].select();

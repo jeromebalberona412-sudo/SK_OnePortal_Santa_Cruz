@@ -326,9 +326,14 @@ input[type="password"]::-ms-clear { display: none !important; }
 
 .forgot-password {
     font-size: 0.875rem; color: var(--op-blue); text-decoration: none;
-    font-weight: 600; transition: color var(--transition-fast); white-space: nowrap;
+    font-weight: 600; transition: color var(--transition-fast), text-decoration-color var(--transition-fast); white-space: nowrap;
+    text-underline-offset: 3px;
 }
-.forgot-password:hover { color: var(--op-blue-dark); }
+.forgot-password:hover {
+    color: var(--op-blue-dark);
+    text-decoration: underline;
+    text-decoration-color: var(--op-blue-dark);
+}
 
 /* Submit button */
 .login-btn {
@@ -365,6 +370,18 @@ input[type="password"]::-ms-clear { display: none !important; }
     padding-top: 1.25rem; border-top: 1px solid var(--op-gray-200);
 }
 .form-footer p { font-size: 0.85rem; color: var(--op-gray-500); font-weight: 500; }
+.form-footer a {
+    color: var(--op-blue);
+    font-weight: 600;
+    text-decoration: none;
+    text-underline-offset: 3px;
+    transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+}
+.form-footer a:hover {
+    color: var(--op-blue-dark);
+    text-decoration: underline;
+    text-decoration-color: var(--op-blue-dark);
+}
 
 /* Back to Profile link */
 .back-to-profile-btn {
