@@ -311,27 +311,39 @@ window.toggleRestoreEditAccountModal = function () {
 window.restoreEditAccountModal = window.toggleRestoreEditAccountModal;
 
 // ── View modal ────────────────────────────────────────────────
-window.openViewModal  = function () { toggleModal('viewAccountModal', true); };
+window.openViewModal  = function () {
+    // Wire toggle button on first open
+    const tb = document.getElementById('viewToggleBtn');
+    if (tb && !tb._wired) {
+        tb._wired = true;
+        tb.addEventListener('click', function (e) {
+            e.stopPropagation();
+            window.toggleFullscreenViewModal();
+        });
+    }
+    toggleModal('viewAccountModal', true);
+};
 window.closeViewModal = function () {
     const modal = document.getElementById('viewAccountModal');
-    if (modal) { modal.classList.remove('modal-fullscreen','modal-minimized'); _setModalBtns(modal, 'normal'); }
+    const box   = document.getElementById('viewAccountModalBox');
+    const tb    = document.getElementById('viewToggleBtn');
+    if (modal) { modal.classList.remove('dsf-maximized'); }
+    if (box)   { box.classList.remove('dsf-maximized'); }
+    if (tb)    { tb.textContent = '□'; }
     toggleModal('viewAccountModal', false);
 };
 window.toggleFullscreenViewModal = function () {
     const modal = document.getElementById('viewAccountModal');
-    if (!modal) return;
-    if (modal.classList.contains('modal-fullscreen')) {
-        modal.classList.remove('modal-fullscreen'); _setModalBtns(modal, 'normal');
-    } else {
-        modal.classList.remove('modal-minimized'); modal.classList.add('modal-fullscreen'); _setModalBtns(modal, 'fullscreen');
-    }
+    const box   = document.getElementById('viewAccountModalBox');
+    const tb    = document.getElementById('viewToggleBtn');
+    if (!modal || !box) return;
+    const isMax = !box.classList.contains('dsf-maximized');
+    modal.classList.toggle('dsf-maximized', isMax);
+    box.classList.toggle('dsf-maximized', isMax);
+    if (tb) tb.textContent = isMax ? '⧉' : '□';
 };
-window.toggleRestoreViewModal = function () {
-    const modal = document.getElementById('viewAccountModal');
-    if (!modal) return;
-    modal.classList.remove('modal-fullscreen'); _setModalBtns(modal, 'normal');
-};
-window.restoreViewModal = window.toggleRestoreViewModal;
+window.toggleRestoreViewModal = window.toggleFullscreenViewModal;
+window.restoreViewModal = window.toggleFullscreenViewModal;
 
 // ── Internal helpers ──────────────────────────────────────────
 function _setModalBtns(modal, state) {

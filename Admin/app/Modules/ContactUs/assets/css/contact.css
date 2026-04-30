@@ -68,28 +68,30 @@
     font-size: 0.9rem;
 }
 
+/* Blue header */
 .contact-table thead tr {
-    background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
-    border-bottom: 2px solid #e2e8f0;
+    background: linear-gradient(135deg, #083080, #0d47a1);
 }
 
 .contact-table thead th {
-    padding: 0.875rem 1.25rem;
-    text-align: left;
-    font-size: 0.75rem;
+    padding: 0.9rem 1.25rem;
+    text-align: center;
+    font-size: 0.8rem;
     font-weight: 700;
-    color: #475569;
+    color: #ffffff;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.07em;
     white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.15);
 }
 
 .contact-table thead th:last-child {
-    text-align: center;
+    border-right: none;
 }
 
+/* Body rows */
 .contact-table tbody tr {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
     transition: background 0.15s ease;
 }
 
@@ -98,97 +100,84 @@
 }
 
 .contact-table tbody tr:hover {
-    background: #f8fafc;
+    background: #f0f4ff;
 }
 
 .contact-table td {
     padding: 0.875rem 1.25rem;
     color: #1e293b;
     vertical-align: middle;
+    text-align: center;
+    border-right: 1px solid #e2e8f0;
+}
+
+.contact-table td:last-child {
+    border-right: none;
 }
 
 .td-num {
-    width: 48px;
-    color: #94a3b8;
+    width: 52px;
+    color: #64748b;
     font-weight: 600;
-    font-size: 0.8125rem;
+    font-size: 0.85rem;
 }
 
 .td-label {
     font-weight: 600;
-    color: #334155;
+    color: #1e293b;
 }
 
 .td-value {
-    color: #475569;
+    color: #334155;
     max-width: 320px;
     word-break: break-word;
 }
 
 .td-actions {
-    text-align: center;
     white-space: nowrap;
+    width: 160px;
 }
 
-/* ── Type Badge ── */
-.type-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.625rem;
-    border-radius: 20px;
-    font-size: 0.78rem;
+/* ── Type text (no badge, no color, no icon) ── */
+.type-text {
+    font-size: 0.875rem;
     font-weight: 600;
-    background: #f1f5f9;
-    color: #475569;
-    white-space: nowrap;
+    color: #1e293b;
 }
 
-.badge-phone    { background: #dcfce7; color: #15803d; }
-.badge-email    { background: #dbeafe; color: #1d4ed8; }
-.badge-address  { background: #fef9c3; color: #a16207; }
-.badge-facebook { background: #eff6ff; color: #1d4ed8; }
-.badge-website  { background: #f0fdf4; color: #15803d; }
-.badge-hours    { background: #fdf4ff; color: #7e22ce; }
-.badge-other    { background: #f1f5f9; color: #475569; }
-
-/* ── Row Buttons ── */
+/* ── Row Buttons — flat, text only, same size ── */
 .row-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.375rem 0.75rem;
+    justify-content: center;
+    padding: 0.375rem 0;
+    width: 72px;
     font-size: 0.8rem;
     font-weight: 600;
     border-radius: 6px;
     border: none;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: opacity 0.15s ease;
     margin: 0 0.2rem;
+    white-space: nowrap;
 }
 
 .row-btn-edit {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: #fff;
-    box-shadow: 0 1px 3px rgba(245,158,11,.25);
+    background-color: #facc15;
+    color: #ffffff;
 }
 
 .row-btn-edit:hover {
-    background: linear-gradient(135deg, #d97706, #b45309);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(245,158,11,.3);
+    opacity: 0.85;
 }
 
 .row-btn-delete {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    background-color: #ef4444;
     color: #fff;
-    box-shadow: 0 1px 3px rgba(220,38,38,.25);
 }
 
 .row-btn-delete:hover {
-    background: linear-gradient(135deg, #b91c1c, #991b1b);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(220,38,38,.3);
+    opacity: 0.85;
 }
 
 /* ── Empty State ── */
@@ -344,6 +333,23 @@
     background: rgba(255,255,255,.3);
 }
 
+/* Yellow header for Edit modal — flat, no gradient */
+.modal-header-yellow {
+    background: #facc15;
+    border-bottom: none;
+}
+
+.modal-header-yellow .modal-title { color: #ffffff; }
+
+.modal-header-yellow .modal-ctrl-btn {
+    background: rgba(0,0,0,.1);
+    color: #ffffff;
+}
+
+.modal-header-yellow .modal-ctrl-btn:hover {
+    background: rgba(0,0,0,.2);
+}
+
 .modal-title {
     display: flex;
     align-items: center;
@@ -354,24 +360,44 @@
     margin: 0;
 }
 
-.modal-close-btn {
-    width: 30px;
-    height: 30px;
-    padding: 5px;
-    border: none;
-    background: #f1f5f9;
-    border-radius: 7px;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.18s ease;
+/* ── Modal controls — exact same as Archived/Deleted modules ── */
+.modal-controls {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    gap: 2px;
 }
 
-.modal-close-btn:hover { background: #e2e8f0; color: #1e293b; }
-.modal-close-btn svg   { width: 100%; height: 100%; }
+.contact-view-toggle,
+.contact-view-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 8px;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+}
+
+.contact-view-toggle:hover,
+.contact-view-close:hover {
+    opacity: 1;
+}
+
+/* Maximized state — same as archived modules */
+.modal-overlay.contact-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.modal-container.contact-maximized {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+}
 
 .modal-body {
     padding: 1.75rem;
@@ -414,6 +440,22 @@
     color: #94a3b8;
 }
 
+/* Dynamic value field that appears after type selection */
+.form-group-dynamic {
+    display: none;
+    margin-bottom: 1.25rem;
+    animation: fadeSlideIn 0.2s ease;
+}
+
+.form-group-dynamic.visible {
+    display: block;
+}
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 .form-input-modern {
     width: 100%;
     padding: 0.7rem 0.95rem;
@@ -446,75 +488,160 @@
 }
 
 /* ── Delete Warning ── */
-.delete-warning {
-    text-align: center;
-    padding: 0.5rem 0;
+.delete-modal-body {
+    padding: 2rem 1.75rem 1.25rem !important;
 }
 
-.delete-warning-icon {
-    width: 64px;
-    height: 64px;
-    background: #fee2e2;
-    border-radius: 50%;
+.delete-warning {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delete-confirm-text {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #475569;
+    margin: 0;
+    line-height: 1.6;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem;
-    color: #dc2626;
+    gap: 0.3rem;
+    flex-wrap: wrap;
 }
 
-.delete-warning p {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 0.375rem;
+.delete-confirm-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    word-break: break-word;
+    max-width: 100%;
 }
 
 .delete-warning-sub {
-    font-size: 0.8125rem !important;
-    font-weight: 400 !important;
-    color: #94a3b8 !important;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: #94a3b8;
+    margin: 0.25rem 0 0;
 }
 
-/* ── Toast ── */
-.toast-notification {
+.modal-footer-center {
+    justify-content: center !important;
+    gap: 1rem !important;
+}
+
+/* Remove white background and border line from delete modal footer */
+.modal-footer-plain {
+    background: transparent !important;
+    border-top: none !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 1.5rem !important;
+}
+
+/* ── Required star ── */
+.required-star {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+/* ── Field error message ── */
+.field-error {
+    display: none;
+    font-size: 0.78rem;
+    color: #dc2626;
+    font-weight: 500;
+    margin-top: 0.3rem;
+}
+
+.field-error.visible {
+    display: block;
+}
+
+.form-input-modern.input-error {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* ── Toast — matches account module, text only (no icon) ── */
+#contactToastAdd,
+#contactToastEdit,
+#contactToastDelete {
     position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.12);
-    padding: 0.875rem 1.125rem;
+    top: calc(var(--topbar-height, 64px) + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-12px);
+    z-index: 3000;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    z-index: 10000;
-    min-width: 300px;
-    border: 1px solid #e2e8f0;
-    animation: toastIn 0.3s ease;
+    gap: 10px;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 12px 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-@keyframes toastIn {
-    from { opacity: 0; transform: translateX(80px); }
-    to   { opacity: 1; transform: translateX(0);    }
+/* green — add */
+#contactToastAdd {
+    border: 1px solid #bbf7d0;
+    border-left: 4px solid #16a34a;
+    color: #15803d;
 }
 
-.toast-icon {
-    width: 36px;
-    height: 36px;
-    padding: 7px;
-    border-radius: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+/* yellow — edit */
+#contactToastEdit {
+    border: 1px solid #fde68a;
+    border-left: 4px solid #d97706;
+    color: #92400e;
 }
 
-.toast-success { background: #dcfce7; color: #16a34a; }
-.toast-icon svg { width: 100%; height: 100%; }
+/* red — delete */
+#contactToastDelete {
+    border: 1px solid #fecaca;
+    border-left: 4px solid #dc2626;
+    color: #991b1b;
+}
 
-.toast-title   { font-size: 0.875rem; font-weight: 700; color: #0f172a; margin-bottom: 1px; }
-.toast-message { font-size: 0.8rem;   color: #64748b; }
+#contactToastAdd.show,
+#contactToastEdit.show,
+#contactToastDelete.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+:root.dark #contactToastAdd {
+    background: #1e293b;
+    border-color: #166534;
+    border-left-color: #16a34a;
+    color: #4ade80;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+:root.dark #contactToastEdit {
+    background: #1e293b;
+    border-color: #78350f;
+    border-left-color: #d97706;
+    color: #fbbf24;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+:root.dark #contactToastDelete {
+    background: #1e293b;
+    border-color: #7f1d1d;
+    border-left-color: #dc2626;
+    color: #f87171;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
 
 /* ── Responsive ── */
 @media (max-width: 768px) {

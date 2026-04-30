@@ -90,22 +90,15 @@
         }
         if (empty) empty.style.display = 'none';
 
-        contacts.forEach(function (c, i) {
+        contacts.forEach(function (c) {
             var tr = document.createElement('tr');
             tr.innerHTML =
-                '<td class="td-num">' + (i + 1) + '</td>' +
-                '<td><span class="type-badge ' + badgeFor(c.type) + '">' + iconFor(c.type) + ' ' + esc(c.type) + '</span></td>' +
+                '<td><span class="type-text">' + esc(c.type) + '</span></td>' +
                 '<td class="td-label">' + esc(c.label) + '</td>' +
                 '<td class="td-value">' + esc(c.value) + '</td>' +
                 '<td class="td-actions">' +
-                    '<button class="row-btn row-btn-edit" data-id="' + c.id + '">' +
-                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>' +
-                        ' Edit' +
-                    '</button>' +
-                    '<button class="row-btn row-btn-delete" data-id="' + c.id + '">' +
-                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
-                        ' Delete' +
-                    '</button>' +
+                    '<button class="row-btn row-btn-edit" data-id="' + c.id + '">Edit</button>' +
+                    '<button class="row-btn row-btn-delete" data-id="' + c.id + '">Delete</button>' +
                 '</td>';
             tbody.appendChild(tr);
         });
@@ -129,15 +122,44 @@
         setTimeout(function () { c.classList.remove('modal-shake'); }, 500);
     }
 
-    /* ── Toast ─────────────────────────────────────────── */
-    function toast(msg) {
-        var el  = document.getElementById('successToast');
-        var txt = document.getElementById('toastMessage');
-        if (!el || !txt) return;
-        txt.textContent = msg;
-        el.style.display = 'flex';
-        clearTimeout(el._t);
-        el._t = setTimeout(function () { el.style.display = 'none'; }, 3000);
+    /* ── Toast — matches account module ───────────────────── */
+    var _toastTimer = null;
+    function toast(msg, type) {
+        var idMap  = { add: 'contactToastAdd', edit: 'contactToastEdit', delete: 'contactToastDelete' };
+        var msgMap = { add: 'contactToastAddMsg', edit: 'contactToastEditMsg', delete: 'contactToastDeleteMsg' };
+        var toastId = idMap[type]  || 'contactToastAdd';
+        var msgId   = msgMap[type] || 'contactToastAddMsg';
+
+        ['contactToastAdd', 'contactToastEdit', 'contactToastDelete'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.remove('show');
+        });
+
+        var toastEl = document.getElementById(toastId);
+        var msgEl   = document.getElementById(msgId);
+        if (!toastEl) return;
+        if (msgEl) msgEl.textContent = msg;
+        toastEl.classList.add('show');
+        if (_toastTimer) clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 3500);
+    }
+
+    /* ── Field validation helpers ──────────────────────────── */
+    function setError(inputId, errorId, show) {
+        var input = document.getElementById(inputId);
+        var err   = document.getElementById(errorId);
+        if (input) {
+            if (show) input.classList.add('input-error');
+            else      input.classList.remove('input-error');
+        }
+        if (err) {
+            if (show) err.classList.add('visible');
+            else      err.classList.remove('visible');
+        }
+    }
+
+    function clearErrors(ids) {
+        ids.forEach(function (pair) { setError(pair[0], pair[1], false); });
     }
 
     /* ── Validation helper ─────────────────────────────── */
@@ -150,6 +172,75 @@
     document.addEventListener('DOMContentLoaded', function () {
         load();
         render();
+
+        /* ── Dynamic value field on type select ── */
+        function wireTypeSelect(selectId, dynamicGroupId, valueInputId, labelInputId) {
+            var sel   = document.getElementById(selectId);
+            var group = document.getElementById(dynamicGroupId);
+            var input = document.getElementById(valueInputId);
+            var lbl   = document.getElementById(labelInputId);
+            if (!sel || !group || !input) return;
+
+            // Placeholder map per type
+            var placeholders = {
+                'Phone':        'e.g. 09081137315',
+                'Email':        'e.g. skoneportal@gmail.com',
+                'Address':      'e.g. Municipal Hall, Santa Cruz, Laguna',
+                'Facebook':     'e.g. https://facebook.com/skoneportal',
+                'Website':      'e.g. https://skoneportal.gov.ph',
+                'Office Hours': 'e.g. Mon\u2013Fri: 8:00 AM \u2013 5:00 PM',
+                'Other':        'Enter contact value',
+            };
+
+            var labelDefaults = {
+                'Phone':        'Contact Number',
+                'Email':        'Official Email',
+                'Address':      'Main Office',
+                'Facebook':     'Facebook Page',
+                'Website':      'Official Website',
+                'Office Hours': 'Working Hours',
+                'Other':        'Other',
+            };
+
+            sel.addEventListener('change', function () {
+                var t = sel.value;
+                if (t) {
+                    input.placeholder = placeholders[t] || 'Enter value';
+                    // Auto-fill label only if empty
+                    if (lbl && !lbl.value.trim()) {
+                        lbl.value = labelDefaults[t] || '';
+                    }
+                    group.classList.add('visible');
+                    setTimeout(function () { input.focus(); }, 80);
+                } else {
+                    group.classList.remove('visible');
+                }
+            });
+        }
+
+        wireTypeSelect('addType', 'addValueGroup', 'addValue', 'addLabel');
+        wireTypeSelect('editType', 'editValueGroup', 'editValue', 'editLabel');
+
+        /* ── Maximize / Restore — exact same pattern as Archived/Deleted modules ── */
+        function wireMaximize(toggleBtnId, overlayId, boxId) {
+            var toggleBtn = document.getElementById(toggleBtnId);
+            var overlay   = document.getElementById(overlayId);
+            var box       = document.getElementById(boxId);
+            if (!toggleBtn || !overlay || !box) return;
+
+            toggleBtn.textContent = '□';
+
+            toggleBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var isMax = !box.classList.contains('contact-maximized');
+                overlay.classList.toggle('contact-maximized', isMax);
+                box.classList.toggle('contact-maximized', isMax);
+                toggleBtn.textContent = isMax ? '⧉' : '□';
+            });
+        }
+
+        wireMaximize('btnMaxAdd',  'addContactModal',  'addModalContainer');
+        wireMaximize('btnMaxEdit', 'editContactModal', 'editModalContainer');
 
         /* ── ADD ── */
         var btnAdd = document.getElementById('btnAddContact');
@@ -169,6 +260,16 @@
         function closeAdd() {
             hideModal('addContactModal');
             document.getElementById('addContactForm').reset();
+            var avg = document.getElementById('addValueGroup');
+            if (avg) avg.classList.remove('visible');
+            clearErrors([['addType','addTypeError'],['addLabel','addLabelError'],['addValue','addValueError']]);
+            // Reset maximize state
+            var overlay = document.getElementById('addContactModal');
+            var box = document.getElementById('addModalContainer');
+            var tb = document.getElementById('btnMaxAdd');
+            if (overlay) overlay.classList.remove('contact-maximized');
+            if (box) box.classList.remove('contact-maximized');
+            if (tb) tb.textContent = '□';
         }
 
         if (btnCloseAdd)  btnCloseAdd.addEventListener('click',  closeAdd);
@@ -178,12 +279,21 @@
             var type  = val('addType');
             var label = val('addLabel');
             var value = val('addValue');
-            if (!type || !label || !value) { shake('addContactModal'); return; }
+
+            // Clear previous errors
+            clearErrors([['addType','addTypeError'],['addLabel','addLabelError'],['addValue','addValueError']]);
+
+            var hasError = false;
+            if (!type)  { setError('addType',  'addTypeError',  true); hasError = true; }
+            if (!label) { setError('addLabel', 'addLabelError', true); hasError = true; }
+            if (!value) { setError('addValue', 'addValueError', true); hasError = true; }
+            if (hasError) { shake('addContactModal'); return; }
+
             contacts.push({ id: uid(), type: type, label: label, value: value });
             persist();
             render();
             closeAdd();
-            toast('Contact added successfully');
+            toast('Contact added successfully!', 'add');
         });
 
         /* ── EDIT ── */
@@ -191,7 +301,16 @@
         var btnCancelEdit = document.getElementById('btnCancelEdit');
         var btnSubmitEdit = document.getElementById('btnSubmitEdit');
 
-        function closeEdit() { hideModal('editContactModal'); }
+        function closeEdit() {
+            hideModal('editContactModal');
+            // Reset maximize state
+            var overlay = document.getElementById('editContactModal');
+            var box = document.getElementById('editModalContainer');
+            var tb = document.getElementById('btnMaxEdit');
+            if (overlay) overlay.classList.remove('contact-maximized');
+            if (box) box.classList.remove('contact-maximized');
+            if (tb) tb.textContent = '□';
+        }
 
         if (btnCloseEdit)  btnCloseEdit.addEventListener('click',  closeEdit);
         if (btnCancelEdit) btnCancelEdit.addEventListener('click', closeEdit);
@@ -201,7 +320,14 @@
             var type  = val('editType');
             var label = val('editLabel');
             var value = val('editValue');
-            if (!type || !label || !value) { shake('editContactModal'); return; }
+
+            clearErrors([['editLabel','editLabelError'],['editValue','editValueError']]);
+
+            var hasError = false;
+            if (!label) { setError('editLabel', 'editLabelError', true); hasError = true; }
+            if (!value) { setError('editValue', 'editValueError', true); hasError = true; }
+            if (hasError) { shake('editContactModal'); return; }
+
             for (var i = 0; i < contacts.length; i++) {
                 if (contacts[i].id === id) {
                     contacts[i] = { id: id, type: type, label: label, value: value };
@@ -211,11 +337,10 @@
             persist();
             render();
             closeEdit();
-            toast('Contact updated successfully');
+            toast('Contact updated successfully!', 'edit');
         });
 
         /* ── DELETE ── */
-        var btnCloseDelete  = document.getElementById('btnCloseDelete');
         var btnCancelDelete = document.getElementById('btnCancelDelete');
         var btnSubmitDelete = document.getElementById('btnSubmitDelete');
 
@@ -224,7 +349,6 @@
             hideModal('deleteContactModal');
         }
 
-        if (btnCloseDelete)  btnCloseDelete.addEventListener('click',  closeDelete);
         if (btnCancelDelete) btnCancelDelete.addEventListener('click', closeDelete);
 
         if (btnSubmitDelete) btnSubmitDelete.addEventListener('click', function () {
@@ -233,7 +357,7 @@
             persist();
             render();
             closeDelete();
-            toast('Contact deleted successfully');
+            toast('Contact deleted successfully!', 'delete');
         });
 
         /* ── Row buttons (event delegation on tbody) ── */
@@ -252,6 +376,9 @@
                     document.getElementById('editType').value      = c.type;
                     document.getElementById('editLabel').value     = c.label;
                     document.getElementById('editValue').value     = c.value;
+                    // Show the dynamic value group since type is already set
+                    var evg = document.getElementById('editValueGroup');
+                    if (evg) evg.classList.add('visible');
                     showModal('editContactModal');
                     setTimeout(function () {
                         var lbl = document.getElementById('editLabel');

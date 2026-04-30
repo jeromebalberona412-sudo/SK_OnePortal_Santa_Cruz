@@ -35,10 +35,9 @@
                 <table class="contact-table" id="contactTable">
                     <thead>
                         <tr>
-                            <th>#</th>
                             <th>Type</th>
-                            <th>Label</th>
-                            <th>Value</th>
+                            <th>Platform</th>
+                            <th>Contact Detail</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -63,46 +62,46 @@
 
 {{-- ── ADD CONTACT MODAL ── --}}
 <div class="modal-overlay" id="addContactModal" style="display:none;">
-    <div class="modal-container">
+    <div class="modal-container" id="addModalContainer">
         <div class="modal-header modal-header-blue">
             <h3 class="modal-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 4v16m8-8H4"/>
                 </svg>
                 Add New Contact
             </h3>
-            <button type="button" class="modal-close-btn" id="btnCloseAdd">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+            <div class="modal-controls">
+                <button type="button" class="contact-view-toggle" id="btnMaxAdd" aria-label="Maximize">□</button>
+                <button type="button" class="contact-view-close" id="btnCloseAdd">&times;</button>
+            </div>
         </div>
         <div class="modal-body">
-            <form id="addContactForm" onsubmit="return false;">
+            <form id="addContactForm">
 
                 <div class="form-group-modern">
-                    <label for="addType" class="form-label-modern">Contact Type</label>
+                    <label for="addType" class="form-label-modern">Contact Type <span class="required-star">*</span></label>
                     <select id="addType" class="form-input-modern form-select-modern" required>
                         <option value="" disabled selected>Select type...</option>
                         <option value="Phone">Phone</option>
                         <option value="Email">Email</option>
                         <option value="Address">Address</option>
                         <option value="Facebook">Facebook</option>
-                        <option value="Website">Website</option>
                         <option value="Office Hours">Office Hours</option>
                         <option value="Other">Other</option>
                     </select>
+                    <span class="field-error" id="addTypeError">Please select a contact type.</span>
                 </div>
 
                 <div class="form-group-modern">
-                    <label for="addLabel" class="form-label-modern">Label <span class="form-hint">(e.g. "Main Office", "Facebook Page")</span></label>
-                    <input type="text" id="addLabel" class="form-input-modern" placeholder="Enter a short label" required>
+                    <label for="addLabel" class="form-label-modern">Platform <span class="required-star">*</span> <span class="form-hint">(e.g. "Main Office", "Facebook Page")</span></label>
+                    <input type="text" id="addLabel" class="form-input-modern" placeholder="Enter platform name" required>
+                    <span class="field-error" id="addLabelError">Platform name is required.</span>
                 </div>
 
-                <div class="form-group-modern">
-                    <label for="addValue" class="form-label-modern">Value</label>
-                    <input type="text" id="addValue" class="form-input-modern" placeholder="Enter the contact value" required>
+                <div class="form-group-dynamic" id="addValueGroup">
+                    <label for="addValue" class="form-label-modern">Contact Detail <span class="required-star">*</span></label>
+                    <input type="text" id="addValue" class="form-input-modern" placeholder="Enter the contact detail">
+                    <span class="field-error" id="addValueError">Contact detail is required.</span>
                 </div>
 
             </form>
@@ -121,47 +120,46 @@
 
 {{-- ── EDIT CONTACT MODAL ── --}}
 <div class="modal-overlay" id="editContactModal" style="display:none;">
-    <div class="modal-container">
-        <div class="modal-header modal-header-blue">
+    <div class="modal-container" id="editModalContainer">
+        <div class="modal-header modal-header-yellow">
             <h3 class="modal-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
                 Edit Contact
             </h3>
-            <button type="button" class="modal-close-btn" id="btnCloseEdit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+            <div class="modal-controls">
+                <button type="button" class="contact-view-toggle" id="btnMaxEdit" aria-label="Maximize">□</button>
+                <button type="button" class="contact-view-close" id="btnCloseEdit">&times;</button>
+            </div>
         </div>
         <div class="modal-body">
             <form id="editContactForm" onsubmit="return false;">
                 <input type="hidden" id="editContactId">
 
                 <div class="form-group-modern">
-                    <label for="editType" class="form-label-modern">Contact Type</label>
+                    <label for="editType" class="form-label-modern">Contact Type <span class="required-star">*</span></label>
                     <select id="editType" class="form-input-modern form-select-modern" required>
                         <option value="Phone">Phone</option>
                         <option value="Email">Email</option>
                         <option value="Address">Address</option>
                         <option value="Facebook">Facebook</option>
-                        <option value="Website">Website</option>
                         <option value="Office Hours">Office Hours</option>
                         <option value="Other">Other</option>
                     </select>
                 </div>
 
                 <div class="form-group-modern">
-                    <label for="editLabel" class="form-label-modern">Label <span class="form-hint">(e.g. "Main Office", "Facebook Page")</span></label>
-                    <input type="text" id="editLabel" class="form-input-modern" placeholder="Enter a short label" required>
+                    <label for="editLabel" class="form-label-modern">Platform <span class="required-star">*</span> <span class="form-hint">(e.g. "Main Office", "Facebook Page")</span></label>
+                    <input type="text" id="editLabel" class="form-input-modern" placeholder="Enter platform name" required>
+                    <span class="field-error" id="editLabelError">Platform name is required.</span>
                 </div>
 
-                <div class="form-group-modern">
-                    <label for="editValue" class="form-label-modern">Value</label>
-                    <input type="text" id="editValue" class="form-input-modern" placeholder="Enter the contact value" required>
+                <div class="form-group-dynamic visible" id="editValueGroup">
+                    <label for="editValue" class="form-label-modern">Contact Detail <span class="required-star">*</span></label>
+                    <input type="text" id="editValue" class="form-input-modern" placeholder="Enter the contact detail" required>
+                    <span class="field-error" id="editValueError">Contact detail is required.</span>
                 </div>
 
             </form>
@@ -170,7 +168,7 @@
             <button type="button" class="btn-secondary-modern" id="btnCancelEdit">Cancel</button>
             <button type="button" class="btn-primary-modern btn-green" id="btnSubmitEdit">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"></polyline>
+                    <polyline points="20 6 9 17 4 12"/>
                 </svg>
                 Save Changes
             </button>
@@ -181,51 +179,37 @@
 {{-- ── DELETE CONFIRMATION MODAL ── --}}
 <div class="modal-overlay" id="deleteContactModal" style="display:none;">
     <div class="modal-container modal-small">
-        <div class="modal-header">
-            <h3 class="modal-title">Confirm Delete</h3>
-            <button type="button" class="modal-close-btn" id="btnCloseDelete">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        <div class="modal-body">
+        <div class="modal-body delete-modal-body">
             <div class="delete-warning">
-                <div class="delete-warning-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <p class="delete-confirm-text">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;color:#dc2626;flex-shrink:0;">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
-                </div>
-                <p>Are you sure you want to delete <strong id="deleteContactLabel">"this contact"</strong>?</p>
+                    Are you sure you want to delete
+                </p>
+                <p class="delete-confirm-name" id="deleteContactLabel">"this contact"</p>
                 <p class="delete-warning-sub">This action cannot be undone.</p>
             </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer modal-footer-center modal-footer-plain">
             <button type="button" class="btn-secondary-modern" id="btnCancelDelete">Cancel</button>
-            <button type="button" class="btn-primary-modern btn-delete" id="btnSubmitDelete">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Delete
-            </button>
+            <button type="button" class="btn-primary-modern btn-delete" id="btnSubmitDelete">Delete</button>
         </div>
     </div>
 </div>
 
-{{-- ── TOAST ── --}}
-<div class="toast-notification" id="successToast" style="display:none;">
-    <div class="toast-icon toast-success">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-    </div>
-    <div class="toast-content">
-        <div class="toast-title">Success!</div>
-        <div class="toast-message" id="toastMessage">Operation completed successfully</div>
-    </div>
+{{-- ── TOAST (matches account module design, text only) ── --}}
+<div id="contactToastAdd" role="status" aria-live="polite">
+    <span id="contactToastAddMsg">Contact added successfully!</span>
+</div>
+
+<div id="contactToastEdit" role="status" aria-live="polite">
+    <span id="contactToastEditMsg">Contact updated successfully!</span>
+</div>
+
+<div id="contactToastDelete" role="status" aria-live="polite">
+    <span id="contactToastDeleteMsg">Contact deleted successfully!</span>
 </div>
 
 @endsection
