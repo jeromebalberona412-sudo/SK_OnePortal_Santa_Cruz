@@ -64,9 +64,6 @@ export default defineConfig({
                 'app/Modules/schedule_programs/assets/js/schedule-programs.js',
                 'app/Modules/schedule_programs/assets/css/sports_application_form.css',
                 'app/Modules/schedule_programs/assets/js/sports_application_form.js',
-                // Barangay Census Form module assets
-                'app/Modules/Barangay_Census_Form/assets/css/barangay-census-form.css',
-                'app/Modules/Barangay_Census_Form/assets/js/barangay-census-form.js',
                 // Layout module assets
                 'app/Modules/layout/css/header.css',
                 'app/Modules/layout/css/sidebar.css',

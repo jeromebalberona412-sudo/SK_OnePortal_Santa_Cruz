@@ -100,6 +100,11 @@
                         <button type="submit" class="sk-submit-btn" id="submitBtn">
                             <span id="fpBtnText">Send Reset Link</span>
                         </button>
+
+                        <!-- Cooldown notice — shown only while timer is active -->
+                        <p class="fp-cooldown-notice" id="fpCooldownNotice" hidden>
+                            You can resend the link in <strong id="fpCooldownCount">60</strong>s.
+                        </p>
                     </form>
 
                     <div class="youth-register-section">

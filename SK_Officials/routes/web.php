@@ -111,8 +111,4 @@ Route::middleware([
     Route::get('/sports-application-form', function () {
         return view('schedule_programs::sports_application_form');
     })->name('sports-application-form');
-
-    Route::get('/barangay-census-form', function () {
-        return view('Barangay_Census_Form::barangay-census-form');
-    })->name('barangay-census-form');
 });
