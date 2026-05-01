@@ -90,6 +90,36 @@
         if (hidden) hidden.value = checkbox.checked ? checkbox.value : '';
     };
 
+    // ── KK Assembly conditional show/hide ──
+    window.kkpHandleAssembly = function (checkbox) {
+        const yesCell = document.getElementById('kkpAssemblyYesCell');
+        const noCell  = document.getElementById('kkpAssemblyNoCell');
+        if (!yesCell || !noCell) return;
+
+        if (!checkbox.checked) {
+            // unchecked — hide both
+            yesCell.style.display = 'none';
+            noCell.style.display  = 'none';
+            return;
+        }
+
+        if (checkbox.value === 'Yes') {
+            yesCell.style.display = '';
+            noCell.style.display  = 'none';
+            // clear No reason
+            document.querySelectorAll('input[name="kk_reasonChk"]').forEach(cb => cb.checked = false);
+            const r = document.getElementById('kkpKkReason');
+            if (r) r.value = '';
+        } else {
+            noCell.style.display  = '';
+            yesCell.style.display = 'none';
+            // clear Yes times
+            document.querySelectorAll('input[name="kk_timesChk"]').forEach(cb => cb.checked = false);
+            const t = document.getElementById('kkpKkTimes');
+            if (t) t.value = '';
+        }
+    };
+
     // ── Auto-dismiss success alert ──
     const successAlert = document.querySelector('.kkp-alert-success');
     if (successAlert) {
@@ -351,6 +381,12 @@ window.handleFormSubmit = function(event) {
             alert('Please provide a signature before saving.');
             return;
         }
+        // Show confirmation modal instead of saving immediately
+        const confirmOverlay = document.getElementById('kkpSigConfirmOverlay');
+        if (confirmOverlay) confirmOverlay.style.display = 'flex';
+    }
+
+    function doSaveSig() {
         const data = canvas.toDataURL('image/png');
 
         // Store in hidden input
@@ -365,6 +401,10 @@ window.handleFormSubmit = function(event) {
         // Hide the Sign button (signature is done)
         if (triggerBtn) triggerBtn.style.display = 'none';
 
+        // Close confirmation modal
+        const confirmOverlay = document.getElementById('kkpSigConfirmOverlay');
+        if (confirmOverlay) confirmOverlay.style.display = 'none';
+
         closePad();
     }
 
@@ -373,6 +413,26 @@ window.handleFormSubmit = function(event) {
     if (closeBtn)   closeBtn.addEventListener('click', closePad);
     if (clearBtn)   clearBtn.addEventListener('click', clearCanvas);
     if (saveBtn)    saveBtn.addEventListener('click', saveSig);
+
+    // Confirmation modal buttons
+    const confirmOverlay  = document.getElementById('kkpSigConfirmOverlay');
+    const confirmCancelBtn = document.getElementById('kkpSigConfirmCancel');
+    const confirmSaveBtn   = document.getElementById('kkpSigConfirmSave');
+
+    if (confirmCancelBtn) {
+        confirmCancelBtn.addEventListener('click', function () {
+            if (confirmOverlay) confirmOverlay.style.display = 'none';
+        });
+    }
+    if (confirmSaveBtn) {
+        confirmSaveBtn.addEventListener('click', doSaveSig);
+    }
+    // Close confirmation on backdrop click
+    if (confirmOverlay) {
+        confirmOverlay.addEventListener('click', function (e) {
+            if (e.target === confirmOverlay) confirmOverlay.style.display = 'none';
+        });
+    }
 
     // Close on backdrop click
     if (overlay) {
