@@ -803,3 +803,15 @@ body {
 
 /* Checkmark cells */
 .preview-table--full td:empty::after { content: '—'; color: #d1d5db; }
+
+/* Signature cell in preview table */
+.preview-table--full td.sig-cell {
+    min-width: 120px;
+    padding: 4px 8px;
+    vertical-align: middle;
+}
+
+.preview-table--full td.sig-cell svg {
+    display: block;
+    margin: 0 auto;
+}

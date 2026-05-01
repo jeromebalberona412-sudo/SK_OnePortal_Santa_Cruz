@@ -21,6 +21,14 @@ const SIGNATURES = [
 function getSignaturePath(id) {
     return SIGNATURES[(id - 1) % SIGNATURES.length];
 }
+
+/* ── Inline SVG signature for table/preview cells ── */
+function makeSignatureSvg(index) {
+    const path = SIGNATURES[index % SIGNATURES.length];
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 50" width="110" height="25" style="display:block;margin:0 auto;" aria-label="Signature">
+        <path d="${path}" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+}
 const PREV_KAB_DATA = [
     {
         id: 1, year: 2023, respondentNo: 'PK-2023-001',
@@ -457,28 +465,24 @@ function renderFullPreviewTable(rows) {
 
     const chk = (val, match) => val === match ? '✔' : '';
 
-    tbody.innerHTML = rows.map(r => `
+    tbody.innerHTML = rows.map((r, idx) => `
         <tr>
             <td>${r.respondentNo}</td>
             <td>${r.date}</td>
-            {{-- Profile --}}
             <td>${r.lastName}</td>
             <td>${r.firstName}</td>
             <td>${r.middleName}</td>
             <td>${r.suffix}</td>
-            {{-- Location --}}
             <td>${r.region}</td>
             <td>${r.province}</td>
             <td>${r.city}</td>
             <td>${r.barangay}</td>
             <td>${r.purokZone}</td>
-            {{-- Personal --}}
             <td>${r.sex}</td>
             <td>${r.age}</td>
             <td>${r.birthday}</td>
             <td>${r.email}</td>
             <td>${r.contact}</td>
-            {{-- Civil Status --}}
             <td>${chk(r.civilStatus,'Single')}</td>
             <td>${chk(r.civilStatus,'Married')}</td>
             <td>${chk(r.civilStatus,'Widowed')}</td>
@@ -487,11 +491,9 @@ function renderFullPreviewTable(rows) {
             <td>${chk(r.civilStatus,'Annulled')}</td>
             <td>${chk(r.civilStatus,'Unknown')}</td>
             <td>${chk(r.civilStatus,'Live-in')}</td>
-            {{-- Youth Age Group --}}
             <td>${chk(r.youthAgeGroup,'Child Youth (15-17 yrs old)')}</td>
             <td>${chk(r.youthAgeGroup,'Core Youth (18-24 yrs old)')}</td>
             <td>${chk(r.youthAgeGroup,'Young Adult (15-30 yrs old)')}</td>
-            {{-- Education --}}
             <td>${chk(r.education,'Elementary Level')}</td>
             <td>${chk(r.education,'Elementary Grad')}</td>
             <td>${chk(r.education,'High School Level')}</td>
@@ -503,7 +505,6 @@ function renderFullPreviewTable(rows) {
             <td>${chk(r.education,'Masters Grad')}</td>
             <td>${chk(r.education,'Doctorate Level')}</td>
             <td>${chk(r.education,'Doctorate Graduate')}</td>
-            {{-- Youth Classification --}}
             <td>${chk(r.youthClassification,'In School Youth')}</td>
             <td>${chk(r.youthClassification,'Out of School Youth')}</td>
             <td>${chk(r.youthClassification,'Working Youth')}</td>
@@ -511,27 +512,22 @@ function renderFullPreviewTable(rows) {
             <td>${chk(r.youthClassification,'Children in Conflict w/ Law')}</td>
             <td>${chk(r.youthClassification,'Indigenous People')}</td>
             <td>${chk(r.youthClassification,'Youth w/ Specific Needs')}</td>
-            {{-- Work Status --}}
             <td>${chk(r.workStatus,'Employed')}</td>
             <td>${chk(r.workStatus,'Unemployed')}</td>
             <td>${chk(r.workStatus,'Self-Employed')}</td>
             <td>${chk(r.workStatus,'Currently looking for a Job')}</td>
             <td>${chk(r.workStatus,'Not Interested Looking for a Job')}</td>
-            {{-- Voting --}}
             <td>${r.skVoter}</td>
             <td>${r.votingHistory}</td>
             <td>${r.votingFrequency}</td>
             <td>${r.natVoter}</td>
-            {{-- KK --}}
             <td>${r.kkAssembly}</td>
             <td>${r.votingReason}</td>
-            {{-- Social --}}
             <td>${r.facebook}</td>
             <td>${r.groupChat}</td>
-            {{-- Signature --}}
-            <td>${r.firstName} ${r.lastName}</td>
+            <td style="min-width:120px;padding:4px 8px;">${makeSignatureSvg(idx)}</td>
         </tr>
-    `).join('').replace(/\{\{--.*?--\}\}/g, '');
+    `).join('');
 }
 
 /* ── Confirm Save ── */
