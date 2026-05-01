@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -333,14 +334,14 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->password = (string) $validated['password'];
+        $user->password = Hash::make((string) $validated['password']);
         $user->remember_token = null;
         $user->save();
 
         // Update must_change_password to false using raw query with PostgreSQL casting
         User::query()
             ->whereKey($user->getKey())
-            ->update(['must_change_password' => \DB::raw("'false'::boolean")]);
+            ->update(['must_change_password' => DB::raw("'false'::boolean")]);
 
         Auth::logout();
         $request->session()->invalidate();

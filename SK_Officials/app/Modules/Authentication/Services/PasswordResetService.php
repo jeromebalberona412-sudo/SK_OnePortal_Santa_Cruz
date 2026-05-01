@@ -108,7 +108,7 @@ class PasswordResetService
         }
 
         $userUpdates = [
-            'password' => $password,
+            'password' => Hash::make($password),
             'remember_token' => null,
         ];
 
@@ -117,6 +117,21 @@ class PasswordResetService
         }
 
         $user->forceFill($userUpdates)->save();
+
+        // Clear the "must_change_password" flag so the user can sign in
+        // normally after completing the reset. Use a raw boolean cast
+        // for PostgreSQL to avoid datatype mismatch errors.
+        try {
+            if ($this->usersTableHasColumn('must_change_password')) {
+                \App\Models\User::query()
+                    ->whereKey($user->getKey())
+                    ->update(['must_change_password' => DB::raw("'false'::boolean")]);
+            }
+        } catch (\Throwable $e) {
+            // Best-effort: if this fails, continue and let the rest of the
+            // reset complete. We'll still delete the token and invalidate
+            // sessions below.
+        }
 
         $this->broker()->deleteToken($user);
         $this->invalidateUserSessions($user);
