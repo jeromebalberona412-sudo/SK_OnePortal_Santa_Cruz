@@ -78,6 +78,69 @@
                 </div>
 
                 {{-- Feed cards --}}
+                {{-- DEMO POST WITH IMAGE COLLAGE - TEAM BUILDING --}}
+                <article class="post-card" data-post-type="activity" data-post-category="activity" id="demoTeamBuildingPost">
+                    <div class="post-header">
+                        <img src="https://ui-avatars.com/api/?name=Maria+Santos&background=FF9800&color=fff" alt="Maria Santos" class="post-avatar">
+                        <div class="post-info">
+                            <h3 class="post-author">Maria Santos</h3>
+                            <p class="post-meta">
+                                <span class="post-type activity">Activity</span>
+                                <span class="post-time">2 hours ago</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="post-content">
+                        <h2 class="post-title">Team Building Activity 2026 - Unforgettable Bonding!</h2>
+                        <p class="post-text">What an amazing day with our SK team! We participated in various team building activities including trust falls, relay races, and group challenges. Great teamwork and camaraderie from everyone! 🤝💪🎉</p>
+
+                        {{-- Image Collage (4 images) --}}
+                        <div class="image-collage collage-4">
+                            <div class="collage-item">
+                                <img src="{{ asset('modules/homepage/image/1.png') }}" alt="Team building activity 1">
+                            </div>
+                            <div class="collage-item">
+                                <img src="{{ asset('modules/homepage/image/2.png') }}" alt="Team building activity 2">
+                            </div>
+                            <div class="collage-item">
+                                <img src="{{ asset('modules/homepage/image/3.png') }}" alt="Team building activity 3">
+                            </div>
+                            <div class="collage-item more-overlay" data-count="+2">
+                                <div class="collage-more-text">+2</div>
+                                <img src="{{ asset('modules/homepage/image/4.png') }}" alt="Team building activity 4" style="display:none;">
+                                <img src="{{ asset('modules/homepage/image/5.png') }}" alt="Team building activity 5" style="display:none;">
+                            </div>
+                        </div>
+
+                        <div class="post-details">
+                            <div class="detail-item">
+                                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+                                <span>May 1, 2026 | 10:00 AM</span>
+                            </div>
+                            <div class="detail-item">
+                                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                                <span>Barangay Community Center</span>
+                            </div>
+                            <div class="detail-item">
+                                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+                                <span>45+ participants</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="post-actions">
+                        <button class="action-btn like-btn" data-liked="false">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>
+                            <span>Like</span>
+                        </button>
+                        <button class="action-btn comment-btn">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
+                            <span>Comment</span>
+                        </button>
+                    </div>
+                </article>
+
                 @foreach ($feedItems as $item)
                 @php
                     $typeClass = match(strtolower($item['type'])) {
@@ -328,6 +391,30 @@
                 </div>
                 <a href="{{ route('login') }}" class="community-modal-login-btn">Login</a>
             </div>
+        </div>
+    </div>
+
+    {{-- ── IMAGE GALLERY MODAL ── --}}
+    <div id="imageGalleryModal" class="image-gallery-modal">
+        <div class="gallery-container">
+            <div class="gallery-header">
+                <img src="" alt="User avatar" class="gallery-user-avatar">
+                <div class="gallery-user-info">
+                    <h3 class="gallery-user-name"></h3>
+                    <p class="gallery-post-time"></p>
+                </div>
+                <button class="gallery-close" id="galleryClose">✕</button>
+            </div>
+            <div class="gallery-caption"></div>
+            <div class="gallery-main">
+                <img src="" alt="Gallery image">
+                <div class="gallery-nav">
+                    <button class="gallery-btn" id="galleryPrev">❮</button>
+                    <button class="gallery-btn" id="galleryNext">❯</button>
+                </div>
+                <div class="gallery-counter"></div>
+            </div>
+            <div class="gallery-thumbnails" id="galleryThumbnails"></div>
         </div>
     </div>
 
