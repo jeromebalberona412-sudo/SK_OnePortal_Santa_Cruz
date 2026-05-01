@@ -105,4 +105,9 @@ it('resets an official password with a valid token', function () {
     expect(Hash::check('NewPassword123!', $official->password))->toBeTrue();
     expect((bool) $official->must_change_password)->toBeFalse();
     expect(DB::table('password_reset_tokens')->where('email', $official->email)->exists())->toBeFalse();
+
+    post('/login', [
+        'email' => $official->email,
+        'password' => 'NewPassword123!',
+    ])->assertRedirect('/dashboard');
 });

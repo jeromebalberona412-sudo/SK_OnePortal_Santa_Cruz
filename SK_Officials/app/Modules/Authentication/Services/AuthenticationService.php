@@ -120,17 +120,13 @@ class AuthenticationService
         }
 
         // Email verification check
-        if ($this->featureFlagService->deviceVerificationEnabled() && ! $user->hasVerifiedEmail()) {
-            $this->emailVerificationDeviceService->storePendingVerification($user, $request);
-
-            $this->auditLogService->log(
-                event: 'login_email_verification_required',
+        if (! $user->hasVerifiedEmail()) {
+            $this->startEmailVerificationWait(
                 user: $user,
+                email: $email,
                 request: $request,
-                metadata: [],
-                outcome: AuthAuditLogService::OUTCOME_BLOCKED,
-                resourceType: 'auth',
-                resourceId: $user->getKey(),
+                reason: 'email_unverified',
+                message: 'A verification email has been sent. Complete verification to continue.'
             );
 
             return null;
@@ -464,6 +460,7 @@ class AuthenticationService
             'email'      => $user->email,
             'started_at' => now()->toIso8601String(),
         ]);
+        $request->session()->flash('takeover_wait', true);
     }
 
     protected function assignSessionOwnership(User $user, Request $request): void
@@ -492,6 +489,39 @@ class AuthenticationService
         } catch (\Throwable) {
             // Best effort
         }
+    }
+
+    protected function startEmailVerificationWait(
+        User $user,
+        string $email,
+        Request $request,
+        string $reason,
+        string $message,
+    ): void {
+        $waitMinutes = (int) config('sk_official_auth.verification.wait_minutes', 15);
+
+        $request->session()->put('sk_official_email_verification_pending', [
+            'user_id' => $user->getKey(),
+            'email' => $user->email,
+            'started_at' => Carbon::now()->toIso8601String(),
+            'expires_at' => now()->addMinutes($waitMinutes)->toIso8601String(),
+        ]);
+
+        $user->sendEmailVerificationNotification();
+        $this->loginSecurityService->recordAttempt($user, $email, false, $request);
+        $this->auditLogService->log(
+            event: 'login_blocked_'.$reason,
+            user: $user,
+            request: $request,
+            outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+            resourceType: 'auth',
+            resourceId: $user->getKey(),
+            metadata: [
+                'reason' => $reason,
+            ],
+        );
+        $request->session()->flash('status', $message);
+        $request->session()->flash('verification_wait', true);
     }
 
     protected function hasColumn(string $table, string $column): bool

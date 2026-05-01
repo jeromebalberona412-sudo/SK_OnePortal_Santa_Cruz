@@ -158,6 +158,19 @@ class PasswordResetService
 
         $user->forceFill($userUpdates)->save();
 
+        // Clear the "must_change_password" flag so the user can sign in
+        // normally after completing the reset. Use a raw boolean cast
+        // for PostgreSQL to avoid datatype mismatch errors.
+        try {
+            if ($this->usersTableHasColumn('must_change_password')) {
+                \App\Modules\Shared\Models\User::query()
+                    ->whereKey($user->getKey())
+                    ->update(['must_change_password' => \DB::raw("'false'::boolean")]);
+            }
+        } catch (\Throwable $e) {
+            // Best-effort: continue even if clearing the flag fails.
+        }
+
         $this->broker()->deleteToken($user);
         $this->invalidateUserSessions($user);
 
