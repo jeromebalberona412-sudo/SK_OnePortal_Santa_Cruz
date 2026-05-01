@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kabataan - Empowering the next generation of leaders</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Public+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#d2bbff",
+                        "primary-fixed": "#84f5ec",
+                        "sector-education": "#3B82F6",
+                        "card-bg": "#FFFFFF",
+                        "on-primary-container": "#f3fffd",
+                        "outline-variant": "#bcc9c7",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#dee4e2",
+                        "primary": "#006762",
+                        "sector-disaster": "#06B6D4",
+                        "on-surface-variant": "#3d4948",
+                        "sector-gad": "#7C3AED",
+                        "on-tertiary-container": "#fffbff",
+                        "sector-health": "#EF4444",
+                        "status-success": "#10B981",
+                        "tertiary-container": "#8a4cfc",
+                        "inverse-on-surface": "#edf2f0",
+                        "on-background": "#171d1c",
+                        "on-secondary-fixed-variant": "#763300",
+                        "dark-text": "#1F2937",
+                        "status-alert": "#EF4444",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#672c00",
+                        "light-bg": "#F9FAFB",
+                        "surface-container": "#eaefed",
+                        "secondary-fixed-dim": "#ffb68d",
+                        "tertiary": "#712ae2",
+                        "primary-container": "#00837c",
+                        "sector-agriculture": "#10B981",
+                        "secondary-container": "#fc8a40",
+                        "surface-container-high": "#e4e9e8",
+                        "inverse-primary": "#66d8cf",
+                        "on-primary-fixed": "#00201e",
+                        "border-gray": "#E5E7EB",
+                        "on-tertiary-fixed-variant": "#5a00c6",
+                        "light-text": "#6B7280",
+                        "on-surface": "#171d1c",
+                        "outline": "#6d7a78",
+                        "background": "#f5faf9",
+                        "surface-tint": "#006a64",
+                        "surface-bright": "#f5faf9",
+                        "sector-anti-drugs": "#1F2937",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#331200",
+                        "on-primary-fixed-variant": "#00504b",
+                        "tertiary-fixed": "#eaddff",
+                        "surface-dim": "#d6dbd9",
+                        "surface": "#f5faf9",
+                        "status-warning": "#F59E0B",
+                        "sector-sports": "#FF8C42",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#dee4e2",
+                        "secondary-fixed": "#ffdbc9",
+                        "surface-container-low": "#eff5f3",
+                        "on-tertiary-fixed": "#25005a",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "status-info": "#3B82F6",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2c3231",
+                        "secondary": "#9b4500",
+                        "primary-fixed-dim": "#66d8cf"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "lg": "24px",
+                        "container-max": "1200px",
+                        "base": "8px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "2xl": "48px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "3xl": "60px",
+                        "4xl": "80px"
+                    },
+                    "fontFamily": {
+                        "h3": [
+                            "Plus Jakarta Sans"
+                        ],
+                        "label-sm": [
+                            "Public Sans"
+                        ],
+                        "h4": [
+                            "Plus Jakarta Sans"
+                        ],
+                        "body-base": [
+                            "Public Sans"
+                        ],
+                        "h2": [
+                            "Plus Jakarta Sans"
+                        ],
+                        "body-sm": [
+                            "Public Sans"
+                        ],
+                        "h1": [
+                            "Plus Jakarta Sans"
+                        ],
+                        "body-lg": [
+                            "Public Sans"
+                        ]
+                    },
+                    "fontSize": {
+                        "h3": [
+                            "32px",
+                            {
+                                "lineHeight": "1.3",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "label-sm": [
+                            "12px",
+                            {
+                                "lineHeight": "1",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "h4": [
+                            "24px",
+                            {
+                                "lineHeight": "1.4",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "body-base": [
+                            "16px",
+                            {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "h2": [
+                            "48px",
+                            {
+                                "lineHeight": "1.2",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "body-sm": [
+                            "14px",
+                            {
+                                "lineHeight": "1.5",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "h1": [
+                            "64px",
+                            {
+                                "lineHeight": "1.1",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "body-lg": [
+                            "18px",
+                            {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                            }
+                        ]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .pattern-bg {
+            background-color: #f5faf9;
+            background-image: radial-gradient(#00837c 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #006762 0%, #00837c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-base antialiased">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md font-['Plus_Jakarta_Sans'] text-sm font-semibold tracking-tight border-b border-gray-100 shadow-sm">
+<div class="flex justify-between items-center h-[70px] px-6 lg:px-12 max-w-[1200px] mx-auto">
+<div class="text-2xl font-extrabold text-teal-600 tracking-tighter">Kabataan</div>
+<div class="hidden md:flex space-x-8">
+<a class="text-teal-600 border-b-2 border-teal-600 pb-1" href="#">About</a>
+<a class="text-slate-600 hover:text-teal-500 transition-colors duration-200" href="#">Programs</a>
+<a class="text-slate-600 hover:text-teal-500 transition-colors duration-200" href="#">Announcements</a>
+<a class="text-slate-600 hover:text-teal-500 transition-colors duration-200" href="#">FAQs</a>
+<a class="text-slate-600 hover:text-teal-500 transition-colors duration-200" href="#">Contact</a>
+</div>
+<div class="flex items-center space-x-4">
+<button class="text-slate-600 hover:text-teal-500 transition-colors duration-200 hidden md:block">Login</button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded shadow-sm hover:shadow-md transition-all scale-95 active:scale-90">Sign Up</button>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<section class="pt-[150px] pb-4xl px-gutter relative overflow-hidden pattern-bg">
+<div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-2xl items-center relative z-10">
+<div>
+<h1 class="font-h1 text-h1 text-dark-text mb-md">
+                    Empowering the <br/>
+<span class="gradient-text">Next Generation</span> <br/>
+                    of Leaders
+                </h1>
+<p class="font-body-lg text-body-lg text-light-text mb-xl max-w-lg">
+                    Join a vibrant, government-backed youth platform dedicated to transparency, community engagement, and driving impactful change in your barangay.
+                </p>
+<div class="flex flex-wrap gap-md">
+<button class="bg-primary text-on-primary px-lg py-md rounded-lg font-label-sm text-label-sm shadow-sm hover:shadow-md transition-all hover:-translate-y-1">Get Involved Today</button>
+<button class="border-2 border-outline-variant text-primary px-lg py-md rounded-lg font-label-sm text-label-sm hover:bg-surface-container-low transition-all">Explore Programs</button>
+</div>
+</div>
+<div class="relative">
+<img alt="Youth leaders meeting" class="rounded-xl shadow-xl w-full h-[500px] object-cover" data-alt="A diverse group of energetic youth leaders engaged in a collaborative discussion around a modern conference table. They are looking at documents and laptops, showing active participation and enthusiasm. The setting is a bright, airy, modern community center with large windows letting in natural sunlight. The atmosphere is optimistic, professional, and vibrant, embodying a forward-thinking government youth initiative. The color palette features warm sunlight, clean whites, and subtle teal accents in their clothing or surroundings." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBzpUE-Qdqj9UAM_7mZfujEqNYG7jMsk4lW-IDIBdfqIC16155jmiKGFx0_UreHRUJwNTmov4cRCt2n-7vpVbr0dZua9VmD9fZRoIXfkRlQIczL0qkaS5JpX8OzC8znLAgFxQJvtq_U0osddEdxVWz0h3dii-Qmza8vlAmhegFozbjn53pP4s-XYiGTLSUCuk2E9li-5PaqjpLsBlpM96H8FRtXGjUQ8kCx70eWnR2tacj5NqfpLtykrSz90Bm4rov0bYpFJtl5r7W"/>
+<div class="absolute -bottom-xl -left-xl glass-card p-lg rounded-xl shadow-lg w-[280px]">
+<div class="flex items-center gap-md mb-sm">
+<div class="bg-status-success/20 p-sm rounded-full">
+<span class="material-symbols-outlined text-status-success">trending_up</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-light-text uppercase">Active Youth</p>
+<p class="font-h3 text-h3 text-dark-text">12,450+</p>
+</div>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-xs">
+<div class="bg-status-success h-xs rounded-full w-[85%]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Feature Highlights (Bento Grid) -->
+<section class="py-4xl px-gutter bg-surface">
+<div class="max-w-container-max mx-auto">
+<div class="text-center mb-2xl">
+<h2 class="font-h2 text-h2 text-dark-text mb-sm">Platform Highlights</h2>
+<p class="font-body-base text-body-base text-light-text max-w-2xl mx-auto">Discover the core pillars that drive transparency, engagement, and youth empowerment in our communities.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Highlight 1: Budget -->
+<div class="bg-card-bg rounded-xl p-xl shadow-sm border border-border-gray hover:-translate-y-1 hover:shadow-md transition-all">
+<div class="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-md">
+<span class="material-symbols-outlined text-primary">account_balance</span>
+</div>
+<h3 class="font-h4 text-h4 text-dark-text mb-sm">Transparent Budgets</h3>
+<p class="font-body-sm text-body-sm text-light-text mb-md">Track barangay youth funds in real-time. See exactly how resources are allocated to education, sports, and health initiatives.</p>
+<a class="font-label-sm text-label-sm text-primary hover:underline flex items-center gap-xs" href="#">
+                        View Reports <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<!-- Highlight 2: Engagement -->
+<div class="bg-card-bg rounded-xl p-xl shadow-sm border border-border-gray hover:-translate-y-1 hover:shadow-md transition-all">
+<div class="bg-sector-education/10 w-12 h-12 rounded-lg flex items-center justify-center mb-md">
+<span class="material-symbols-outlined text-sector-education">group</span>
+</div>
+<h3 class="font-h4 text-h4 text-dark-text mb-sm">Active Engagement</h3>
+<p class="font-body-sm text-body-sm text-light-text mb-md">Participate in local polls, suggest community projects, and have your voice heard directly by youth council leaders.</p>
+<a class="font-label-sm text-label-sm text-sector-education hover:underline flex items-center gap-xs" href="#">
+                        Join Discussions <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<!-- Highlight 3: Rewards -->
+<div class="bg-card-bg rounded-xl p-xl shadow-sm border border-border-gray hover:-translate-y-1 hover:shadow-md transition-all">
+<div class="bg-secondary-container/20 w-12 h-12 rounded-lg flex items-center justify-center mb-md">
+<span class="material-symbols-outlined text-secondary">star</span>
+</div>
+<h3 class="font-h4 text-h4 text-dark-text mb-sm">Youth Rewards</h3>
+<p class="font-body-sm text-body-sm text-light-text mb-md">Earn points for attending assemblies and volunteering. Redeem rewards for educational materials and local perks.</p>
+<a class="font-label-sm text-label-sm text-secondary hover:underline flex items-center gap-xs" href="#">
+                        See Leaderboard <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Explore Other Barangays (3-Column Grid with Spotlight) -->
+<section class="py-4xl px-gutter bg-white">
+<div class="max-w-container-max mx-auto">
+<div class="flex justify-between items-end mb-2xl border-b border-border-gray pb-md">
+<div>
+<h2 class="font-h2 text-h2 text-dark-text">Explore Barangays</h2>
+<p class="font-body-base text-body-base text-light-text">Discover initiatives and connect with neighboring communities.</p>
+</div>
+<div class="hidden md:flex gap-sm">
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-dark-text">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-dark-text">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Spotlight Barangay -->
+<div class="md:col-span-2 relative rounded-xl overflow-hidden shadow-sm group">
+<img alt="Barangay Spotlight" class="w-full h-[400px] object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A sweeping wide-angle shot of a vibrant, clean local barangay community center during a sunny day. The modern building features large open spaces, colorful murals depicting youth activities, and sustainable design elements like solar panels. Young people are seen in the foreground playing basketball and engaging in community gardening. The lighting is bright and cheerful, emphasizing a positive, progressive civic environment. The overall color palette highlights earthy greens, bright sky blues, and warm concrete textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi_nG6xgxDU6VQNTemKQ4Pqjl_bDI8pC8hrLjh3M-YHBKDe1ZhgXXU0VhnxL7PNrJ79Tzy4z-jaqkXlHnqtSmWnas-I7xNlJXMdNzxdIZrtIBWDbDbW5sTjcyhQ43at5cgdUc0qQ8wUHZnUq64aubNb1DTuRfnYyYgttBsImIfez4tv2P2Bi_SWdUl4F8tRVMS8rZtjijhoM6W9cK360JU36bOMCenTdd3GOvleyEhysaL8xT6sx7uUUUnJTzOX2UZkbf91FEHDhvp"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-xl">
+<span class="bg-primary text-on-primary px-sm py-xs rounded font-label-sm text-label-sm w-fit mb-sm">Featured Spotlight</span>
+<h3 class="font-h3 text-h3 text-white mb-xs">Barangay San Lorenzo</h3>
+<p class="font-body-base text-body-base text-gray-200 mb-md max-w-md">Leading the way in sustainable youth programs and digital literacy initiatives for 2024.</p>
+<button class="bg-white text-dark-text px-md py-sm rounded-lg font-label-sm text-label-sm w-fit hover:bg-gray-100 transition-colors">View Profile</button>
+</div>
+</div>
+<!-- Regular Barangay Cards -->
+<div class="flex flex-col gap-lg">
+<div class="bg-card-bg rounded-xl p-md border border-border-gray shadow-sm hover:shadow-md transition-shadow flex gap-md items-center cursor-pointer">
+<img alt="Barangay 1" class="w-20 h-20 rounded-lg object-cover" data-alt="A close-up shot of a local community park with newly installed playground equipment and a small outdoor library kiosk. Several teenagers are casually sitting on benches reading and chatting. The setting is bathed in warm afternoon sunlight, creating a cozy and inviting atmosphere. The colors are predominantly natural greens, warm wood tones, and soft architectural grays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIG0qfP8fAOiO6a1ADg9KYvPSg6x__56yAxk-xySJX0d7GKRcgNNsK8eXyLNZBaAShZjtoem3FQh2p2uLhRAl7NUwkw7CKuDDeLhG6ghlteUBwk_2-v93M3Uyo41tXWTv_nR-2iEf3WwogV9MDqBFbUMGvoXUZxMtGCfQ6hxj_zzcWKexCN6mdWGoNCQiKTafE5kguljI_NgLPcXsIsDGqUtWL1tP0-ExwTZP-PP9ppot7Eoq4WDG-udTTbDt_TzkoLRXRukSakxoD"/>
+<div>
+<h4 class="font-h4 text-h4 text-dark-text text-[18px]">Brgy. Poblacion</h4>
+<p class="font-body-sm text-body-sm text-light-text mb-xs">Active Projects: 12</p>
+<span class="text-xs text-status-success font-semibold flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">check_circle</span> High Engagement</span>
+</div>
+</div>
+<div class="bg-card-bg rounded-xl p-md border border-border-gray shadow-sm hover:shadow-md transition-shadow flex gap-md items-center cursor-pointer">
+<img alt="Barangay 2" class="w-20 h-20 rounded-lg object-cover" data-alt="A vibrant outdoor sports court in a local neighborhood, focusing on a newly painted basketball court with vivid blue and red markings. A group of young adults is actively playing a game, demonstrating teamwork and sportsmanship. The bright daylight creates strong, dynamic shadows, emphasizing action and energy. The scene feels lively, communal, and perfectly captures youth sports initiatives." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAYVnSIzv06bXku77shPyAxqEvChG01ugRTK0DqEXUTKKknpxIbDJP2LP22tCRwCb6-3fM2QZctFQzU803VAYC6sTEbUTD39sCt_xdAQafbcET-ngvFIEkLr2MDThZoMx03F_Ip5o9WOcp-tLvaVpCd0upSvWA2zx2BnxEgzhaCBkSUecp8PHbmVPoaVqFAa1Hx1slOjSoNoYFpbiob1AhdelhPpLGRVay8KUIVOOhyZvArysrRuGaD_LgDLN4BqZO98ulKvPwzVVA"/>
+<div>
+<h4 class="font-h4 text-h4 text-dark-text text-[18px]">Brgy. Guadalupe</h4>
+<p class="font-body-sm text-body-sm text-light-text mb-xs">Active Projects: 8</p>
+<span class="text-xs text-status-info font-semibold flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">sports_basketball</span> Sports Focus</span>
+</div>
+</div>
+<div class="bg-card-bg rounded-xl p-md border border-border-gray shadow-sm hover:shadow-md transition-shadow flex gap-md items-center cursor-pointer">
+<div class="w-20 h-20 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-3xl">map</span>
+</div>
+<div>
+<h4 class="font-h4 text-h4 text-dark-text text-[18px]">View All</h4>
+<p class="font-body-sm text-body-sm text-light-text">Explore 40+ more communities in the district.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="w-full py-12 border-t border-gray-200 bg-slate-50 font-['Plus_Jakarta_Sans'] text-sm text-slate-500">
+<div class="max-w-[1200px] mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div>
+<div class="text-xl font-bold text-slate-900 mb-4">Kabataan</div>
+<p>© 2024 Kabataan Platform. Empowering the next generation of leaders.</p>
+</div>
+<div class="flex flex-col space-y-2">
+<a class="text-slate-500 hover:text-teal-600 hover:underline transition-all opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="text-slate-500 hover:text-teal-600 hover:underline transition-all opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+<a class="text-slate-500 hover:text-teal-600 hover:underline transition-all opacity-80 hover:opacity-100" href="#">Accessibility</a>
+<a class="text-slate-500 hover:text-teal-600 hover:underline transition-all opacity-80 hover:opacity-100" href="#">Transparency Seal</a>
+</div>
+<div>
+<p class="mb-4">Connect with us on social media for real-time updates and community stories.</p>
+<div class="flex space-x-4">
+<a class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center hover:bg-teal-100 hover:text-teal-600 transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">share</span>
+</a>
+<a class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center hover:bg-teal-100 hover:text-teal-600 transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">mail</span>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

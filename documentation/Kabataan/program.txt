@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kabataan Platform - Programs Discovery</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&amp;family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "status-alert": "#EF4444",
+                      "on-surface-variant": "#3d4948",
+                      "secondary-container": "#fc8a40",
+                      "secondary": "#9b4500",
+                      "on-surface": "#171d1c",
+                      "tertiary": "#712ae2",
+                      "border-gray": "#E5E7EB",
+                      "secondary-fixed-dim": "#ffb68d",
+                      "error": "#ba1a1a",
+                      "outline-variant": "#bcc9c7",
+                      "primary": "#006762",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed": "#ffdbc9",
+                      "on-primary-container": "#f3fffd",
+                      "status-warning": "#F59E0B",
+                      "sector-sports": "#FF8C42",
+                      "sector-gad": "#7C3AED",
+                      "tertiary-container": "#8a4cfc",
+                      "primary-fixed-dim": "#66d8cf",
+                      "surface-bright": "#f5faf9",
+                      "sector-education": "#3B82F6",
+                      "surface-container-low": "#eff5f3",
+                      "background": "#f5faf9",
+                      "tertiary-fixed": "#eaddff",
+                      "on-primary-fixed-variant": "#00504b",
+                      "inverse-surface": "#2c3231",
+                      "card-bg": "#FFFFFF",
+                      "on-secondary-fixed-variant": "#763300",
+                      "on-primary-fixed": "#00201e",
+                      "surface-container": "#eaefed",
+                      "surface-container-highest": "#dee4e2",
+                      "primary-container": "#00837c",
+                      "on-tertiary-fixed": "#25005a",
+                      "inverse-primary": "#66d8cf",
+                      "primary-fixed": "#84f5ec",
+                      "surface-dim": "#d6dbd9",
+                      "sector-agriculture": "#10B981",
+                      "on-error-container": "#93000a",
+                      "error-container": "#ffdad6",
+                      "surface-variant": "#dee4e2",
+                      "on-tertiary-container": "#fffbff",
+                      "inverse-on-surface": "#edf2f0",
+                      "dark-text": "#1F2937",
+                      "surface": "#f5faf9",
+                      "sector-disaster": "#06B6D4",
+                      "sector-anti-drugs": "#1F2937",
+                      "on-tertiary-fixed-variant": "#5a00c6",
+                      "outline": "#6d7a78",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-error": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "status-success": "#10B981",
+                      "sector-health": "#EF4444",
+                      "light-text": "#6B7280",
+                      "on-background": "#171d1c",
+                      "surface-tint": "#006a64",
+                      "light-bg": "#F9FAFB",
+                      "on-secondary-container": "#672c00",
+                      "surface-container-high": "#e4e9e8",
+                      "status-info": "#3B82F6",
+                      "on-secondary-fixed": "#331200",
+                      "tertiary-fixed-dim": "#d2bbff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "lg": "24px",
+                      "4xl": "80px",
+                      "container-max": "1200px",
+                      "md": "16px",
+                      "gutter": "24px",
+                      "base": "8px",
+                      "2xl": "48px",
+                      "sm": "8px",
+                      "xl": "32px",
+                      "3xl": "60px"
+              },
+              "fontFamily": {
+                      "h2": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-lg": [
+                              "Public Sans"
+                      ],
+                      "label-sm": [
+                              "Public Sans"
+                      ],
+                      "h1": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-sm": [
+                              "Public Sans"
+                      ],
+                      "h3": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-base": [
+                              "Public Sans"
+                      ],
+                      "h4": [
+                              "Plus Jakarta Sans"
+                      ]
+              },
+              "fontSize": {
+                      "h2": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "h1": [
+                              "64px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "h3": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-base": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "h4": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-base antialiased min-h-screen flex flex-col pt-[70px]">
+<!-- TopNavBar (Shared Component) -->
+<nav class="fixed top-0 w-full h-[70px] z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 shadow-sm">
+<div class="flex justify-between items-center max-w-[1200px] mx-auto px-5 h-full">
+<div class="text-2xl font-black text-[#1BA098] tracking-tighter">Kabataan</div>
+<div class="hidden md:flex space-x-6">
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-semibold tracking-tight text-gray-600 dark:text-slate-400 hover:text-[#1BA098] transition-colors hover:text-[#1BA098] hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-all duration-300 active:scale-95 transition-transform duration-200 px-3 py-2 rounded-md" href="#">About</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-semibold tracking-tight text-[#1BA098] border-b-2 border-[#1BA098] pb-1 hover:text-[#1BA098] hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-all duration-300 active:scale-95 transition-transform duration-200 px-3 py-2 rounded-md" href="#">Programs</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-semibold tracking-tight text-gray-600 dark:text-slate-400 hover:text-[#1BA098] transition-colors hover:text-[#1BA098] hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-all duration-300 active:scale-95 transition-transform duration-200 px-3 py-2 rounded-md" href="#">Announcements</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-semibold tracking-tight text-gray-600 dark:text-slate-400 hover:text-[#1BA098] transition-colors hover:text-[#1BA098] hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-all duration-300 active:scale-95 transition-transform duration-200 px-3 py-2 rounded-md" href="#">FAQs</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-semibold tracking-tight text-gray-600 dark:text-slate-400 hover:text-[#1BA098] transition-colors hover:text-[#1BA098] hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-all duration-300 active:scale-95 transition-transform duration-200 px-3 py-2 rounded-md" href="#">Contact</a>
+</div>
+<div class="flex items-center space-x-4">
+<button class="bg-[#1BA098] text-white px-4 py-2 rounded-DEFAULT font-label-sm font-bold shadow hover:shadow-md transition-shadow active:scale-95">Join Now</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow max-w-[1200px] w-full mx-auto px-5 py-3xl">
+<!-- Header & Search/Filter Section -->
+<div class="mb-2xl">
+<h1 class="font-h1 text-h1 text-on-surface mb-md">Discover Programs</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-xl">Explore ongoing youth initiatives, track budget utilization, and find opportunities to participate in your barangay.</p>
+<div class="bg-card-bg rounded-xl shadow-sm border border-border-gray p-lg">
+<div class="flex flex-col md:flex-row gap-md">
+<div class="flex-grow relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-3 rounded-lg border-border-gray focus:border-primary focus:ring-primary font-body-base text-body-base placeholder-outline-variant bg-surface-bright" placeholder="Search programs by name or keywords..." type="text"/>
+</div>
+<div class="flex gap-sm overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+<select class="rounded-lg border-border-gray focus:border-primary focus:ring-primary font-body-base text-body-base bg-surface-bright px-4 py-3 min-w-[150px]">
+<option value="">All Barangays</option>
+<option value="b1">Barangay 1</option>
+<option value="b2">Barangay 2</option>
+<option value="b3">Barangay 3</option>
+</select>
+<select class="rounded-lg border-border-gray focus:border-primary focus:ring-primary font-body-base text-body-base bg-surface-bright px-4 py-3 min-w-[150px]">
+<option value="">All Sectors</option>
+<option value="education">Education</option>
+<option value="sports">Sports</option>
+<option value="health">Health</option>
+<option value="agriculture">Agriculture</option>
+</select>
+<select class="rounded-lg border-border-gray focus:border-primary focus:ring-primary font-body-base text-body-base bg-surface-bright px-4 py-3 min-w-[150px]">
+<option value="">Status</option>
+<option value="active">Active</option>
+<option value="completed">Completed</option>
+<option value="planned">Planned</option>
+</select>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-4 py-3 rounded-lg font-label-sm flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+                            More
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Programs Grid (Bento/Structured Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Program Card 1: Education (Featured/Larger span if needed, but sticking to uniform grid for now) -->
+<div class="bg-card-bg rounded-xl border border-border-gray overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col group">
+<div class="relative h-48 bg-surface-container overflow-hidden">
+<img alt="Students in a bright modern classroom" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A bright, modern classroom setting with natural light pouring through large windows. Diverse youth are engaged in collaborative learning around modern tables, looking at laptops and notebooks. The scene is energetic and focused, reflecting a high-quality educational environment with a clean, light-mode aesthetic, utilizing white and subtle blue tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIBgmGISWeZQtIeqxnsaJsMviDi1CqOeSR1c_tNpycywbxNEQCSjZZPVRZqsp5dmOFOhJ9fruYtmE1oW2H_nLndv_pv33UBSpwxV8I_iOQ7y8hQYWmyDqO6tyom8HGbz7owDFprX_OoN_1ktjD4onyvUTpy2DZMiW-_Yk_y9JSAFmW2SZIWNJpcyHEYPSlyaTAMfUNvyHeN59TnnxunoBzflS1hRv5zC3Jec20r-a_jPWXOBcHFI0rGiRGUseS-fWPJ9mmeX79VKYY"/>
+<div class="absolute top-4 left-4 bg-sector-education text-white px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">school</span>
+                        Education
+                    </div>
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-status-success px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                        Active
+                    </div>
+</div>
+<div class="p-lg flex-grow flex flex-col">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span class="font-body-sm text-body-sm">Barangay San Isidro</span>
+</div>
+<h3 class="font-h4 text-h4 text-on-surface mb-sm line-clamp-2">Youth Tech Literacy Bootcamp</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md flex-grow line-clamp-3">A comprehensive 8-week program designed to equip local youth with essential digital skills, coding basics, and online safety protocols.</p>
+<div class="space-y-4 mt-auto">
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1">
+<span class="text-on-surface-variant">Budget Utilization</span>
+<span class="text-on-surface font-bold">75%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center pt-2 border-t border-border-gray">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">groups</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant"><strong class="text-on-surface">120</strong> Participants</span>
+</div>
+<button class="text-primary hover:text-primary-container font-label-sm font-bold flex items-center gap-1 transition-colors">
+                                Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Program Card 2: Sports -->
+<div class="bg-card-bg rounded-xl border border-border-gray overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col group">
+<div class="relative h-48 bg-surface-container overflow-hidden">
+<img alt="Youth playing basketball on a well-lit court" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A dynamic action shot of diverse youth playing basketball on a well-maintained outdoor community court during late afternoon. The lighting is warm and energetic, casting dynamic shadows. The overall aesthetic is vibrant and active, incorporating a light-mode friendly bright sky with touches of energetic orange and warm tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAROzcaQTqvUa3-rESe4ekDp9_WUcdkUjl1_-VQldNMqOa8dh-J1catdfPz6TbneAof3mHtm70CqFBdMgUkRmLXgenZ53f4I_710s-794-L089oaNmXNCVtLK8Ar8ANE-egpR_m-ra7w0ZI_yzZ05HJ_IZQLZ_ocTzVea44AC_CtOenjgIh7AM1wxnjRP5DnKibTDtoAntG6aQ-SeD2rJtPheXwUybpuC_yhONJ2r0xNgYjWx0l-dcorxUhRf1DJ861kYsY0UguuyY4"/>
+<div class="absolute top-4 left-4 bg-sector-sports text-white px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sports_basketball</span>
+                        Sports
+                    </div>
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-status-success px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                        Active
+                    </div>
+</div>
+<div class="p-lg flex-grow flex flex-col">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span class="font-body-sm text-body-sm">Barangay Poblacion</span>
+</div>
+<h3 class="font-h4 text-h4 text-on-surface mb-sm line-clamp-2">Inter-Barangay Summer League</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md flex-grow line-clamp-3">Annual multi-sport tournament promoting camaraderie, physical health, and community spirit among the youth across different zones.</p>
+<div class="space-y-4 mt-auto">
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1">
+<span class="text-on-surface-variant">Budget Utilization</span>
+<span class="text-on-surface font-bold">45%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2">
+<div class="bg-sector-sports h-2 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center pt-2 border-t border-border-gray">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">groups</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant"><strong class="text-on-surface">350</strong> Participants</span>
+</div>
+<button class="text-primary hover:text-primary-container font-label-sm font-bold flex items-center gap-1 transition-colors">
+                                Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Program Card 3: Health -->
+<div class="bg-card-bg rounded-xl border border-border-gray overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col group">
+<div class="relative h-48 bg-surface-container overflow-hidden">
+<img alt="Medical professionals consulting with youth" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A clean, modern community health center setting where friendly medical professionals are engaging with young individuals. The environment is well-lit, hygienic, and welcoming, utilizing a cool, professional light-mode aesthetic with bright whites and soft teal accents. The mood is supportive and educational." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCd3Ae6-jCP9hFBp44fyv_401wReNoZGTDA3KrFSiKWL61xGWpvB1o3m-c3_7l80P1Uu3th1aCTraYedSsNOd61H-A9TYSeBKaaKz7PyY4ZNpH9F3U_9QByuo10-8jPqk8f4Ls5GvgIsdszQ-yhLDvt34Ihj2OijpFwvgKfabbweDWMX1QZUy3loCcDjw1av_9RehPBk5_qT6IDE_BQq_IQfax_4zRDFlG99P3COtlcIsVV50v4TIJKliZCANkCbjbu0PXL_0JMrhl4"/>
+<div class="absolute top-4 left-4 bg-sector-health text-white px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">favorite</span>
+                        Health
+                    </div>
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-status-warning px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                        Planned
+                    </div>
+</div>
+<div class="p-lg flex-grow flex flex-col">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span class="font-body-sm text-body-sm">Barangay Mabuhay</span>
+</div>
+<h3 class="font-h4 text-h4 text-on-surface mb-sm line-clamp-2">Youth Mental Wellness Drive</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md flex-grow line-clamp-3">A series of workshops and accessible counseling sessions aimed at destigmatizing mental health issues and providing support networks.</p>
+<div class="space-y-4 mt-auto">
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1">
+<span class="text-on-surface-variant">Budget Utilization</span>
+<span class="text-on-surface font-bold">10%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2">
+<div class="bg-sector-health h-2 rounded-full" style="width: 10%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center pt-2 border-t border-border-gray">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">groups</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant"><strong class="text-on-surface">0</strong> Participants</span>
+</div>
+<button class="text-primary hover:text-primary-container font-label-sm font-bold flex items-center gap-1 transition-colors">
+                                Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Program Card 4: Agriculture (Glassmorphism inspired variant for variety within grid) -->
+<div class="bg-card-bg rounded-xl border border-border-gray overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col group relative">
+<div class="absolute inset-0 bg-gradient-to-br from-sector-agriculture/10 to-transparent z-0 pointer-events-none"></div>
+<div class="relative h-48 bg-surface-container overflow-hidden z-10">
+<img alt="Youth planting in a community garden" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A lush, green community garden setting under bright, clear sunlight. Young volunteers are actively planting seedlings in well-organized raised beds. The aesthetic is organic, vibrant, and hopeful, heavily utilizing natural greens, earthy tones, and bright natural lighting characteristic of a fresh, outdoor light-mode scene." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXBxs4iovdtNXSQxJDcG_koi-dv8-hIzrCaf8ZiVCpIhCc18rOVYBDp1WxPRArKJeik9TRm4zKf_HrIavWWU3y3N8I9M3MnL9rqQsHcmqmnwK877Q130uyIHEOvlu2H0cOZXESmiiAggkzefLmB_Ts8z7vHC8hd84u-NJbgIXOmFdBwenyBKz1i82TIakxfHE67yiLtkQUKSqMFLrULXIY0MBzzhg5lqkL4XcGAZ6w-2vqWjpgbuw8SUkRr7ztqUJY4B1MtpiNGVG5"/>
+<div class="absolute top-4 left-4 bg-sector-agriculture text-white px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">eco</span>
+                        Agriculture
+                    </div>
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-status-success px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                        Active
+                    </div>
+</div>
+<div class="p-lg flex-grow flex flex-col relative z-10 bg-white/80 backdrop-blur-md">
+<div class="flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span class="font-body-sm text-body-sm">Barangay San Jose</span>
+</div>
+<h3 class="font-h4 text-h4 text-on-surface mb-sm line-clamp-2">Urban Youth Farming Initiative</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md flex-grow line-clamp-3">Transforming unused local spaces into productive community gardens managed by youth groups to promote sustainable food sources.</p>
+<div class="space-y-4 mt-auto">
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1">
+<span class="text-on-surface-variant">Budget Utilization</span>
+<span class="text-on-surface font-bold">85%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2">
+<div class="bg-sector-agriculture h-2 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center pt-2 border-t border-border-gray">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">groups</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant"><strong class="text-on-surface">45</strong> Participants</span>
+</div>
+<button class="text-primary hover:text-primary-container font-label-sm font-bold flex items-center gap-1 transition-colors">
+                                Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-2xl flex justify-center items-center space-x-2">
+<button class="w-10 h-10 rounded-lg border border-border-gray flex items-center justify-center text-outline hover:bg-surface-container-highest transition-colors disabled:opacity-50">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-lg bg-primary text-white font-label-sm flex items-center justify-center shadow-sm">1</button>
+<button class="w-10 h-10 rounded-lg border border-border-gray text-on-surface-variant hover:bg-surface-container-highest font-label-sm flex items-center justify-center transition-colors">2</button>
+<button class="w-10 h-10 rounded-lg border border-border-gray text-on-surface-variant hover:bg-surface-container-highest font-label-sm flex items-center justify-center transition-colors">3</button>
+<span class="text-outline">...</span>
+<button class="w-10 h-10 rounded-lg border border-border-gray flex items-center justify-center text-outline hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="bg-gray-50 dark:bg-slate-950 w-full py-12 border-t border-gray-200 dark:border-slate-800 border-t border-gray-200 dark:border-slate-800 flat no shadows mt-auto">
+<div class="max-w-[1200px] mx-auto px-5 grid grid-cols-1 md:grid-cols-2 lg:flex lg:justify-between gap-8">
+<div>
+<div class="text-xl font-bold text-[#1BA098] mb-4">Kabataan</div>
+<p class="font-['Plus_Jakarta_Sans'] text-xs text-gray-500 dark:text-slate-500 mb-6 max-w-xs">© 2024 Kabataan Platform. Government-backed Youth Empowerment.</p>
+</div>
+<div class="flex flex-col space-y-3">
+<a class="font-['Plus_Jakarta_Sans'] text-xs text-gray-500 dark:text-slate-500 text-gray-500 hover:text-[#1BA098] hover:underline decoration-[#1BA098] decoration-2 underline-offset-4 transition-all duration-300" href="#">Privacy Policy</a>
+<a class="font-['Plus_Jakarta_Sans'] text-xs text-gray-500 dark:text-slate-500 text-gray-500 hover:text-[#1BA098] hover:underline decoration-[#1BA098] decoration-2 underline-offset-4 transition-all duration-300" href="#">Terms of Service</a>
+<a class="font-['Plus_Jakarta_Sans'] text-xs text-gray-500 dark:text-slate-500 text-gray-500 hover:text-[#1BA098] hover:underline decoration-[#1BA098] decoration-2 underline-offset-4 transition-all duration-300" href="#">Governance Transparency</a>
+<a class="font-['Plus_Jakarta_Sans'] text-xs text-gray-500 dark:text-slate-500 text-gray-500 hover:text-[#1BA098] hover:underline decoration-[#1BA098] decoration-2 underline-offset-4 transition-all duration-300" href="#">Community Guidelines</a>
+<a class="font-['Plus_Jakarta_Sans'] text-xs text-gray-500 dark:text-slate-500 text-gray-500 hover:text-[#1BA098] hover:underline decoration-[#1BA098] decoration-2 underline-offset-4 transition-all duration-300" href="#">Resource Center</a>
+</div>
+</div>
+</footer>
+</body></html>

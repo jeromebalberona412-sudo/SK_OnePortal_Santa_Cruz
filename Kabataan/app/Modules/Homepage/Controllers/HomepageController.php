@@ -14,6 +14,173 @@ class HomepageController extends Controller
             'description' => 'View-only youth community updates from barangay SK officials.',
         ];
 
+        $heroStats = [
+            ['label' => 'Barangays covered', 'value' => '26'],
+            ['label' => 'Kabataang connected', 'value' => '10,000+'],
+            ['label' => 'Live updates', 'value' => 'Real-time'],
+            ['label' => 'Budget visibility', 'value' => 'Transparent'],
+        ];
+
+        $valueProps = [
+            [
+                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v5c0 5-3.6 8.7-8 9-4.4-.3-8-4-8-9V7l8-4z"/><path d="M9 12l2 2 4-5"/></svg>',
+                'title' => 'Discover Opportunities',
+                'description' => 'Browse education, health, sports, agriculture, and livelihood programs happening in your barangay.',
+            ],
+            [
+                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 12h10M7 8h10M7 16h6"/><path d="M4 6h16v12H4z"/></svg>',
+                'title' => 'Connect & Participate',
+                'description' => 'Join activities, react to announcements, and stay close to the initiatives shaping your community.',
+            ],
+            [
+                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18"/><path d="M17 7H9.5a3.5 3.5 0 000 7H14a3 3 0 010 6H7"/></svg>',
+                'title' => 'See Where Money Goes',
+                'description' => 'Transparent budgets and impact metrics make it easier to understand how youth programs are funded.',
+            ],
+            [
+                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 6 7 .8-5.2 4.6 1.6 6.8L12 16.9 5.6 20.2l1.6-6.8L2 8.8 9 8l3-6z"/></svg>',
+                'title' => 'Build Your Profile',
+                'description' => 'Earn badges, track accomplishments, and grow a digital record of youth leadership and service.',
+            ],
+        ];
+
+        $heroImages = [
+            asset('modules/homepage/image/1.png'),
+            asset('modules/homepage/image/2.png'),
+            asset('modules/homepage/image/3.png'),
+            asset('modules/homepage/image/4.png'),
+            asset('modules/homepage/image/5.png'),
+        ];
+
+        $featuredPrograms = [
+            [
+                'badge' => 'Education',
+                'barangay' => 'Pagsawitan',
+                'title' => 'Career Readiness Session for Senior High',
+                'summary' => 'A practical CV and interview workshop for youth preparing for college and employment pathways.',
+                'image' => $heroImages[0],
+                'joined' => '45 / 100 joined',
+                'budget' => '₱50,000 allocated',
+                'progress' => 45,
+            ],
+            [
+                'badge' => 'Sports',
+                'barangay' => 'Labuin',
+                'title' => 'Weekend Basketball Skills Clinic',
+                'summary' => 'Open clinic focused on fundamentals, teamwork, and youth fitness monitoring for all skill levels.',
+                'image' => $heroImages[1],
+                'joined' => '32 / 60 joined',
+                'budget' => '₱35,000 allocated',
+                'progress' => 53,
+            ],
+            [
+                'badge' => 'Health',
+                'barangay' => 'Alipit',
+                'title' => 'Mental Health Peer Support Circle',
+                'summary' => 'A guided peer support activity and stress management session for kabataan volunteers.',
+                'image' => $heroImages[2],
+                'joined' => '28 / 50 joined',
+                'budget' => '₱20,000 allocated',
+                'progress' => 56,
+            ],
+            [
+                'badge' => 'Livelihood',
+                'barangay' => 'Santisima Cruz',
+                'title' => 'Youth Digital Freelancing Orientation',
+                'summary' => 'Introductory orientation on online freelancing, portfolio basics, and responsible digital work habits.',
+                'image' => $heroImages[3],
+                'joined' => '18 / 40 joined',
+                'budget' => '₱15,000 allocated',
+                'progress' => 45,
+            ],
+        ];
+
+        $barangayTabs = [
+            ['key' => 'all', 'label' => 'All Barangays'],
+            ['key' => 'pagsawitan', 'label' => 'Pagsawitan'],
+            ['key' => 'san-jose', 'label' => 'San Jose'],
+            ['key' => 'gatid', 'label' => 'Gatid'],
+            ['key' => 'labuin', 'label' => 'Labuin'],
+            ['key' => 'alipit', 'label' => 'Alipit'],
+            ['key' => 'santisima-cruz', 'label' => 'Santisima Cruz'],
+            ['key' => 'duhat', 'label' => 'Duhat'],
+        ];
+
+        $barangayCards = [
+            [
+                'barangay' => 'Pagsawitan',
+                'type' => 'Program',
+                'category' => 'Education',
+                'title' => 'Career Readiness Session for Senior High',
+                'summary' => 'Scholarship guidance, interview practice, and local internship matching for senior high youth.',
+                'image' => $heroImages[0],
+                'date' => 'March 30 - April 5, 2026',
+                'interested' => '156 interested / 43 participating',
+                'budget' => '₱75,000 budget',
+                'badgeClass' => 'badge-blue',
+            ],
+            [
+                'barangay' => 'San Jose',
+                'type' => 'Announcement',
+                'category' => 'General',
+                'title' => 'SK Monthly Meeting Rescheduled',
+                'summary' => 'Reminder to all SK members: the monthly meeting has been moved to next Friday.',
+                'image' => $heroImages[4],
+                'date' => 'April 4, 2026',
+                'interested' => '124 reached / 31 saved',
+                'budget' => 'Budget discussion included',
+                'badgeClass' => 'badge-slate',
+            ],
+            [
+                'barangay' => 'Gatid',
+                'type' => 'Activity',
+                'category' => 'Environment',
+                'title' => 'River Cleanup and Waste Segregation Drive',
+                'summary' => 'Hands-on cleanup drive with proper waste segregation orientation for kabataan volunteers.',
+                'image' => $heroImages[1],
+                'date' => 'April 6, 2026',
+                'interested' => '88 interested / 29 participating',
+                'budget' => '₱30,000 budget',
+                'badgeClass' => 'badge-cyan',
+            ],
+            [
+                'barangay' => 'Labuin',
+                'type' => 'Program',
+                'category' => 'Sports Development',
+                'title' => 'Weekend Basketball Skills Clinic',
+                'summary' => 'Age-based clinic focused on fundamentals, teamwork, and healthy competition.',
+                'image' => $heroImages[2],
+                'date' => 'April 12, 2026',
+                'interested' => '63 interested / 18 participating',
+                'budget' => '₱35,000 budget',
+                'badgeClass' => 'badge-green',
+            ],
+            [
+                'barangay' => 'Alipit',
+                'type' => 'Activity',
+                'category' => 'Health',
+                'title' => 'Mental Health Peer Support Circle',
+                'summary' => 'Guided peer support and stress management session for youth facilitators and volunteers.',
+                'image' => $heroImages[3],
+                'date' => 'April 10, 2026',
+                'interested' => '71 interested / 24 participating',
+                'budget' => '₱20,000 budget',
+                'badgeClass' => 'badge-emerald',
+            ],
+            [
+                'barangay' => 'Santisima Cruz',
+                'type' => 'Program',
+                'category' => 'Livelihood',
+                'title' => 'Youth Digital Freelancing Orientation',
+                'summary' => 'Introductory orientation on online freelancing, portfolio basics, and responsible digital work habits.',
+                'image' => $heroImages[0],
+                'date' => 'April 8, 2026',
+                'interested' => '54 interested / 16 participating',
+                'budget' => '₱15,000 budget',
+                'badgeClass' => 'badge-orange',
+            ],
+        ];
+
         $feedItems = [
             [
                 'id' => 1,
@@ -154,8 +321,14 @@ class HomepageController extends Controller
             ['name' => 'Santisima Cruz', 'chairman' => '[SK Chairman]', 'color' => '#FF5722', 'programs' => 2, 'events' => 1, 'members' => ['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
         ];
 
-        return view('homepage::index', [
+        return view('homepage::landing', [
             'municipality'      => $municipality,
+            'heroStats'         => $heroStats,
+            'valueProps'        => $valueProps,
+            'heroImages'        => $heroImages,
+            'featuredPrograms'  => $featuredPrograms,
+            'barangayTabs'      => $barangayTabs,
+            'barangayCards'     => $barangayCards,
             'feedItems'         => $feedItems,
             'highlights'        => $highlights,
             'programCategories' => $programCategories,
@@ -166,5 +339,20 @@ class HomepageController extends Controller
     public function about()
     {
         return view('homepage::about');
+    }
+
+    public function programs()
+    {
+        return view('homepage::programs');
+    }
+
+    public function faqs()
+    {
+        return view('homepage::faqs');
+    }
+
+    public function contact()
+    {
+        return view('homepage::contact');
     }
 }
