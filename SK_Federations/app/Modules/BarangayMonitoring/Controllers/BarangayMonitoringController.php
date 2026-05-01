@@ -42,21 +42,21 @@ class BarangayMonitoringController extends Controller
     private function buildStats(array $barangays): array
     {
         $count = count($barangays);
-        $reports = array_sum(array_map(fn ($item) => $item['reports'], $barangays));
-        $onTime = array_sum(array_map(fn ($item) => $item['on_time'], $barangays));
         $activePrograms = array_sum(array_map(fn ($item) => $item['active_programs'], $barangays));
+        $participationRates = array_map(fn ($item) => $item['participation_rate'], $barangays);
         $compliant = count(array_filter($barangays, fn ($item) => $item['status'] === 'compliant'));
-        $partial = count(array_filter($barangays, fn ($item) => $item['status'] === 'partial'));
         $nonCompliant = count(array_filter($barangays, fn ($item) => $item['status'] === 'non-compliant'));
+
+        $avgParticipation = count($participationRates) > 0 ? round(array_sum($participationRates) / count($participationRates)) : 0;
+        $complianceRate = $count > 0 ? round(($compliant / $count) * 100) : 0;
+        $nonComplianceRate = $count > 0 ? round(($nonCompliant / $count) * 100) : 0;
 
         return [
             'total_barangays' => $count,
-            'reporting_rate' => $count > 0 ? round(($count / 26) * 100) : 0,
-            'ontime_rate' => $reports > 0 ? round(($onTime / $reports) * 100) : 0,
-            'active_programs' => $activePrograms,
-            'compliant' => $compliant,
-            'partial' => $partial,
-            'non_compliant' => $nonCompliant,
+            'total_programs' => $activePrograms,
+            'average_participation_rate' => $avgParticipation,
+            'compliance_rate' => $complianceRate,
+            'non_compliance_rate' => $nonComplianceRate,
         ];
     }
 
@@ -72,6 +72,8 @@ class BarangayMonitoringController extends Controller
                 'active_programs' => 4,
                 'participation_rate' => 86,
                 'last_update' => 'Mar 20, 2026',
+                'sk_chairman' => 'Alyssa M. Ramos',
+                'report_rate' => 92,
             ],
             'brgy-2-poblacion' => [
                 'slug' => 'brgy-2-poblacion',
@@ -82,6 +84,8 @@ class BarangayMonitoringController extends Controller
                 'active_programs' => 3,
                 'participation_rate' => 78,
                 'last_update' => 'Mar 18, 2026',
+                'sk_chairman' => 'Mark D. Villanueva',
+                'report_rate' => 80,
             ],
             'brgy-3-poblacion' => [
                 'slug' => 'brgy-3-poblacion',
@@ -92,6 +96,8 @@ class BarangayMonitoringController extends Controller
                 'active_programs' => 4,
                 'participation_rate' => 83,
                 'last_update' => 'Mar 19, 2026',
+                'sk_chairman' => 'Celine P. Mendoza',
+                'report_rate' => 91,
             ],
             'brgy-4-poblacion' => [
                 'slug' => 'brgy-4-poblacion',
@@ -102,6 +108,8 @@ class BarangayMonitoringController extends Controller
                 'active_programs' => 2,
                 'participation_rate' => 66,
                 'last_update' => 'Mar 17, 2026',
+                'sk_chairman' => 'Jomar L. Bautista',
+                'report_rate' => 67,
             ],
             'brgy-5-poblacion' => [
                 'slug' => 'brgy-5-poblacion',
@@ -112,6 +120,8 @@ class BarangayMonitoringController extends Controller
                 'active_programs' => 1,
                 'participation_rate' => 49,
                 'last_update' => 'Mar 16, 2026',
+                'sk_chairman' => 'Maria Santos',
+                'report_rate' => 42,
             ],
             'labuin' => [
                 'slug' => 'labuin',
@@ -122,6 +132,8 @@ class BarangayMonitoringController extends Controller
                 'active_programs' => 3,
                 'participation_rate' => 74,
                 'last_update' => 'Mar 18, 2026',
+                'sk_chairman' => 'Juan Cruz',
+                'report_rate' => 75,
             ],
             'pagsawitan' => [
                 'slug' => 'pagsawitan',
@@ -132,6 +144,8 @@ class BarangayMonitoringController extends Controller
                 'active_programs' => 5,
                 'participation_rate' => 88,
                 'last_update' => 'Mar 20, 2026',
+                'sk_chairman' => 'Rosa Dela Cruz',
+                'report_rate' => 100,
             ],
             'san-jose' => [
                 'slug' => 'san-jose',
@@ -142,6 +156,8 @@ class BarangayMonitoringController extends Controller
                 'active_programs' => 1,
                 'participation_rate' => 43,
                 'last_update' => 'Mar 15, 2026',
+                'sk_chairman' => 'Pedro Reyes',
+                'report_rate' => 33,
             ],
         ];
     }

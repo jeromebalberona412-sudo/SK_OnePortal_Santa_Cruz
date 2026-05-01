@@ -119,5 +119,125 @@ document.addEventListener('DOMContentLoaded', () => {
         openLoginModal();
     });
 
+    // ── Image Collage & Gallery ──────────────────────────────────────────────
+    let currentGalleryImages = [];
+    let currentGalleryIndex = 0;
+    let currentPostData = {};
+
+    const openImageGallery = (images, startIndex = 0, postData = {}) => {
+        currentGalleryImages = images;
+        currentGalleryIndex = startIndex;
+        currentPostData = postData;
+        
+        // Populate thumbnails
+        const thumbContainer = document.getElementById('galleryThumbnails');
+        if (thumbContainer) {
+            thumbContainer.innerHTML = images.map((img, idx) => 
+                `<div class="gallery-thumb ${idx === startIndex ? 'active' : ''}">
+                    <img src="${img}" alt="Thumbnail ${idx + 1}">
+                </div>`
+            ).join('');
+        }
+        
+        // Populate header info
+        const userAvatar = document.querySelector('.gallery-user-avatar');
+        const userName = document.querySelector('.gallery-user-name');
+        const postTime = document.querySelector('.gallery-post-time');
+        const caption = document.querySelector('.gallery-caption');
+        
+        if (userAvatar && postData.avatar) userAvatar.src = postData.avatar;
+        if (userName && postData.author) userName.textContent = postData.author;
+        if (postTime && postData.time) postTime.textContent = postData.time;
+        if (caption && postData.caption) caption.textContent = postData.caption;
+        
+        updateGalleryDisplay();
+        openModal('imageGalleryModal');
+    };
+
+    const updateGalleryDisplay = () => {
+        const modal = document.getElementById('imageGalleryModal');
+        const mainImg = modal?.querySelector('.gallery-main img');
+        const counter = modal?.querySelector('.gallery-counter');
+        const thumbs = modal?.querySelectorAll('.gallery-thumb');
+
+        if (mainImg && currentGalleryImages[currentGalleryIndex]) {
+            mainImg.src = currentGalleryImages[currentGalleryIndex];
+        }
+
+        if (counter) {
+            counter.textContent = `${currentGalleryIndex + 1} / ${currentGalleryImages.length}`;
+        }
+
+        thumbs?.forEach((thumb, idx) => {
+            thumb.classList.toggle('active', idx === currentGalleryIndex);
+        });
+    };
+
+    // Gallery navigation
+    document.getElementById('galleryPrev')?.addEventListener('click', () => {
+        currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+        updateGalleryDisplay();
+    });
+
+    document.getElementById('galleryNext')?.addEventListener('click', () => {
+        currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
+        updateGalleryDisplay();
+    });
+
+    document.getElementById('galleryClose')?.addEventListener('click', () => {
+        closeModal('imageGalleryModal');
+    });
+
+    // Thumbnail clicks
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.gallery-thumb')) {
+            const thumbs = document.querySelectorAll('.gallery-thumb');
+            thumbs.forEach((thumb, idx) => {
+                if (thumb === e.target.closest('.gallery-thumb')) {
+                    currentGalleryIndex = idx;
+                    updateGalleryDisplay();
+                }
+            });
+        }
+    });
+
+    // Collage "more" overlay click
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.collage-more-text')) {
+            const collage = e.target.closest('.image-collage');
+            const postCard = collage?.closest('.post-card');
+            const images = Array.from(collage?.querySelectorAll('img') || []).map(img => img.src);
+            
+            const postData = {
+                avatar: postCard?.querySelector('.post-avatar')?.src || '',
+                author: postCard?.querySelector('.post-author')?.textContent || '',
+                time: postCard?.querySelector('.post-time')?.textContent || '',
+                caption: postCard?.querySelector('.post-title')?.textContent || ''
+            };
+            
+            openImageGallery(images, 0, postData);
+        }
+    });
+
+    // Collage item clicks
+    document.addEventListener('click', (e) => {
+        const collageItem = e.target.closest('.collage-item:not(.more-overlay)');
+        if (collageItem) {
+            const collage = collageItem.closest('.image-collage');
+            const postCard = collage?.closest('.post-card');
+            const images = Array.from(collage?.querySelectorAll('img') || []).map(img => img.src);
+            const index = Array.from(collage?.querySelectorAll('.collage-item:not(.more-overlay)') || []).indexOf(collageItem);
+            
+            const postData = {
+                avatar: postCard?.querySelector('.post-avatar')?.src || '',
+                author: postCard?.querySelector('.post-author')?.textContent || '',
+                time: postCard?.querySelector('.post-time')?.textContent || '',
+                caption: postCard?.querySelector('.post-title')?.textContent || ''
+            };
+            
+            openImageGallery(images, index, postData);
+        }
+    });
+
     applyFilters();
 });
