@@ -135,38 +135,262 @@
 })();
 
 /* ═══════════════════════════════════════════════════════════════
-   FORM SUBMISSION HANDLER - Show Email Verification
+   FORM SUBMISSION HANDLER - Validate then Show Email Verification
 ═══════════════════════════════════════════════════════════════ */
 window.handleFormSubmit = function(event) {
     event.preventDefault();
-    
-    // Get email from form
-    const emailInput = document.querySelector('input[name="email"]');
-    const email = emailInput ? emailInput.value : 'your-email@example.com';
-    
-    if (!email || email.trim() === '') {
-        alert('Please provide an email address to continue.');
-        emailInput.focus();
+
+    // ── Clear previous errors ──
+    document.querySelectorAll('.kkp-field-error').forEach(el => el.remove());
+    document.querySelectorAll('.kkp-input-err').forEach(el => el.classList.remove('kkp-input-err'));
+
+    const errors = [];
+
+    // Helper: show inline error below an element
+    function fieldError(el, msg) {
+        if (!el) return;
+        el.classList.add('kkp-input-err');
+        const err = document.createElement('span');
+        err.className = 'kkp-field-error';
+        err.textContent = msg;
+        el.parentNode.insertBefore(err, el.nextSibling);
+    }
+
+    // Helper: get hidden input value (single-check groups)
+    function hiddenVal(id) {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+    }
+
+    // ── 1. Last Name ──
+    const lastName = document.querySelector('input[name="last_name"]');
+    if (!lastName || !lastName.value.trim()) {
+        errors.push('Last Name is required.');
+        fieldError(lastName, 'Last Name is required.');
+    }
+
+    // ── 2. First Name ──
+    const firstName = document.querySelector('input[name="first_name"]');
+    if (!firstName || !firstName.value.trim()) {
+        errors.push('First Name is required.');
+        fieldError(firstName, 'First Name is required.');
+    }
+
+    // ── 3. Purok/Zone ──
+    const purok = document.querySelector('input[name="purok_zone"]');
+    if (!purok || !purok.value.trim()) {
+        errors.push('Purok/Zone is required.');
+        fieldError(purok, 'Purok/Zone is required.');
+    }
+
+    // ── 4. Sex ──
+    if (!hiddenVal('kkpSex')) {
+        errors.push('Sex Assigned by Birth is required.');
+        const sexBlock = document.querySelector('.kkp-sex-block');
+        if (sexBlock) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Sex Assigned by Birth.';
+            sexBlock.parentNode.insertBefore(err, sexBlock.nextSibling);
+        }
+    }
+
+    // ── 5. Age ──
+    const age = document.querySelector('input[name="age"]');
+    if (!age || !age.value.trim()) {
+        errors.push('Age is required.');
+        fieldError(age, 'Age is required.');
+    }
+
+    // ── 6. Birthday ──
+    const birthday = document.querySelector('input[name="birthday"]');
+    if (!birthday || !birthday.value.trim()) {
+        errors.push('Birthday is required.');
+        fieldError(birthday, 'Birthday is required.');
+    }
+
+    // ── 7. Email ──
+    const email = document.querySelector('input[name="email"]');
+    if (!email || !email.value.trim()) {
+        errors.push('E-mail address is required.');
+        fieldError(email, 'E-mail address is required.');
+    }
+
+    // ── 8. Contact # ──
+    const contact = document.querySelector('input[name="contact_number"]');
+    if (!contact || !contact.value.trim()) {
+        errors.push('Contact # is required.');
+        fieldError(contact, 'Contact # is required.');
+    }
+
+    // ── 9. Civil Status ──
+    if (!hiddenVal('kkpCivilStatus')) {
+        errors.push('Civil Status is required.');
+        const el = document.getElementById('kkpCivilStatus');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Civil Status.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 10. Youth Age Group ──
+    if (!hiddenVal('kkpYouthAgeGroup')) {
+        errors.push('Youth Age Group is required.');
+        const el = document.getElementById('kkpYouthAgeGroup');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Youth Age Group.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 11. Educational Background ──
+    if (!hiddenVal('kkpEducation')) {
+        errors.push('Educational Background is required.');
+        const el = document.getElementById('kkpEducation');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Educational Background.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 12. Youth Classification ──
+    if (!hiddenVal('kkpYouthClass')) {
+        errors.push('Youth Classification is required.');
+        const el = document.getElementById('kkpYouthClass');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Youth Classification.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 13. Work Status ──
+    if (!hiddenVal('kkpWorkStatus')) {
+        errors.push('Work Status is required.');
+        const el = document.getElementById('kkpWorkStatus');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Work Status.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 14. Registered SK Voter ──
+    if (!hiddenVal('kkpSkVoter')) {
+        errors.push('Registered SK Voter is required.');
+        const el = document.getElementById('kkpSkVoter');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Yes or No.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 15. Did you vote last SK ──
+    if (!hiddenVal('kkpSkVoted')) {
+        errors.push('Did you vote last SK is required.');
+        const el = document.getElementById('kkpSkVoted');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Yes or No.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 16. Registered National Voter ──
+    if (!hiddenVal('kkpNationalVoter')) {
+        errors.push('Registered National Voter is required.');
+        const el = document.getElementById('kkpNationalVoter');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Yes or No.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 17. KK Assembly ──
+    if (!hiddenVal('kkpKkAssembly')) {
+        errors.push('Have you attended a KK Assembly is required.');
+        const el = document.getElementById('kkpKkAssembly');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Yes or No.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 18. FB Account ──
+    const facebook = document.querySelector('input[name="facebook"]');
+    if (!facebook || !facebook.value.trim()) {
+        errors.push('FB Account is required.');
+        fieldError(facebook, 'FB Account is required.');
+    }
+
+    // ── 19. Willing to join group chat ──
+    if (!hiddenVal('kkpGroupChat')) {
+        errors.push('Willing to join the group chat is required.');
+        const el = document.getElementById('kkpGroupChat');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select Yes or No.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
+    // ── 20. Signature ──
+    const sigData = document.getElementById('kkpSignatureData');
+    if (!sigData || !sigData.value.trim()) {
+        errors.push('Signature is required.');
+        const sigSection = document.querySelector('.kkp-sig-section');
+        if (sigSection) {
+            let err = sigSection.querySelector('.kkp-field-error');
+            if (!err) {
+                err = document.createElement('span');
+                err.className = 'kkp-field-error';
+                err.textContent = 'Please provide your signature.';
+                sigSection.appendChild(err);
+            }
+        }
+    }
+
+    // ── If errors, scroll to first error and stop ──
+    if (errors.length > 0) {
+        const firstErr = document.querySelector('.kkp-field-error');
+        if (firstErr) {
+            firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         return false;
     }
-    
-    // Hide form card
-    const formCard = document.getElementById('kkpFormCard');
+
+    // ── All valid — show email verification card ──
+    const emailVal = email.value.trim();
+    const formCard        = document.getElementById('kkpFormCard');
     const emailVerifyCard = document.getElementById('emailVerifyCard');
-    const displayEmail = document.getElementById('displayEmail');
-    
-    if (formCard) formCard.style.display = 'none';
+    const displayEmail    = document.getElementById('displayEmail');
+
+    if (formCard)        formCard.style.display        = 'none';
     if (emailVerifyCard) {
         emailVerifyCard.style.display = 'block';
-        if (displayEmail) displayEmail.textContent = email;
+        if (displayEmail) displayEmail.textContent = emailVal;
     }
-    
+
     // Start resend timer
     if (window.startResendTimer) window.startResendTimer();
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
     return false;
 };
 
@@ -227,14 +451,11 @@ window.handleFormSubmit = function(event) {
     if (resendEmailBtn) {
         resendEmailBtn.addEventListener('click', function () {
             if (this.disabled) return;
-            // Trigger resend (in production this would POST to a resend endpoint)
+            const btn = this;
+            const originalText = btn.textContent;
+            btn.textContent = 'Email sent!';
+            setTimeout(() => { btn.textContent = 'Resend verification email'; }, 2500);
             window.startResendTimer();
-            // Visual feedback
-            const originalText = this.querySelector('.verify-resend-text');
-            if (originalText) {
-                originalText.textContent = 'Email sent!';
-                setTimeout(() => { originalText.textContent = 'Resend verification email'; }, 3000);
-            }
         });
     }
 })();

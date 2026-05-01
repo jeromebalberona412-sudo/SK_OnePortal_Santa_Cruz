@@ -84,16 +84,19 @@
                 <p class="verify-instruction">
                     Please check your email and click the verification link to complete your registration.
                 </p>
+                <div class="verify-help">
+                    <p>Didn't receive the email?</p>
+                    <div class="verify-resend-wrap">
+                        <button type="button" class="verify-resend-btn" id="resendEmailBtn" disabled>
+                            Resend verification email
+                        </button>
+                        <span class="verify-resend-timer" id="resendTimer">(1:00)</span>
+                    </div>
+                </div>
                 <div class="verify-actions">
                     <button type="button" class="verify-btn verify-btn-secondary" id="backToFormBtn">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
                         Back to KK Profiling
-                    </button>
-                </div>
-                <div class="verify-help">
-                    <p>Didn't receive the email?</p>
-                    <button type="button" class="verify-link-btn" id="resendEmailBtn" disabled>
-                        Resend verification email <span class="verify-resend-timer" id="resendTimer">(1:00)</span>
                     </button>
                 </div>
             </div>
