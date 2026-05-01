@@ -67,7 +67,7 @@
                 </li>
 
                 <!-- ── Youth Management (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('kk-profiling-requests', 'schedule-kk-profiling', 'kabataan') ? 'open' : '' }}" id="youthManagementDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('kk-profiling-requests', 'schedule-kk-profiling', 'kabataan', 'previous-kabataan') ? 'open' : '' }}" id="youthManagementDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="youthManagementToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -101,6 +101,13 @@
                         <li class="nav-subitem">
                             <a href="{{ route('kabataan') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('kabataan') ? 'active' : '' }}">
                                 <span>Kabataan</span>
+                            </a>
+                        </li>
+
+                        <!-- Previous Kabataan -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('previous-kabataan') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('previous-kabataan') ? 'active' : '' }}">
+                                <span>Previous Kabataan</span>
                             </a>
                         </li>
 

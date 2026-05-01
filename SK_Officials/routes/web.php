@@ -84,6 +84,10 @@ Route::middleware([
         return view('Kabataan::kabataan');
     })->name('kabataan');
 
+    Route::get('/previous-kabataan', function () {
+        return view('PreviousKabataan::previous-kabataan');
+    })->name('previous-kabataan');
+
     Route::get('/deleted-kabataan', function () {
         return view('Deleted_Kabataan::deleted-kabataan');
     })->name('deleted-kabataan');
