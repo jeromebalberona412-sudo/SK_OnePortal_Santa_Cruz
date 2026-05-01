@@ -889,10 +889,12 @@
 ══════════════════════════════════════════ */
 .verify-card {
     background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-    padding: 48px 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    padding: 48px 40px 40px;
     text-align: center;
+    max-width: 520px;
+    margin: 0 auto;
 }
 
 .verify-icon {
@@ -908,48 +910,50 @@
 }
 
 .verify-icon svg {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     color: #fff;
 }
 
 .verify-title {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     color: #111;
-    margin: 0 0 16px;
+    margin: 0 0 14px;
 }
 
 .verify-message {
-    font-size: 15px;
+    font-size: 14px;
     color: #555;
     line-height: 1.6;
-    margin: 0 0 12px;
+    margin: 0 0 10px;
 }
 
 .verify-email {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--brand);
-    margin: 0 0 20px;
-    padding: 12px 20px;
+    margin: 0 0 16px;
+    padding: 10px 20px;
     background: #f0f7ff;
     border-radius: 8px;
     border: 1px solid #bfdbfe;
+    display: inline-block;
+    word-break: break-all;
 }
 
 .verify-instruction {
-    font-size: 14px;
+    font-size: 13px;
     color: #666;
     line-height: 1.6;
-    margin: 0 0 32px;
+    margin: 0 0 28px;
 }
 
 .verify-actions {
     display: flex;
     justify-content: center;
     gap: 12px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
 }
 
 .verify-btn {
@@ -957,7 +961,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 24px;
+    padding: 11px 24px;
     font-size: 14px;
     font-weight: 600;
     border-radius: 8px;
@@ -969,17 +973,13 @@
     font-family: inherit;
 }
 
-.verify-btn svg {
-    width: 16px;
-    height: 16px;
-}
+.verify-btn svg { width: 16px; height: 16px; }
 
 .verify-btn-secondary {
     background: #fff;
     color: var(--brand);
     border-color: var(--brand);
 }
-
 .verify-btn-secondary:hover {
     background: var(--brand);
     color: #fff;
@@ -988,14 +988,14 @@
 }
 
 .verify-help {
-    padding-top: 24px;
+    padding-top: 20px;
     border-top: 1px solid #e5e7eb;
 }
 
 .verify-help p {
     font-size: 13px;
     color: #666;
-    margin: 0 0 8px;
+    margin: 0 0 10px;
 }
 
 .verify-link-btn {
@@ -1010,9 +1010,18 @@
     transition: color 0.2s;
     font-family: inherit;
 }
+.verify-link-btn:hover:not(:disabled) { color: #003070; }
+.verify-link-btn:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+    text-decoration: none;
+}
 
-.verify-link-btn:hover {
-    color: #003070;
+.verify-resend-timer {
+    font-size: 12px;
+    font-weight: 400;
+    color: #9ca3af;
+    margin-left: 4px;
 }
 
 /* ══════════════════════════════════════════
@@ -1197,39 +1206,123 @@
     color: #003070;
 }
 
+/* ── Set Password spinner & error ── */
+@keyframes kkpSpin {
+    to { transform: rotate(360deg); }
+}
+
+.setpw-btn-spinner {
+    animation: kkpSpin 0.8s linear infinite;
+    width: 18px;
+    height: 18px;
+}
+
+.setpw-error-msg {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+/* ══════════════════════════════════════════
+   REGISTRATION SUCCESS CARD
+══════════════════════════════════════════ */
+.reg-success-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    padding: 56px 40px 48px;
+    text-align: center;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.reg-success-icon {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(22,163,74,0.3);
+}
+
+.reg-success-icon svg {
+    width: 44px;
+    height: 44px;
+    color: #fff;
+}
+
+.reg-success-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 14px;
+}
+
+.reg-success-message {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.7;
+    margin: 0 0 32px;
+}
+
+.reg-success-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 32px;
+    background: linear-gradient(135deg, var(--brand) 0%, #003070 100%);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(4,80,168,0.3);
+    font-family: inherit;
+}
+.reg-success-btn svg { width: 18px; height: 18px; }
+.reg-success-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(4,80,168,0.4);
+}
+
 @media (max-width: 600px) {
-    .verify-card {
-        padding: 32px 24px;
+    .verify-card, .setpw-card, .reg-success-card {
+        padding: 32px 20px;
     }
-    .verify-title {
-        font-size: 24px;
+    .verify-title, .setpw-title, .reg-success-title {
+        font-size: 22px;
     }
-    .verify-icon {
+    .verify-icon, .setpw-icon {
         width: 64px;
         height: 64px;
     }
-    .verify-icon svg {
-        width: 32px;
-        height: 32px;
+    .verify-icon svg, .setpw-icon svg {
+        width: 30px;
+        height: 30px;
+    }
+    .reg-success-icon {
+        width: 72px;
+        height: 72px;
+    }
+    .reg-success-icon svg {
+        width: 36px;
+        height: 36px;
     }
     .verify-actions {
         flex-direction: column;
     }
     .verify-btn {
         width: 100%;
-    }
-    .setpw-card {
-        padding: 32px 24px;
-    }
-    .setpw-title {
-        font-size: 22px;
-    }
-    .setpw-icon {
-        width: 60px;
-        height: 60px;
-    }
-    .setpw-icon svg {
-        width: 30px;
-        height: 30px;
     }
 }

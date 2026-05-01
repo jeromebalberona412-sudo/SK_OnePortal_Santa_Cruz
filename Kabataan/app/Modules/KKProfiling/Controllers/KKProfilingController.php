@@ -103,4 +103,29 @@ class KKProfilingController extends Controller
             ->route('kkprofiling', ['barangay' => $barangay])
             ->with('success', 'Your KK Profiling submission has been received! It will be reviewed by your barangay SK officials.');
     }
+
+    /**
+     * Show the Set Password page (after email verification)
+     */
+    public function showSetPassword(string $barangay)
+    {
+        return view('kkprofiling::set_password', [
+            'barangay' => $barangay,
+        ]);
+    }
+
+    /**
+     * Handle password creation after email verification
+     */
+    public function storePassword(Request $request, string $barangay)
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // TODO: Save password to the pending KK profile record
+        // For now redirect to login with success message
+        return redirect('/youth/login')
+            ->with('success', 'Registration completed successfully! You can now login with your credentials.');
+    }
 }

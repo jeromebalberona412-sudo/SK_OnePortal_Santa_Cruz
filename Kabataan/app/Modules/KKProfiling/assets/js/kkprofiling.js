@@ -161,6 +161,9 @@ window.handleFormSubmit = function(event) {
         if (displayEmail) displayEmail.textContent = email;
     }
     
+    // Start resend timer
+    if (window.startResendTimer) window.startResendTimer();
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
@@ -172,43 +175,66 @@ window.handleFormSubmit = function(event) {
 ═══════════════════════════════════════════════════════════════ */
 (function() {
     // Back to form button
-    const backToFormBtn = document.getElementById('backToFormBtn');
+    const backToFormBtn  = document.getElementById('backToFormBtn');
     const backToFormBtn2 = document.getElementById('backToFormBtn2');
-    
+
     function showForm() {
-        const formCard = document.getElementById('kkpFormCard');
+        const formCard        = document.getElementById('kkpFormCard');
         const emailVerifyCard = document.getElementById('emailVerifyCard');
         const setPasswordCard = document.getElementById('setPasswordCard');
-        
-        if (formCard) formCard.style.display = 'block';
+        const regSuccessCard  = document.getElementById('regSuccessCard');
+
+        if (formCard)        formCard.style.display        = 'block';
         if (emailVerifyCard) emailVerifyCard.style.display = 'none';
         if (setPasswordCard) setPasswordCard.style.display = 'none';
-        
+        if (regSuccessCard)  regSuccessCard.style.display  = 'none';
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    
-    if (backToFormBtn) backToFormBtn.addEventListener('click', showForm);
+
+    if (backToFormBtn)  backToFormBtn.addEventListener('click', showForm);
     if (backToFormBtn2) backToFormBtn2.addEventListener('click', showForm);
-    
-    // Resend email button
+
+    // ── Resend email with 1-minute countdown ──
+    let resendInterval = null;
+
+    window.startResendTimer = function () {
+        const btn   = document.getElementById('resendEmailBtn');
+        const timer = document.getElementById('resendTimer');
+        if (!btn || !timer) return;
+
+        let seconds = 60;
+        btn.disabled = true;
+        timer.style.display = 'inline';
+        timer.textContent = '(1:00)';
+
+        clearInterval(resendInterval);
+        resendInterval = setInterval(function () {
+            seconds--;
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            timer.textContent = '(' + m + ':' + (s < 10 ? '0' : '') + s + ')';
+
+            if (seconds <= 0) {
+                clearInterval(resendInterval);
+                btn.disabled = false;
+                timer.style.display = 'none';
+            }
+        }, 1000);
+    };
+
     const resendEmailBtn = document.getElementById('resendEmailBtn');
     if (resendEmailBtn) {
-        resendEmailBtn.addEventListener('click', function() {
-            alert('Verification email has been resent! Please check your inbox.');
-        });
-    }
-    
-    // Simulate email verification (for demo)
-    const simulateVerifyBtn = document.getElementById('simulateVerifyBtn');
-    if (simulateVerifyBtn) {
-        simulateVerifyBtn.addEventListener('click', function() {
-            const emailVerifyCard = document.getElementById('emailVerifyCard');
-            const setPasswordCard = document.getElementById('setPasswordCard');
-            
-            if (emailVerifyCard) emailVerifyCard.style.display = 'none';
-            if (setPasswordCard) setPasswordCard.style.display = 'block';
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        resendEmailBtn.addEventListener('click', function () {
+            if (this.disabled) return;
+            // Trigger resend (in production this would POST to a resend endpoint)
+            window.startResendTimer();
+            // Visual feedback
+            const originalText = this.querySelector('.verify-resend-text');
+            if (originalText) {
+                originalText.textContent = 'Email sent!';
+                setTimeout(() => { originalText.textContent = 'Resend verification email'; }, 3000);
+            }
         });
     }
 })();
@@ -220,68 +246,89 @@ window.handleFormSubmit = function(event) {
     // Password toggle
     function setupPasswordToggle(toggleBtnId, inputId) {
         const toggleBtn = document.getElementById(toggleBtnId);
-        const input = document.getElementById(inputId);
-        
+        const input     = document.getElementById(inputId);
         if (!toggleBtn || !input) return;
 
-        const eyeIcon = toggleBtn.querySelector('.eye-icon');
+        const eyeIcon    = toggleBtn.querySelector('.eye-icon');
         const eyeOffIcon = toggleBtn.querySelector('.eye-off-icon');
 
         toggleBtn.addEventListener('click', function () {
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
-            
             if (eyeIcon && eyeOffIcon) {
-                eyeIcon.style.display = isPassword ? 'none' : 'block';
+                eyeIcon.style.display    = isPassword ? 'none'  : 'block';
                 eyeOffIcon.style.display = isPassword ? 'block' : 'none';
             }
         });
     }
 
-    setupPasswordToggle('togglePassword', 'password');
+    setupPasswordToggle('togglePassword',        'password');
     setupPasswordToggle('togglePasswordConfirm', 'password_confirmation');
 
-    // Form validation
+    // Form submission with loading animation
     const setPasswordForm = document.getElementById('setPasswordForm');
     if (setPasswordForm) {
         setPasswordForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            
-            const password = document.getElementById('password');
-            const passwordConfirm = document.getElementById('password_confirmation');
 
+            const password        = document.getElementById('password');
+            const passwordConfirm = document.getElementById('password_confirmation');
             if (!password || !passwordConfirm) return;
 
-            // Check if passwords match
             if (password.value !== passwordConfirm.value) {
-                alert('Passwords do not match. Please try again.');
+                showSetPwError('Passwords do not match. Please try again.');
                 passwordConfirm.focus();
-                return false;
+                return;
+            }
+            if (password.value.length < 8) {
+                showSetPwError('Password must be at least 8 characters long.');
+                password.focus();
+                return;
             }
 
-            // Check minimum length
-            if (password.value.length < 8) {
-                alert('Password must be at least 8 characters long.');
-                password.focus();
-                return false;
-            }
-            
-            // Success!
-            alert('Registration completed successfully! You can now login with your credentials.');
-            
-            // Show form again
-            const formCard = document.getElementById('kkpFormCard');
-            const setPasswordCard = document.getElementById('setPasswordCard');
-            
-            if (formCard) formCard.style.display = 'block';
-            if (setPasswordCard) setPasswordCard.style.display = 'none';
-            
-            // Reset forms
-            document.getElementById('kkProfilingForm').reset();
-            setPasswordForm.reset();
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Show loading state
+            const submitBtn  = document.getElementById('setpwSubmitBtn');
+            const btnIcon    = submitBtn && submitBtn.querySelector('.setpw-btn-icon');
+            const btnSpinner = submitBtn && submitBtn.querySelector('.setpw-btn-spinner');
+            const btnText    = submitBtn && submitBtn.querySelector('.setpw-btn-text');
+
+            if (submitBtn)  submitBtn.disabled = true;
+            if (btnIcon)    btnIcon.style.display    = 'none';
+            if (btnSpinner) btnSpinner.style.display = 'block';
+            if (btnText)    btnText.textContent      = 'Registering...';
+
+            // Simulate async registration (replace with real AJAX in production)
+            setTimeout(function () {
+                // Hide set password card, show success card
+                const setPasswordCard = document.getElementById('setPasswordCard');
+                const regSuccessCard  = document.getElementById('regSuccessCard');
+
+                if (setPasswordCard) setPasswordCard.style.display = 'none';
+                if (regSuccessCard)  regSuccessCard.style.display  = 'block';
+
+                // Reset button state
+                if (submitBtn)  submitBtn.disabled = false;
+                if (btnIcon)    btnIcon.style.display    = 'block';
+                if (btnSpinner) btnSpinner.style.display = 'none';
+                if (btnText)    btnText.textContent      = 'Complete Registration';
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 2000);
         });
+    }
+
+    function showSetPwError(msg) {
+        let errEl = document.getElementById('setpwErrorMsg');
+        if (!errEl) {
+            errEl = document.createElement('p');
+            errEl.id = 'setpwErrorMsg';
+            errEl.className = 'setpw-error-msg';
+            const form = document.getElementById('setPasswordForm');
+            if (form) form.prepend(errEl);
+        }
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+        setTimeout(() => { errEl.style.display = 'none'; }, 4000);
     }
 })();
 

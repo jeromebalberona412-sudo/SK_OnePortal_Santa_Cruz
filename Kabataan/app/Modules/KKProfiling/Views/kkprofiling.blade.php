@@ -92,10 +92,9 @@
                 </div>
                 <div class="verify-help">
                     <p>Didn't receive the email?</p>
-                    <button type="button" class="verify-link-btn" id="resendEmailBtn">Resend verification email</button>
-                    <p style="margin-top: 16px; font-size: 12px; color: #999;">
-                        (For demo: <button type="button" class="verify-link-btn" id="simulateVerifyBtn">Click here to simulate email verification</button>)
-                    </p>
+                    <button type="button" class="verify-link-btn" id="resendEmailBtn" disabled>
+                        Resend verification email <span class="verify-resend-timer" id="resendTimer">(1:00)</span>
+                    </button>
                 </div>
             </div>
 
@@ -115,15 +114,8 @@
                     <div class="setpw-field">
                         <label for="password" class="setpw-label">Password</label>
                         <div class="setpw-input-wrapper">
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
-                                class="setpw-input" 
-                                placeholder="Enter your password"
-                                required
-                                minlength="8"
-                            >
+                            <input type="password" id="password" name="password" class="setpw-input"
+                                placeholder="Enter your password" required minlength="8">
                             <button type="button" class="setpw-toggle-btn" id="togglePassword" aria-label="Toggle password visibility">
                                 <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -140,15 +132,8 @@
                     <div class="setpw-field">
                         <label for="password_confirmation" class="setpw-label">Confirm Password</label>
                         <div class="setpw-input-wrapper">
-                            <input 
-                                type="password" 
-                                id="password_confirmation" 
-                                name="password_confirmation" 
-                                class="setpw-input" 
-                                placeholder="Confirm your password"
-                                required
-                                minlength="8"
-                            >
+                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                class="setpw-input" placeholder="Confirm your password" required minlength="8">
                             <button type="button" class="setpw-toggle-btn" id="togglePasswordConfirm" aria-label="Toggle password visibility">
                                 <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -161,13 +146,17 @@
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="setpw-submit-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button type="submit" class="setpw-submit-btn" id="setpwSubmitBtn">
+                        <svg class="setpw-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                             <polyline points="10 17 15 12 10 7"></polyline>
                             <line x1="15" y1="12" x2="3" y2="12"></line>
                         </svg>
-                        Complete Registration
+                        <svg class="setpw-btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+                        </svg>
+                        <span class="setpw-btn-text">Complete Registration</span>
                     </button>
                 </form>
                 <div class="setpw-footer">
@@ -176,6 +165,29 @@
                         Back to KK Profiling
                     </button>
                 </div>
+            </div>
+
+            {{-- Registration Success Card (Hidden by default) --}}
+            <div class="reg-success-card" id="regSuccessCard" style="display:none;">
+                <div class="reg-success-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h1 class="reg-success-title">Registration Complete!</h1>
+                <p class="reg-success-message">
+                    Your KK Profiling registration has been completed successfully.<br>
+                    You can now login with your credentials.
+                </p>
+                <a href="/youth/login" class="reg-success-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    Go to Login
+                </a>
             </div>
 
             {{-- Paper Form Card --}}
