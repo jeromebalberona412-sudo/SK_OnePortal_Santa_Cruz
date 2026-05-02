@@ -9,6 +9,32 @@
         'app/Modules/Authentication/assets/css/youth-login.css',
         'app/Modules/Authentication/assets/js/youth-login.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <style>
+        .youth-main-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 1024px) {
+            .youth-main-title {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .youth-main-title {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .youth-main-title {
+                font-size: 24px;
+            }
+        }
+    </style>
 </head>
 <body class="youth-login-page">
     <!-- Animated Background -->
@@ -69,7 +95,7 @@
                 @endif
 
                 <!-- Login Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('login') }}">
+                <form class="youth-login-form" id="loginForm" method="POST" action="{{ route('login') }}" novalidate>
                     @csrf
 
                     <!-- Email Field -->
@@ -90,8 +116,8 @@
                             autofocus
                             autocomplete="email"
                             placeholder="Enter your email"
-                            required
                         >
+                        <div class="youth-field-error" id="email-error" hidden></div>
                     </div>
 
                     <!-- Password Field -->
@@ -110,7 +136,6 @@
                                 class="youth-input password-input"
                                 autocomplete="current-password"
                                 placeholder="Enter your password"
-                                required
                             >
                             <button type="button" class="pw-toggle-btn" id="pwToggleBtn" aria-label="Show password" tabindex="-1">
                                 {{-- Eye open (password hidden) --}}
@@ -126,6 +151,7 @@
                                 </svg>
                             </button>
                         </div>
+                        <div class="youth-field-error" id="password-error" hidden></div>
                     </div>
 
                     <!-- Remember Me & Forgot Password -->
@@ -139,7 +165,7 @@
                             >
                             <span class="checkbox-label">Remember me</span>
                         </label>
-                        <a href="{{ route('password.request') }}" class="youth-link">Forgot password?</a>
+                        <a href="{{ route('password.request') }}" class="youth-link" id="forgotBtn">Forgot password?</a>
                     </div>
 
                     <!-- Submit Button -->
@@ -166,6 +192,95 @@
                 btn.classList.toggle('pw-visible', show);
             });
         })();
+
+        // Form Validation
+        (() => {
+            const form = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const emailError = document.getElementById('email-error');
+            const passwordError = document.getElementById('password-error');
+
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            function showError(input, errorElement, message) {
+                input.classList.add('error');
+                errorElement.textContent = message;
+                errorElement.hidden = false;
+            }
+
+            function clearError(input, errorElement) {
+                input.classList.remove('error');
+                errorElement.hidden = true;
+            }
+
+            emailInput.addEventListener('blur', () => {
+                if (!emailInput.value.trim()) {
+                    showError(emailInput, emailError, 'Email is required');
+                } else if (!validateEmail(emailInput.value)) {
+                    showError(emailInput, emailError, 'Please enter a valid email address');
+                } else {
+                    clearError(emailInput, emailError);
+                }
+            });
+
+            emailInput.addEventListener('input', () => {
+                if (emailInput.value.trim() && validateEmail(emailInput.value)) {
+                    clearError(emailInput, emailError);
+                }
+            });
+
+            passwordInput.addEventListener('blur', () => {
+                if (!passwordInput.value.trim()) {
+                    showError(passwordInput, passwordError, 'Password is required');
+                } else {
+                    clearError(passwordInput, passwordError);
+                }
+            });
+
+            passwordInput.addEventListener('input', () => {
+                if (passwordInput.value.trim()) {
+                    clearError(passwordInput, passwordError);
+                }
+            });
+
+            form.addEventListener('submit', (e) => {
+                let isValid = true;
+
+                if (!emailInput.value.trim()) {
+                    showError(emailInput, emailError, 'Email is required');
+                    isValid = false;
+                } else if (!validateEmail(emailInput.value)) {
+                    showError(emailInput, emailError, 'Please enter a valid email address');
+                    isValid = false;
+                }
+
+                if (!passwordInput.value.trim()) {
+                    showError(passwordInput, passwordError, 'Password is required');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                LoadingScreen.show('Signing In', 'Please wait...');
+            });
+
+            document.getElementById('forgotBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                LoadingScreen.show('Redirecting', 'Taking you to password recovery...');
+                setTimeout(() => {
+                    window.location.href = this.href;
+                }, 300);
+            });
+        })();
     </script>
+
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

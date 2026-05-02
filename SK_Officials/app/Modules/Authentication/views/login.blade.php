@@ -12,6 +12,32 @@
         'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/js/login.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <style>
+        .sk-main-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 1024px) {
+            .sk-main-title {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sk-main-title {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sk-main-title {
+                font-size: 24px;
+            }
+        }
+    </style>
 </head>
 <body class="sk-login-page">
     <!-- Animated Background -->
@@ -154,8 +180,102 @@
                 eyeClosed.style.display = 'none';
             }
         }
+
+        // Form Validation
+        (() => {
+            const form = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const emailError = document.getElementById('email-error');
+            const passwordError = document.getElementById('password-error');
+            const loginBtn = document.getElementById('loginBtn');
+
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            function showError(input, errorElement, message) {
+                input.classList.add('error');
+                errorElement.textContent = message;
+                errorElement.hidden = false;
+            }
+
+            function clearError(input, errorElement) {
+                input.classList.remove('error');
+                errorElement.hidden = true;
+            }
+
+            emailInput.addEventListener('blur', () => {
+                if (!emailInput.value.trim()) {
+                    showError(emailInput, emailError, 'Email is required');
+                } else if (!validateEmail(emailInput.value)) {
+                    showError(emailInput, emailError, 'Please enter a valid email address');
+                } else {
+                    clearError(emailInput, emailError);
+                }
+            });
+
+            emailInput.addEventListener('input', () => {
+                if (emailInput.value.trim() && validateEmail(emailInput.value)) {
+                    clearError(emailInput, emailError);
+                }
+            });
+
+            passwordInput.addEventListener('blur', () => {
+                if (!passwordInput.value.trim()) {
+                    showError(passwordInput, passwordError, 'Password is required');
+                } else if (passwordInput.value.length < 8) {
+                    showError(passwordInput, passwordError, 'Password must be at least 8 characters');
+                } else {
+                    clearError(passwordInput, passwordError);
+                }
+            });
+
+            passwordInput.addEventListener('input', () => {
+                if (passwordInput.value.trim() && passwordInput.value.length >= 8) {
+                    clearError(passwordInput, passwordError);
+                }
+            });
+
+            form.addEventListener('submit', (e) => {
+                let isValid = true;
+
+                if (!emailInput.value.trim()) {
+                    showError(emailInput, emailError, 'Email is required');
+                    isValid = false;
+                } else if (!validateEmail(emailInput.value)) {
+                    showError(emailInput, emailError, 'Please enter a valid email address');
+                    isValid = false;
+                }
+
+                if (!passwordInput.value.trim()) {
+                    showError(passwordInput, passwordError, 'Password is required');
+                    isValid = false;
+                } else if (passwordInput.value.length < 8) {
+                    showError(passwordInput, passwordError, 'Password must be at least 8 characters');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                LoadingScreen.show('Signing In', 'Please wait...');
+            });
+
+            document.getElementById('forgotBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                LoadingScreen.show('Redirecting', 'Taking you to password recovery...');
+                setTimeout(() => {
+                    window.location.href = '{{ route("password.request", [], false) }}';
+                }, 300);
+            });
+        })();
     </script>
 
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Authentication/assets/js/loader.js'])
 @if (session('verification_wait') && session()->has('sk_official_email_verification_pending'))
     <script>window.location.replace("{{ route('sk_official.verification.wait', [], false) }}");</script>
