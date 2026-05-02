@@ -17,43 +17,69 @@
 
 <main class="main-content">
 <div class="sports-application-container">
-    <div class="form-header">
-        <div>
-            <h2>Sports Application Management</h2>
-            <p class="subtitle">Manage sports program applications and approvals</p>
-        </div>
-        <button type="button" id="createProgramBtn" class="btn btn-create-program">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Create Sports Program
-        </button>
-    </div>
-
-    <!-- Applications Table -->
-    <div class="applications-table-section">
-        <div class="table-header">
-            <h3>Pending Applications</h3>
-            <div class="table-filters">
-                <input type="text" id="searchApplications" class="search-input" placeholder="Search applications...">
+    <!-- Two Column Layout -->
+    <div style="display: grid; grid-template-columns: 350px 1fr; gap: 24px; margin-bottom: 24px;">
+        
+        <!-- Left Side: Created Programs Table -->
+        <div class="created-programs-section">
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 style="font-size: 16px; font-weight: 700; color: #1f2937; margin: 0;">Created Sports Programs</h3>
+                    <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">View and manage your programs</p>
+                </div>
+                <div class="programs-table-wrapper" style="margin-top: 16px;">
+                    <table class="programs-mini-table">
+                        <thead>
+                            <tr>
+                                <th>Program</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="createdProgramsTableBody">
+                            <!-- Sample data -->
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 600; font-size: 13px; color: #111827;">Basketball Tournament 2026</div>
+                                    <div style="font-size: 11px; color: #6b7280;">4 Divisions</div>
+                                </td>
+                                <td style="font-size: 12px; color: #4b5563;">May 15, 2026</td>
+                                <td>
+                                    <button type="button" class="btn-view-program" data-program-id="1" title="View Details">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 600; font-size: 13px; color: #111827;">Volleyball League</div>
+                                    <div style="font-size: 11px; color: #6b7280;">2 Divisions</div>
+                                </td>
+                                <td style="font-size: 12px; color: #4b5563;">Jun 10, 2026</td>
+                                <td>
+                                    <button type="button" class="btn-view-program" data-program-id="2" title="View Details">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div class="table-wrapper">
-            <table class="applications-table">
-                <thead>
-                    <tr>
-                        <th>Applicant Name</th>
-                        <th>Sport</th>
-                        <th>Division</th>
-                        <th>Contact</th>
-                        <th>Date Applied</th>
-                        <th>Payment Status</th>
-                        <th>Status</th>
-                        <th class="col-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="applicationsTableBody">
-                    <!-- Sample data will be populated here -->
-                </tbody>
-            </table>
+
+        <!-- Right Side: Create Button -->
+        <div>
+            <div class="form-header">
+                <div>
+                    <h2>Sports Application Management</h2>
+                    <p class="subtitle">Create and manage sports program applications</p>
+                </div>
+                <button type="button" id="createProgramBtn" class="btn btn-create-program">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Create Sports Program
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -62,18 +88,54 @@
 <div class="modal-overlay" id="createProgramModal" style="display: none;">
     <div class="modal-box modal-large" id="createProgramModalBox">
         <div class="modal-header">
-            <h3>Sports Program Application Form</h3>
+            <h3>Create Sports Program</h3>
             <button type="button" class="modal-close" id="closeProgramModal">&times;</button>
         </div>
         <div class="modal-body">
-            <p class="modal-subtitle">Configure your sports program details and requirements</p>
+            <p class="modal-subtitle">Fill out the form below to create a new sports program</p>
             
             <form id="sportsApplicationForm" class="sports-form">
                 
+                <!-- Program Details Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                        Program Details
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="programName">Program Name <span class="required">*</span></label>
+                        <input type="text" id="programName" name="program_name" class="form-control" 
+                            placeholder="e.g., Basketball Tournament 2026" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startDate">Start Date <span class="required">*</span></label>
+                            <input type="date" id="startDate" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date <span class="required">*</span></label>
+                            <input type="date" id="endDate" name="end_date" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime">Start Time <span class="required">*</span></label>
+                            <input type="time" id="startTime" name="start_time" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime">End Time <span class="required">*</span></label>
+                            <input type="time" id="endTime" name="end_time" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Sports Selection -->
                 <div class="form-section">
                     <h3 class="section-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
                         Sports Selection
                     </h3>
                     <div class="form-group">
@@ -82,6 +144,8 @@
                             <option value="">— Select Sport —</option>
                             <option value="basketball">Basketball</option>
                             <option value="volleyball">Volleyball</option>
+                            <option value="badminton">Badminton</option>
+                            <option value="football">Football</option>
                             <option value="other">Other</option>
                         </select>
                     </div>
@@ -95,33 +159,58 @@
                 <!-- Announcement Section -->
                 <div class="form-section">
                     <h3 class="section-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>
-                        Announcement Section
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>
+                        Announcement / Instructions
                     </h3>
                     <div class="form-group">
-                        <label for="announcement">Program Announcement / Instructions</label>
-                        <textarea id="announcement" name="announcement" class="form-control" rows="5" 
-                            placeholder="Enter instructions about required submissions, general guidelines for participants, and other important information..."></textarea>
+                        <label for="announcement">Program Announcement</label>
+                        <textarea id="announcement" name="announcement" class="form-control" rows="4" 
+                            placeholder="Enter instructions, guidelines, and important information for participants..."></textarea>
                         <small class="form-text">This will be displayed to participants when they view the application form.</small>
                     </div>
                 </div>
 
-                <!-- Dynamic Requirements / Application Form -->
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        Requirements / Application Form
-                    </h3>
-                    <p class="instruction-text">Please input the required questions for this sports application form.</p>
+                <!-- Dynamic Question Builder (Google Form Style) -->
+                <div class="form-section question-builder-section">
+                    <div class="section-title-with-action">
+                        <h3 class="section-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            Application Form Questions
+                        </h3>
+                        <button type="button" id="addQuestionBtn" class="btn btn-add-question-inline">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add Question
+                        </button>
+                    </div>
+                    <p class="instruction-text">Build your custom application form by adding questions below.</p>
                     
-                    <div id="questionsContainer">
+                    <div id="questionsContainer" class="questions-list">
                         <!-- Dynamic questions will be added here -->
                     </div>
 
+                    <div class="empty-state" id="emptyQuestionsState">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+                        <p>No questions added yet</p>
+                        <small>Click "Add Question" to start building your form</small>
+                    </div>
+                </div>
+
+                <!-- Requirements Section (Google Form Style) -->
+                <div class="form-section requirements-section">
+                    <h3 class="section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                        Requirements for Sports Application
+                    </h3>
+                    <p class="instruction-text">Specify the documents and requirements participants must submit.</p>
+                    
+                    <div id="requirementsContainer">
+                        <!-- Dynamic requirements will be added here -->
+                    </div>
+
                     <div class="question-actions">
-                        <button type="button" id="addQuestionBtn" class="btn btn-add-question">
+                        <button type="button" id="addRequirementBtn" class="btn btn-add-question">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Add Question
+                            Add Requirement
                         </button>
                     </div>
                 </div>
@@ -134,7 +223,7 @@
                             Preview Form
                         </button>
                         <button type="button" class="btn btn-outline" id="cancelProgramBtn">Cancel</button>
-                        <button type="submit" class="btn btn-save">Save Program</button>
+                        <button type="submit" class="btn btn-save">Create Program</button>
                     </div>
                 </div>
 
@@ -233,6 +322,19 @@
     </div>
 </div>
 
+<!-- View Program Details Modal -->
+<div class="view-program-modal-overlay" id="viewProgramModal" style="display: none;">
+    <div class="view-program-modal">
+        <div class="view-program-modal-header">
+            <h3>Program Details</h3>
+            <button type="button" class="modal-close" id="closeViewProgramModal">&times;</button>
+        </div>
+        <div class="view-program-modal-body" id="viewProgramContent">
+            <!-- Program details will be inserted here -->
+        </div>
+    </div>
+</div>
+
 <!-- Question Template (Hidden) -->
 <template id="questionTemplate">
     <div class="question-item">
@@ -271,6 +373,49 @@
                         <option value="optional">Optional</option>
                     </select>
                 </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Requirement Template (Hidden) -->
+<template id="requirementTemplate">
+    <div class="requirement-item">
+        <div class="requirement-header">
+            <span class="requirement-number"></span>
+            <div class="requirement-actions">
+                <button type="button" class="btn-remove-requirement" title="Delete">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="requirement-body">
+            <div class="form-group">
+                <label>Requirement Name</label>
+                <input type="text" class="form-control requirement-name" name="requirements[][name]" 
+                    placeholder="e.g., Birth Certificate, Medical Certificate, ID Photo">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>File Type</label>
+                    <select class="form-control requirement-type" name="requirements[][type]">
+                        <option value="pdf">PDF Document</option>
+                        <option value="image">Image (JPG, PNG)</option>
+                        <option value="any">Any File Type</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Required</label>
+                    <select class="form-control requirement-required" name="requirements[][required]">
+                        <option value="required">Required</option>
+                        <option value="optional">Optional</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description / Instructions</label>
+                <textarea class="form-control requirement-description" name="requirements[][description]" rows="2" 
+                    placeholder="Add any specific instructions for this requirement..."></textarea>
             </div>
         </div>
     </div>

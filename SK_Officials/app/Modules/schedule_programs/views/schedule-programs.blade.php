@@ -212,55 +212,7 @@
             </div>
         </section>
 
-        <!-- ── Table ── -->
-        <section class="page-content-section" id="spProgramSection" style="display: none;">
-            <div class="section-heading-row" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-                <div>
-                    <h2 class="section-title" id="spProgramSectionTitle">Program Schedules</h2>
-                    <p class="section-subtitle" id="spProgramSectionSubtitle" style="margin-top:4px;"></p>
-                </div>
-                <a href="/sports-application-form" id="spSportsLink" class="sp-scholarship-link" style="display:none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-                    Go to Sports Application Form
-                </a>
-            </div>
-
-            <!-- Activities list for the selected committee -->
-            <div id="spActivitiesPanel" style="display:none;margin-bottom:18px;">
-                <div class="sp-activities-list" id="spActivitiesList"></div>
-            </div>
-
-            <div class="table-card">
-                <div class="table-wrapper">
-                    <table class="sp-table">
-                        <thead>
-                            <tr>
-                                <th>Program Name</th>
-                                <th>Activity Type</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Venue</th>
-                                <th>Status</th>
-                                <th class="col-actions">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="spTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Pagination -->
-            <div class="pagination-container">
-                <div class="pagination-info">
-                    <span id="spPaginationInfo">No records found</span>
-                </div>
-                <div class="pagination-controls">
-                    <button type="button" id="spPrevBtn" class="pagination-btn" disabled>Previous</button>
-                    <div class="pagination-numbers" id="spPageNumbers"></div>
-                    <button type="button" id="spNextBtn" class="pagination-btn">Next</button>
-                </div>
-            </div>
-        </section>
+        <!-- Old Sports Development table section removed - now using Approved Sports Applications table only -->
 
         <!-- ── Passed Scholars Table (shown on click of education card) ── -->
         <section class="page-content-section" id="spPassedSection" style="display:none;margin-top:20px;">

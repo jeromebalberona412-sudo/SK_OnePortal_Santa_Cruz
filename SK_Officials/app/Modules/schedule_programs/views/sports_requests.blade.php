@@ -125,7 +125,7 @@
      Create Sports Program Modal
      ══════════════════════════════════════════════════════════════ -->
 <div class="sports-modal-overlay" id="createProgramModal" style="display:none;">
-    <div class="sports-modal-box sports-modal-md">
+    <div class="sports-modal-box sports-modal-form-builder">
         <div class="sports-modal-header">
             <h3>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -133,36 +133,82 @@
             </h3>
             <button type="button" class="sports-modal-close" id="createProgramClose">&times;</button>
         </div>
-        <div class="sports-modal-body">
-            <form id="programForm">
-                <div class="sports-field">
-                    <label for="programName">Program Name <span class="sports-req">*</span></label>
-                    <input type="text" id="programName" class="sports-input" placeholder="e.g., Basketball Tournament 2026" required>
+
+        <div class="sports-modal-body spfb-modal-body">
+
+            <!-- ── Section 1: Program Basic Fields ── -->
+            <div class="spfb-section-card spfb-section-basic">
+                <div class="spfb-section-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                    Program Details
                 </div>
-                
-                <div class="sports-field-row">
+
+                <div class="sports-field" style="margin-bottom:14px;">
+                    <label for="programName">Program Name <span class="sports-req">*</span></label>
+                    <input type="text" id="programName" class="sports-input" placeholder="e.g., Basketball Tournament 2026" maxlength="150">
+                </div>
+
+                <div class="sports-field-row" style="margin-bottom:14px;">
                     <div class="sports-field">
                         <label for="startDate">Start Date <span class="sports-req">*</span></label>
-                        <input type="date" id="startDate" class="sports-input" required>
+                        <div class="spfb-date-wrap">
+                            <input type="text" id="startDate" class="sports-input spfb-date-input" placeholder="mm/dd/yyyy" maxlength="10" autocomplete="off">
+                            <svg class="spfb-date-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                        </div>
                     </div>
                     <div class="sports-field">
                         <label for="endDate">End Date <span class="sports-req">*</span></label>
-                        <input type="date" id="endDate" class="sports-input" required>
+                        <div class="spfb-date-wrap">
+                            <input type="text" id="endDate" class="sports-input spfb-date-input" placeholder="mm/dd/yyyy" maxlength="10" autocomplete="off">
+                            <svg class="spfb-date-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                        </div>
                     </div>
                 </div>
 
                 <div class="sports-field-row">
                     <div class="sports-field">
                         <label for="startTime">Start Time <span class="sports-req">*</span></label>
-                        <input type="time" id="startTime" class="sports-input" value="08:00" required>
+                        <div class="spfb-time-wrap">
+                            <input type="text" id="startTime" class="sports-input spfb-time-input" placeholder="e.g., 08:00 AM" maxlength="8" autocomplete="off">
+                            <svg class="spfb-time-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
                     </div>
                     <div class="sports-field">
                         <label for="endTime">End Time <span class="sports-req">*</span></label>
-                        <input type="time" id="endTime" class="sports-input" value="17:00" required>
+                        <div class="spfb-time-wrap">
+                            <input type="text" id="endTime" class="sports-input spfb-time-input" placeholder="e.g., 05:00 PM" maxlength="8" autocomplete="off">
+                            <svg class="spfb-time-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- ── Section 2: Question Builder ── -->
+            <div class="spfb-section-card spfb-section-builder">
+                <div class="spfb-section-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Application Form Builder
+                    <span class="spfb-badge" id="spfbQuestionCount">0 questions</span>
+                </div>
+                <p class="spfb-builder-hint">Build the application form that Kabataan members will fill out when applying for this program.</p>
+
+                <!-- Question List -->
+                <div id="spfbQuestionList" class="spfb-question-list">
+                    <div class="spfb-empty-state" id="spfbEmptyState">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <p>No questions yet. Click <strong>Add Question</strong> to start building your form.</p>
+                    </div>
+                </div>
+
+                <!-- Add Question Button -->
+                <button type="button" class="spfb-add-question-btn" id="spfbAddQuestionBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Question
+                </button>
+            </div>
+
+        </div><!-- /.spfb-modal-body -->
+
         <div class="sports-modal-footer">
             <button type="button" class="sports-btn sports-btn-outline" id="programCancelBtn">Cancel</button>
             <button type="button" class="sports-btn sports-btn-primary" id="programSaveBtn">

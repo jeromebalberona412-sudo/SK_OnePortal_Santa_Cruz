@@ -2,6 +2,61 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     
+    // Sample Created Programs Data
+    const SAMPLE_PROGRAMS = [
+        {
+            id: 1,
+            programName: 'Basketball Tournament 2026',
+            startDate: '2026-05-15',
+            endDate: '2026-05-20',
+            startTime: '08:00',
+            endTime: '17:00',
+            sport: 'basketball',
+            announcement: 'All participants must bring their own jerseys and equipment. Registration fee is ₱500 per team.',
+            questions: [
+                { label: 'Team Name', type: 'text', required: 'required' },
+                { label: 'Team Captain Name', type: 'text', required: 'required' },
+                { label: 'Contact Number', type: 'phone', required: 'required' },
+                { label: 'Number of Players', type: 'number', required: 'required' }
+            ],
+            requirements: [
+                { name: 'Team Photo', type: 'image', required: 'required', description: 'Submit a team photo with all members' },
+                { name: 'Medical Certificate', type: 'pdf', required: 'required', description: 'Valid medical certificate for each player' },
+                { name: 'Waiver Form', type: 'pdf', required: 'required', description: 'Signed waiver form by team captain' }
+            ],
+            divisions: 4,
+            createdAt: 'May 15, 2026'
+        },
+        {
+            id: 2,
+            programName: 'Volleyball League',
+            startDate: '2026-06-10',
+            endDate: '2026-06-15',
+            startTime: '09:00',
+            endTime: '16:00',
+            sport: 'volleyball',
+            announcement: 'Open to all youth ages 15-30. Bring valid ID for verification.',
+            questions: [
+                { label: 'Full Name', type: 'text', required: 'required' },
+                { label: 'Age', type: 'number', required: 'required' },
+                { label: 'Email Address', type: 'email', required: 'required' }
+            ],
+            requirements: [
+                { name: 'Valid ID', type: 'image', required: 'required', description: 'Government-issued ID or school ID' },
+                { name: 'Birth Certificate', type: 'pdf', required: 'optional', description: 'For age verification if needed' }
+            ],
+            divisions: 2,
+            createdAt: 'Jun 10, 2026'
+        }
+    ];
+
+    // Load programs from localStorage or use sample data
+    let createdPrograms = JSON.parse(localStorage.getItem('created_sports_programs') || 'null');
+    if (!createdPrograms || createdPrograms.length === 0) {
+        createdPrograms = [...SAMPLE_PROGRAMS];
+        localStorage.setItem('created_sports_programs', JSON.stringify(createdPrograms));
+    }
+    
     // Sample Data - 8 pending applications
     const SAMPLE_APPLICATIONS = [
         {
@@ -130,13 +185,239 @@ document.addEventListener('DOMContentLoaded', function() {
     const addQuestionBtn = document.getElementById('addQuestionBtn');
     const questionsContainer = document.getElementById('questionsContainer');
     const questionTemplate = document.getElementById('questionTemplate');
+    const addRequirementBtn = document.getElementById('addRequirementBtn');
+    const requirementsContainer = document.getElementById('requirementsContainer');
+    const requirementTemplate = document.getElementById('requirementTemplate');
 
     let questionCounter = 0;
+    let requirementCounter = 0;
     let isMaximized = false;
     let currentApplicationId = null;
 
     // Initialize
     renderApplicationsTable();
+    renderCreatedProgramsTable();
+
+    // Render Created Programs Table
+    function renderCreatedProgramsTable() {
+        const tbody = document.getElementById('createdProgramsTableBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = createdPrograms.map(program => {
+            const date = new Date(program.startDate).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            return `
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; font-size: 13px; color: #111827;">${program.programName}</div>
+                        <div style="font-size: 11px; color: #6b7280;">${program.divisions || 0} Divisions</div>
+                    </td>
+                    <td style="font-size: 12px; color: #4b5563;">${date}</td>
+                    <td>
+                        <button type="button" class="btn-view-program" data-program-id="${program.id}" title="View Details">
+                            View
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Attach event listeners to View buttons
+        tbody.querySelectorAll('.btn-view-program').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const programId = parseInt(this.getAttribute('data-program-id'));
+                openViewProgramModal(programId);
+            });
+        });
+    }
+
+    // Open View Program Modal
+    function openViewProgramModal(programId) {
+        const program = createdPrograms.find(p => p.id === programId);
+        if (!program) return;
+
+        const viewProgramModal = document.getElementById('viewProgramModal');
+        const viewProgramContent = document.getElementById('viewProgramContent');
+        
+        if (!viewProgramModal || !viewProgramContent) return;
+
+        // Format dates and times
+        const startDate = new Date(program.startDate).toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        const endDate = new Date(program.endDate).toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        
+        const formatTime = (time) => {
+            const [hours, minutes] = time.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        };
+
+        const sportName = program.sport === 'other' 
+            ? (program.otherSport || 'Other Sport')
+            : program.sport.charAt(0).toUpperCase() + program.sport.slice(1);
+
+        // Build questions HTML
+        let questionsHTML = '';
+        if (program.questions && program.questions.length > 0) {
+            questionsHTML = program.questions.map((q, index) => {
+                const typeLabels = {
+                    'text': 'Text Input',
+                    'textarea': 'Long Text',
+                    'file': 'File Upload',
+                    'email': 'Email',
+                    'number': 'Number',
+                    'phone': 'Phone Number'
+                };
+                
+                return `
+                    <div class="program-question-item">
+                        <div class="program-question-number">Question ${index + 1}</div>
+                        <div class="program-question-label">${q.label}</div>
+                        <div class="program-question-meta">
+                            <span class="program-question-type">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                ${typeLabels[q.type] || q.type}
+                            </span>
+                            <span class="program-question-required">
+                                ${q.required === 'required' 
+                                    ? '<span class="required-indicator">● Required</span>' 
+                                    : '○ Optional'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            questionsHTML = '<p style="color: #9ca3af; font-style: italic;">No questions added</p>';
+        }
+
+        // Build requirements HTML
+        let requirementsHTML = '';
+        if (program.requirements && program.requirements.length > 0) {
+            requirementsHTML = program.requirements.map((req, index) => {
+                const typeLabels = {
+                    'pdf': 'PDF Document',
+                    'image': 'Image (JPG, PNG)',
+                    'any': 'Any File Type'
+                };
+                
+                return `
+                    <div class="program-question-item">
+                        <div class="program-question-number">Requirement ${index + 1}</div>
+                        <div class="program-question-label">${req.name}</div>
+                        ${req.description ? `<p style="font-size: 12px; color: #6b7280; margin: 4px 0 8px 0;">${req.description}</p>` : ''}
+                        <div class="program-question-meta">
+                            <span class="program-question-type">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                ${typeLabels[req.type] || req.type}
+                            </span>
+                            <span class="program-question-required">
+                                ${req.required === 'required' 
+                                    ? '<span class="required-indicator">● Required</span>' 
+                                    : '○ Optional'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            requirementsHTML = '<p style="color: #9ca3af; font-style: italic;">No requirements added</p>';
+        }
+
+        viewProgramContent.innerHTML = `
+            <div class="program-detail-section">
+                <div class="program-detail-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    Program Information
+                </div>
+                <div class="program-detail-row">
+                    <div class="program-detail-label">Program Name:</div>
+                    <div class="program-detail-value">${program.programName}</div>
+                </div>
+                <div class="program-detail-row">
+                    <div class="program-detail-label">Sport:</div>
+                    <div class="program-detail-value">${sportName}</div>
+                </div>
+                <div class="program-detail-row">
+                    <div class="program-detail-label">Start Date:</div>
+                    <div class="program-detail-value">${startDate}</div>
+                </div>
+                <div class="program-detail-row">
+                    <div class="program-detail-label">End Date:</div>
+                    <div class="program-detail-value">${endDate}</div>
+                </div>
+                <div class="program-detail-row">
+                    <div class="program-detail-label">Time:</div>
+                    <div class="program-detail-value">${formatTime(program.startTime)} - ${formatTime(program.endTime)}</div>
+                </div>
+            </div>
+
+            ${program.announcement ? `
+            <div class="program-detail-section">
+                <div class="program-detail-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>
+                    Announcement / Instructions
+                </div>
+                <div class="program-announcement-box">
+                    <div class="program-announcement-text">${program.announcement}</div>
+                </div>
+            </div>
+            ` : ''}
+
+            <div class="program-detail-section">
+                <div class="program-detail-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Application Form Questions
+                </div>
+                <div class="program-questions-list">
+                    ${questionsHTML}
+                </div>
+            </div>
+
+            <div class="program-detail-section">
+                <div class="program-detail-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    Requirements for Application
+                </div>
+                <div class="program-questions-list">
+                    ${requirementsHTML}
+                </div>
+            </div>
+        `;
+
+        viewProgramModal.style.display = 'flex';
+    }
+
+    // Close View Program Modal
+    const closeViewProgramModal = document.getElementById('closeViewProgramModal');
+    if (closeViewProgramModal) {
+        closeViewProgramModal.addEventListener('click', function() {
+            document.getElementById('viewProgramModal').style.display = 'none';
+        });
+    }
+
+    // Close modal when clicking outside
+    const viewProgramModal = document.getElementById('viewProgramModal');
+    if (viewProgramModal) {
+        viewProgramModal.addEventListener('click', function(e) {
+            if (e.target === viewProgramModal) {
+                viewProgramModal.style.display = 'none';
+            }
+        });
+    }
 
     // Create Program Button
     if (createProgramBtn) {
@@ -182,6 +463,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Add Requirement Button
+    if (addRequirementBtn) {
+        addRequirementBtn.addEventListener('click', function() {
+            addRequirement();
+        });
+    }
+
     // Function to Add Question
     function addQuestion(data = null) {
         questionCounter++;
@@ -212,6 +500,38 @@ document.addEventListener('DOMContentLoaded', function() {
         questionsContainer.appendChild(clone);
     }
 
+    // Function to Add Requirement
+    function addRequirement(data = null) {
+        requirementCounter++;
+        
+        const clone = requirementTemplate.content.cloneNode(true);
+        const requirementItem = clone.querySelector('.requirement-item');
+        
+        const requirementNumber = clone.querySelector('.requirement-number');
+        requirementNumber.textContent = `Requirement ${requirementCounter}`;
+        
+        const requirementName = clone.querySelector('.requirement-name');
+        const requirementType = clone.querySelector('.requirement-type');
+        const requirementRequired = clone.querySelector('.requirement-required');
+        const requirementDescription = clone.querySelector('.requirement-description');
+        const removeBtn = clone.querySelector('.btn-remove-requirement');
+
+        if (data) {
+            requirementName.value = data.name || '';
+            requirementType.value = data.type || 'pdf';
+            requirementRequired.value = data.required || 'required';
+            requirementDescription.value = data.description || '';
+        }
+
+        removeBtn.addEventListener('click', function() {
+            requirementItem.remove();
+            updateRequirementNumbers();
+            showToast('Requirement removed successfully', 'success');
+        });
+
+        requirementsContainer.appendChild(clone);
+    }
+
     // Update Question Numbers
     function updateQuestionNumbers() {
         const questions = questionsContainer.querySelectorAll('.question-item');
@@ -220,6 +540,16 @@ document.addEventListener('DOMContentLoaded', function() {
             numberSpan.textContent = `Question ${index + 1}`;
         });
         questionCounter = questions.length;
+    }
+
+    // Update Requirement Numbers
+    function updateRequirementNumbers() {
+        const requirements = requirementsContainer.querySelectorAll('.requirement-item');
+        requirements.forEach((requirement, index) => {
+            const numberSpan = requirement.querySelector('.requirement-number');
+            numberSpan.textContent = `Requirement ${index + 1}`;
+        });
+        requirementCounter = requirements.length;
     }
 
     // Preview Form Button
@@ -328,7 +658,77 @@ document.addEventListener('DOMContentLoaded', function() {
         sportsForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            showToast('Sports program saved successfully!', 'success');
+            // Collect form data
+            const programName = document.getElementById('programName').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const sport = sportsTypeSelect.value;
+            const otherSport = document.getElementById('otherSport').value.trim();
+            const announcement = document.getElementById('announcement').value.trim();
+            
+            // Collect questions
+            const questions = [];
+            const questionItems = questionsContainer.querySelectorAll('.question-item');
+            questionItems.forEach(item => {
+                const label = item.querySelector('.question-label').value.trim();
+                const type = item.querySelector('.question-type').value;
+                const required = item.querySelector('.question-required').value;
+                
+                if (label) {
+                    questions.push({ label, type, required });
+                }
+            });
+
+            // Collect requirements
+            const requirements = [];
+            const requirementItems = requirementsContainer.querySelectorAll('.requirement-item');
+            requirementItems.forEach(item => {
+                const name = item.querySelector('.requirement-name').value.trim();
+                const type = item.querySelector('.requirement-type').value;
+                const required = item.querySelector('.requirement-required').value;
+                const description = item.querySelector('.requirement-description').value.trim();
+                
+                if (name) {
+                    requirements.push({ name, type, required, description });
+                }
+            });
+
+            // Calculate divisions (for display purposes)
+            const divisions = questions.length > 0 ? Math.ceil(questions.length / 2) : 0;
+
+            // Create new program object
+            const newProgram = {
+                id: Date.now(), // Simple ID generation
+                programName,
+                startDate,
+                endDate,
+                startTime,
+                endTime,
+                sport,
+                otherSport: sport === 'other' ? otherSport : '',
+                announcement,
+                questions,
+                requirements,
+                divisions,
+                createdAt: new Date().toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                })
+            };
+
+            // Add to programs array
+            createdPrograms.push(newProgram);
+            
+            // Save to localStorage
+            localStorage.setItem('created_sports_programs', JSON.stringify(createdPrograms));
+            
+            // Re-render the created programs table
+            renderCreatedProgramsTable();
+            
+            showToast('Sports program created successfully!', 'success');
             createProgramModal.style.display = 'none';
             resetForm();
         });
@@ -338,7 +738,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function resetForm() {
         if (sportsForm) sportsForm.reset();
         questionsContainer.innerHTML = '';
+        requirementsContainer.innerHTML = '';
         questionCounter = 0;
+        requirementCounter = 0;
         otherSportField.style.display = 'none';
     }
 

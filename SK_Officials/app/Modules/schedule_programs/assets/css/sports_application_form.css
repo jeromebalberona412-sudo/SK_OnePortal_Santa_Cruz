@@ -1622,6 +1622,318 @@ select.preview-input {
     color: #374151;
 }
 
+/* Created Programs Section */
+.section-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.section-header {
+    margin-bottom: 16px;
+}
+
+.programs-mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.programs-mini-table thead {
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.programs-mini-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.programs-mini-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.programs-mini-table tbody tr {
+    transition: background 0.2s;
+}
+
+.programs-mini-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.btn-view-program {
+    background: #2c2c3e;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-view-program:hover {
+    background: #1a1a28;
+    transform: translateY(-1px);
+}
+
+.btn-view-program svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Requirements Section (Google Form Style) */
+.requirements-section {
+    background: #f9fafb;
+    border-left: 4px solid #3b82f6;
+}
+
+#requirementsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.requirement-item {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.requirement-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.requirement-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.requirement-number {
+    font-weight: 700;
+    color: #3b82f6;
+    font-size: 16px;
+}
+
+.requirement-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-remove-requirement {
+    background: transparent;
+    color: #6b7280;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-remove-requirement:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-remove-requirement svg {
+    width: 18px;
+    height: 18px;
+}
+
+.requirement-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.requirement-name,
+.requirement-type,
+.requirement-required,
+.requirement-description {
+    width: 100%;
+}
+
+/* View Program Details Modal */
+.view-program-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.view-program-modal {
+    background: #fff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.view-program-modal-header {
+    padding: 20px 24px;
+    border-bottom: 2px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9fafb;
+}
+
+.view-program-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c2c3e;
+}
+
+.view-program-modal-body {
+    padding: 24px;
+}
+
+.program-detail-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.program-detail-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.program-detail-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c2c3e;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.program-detail-title svg {
+    color: #2c2c3e;
+    flex-shrink: 0;
+}
+
+.program-detail-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.program-detail-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.program-detail-value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 500;
+}
+
+.program-announcement-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+.program-announcement-text {
+    font-size: 14px;
+    color: #1e3a8a;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.program-questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.program-question-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+
+.program-question-number {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.program-question-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.program-question-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.program-question-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.program-question-required {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.required-indicator {
+    color: #ef4444;
+    font-weight: 700;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .form-header {
@@ -1662,5 +1974,19 @@ select.preview-input {
         right: 12px;
         left: 12px;
         min-width: auto;
+    }
+
+    .program-detail-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .programs-mini-table {
+        font-size: 12px;
+    }
+
+    .programs-mini-table th,
+    .programs-mini-table td {
+        padding: 8px;
     }
 }

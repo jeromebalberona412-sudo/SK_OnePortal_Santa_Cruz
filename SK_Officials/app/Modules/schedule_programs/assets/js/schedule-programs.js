@@ -1,21 +1,185 @@
+// ── Education Activity Sample Data ────────────────────────────────────────
+const SP_EDUCATION_SAMPLE = {
+    'Support to ALS and RIC': [
+        {
+            last_name: 'Mendoza', first_name: 'Liza', middle_name: 'Cruz', suffix: '',
+            school_name: 'ALS Learning Center – Santa Cruz', school_address: 'Brgy. Poblacion, Santa Cruz, Laguna',
+            year_level: 'ALS Level 2', program_strand: 'Alternative Learning System (ALS)',
+            purpose: 'Learning Materials', approved_at: 'Feb 5, 2025',
+            purpose_list: ['Learning Materials'], purpose_others: '',
+            cor_certified: true, photo_id: true,
+        },
+        {
+            last_name: 'Ramos', first_name: 'Carlo', middle_name: 'Bautista', suffix: '',
+            school_name: 'RIC – Regional Interactive Center', school_address: 'Brgy. Calios, Santa Cruz, Laguna',
+            year_level: 'RIC Module 3', program_strand: 'Reading and Integrated Curriculum (RIC)',
+            purpose: 'Books / Equipments', approved_at: 'Feb 12, 2025',
+            purpose_list: ['Books / Equipments'], purpose_others: '',
+            cor_certified: true, photo_id: false,
+        },
+        {
+            last_name: 'Villanueva', first_name: 'Ana', middle_name: 'Santos', suffix: '',
+            school_name: 'ALS Learning Center – Santa Cruz', school_address: 'Brgy. Poblacion, Santa Cruz, Laguna',
+            year_level: 'ALS Level 1', program_strand: 'Alternative Learning System (ALS)',
+            purpose: 'Tuition Fees, Learning Materials', approved_at: 'Mar 1, 2025',
+            purpose_list: ['Tuition Fees', 'Learning Materials'], purpose_others: '',
+            cor_certified: false, photo_id: true,
+        },
+    ],
+    '150 Students for Educational Assistance': [
+        {
+            last_name: 'Reyes', first_name: 'Maria', middle_name: 'Santos', suffix: '',
+            school_name: 'Laguna State Polytechnic University',
+            school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
+            year_level: '2nd Year', program_strand: 'Bachelor of Secondary Education (BSED)',
+            purpose: 'Tuition Fees, Books / Equipments', approved_at: 'Jan 15, 2025',
+            purpose_list: ['Tuition Fees', 'Books / Equipments'], purpose_others: '',
+            cor_certified: true, photo_id: true,
+        },
+        {
+            last_name: 'Dela Cruz', first_name: 'Jose', middle_name: 'Ramos', suffix: 'Jr.',
+            school_name: 'Laguna State Polytechnic University',
+            school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
+            year_level: '3rd Year', program_strand: 'Bachelor of Science in Information Technology (BSIT)',
+            purpose: 'Tuition Fees, Living Expenses', approved_at: 'Jan 25, 2025',
+            purpose_list: ['Tuition Fees', 'Living Expenses'], purpose_others: '',
+            cor_certified: true, photo_id: true,
+        },
+        {
+            last_name: 'Bautista', first_name: 'Kristine', middle_name: 'Flores', suffix: '',
+            school_name: 'De La Salle University – Dasmariñas',
+            school_address: 'Brgy. Salitran, Dasmariñas, Cavite 4114',
+            year_level: '2nd Year', program_strand: 'Bachelor of Science in Nursing (BSN)',
+            purpose: 'Tuition Fees, Books / Equipments', approved_at: 'Feb 10, 2025',
+            purpose_list: ['Tuition Fees', 'Books / Equipments'], purpose_others: '',
+            cor_certified: true, photo_id: true,
+        },
+        {
+            last_name: 'Santos', first_name: 'Mark', middle_name: 'Villanueva', suffix: '',
+            school_name: 'University of the Philippines Los Baños',
+            school_address: 'Brgy. College, Los Baños, Laguna 4031',
+            year_level: '4th Year', program_strand: 'Bachelor of Science in Computer Science (BSCS)',
+            purpose: 'Tuition Fees, Living Expenses', approved_at: 'Feb 20, 2025',
+            purpose_list: ['Tuition Fees', 'Living Expenses'], purpose_others: '',
+            cor_certified: true, photo_id: false,
+        },
+        {
+            last_name: 'Lim', first_name: 'Angela', middle_name: 'Cruz', suffix: '',
+            school_name: 'Santa Cruz National High School',
+            school_address: 'Brgy. Poblacion, Santa Cruz, Laguna 4009',
+            year_level: 'Grade 12', program_strand: 'Science, Technology, Engineering and Mathematics (STEM)',
+            purpose: 'Books / Equipments', approved_at: 'Mar 5, 2025',
+            purpose_list: ['Books / Equipments'], purpose_others: '',
+            cor_certified: false, photo_id: true,
+        },
+    ],
+    'Support to Elementary and Daycare': [
+        {
+            last_name: 'Garcia', first_name: 'Sofia', middle_name: 'Lopez', suffix: '',
+            school_name: 'Calios Elementary School',
+            school_address: 'Brgy. Calios, Santa Cruz, Laguna',
+            year_level: 'Grade 3', program_strand: 'Elementary Education',
+            purpose: 'School Supplies', approved_at: 'Jan 20, 2025',
+            purpose_list: ['School Supplies'], purpose_others: '',
+            cor_certified: true, photo_id: true,
+        },
+        {
+            last_name: 'Torres', first_name: 'Miguel', middle_name: 'Reyes', suffix: '',
+            school_name: 'Calios Daycare Center',
+            school_address: 'Brgy. Calios, Santa Cruz, Laguna',
+            year_level: 'Kinder 2', program_strand: 'Early Childhood Education',
+            purpose: 'School Supplies, Books / Equipments', approved_at: 'Jan 28, 2025',
+            purpose_list: ['School Supplies', 'Books / Equipments'], purpose_others: '',
+            cor_certified: true, photo_id: false,
+        },
+        {
+            last_name: 'Flores', first_name: 'Isabella', middle_name: 'Navarro', suffix: '',
+            school_name: 'Calios Elementary School',
+            school_address: 'Brgy. Calios, Santa Cruz, Laguna',
+            year_level: 'Grade 5', program_strand: 'Elementary Education',
+            purpose: 'Tuition Fees, School Supplies', approved_at: 'Feb 8, 2025',
+            purpose_list: ['Tuition Fees', 'School Supplies'], purpose_others: '',
+            cor_certified: false, photo_id: true,
+        },
+    ],
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeSchedulePrograms();
     initializeCommitteeCards();
+
+    // ── "View Passed Scholars" standalone button ──────────────────────────
+    const showPassedBtn = document.getElementById('spShowPassedBtn');
+    if (showPassedBtn) {
+        showPassedBtn.addEventListener('click', () => {
+            // Hide sports section if visible
+            const sportsSection = document.getElementById('spSportsSection');
+            if (sportsSection) sportsSection.style.display = 'none';
+
+            // Combine all education sample records
+            const allRecords = [].concat(
+                SP_EDUCATION_SAMPLE['Support to ALS and RIC'] || [],
+                SP_EDUCATION_SAMPLE['150 Students for Educational Assistance'] || [],
+                SP_EDUCATION_SAMPLE['Support to Elementary and Daycare'] || []
+            );
+
+            // Update section title
+            const titleEl    = document.getElementById('spPassedSectionTitle');
+            const subtitleEl = document.getElementById('spPassedSectionSubtitle');
+            if (titleEl)    titleEl.textContent    = 'Passed Scholars';
+            if (subtitleEl) subtitleEl.textContent = 'All approved and passed scholars across all education activities.';
+
+            // Render table rows
+            const tbody = document.getElementById('spPassedTableBody');
+            if (tbody) {
+                tbody.innerHTML = allRecords.map((r, i) => {
+                    const fullName = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+                    return `
+                    <tr>
+                        <td style="text-align:center;font-weight:600;">${fullName}</td>
+                        <td style="text-align:center;font-size:12px;">${r.school_name || '—'}</td>
+                        <td style="text-align:center;">${r.year_level || '—'}</td>
+                        <td style="text-align:center;font-size:12px;">${r.program_strand || '—'}</td>
+                        <td style="text-align:center;font-size:12px;">${r.purpose || '—'}</td>
+                        <td style="text-align:center;">${r.approved_at || '—'}</td>
+                        <td style="text-align:center;"><span class="sp-status-badge completed">Passed</span></td>
+                        <td style="text-align:center;">
+                            <div class="sp-actions">
+                                <button class="sp-btn sp-btn-edit" data-passed-idx="${i}" style="background:#2c2c3e;">View</button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+
+                tbody.querySelectorAll('button[data-passed-idx]').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const idx = parseInt(this.getAttribute('data-passed-idx'), 10);
+                        if (allRecords[idx]) openPassedScholarModal(allRecords[idx]);
+                    });
+                });
+            }
+
+            // Show the section and scroll to it
+            const passedSection = document.getElementById('spPassedSection');
+            if (passedSection) {
+                passedSection.style.display = '';
+                setTimeout(() => passedSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+            }
+        });
+    }
 });
 
 // ── Committee Cards Handler ────────────────────────────────────────────────
 function initializeCommitteeCards() {
-    const committeeCards  = document.querySelectorAll('.committee-card');
-    const programSection  = document.getElementById('spProgramSection');
-    const passedSection   = document.getElementById('spPassedSection');
-    const sectionTitle    = document.getElementById('spProgramSectionTitle');
-    const sectionSubtitle = document.getElementById('spProgramSectionSubtitle');
-    const scholarshipLink = document.getElementById('spScholarshipLink');
-    const sportsLink      = document.getElementById('spSportsLink');
-    const activitiesPanel = document.getElementById('spActivitiesPanel');
-    const activitiesList  = document.getElementById('spActivitiesList');
+    const committeeCards     = document.querySelectorAll('.committee-card');
+    const activityBtnsPanel  = document.getElementById('spActivityButtonsPanel');
+    const activityPanelTitle = document.getElementById('spActivityPanelTitle');
+    const activityBtnGroup   = document.getElementById('spActivityBtnGroup');
+    const passedSection      = document.getElementById('spPassedSection');
+    const sportsSection      = document.getElementById('spSportsSection');
+    const scholarshipLink    = document.getElementById('spScholarshipLink');
 
-    // Committee metadata: title, activities, and optional link
+    // Committee metadata
     const committeeData = {
         education: {
             title: 'Equitable Access to Quality Education',
@@ -26,10 +190,12 @@ function initializeCommitteeCards() {
             ],
             link: '/scholarship',
             linkLabel: 'Go to Scholarship Application List',
+            type: 'education',
         },
         environment: {
             title: 'Environmental Protection',
             activities: ['Clean-Up Drive', 'Payroll for Laborer', 'Tree Planting'],
+            type: 'other',
         },
         disaster: {
             title: 'Disaster Risk Reduction and Resiliency',
@@ -37,10 +203,12 @@ function initializeCommitteeCards() {
                 'Training on Disaster Preparedness for Youth Volunteer Groups',
                 'Distribution of Relief Goods for KK Members',
             ],
+            type: 'other',
         },
         livelihood: {
             title: 'Youth Employment and Livelihood',
             activities: ['Livelihood Training', 'Food and Other Supplies'],
+            type: 'other',
         },
         health: {
             title: 'Health',
@@ -48,14 +216,17 @@ function initializeCommitteeCards() {
                 'Medicines / Medical Equipment',
                 'Campaigning Materials for Anti-Drugs (Leaflets, Posters, Tarpaulins)',
             ],
+            type: 'other',
         },
         'anti-drug': {
             title: 'Anti-Drug and Peace and Order',
             activities: ['Orientation for Anti-Drug and Physical Abuse', 'Foods and Accommodations'],
+            type: 'other',
         },
         gender: {
             title: 'Gender Sensitivity',
             activities: ['Orientation on GAD and VAWC', 'Foods and Accommodations'],
+            type: 'other',
         },
         feeding: {
             title: 'Feeding Program for KK Members',
@@ -63,12 +234,14 @@ function initializeCommitteeCards() {
                 'Improve health and physique of children',
                 'Youth and Children in the vicinity of Barangay',
             ],
+            type: 'other',
         },
         sports: {
             title: 'Sports Development',
             activities: ['Supplies and Materials', 'Food and Accommodation', 'Officiating Fees'],
-            link: '/sports-application-form',
-            linkLabel: 'Go to Sports Application Form',
+            link: '/sports-requests',
+            linkLabel: 'Go to Sports Application Requests',
+            type: 'sports',
         },
         other: {
             title: 'Other Programs',
@@ -77,12 +250,78 @@ function initializeCommitteeCards() {
                 'Barangay Day Celebration',
                 'Youth Week',
             ],
+            type: 'other',
         },
     };
 
-    let lastClickedCommittee = null;
-    let lastClickTime        = 0;
-    const DOUBLE_CLICK_MS    = 400;
+    function hideAllTables() {
+        if (passedSection)  passedSection.style.display  = 'none';
+        if (sportsSection)  sportsSection.style.display  = 'none';
+    }
+
+    function buildActivityButtons(data) {
+        if (!activityBtnGroup || !activityBtnsPanel || !activityPanelTitle) return;
+
+        activityPanelTitle.textContent = data.title;
+        activityBtnGroup.innerHTML = '';
+
+        data.activities.forEach(activity => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'sp-activity-action-btn';
+            btn.textContent = activity;
+            btn.setAttribute('data-activity', activity);
+            btn.setAttribute('data-committee-type', data.type);
+
+            btn.addEventListener('click', function () {
+                // Highlight active activity button
+                activityBtnGroup.querySelectorAll('.sp-activity-action-btn')
+                    .forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const type = this.getAttribute('data-committee-type');
+                const act  = this.getAttribute('data-activity');
+
+                hideAllTables();
+
+                if (type === 'sports') {
+                    renderSportsPrograms(act);
+                    const titleEl    = document.getElementById('spSportsSectionTitle');
+                    const subtitleEl = document.getElementById('spSportsSectionSubtitle');
+                    if (titleEl)    titleEl.textContent    = `Sports Development — ${act}`;
+                    if (subtitleEl) subtitleEl.textContent = `Records for ${act} under Sports Development.`;
+                    if (sportsSection) {
+                        sportsSection.style.display = '';
+                        setTimeout(() => sportsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+                    }
+                } else if (type === 'education') {
+                    renderEducationActivity(act);
+                    const titleEl    = document.getElementById('spPassedSectionTitle');
+                    const subtitleEl = document.getElementById('spPassedSectionSubtitle');
+                    if (titleEl)    titleEl.textContent    = act;
+                    if (subtitleEl) subtitleEl.textContent = `Records for ${act} under Equitable Access to Quality Education.`;
+                    // Show/hide scholarship link for ALS/150 Students activities
+                    if (scholarshipLink) {
+                        if (act === '150 Students for Educational Assistance') {
+                            scholarshipLink.href         = '/scholarship';
+                            scholarshipLink.style.display = 'inline-flex';
+                        } else {
+                            scholarshipLink.style.display = 'none';
+                        }
+                    }
+                    if (passedSection) {
+                        passedSection.style.display = '';
+                        setTimeout(() => passedSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+                    }
+                }
+            });
+
+            activityBtnGroup.appendChild(btn);
+        });
+
+        activityBtnsPanel.style.display = '';
+        setTimeout(() => activityBtnsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    }
 
     committeeCards.forEach(card => {
         card.addEventListener('click', function () {
@@ -90,110 +329,97 @@ function initializeCommitteeCards() {
             const data      = committeeData[committee];
             if (!data) return;
 
-            const now       = Date.now();
-            const isDouble  = (committee === lastClickedCommittee) && (now - lastClickTime < DOUBLE_CLICK_MS);
-            lastClickedCommittee = committee;
-            lastClickTime        = now;
-
             // Highlight active card
             committeeCards.forEach(c => c.classList.remove('committee-active'));
             this.classList.add('committee-active');
 
-            // ── Click: show appropriate content per committee ──────────────
-            // Education → hide program section, show only passed scholars table
-            // Sports → show program section only (no passed table)
-            // Others → show program section only (no passed table)
+            // Hide all tables and reset activity buttons
+            hideAllTables();
+            if (activityBtnsPanel) activityBtnsPanel.style.display = 'none';
 
-            if (committee === 'education') {
-                // Hide the program schedules section entirely for education
-                if (programSection) programSection.style.display = 'none';
-                if (sportsLink)     sportsLink.style.display     = 'none';
-                
-                // Hide sports section for education
-                const sportsSection = document.getElementById('spSportsSection');
-                if (sportsSection) sportsSection.style.display = 'none';
+            if (data.type === 'education') {
+                // Build activity filter buttons
+                buildActivityButtons(data);
 
-                // Show scholarship link above passed table
-                if (scholarshipLink) {
-                    scholarshipLink.href      = data.link;
-                    scholarshipLink.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                        ${data.linkLabel}`;
-                    scholarshipLink.style.display = 'inline-flex';
+                // Immediately show ALL passed scholars (all activities combined)
+                const allRecords = [].concat(
+                    SP_EDUCATION_SAMPLE['Support to ALS and RIC'] || [],
+                    SP_EDUCATION_SAMPLE['150 Students for Educational Assistance'] || [],
+                    SP_EDUCATION_SAMPLE['Support to Elementary and Daycare'] || []
+                );
+
+                const titleEl    = document.getElementById('spPassedSectionTitle');
+                const subtitleEl = document.getElementById('spPassedSectionSubtitle');
+                if (titleEl)    titleEl.textContent    = 'Equitable Access to Quality Education';
+                if (subtitleEl) subtitleEl.textContent = 'All approved and passed scholars. Click an activity button above to filter.';
+
+                // Reset thead to default
+                const thead = document.getElementById('spPassedTableHead');
+                if (thead) {
+                    thead.innerHTML = `<tr>
+                        <th>FULL NAME<div class="column-hint" style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
+                        <th>School</th>
+                        <th>Year / Level</th>
+                        <th>Program / Strand</th>
+                        <th>Purpose</th>
+                        <th>Date Approved</th>
+                        <th>Result</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>`;
                 }
 
-                // Render and show passed scholars table
-                renderPassedScholars();
+                const tbody = document.getElementById('spPassedTableBody');
+                if (tbody) {
+                    tbody.innerHTML = allRecords.map((r, i) => {
+                        const fullName = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+                        return `
+                        <tr>
+                            <td style="text-align:center;font-weight:600;">${fullName}</td>
+                            <td style="text-align:center;font-size:12px;">${r.school_name || '—'}</td>
+                            <td style="text-align:center;">${r.year_level || '—'}</td>
+                            <td style="text-align:center;font-size:12px;">${r.program_strand || '—'}</td>
+                            <td style="text-align:center;font-size:12px;">${r.purpose || '—'}</td>
+                            <td style="text-align:center;">${r.approved_at || '—'}</td>
+                            <td style="text-align:center;"><span class="sp-status-badge completed">Passed</span></td>
+                            <td style="text-align:center;">
+                                <div class="sp-actions">
+                                    <button class="sp-btn sp-btn-edit" data-passed-idx="${i}" style="background:#2c2c3e;">View</button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('');
+
+                    tbody.querySelectorAll('button[data-passed-idx]').forEach(btn => {
+                        btn.addEventListener('click', function () {
+                            const idx = parseInt(this.getAttribute('data-passed-idx'), 10);
+                            if (allRecords[idx]) openPassedScholarModal(allRecords[idx]);
+                        });
+                    });
+                }
+
                 if (passedSection) {
                     passedSection.style.display = '';
-                    passedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => passedSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
                 }
 
-            } else if (committee === 'sports') {
-                // For sports committee: show both program section AND sports section
-                if (passedSection)   passedSection.style.display   = 'none';
-                if (scholarshipLink) scholarshipLink.style.display  = 'none';
+            } else if (data.type === 'sports') {
+                // Build activity filter buttons
+                buildActivityButtons(data);
 
-                // Update section header
-                if (sectionTitle)    sectionTitle.textContent    = data.title;
-                if (sectionSubtitle) sectionSubtitle.textContent = '';
+                // Immediately show ALL sports records
+                renderSportsPrograms(null);
 
-                // Show sports link
-                if (sportsLink) sportsLink.style.display = 'inline-flex';
+                const titleEl    = document.getElementById('spSportsSectionTitle');
+                const subtitleEl = document.getElementById('spSportsSectionSubtitle');
+                if (titleEl)    titleEl.textContent    = 'Sports Development';
+                if (subtitleEl) subtitleEl.textContent = 'All approved sports applications. Click an activity button above to filter.';
 
-                // Render activities chips
-                if (activitiesList) {
-                    activitiesList.innerHTML = data.activities.map(a =>
-                        `<span class="sp-activity-chip">${a}</span>`
-                    ).join('');
-                }
-                if (activitiesPanel) activitiesPanel.style.display = 'block';
-
-                // Show program section
-                if (programSection) {
-                    programSection.style.display = '';
-                }
-
-                // Render and show sports section
-                renderSportsPrograms();
-                const sportsSection = document.getElementById('spSportsSection');
                 if (sportsSection) {
                     sportsSection.style.display = '';
-                    // Scroll to sports section after a brief delay
-                    setTimeout(() => {
-                        sportsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 100);
-                }
-
-            } else {
-                // Hide passed scholars table and sports section for all other committees
-                if (passedSection)   passedSection.style.display   = 'none';
-                if (scholarshipLink) scholarshipLink.style.display  = 'none';
-                
-                const sportsSection = document.getElementById('spSportsSection');
-                if (sportsSection) sportsSection.style.display = 'none';
-
-                // Update section header
-                if (sectionTitle)    sectionTitle.textContent    = data.title;
-                if (sectionSubtitle) sectionSubtitle.textContent = '';
-
-                // Hide sports link for non-sports committees
-                if (sportsLink) sportsLink.style.display = 'none';
-
-                // Render activities chips
-                if (activitiesList) {
-                    activitiesList.innerHTML = data.activities.map(a =>
-                        `<span class="sp-activity-chip">${a}</span>`
-                    ).join('');
-                }
-                if (activitiesPanel) activitiesPanel.style.display = 'block';
-
-                // Show program section
-                if (programSection) {
-                    programSection.style.display = '';
-                    programSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => sportsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
                 }
             }
+            // Other committees: no table shown
         });
     });
 }
@@ -536,6 +762,82 @@ function exportPassedToCsv(passed) {
     URL.revokeObjectURL(url);
 }
 
+// ── Education Activity Table Renderer ─────────────────────────────────────
+function renderEducationActivity(activity) {
+    const tbody = document.getElementById('spPassedTableBody');
+    if (!tbody) return;
+
+    // Always use per-activity sample data (live data integration can be added later)
+    const records = SP_EDUCATION_SAMPLE[activity] || SP_PASSED_SAMPLE;
+
+    // Update table header based on activity
+    const thead = document.getElementById('spPassedTableHead');
+    if (thead) {
+        if (activity === 'Support to Elementary and Daycare') {
+            thead.innerHTML = `<tr>
+                <th>FULL NAME<div class="column-hint" style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
+                <th>School</th>
+                <th>Year / Level</th>
+                <th>Program / Strand</th>
+                <th>Purpose</th>
+                <th>Date Approved</th>
+                <th>Status</th>
+                <th class="col-actions">Actions</th>
+            </tr>`;
+        } else {
+            thead.innerHTML = `<tr>
+                <th>FULL NAME<div class="column-hint" style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
+                <th>School</th>
+                <th>Year / Level</th>
+                <th>Program / Strand</th>
+                <th>Purpose</th>
+                <th>Date Approved</th>
+                <th>Result</th>
+                <th class="col-actions">Actions</th>
+            </tr>`;
+        }
+    }
+
+    tbody.innerHTML = records.map((r, i) => {
+        const fullName = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const resultLabel = activity === 'Support to Elementary and Daycare' ? 'Approved' : 'Passed';
+        return `
+        <tr>
+            <td style="text-align:center;font-weight:600;">${fullName}</td>
+            <td style="text-align:center;font-size:12px;">${r.school_name || '—'}</td>
+            <td style="text-align:center;">${r.year_level || '—'}</td>
+            <td style="text-align:center;font-size:12px;">${r.program_strand || '—'}</td>
+            <td style="text-align:center;font-size:12px;">${r.purpose || '—'}</td>
+            <td style="text-align:center;">${r.approved_at || '—'}</td>
+            <td style="text-align:center;"><span class="sp-status-badge completed">${resultLabel}</span></td>
+            <td style="text-align:center;">
+                <div class="sp-actions">
+                    <button class="sp-btn sp-btn-edit" data-passed-idx="${i}" style="background:#2c2c3e;">View</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+
+    // View button
+    tbody.querySelectorAll('button[data-passed-idx]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const idx    = parseInt(this.getAttribute('data-passed-idx'), 10);
+            const record = records[idx];
+            if (!record) return;
+            openPassedScholarModal(record);
+        });
+    });
+
+    // Export CSV button
+    const exportBtn = document.getElementById('spExportCsvBtn');
+    if (exportBtn) {
+        const newBtn = exportBtn.cloneNode(true);
+        newBtn.id = 'spExportCsvBtn';
+        exportBtn.parentNode.replaceChild(newBtn, exportBtn);
+        newBtn.addEventListener('click', () => exportPassedToCsv(records));
+    }
+}
+
 // ── Approved Sports Programs ───────────────────────────────────────────────
 // Static sample data — always displayed regardless of localStorage state
 const SP_SPORTS_SAMPLE = [
@@ -606,15 +908,12 @@ const SP_SPORTS_SAMPLE = [
     }
 ];
 
-function renderSportsPrograms() {
+function renderSportsPrograms(activity) {
     const tbody = document.getElementById('spSportsTableBody');
     if (!tbody) return;
 
-    // Merge static sample with any live Approved records from localStorage
-    const stored = JSON.parse(localStorage.getItem('sports_approved') || '[]');
-
-    // Use live data if available, otherwise always show static sample
-    const sports = stored.length > 0 ? stored : SP_SPORTS_SAMPLE;
+    // Always use sample data — show all records (activity param reserved for future filtering)
+    const sports = SP_SPORTS_SAMPLE;
 
     tbody.innerHTML = sports.map((s, i) => {
         const schedule = formatSchedule(s);
