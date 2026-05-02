@@ -1,0 +1,8 @@
+{
+  "name": "Archive",
+  "description": "Archive module for managing deleted and archived reports",
+  "version": "1.0.0",
+  "providers": [
+    "App\\Modules\\Archive\\Providers\\ArchiveServiceProvider"
+  ]
+}

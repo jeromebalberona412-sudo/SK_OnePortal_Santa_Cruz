@@ -108,9 +108,24 @@
             <a href="{{ route('barangay-monitoring') }}" class="menu-item active" data-tooltip="Barangay Monitoring">
                 <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
             </a>
+            <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports">
+                <i class="fas fa-chart-bar"></i><span>Reports</span>
+            </a>
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
             </a>
+            <a href="javascript:void(0);" class="menu-item" onclick="document.getElementById('archiveSubmenu').style.display = document.getElementById('archiveSubmenu').style.display === 'block' ? 'none' : 'block'; document.getElementById('archiveChevron').style.transform = document.getElementById('archiveSubmenu').style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)'; return false;" data-tooltip="Archive">
+                <i class="fas fa-archive"></i><span>Archive</span>
+                <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;"></i>
+            </a>
+            <div id="archiveSubmenu" style="display:none;padding-left:20px;border-left:2px solid #e2e8f0;margin-left:10px;">
+                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-trash"></i><span>Deleted Reports</span>
+                </a>
+                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-box"></i><span>Archived Reports</span>
+                </a>
+            </div>
             <div class="menu-divider"></div>
             <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()">
                 <i class="fas fa-sign-out-alt"></i><span>Logout</span>
@@ -151,11 +166,47 @@
             <section class="bm-card" aria-label="All barangays list">
                 <div class="bm-card-head">
                     <h3>All Barangays</h3>
-                    <div class="bm-chip-row">
-                        <button class="bm-chip active" data-status="all" type="button" onclick="bmSetStatus('all', this)">All</button>
-                        <button class="bm-chip" data-status="compliant" type="button" onclick="bmSetStatus('compliant', this)">Compliant</button>
-                        <button class="bm-chip" data-status="partial" type="button" onclick="bmSetStatus('partial', this)">Partial</button>
-                        <button class="bm-chip" data-status="non-compliant" type="button" onclick="bmSetStatus('non-compliant', this)">Non-compliant</button>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <select id="bmFilterStatus" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
+                            <option value="all">All Status</option>
+                            <option value="compliant">Compliant</option>
+                            <option value="partial">Partial</option>
+                            <option value="non-compliant">Non-Compliant</option>
+                        </select>
+                        <select id="bmFilterBarangay" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
+                            <option value="all">All Barangays</option>
+                            <option value="Alipit">Alipit</option>
+                            <option value="Bagumbayan">Bagumbayan</option>
+                            <option value="Calios">Calios</option>
+                            <option value="Duhat">Duhat</option>
+                            <option value="Gatid">Gatid</option>
+                            <option value="Jasaan">Jasaan</option>
+                            <option value="Labuin">Labuin</option>
+                            <option value="Malinao">Malinao</option>
+                            <option value="Oogong">Oogong</option>
+                            <option value="Pagsawitan">Pagsawitan</option>
+                            <option value="Palasan">Palasan</option>
+                            <option value="Patimbao">Patimbao</option>
+                            <option value="Poblacion I">Poblacion I</option>
+                            <option value="Poblacion II">Poblacion II</option>
+                            <option value="Poblacion III">Poblacion III</option>
+                            <option value="Poblacion IV">Poblacion IV</option>
+                            <option value="Poblacion V">Poblacion V</option>
+                            <option value="San Jose">San Jose</option>
+                            <option value="San Juan">San Juan</option>
+                            <option value="San Pablo Norte">San Pablo Norte</option>
+                            <option value="San Pablo Sur">San Pablo Sur</option>
+                            <option value="Santisima Cruz">Santisima Cruz</option>
+                            <option value="Santo Angel Central">Santo Angel Central</option>
+                            <option value="Santo Angel Norte">Santo Angel Norte</option>
+                            <option value="Santo Angel Sur">Santo Angel Sur</option>
+                        </select>
+                        <select id="bmFilterTime" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
+                            <option value="all">All Time</option>
+                            <option value="day">Today</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
                     </div>
                 </div>
                 <div class="bm-card-body">
@@ -165,7 +216,8 @@
                                 href="{{ route('barangay-monitoring.show', ['barangay' => $barangay['slug']]) }}"
                                 class="bm-list-item"
                                 data-status="{{ $barangay['status'] }}"
-                                data-name="{{ strtolower($barangay['name']) }}"
+                                data-barangay="{{ strtolower($barangay['name']) }}"
+                                data-date="{{ strtotime($barangay['last_update']) }}"
                             >
                                 <div class="bm-list-head">
                                     <h4>{{ $barangay['name'] }}</h4>
@@ -220,6 +272,54 @@
             LoadingScreen.show('Loading', 'Please wait...');
             setTimeout(() => { window.location.href = this.href; }, 300);
         });
+
+        // ── BARANGAY FILTER FUNCTION ──
+        function bmFilterBarangays() {
+            const statusFilter = document.getElementById('bmFilterStatus').value;
+            const barangayFilter = document.getElementById('bmFilterBarangay').value;
+            const timeFilter = document.getElementById('bmFilterTime').value;
+            const grid = document.getElementById('bm-list-grid');
+            const items = grid.querySelectorAll('.bm-list-item');
+            const emptyMsg = document.getElementById('bm-empty');
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const itemStatus = item.getAttribute('data-status');
+                const itemBarangay = item.getAttribute('data-barangay');
+                const itemDate = parseInt(item.getAttribute('data-date')) || 0;
+                
+                let statusMatch = statusFilter === 'all' || itemStatus === statusFilter;
+                let barangayMatch = barangayFilter === 'all' || itemBarangay === barangayFilter.toLowerCase();
+                let timeMatch = isDateInTimeRange(itemDate, timeFilter);
+                
+                if (statusMatch && barangayMatch && timeMatch) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            emptyMsg.hidden = visibleCount > 0;
+        }
+
+        function isDateInTimeRange(timestamp, range) {
+            if (range === 'all') return true;
+            
+            const now = new Date();
+            const itemDate = new Date(timestamp * 1000);
+            
+            if (range === 'day') {
+                return itemDate.toDateString() === now.toDateString();
+            } else if (range === 'month') {
+                return itemDate.getFullYear() === now.getFullYear() && 
+                       itemDate.getMonth() === now.getMonth();
+            } else if (range === 'year') {
+                return itemDate.getFullYear() === now.getFullYear();
+            }
+            
+            return true;
+        }
     </script>
 </body>
 </html>
