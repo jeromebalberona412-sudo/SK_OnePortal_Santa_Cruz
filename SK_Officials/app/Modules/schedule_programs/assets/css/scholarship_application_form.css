@@ -22,7 +22,12 @@ body {
 @media (max-width: 768px) { .main-content { margin-left: 0; width: 100%; margin-top: 60px; padding: 12px; } }
 
 /* ── Page Container ── */
-.schol-page-container { width: 100%; max-width: 960px; margin: 0 auto; }
+.schol-page-container { 
+    width: 100%; 
+    max-width: 100%; 
+    margin: 0; 
+    padding: 20px 30px;
+}
 
 /* ── Page Header ── */
 .schol-page-header {
@@ -53,6 +58,31 @@ body {
 .schol-btn-approve { background: #22c55e; color: #fff; }
 .schol-btn-approve:hover { background: #16a34a; }
 .schol-btn-reject { background: #ef4444; color: #fff; }
+.schol-btn-reject:hover { background: #dc2626; }
+
+/* Back to Scholar List button */
+.schol-btn-back-list {
+    background: #2c2c3e;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(44,44,62,0.2);
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+.schol-btn-back-list:hover {
+    background: #1a1a28;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(44,44,62,0.3);
+    color: #fff !important;
+}
 .schol-btn-reject:hover { background: #dc2626; }
 .schol-btn-danger { background: #ef4444; color: #fff; }
 .schol-btn-danger:hover { background: #dc2626; }
@@ -191,8 +221,19 @@ select.schol-input {
 .schol-stat-label { font-size: 11px; font-weight: 600; color: #6b7280; }
 
 /* ── Filters ── */
-.schol-filters-row { display: flex; gap: 12px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
-.schol-search-wrap { position: relative; flex: 1; min-width: 200px; }
+.schol-filters-row { 
+    display: flex; 
+    gap: 12px; 
+    margin-bottom: 14px; 
+    align-items: center; 
+    flex-wrap: nowrap; 
+    width: 100%;
+}
+.schol-search-wrap { 
+    position: relative; 
+    flex: 1;
+    min-width: 200px;
+}
 .schol-search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
 .schol-search-input {
     width: 100%; padding: 9px 12px 9px 32px;
@@ -210,6 +251,21 @@ select.schol-input {
     cursor: pointer; min-width: 150px;
 }
 .schol-filter-select:focus { outline: none; border-color: #2c2c3e; }
+.schol-filter-input {
+    padding: 9px 12px; border: 1.5px solid #d1d5db;
+    border-radius: 9px; font-size: 13px; background: #fff; color: #374151;
+    font-family: inherit; cursor: pointer; 
+    flex: 1;
+    min-width: 140px;
+    transition: border-color 0.2s;
+}
+.schol-filter-input:focus { outline: none; border-color: #2c2c3e; box-shadow: 0 0 0 3px rgba(245,197,24,0.15); }
+.schol-filter-input::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+@media (max-width: 1200px) {
+    .schol-filters-row { flex-wrap: wrap; }
+    .schol-filter-input { min-width: 120px; }
+}
 
 /* ── Table ── */
 .schol-table-card {
@@ -218,13 +274,22 @@ select.schol-input {
     box-shadow: 0 4px 16px rgba(15,23,42,0.08);
     overflow: hidden;
 }
-.schol-table-wrap { overflow-x: auto; }
-.schol-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.schol-table-wrap { 
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.schol-table { 
+    width: 100%; 
+    min-width: 900px;
+    border-collapse: separate; 
+    border-spacing: 0; 
+    font-size: 11px; 
+}
 .schol-table thead { background: #2c2c3e; }
 .schol-table th {
-    color: #fff; font-size: 11px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.04em;
-    padding: 11px 14px; text-align: center;
+    color: #fff; font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.03em;
+    padding: 9px 6px; text-align: center;
     border-right: 1px solid rgba(255,255,255,0.1);
     border-bottom: 2px solid rgba(255,255,255,0.15);
     white-space: nowrap; background: #2c2c3e;
@@ -232,7 +297,7 @@ select.schol-input {
 .schol-table th:first-child { border-top-left-radius: 12px; }
 .schol-table th:last-child  { border-top-right-radius: 12px; border-right: none; }
 .schol-table td {
-    padding: 10px 14px; text-align: center;
+    padding: 8px 6px; text-align: center;
     border-bottom: 1px solid #e5e7eb;
     border-right: 1px solid #e5e7eb; color: #374151;
 }
@@ -278,6 +343,7 @@ select.schol-input {
     animation: scholModalIn 0.18s ease-out; overflow: hidden;
 }
 .schol-modal-sm { max-width: 400px; }
+.schol-modal-md { max-width: 600px; }
 @keyframes scholModalIn { from { opacity:0; transform:scale(0.96) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
 .schol-modal-header {
     padding: 14px 20px; background: #2c2c3e; color: #fff;
@@ -389,12 +455,30 @@ select.schol-input {
     .schol-detail-grid { grid-template-columns: 1fr; }
     .schol-sig-row { flex-direction: column; align-items: stretch; }
     .schol-form-actions { justify-content: flex-end; }
+    
+    /* Table responsive on mobile */
+    .schol-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .schol-table {
+        min-width: 900px;
+    }
 }
 @media (max-width: 480px) {
     .schol-col-2, .schol-col-3, .schol-col-4 { grid-template-columns: 1fr; }
     .schol-pv-col-2, .schol-pv-col-3, .schol-pv-col-4 { grid-template-columns: 1fr; }
     .schol-stats-grid { grid-template-columns: repeat(2, 1fr); }
     .schol-page-header { flex-direction: column; }
+    
+    /* Ensure table scrolls on small mobile */
+    .schol-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .schol-table {
+        min-width: 900px;
+    }
 }
 
 /* ── PDF Form Styles (used in preview + view modal) ── */

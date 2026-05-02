@@ -158,10 +158,10 @@
                             </a>
                         </li>
 
-                        <!-- Schedule Programs -->
+                        <!-- Programs Management -->
                         <li class="nav-subitem">
                             <a href="{{ route('schedule-programs') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-programs') ? 'active' : '' }}">
-                                <span>Schedule Programs</span>
+                                <span>Programs Management</span>
                             </a>
                         </li>
 

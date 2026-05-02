@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule Scholarships - SK Officials Portal</title>
+    <title>Scholar Application - SK Officials Portal</title>
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
@@ -20,16 +20,49 @@
     <!-- Page Header -->
     <section class="schol-page-header">
         <div class="schol-page-header-left">
-            <h1 class="schol-page-title">Schedule Scholarships</h1>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                <a href="/scholar-list" class="schol-btn schol-btn-back-list">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Back to Scholar List
+                </a>
+            </div>
+            <h1 class="schol-page-title">Scholar Application</h1>
             <p class="schol-page-subtitle">Manage scholarship programs and review submitted applications from Kabataan members.</p>
         </div>
         <div class="schol-header-actions">
+            <button type="button" class="schol-btn schol-btn-outline" id="btnViewScheduleList">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Scheduled History
+            </button>
             <button type="button" class="schol-btn schol-btn-save" id="btnMakeForm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
                 Schedule a Scholarship Application Form
             </button>
         </div>
     </section>
+
+    <!-- Scheduled Application Info -->
+    <div id="scheduledAppInfo" style="display:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px 20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:300px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2c2c3e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <div style="font-size:15px;font-weight:700;color:#111827;">Application Window Schedule</div>
+                    <div id="scheduleStatusBadge" style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;"></div>
+                </div>
+                <div id="scheduleInfoText" style="font-size:13px;color:#374151;line-height:1.6;"></div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="schol-btn" id="btnEditSchedule" style="font-size:12px;padding:7px 14px;background:#fbbf24;color:#78350f;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Schedule
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Stat Cards -->
     <div class="schol-stats-grid">
@@ -73,16 +106,14 @@
 
     <!-- Filters -->
     <div class="schol-filters-row">
+        <input type="date" id="scholStartDate" class="schol-filter-input" placeholder="Start Date">
+        <input type="date" id="scholEndDate" class="schol-filter-input" placeholder="End Date">
+        <input type="time" id="scholStartTime" class="schol-filter-input" placeholder="Start Time">
+        <input type="time" id="scholEndTime" class="schol-filter-input" placeholder="End Time">
         <div class="schol-search-wrap">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="scholSearch" class="schol-search-input" placeholder="Search by name or school...">
         </div>
-        <select id="scholStatusFilter" class="schol-filter-select">
-            <option value="">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-        </select>
     </div>
 
     <!-- Applications Table -->
@@ -91,14 +122,14 @@
             <table class="schol-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Name</th>
+                        <th>FULL NAME<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
                         <th>School</th>
                         <th>Year / Level</th>
                         <th>Purpose</th>
                         <th>Requirements</th>
                         <th>Status</th>
                         <th>Date Submitted</th>
+                        <th>Time Submitted</th>
                         <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
@@ -114,13 +145,16 @@
      Schedule a Scholarship Application Form Modal (SK Officials)
      ══════════════════════════════════════════════════════════════ -->
 <div class="schol-modal-overlay" id="makeFormModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-xl">
+    <div class="schol-modal-box schol-modal-xl" id="makeFormBox">
         <div class="schol-modal-header">
             <h3>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
                 Schedule a Scholarship Application Form
             </h3>
-            <button type="button" class="schol-modal-close" id="makeFormClose">&times;</button>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="schol-modal-close" id="makeFormMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="schol-modal-close" id="makeFormClose" title="Close">&times;</button>
+            </div>
         </div>
         <div class="schol-modal-body" style="background:#f0f1f5;">
 
@@ -147,6 +181,15 @@
                         <label for="schedCloseTime">Close Time</label>
                         <input type="time" id="schedCloseTime" class="schol-input" value="17:00">
                     </div>
+                    <div class="schol-field">
+                        <label for="schedStatus">Status</label>
+                        <select id="schedStatus" class="schol-input">
+                            <option value="auto">Auto (Based on Date/Time)</option>
+                            <option value="open">Open</option>
+                            <option value="closed">Closed</option>
+                            <option value="upcoming">Upcoming</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="schol-schedule-status" id="schedStatusBadge" style="display:none;"></div>
             </div>
@@ -158,14 +201,9 @@
                 <div class="schol-pdf-header">
                     <img src="/images/barangay_logo.png" alt="Barangay Calios" class="schol-pdf-logo-img">
                     <h2 class="schol-pdf-title">SCHOLARSHIP APPLICATION FORM</h2>
-                    <!-- Picture Here — clickable image uploader -->
-                    <div class="schol-pdf-picture-upload" id="pictureUploadBox" title="Click to upload photo">
-                        <img id="picturePreviewImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:2px;">
-                        <div id="pictureUploadPlaceholder">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            <span>Picture<br>Here</span>
-                        </div>
-                        <input type="file" id="pictureUploadInput" accept="image/*" style="display:none;">
+                    <!-- Picture Here — static display only, not clickable -->
+                    <div class="schol-pdf-picture-box">
+                        <span>Picture<br>Here</span>
                     </div>
                 </div>
 
@@ -249,37 +287,13 @@
                     <div class="schol-pdf-bottom-right">
                         <p class="schol-pdf-inline-title">SUBMITTED REQUIRMENTS: <span style="font-weight:400;font-size:10px;">Note: To be filled out by sk officials</span></p>
 
-                        <!-- COR Upload -->
-                        <div class="schol-upload-field" style="margin-top:10px;">
-                            <label class="schol-upload-label">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                COR – CERTIFIED TRUE COPY
-                                <span class="schol-upload-hint">PDF / Image, max 10MB</span>
-                            </label>
-                            <div class="schol-upload-drop" id="corUploadDrop">
-                                <input type="file" id="corUploadInput" accept=".pdf,image/*" style="display:none;">
-                                <div class="schol-upload-drop-inner" id="corDropInner">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                                    <span>Click or drag file here</span>
-                                </div>
-                                <div class="schol-upload-preview" id="corPreview" style="display:none;"></div>
+                        <!-- Static checkboxes like PDF -->
+                        <div class="schol-pdf-check-list" style="margin-top:10px;">
+                            <div class="schol-pdf-check-item">
+                                <span class="schol-pdf-checkbox"></span> COR – CERTIFIED TRUE COPY
                             </div>
-                        </div>
-
-                        <!-- Photo ID Upload -->
-                        <div class="schol-upload-field" style="margin-top:12px;">
-                            <label class="schol-upload-label">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                                PHOTO COPY OF ID (FRONT AND BACK)
-                                <span class="schol-upload-hint">PDF / Image, max 10MB</span>
-                            </label>
-                            <div class="schol-upload-drop" id="photoIdUploadDrop">
-                                <input type="file" id="photoIdUploadInput" accept=".pdf,image/*" style="display:none;">
-                                <div class="schol-upload-drop-inner" id="photoIdDropInner">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                                    <span>Click or drag file here</span>
-                                </div>
-                                <div class="schol-upload-preview" id="photoIdPreview" style="display:none;"></div>
+                            <div class="schol-pdf-check-item">
+                                <span class="schol-pdf-checkbox"></span> PHOTO COPY OF ID (FRONT AND BACK)
                             </div>
                         </div>
 
@@ -295,12 +309,8 @@
             </div>
         </div>
 
-        <!-- Footer: Apply Scholar (preview/test) + Save Schedule — NO Close button -->
+        <!-- Footer: Save Schedule only -->
         <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-preview" style="margin-right:auto;" onclick="window.location.href='/scholarship/apply'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                Apply Scholar (Preview)
-            </button>
             <button type="button" class="schol-btn schol-btn-save" id="btnSaveSchedule">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 Save Schedule
@@ -336,6 +346,55 @@
     </div>
 </div>
 
+<!-- ── Rejection Reason Modal ── -->
+<div class="schol-modal-overlay" id="scholRejectReasonModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-md">
+        <div class="schol-modal-header schol-modal-header-danger">
+            <h3>Rejection Reason</h3>
+            <button type="button" class="schol-modal-close" id="scholRejectReasonClose">&times;</button>
+        </div>
+        <div class="schol-modal-body">
+            <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:16px;">Please select the reason(s) for rejecting this application:</p>
+            
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
+                    <input type="checkbox" class="reject-reason-checkbox" value="Incomplete Requirements" style="cursor:pointer;width:16px;height:16px;">
+                    <span>Incomplete Requirements</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
+                    <input type="checkbox" class="reject-reason-checkbox" value="Invalid Documents" style="cursor:pointer;width:16px;height:16px;">
+                    <span>Invalid Documents</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
+                    <input type="checkbox" class="reject-reason-checkbox" value="Does Not Meet Eligibility Criteria" style="cursor:pointer;width:16px;height:16px;">
+                    <span>Does Not Meet Eligibility Criteria</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
+                    <input type="checkbox" class="reject-reason-checkbox" value="Duplicate Application" style="cursor:pointer;width:16px;height:16px;">
+                    <span>Duplicate Application</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
+                    <input type="checkbox" class="reject-reason-checkbox" value="Late Submission" style="cursor:pointer;width:16px;height:16px;">
+                    <span>Late Submission</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
+                    <input type="checkbox" id="rejectReasonOtherCheckbox" value="Other" style="cursor:pointer;width:16px;height:16px;">
+                    <span>Other</span>
+                </label>
+            </div>
+
+            <div id="rejectReasonOtherField" style="display:none;">
+                <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;display:block;">Please specify:</label>
+                <textarea id="rejectReasonOtherText" class="schol-input" rows="3" placeholder="Enter other reason..." style="width:100%;resize:vertical;"></textarea>
+            </div>
+        </div>
+        <div class="schol-modal-footer">
+            <button type="button" class="schol-btn schol-btn-outline" id="scholRejectReasonCancel">Cancel</button>
+            <button type="button" class="schol-btn schol-btn-danger" id="scholRejectReasonConfirm">Confirm Rejection</button>
+        </div>
+    </div>
+</div>
+
 <!-- ── Delete Confirm Modal ── -->
 <div class="schol-modal-overlay" id="scholDeleteModal" style="display:none;">
     <div class="schol-modal-box schol-modal-sm">
@@ -349,6 +408,97 @@
         <div class="schol-modal-footer">
             <button type="button" class="schol-btn schol-btn-outline" id="scholDeleteCancel">Cancel</button>
             <button type="button" class="schol-btn schol-btn-danger" id="scholDeleteConfirm">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Schedule List Modal ── -->
+<div class="schol-modal-overlay" id="scheduleListModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-xl" id="scheduleListBox">
+        <div class="schol-modal-header">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                Scheduled History List
+            </h3>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="schol-modal-close" id="scheduleListMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="schol-modal-close" id="scheduleListClose">&times;</button>
+            </div>
+        </div>
+        <div class="schol-modal-body">
+            <div class="schol-table-card">
+                <div class="schol-table-wrap">
+                    <table class="schol-table">
+                        <thead>
+                            <tr>
+                                <th>Schedule ID</th>
+                                <th>Open Date</th>
+                                <th>Open Time</th>
+                                <th>Close Date</th>
+                                <th>Close Time</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleListTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="schol-modal-footer">
+        </div>
+    </div>
+</div>
+
+<!-- ── Activate Schedule Confirmation Modal ── -->
+<div class="schol-modal-overlay" id="activateScheduleModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-sm">
+        <div class="schol-modal-header">
+            <h3>Activate Schedule</h3>
+            <button type="button" class="schol-modal-close" id="activateScheduleClose">&times;</button>
+        </div>
+        <div class="schol-modal-body">
+            <p style="font-size:14px;color:#374151;line-height:1.6;">Are you sure you want to activate this schedule? This will replace the current active schedule.</p>
+        </div>
+        <div class="schol-modal-footer">
+            <button type="button" class="schol-btn schol-btn-outline" id="activateScheduleCancel">Cancel</button>
+            <button type="button" class="schol-btn schol-btn-save" id="activateScheduleConfirm">Activate</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Delete Schedule Confirmation Modal ── -->
+<div class="schol-modal-overlay" id="deleteScheduleModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-sm">
+        <div class="schol-modal-header schol-modal-header-danger">
+            <h3>Delete Schedule</h3>
+            <button type="button" class="schol-modal-close" id="deleteScheduleClose">&times;</button>
+        </div>
+        <div class="schol-modal-body">
+            <p style="font-size:14px;color:#374151;line-height:1.6;">Are you sure you want to delete this schedule? This action cannot be undone.</p>
+        </div>
+        <div class="schol-modal-footer">
+            <button type="button" class="schol-btn schol-btn-outline" id="deleteScheduleCancel">Cancel</button>
+            <button type="button" class="schol-btn schol-btn-danger" id="deleteScheduleConfirm">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── View Schedule Details Modal ── -->
+<div class="schol-modal-overlay" id="viewScheduleModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-md">
+        <div class="schol-modal-header">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                Schedule Details
+            </h3>
+            <button type="button" class="schol-modal-close" id="viewScheduleClose">&times;</button>
+        </div>
+        <div class="schol-modal-body" id="viewScheduleBody">
+            <!-- Schedule details will be populated here -->
+        </div>
+        <div class="schol-modal-footer">
         </div>
     </div>
 </div>

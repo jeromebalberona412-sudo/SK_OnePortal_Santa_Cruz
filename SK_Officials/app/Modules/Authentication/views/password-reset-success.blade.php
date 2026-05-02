@@ -2,31 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Password Reset Successful</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Password Reset Successful - SK Officials</title>
+    @vite([
+        'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Authentication/assets/js/login.js',
+    ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+        .success-content {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        .success-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 60px 40px;
             text-align: center;
-            max-width: 500px;
-            width: 100%;
-            margin: 20px;
+            padding: 60px 40px;
         }
 
         .check-wrap {
@@ -74,7 +68,7 @@
             }
         }
 
-        h1 {
+        .success-title {
             color: #213F99;
             font-size: 28px;
             font-weight: 700;
@@ -83,7 +77,7 @@
             animation: fadeIn 0.6s 0.4s ease-in backwards;
         }
 
-        .message {
+        .success-message {
             color: #64748b;
             font-size: 16px;
             margin-bottom: 12px;
@@ -98,8 +92,8 @@
             animation: fadeIn 0.6s 0.6s ease-in backwards;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .success-btn {
+            background: linear-gradient(135deg, #213F99 0%, #1a2f7a 100%);
             border: none;
             padding: 12px 32px;
             font-size: 16px;
@@ -110,11 +104,12 @@
             color: white;
             transition: all 0.3s ease;
             animation: fadeIn 0.6s 0.7s ease-in backwards;
+            cursor: pointer;
         }
 
-        .btn-primary:hover {
+        .success-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 20px rgba(33, 63, 153, 0.3);
             color: white;
         }
 
@@ -130,32 +125,79 @@
         }
 
         @media (max-width: 576px) {
-            .success-container {
+            .success-content {
                 padding: 40px 24px;
             }
-            h1 {
+            .success-title {
                 font-size: 24px;
             }
         }
     </style>
 </head>
-<body>
-    <div class="success-container">
-        <div class="check-wrap">
-            <span class="check-icon">✓</span>
+<body class="sk-login-page">
+    <!-- Animated Background -->
+    <div class="sk-bg-wrapper">
+        <div class="sk-bg-image"></div>
+        <div class="sk-gradient-overlay"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
         </div>
-        <h1>Password Reset Successfully!</h1>
-        <p class="message">Your password has been updated successfully.</p>
-        <p class="message">You can now log in with your new password.</p>
-        <p class="next-step">Redirecting to login page...</p>
-        <a href="{{ route('login') }}" class="btn-primary">Go to Login</a>
     </div>
+
+    <main class="sk-login-container">
+        <!-- Left Side - Logo & Branding -->
+        <div class="sk-branding-section">
+            <div class="branding-content">
+                <div class="logo-wrapper">
+                    <img
+                        src="{{ asset('images/logo.png') }}"
+                        alt="SK Officials Logo"
+                        class="sk-logo"
+                    >
+                </div>
+                <h1 class="sk-main-title">SK OnePortal</h1>
+                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+            </div>
+        </div>
+
+        <!-- Right Side - Success Card -->
+        <div class="sk-login-section">
+            <div class="sk-login-card">
+                <div class="success-content">
+                    <div class="check-wrap">
+                        <span class="check-icon">✓</span>
+                    </div>
+                    <h1 class="success-title">Password Reset Successfully!</h1>
+                    <p class="success-message">Your password has been updated successfully.</p>
+                    <p class="success-message">You can now log in with your new password.</p>
+                    <p class="next-step">Redirecting to login page...</p>
+                    <a href="{{ route('login') }}" class="success-btn">Go to Login</a>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <script>
         // Auto-redirect after 3 seconds
         setTimeout(function() {
-            window.location.href = '{{ route('login') }}';
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = '{{ route('login') }}';
+            }, 300);
         }, 3000);
+
+        document.querySelector('.success-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            LoadingScreen.show('Redirecting', 'Taking you to login...');
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 300);
+        });
     </script>
+
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
+    @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>

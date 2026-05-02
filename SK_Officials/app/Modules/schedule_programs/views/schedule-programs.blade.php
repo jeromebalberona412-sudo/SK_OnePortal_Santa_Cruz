@@ -86,7 +86,7 @@
             <div class="committees-grid">
 
                 <!-- A. Equitable Access to Quality Education -->
-                <div class="committee-card" data-committee="education">
+                <a href="/scholar-list" class="committee-card" data-committee="education" style="text-decoration:none;color:inherit;">
                     <div class="committee-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                     </div>
@@ -96,7 +96,7 @@
                         <li>150 Students for Educational Assistance</li>
                         <li>Support to Elementary and Daycare</li>
                     </ul>
-                </div>
+                </a>
 
                 <!-- B. Environmental Protection -->
                 <div class="committee-card" data-committee="environment">
@@ -184,7 +184,7 @@
                 </div>
 
                 <!-- I. Sports Development -->
-                <div class="committee-card" data-committee="sports">
+                <a href="/sport_list" class="committee-card" data-committee="sports" style="text-decoration:none;color:inherit;">
                     <div class="committee-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
                     </div>
@@ -194,7 +194,7 @@
                         <li>Food and Accommodation</li>
                         <li>Officiating Fees</li>
                     </ul>
-                </div>
+                </a>
 
                 <!-- J. Other Programs -->
                 <div class="committee-card" data-committee="other">
@@ -212,62 +212,23 @@
             </div>
         </section>
 
-        <!-- ── Table ── -->
-        <section class="page-content-section" id="spProgramSection" style="display: none;">
-            <div class="section-heading-row" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-                <div>
-                    <h2 class="section-title" id="spProgramSectionTitle">Program Schedules</h2>
-                    <p class="section-subtitle" id="spProgramSectionSubtitle" style="margin-top:4px;"></p>
-                </div>
-                <a href="/sports-application-form" id="spSportsLink" class="sp-scholarship-link" style="display:none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-                    Go to Sports Application Form
-                </a>
-            </div>
+        <!-- Old Sports Development table section removed - now using Approved Sports Applications table only -->
 
-            <!-- Activities list for the selected committee -->
-            <div id="spActivitiesPanel" style="display:none;margin-bottom:18px;">
-                <div class="sp-activities-list" id="spActivitiesList"></div>
+        <!-- ── Activity Buttons Panel (shown after clicking a committee card) ── -->
+        <section class="page-content-section" id="spActivityButtonsPanel" style="display:none;margin-top:20px;">
+            <div class="section-heading-row" style="margin-bottom:12px;">
+                <h2 class="section-title" id="spActivityPanelTitle"></h2>
+                <p class="section-subtitle">Select an activity below to view its records.</p>
             </div>
-
-            <div class="table-card">
-                <div class="table-wrapper">
-                    <table class="sp-table">
-                        <thead>
-                            <tr>
-                                <th>Program Name</th>
-                                <th>Activity Type</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Venue</th>
-                                <th>Status</th>
-                                <th class="col-actions">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="spTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Pagination -->
-            <div class="pagination-container">
-                <div class="pagination-info">
-                    <span id="spPaginationInfo">No records found</span>
-                </div>
-                <div class="pagination-controls">
-                    <button type="button" id="spPrevBtn" class="pagination-btn" disabled>Previous</button>
-                    <div class="pagination-numbers" id="spPageNumbers"></div>
-                    <button type="button" id="spNextBtn" class="pagination-btn">Next</button>
-                </div>
-            </div>
+            <div id="spActivityBtnGroup" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
         </section>
 
         <!-- ── Passed Scholars Table (shown on click of education card) ── -->
         <section class="page-content-section" id="spPassedSection" style="display:none;margin-top:20px;">
             <div class="section-heading-row" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
                 <div>
-                    <h2 class="section-title">Passed Scholars</h2>
-                    <p class="section-subtitle">List of approved scholarship applicants with a Passed result.</p>
+                    <h2 class="section-title" id="spPassedSectionTitle">Passed Scholars</h2>
+                    <p class="section-subtitle" id="spPassedSectionSubtitle">List of approved scholarship applicants with a Passed result.</p>
                 </div>
                 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                     <button type="button" id="spExportCsvBtn" class="sp-scholarship-link" style="background:#22c55e;box-shadow:0 4px 12px rgba(34,197,94,0.3);border:none;">
@@ -283,7 +244,7 @@
             <div class="table-card">
                 <div class="table-wrapper">
                     <table class="sp-table">
-                        <thead>
+                        <thead id="spPassedTableHead">
                             <tr>
                                 <th>FULL NAME<div class="column-hint" style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
                                 <th>School</th>
@@ -296,6 +257,39 @@
                             </tr>
                         </thead>
                         <tbody id="spPassedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Approved Sports Applications Table (shown on click of sports card) ── -->
+        <section class="page-content-section" id="spSportsSection" style="display:none;margin-top:20px;">
+            <div class="section-heading-row" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+                <div>
+                    <h2 class="section-title" id="spSportsSectionTitle">Approved Sports Applications</h2>
+                    <p class="section-subtitle" id="spSportsSectionSubtitle">List of approved sports program applications with Paid status.</p>
+                </div>
+                <a href="/sports-requests" class="sp-scholarship-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    Go to Sports Application Requests
+                </a>
+            </div>
+            <div class="table-card">
+                <div class="table-wrapper">
+                    <table class="sp-table">
+                        <thead>
+                            <tr>
+                                <th>FULL NAME<div class="column-hint" style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
+                                <th>Program Name</th>
+                                <th>Sport</th>
+                                <th>Division</th>
+                                <th>Schedule</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spSportsTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -315,6 +309,20 @@
             </div>
         </div>
         <div class="sp-modal-body" id="spPassedViewBody" style="background:#f0f1f5;padding:20px;"></div>
+    </div>
+</div>
+
+<!-- ── Sports Application View Modal ── -->
+<div class="sp-modal-overlay" id="spSportsViewModal" style="display:none;">
+    <div class="sp-modal-box" id="spSportsViewBox" style="max-width:680px;">
+        <div class="sp-modal-header">
+            <h3>Sports Application Details</h3>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="sp-modal-close" id="spSportsViewMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="sp-modal-close" id="spSportsViewClose" title="Close">&times;</button>
+            </div>
+        </div>
+        <div class="sp-modal-body" id="spSportsViewBody" style="background:#f0f1f5;padding:20px;"></div>
     </div>
 </div>
 

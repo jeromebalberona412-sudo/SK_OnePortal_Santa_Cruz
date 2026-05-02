@@ -1111,3 +1111,53 @@ select.form-input-light option { color: #1e293b; background: #ffffff; }
     border-color: #64748b;
     color: #f1f5f9;
 }
+
+/* ── Loading Overlay ─────────────────────────────────────────
+   Shown while Create Account / Update Account requests are
+   in-flight for both SK Federation and SK Officials forms.
+   ─────────────────────────────────────────────────────────── */
+#loadingOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 30, 60, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2.25rem 3rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    min-width: 180px;
+    text-align: center;
+}
+
+.loading-spinner .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #255fa8;
+    border-radius: 50%;
+    animation: accountSpinnerRotate 0.75s linear infinite;
+}
+
+.loading-spinner p {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #255fa8;
+    letter-spacing: 0.02em;
+}
+
+@keyframes accountSpinnerRotate {
+    to { transform: rotate(360deg); }
+}

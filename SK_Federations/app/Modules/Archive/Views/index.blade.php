@@ -114,10 +114,6 @@
             <div class="menu-divider"></div>
             <div class="menu-divider"></div>
             <div class="menu-divider"></div>
-            <div class="menu-divider"></div>
-            <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()">
-                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
-            </button>
         </nav>
     </aside>
 
@@ -193,47 +189,6 @@
                                 </tr>
                             </thead>
                             <tbody id="deletedReportsTable">
-                                @forelse($deletedReports as $report)
-                                <tr class="deleted-row" data-status="{{ $report['status'] }}" data-barangay="{{ strtolower($report['barangay']) }}" data-type="{{ $report['type'] }}" data-date="{{ $report['timestamp_deleted'] }}" style="border-bottom:1px solid #e2e8f0;">
-                                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;font-weight:600;">{{ $report['name'] }}</td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;">
-                                        <span style="background:#eff3ff;color:#213F99;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;">{{ $report['type'] }}</span>
-                                    </td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;">{{ $report['barangay'] }}</td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#64748b;">{{ $report['date_submitted'] }}</td>
-                                    <td style="padding:12px 16px;font-size:13px;text-align:center;">
-                                        @if(isset($report['pdf_path']))
-                                            <a href="{{ $report['pdf_path'] }}" target="_blank" style="color:#213F99;text-decoration:none;font-weight:600;" title="Download PDF">
-                                                <i class="fas fa-file-pdf"></i> PDF
-                                            </a>
-                                        @else
-                                            <span style="color:#94a3b8;">—</span>
-                                        @endif
-                                    </td>
-                                    <td style="padding:12px 16px;font-size:13px;">
-                                        <span style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">{{ ucfirst($report['status']) }}</span>
-                                    </td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;font-weight:600;">
-                                        @if($report['days_until_permanent_delete'] > 0)
-                                            <span style="background:#fef3c7;color:#b45309;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">{{ $report['days_until_permanent_delete'] }} days</span>
-                                        @else
-                                            <span style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">Expired</span>
-                                        @endif
-                                    </td>
-                                    <td style="padding:12px 16px;text-align:center;">
-                                        <button onclick="recoverReport({{ $report['id'] }}, 'deleted')" style="padding:6px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;color:#213F99;cursor:pointer;margin-right:4px;transition:background .2s;font-size:14px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'" title="Recover Report">
-                                            <i class="fas fa-undo"></i>
-                                        </button>
-                                        <button onclick="permanentlyDeleteReport({{ $report['id'] }})" style="padding:6px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;color:#dc2626;cursor:pointer;transition:background .2s;font-size:14px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff'" title="Delete Report">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8" style="padding:20px;text-align:center;color:#94a3b8;">No deleted reports</td>
-                                </tr>
-                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -322,41 +277,6 @@
                                 </tr>
                             </thead>
                             <tbody id="archivedReportsTable">
-                                @forelse($archivedReports as $report)
-                                <tr class="archived-row" data-status="{{ $report['status'] }}" data-barangay="{{ strtolower($report['barangay']) }}" data-type="{{ $report['type'] }}" data-date="{{ strtotime($report['date_archived']) }}" style="border-bottom:1px solid #e2e8f0;">
-                                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;font-weight:600;">{{ $report['name'] }}</td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;">
-                                        <span style="background:#eff3ff;color:#213F99;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;">{{ $report['type'] }}</span>
-                                    </td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;">{{ $report['barangay'] }}</td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#64748b;">{{ $report['date_submitted'] }}</td>
-                                    <td style="padding:12px 16px;font-size:13px;text-align:center;">
-                                        @if(isset($report['pdf_path']))
-                                            <a href="{{ $report['pdf_path'] }}" target="_blank" style="color:#213F99;text-decoration:none;font-weight:600;" title="Download PDF">
-                                                <i class="fas fa-file-pdf"></i> PDF
-                                            </a>
-                                        @else
-                                            <span style="color:#94a3b8;">—</span>
-                                        @endif
-                                    </td>
-                                    <td style="padding:12px 16px;font-size:13px;">
-                                        <span style="background:#dcfce7;color:#15803d;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">{{ ucfirst($report['status']) }}</span>
-                                    </td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#64748b;">{{ $report['archived_by'] }}</td>
-                                    <td style="padding:12px 16px;text-align:center;">
-                                        <button onclick="unarchiveReport({{ $report['id'] }})" style="padding:6px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;color:#213F99;cursor:pointer;margin-right:4px;transition:background .2s;font-size:14px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'" title="Unarchive Report">
-                                            <i class="fas fa-arrow-up"></i>
-                                        </button>
-                                        <button onclick="deleteArchivedReport({{ $report['id'] }})" style="padding:6px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;color:#dc2626;cursor:pointer;transition:background .2s;font-size:14px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff'" title="Delete Report">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8" style="padding:20px;text-align:center;color:#94a3b8;">No archived reports</td>
-                                </tr>
-                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -603,8 +523,121 @@
             updateArchivedPagination();
         }
 
+        // Load reports from localStorage and populate tables
+        function loadReportsFromStorage() {
+            const deletedReports = JSON.parse(localStorage.getItem('archiveDeletedReports') || '[]');
+            const archivedReports = JSON.parse(localStorage.getItem('archiveArchivedReports') || '[]');
+            
+            populateDeletedReportsTable(deletedReports);
+            populateArchivedReportsTable(archivedReports);
+        }
+
+        function populateDeletedReportsTable(reports) {
+            const tbody = document.getElementById('deletedReportsTable');
+            tbody.innerHTML = '';
+            
+            if (reports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;text-align:center;color:#94a3b8;">No deleted reports</td></tr>';
+                return;
+            }
+            
+            reports.forEach(report => {
+                const row = document.createElement('tr');
+                row.className = 'deleted-row';
+                row.setAttribute('data-status', report.status || 'rejected');
+                row.setAttribute('data-barangay', (report.barangay || '').toLowerCase());
+                row.setAttribute('data-type', report.type || 'abyip');
+                row.setAttribute('data-date', report.timestamp_deleted || Math.floor(Date.now() / 1000));
+                row.style.borderBottom = '1px solid #e2e8f0';
+                
+                const daysLeft = calculateDaysLeft(report.timestamp_deleted);
+                const statusBg = daysLeft > 0 ? '#fef3c7' : '#fee2e2';
+                const statusColor = daysLeft > 0 ? '#b45309' : '#dc2626';
+                const daysText = daysLeft > 0 ? `${daysLeft} days` : 'Expired';
+                
+                row.innerHTML = `
+                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;font-weight:600;">${report.name || 'N/A'}</td>
+                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;">
+                        <span style="background:#eff3ff;color:#213F99;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;">${report.type || 'ABYIP'}</span>
+                    </td>
+                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;">${report.barangay || 'N/A'}</td>
+                    <td style="padding:12px 16px;font-size:13px;color:#64748b;">${report.date_submitted || 'N/A'}</td>
+                    <td style="padding:12px 16px;font-size:13px;text-align:center;">
+                        <span style="color:#94a3b8;">—</span>
+                    </td>
+                    <td style="padding:12px 16px;font-size:13px;">
+                        <span style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">Rejected</span>
+                    </td>
+                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;font-weight:600;">
+                        <span style="background:${statusBg};color:${statusColor};padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">${daysText}</span>
+                    </td>
+                    <td style="padding:12px 16px;text-align:center;">
+                        <button onclick="recoverReport('${report.id}', 'deleted')" style="padding:6px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;color:#213F99;cursor:pointer;margin-right:4px;transition:background .2s;font-size:14px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'" title="Recover Report">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button onclick="permanentlyDeleteReport('${report.id}')" style="padding:6px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;color:#dc2626;cursor:pointer;transition:background .2s;font-size:14px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff'" title="Delete Report">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populateArchivedReportsTable(reports) {
+            const tbody = document.getElementById('archivedReportsTable');
+            tbody.innerHTML = '';
+            
+            if (reports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;text-align:center;color:#94a3b8;">No archived reports</td></tr>';
+                return;
+            }
+            
+            reports.forEach(report => {
+                const row = document.createElement('tr');
+                row.className = 'archived-row';
+                row.setAttribute('data-status', report.status || 'compliant');
+                row.setAttribute('data-barangay', (report.barangay || '').toLowerCase());
+                row.setAttribute('data-type', report.type || 'abyip');
+                row.setAttribute('data-date', report.timestamp_archived || Math.floor(Date.now() / 1000));
+                row.style.borderBottom = '1px solid #e2e8f0';
+                
+                row.innerHTML = `
+                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;font-weight:600;">${report.name || 'N/A'}</td>
+                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;">
+                        <span style="background:#eff3ff;color:#213F99;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;">${report.type || 'ABYIP'}</span>
+                    </td>
+                    <td style="padding:12px 16px;font-size:13px;color:#0d1b4b;">${report.barangay || 'N/A'}</td>
+                    <td style="padding:12px 16px;font-size:13px;color:#64748b;">${report.date_submitted || 'N/A'}</td>
+                    <td style="padding:12px 16px;font-size:13px;text-align:center;">
+                        <span style="color:#94a3b8;">—</span>
+                    </td>
+                    <td style="padding:12px 16px;font-size:13px;">
+                        <span style="background:#dcfce7;color:#15803d;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">Compliant</span>
+                    </td>
+                    <td style="padding:12px 16px;font-size:13px;color:#64748b;">${report.archived_by || 'Admin'}</td>
+                    <td style="padding:12px 16px;text-align:center;">
+                        <button onclick="unarchiveReport('${report.id}')" style="padding:6px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;color:#213F99;cursor:pointer;margin-right:4px;transition:background .2s;font-size:14px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'" title="Unarchive Report">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <button onclick="deleteArchivedReport('${report.id}')" style="padding:6px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;color:#dc2626;cursor:pointer;transition:background .2s;font-size:14px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff'" title="Delete Report">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function calculateDaysLeft(timestamp) {
+            const now = Math.floor(Date.now() / 1000);
+            const daysDiff = Math.floor((now - timestamp) / (24 * 60 * 60));
+            return Math.max(0, 30 - daysDiff);
+        }
+
         // Initialize pagination on page load
         document.addEventListener('DOMContentLoaded', function() {
+            loadReportsFromStorage();
             updateDeletedPagination();
             updateArchivedPagination();
         });
