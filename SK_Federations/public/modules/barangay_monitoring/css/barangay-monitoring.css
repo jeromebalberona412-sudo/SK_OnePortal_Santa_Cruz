@@ -1,0 +1,265 @@
+/* Barangay Monitoring Module Styles */
+
+/* Modal Animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Table Wrapper Styles */
+.bm-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+.bm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Inter', sans-serif;
+}
+
+.bm-table thead {
+    background-color: #f1f5f9;
+}
+
+.bm-table th {
+    font-weight: 700;
+    color: #0d1b4b;
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.bm-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+}
+
+.bm-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.bm-th-text {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0d1b4b;
+}
+
+/* Card Styles */
+.bm-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bm-card-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+.bm-card-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0d1b4b;
+}
+
+/* Container Styles */
+.bm-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.bm-main {
+    background-color: #f8fafc;
+    min-height: 100vh;
+}
+
+.bm-back-link {
+    color: #213F99;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.bm-back-link:hover {
+    color: #1a2f7a;
+}
+
+/* Mobile Responsiveness - Tables */
+@media (max-width: 767px) {
+    .bm-table {
+        min-width: 600px;
+        font-size: 12px;
+    }
+
+    .bm-table th {
+        font-size: 12px;
+        padding: 10px 8px;
+        font-weight: 700;
+        background-color: #f1f5f9;
+        color: #0d1b4b;
+        white-space: nowrap;
+    }
+
+    .bm-table td {
+        font-size: 12px;
+        padding: 10px 8px;
+        display: table-cell !important;
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
+    .bm-th-text {
+        font-size: 12px;
+        display: inline-block;
+        font-weight: 700;
+        color: #0d1b4b;
+    }
+
+    /* Ensure all columns are visible */
+    .bm-table thead tr {
+        display: table-row;
+    }
+
+    .bm-table tbody tr {
+        display: table-row;
+    }
+
+    .bm-table th,
+    .bm-table td {
+        display: table-cell !important;
+        min-width: 80px;
+        text-align: left;
+    }
+
+    /* Make table wrapper scrollable */
+    .bm-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        display: block;
+        width: 100%;
+    }
+
+    /* Pagination Styles */
+    .bm-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-top: 1px solid #e2e8f0;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .bm-pagination-info {
+        font-size: 12px;
+        color: #64748b;
+        white-space: nowrap;
+    }
+
+    .bm-pagination-controls {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .bm-pagination-btn {
+        padding: 6px 10px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        border-radius: 6px;
+        font-size: 11px;
+        color: #213F99;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+
+    .bm-pagination-btn:hover {
+        background: #f1f5f9;
+    }
+
+    /* Card Styles for Mobile */
+    .bm-card {
+        margin-bottom: 16px;
+    }
+
+    .bm-card-head {
+        padding: 12px 16px;
+    }
+
+    .bm-card-head h3 {
+        font-size: 14px;
+    }
+
+    /* Container Padding */
+    .bm-container {
+        padding: 12px;
+    }
+
+    /* Summary Cards Mobile */
+    #summaryCardsDesktop,
+    #abyipSummaryCardsDesktop,
+    #accomplishmentSummaryCardsDesktop {
+        display: none !important;
+    }
+
+    #summaryDropdownMobile,
+    #abyipSummaryDropdownMobile,
+    #accomplishmentSummaryDropdownMobile {
+        display: block !important;
+    }
+
+    /* Modal Responsive */
+    #programDetailModal > div {
+        margin: 20px !important;
+        max-width: calc(100% - 40px) !important;
+    }
+}
+
+/* Desktop Responsiveness */
+@media (min-width: 768px) {
+    .bm-table {
+        font-size: 13px;
+    }
+
+    .bm-table th {
+        font-size: 13px;
+        padding: 12px 8px;
+    }
+
+    .bm-table td {
+        font-size: 13px;
+        padding: 12px 8px;
+    }
+
+    .bm-th-text {
+        font-size: 13px;
+    }
+
+    #summaryCardsDesktop,
+    #abyipSummaryCardsDesktop,
+    #accomplishmentSummaryCardsDesktop {
+        display: grid !important;
+    }
+
+    #summaryDropdownMobile,
+    #abyipSummaryDropdownMobile,
+    #accomplishmentSummaryDropdownMobile {
+        display: none !important;
+    }
+}

@@ -185,11 +185,11 @@ const NetworkNotification = {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         LoadingScreen.init();
-        NetworkNotification.init();
+        // NetworkNotification.init(); // Disabled - network notification not needed
     });
 } else {
     LoadingScreen.init();
-    NetworkNotification.init();
+    // NetworkNotification.init(); // Disabled - network notification not needed
 }
 
 // Hide loading when page is fully loaded
@@ -207,27 +207,29 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Monitor online/offline status
-window.addEventListener('online', () => {
-    NetworkNotification.showOnline();
-});
+// Disabled - network notification not needed
+// window.addEventListener('online', () => {
+//     NetworkNotification.showOnline();
+// });
 
-window.addEventListener('offline', () => {
-    LoadingScreen.hide();
-    NetworkNotification.showOffline();
-});
+// window.addEventListener('offline', () => {
+//     LoadingScreen.hide();
+//     NetworkNotification.showOffline();
+// });
 
 // Monitor slow connection using Navigation Timing API
-window.addEventListener('load', () => {
-    if (window.performance && window.performance.timing) {
-        const perfData = window.performance.timing;
-        const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-        
-        // If page took more than 10 seconds to load, show slow connection warning
-        if (pageLoadTime > 10000) {
-            NetworkNotification.showSlowConnection();
-        }
-    }
-});
+// Disabled - network notification not needed
+// window.addEventListener('load', () => {
+//     if (window.performance && window.performance.timing) {
+//         const perfData = window.performance.timing;
+//         const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+//         
+//         // If page took more than 10 seconds to load, show slow connection warning
+//         if (pageLoadTime > 10000) {
+//             NetworkNotification.showSlowConnection();
+//         }
+//     }
+// });
 
 // Export for global use
 window.LoadingScreen = LoadingScreen;

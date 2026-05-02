@@ -1,0 +1,268 @@
+/* Archive Module Styles */
+
+.archive-container {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.archive-header {
+    margin-bottom: 24px;
+}
+
+.archive-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0d1b4b;
+    margin-bottom: 4px;
+}
+
+.archive-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+.archive-section {
+    margin-bottom: 32px;
+}
+
+.section-header {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0d1b4b;
+    margin-bottom: 16px;
+}
+
+.section-description {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 16px;
+}
+
+.filter-container {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #475569;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.filter-select:hover {
+    border-color: #cbd5e1;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #213F99;
+    box-shadow: 0 0 0 3px rgba(33, 63, 153, 0.1);
+}
+
+.table-wrapper {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+.archive-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.archive-table thead {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.archive-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0d1b4b;
+}
+
+.archive-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s;
+}
+
+.archive-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.archive-table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #0d1b4b;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge-abyip {
+    background: #eff3ff;
+    color: #213F99;
+}
+
+.badge-accomplishment {
+    background: #eff3ff;
+    color: #213F99;
+}
+
+.badge-rejected {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.badge-compliant {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.btn-action {
+    padding: 4px 10px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-recover {
+    color: #213F99;
+}
+
+.btn-recover:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.btn-delete {
+    color: #dc2626;
+}
+
+.btn-delete:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+.btn-unarchive {
+    color: #213F99;
+}
+
+.btn-unarchive:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.empty-state {
+    padding: 20px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .archive-container {
+        padding: 16px;
+    }
+
+    .archive-title {
+        font-size: 22px;
+    }
+
+    .filter-container {
+        gap: 8px;
+    }
+
+    .filter-select {
+        padding: 6px 10px;
+        font-size: 12px;
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .archive-table th,
+    .archive-table td {
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+
+    .btn-action {
+        padding: 3px 8px;
+        font-size: 10px;
+    }
+
+    .section-title {
+        font-size: 18px;
+    }
+
+    .section-description {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .archive-container {
+        padding: 12px;
+    }
+
+    .archive-title {
+        font-size: 18px;
+    }
+
+    .filter-select {
+        min-width: 100px;
+        font-size: 11px;
+    }
+
+    .archive-table th,
+    .archive-table td {
+        padding: 8px 6px;
+        font-size: 11px;
+    }
+
+    .btn-action {
+        padding: 2px 6px;
+        font-size: 9px;
+    }
+}

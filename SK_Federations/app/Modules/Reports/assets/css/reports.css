@@ -1,0 +1,47 @@
+/* Reports Module Styles */
+
+.reports-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Report Cards */
+.report-card,
+.abyip-report-card {
+    transition: all 0.2s ease;
+}
+
+.report-card:hover,
+.abyip-report-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Status Badge Colors */
+.status-compliant {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-partial {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status-non-compliant {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .reports-container {
+        padding: 12px;
+    }
+
+    .report-card,
+    .abyip-report-card {
+        min-width: 100%;
+    }
+}
