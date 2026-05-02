@@ -21,7 +21,7 @@
         <!-- ── Page Header ── -->
         <section class="spl-page-header">
             <div class="spl-page-header-left">
-                <a href="/schedule-programs" class="spl-btn spl-btn-back">
+                <a href="/schedule-programs" class="spl-btn-back">
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6"/>
@@ -103,10 +103,10 @@
             </select>
             <select id="splFilterDivision" class="spl-filter-input">
                 <option value="">All Divisions</option>
-                <option value="Cadet Division (15-17)">Cadet (15-17)</option>
-                <option value="Youth Division (18-21)">Youth (18-21)</option>
-                <option value="Young Adult (22-25)">Young Adult (22-25)</option>
-                <option value="Senior Division (26-30)">Senior (26-30)</option>
+                <option value="Junior Division (15-17)">Junior Division — 15–17</option>
+                <option value="Youth Division (18-21)">Youth Division — 18–21</option>
+                <option value="Senior Division (22-25)">Senior Division — 22–25</option>
+                <option value="Open Division (26-30)">Open Division — 26–30</option>
             </select>
             <div class="spl-search-wrap">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -127,6 +127,7 @@
                             <th>Division</th>
                             <th>Contact</th>
                             <th>Date Applied</th>
+                            <th>Payment</th>
                             <th>Status</th>
                             <th class="col-actions">Actions</th>
                         </tr>

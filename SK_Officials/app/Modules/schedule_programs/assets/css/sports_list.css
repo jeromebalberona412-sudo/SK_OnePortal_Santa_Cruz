@@ -79,11 +79,23 @@ body {
     white-space: nowrap;
 }
 
+/* Back button — tight around text only */
 .spl-btn-back {
     background: #2c2c3e;
     color: #fff;
     box-shadow: 0 2px 8px rgba(44,44,62,0.2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
     margin-bottom: 8px;
+    white-space: nowrap;
+    align-self: flex-start;
 }
 .spl-btn-back:hover { background: #1a1a28; transform: translateY(-1px); color: #fff; }
 
@@ -147,10 +159,11 @@ body {
 /* ── Filters ── */
 .spl-filters-row {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 16px;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    width: 100%;
 }
 
 .spl-filter-input {
@@ -162,7 +175,8 @@ body {
     color: #374151;
     font-family: inherit;
     cursor: pointer;
-    min-width: 160px;
+    width: 200px;
+    flex: 0 0 200px;
     transition: border-color 0.2s;
     appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -175,8 +189,8 @@ body {
 
 .spl-search-wrap {
     position: relative;
-    flex: 1;
-    min-width: 200px;
+    width: 220px;
+    flex: 0 0 220px;
 }
 .spl-search-wrap svg {
     position: absolute;
@@ -434,8 +448,83 @@ body {
     .spl-page-header { flex-direction: column; align-items: flex-start; }
     .spl-detail-grid { grid-template-columns: 1fr; }
     .spl-detail-grid.spl-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .spl-filters-row { flex-wrap: wrap; }
+    .spl-filter-input { flex: 1 1 calc(50% - 5px); width: auto; }
+    .spl-search-wrap { flex: 1 1 100%; width: auto; }
 }
 @media (max-width: 480px) {
     .spl-stats-grid { grid-template-columns: repeat(2, 1fr); }
     .spl-detail-grid.spl-grid-3 { grid-template-columns: 1fr; }
+    .spl-filter-input { flex: 1 1 100%; }
+}
+
+/* ── Payment badges in table ── */
+.spl-badge-paid    { background: #dcfce7; color: #15803d; }
+.spl-badge-notpaid { background: #fee2e2; color: #b91c1c; }
+
+/* ── Requirement PDF file card ── */
+.spl-req-file-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    max-width: 380px;
+    text-decoration: none;
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+    cursor: pointer;
+}
+.spl-req-file-card:hover {
+    border-color: #ef4444;
+    background: #fff5f5;
+    box-shadow: 0 2px 10px rgba(239,68,68,0.12);
+}
+.spl-req-file-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    background: #fee2e2;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.spl-req-file-info { flex: 1; min-width: 0; }
+.spl-req-file-name {
+    font-size: 13px; font-weight: 700; color: #111827;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.spl-req-file-meta { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.spl-req-file-badge {
+    background: #dcfce7; color: #15803d;
+    font-size: 10px; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+/* ── Payment pills in modal ── */
+.spl-payment-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px; border-radius: 9px; border: 2px solid #e5e7eb;
+    font-size: 13px; font-weight: 600; cursor: default;
+}
+.spl-payment-paid     { background: #dcfce7; border-color: #22c55e; color: #15803d; }
+.spl-payment-paid-off { background: #f9fafb; border-color: #e5e7eb; color: #9ca3af; }
+.spl-payment-notpaid     { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+.spl-payment-notpaid-off { background: #f9fafb; border-color: #e5e7eb; color: #9ca3af; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .spl-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .spl-page-header { flex-direction: column; align-items: flex-start; }
+    .spl-detail-grid { grid-template-columns: 1fr; }
+    .spl-detail-grid.spl-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .spl-filters-row { flex-wrap: wrap; }
+    .spl-filter-input { flex: 1 1 calc(50% - 5px); width: auto; }
+    .spl-search-wrap { flex: 1 1 100%; width: auto; }
+}
+@media (max-width: 480px) {
+    .spl-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .spl-detail-grid.spl-grid-3 { grid-template-columns: 1fr; }
+    .spl-filter-input { flex: 1 1 100%; }
 }

@@ -49,7 +49,15 @@ function initSportsList() {
             const name = formatName(a).toLowerCase();
             if (search && !name.includes(search) && !a.sport.toLowerCase().includes(search)) return false;
             if (sport && a.sport !== sport) return false;
-            if (div && a.division !== div) return false;
+            if (div) {
+                const age = parseInt(a.age, 10);
+                let match = false;
+                if (div === 'Junior Division (15-17)'  && age >= 15 && age <= 17) match = true;
+                if (div === 'Youth Division (18-21)'   && age >= 18 && age <= 21) match = true;
+                if (div === 'Senior Division (22-25)'  && age >= 22 && age <= 25) match = true;
+                if (div === 'Open Division (26-30)'    && age >= 26 && age <= 30) match = true;
+                if (!match) return false;
+            }
             return true;
         });
 
@@ -93,12 +101,15 @@ function initSportsList() {
         if (!tbody) return;
 
         if (list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="spl-empty">No approved sports participants found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" class="spl-empty">No approved sports participants found.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = list.map((a, i) => {
             const name = formatName(a);
+            const paymentBadge = a.paymentStatus === 'Paid'
+                ? `<span class="spl-badge spl-badge-paid">PAID</span>`
+                : `<span class="spl-badge spl-badge-notpaid">NOT PAID</span>`;
             return `
             <tr>
                 <td class="spl-td-name">${name}</td>
@@ -106,6 +117,7 @@ function initSportsList() {
                 <td>${a.division || '—'}</td>
                 <td>${a.contact || '—'}</td>
                 <td>${a.dateApplied || '—'}</td>
+                <td>${paymentBadge}</td>
                 <td><span class="spl-badge spl-badge-approved">APPROVED</span></td>
                 <td>
                     <button class="spl-action-btn" data-idx="${i}">View</button>
@@ -126,11 +138,21 @@ function initSportsList() {
         const body = document.getElementById('splViewBody');
         if (!modal || !body) return;
 
-        const chk = (checked) => checked
-            ? `<span class="spl-req-chk spl-req-chk-on"><span class="spl-req-chk-mark"></span></span>`
-            : `<span class="spl-req-chk"></span>`;
+        const file = a.requirementFile || { name: 'requirements.pdf', size: '4.2 MB' };
+        const reqFileHTML = `
+            <a href="#" download="${file.name}" class="spl-req-file-card" title="Click to download ${file.name}">
+                <div class="spl-req-file-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                </div>
+                <div class="spl-req-file-info">
+                    <div class="spl-req-file-name">${file.name}</div>
+                    <div class="spl-req-file-meta">${file.size} &nbsp;·&nbsp; Max 10 MB</div>
+                </div>
+                <span class="spl-req-file-badge">Uploaded</span>
+            </a>`;
 
-        const reqs = a.requirements || {};
+        const paymentStatus = a.paymentStatus || 'Not Paid';
+        const isPaid = paymentStatus === 'Paid';
 
         body.innerHTML = `
         <div class="spl-detail-card">
@@ -195,23 +217,20 @@ function initSportsList() {
 
         <div class="spl-detail-card">
             <div class="spl-detail-section-title">Submitted Requirements</div>
-            <div class="spl-req-list">
-                <div class="spl-req-item">
-                    ${chk(reqs.birthCertificate)}
-                    <span>Birth Certificate</span>
-                </div>
-                <div class="spl-req-item">
-                    ${chk(reqs.validId)}
-                    <span>Valid ID</span>
-                </div>
-                <div class="spl-req-item">
-                    ${chk(reqs.medicalCertificate)}
-                    <span>Medical Certificate</span>
-                </div>
-                <div class="spl-req-item">
-                    ${chk(reqs.parentConsent)}
-                    <span>Parent / Guardian Consent</span>
-                </div>
+            ${reqFileHTML}
+        </div>
+
+        <div class="spl-detail-card">
+            <div class="spl-detail-section-title">Payment Status</div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+                <span class="spl-payment-pill ${isPaid ? 'spl-payment-paid' : 'spl-payment-paid-off'}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Paid
+                </span>
+                <span class="spl-payment-pill ${!isPaid ? 'spl-payment-notpaid' : 'spl-payment-notpaid-off'}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Not Paid
+                </span>
             </div>
         </div>
         `;
@@ -278,7 +297,8 @@ function getSampleApprovedData() {
             address: '123 Main St., Brgy. Calios, Santa Cruz, Laguna',
             sport: 'Basketball', division: 'Youth Division (18-21)',
             dateApplied: 'Apr 28, 2026',
-            requirements: { birthCertificate: true, validId: true, medicalCertificate: true, parentConsent: false },
+            requirementFile: { name: 'requirements.pdf', size: '4.2 MB' },
+            paymentStatus: 'Paid',
             status: 'Approved'
         },
         {
@@ -287,9 +307,10 @@ function getSampleApprovedData() {
             dateOfBirth: '2001-08-22', age: 24,
             contact: '09281234567', email: 'maria.santos@email.com',
             address: '456 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
-            sport: 'Volleyball', division: 'Young Adult (22-25)',
+            sport: 'Volleyball', division: 'Senior Division (22-25)',
             dateApplied: 'Apr 29, 2026',
-            requirements: { birthCertificate: true, validId: true, medicalCertificate: true, parentConsent: false },
+            requirementFile: { name: 'requirements.pdf', size: '3.8 MB' },
+            paymentStatus: 'Paid',
             status: 'Approved'
         },
         {
@@ -298,9 +319,10 @@ function getSampleApprovedData() {
             dateOfBirth: '2008-03-10', age: 18,
             contact: '09391234567', email: 'pedro.reyes@email.com',
             address: '789 Bonifacio St., Brgy. Calios, Santa Cruz, Laguna',
-            sport: 'Basketball', division: 'Cadet Division (15-17)',
+            sport: 'Basketball', division: 'Junior Division (15-17)',
             dateApplied: 'Apr 30, 2026',
-            requirements: { birthCertificate: true, validId: true, medicalCertificate: true, parentConsent: true },
+            requirementFile: { name: 'requirements.pdf', size: '5.1 MB' },
+            paymentStatus: 'Not Paid',
             status: 'Approved'
         },
         {
@@ -311,7 +333,8 @@ function getSampleApprovedData() {
             address: '321 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
             sport: 'Volleyball', division: 'Youth Division (18-21)',
             dateApplied: 'May 1, 2026',
-            requirements: { birthCertificate: true, validId: true, medicalCertificate: true, parentConsent: false },
+            requirementFile: { name: 'requirements.pdf', size: '2.9 MB' },
+            paymentStatus: 'Paid',
             status: 'Approved'
         },
         {
@@ -320,9 +343,10 @@ function getSampleApprovedData() {
             dateOfBirth: '2002-09-30', age: 23,
             contact: '09831234567', email: 'miguel.torres@email.com',
             address: '147 Aguinaldo Ave., Brgy. Calios, Santa Cruz, Laguna',
-            sport: 'Basketball', division: 'Young Adult (22-25)',
+            sport: 'Basketball', division: 'Senior Division (22-25)',
             dateApplied: 'May 4, 2026',
-            requirements: { birthCertificate: true, validId: true, medicalCertificate: true, parentConsent: false },
+            requirementFile: { name: 'requirements.pdf', size: '7.5 MB' },
+            paymentStatus: 'Not Paid',
             status: 'Approved'
         },
     ];
