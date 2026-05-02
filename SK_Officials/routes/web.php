@@ -72,21 +72,22 @@ Route::middleware([
         return view('BudgetFinance::budget-finance');
     })->name('budget-finance');
 
-    Route::get('/kk-profiling-requests', function () {
-        return view('KKProfilingRequests::kkprofiling-requests');
-    })->name('kk-profiling-requests');
+    Route::get('/kk-profiling-requests', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
+    Route::get('/kk-profiling-requests/data', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'data'])->name('kkprofiling-requests.data');
+    Route::post('/kk-profiling-requests/{id}/approve', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'approve'])->name('kkprofiling-requests.approve');
+    Route::post('/kk-profiling-requests/{id}/reject', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'reject'])->name('kkprofiling-requests.reject');
 
     Route::get('/abyip', function () {
         return view('ABYIP::abyip');
     })->name('abyip.index');
 
-    Route::get('/kabataan', function () {
-        return view('Kabataan::kabataan');
-    })->name('kabataan');
+    Route::get('/kabataan', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'index'])->name('kabataan');
+    Route::get('/kabataan/data', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'data'])->name('kabataan.data');
 
-    Route::get('/previous-kabataan', function () {
-        return view('PreviousKabataan::previous-kabataan');
-    })->name('previous-kabataan');
+    Route::get('/previous-kabataan', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'index'])->name('previous-kabataan');
+    Route::get('/previous-kabataan/data', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'data'])->name('previous-kabataan.data');
+    Route::post('/previous-kabataan/upload', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'upload'])->name('previous-kabataan.upload');
+    Route::post('/previous-kabataan/move/{id}', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'moveFromActive'])->name('previous-kabataan.move');
 
     Route::get('/deleted-kabataan', function () {
         return view('Deleted_Kabataan::deleted-kabataan');

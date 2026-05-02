@@ -4,28 +4,20 @@ namespace App\Modules\Dashboard\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // PROTOTYPE MODE: Check for prototype authentication
-        if (!$request->session()->has('prototype_authenticated')) {
-            // If not authenticated in prototype mode, redirect to login
-            return redirect()->route('login')->with('error', 'Please login first.');
+        if (!Auth::check()) {
+            return redirect()->route('login');
         }
-        
-        // Get prototype user data
-        $prototypeUser = $request->session()->get('prototype_user', [
-            'id' => 1,
-            'name' => 'Youth User',
-            'email' => 'youth@skportal.com',
-            'barangay' => 'Barangay 1',
-        ]);
-        
-        // Pass user data to view
+
+        $user = Auth::user();
+
         return view('dashboard::index', [
-            'user' => (object) $prototypeUser
+            'user' => $user
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma'        => 'no-cache',
@@ -34,14 +26,11 @@ class DashboardController extends Controller
     }
     public function barangay(Request $request, string $slug)
     {
-        if (!$request->session()->has('prototype_authenticated')) {
-            return redirect()->route('login')->with('error', 'Please login first.');
+        if (!Auth::check()) {
+            return redirect()->route('login');
         }
 
-        $prototypeUser = $request->session()->get('prototype_user', [
-            'id' => 1, 'name' => 'Youth User',
-            'email' => 'youth@skportal.com', 'barangay' => 'Barangay 1',
-        ]);
+        $user = Auth::user();
 
         $barangays = [
             'alipit'         => 'Alipit',
@@ -116,7 +105,7 @@ class DashboardController extends Controller
         ];
 
         return view('dashboard::barangay', [
-            'user'     => (object) $prototypeUser,
+            'user'     => $user,
             'slug'     => $slug,
             'name'     => $name,
             'color'    => $colors[$slug] ?? '#667eea',

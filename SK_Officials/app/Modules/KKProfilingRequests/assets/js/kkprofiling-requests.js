@@ -87,7 +87,7 @@ function initializeKKProfilingRequestsUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 8;
+            td.colSpan = 9;
             td.textContent = 'No KK Profiling requests for this status.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -97,10 +97,13 @@ function initializeKKProfilingRequestsUI() {
 
         paginatedData.forEach((r) => {
             const tr = document.createElement('tr');
-            const statusClass = r.status === 'New Kabataan' ? 'approved'
+            const statusClass = r.status === 'active' || r.status === 'Auto Approved' ? 'approved'
+                : r.status === 'rejected' ? 'rejected'
                 : r.status === 'Duplicate' ? 'duplicate'
-                : r.status === 'Wrong Credential' ? 'rejected'
-                : r.status === 'New Applicant' ? 'new-applicant'
+                : r.status === 'Wrong Credentials' ? 'rejected'
+                : r.status === 'Not Profiled' ? 'pending'
+                : r.status === 'email_verified' ? 'duplicate'
+                : r.status === 'password_set' ? 'new-applicant'
                 : 'pending';
             const fullName = formatFullName(r);
             const voterStatus = r.registeredVoter || 'No';
@@ -149,6 +152,7 @@ function initializeKKProfilingRequestsUI() {
                 <td>${purokZone}</td>
                 <td>${voterStatus}</td>
                 <td><span class="kk-status-pill ${statusClass}">${r.status}</span></td>
+                <td>${r.evaluationNotes?.message || '—'}</td>
                 <td><div class="kk-actions"><button type="button" class="kk-btn-view" data-action="view" data-id="${r.id}">View</button></div></td>
             `;
             tbody.appendChild(tr);
@@ -358,6 +362,36 @@ function initializeKKProfilingRequestsUI() {
         setField('kkViewEmailAddress',  'emailAddress',  emailAddress  || '—');
         setField('kkViewContactNumber', 'contactNumber', contactNumber || '—');
 
+        // ── Inline mismatch highlights for Wrong Credentials ──
+        const mismatches = request.evaluationNotes?.mismatches || [];
+        const mismatchMap = {};
+        mismatches.forEach(m => { mismatchMap[m.field] = m; });
+
+        const fieldToElId = {
+            age:      'kkViewAge',
+            birthday: 'kkViewBirthday',
+            sex:      'kkViewSexAssignedAtBirth',
+            name:     'kkViewLastName',
+        };
+
+        // Remove old mismatch badges
+        document.querySelectorAll('.kk-eval-mismatch-badge').forEach(el => el.remove());
+
+        if (status === 'Wrong Credentials' && mismatches.length > 0) {
+            Object.entries(fieldToElId).forEach(([field, elId]) => {
+                if (!mismatchMap[field]) return;
+                const el = document.getElementById(elId);
+                if (!el) return;
+                const m = mismatchMap[field];
+                const badge = document.createElement('span');
+                badge.className = 'kk-eval-mismatch-badge';
+                badge.style.cssText = 'display:inline-block;margin-left:6px;padding:2px 7px;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;border-radius:4px;font-size:0.75rem;font-weight:600;';
+                badge.title = `Previous record: ${m.previous}`;
+                badge.textContent = `⚠ Previous: ${m.previous}`;
+                el.parentNode?.appendChild(badge);
+            });
+        }
+
         // Civil Status — also handle as editable if it's an error field
         if (isEditable && errorMap['civilStatus'] && !skipErrorPanel) {
             const e = errorMap['civilStatus'];
@@ -407,15 +441,43 @@ function initializeKKProfilingRequestsUI() {
         setCheck('kkViewVR_NoKK', votingReason === 'There was no KK Assembly'); setCheck('kkViewVR_NotInt', votingReason === 'Not Interested to Attend');
         setVal('kkViewFacebookAccount', facebookAccount || '—');
         setCheck('kkViewGC_Yes', willingToJoinGroupChat === 'Yes'); setCheck('kkViewGC_No', willingToJoinGroupChat === 'No');
-        setVal('kkViewSignature', signature || '—');
+        // Signature — render as image if base64, otherwise plain text
+        const sigEl = document.getElementById('kkViewSignature');
+        const sigOverlay = document.getElementById('kkViewSignatureOverlay');
+        if (sigEl) {
+            const nameParts = [firstName, middleName ? middleName.charAt(0) + '.' : null, lastName, suffix].filter(Boolean);
+            const printedName = nameParts.join(' ') || '—';
+            if (signature && signature.startsWith('data:image')) {
+                sigEl.innerHTML = `<img src="${signature}" alt="Signature" style="max-width:100%;max-height:80px;display:block;"><span style="display:block;margin-top:4px;font-weight:600;">${printedName}</span>`;
+                if (sigOverlay) sigOverlay.style.display = 'none';
+            } else {
+                sigEl.innerHTML = `<span>${signature || '—'}</span><span style="display:block;margin-top:4px;font-weight:600;">${printedName}</span>`;
+                if (sigOverlay) sigOverlay.style.display = signature ? 'none' : '';
+            }
+        }
 
         const rejectionWrap = document.getElementById('kkViewRejectionWrap');
         const rejectionText = document.getElementById('kkViewRejectionText');
         if (rejectionWrap && rejectionText) {
-            // Never show rejection reason for Wrong Credential — it's shown inline on the form
-            if (rejectionReason && status !== 'Wrong Credential') {
+            const notes = request.evaluationNotes;
+            let displayText = '';
+
+            if (status === 'Wrong Credentials' && notes?.mismatches?.length) {
+                displayText = 'Mismatched fields:\n' + notes.mismatches.map(m =>
+                    `• ${m.field}: submitted "${m.submitted}" — previous record has "${m.previous}"`
+                ).join('\n');
+            } else if (status === 'Not Profiled') {
+                displayText = notes?.message || 'No matching record found in previous kabataan.';
+            } else if (status === 'Duplicate') {
+                displayText = notes?.message || 'Already exists as an active Kabataan member.';
+            } else if (rejectionReason) {
+                displayText = rejectionReason;
+            }
+
+            if (displayText) {
                 rejectionWrap.style.display = 'block';
-                rejectionText.textContent = rejectionReason;
+                rejectionText.style.whiteSpace = 'pre-line';
+                rejectionText.textContent = displayText;
             } else {
                 rejectionWrap.style.display = 'none';
             }
@@ -564,15 +626,8 @@ function initializeKKProfilingRequestsUI() {
     if (viewApproveBtn) {
         viewApproveBtn.addEventListener('click', () => {
             if (activeRequestId) {
-                const request = requests.find(r => r.id === activeRequestId);
-                if (request) {
-                    const idx = requests.indexOf(request);
-                    if (idx !== -1) requests.splice(idx, 1);
-                    closeAllModals();
-                    renderTable();
-                    updateStatCards();
-                    showToast('KK Profiling Request Approved Successfully', 'success');
-                }
+                closeModal(viewModal);
+                openModal(approveModal);
             }
         });
     }
@@ -617,14 +672,39 @@ function initializeKKProfilingRequestsUI() {
     if (approveConfirmBtn) {
         approveConfirmBtn.addEventListener('click', () => {
             if (activeRequestId === null) { closeModal(approveModal); return; }
-            const request = requests.find((r) => r.id === activeRequestId);
-            if (!request) { closeModal(approveModal); return; }
-            const idx = requests.indexOf(request);
-            if (idx !== -1) requests.splice(idx, 1);
-            closeModal(approveModal);
-            renderTable();
-            updateStatCards();
-            showToast('KK Profiling Request Approved Successfully', 'success');
+
+            console.log('Approving request ID:', activeRequestId);
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            console.log('CSRF Token:', csrfToken ? 'Found' : 'Missing');
+
+            fetch(`/kk-profiling-requests/${activeRequestId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(r => {
+                console.log('Response status:', r.status);
+                return r.json();
+            })
+            .then(res => {
+                console.log('Response data:', res);
+                if (res.success) {
+                    closeModal(approveModal);
+                    closeModal(viewModal);
+                    showToast('KK Profiling Request Approved Successfully', 'success');
+                    loadData();
+                } else {
+                    showToast(res.message || 'Failed to approve.', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                showToast('Network error. Please try again.', 'error');
+            });
         });
     }
 
@@ -636,8 +716,7 @@ function initializeKKProfilingRequestsUI() {
     if (rejectConfirmBtn) {
         rejectConfirmBtn.addEventListener('click', () => {
             if (activeRequestId === null) { closeModal(rejectModal); return; }
-            const request = requests.find((r) => r.id === activeRequestId);
-            if (!request) { closeModal(rejectModal); return; }
+
             const checkboxes = rejectModal ? rejectModal.querySelectorAll('.kk-reject-reason:not(.kk-reject-other-checkbox)') : [];
             const selectedReasons = [];
             checkboxes.forEach((cb) => { if (cb.checked) selectedReasons.push(cb.value); });
@@ -648,13 +727,30 @@ function initializeKKProfilingRequestsUI() {
                 if (otherReason) selectedReasons.push('Other: ' + otherReason);
                 else { alert('Please specify the reason for "Other".'); return; }
             }
-            if (selectedReasons.length === 0) { alert('Please select at least one rejection reason or check Other and specify.'); return; }
-            request.status = 'Rejected';
-            request.rejectionReason = selectedReasons.join('; ');
-            closeModal(rejectModal);
-            closeModal(viewModal);
-            renderTable();
-            showSuccessModal('Rejected');
+            if (selectedReasons.length === 0) { alert('Please select at least one rejection reason.'); return; }
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            fetch(`/kk-profiling-requests/${activeRequestId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ reasons: selectedReasons }),
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    closeModal(rejectModal);
+                    closeModal(viewModal);
+                    showToast('KK Profiling Request Rejected', 'success');
+                    loadData();
+                } else {
+                    showToast(res.message || 'Failed to reject.', 'error');
+                }
+            })
+            .catch(() => showToast('Network error. Please try again.', 'error'));
         });
     }
 
@@ -673,18 +769,75 @@ function initializeKKProfilingRequestsUI() {
 
     // Compare with Census button — now just a link, no JS needed
 
-    // Load sample data from JSON then render
-    fetch('/sample-data/kkprofiling-requests.json')
+    // Load data from API then render
+    function loadData(params = {}) {
+        const url = new URL('/kk-profiling-requests/data', window.location.origin);
+        if (params.status && params.status !== 'All') url.searchParams.set('status', params.status);
+        if (params.search) url.searchParams.set('search', params.search);
+        if (params.purok) url.searchParams.set('purok', params.purok);
+        if (params.voter) url.searchParams.set('voter', params.voter);
+
+        fetch(url.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
         .then(r => r.json())
-        .then(data => {
-            requests.push(...data);
-            sortRequestsAlphabetically();
-            updateStatCards();
+        .then(response => {
+            requests.length = 0;
+            (response.data || []).forEach((r, i) => {
+                requests.push({
+                    id: r.id,
+                    respondentNumber: String(i + 1).padStart(3, '0'),
+                    date: r.submitted_at || '—',
+                    lastName: r.last_name,
+                    firstName: r.first_name,
+                    middleName: r.middle_name,
+                    suffix: r.suffix,
+                    age: r.age,
+                    birthday: r.birthday,
+                    sex: r.sex,
+                    emailAddress: r.email,
+                    contactNumber: r.contact_number,
+                    barangay: r.barangay,
+                    purokZone: r.purok_zone,
+                    registeredSKVoter: r.sk_voter,
+                    registeredNationalVoter: r.national_voter,
+                    registeredVoter: r.sk_voter,
+                    civilStatus: r.civil_status,
+                    youthClassification: r.youth_classification,
+                    youthAgeGroup: r.youth_age_group,
+                    workStatus: r.work_status,
+                    educationalBackground: r.education,
+                    votingHistory: r.sk_voted,
+                    votingFrequency: r.vote_frequency,
+                    attendedKKAssembly: r.kk_assembly,
+                    votingReason: Array.isArray(r.kk_reason) ? r.kk_reason[0] : r.kk_reason,
+                    facebookAccount: r.facebook,
+                    willingToJoinGroupChat: r.group_chat,
+                    signature: r.signature,
+                    status: r.evaluation_status || r.status,
+                    evaluationNotes: r.evaluation_notes,
+                    rejectionReason: r.review_notes,
+                    region: 'Region IV-A (CALABARZON)',
+                    province: 'Laguna',
+                    city: 'Santa Cruz',
+                });
+            });
+
+            const stats = response.stats || {};
+            const el = (id) => document.getElementById(id);
+            if (el('kkStatApproved'))  el('kkStatApproved').textContent  = stats.active || 0;
+            if (el('kkStatPending'))   el('kkStatPending').textContent   = stats.pending_verification || 0;
+            if (el('kkStatRejected'))  el('kkStatRejected').textContent  = stats.rejected || 0;
+            if (el('kkStatTotal'))     el('kkStatTotal').textContent     = stats.total || 0;
+
             setStatusFilter('All');
         })
         .catch(() => {
             setStatusFilter('All');
         });
+    }
+
+    loadData();
 }
 
 // ═══════════════════════════════════════════════════════

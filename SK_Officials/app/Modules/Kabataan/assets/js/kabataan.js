@@ -989,7 +989,65 @@ function initializeKabataanUI() {
         });
     }
 
-    render();
+    // Load from API
+    function loadData() {
+        const url = new URL('/kabataan/data', window.location.origin);
+        if (currentQuery) url.searchParams.set('search', currentQuery);
+
+        fetch(url.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(response => {
+            kabataan.length = 0;
+            (response.data || []).forEach(r => {
+                kabataan.push({
+                    id: r.id,
+                    respondentNumber: r.respondent_no,
+                    lastName: r.last_name,
+                    firstName: r.first_name,
+                    middleName: r.middle_name,
+                    suffix: r.suffix,
+                    age: r.age,
+                    sex: r.sex,
+                    birthday: r.birthday,
+                    email: r.email,
+                    contact: r.contact_number,
+                    barangay: r.barangay,
+                    purokZone: r.purok_zone,
+                    highestEducation: r.education,
+                    educationalBackground: r.education,
+                    civilStatus: r.civil_status,
+                    youthClassification: r.youth_classification,
+                    youthAgeGroup: r.youth_age_group,
+                    workStatus: r.work_status,
+                    registeredSKVoter: r.sk_voter,
+                    registeredNationalVoter: r.national_voter,
+                    votingHistory: r.sk_voted,
+                    votingFrequency: r.vote_frequency,
+                    attendedKKAssembly: r.kk_assembly,
+                    votingReason: Array.isArray(r.kk_reason) ? r.kk_reason[0] : r.kk_reason,
+                    facebookAccount: r.facebook,
+                    willingToJoinGroupChat: r.group_chat,
+                    signature: r.signature,
+                    date: r.submitted_at,
+                });
+            });
+
+            const stats = response.stats || {};
+            const el = id => document.getElementById(id);
+            if (el('kabStatApproved')) el('kabStatApproved').textContent = stats.active || 0;
+            if (el('kabStatPending'))  el('kabStatPending').textContent  = stats.pending || 0;
+            if (el('kabStatRejected')) el('kabStatRejected').textContent = stats.rejected || 0;
+            if (el('kabStatTotal'))    el('kabStatTotal').textContent    = stats.total || 0;
+
+            sortKabataanAlphabetically();
+            render();
+        })
+        .catch(() => render());
+    }
+
+    loadData();
 }
 
 

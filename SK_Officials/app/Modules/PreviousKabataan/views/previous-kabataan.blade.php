@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Previous Kabataan Records - SK Officials Portal</title>
 
     @vite([
@@ -93,15 +94,18 @@
                     <table class="prev-kab-table">
                         <thead>
                             <tr>
-                                <th>Respondent #</th>
-                                <th>
-                                    Full Name
-                                    <div class="column-hint">LN, FN, MN, Suffix</div>
-                                </th>
+                                <th>#</th>
+                                <th>Name</th>
                                 <th>Age</th>
                                 <th>Barangay</th>
-                                <th>Purok/Zone</th>
-                                <th>Voter Status</th>
+                                <th>Home Address</th>
+                                <th>Sex</th>
+                                <th>Civil Status</th>
+                                <th>Youth Classification</th>
+                                <th>Youth Age Group</th>
+                                <th>Education</th>
+                                <th>Work Status</th>
+                                <th>Registered Voter</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -387,44 +391,26 @@
                     <table class="preview-table preview-table--full">
                         <thead>
                             <tr>
-                                <th rowspan="2">Resp. #</th>
-                                <th rowspan="2">Date</th>
-                                <th colspan="4">I. Profile</th>
-                                <th colspan="5">Location</th>
-                                <th colspan="5">Personal Info</th>
-                                <th colspan="8">Civil Status</th>
-                                <th colspan="3">Youth Age Group</th>
-                                <th colspan="11">Education</th>
-                                <th colspan="7">Youth Classification</th>
-                                <th colspan="5">Work Status</th>
-                                <th colspan="4">Voting Info</th>
-                                <th colspan="2">KK Participation</th>
-                                <th colspan="2">Social</th>
-                                <th rowspan="2">Signature</th>
-                            </tr>
-                            <tr>
-                                {{-- Profile --}}
-                                <th>Last Name</th><th>First Name</th><th>Middle Name</th><th>Suffix</th>
-                                {{-- Location --}}
-                                <th>Region</th><th>Province</th><th>City/Mun.</th><th>Barangay</th><th>Purok/Zone</th>
-                                {{-- Personal --}}
-                                <th>Sex</th><th>Age</th><th>Birthday</th><th>Email</th><th>Contact #</th>
-                                {{-- Civil Status --}}
-                                <th>Single</th><th>Married</th><th>Widowed</th><th>Divorced</th><th>Separated</th><th>Annulled</th><th>Unknown</th><th>Live-in</th>
-                                {{-- Youth Age Group --}}
-                                <th>Child (15-17)</th><th>Core (18-24)</th><th>Young Adult (15-30)</th>
-                                {{-- Education --}}
-                                <th>Elem Lvl</th><th>Elem Grad</th><th>HS Lvl</th><th>HS Grad</th><th>Voc Grad</th><th>Col Lvl</th><th>Col Grad</th><th>Masters Lvl</th><th>Masters Grad</th><th>Doc Lvl</th><th>Doc Grad</th>
-                                {{-- Youth Classification --}}
-                                <th>In School</th><th>Out of School</th><th>Working</th><th>PWD</th><th>CICL</th><th>Indigenous</th><th>w/ Specific Needs</th>
-                                {{-- Work Status --}}
-                                <th>Employed</th><th>Unemployed</th><th>Self-Emp.</th><th>Looking</th><th>Not Interested</th>
-                                {{-- Voting --}}
-                                <th>SK Voter</th><th>Voted Last SK</th><th>Times Voted</th><th>Nat'l Voter</th>
-                                {{-- KK --}}
-                                <th>KK Assembly</th><th>If No: Reason</th>
-                                {{-- Social --}}
-                                <th>Facebook</th><th>Group Chat</th>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Birthday</th>
+                                <th>Sex</th>
+                                <th>Civil Status</th>
+                                <th>Youth Classification</th>
+                                <th>Youth Age Group</th>
+                                <th>Contact #</th>
+                                <th>Home Address</th>
+                                <th>Education</th>
+                                <th>Work Status</th>
+                                <th>Registered Voter?</th>
+                                <th>Voted Last Election?</th>
+                                <th>Attended KK Assembly?</th>
+                                <th>If Yes, How Many Times?</th>
+                                <th>Barangay</th>
+                                <th>Region</th>
+                                <th>Province</th>
+                                <th>City/Municipality</th>
                             </tr>
                         </thead>
                         <tbody id="prevKabPreviewTableBody">
