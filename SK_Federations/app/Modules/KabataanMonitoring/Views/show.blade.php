@@ -108,6 +108,9 @@
             <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring">
                 <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
             </a>
+            <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports">
+                <i class="fas fa-chart-bar"></i><span>Reports</span>
+            </a>
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item active" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
             </a>

@@ -158,6 +158,7 @@
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed"><i class="fas fa-rss"></i><span>SK Community Feed</span></a>
             <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring"><i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span></a>
+            <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring"><i class="fas fa-users"></i><span>Kabataan Monitoring</span></a>
             <div class="menu-divider"></div>
             <button type="button" class="menu-item logout-item" onclick="showLogoutModal()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>

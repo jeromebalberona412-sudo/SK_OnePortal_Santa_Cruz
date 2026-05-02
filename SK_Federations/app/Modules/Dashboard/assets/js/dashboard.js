@@ -77,6 +77,21 @@ function closeLogoutModal() {
     if (modal) modal.classList.remove('show');
 }
 
+// ── Archive Menu Toggle ──
+function toggleArchiveMenu() {
+    console.log('toggleArchiveMenu called');
+    const submenu = document.getElementById('archiveSubmenu');
+    const chevron = document.getElementById('archiveChevron');
+    console.log('submenu:', submenu, 'chevron:', chevron);
+    if (submenu && chevron) {
+        const isOpen = submenu.style.display === 'block';
+        console.log('isOpen:', isOpen);
+        submenu.style.display = isOpen ? 'none' : 'block';
+        chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        console.log('toggled - new display:', submenu.style.display);
+    }
+}
+
 function confirmLogout() {
     if (typeof LoadingScreen !== 'undefined') {
         LoadingScreen.show('Logging Out', 'Please wait...');

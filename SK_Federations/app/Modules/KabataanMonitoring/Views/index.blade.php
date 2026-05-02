@@ -96,7 +96,20 @@
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed"><i class="fas fa-rss"></i><span>SK Community Feed</span></a>
             <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring"><i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span></a>
+            <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item active" data-tooltip="Kabataan Monitoring"><i class="fas fa-users"></i><span>Kabataan Monitoring</span></a>
+            <a href="javascript:void(0);" class="menu-item" onclick="document.getElementById('archiveSubmenu').style.display = document.getElementById('archiveSubmenu').style.display === 'block' ? 'none' : 'block'; document.getElementById('archiveChevron').style.transform = document.getElementById('archiveSubmenu').style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)'; return false;" data-tooltip="Archive">
+                <i class="fas fa-archive"></i><span>Archive</span>
+                <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;"></i>
+            </a>
+            <div id="archiveSubmenu" style="display:none;padding-left:20px;border-left:2px solid #e2e8f0;margin-left:10px;">
+                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-trash"></i><span>Deleted Reports</span>
+                </a>
+                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-box"></i><span>Archived Reports</span>
+                </a>
+            </div>
             <div class="menu-divider"></div>
             <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
         </nav>

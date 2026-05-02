@@ -10,5 +10,7 @@ return [
     App\Modules\Profile\Providers\ProfileServiceProvider::class,
     App\Modules\CommunityFeed\Providers\CommunityFeedServiceProvider::class,
     App\Modules\BarangayMonitoring\Providers\BarangayMonitoringServiceProvider::class,
+    App\Modules\Reports\Providers\ReportsServiceProvider::class,
     App\Modules\KabataanMonitoring\Providers\KabataanMonitoringServiceProvider::class,
+    App\Modules\Archive\Providers\ArchiveServiceProvider::class,
 ];
