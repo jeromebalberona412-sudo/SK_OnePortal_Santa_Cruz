@@ -83,7 +83,7 @@
             </div>
             <div class="filters-row">
                 <div class="filter-item">
-                    <label for="kkStatusFilter" class="filter-label">Status</label>
+                    <label for="kkStatusFilter" class="filter-label">Kabataan Status</label>
                     <select id="kkStatusFilter" class="filter-select" onchange="document.querySelectorAll('.status-tab').forEach(t=>t.classList.remove('active')); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.classList.add('active'); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.click();">
                         <option value="All">All</option>
                         <option value="New Kabataan">New Kabataan</option>
@@ -143,7 +143,7 @@
                                 <th>Barangay</th>
                                 <th>Purok/Zone</th>
                                 <th>Registered Voter</th>
-                                <th>Status</th>
+                                <th>Kabataan Status</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>

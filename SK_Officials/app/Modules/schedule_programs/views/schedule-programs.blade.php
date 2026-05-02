@@ -301,6 +301,39 @@
             </div>
         </section>
 
+        <!-- ── Approved Sports Applications Table (shown on click of sports card) ── -->
+        <section class="page-content-section" id="spSportsSection" style="display:none;margin-top:20px;">
+            <div class="section-heading-row" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+                <div>
+                    <h2 class="section-title">Approved Sports Applications</h2>
+                    <p class="section-subtitle">List of approved sports program applications with Paid status.</p>
+                </div>
+                <a href="/sports-requests" class="sp-scholarship-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    Go to Sports Application Requests
+                </a>
+            </div>
+            <div class="table-card">
+                <div class="table-wrapper">
+                    <table class="sp-table">
+                        <thead>
+                            <tr>
+                                <th>FULL NAME<div class="column-hint" style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
+                                <th>Program Name</th>
+                                <th>Sport</th>
+                                <th>Division</th>
+                                <th>Schedule</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spSportsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
     </div>
 </main>
 
@@ -315,6 +348,20 @@
             </div>
         </div>
         <div class="sp-modal-body" id="spPassedViewBody" style="background:#f0f1f5;padding:20px;"></div>
+    </div>
+</div>
+
+<!-- ── Sports Application View Modal ── -->
+<div class="sp-modal-overlay" id="spSportsViewModal" style="display:none;">
+    <div class="sp-modal-box" id="spSportsViewBox" style="max-width:680px;">
+        <div class="sp-modal-header">
+            <h3>Sports Application Details</h3>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="sp-modal-close" id="spSportsViewMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="sp-modal-close" id="spSportsViewClose" title="Close">&times;</button>
+            </div>
+        </div>
+        <div class="sp-modal-body" id="spSportsViewBody" style="background:#f0f1f5;padding:20px;"></div>
     </div>
 </div>
 

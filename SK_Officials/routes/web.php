@@ -124,4 +124,9 @@ Route::middleware([
     Route::get('/rejected-scholarship', function () {
         return view('Rejected_Scholarship::rejected-scholarship');
     })->name('rejected-scholarship');
+
+    // ── Sports requests route (pure front-end, no DB) ──
+    Route::get('/sports-requests', function () {
+        return view('schedule_programs::sports_requests');
+    })->name('sports-requests');
 });
