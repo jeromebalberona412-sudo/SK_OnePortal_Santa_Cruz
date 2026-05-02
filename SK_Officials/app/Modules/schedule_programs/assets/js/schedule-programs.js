@@ -295,24 +295,8 @@ function initializeCommitteeCards() {
                         setTimeout(() => sportsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
                     }
                 } else if (type === 'education') {
-                    renderEducationActivity(act);
-                    const titleEl    = document.getElementById('spPassedSectionTitle');
-                    const subtitleEl = document.getElementById('spPassedSectionSubtitle');
-                    if (titleEl)    titleEl.textContent    = act;
-                    if (subtitleEl) subtitleEl.textContent = `Records for ${act} under Equitable Access to Quality Education.`;
-                    // Show/hide scholarship link for ALS/150 Students activities
-                    if (scholarshipLink) {
-                        if (act === '150 Students for Educational Assistance') {
-                            scholarshipLink.href         = '/scholarship';
-                            scholarshipLink.style.display = 'inline-flex';
-                        } else {
-                            scholarshipLink.style.display = 'none';
-                        }
-                    }
-                    if (passedSection) {
-                        passedSection.style.display = '';
-                        setTimeout(() => passedSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-                    }
+                    // Redirect to scholar list page
+                    window.location.href = '/scholar-list';
                 }
             });
 
@@ -338,69 +322,8 @@ function initializeCommitteeCards() {
             if (activityBtnsPanel) activityBtnsPanel.style.display = 'none';
 
             if (data.type === 'education') {
-                // Build activity filter buttons
-                buildActivityButtons(data);
-
-                // Immediately show ALL passed scholars (all activities combined)
-                const allRecords = [].concat(
-                    SP_EDUCATION_SAMPLE['Support to ALS and RIC'] || [],
-                    SP_EDUCATION_SAMPLE['150 Students for Educational Assistance'] || [],
-                    SP_EDUCATION_SAMPLE['Support to Elementary and Daycare'] || []
-                );
-
-                const titleEl    = document.getElementById('spPassedSectionTitle');
-                const subtitleEl = document.getElementById('spPassedSectionSubtitle');
-                if (titleEl)    titleEl.textContent    = 'Equitable Access to Quality Education';
-                if (subtitleEl) subtitleEl.textContent = 'All approved and passed scholars. Click an activity button above to filter.';
-
-                // Reset thead to default
-                const thead = document.getElementById('spPassedTableHead');
-                if (thead) {
-                    thead.innerHTML = `<tr>
-                        <th>FULL NAME<div class="column-hint" style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
-                        <th>School</th>
-                        <th>Year / Level</th>
-                        <th>Program / Strand</th>
-                        <th>Purpose</th>
-                        <th>Date Approved</th>
-                        <th>Result</th>
-                        <th class="col-actions">Actions</th>
-                    </tr>`;
-                }
-
-                const tbody = document.getElementById('spPassedTableBody');
-                if (tbody) {
-                    tbody.innerHTML = allRecords.map((r, i) => {
-                        const fullName = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}${r.suffix ? ' ' + r.suffix : ''}`;
-                        return `
-                        <tr>
-                            <td style="text-align:center;font-weight:600;">${fullName}</td>
-                            <td style="text-align:center;font-size:12px;">${r.school_name || '—'}</td>
-                            <td style="text-align:center;">${r.year_level || '—'}</td>
-                            <td style="text-align:center;font-size:12px;">${r.program_strand || '—'}</td>
-                            <td style="text-align:center;font-size:12px;">${r.purpose || '—'}</td>
-                            <td style="text-align:center;">${r.approved_at || '—'}</td>
-                            <td style="text-align:center;"><span class="sp-status-badge completed">Passed</span></td>
-                            <td style="text-align:center;">
-                                <div class="sp-actions">
-                                    <button class="sp-btn sp-btn-edit" data-passed-idx="${i}" style="background:#2c2c3e;">View</button>
-                                </div>
-                            </td>
-                        </tr>`;
-                    }).join('');
-
-                    tbody.querySelectorAll('button[data-passed-idx]').forEach(btn => {
-                        btn.addEventListener('click', function () {
-                            const idx = parseInt(this.getAttribute('data-passed-idx'), 10);
-                            if (allRecords[idx]) openPassedScholarModal(allRecords[idx]);
-                        });
-                    });
-                }
-
-                if (passedSection) {
-                    passedSection.style.display = '';
-                    setTimeout(() => passedSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-                }
+                // Redirect to scholar list page
+                window.location.href = '/scholar-list';
 
             } else if (data.type === 'sports') {
                 // Build activity filter buttons

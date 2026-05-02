@@ -71,6 +71,8 @@ export default defineConfig({
                 'app/Modules/schedule_programs/assets/js/sports_requests.js',
                 'app/Modules/schedule_programs/assets/css/scholarship_application_form.css',
                 'app/Modules/schedule_programs/assets/js/scholarship_requests.js',
+                'app/Modules/schedule_programs/assets/css/scholar_list.css',
+                'app/Modules/schedule_programs/assets/js/scholar_list.js',
                 // Rejected Scholarship module assets
                 'app/Modules/Rejected_Scholarship/assets/css/rejected-scholarship.css',
                 'app/Modules/Rejected_Scholarship/assets/js/rejected-scholarship.js',

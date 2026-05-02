@@ -1,0 +1,727 @@
+/* ── Scholar List Page ─────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f1f5;
+    min-height: 100vh;
+}
+
+.main-content {
+    margin-left: 280px;
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
+    transition: margin-left 0.3s ease;
+    padding: 20px;
+}
+
+.sl-page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+}
+
+/* ── Page Header ── */
+.sl-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.sl-page-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sl-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    text-decoration: none;
+    padding: 6px 0;
+    transition: color 0.2s;
+    width: fit-content;
+}
+
+.sl-back-btn:hover {
+    color: #22c55e;
+}
+
+.sl-back-btn svg {
+    flex-shrink: 0;
+}
+
+.sl-page-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.sl-page-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* ── Header Action Buttons ── */
+.sl-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sl-btn-green {
+    background: #22c55e;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.sl-btn-green:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+.sl-btn-dark {
+    background: #2c2c3e;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(44, 44, 62, 0.25);
+}
+
+.sl-btn-dark:hover {
+    background: #1a1a28;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(44, 44, 62, 0.35);
+}
+
+/* ── Activity Filter Buttons ── */
+.sl-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.sl-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 18px;
+    background: #ffffff;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sl-filter-btn:hover {
+    border-color: #22c55e;
+    color: #16a34a;
+    background: #f0fdf4;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+.sl-filter-btn.active {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border-color: #16a34a;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+/* ── Table Card ── */
+.sl-table-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.sl-table-wrapper {
+    overflow-x: auto;
+}
+
+.sl-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 860px;
+}
+
+/* ── Table Head ── */
+.sl-table thead tr {
+    background: #2c2c3e;
+}
+
+.sl-table thead th {
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sl-table thead th:last-child {
+    border-right: none;
+}
+
+.sl-table thead th.col-actions {
+    width: 90px;
+}
+
+.sl-col-hint {
+    font-size: 9px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+}
+
+/* ── Table Body ── */
+.sl-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.15s;
+}
+
+.sl-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.sl-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.sl-table tbody tr:hover {
+    background: rgba(245, 197, 24, 0.08);
+}
+
+.sl-table tbody td {
+    padding: 11px 14px;
+    color: #374151;
+    vertical-align: middle;
+    border-right: 1px solid #e5e7eb;
+}
+
+.sl-table tbody td:last-child {
+    border-right: none;
+}
+
+/* ── Table Cell Helpers ── */
+.sl-td-name {
+    text-align: center;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+}
+
+.sl-td-center {
+    text-align: center;
+}
+
+.sl-td-purpose {
+    font-size: 12px;
+    max-width: 180px;
+}
+
+.sl-td-program {
+    font-size: 12px;
+    max-width: 200px;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+/* ── PASSED Badge ── */
+.sl-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.sl-badge-passed,
+.sl-badge-approved {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+/* ── View Action Button ── */
+.sl-actions {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.sl-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 18px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #2c2c3e;
+    color: #fff;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 6px rgba(44, 44, 62, 0.2);
+}
+
+.sl-action-btn:hover {
+    background: #1a1a28;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(44, 44, 62, 0.3);
+}
+
+/* ── Empty State ── */
+.sl-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+/* ── Modal ── */
+.sl-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.sl-modal-box {
+    background: #fff;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 860px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    animation: slModalIn 0.18s ease-out;
+}
+
+@keyframes slModalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.sl-modal-box.sl-modal-maximized {
+    max-width: 98vw;
+    max-height: 96vh;
+    border-radius: 8px;
+}
+
+.sl-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #2c2c3e;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.sl-modal-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    color: #fff;
+}
+
+.sl-modal-close {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.sl-modal-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.sl-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f0f1f5;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .main-content { margin-left: 260px; padding: 16px; }
+}
+
+@media (max-width: 768px) {
+    .main-content { margin-left: 0; margin-top: 60px; padding: 12px; }
+
+    .sl-page-container {
+        padding: 16px 12px 32px;
+    }
+
+    .sl-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sl-header-actions {
+        width: 100%;
+    }
+
+    .sl-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .sl-filter-row {
+        gap: 8px;
+    }
+
+    .sl-filter-btn {
+        font-size: 12px;
+        padding: 7px 12px;
+    }
+}
+
+@media (min-width: 769px) {
+    .main-content.sidebar-collapsed { margin-left: 80px; }
+}
+
+
+/* ── PDF Form Modal Styles ────────────────────────────────────────────── */
+
+.sl-pdf-wrap {
+    background: #fff;
+    border-radius: 10px;
+    padding: 28px 32px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: #111827;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+/* Header */
+.sl-pdf-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1.5px solid #d1d5db;
+}
+
+.sl-pdf-logo {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.sl-pdf-title {
+    font-size: 18px;
+    font-weight: 900;
+    color: #111827;
+    text-align: center;
+    flex: 1;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin: 0;
+    align-self: center;
+}
+
+.sl-pdf-picbox {
+    width: 90px;
+    height: 100px;
+    border: 2px solid #374151;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    flex-shrink: 0;
+    background: #f9fafb;
+}
+
+/* Section title */
+.sl-pdf-section-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #111827;
+    text-decoration: underline;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+}
+
+.sl-pdf-note {
+    font-size: 10px;
+    font-weight: 500;
+    color: #6b7280;
+    text-decoration: none;
+    text-transform: none;
+    margin-left: 6px;
+}
+
+/* Date row */
+.sl-pdf-date-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+/* Field rows */
+.sl-pdf-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.sl-pdf-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-bottom: 2px;
+}
+
+.sl-pdf-sublabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.sl-pdf-underline {
+    border-bottom: 1.5px solid #374151;
+    display: inline-block;
+    padding: 0 4px 2px;
+    min-width: 80px;
+}
+
+.sl-pdf-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.sl-pdf-flex1  { flex: 1; min-width: 80px; }
+.sl-pdf-flex2  { flex: 2; min-width: 120px; }
+.sl-pdf-full   { flex: 1 1 100%; min-width: 200px; }
+.sl-pdf-narrow { min-width: 40px; max-width: 60px; }
+
+/* Two-column layout */
+.sl-pdf-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+/* Checkboxes */
+.sl-pdf-chk-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.sl-pdf-chk {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #374151;
+    background: #fff;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.sl-pdf-chk-on {
+    background: #2c2c3e;
+    border-color: #2c2c3e;
+}
+
+.sl-pdf-chk-mark {
+    position: absolute;
+    left: 2px;
+    top: -1px;
+    width: 6px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+    display: block;
+}
+
+/* Requirement item — checkbox row + view button stacked */
+.sl-pdf-req-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.sl-pdf-req-item:last-child {
+    margin-bottom: 0;
+}
+
+/* View PDF buttons */
+.sl-pdf-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: #eff6ff;
+    border: 1.5px solid #93c5fd;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1d4ed8;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-start;
+    margin-left: 22px;
+}
+
+.sl-pdf-view-btn:hover {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #1e40af;
+}
+
+/* Signature */
+.sl-pdf-sig-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 36px;
+    padding-top: 8px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.sl-pdf-sig-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 300px;
+}
+
+.sl-pdf-sig-name {
+    font-size: 24px;
+    font-style: italic;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #1d4ed8;
+    margin-bottom: 0;
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.sl-pdf-sig-line {
+    width: 100%;
+    border-bottom: 1.5px solid #374151;
+    margin-top: 2px;
+    margin-bottom: 5px;
+}
+
+.sl-pdf-sig-printed {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    text-align: center;
+    width: 100%;
+}
+
+.sl-pdf-sig-sublabel {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 3px;
+    text-align: center;
+    font-weight: 400;
+}
+
+/* Responsive PDF form */
+@media (max-width: 640px) {
+    .sl-pdf-two-col {
+        grid-template-columns: 1fr;
+    }
+    .sl-pdf-wrap {
+        padding: 16px;
+    }
+    .sl-pdf-title {
+        font-size: 14px;
+    }
+}
