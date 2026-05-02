@@ -70,7 +70,7 @@
                 @endif
 
                 <!-- Forgot Password Form -->
-                <form class="youth-login-form" id="forgotPasswordForm">
+                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}">
                     @csrf
 
                     <!-- Email Field -->
@@ -113,38 +113,14 @@
     </main>
 
     <script>
-        // Function to show inline error with auto-dismiss
-        function showInlineError(elementId, message) {
-            const errorElement = document.getElementById(elementId);
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            
-            // Auto-dismiss after 5 seconds
-            setTimeout(() => {
-                errorElement.style.display = 'none';
-            }, 5000);
-        }
-
-        // Prototype: Accept any email and redirect to reset password page
-        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            
-            // Clear previous errors
-            document.getElementById('emailError').style.display = 'none';
-            
-            // Validate email format
-            if (!emailRegex.test(email)) {
-                showInlineError('emailError', 'Please enter a valid email address.');
-                return;
+        (function () {
+            var btn = document.querySelector('.youth-submit-btn');
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    if (window.showLoading) window.showLoading('Sending reset link...');
+                });
             }
-            
-            // Redirect to reset password page with email parameter
-            if (window.showLoading) showLoading('Sending reset link');
-            window.location.href = '{{ route("password.reset", ["token" => "demo-token"]) }}?email=' + encodeURIComponent(email);
-        });
+        })();
     </script>
 </body>
 </html>

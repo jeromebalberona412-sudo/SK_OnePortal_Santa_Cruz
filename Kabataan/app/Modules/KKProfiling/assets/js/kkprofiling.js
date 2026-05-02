@@ -138,8 +138,6 @@
    FORM SUBMISSION HANDLER - Validate then Show Email Verification
 ═══════════════════════════════════════════════════════════════ */
 window.handleFormSubmit = function(event) {
-    event.preventDefault();
-
     // ── Clear previous errors ──
     document.querySelectorAll('.kkp-field-error').forEach(el => el.remove());
     document.querySelectorAll('.kkp-input-err').forEach(el => el.classList.remove('kkp-input-err'));
@@ -375,23 +373,10 @@ window.handleFormSubmit = function(event) {
         return false;
     }
 
-    // ── All valid — show email verification card ──
-    const emailVal = email.value.trim();
-    const formCard        = document.getElementById('kkpFormCard');
-    const emailVerifyCard = document.getElementById('emailVerifyCard');
-    const displayEmail    = document.getElementById('displayEmail');
-
-    if (formCard)        formCard.style.display        = 'none';
-    if (emailVerifyCard) {
-        emailVerifyCard.style.display = 'block';
-        if (displayEmail) displayEmail.textContent = emailVal;
-    }
-
-    // Start resend timer
-    if (window.startResendTimer) window.startResendTimer();
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return false;
+    // ── All valid — submit the form to backend ──
+    // Remove the fake email verification card display
+    // Let the form submit naturally to the controller
+    return true; // Allow form submission
 };
 
 /* ═══════════════════════════════════════════════════════════════

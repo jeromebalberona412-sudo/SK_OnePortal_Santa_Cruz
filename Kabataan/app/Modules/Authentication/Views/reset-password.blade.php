@@ -54,7 +54,7 @@
                 <!-- Alert Messages (removed - not needed for reset password page) -->
 
                 <!-- Reset Password Form -->
-                <form class="youth-login-form" id="resetPasswordForm">
+                <form class="youth-login-form" method="POST" action="{{ route('password.update') }}" id="resetPasswordForm">
                     @csrf
                     <input type="hidden" name="token" value="{{ $token ?? '' }}">
                     <input type="hidden" name="email" value="{{ $email ?? request()->email }}">

@@ -29,123 +29,9 @@ function makeSignatureSvg(index) {
         <path d="${path}" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
 }
-const PREV_KAB_DATA = [
-    {
-        id: 1, year: 2023, respondentNo: 'PK-2023-001',
-        lastName: 'Dela Cruz', firstName: 'Juan', middleName: 'Santos', suffix: '',
-        age: 20, barangay: 'Calios', purokZone: 'Bayside',
-        registeredVoter: 'Yes',
-        sex: 'Male', birthday: '15/06/2003', email: 'juan.delacruz@email.com', contact: '09171234567',
-        region: 'Region IV-A', province: 'Laguna', city: 'Santa Cruz',
-        civilStatus: 'Single', youthAgeGroup: 'Core Youth (18-24 yrs old)',
-        youthClassification: 'In School Youth', workStatus: 'Unemployed',
-        education: 'College Level', skVoter: 'Yes', natVoter: 'Yes',
-        votingHistory: 'Yes', votingFrequency: '1-2 Times',
-        kkAssembly: 'Yes', votingReason: '',
-        facebook: 'juan.delacruz', groupChat: 'Yes', date: '2023-01-15',
-    },
-    {
-        id: 2, year: 2023, respondentNo: 'PK-2023-002',
-        lastName: 'Reyes', firstName: 'Maria', middleName: 'Lopez', suffix: '',
-        age: 17, barangay: 'Calios', purokZone: 'Villa Gracia',
-        registeredVoter: 'No',
-        sex: 'Female', birthday: '22/09/2006', email: 'maria.reyes@email.com', contact: '09281234567',
-        region: 'Region IV-A', province: 'Laguna', city: 'Santa Cruz',
-        civilStatus: 'Single', youthAgeGroup: 'Child Youth (15-17 yrs old)',
-        youthClassification: 'In School Youth', workStatus: 'Unemployed',
-        education: 'High School Level', skVoter: 'No', natVoter: 'No',
-        votingHistory: 'No', votingFrequency: '',
-        kkAssembly: 'No', votingReason: 'Not Interested to Attend',
-        facebook: 'maria.reyes', groupChat: 'No', date: '2023-01-15',
-    },
-    {
-        id: 3, year: 2024, respondentNo: 'PK-2024-001',
-        lastName: 'Garcia', firstName: 'Pedro', middleName: 'Bautista', suffix: 'Jr.',
-        age: 24, barangay: 'Calios', purokZone: 'Imelda',
-        registeredVoter: 'Yes',
-        sex: 'Male', birthday: '03/03/2000', email: 'pedro.garcia@email.com', contact: '09391234567',
-        region: 'Region IV-A', province: 'Laguna', city: 'Santa Cruz',
-        civilStatus: 'Single', youthAgeGroup: 'Core Youth (18-24 yrs old)',
-        youthClassification: 'Working Youth', workStatus: 'Employed',
-        education: 'College Grad', skVoter: 'Yes', natVoter: 'Yes',
-        votingHistory: 'Yes', votingFrequency: '3-4 Times',
-        kkAssembly: 'Yes', votingReason: '',
-        facebook: 'pedro.garcia', groupChat: 'Yes', date: '2024-02-10',
-    },
-    {
-        id: 4, year: 2024, respondentNo: 'PK-2024-002',
-        lastName: 'Santos', firstName: 'Ana', middleName: 'Cruz', suffix: '',
-        age: 19, barangay: 'Calios', purokZone: 'Lupang Pangako',
-        registeredVoter: 'Yes',
-        sex: 'Female', birthday: '11/11/2004', email: 'ana.santos@email.com', contact: '09501234567',
-        region: 'Region IV-A', province: 'Laguna', city: 'Santa Cruz',
-        civilStatus: 'Single', youthAgeGroup: 'Core Youth (18-24 yrs old)',
-        youthClassification: 'In School Youth', workStatus: 'Unemployed',
-        education: 'College Level', skVoter: 'Yes', natVoter: 'No',
-        votingHistory: 'Yes', votingFrequency: '1-2 Times',
-        kkAssembly: 'Yes', votingReason: '',
-        facebook: 'ana.santos', groupChat: 'Yes', date: '2024-02-10',
-    },
-    {
-        id: 5, year: 2025, respondentNo: 'PK-2025-001',
-        lastName: 'Mendoza', firstName: 'Carlo', middleName: 'Ramos', suffix: '',
-        age: 22, barangay: 'Calios', purokZone: 'Damayan',
-        registeredVoter: 'Yes',
-        sex: 'Male', birthday: '07/07/2002', email: 'carlo.mendoza@email.com', contact: '09611234567',
-        region: 'Region IV-A', province: 'Laguna', city: 'Santa Cruz',
-        civilStatus: 'Single', youthAgeGroup: 'Core Youth (18-24 yrs old)',
-        youthClassification: 'Out of School Youth', workStatus: 'Self-Employed',
-        education: 'High School Grad', skVoter: 'Yes', natVoter: 'Yes',
-        votingHistory: 'Yes', votingFrequency: '1-2 Times',
-        kkAssembly: 'No', votingReason: 'There was no KK Assembly',
-        facebook: 'carlo.mendoza', groupChat: 'Yes', date: '2025-03-05',
-    },
-    {
-        id: 6, year: 2025, respondentNo: 'PK-2025-002',
-        lastName: 'Torres', firstName: 'Liza', middleName: 'Villanueva', suffix: '',
-        age: 16, barangay: 'Calios', purokZone: 'Marcelo',
-        registeredVoter: 'No',
-        sex: 'Female', birthday: '30/04/2008', email: 'liza.torres@email.com', contact: '09721234567',
-        region: 'Region IV-A', province: 'Laguna', city: 'Santa Cruz',
-        civilStatus: 'Single', youthAgeGroup: 'Child Youth (15-17 yrs old)',
-        youthClassification: 'In School Youth', workStatus: 'Unemployed',
-        education: 'High School Level', skVoter: 'No', natVoter: 'No',
-        votingHistory: 'No', votingFrequency: '',
-        kkAssembly: 'Yes', votingReason: '',
-        facebook: 'liza.torres', groupChat: 'No', date: '2025-03-05',
-    },
-    {
-        id: 7, year: 2026, respondentNo: 'PK-2026-001',
-        lastName: 'Bautista', firstName: 'Marco', middleName: 'Reyes', suffix: '',
-        age: 21, barangay: 'Calios', purokZone: 'Bigayan Villa Rosa',
-        registeredVoter: 'Yes',
-        sex: 'Male', birthday: '12/03/2004', email: 'marco.bautista@email.com', contact: '09831234567',
-        region: 'Region IV-A', province: 'Laguna', city: 'Santa Cruz',
-        civilStatus: 'Single', youthAgeGroup: 'Core Youth (18-24 yrs old)',
-        youthClassification: 'In School Youth', workStatus: 'Unemployed',
-        education: 'College Level', skVoter: 'Yes', natVoter: 'Yes',
-        votingHistory: 'Yes', votingFrequency: '1-2 Times',
-        kkAssembly: 'Yes', votingReason: '',
-        facebook: 'marco.bautista', groupChat: 'Yes', date: '2026-01-20',
-    },
-    {
-        id: 8, year: 2026, respondentNo: 'PK-2026-002',
-        lastName: 'Villanueva', firstName: 'Rosa', middleName: 'Dela Torre', suffix: '',
-        age: 18, barangay: 'Calios', purokZone: 'Phase 3',
-        registeredVoter: 'No',
-        sex: 'Female', birthday: '05/08/2007', email: 'rosa.villanueva@email.com', contact: '09941234567',
-        region: 'Region IV-A', province: 'Laguna', city: 'Santa Cruz',
-        civilStatus: 'Single', youthAgeGroup: 'Core Youth (18-24 yrs old)',
-        youthClassification: 'In School Youth', workStatus: 'Unemployed',
-        education: 'High School Grad', skVoter: 'No', natVoter: 'No',
-        votingHistory: 'No', votingFrequency: '',
-        kkAssembly: 'No', votingReason: 'Not Interested to Attend',
-        facebook: 'rosa.villanueva', groupChat: 'Yes', date: '2026-01-20',
-    },
-];
-
 /* ── State ── */
-let filteredData    = [...PREV_KAB_DATA];
+let PREV_KAB_DATA   = [];
+let filteredData    = [];
 let currentPage     = 1;
 const ROWS_PER_PAGE = 10;
 let uploadedRows    = [];
@@ -163,33 +49,90 @@ const nextBtn        = document.getElementById('prevKabNextBtn');
 
 /* ── Helpers ── */
 function fullName(r) {
-    const parts = [r.lastName, r.firstName, r.middleName].filter(Boolean).join(', ');
-    return r.suffix ? `${parts} ${r.suffix}` : parts;
+    const parts = [r.lastName || r.last_name, r.firstName || r.first_name, r.middleName || r.middle_name].filter(Boolean).join(', ');
+    const sfx = r.suffix;
+    return sfx ? `${parts} ${sfx}` : parts;
+}
+
+/* ── Load from API ── */
+function loadData() {
+    const url = new URL('/previous-kabataan/data', window.location.origin);
+    if (yearFilter?.value)  url.searchParams.set('year',   yearFilter.value);
+    if (searchInput?.value) url.searchParams.set('search', searchInput.value.trim());
+    if (purokFilter?.value) url.searchParams.set('purok',  purokFilter.value);
+    if (voterFilter?.value) url.searchParams.set('voter',  voterFilter.value);
+
+    fetch(url.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(response => {
+        PREV_KAB_DATA = (response.data || []).map(r => ({
+            id: r.id,
+            year: r.profiling_year,
+            respondentNo: r.respondent_no,
+            name: r.name || '',
+            lastName: r.last_name,
+            firstName: r.first_name,
+            middleName: r.middle_name,
+            suffix: r.suffix,
+            age: r.age,
+            barangay: r.barangay,
+            homeAddress: r.home_address || r.purok_zone || '',
+            purokZone: r.purok_zone,
+            registeredVoter: r.sk_voter,
+            sex: r.sex,
+            birthday: r.birthday,
+            email: r.email,
+            contact: r.contact_number,
+            region: r.region,
+            province: r.province,
+            city: r.city,
+            civilStatus: r.civil_status,
+            youthAgeGroup: r.youth_age_group,
+            youthClassification: r.youth_classification,
+            workStatus: r.work_status,
+            education: r.education,
+            skVoter: r.sk_voter,
+            natVoter: r.national_voter,
+            votingHistory: r.sk_voted,
+            votingFrequency: r.vote_frequency,
+            kkAssembly: r.kk_assembly,
+            votingReason: Array.isArray(r.kk_reason) ? r.kk_reason[0] : r.kk_reason,
+            facebook: r.facebook,
+            groupChat: r.group_chat,
+            signature: r.signature,
+            date: r.date,
+        }));
+
+        // Populate year filter dynamically
+        if (yearFilter && response.years?.length) {
+            const currentVal = yearFilter.value;
+            yearFilter.innerHTML = '<option value="">All Years</option>';
+            response.years.forEach(y => {
+                yearFilter.innerHTML += `<option value="${y}" ${String(y) === currentVal ? 'selected' : ''}>${y}</option>`;
+            });
+        }
+
+        filteredData = [...PREV_KAB_DATA];
+        currentPage = 1;
+        renderTable();
+    })
+    .catch(() => {
+        filteredData = [];
+        renderTable();
+    });
 }
 
 /* ── Filter & Render ── */
 function applyFilters() {
-    const q      = (searchInput?.value || '').toLowerCase().trim();
-    const yr     = yearFilter?.value || '';
-    const purok  = purokFilter?.value || '';
-    const voter  = voterFilter?.value || '';
-
-    filteredData = PREV_KAB_DATA.filter(r => {
-        const matchQ     = !q     || fullName(r).toLowerCase().includes(q) || r.respondentNo.toLowerCase().includes(q);
-        const matchYr    = !yr    || String(r.year) === yr;
-        const matchPurok = !purok || r.purokZone === purok;
-        const matchVoter = !voter || r.registeredVoter === voter;
-        return matchQ && matchYr && matchPurok && matchVoter;
-    });
-
-    currentPage = 1;
-    renderTable();
+    loadData();
 }
 
+/* ── Render ── */
 function renderTable() {
     const total = filteredData.length;
     const pages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
-    if (currentPage > pages) currentPage = pages;
 
     const start = (currentPage - 1) * ROWS_PER_PAGE;
     const slice = filteredData.slice(start, start + ROWS_PER_PAGE);
@@ -197,16 +140,22 @@ function renderTable() {
     if (!tableBody) return;
 
     if (slice.length === 0) {
-        tableBody.innerHTML = `<tr class="empty-state-row"><td colspan="7">No records found.</td></tr>`;
+        tableBody.innerHTML = `<tr class="empty-state-row"><td colspan="13">No records found.</td></tr>`;
     } else {
-        tableBody.innerHTML = slice.map(r => `
+        tableBody.innerHTML = slice.map((r, i) => `
             <tr>
-                <td>${r.respondentNo}</td>
-                <td class="fullname-cell">${fullName(r)}</td>
+                <td>${(currentPage - 1) * ROWS_PER_PAGE + i + 1}</td>
+                <td class="fullname-cell">${r.name || fullName(r)}</td>
                 <td>${r.age}</td>
                 <td>${r.barangay}</td>
-                <td>${r.purokZone}</td>
-                <td><span class="voter-badge ${r.registeredVoter === 'Yes' ? 'yes' : 'no'}">${r.registeredVoter}</span></td>
+                <td>${r.homeAddress || r.purokZone || '—'}</td>
+                <td>${r.sex}</td>
+                <td>${r.civilStatus}</td>
+                <td>${r.youthClassification}</td>
+                <td>${r.youthAgeGroup}</td>
+                <td>${r.education}</td>
+                <td>${r.workStatus}</td>
+                <td><span class="voter-badge ${r.registeredVoter === 'YES' || r.registeredVoter === 'Yes' ? 'yes' : 'no'}">${r.registeredVoter}</span></td>
                 <td>
                     <div class="row-actions">
                         <button class="btn-action-view" onclick="openViewModal(${r.id})">View</button>
@@ -275,24 +224,31 @@ window.openViewModal = function(id) {
 
     setCheckboxes('pvSex',                 r.sex);
     setCheckboxes('pvCivilStatus',         r.civilStatus);
-    setCheckboxes('pvYouthAgeGroup',       r.youthAgeGroup);
-    setCheckboxes('pvYouthClassification', r.youthClassification);
-    setCheckboxes('pvWorkStatus',          r.workStatus);
-    setCheckboxes('pvEducation',           r.education);
+    setCheckboxes('pvYouthAgeGroup',       normalizeValue('pvYouthAgeGroup', r.youthAgeGroup));
+    setCheckboxes('pvYouthClassification', normalizeValue('pvYouthClassification', r.youthClassification));
+    setCheckboxes('pvWorkStatus',          normalizeValue('pvWorkStatus', r.workStatus));
+    setCheckboxes('pvEducation',           normalizeValue('pvEducation', r.education));
     setCheckboxes('pvSKVoter',             r.skVoter);
     setCheckboxes('pvNatVoter',            r.natVoter);
     setCheckboxes('pvVotingHistory',       r.votingHistory);
-    setCheckboxes('pvVotingFrequency',     r.votingFrequency);
+    setCheckboxes('pvVotingFrequency',     normalizeValue('pvVotingFrequency', r.votingFrequency));
     setCheckboxes('pvKKAssembly',          r.kkAssembly);
     setCheckboxes('pvVotingReason',        r.votingReason);
     setCheckboxes('pvGroupChat',           r.groupChat);
 
-    setText('pvSignatureText', `${r.firstName} ${r.lastName}`);
+    // Signature — image or text
+    const sigSvg  = document.getElementById('pvSignatureSvg');
+    const sigText = document.getElementById('pvSignatureText');
+    const printedName = [r.firstName, r.middleName ? r.middleName.charAt(0) + '.' : null, r.lastName, r.suffix].filter(Boolean).join(' ');
 
-    // Inject unique signature SVG path for this record
-    const sigSvg = document.getElementById('pvSignatureSvg');
-    if (sigSvg) {
-        sigSvg.innerHTML = `<path d="${getSignaturePath(r.id)}" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (r.signature && r.signature.startsWith('data:image')) {
+        if (sigSvg) sigSvg.innerHTML = '';
+        if (sigText) sigText.innerHTML = `<img src="${r.signature}" alt="Signature" style="max-width:100%;max-height:60px;display:block;"><span style="display:block;margin-top:4px;font-weight:600;">${printedName}</span>`;
+    } else {
+        if (sigSvg) {
+            sigSvg.innerHTML = `<path d="${getSignaturePath(r.id)}" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+        }
+        if (sigText) sigText.textContent = printedName;
     }
 
     document.getElementById('prevKabViewModal').style.display = 'flex';
@@ -304,9 +260,47 @@ function setText(id, val) {
 }
 
 function setCheckboxes(field, value) {
+    if (!value) return;
+    const v = String(value).trim().toLowerCase();
     document.querySelectorAll(`[data-view-field="${field}"]`).forEach(chk => {
-        chk.checked = chk.value === value;
+        chk.checked = chk.value.trim().toLowerCase() === v;
     });
+}
+
+// Normalize Excel abbreviated values to full display values
+function normalizeValue(field, value) {
+    if (!value) return value;
+    const v = String(value).trim().toUpperCase();
+
+    if (field === 'pvYouthAgeGroup') {
+        if (v === '15-17') return 'Child Youth (15-17 yrs old)';
+        if (v === '18-24') return 'Core Youth (18-24 yrs old)';
+        if (v === '15-30') return 'Young Adult (15-30 yrs old)';
+    }
+    if (field === 'pvYouthClassification') {
+        if (v === 'IN SCHOOL' || v === 'IN SCHOOL YOUTH') return 'In School Youth';
+        if (v === 'OUT OF SCHOOL' || v === 'OUT OF SCHOOL YOUTH') return 'Out of School Youth';
+        if (v === 'WORKING' || v === 'WORKING YOUTH') return 'Working Youth';
+    }
+    if (field === 'pvWorkStatus') {
+        if (v === 'N/A' || v === 'NA') return '';
+        if (v === 'EMPLOYED') return 'Employed';
+        if (v === 'UNEMPLOYED') return 'Unemployed';
+        if (v === 'SELF-EMPLOYED') return 'Self-Employed';
+    }
+    if (field === 'pvEducation') {
+        if (v === 'HIGHSCHOOL' || v === 'HIGH SCHOOL') return 'High School Level';
+        if (v === 'SENIOR HIGH' || v === 'SENIOR HIGHSCHOOL' || v === 'SENIOR HIGH SCHOOL') return 'High School Grad';
+        if (v === 'COLLEGE') return 'College Level';
+        if (v === 'COLLEGE GRADUATE' || v === 'COLLEGE GRAD') return 'College Grad';
+        if (v === 'MASTERS' || v === 'MASTERS LEVEL') return 'Masters Level';
+    }
+    if (field === 'pvVotingFrequency') {
+        if (v === '1' || v === '1-2' || v === '1-2 TIMES') return '1-2 Times';
+        if (v === '2' || v === '3-4' || v === '3-4 TIMES') return '3-4 Times';
+        if (v === '3' || v === '5+' || v === '5 AND ABOVE' || v === '5 ABOVE') return '5 and above';
+    }
+    return value;
 }
 
 /* ── Modal close / maximize ── */
@@ -391,21 +385,82 @@ function handleFileSelected(file) {
 
     if (selectedFileName) selectedFileName.textContent = file.name;
     if (selectedFileBar)  selectedFileBar.classList.add('visible');
-    if (confirmUploadBtn) confirmUploadBtn.disabled = false;
+    if (confirmUploadBtn) confirmUploadBtn.disabled = true; // disable until parsed
 
-    // Immediately show inline preview with mock full-detail data
-    uploadedRows = generateFullMockRows();
-    renderFullPreviewTable(uploadedRows);
+    // Parse Excel with SheetJS
+    import('xlsx').then((XLSX) => {
+        const { read, utils } = XLSX;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const wb = read(e.target.result, { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const raw = utils.sheet_to_json(ws, { defval: '' });
 
-    // Expand modal to wide mode and show preview
-    if (inlinePreview) inlinePreview.style.display = 'block';
-    if (uploadZone)    uploadZone.style.display = 'none';
-    if (confirmSaveBtn) confirmSaveBtn.style.display = 'inline-flex';
-    if (confirmUploadBtn) confirmUploadBtn.style.display = 'none';
+            // Normalize keys: lowercase + underscores
+            uploadedRows = raw.map((r, idx) => {
+                const norm = {};
+                Object.keys(r).forEach(k => { norm[k.toLowerCase().replace(/[\s\/\-]+/g, '_')] = r[k]; });
 
-    // Widen the modal
-    const modalBox = uploadModal?.querySelector('.upload-modal-box--wide');
-    if (modalBox) modalBox.classList.add('is-previewing');
+                // Convert Excel date serial to readable date
+                const rawBday = norm['birthday'] || norm['birthday_(month_day_year)'] || '';
+                let birthday = rawBday;
+                if (typeof rawBday === 'number') {
+                    const d = XLSX.SSF.parse_date_code(rawBday);
+                    birthday = `${String(d.m).padStart(2,'0')}/${String(d.d).padStart(2,'0')}/${d.y}`;
+                }
+
+                const voteTimes = norm['if_yes,_how_many_times?'] || norm['if_yes__how_many_times?'] || '';
+
+                return {
+                    respondentNo:        String(idx + 1).padStart(3, '0'),
+                    date:                norm['date'] || '',
+                    name:                norm['name'] || '',
+                    lastName:            '',
+                    firstName:           '',
+                    middleName:          '',
+                    suffix:              '',
+                    region:              norm['region'] || 'Region IV-A (CALABARZON)',
+                    province:            norm['province'] || 'Laguna',
+                    city:                norm['city_municipality'] || norm['city'] || 'Santa Cruz',
+                    barangay:            norm['barangay'] || '',
+                    homeAddress:         String(norm['home_address'] || '').trim(),
+                    purokZone:           String(norm['home_address'] || '').trim(),
+                    sex:                 norm['sex_assigned_at_birth'] || norm['sex'] || '',
+                    age:                 norm['age'] || '',
+                    birthday:            birthday,
+                    email:               norm['email'] || '',
+                    contact:             String(norm['contact_number'] || ''),
+                    civilStatus:         String(norm['civil_status'] || '').trim(),
+                    youthAgeGroup:       norm['youth_age_group'] || '',
+                    youthClassification: String(norm['youth_classification'] || '').trim(),
+                    workStatus:          String(norm['work_status'] || '').trim(),
+                    education:           String(norm['highest_educational_attainment'] || norm['education'] || '').trim(),
+                    skVoter:             norm['registered_voter?'] || norm['registered_voter'] || '',
+                    natVoter:            '',
+                    votingHistory:       norm['voted_last_election?'] || norm['voted_last_election'] || '',
+                    votingFrequency:     voteTimes ? String(voteTimes) : '',
+                    kkAssembly:          norm['attended_kk__assembly?'] || norm['attended_kk_assembly?'] || norm['attended_kk_assembly'] || '',
+                    votingReason:        '',
+                    facebook:            norm['facebook'] || '',
+                    groupChat:           norm['group_chat'] || '',
+                    registeredVoter:     norm['registered_voter?'] || norm['registered_voter'] || '',
+                };
+            }).filter(r => r.name || r.lastName);
+
+            renderFullPreviewTable(uploadedRows);
+
+            if (inlinePreview) inlinePreview.style.display = 'block';
+            if (uploadZone)    uploadZone.style.display = 'none';
+            if (confirmSaveBtn) confirmSaveBtn.style.display = 'inline-flex';
+            if (confirmUploadBtn) { confirmUploadBtn.style.display = 'none'; confirmUploadBtn.disabled = false; }
+
+            const modalBox = uploadModal?.querySelector('.upload-modal-box--wide');
+            if (modalBox) modalBox.classList.add('is-previewing');
+        };
+        reader.readAsArrayBuffer(file);
+    }).catch(() => {
+        alert('Failed to load Excel parser. Please try again.');
+    });
 }
 
 if (removeFileBtn) {
@@ -482,69 +537,28 @@ function renderFullPreviewTable(rows) {
     if (count) count.textContent = rows.length;
     if (!tbody) return;
 
-    const chk = (val, match) => val === match ? '✔' : '';
-
     tbody.innerHTML = rows.map((r, idx) => `
         <tr>
-            <td>${r.respondentNo}</td>
-            <td>${r.date}</td>
-            <td>${r.lastName}</td>
-            <td>${r.firstName}</td>
-            <td>${r.middleName}</td>
-            <td>${r.suffix}</td>
+            <td>${idx + 1}</td>
+            <td>${r.name || [r.lastName, r.firstName, r.middleName].filter(Boolean).join(', ')}</td>
+            <td>${r.age}</td>
+            <td>${r.birthday}</td>
+            <td>${r.sex}</td>
+            <td>${r.civilStatus}</td>
+            <td>${r.youthClassification}</td>
+            <td>${r.youthAgeGroup}</td>
+            <td>${r.contact}</td>
+            <td>${r.homeAddress || r.purokZone}</td>
+            <td>${r.education}</td>
+            <td>${r.workStatus}</td>
+            <td>${r.registeredVoter}</td>
+            <td>${r.votingHistory}</td>
+            <td>${r.kkAssembly}</td>
+            <td>${r.votingFrequency}</td>
+            <td>${r.barangay}</td>
             <td>${r.region}</td>
             <td>${r.province}</td>
             <td>${r.city}</td>
-            <td>${r.barangay}</td>
-            <td>${r.purokZone}</td>
-            <td>${r.sex}</td>
-            <td>${r.age}</td>
-            <td>${r.birthday}</td>
-            <td>${r.email}</td>
-            <td>${r.contact}</td>
-            <td>${chk(r.civilStatus,'Single')}</td>
-            <td>${chk(r.civilStatus,'Married')}</td>
-            <td>${chk(r.civilStatus,'Widowed')}</td>
-            <td>${chk(r.civilStatus,'Divorced')}</td>
-            <td>${chk(r.civilStatus,'Separated')}</td>
-            <td>${chk(r.civilStatus,'Annulled')}</td>
-            <td>${chk(r.civilStatus,'Unknown')}</td>
-            <td>${chk(r.civilStatus,'Live-in')}</td>
-            <td>${chk(r.youthAgeGroup,'Child Youth (15-17 yrs old)')}</td>
-            <td>${chk(r.youthAgeGroup,'Core Youth (18-24 yrs old)')}</td>
-            <td>${chk(r.youthAgeGroup,'Young Adult (15-30 yrs old)')}</td>
-            <td>${chk(r.education,'Elementary Level')}</td>
-            <td>${chk(r.education,'Elementary Grad')}</td>
-            <td>${chk(r.education,'High School Level')}</td>
-            <td>${chk(r.education,'High School Grad')}</td>
-            <td>${chk(r.education,'Vocational Grad')}</td>
-            <td>${chk(r.education,'College Level')}</td>
-            <td>${chk(r.education,'College Grad')}</td>
-            <td>${chk(r.education,'Masters Level')}</td>
-            <td>${chk(r.education,'Masters Grad')}</td>
-            <td>${chk(r.education,'Doctorate Level')}</td>
-            <td>${chk(r.education,'Doctorate Graduate')}</td>
-            <td>${chk(r.youthClassification,'In School Youth')}</td>
-            <td>${chk(r.youthClassification,'Out of School Youth')}</td>
-            <td>${chk(r.youthClassification,'Working Youth')}</td>
-            <td>${chk(r.youthClassification,'Person w/ Disability')}</td>
-            <td>${chk(r.youthClassification,'Children in Conflict w/ Law')}</td>
-            <td>${chk(r.youthClassification,'Indigenous People')}</td>
-            <td>${chk(r.youthClassification,'Youth w/ Specific Needs')}</td>
-            <td>${chk(r.workStatus,'Employed')}</td>
-            <td>${chk(r.workStatus,'Unemployed')}</td>
-            <td>${chk(r.workStatus,'Self-Employed')}</td>
-            <td>${chk(r.workStatus,'Currently looking for a Job')}</td>
-            <td>${chk(r.workStatus,'Not Interested Looking for a Job')}</td>
-            <td>${r.skVoter}</td>
-            <td>${r.votingHistory}</td>
-            <td>${r.votingFrequency}</td>
-            <td>${r.natVoter}</td>
-            <td>${r.kkAssembly}</td>
-            <td>${r.votingReason}</td>
-            <td>${r.facebook}</td>
-            <td>${r.groupChat}</td>
-            <td style="min-width:120px;padding:4px 8px;">${makeSignatureSvg(idx)}</td>
         </tr>
     `).join('');
 }
@@ -552,35 +566,59 @@ function renderFullPreviewTable(rows) {
 /* ── Confirm Save ── */
 if (confirmSaveBtn) {
     confirmSaveBtn.addEventListener('click', () => {
-        const saved = uploadedRows.length;
-        const nextId = PREV_KAB_DATA.length + 1;
-        const thisYear = new Date().getFullYear();
+        if (!uploadedRows.length) return;
 
-        uploadedRows.forEach((row, i) => {
-            PREV_KAB_DATA.push({
-                id: nextId + i, year: thisYear,
-                respondentNo: row.respondentNo,
-                lastName: row.lastName, firstName: row.firstName,
-                middleName: row.middleName, suffix: row.suffix,
-                age: row.age, barangay: row.barangay, purokZone: row.purokZone,
-                registeredVoter: row.registeredVoter,
-                sex: row.sex, birthday: row.birthday, email: row.email, contact: row.contact,
-                region: row.region, province: row.province, city: row.city,
-                civilStatus: row.civilStatus, youthAgeGroup: row.youthAgeGroup,
-                youthClassification: row.youthClassification,
-                workStatus: row.workStatus, education: row.education,
-                skVoter: row.skVoter, natVoter: row.natVoter,
-                votingHistory: row.votingHistory, votingFrequency: row.votingFrequency,
-                kkAssembly: row.kkAssembly, votingReason: row.votingReason,
-                facebook: row.facebook, groupChat: row.groupChat,
-                date: row.date,
+        confirmSaveBtn.disabled = true;
+        confirmSaveBtn.textContent = 'Saving...';
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const BATCH = 200;
+        const batches = [];
+        for (let i = 0; i < uploadedRows.length; i += BATCH) {
+            batches.push(uploadedRows.slice(i, i + BATCH));
+        }
+
+        let totalSaved = 0;
+
+        const sendBatch = (idx) => {
+            if (idx >= batches.length) {
+                uploadModal.style.display = 'none';
+                resetUploadModal();
+                loadData();
+                showToast(`${totalSaved} record(s) saved successfully.`);
+                return;
+            }
+
+            confirmSaveBtn.textContent = `Saving... (${idx * BATCH}/${uploadedRows.length})`;
+
+            fetch('/previous-kabataan/upload', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ rows: batches[idx] }),
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    totalSaved += res.saved;
+                    sendBatch(idx + 1);
+                } else {
+                    showToast('Failed to save records. Please try again.', 'error');
+                    confirmSaveBtn.disabled = false;
+                    confirmSaveBtn.textContent = 'Confirm & Save';
+                }
+            })
+            .catch(() => {
+                showToast('Network error. Please try again.', 'error');
+                confirmSaveBtn.disabled = false;
+                confirmSaveBtn.textContent = 'Confirm & Save';
             });
-        });
+        };
 
-        uploadModal.style.display = 'none';
-        resetUploadModal();
-        applyFilters();
-        showToast(`${saved} record(s) saved successfully.`);
+        sendBatch(0);
     });
 }
 
@@ -621,4 +659,4 @@ if (nextBtn) nextBtn.addEventListener('click', () => {
 });
 
 /* ── Init ── */
-applyFilters();
+loadData();

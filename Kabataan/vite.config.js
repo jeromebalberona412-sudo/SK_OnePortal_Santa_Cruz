@@ -30,8 +30,6 @@ export default defineConfig({
                 'app/Modules/Homepage/assets/css/faqs.css',
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling.js',
-                'app/Modules/Kabataan_Portal/assets/css/portal.css',
-                'app/Modules/Kabataan_Portal/assets/js/portal.js',
                 'app/Modules/Shared/assets/css/loading.css',
                 'app/Modules/Shared/assets/js/loading.js',
             ],

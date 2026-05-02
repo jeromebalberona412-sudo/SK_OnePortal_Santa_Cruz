@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>KK Profiling Requests - SK Officials Portal</title>
 
     @vite([
@@ -85,17 +86,17 @@
                 <div class="filter-item">
                     <label for="kkStatusFilter" class="filter-label">Status</label>
                     <select id="kkStatusFilter" class="filter-select" onchange="document.querySelectorAll('.status-tab').forEach(t=>t.classList.remove('active')); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.classList.add('active'); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.click();">
-                        <option value="All">All</option>
-                        <option value="New Kabataan">New Kabataan</option>
-                        <option value="Duplicate">Duplicate Records</option>
-                        <option value="Wrong Credential">Wrong Credential</option>
+                        <option value="All">All Pending</option>
+                        <option value="Not Profiled">Not Profiled</option>
+                        <option value="Wrong Credentials">Wrong Credentials</option>
+                        <option value="Duplicate">Duplicate</option>
                     </select>
                     {{-- Hidden tabs still used by JS logic --}}
                     <div class="status-tabs d-none" id="kkStatusTabs" style="display:none!important;">
-                        <button type="button" class="status-tab active" data-status-filter="All">All</button>
-                        <button type="button" class="status-tab" data-status-filter="New Kabataan">New Kabataan</button>
-                        <button type="button" class="status-tab" data-status-filter="Duplicate">Duplicate Records</button>
-                        <button type="button" class="status-tab" data-status-filter="Wrong Credential">Wrong Credential</button>
+                        <button type="button" class="status-tab active" data-status-filter="All">All Pending</button>
+                        <button type="button" class="status-tab" data-status-filter="Not Profiled">Not Profiled</button>
+                        <button type="button" class="status-tab" data-status-filter="Wrong Credentials">Wrong Credentials</button>
+                        <button type="button" class="status-tab" data-status-filter="Duplicate">Duplicate</button>
                     </div>
                 </div>
                 <div class="filter-item">
@@ -144,6 +145,7 @@
                                 <th>Purok/Zone</th>
                                 <th>Registered Voter</th>
                                 <th>Status</th>
+                                <th>Reason</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
