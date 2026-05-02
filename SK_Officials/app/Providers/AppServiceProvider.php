@@ -2,28 +2,45 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
+    public function register(): void {}
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // Load module routes
         $this->loadModuleRoutes();
-        
-        // Load module views
         $this->loadModuleViews();
+        $this->shareBarangayLogo();
+    }
+
+    private function shareBarangayLogo(): void
+    {
+        View::composer('layout::sidebar', function ($view) {
+            $user = Auth::user();
+
+            $barangayName = null;
+            $barangayLogoUrl = null;
+
+            if ($user && $user->barangay_id) {
+                $barangayName = DB::table('barangays')
+                    ->where('id', $user->barangay_id)
+                    ->value('name');
+
+                $barangayLogoUrl = DB::table('barangay_logos')
+                    ->where('barangay_id', $user->barangay_id)
+                    ->value('url');
+            }
+
+            $view->with([
+                'barangayName'    => $barangayName,
+                'barangayLogoUrl' => $barangayLogoUrl,
+            ]);
+        });
     }
     
     /**

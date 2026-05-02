@@ -4,13 +4,17 @@
         <div class="sidebar-admin">
             
             <div class="admin-avatar">
-                <!-- Admin Logo Image -->
-                <img src="{{ asset('images/barangay_logo.png') }}" alt="Admin Logo" class="admin-logo">
+                <!-- Barangay Logo -->
+                @if($barangayLogoUrl)
+                    <img src="{{ $barangayLogoUrl }}" alt="{{ $barangayName ?? 'Barangay' }} Logo" class="admin-logo">
+                @else
+                    <img src="{{ asset('images/SK_OnePortal_logo.png') }}" alt="SK OnePortal Logo" class="admin-logo">
+                @endif
             </div>
 
             <div class="admin-info">
                 <span class="admin-name">Sk Officials User</span>
-                <span class="admin-role">Calios</span>
+                <span class="admin-role">{{ $barangayName ?? 'Barangay' }}</span>
             </div>
 
         </div>
