@@ -2755,6 +2755,41 @@ body {
     flex-direction: column;
     gap: 4px;
     max-width: 340px;
+    margin: 0 auto;
+    align-items: center;
+}
+
+.kk-qs-sig-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.kk-qs-sig-overlay {
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.kk-qs-sig-icon {
+    width: 180px;
+    height: 50px;
+    opacity: 0.8;
+}
+
+.kk-qs-field-value.kk-qs-underline {
+    position: relative;
+    z-index: 1;
 }
 
 /* Responsive */

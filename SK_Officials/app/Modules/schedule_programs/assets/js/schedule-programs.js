@@ -5,24 +5,473 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Committee Cards Handler ────────────────────────────────────────────────
 function initializeCommitteeCards() {
-    const committeeCards = document.querySelectorAll('.committee-card');
-    
+    const committeeCards  = document.querySelectorAll('.committee-card');
+    const programSection  = document.getElementById('spProgramSection');
+    const passedSection   = document.getElementById('spPassedSection');
+    const sectionTitle    = document.getElementById('spProgramSectionTitle');
+    const sectionSubtitle = document.getElementById('spProgramSectionSubtitle');
+    const scholarshipLink = document.getElementById('spScholarshipLink');
+    const sportsLink      = document.getElementById('spSportsLink');
+    const activitiesPanel = document.getElementById('spActivitiesPanel');
+    const activitiesList  = document.getElementById('spActivitiesList');
+
+    // Committee metadata: title, activities, and optional link
+    const committeeData = {
+        education: {
+            title: 'Equitable Access to Quality Education',
+            activities: [
+                'Support to ALS and RIC',
+                '150 Students for Educational Assistance',
+                'Support to Elementary and Daycare',
+            ],
+            link: '/scholarship',
+            linkLabel: 'Go to Scholarship Application List',
+        },
+        environment: {
+            title: 'Environmental Protection',
+            activities: ['Clean-Up Drive', 'Payroll for Laborer', 'Tree Planting'],
+        },
+        disaster: {
+            title: 'Disaster Risk Reduction and Resiliency',
+            activities: [
+                'Training on Disaster Preparedness for Youth Volunteer Groups',
+                'Distribution of Relief Goods for KK Members',
+            ],
+        },
+        livelihood: {
+            title: 'Youth Employment and Livelihood',
+            activities: ['Livelihood Training', 'Food and Other Supplies'],
+        },
+        health: {
+            title: 'Health',
+            activities: [
+                'Medicines / Medical Equipment',
+                'Campaigning Materials for Anti-Drugs (Leaflets, Posters, Tarpaulins)',
+            ],
+        },
+        'anti-drug': {
+            title: 'Anti-Drug and Peace and Order',
+            activities: ['Orientation for Anti-Drug and Physical Abuse', 'Foods and Accommodations'],
+        },
+        gender: {
+            title: 'Gender Sensitivity',
+            activities: ['Orientation on GAD and VAWC', 'Foods and Accommodations'],
+        },
+        feeding: {
+            title: 'Feeding Program for KK Members',
+            activities: [
+                'Improve health and physique of children',
+                'Youth and Children in the vicinity of Barangay',
+            ],
+        },
+        sports: {
+            title: 'Sports Development',
+            activities: ['Supplies and Materials', 'Food and Accommodation', 'Officiating Fees'],
+            link: '/sports-application-form',
+            linkLabel: 'Go to Sports Application Form',
+        },
+        other: {
+            title: 'Other Programs',
+            activities: [
+                'Katipunan ng Kabataan (KK) General Assembly',
+                'Barangay Day Celebration',
+                'Youth Week',
+            ],
+        },
+    };
+
+    let lastClickedCommittee = null;
+    let lastClickTime        = 0;
+    const DOUBLE_CLICK_MS    = 400;
+
     committeeCards.forEach(card => {
-        card.addEventListener('click', function() {
-            // Check if card is disabled
-            if (this.classList.contains('committee-disabled')) {
-                showToast('This committee is coming soon!', 'error');
-                return;
-            }
-            
+        card.addEventListener('click', function () {
             const committee = this.getAttribute('data-committee');
-            
-            // Only sports is active for now
-            if (committee === 'sports') {
-                window.location.href = '/sports-application-form';
+            const data      = committeeData[committee];
+            if (!data) return;
+
+            const now       = Date.now();
+            const isDouble  = (committee === lastClickedCommittee) && (now - lastClickTime < DOUBLE_CLICK_MS);
+            lastClickedCommittee = committee;
+            lastClickTime        = now;
+
+            // Highlight active card
+            committeeCards.forEach(c => c.classList.remove('committee-active'));
+            this.classList.add('committee-active');
+
+            // ── Click: show appropriate content per committee ──────────────
+            // Education → hide program section, show only passed scholars table
+            // Sports → show program section only (no passed table)
+            // Others → show program section only (no passed table)
+
+            if (committee === 'education') {
+                // Hide the program schedules section entirely for education
+                if (programSection) programSection.style.display = 'none';
+                if (sportsLink)     sportsLink.style.display     = 'none';
+
+                // Show scholarship link above passed table
+                if (scholarshipLink) {
+                    scholarshipLink.href      = data.link;
+                    scholarshipLink.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        ${data.linkLabel}`;
+                    scholarshipLink.style.display = 'inline-flex';
+                }
+
+                // Render and show passed scholars table
+                renderPassedScholars();
+                if (passedSection) {
+                    passedSection.style.display = '';
+                    passedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+            } else {
+                // Hide passed scholars table for all other committees
+                if (passedSection)   passedSection.style.display   = 'none';
+                if (scholarshipLink) scholarshipLink.style.display  = 'none';
+
+                // Update section header
+                if (sectionTitle)    sectionTitle.textContent    = data.title;
+                if (sectionSubtitle) sectionSubtitle.textContent = '';
+
+                // Show sports link if sports committee
+                if (sportsLink) {
+                    if (committee === 'sports') {
+                        sportsLink.style.display = 'inline-flex';
+                    } else {
+                        sportsLink.style.display = 'none';
+                    }
+                }
+
+                // Render activities chips
+                if (activitiesList) {
+                    activitiesList.innerHTML = data.activities.map(a =>
+                        `<span class="sp-activity-chip">${a}</span>`
+                    ).join('');
+                }
+                if (activitiesPanel) activitiesPanel.style.display = 'block';
+
+                // Show program section
+                if (programSection) {
+                    programSection.style.display = '';
+                    programSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
         });
     });
+}
+
+// ── Passed Scholars Table ─────────────────────────────────────────────────
+// Static sample data — always displayed regardless of localStorage state
+const SP_PASSED_SAMPLE = [
+    {
+        last_name: 'Reyes', first_name: 'Maria', middle_name: 'Santos', suffix: '',
+        date_of_birth: '2005-03-14', gender: 'Female', age: 20,
+        contact_no: '09171234567',
+        address: '123 Sampaguita St., Brgy. Calios, Santa Cruz, Laguna',
+        email: 'maria.reyes@email.com',
+        school_name: 'Laguna State Polytechnic University',
+        school_address: 'Siniloan, Laguna',
+        year_level: '2nd Year', program_strand: 'BSED',
+        purpose: 'Tuition Fees, Books / Equipments',
+        purpose_list: ['Tuition Fees', 'Books / Equipments'],
+        purpose_others: '',
+        cor_certified: true, photo_id: true,
+        approved_at: 'Jan 15, 2025',
+    },
+    {
+        last_name: 'Dela Cruz', first_name: 'Jose', middle_name: 'Ramos', suffix: 'Jr.',
+        date_of_birth: '2004-11-20', gender: 'Male', age: 21,
+        contact_no: '09721234567',
+        address: '88 Magsaysay St., Brgy. Calios, Santa Cruz, Laguna',
+        email: 'jose.delacruz@email.com',
+        school_name: 'Laguna State Polytechnic University',
+        school_address: 'Siniloan, Laguna',
+        year_level: '3rd Year', program_strand: 'BSIT',
+        purpose: 'Tuition Fees, Living Expenses',
+        purpose_list: ['Tuition Fees', 'Living Expenses'],
+        purpose_others: '',
+        cor_certified: true, photo_id: true,
+        approved_at: 'Jan 25, 2025',
+    },
+    {
+        last_name: 'Bautista', first_name: 'Kristine', middle_name: 'Flores', suffix: '',
+        date_of_birth: '2005-06-08', gender: 'Female', age: 20,
+        contact_no: '09831234567',
+        address: '14 Quezon Blvd., Brgy. Calios, Santa Cruz, Laguna',
+        email: 'kristine.bautista@email.com',
+        school_name: 'De La Salle University – Dasmariñas',
+        school_address: 'Dasmariñas, Cavite',
+        year_level: '2nd Year', program_strand: 'BSN',
+        purpose: 'Tuition Fees, Books / Equipments',
+        purpose_list: ['Tuition Fees', 'Books / Equipments'],
+        purpose_others: '',
+        cor_certified: true, photo_id: true,
+        approved_at: 'Feb 10, 2025',
+    },
+    {
+        last_name: 'Santos', first_name: 'Mark', middle_name: 'Villanueva', suffix: '',
+        date_of_birth: '2003-09-15', gender: 'Male', age: 22,
+        contact_no: '09941234567',
+        address: '22 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
+        email: 'mark.santos@email.com',
+        school_name: 'University of the Philippines Los Baños',
+        school_address: 'College, Los Baños, Laguna',
+        year_level: '4th Year', program_strand: 'BS Computer Science',
+        purpose: 'Tuition Fees, Living Expenses',
+        purpose_list: ['Tuition Fees', 'Living Expenses'],
+        purpose_others: '',
+        cor_certified: true, photo_id: false,
+        approved_at: 'Feb 20, 2025',
+    },
+    {
+        last_name: 'Lim', first_name: 'Angela', middle_name: 'Cruz', suffix: '',
+        date_of_birth: '2007-04-22', gender: 'Female', age: 18,
+        contact_no: '09051234567',
+        address: '5 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
+        email: 'angela.lim@email.com',
+        school_name: 'Santa Cruz National High School',
+        school_address: 'Santa Cruz, Laguna',
+        year_level: 'Grade 12', program_strand: 'STEM',
+        purpose: 'Books / Equipments',
+        purpose_list: ['Books / Equipments'],
+        purpose_others: '',
+        cor_certified: false, photo_id: true,
+        approved_at: 'Mar 5, 2025',
+    },
+];
+
+function renderPassedScholars() {
+    const tbody = document.getElementById('spPassedTableBody');
+    if (!tbody) return;
+
+    // Merge static sample with any live Passed records from localStorage
+    const stored = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
+    const livePassed = stored.filter(r => r.status === 'Approved' && r.result === 'Passed');
+
+    // Use live data if available, otherwise always show static sample
+    const passed = livePassed.length > 0 ? livePassed : SP_PASSED_SAMPLE;
+
+    tbody.innerHTML = passed.map((r, i) => {
+        const fullName = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        return `
+        <tr>
+            <td style="text-align:center;font-weight:600;">${fullName}</td>
+            <td style="text-align:center;font-size:12px;">${r.school_name || '—'}</td>
+            <td style="text-align:center;">${r.year_level || '—'}</td>
+            <td style="text-align:center;font-size:12px;">${r.program_strand || '—'}</td>
+            <td style="text-align:center;font-size:12px;">${r.purpose || '—'}</td>
+            <td style="text-align:center;">${r.approved_at || '—'}</td>
+            <td style="text-align:center;"><span class="sp-status-badge completed">Passed</span></td>
+            <td style="text-align:center;">
+                <div class="sp-actions">
+                    <button class="sp-btn sp-btn-edit" data-passed-idx="${i}" style="background:#2c2c3e;">View</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+
+    // View button — open passed scholar detail modal
+    tbody.querySelectorAll('button[data-passed-idx]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const idx    = parseInt(this.getAttribute('data-passed-idx'), 10);
+            const record = passed[idx];
+            if (!record) return;
+            openPassedScholarModal(record);
+        });
+    });
+
+    // ── Export to CSV ────────────────────────────────────────────────────────
+    const exportBtn = document.getElementById('spExportCsvBtn');
+    if (exportBtn) {
+        // Remove old listener by cloning
+        const newBtn = exportBtn.cloneNode(true);
+        exportBtn.parentNode.replaceChild(newBtn, exportBtn);
+        newBtn.addEventListener('click', () => exportPassedToCsv(passed));
+    }
+}
+
+// ── Passed Scholar View Modal — PDF exact layout ──────────────────────────
+function openPassedScholarModal(r) {
+    const modal = document.getElementById('spPassedViewModal');
+    const body  = document.getElementById('spPassedViewBody');
+    if (!modal || !body) return;
+
+    const allPurposes = ['Tuition Fees', 'Books/Equipments', 'Living Expenses', 'Others'];
+    const purposeList = r.purpose_list || [];
+
+    const purposeHTML = allPurposes.map(p => {
+        const checked = purposeList.some(v => v.toLowerCase().replace(/\s/g,'') === p.toLowerCase().replace(/\s/g,''));
+        const extra   = (p === 'Others' && r.purpose_others) ? ` (${r.purpose_others})` : '';
+        const box     = checked
+            ? `<span style="width:13px;height:13px;border:1.5px solid #2c2c3e;background:#2c2c3e;border-radius:1px;display:inline-block;position:relative;flex-shrink:0;"><span style="position:absolute;left:2px;top:-1px;width:5px;height:9px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg);display:block;"></span></span>`
+            : `<span style="width:13px;height:13px;border:1.5px solid #374151;background:#fff;border-radius:1px;display:inline-block;flex-shrink:0;"></span>`;
+        return `<div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#111827;margin-bottom:5px;">${box} ${p}${extra}</div>`;
+    }).join('');
+
+    const corBox   = r.cor_certified
+        ? `<span style="width:13px;height:13px;border:1.5px solid #2c2c3e;background:#2c2c3e;border-radius:1px;display:inline-block;position:relative;flex-shrink:0;"><span style="position:absolute;left:2px;top:-1px;width:5px;height:9px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg);display:block;"></span></span>`
+        : `<span style="width:13px;height:13px;border:1.5px solid #374151;background:#fff;border-radius:1px;display:inline-block;flex-shrink:0;"></span>`;
+    const photoBox = r.photo_id
+        ? `<span style="width:13px;height:13px;border:1.5px solid #2c2c3e;background:#2c2c3e;border-radius:1px;display:inline-block;position:relative;flex-shrink:0;"><span style="position:absolute;left:2px;top:-1px;width:5px;height:9px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg);display:block;"></span></span>`
+        : `<span style="width:13px;height:13px;border:1.5px solid #374151;background:#fff;border-radius:1px;display:inline-block;flex-shrink:0;"></span>`;
+
+    const line = (w) => `<span style="border-bottom:1.5px solid #374151;display:inline-block;min-width:${w}px;padding:0 4px 2px;font-size:11px;font-weight:700;color:#111827;"></span>`;
+    const filled = (val, w) => `<span style="border-bottom:1.5px solid #374151;display:inline-block;min-width:${w||80}px;padding:0 4px 2px;font-size:11px;font-weight:700;color:#111827;">${val||'—'}</span>`;
+    const label  = (txt) => `<span style="font-size:11px;font-weight:600;color:#111827;white-space:nowrap;flex-shrink:0;padding-bottom:2px;">${txt}</span>`;
+    const row    = (content) => `<div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap;">${content}</div>`;
+    const sectionTitle = (txt) => `<p style="font-size:11px;font-weight:800;color:#111827;text-decoration:underline;text-transform:uppercase;margin-bottom:8px;letter-spacing:0.02em;">${txt}</p>`;
+
+    // Sample PDF file links (simulated)
+    const samplePdfUrl = 'data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nCtUMlQyULIGAAMiAWUKZW5kc3RyZWFtCmVuZG9iagozIDAgb2JqCjE4CmVuZG9iagoxIDAgb2JqCjw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgNjEyIDc5Ml0vUmVzb3VyY2VzPDwvRm9udDw8L0YxIDQgMCBSPj4+Pi9Db250ZW50cyAyIDAgUi9QYXJlbnQgNSAwIFI+PgplbmRvYmoKNCAwIG9iago8PC9UeXBlL0ZvbnQvU3VidHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PgplbmRvYmoKNSAwIG9iago8PC9UeXBlL1BhZ2VzL0tpZHNbMSAwIFJdL0NvdW50IDE+PgplbmRvYmoKNiAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgNSAwIFI+PgplbmRvYmoKeHJlZgowIDcKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMTI1IDAwMDAwIG4gCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwNiAwMDAwMCBuIAowMDAwMDAwMjQ0IDAwMDAwIG4gCjAwMDAwMDAzMTMgMDAwMDAgbiAKMDAwMDAwMDM2NiAwMDAwMCBuIAp0cmFpbGVyCjw8L1NpemUgNy9Sb290IDYgMCBSPj4Kc3RhcnR4cmVmCjQxNQolJUVPRgo=';
+
+    body.innerHTML = `
+    <div style="background:#fff;border-radius:10px;padding:18px 22px;border:1px solid #e5e7eb;font-family:'Segoe UI',sans-serif;">
+
+        <!-- PDF Header: Logo | Title | Picture Here (barangay logo as photo) -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #d1d5db;">
+            <img src="/images/barangay_logo.png" alt="Barangay Calios" style="width:60px;height:60px;object-fit:contain;border-radius:50%;flex-shrink:0;" onerror="this.style.display='none'">
+            <h2 style="font-size:15px;font-weight:900;color:#111827;text-align:center;flex:1;letter-spacing:0.02em;">SCHOLARSHIP APPLICATION FORM</h2>
+            <!-- Picture Here — shows barangay logo as sample photo -->
+            <div style="width:80px;height:90px;border:2px solid #374151;border-radius:2px;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f9fafb;">
+                <img src="/images/barangay_logo.png" alt="Picture Here"
+                     style="width:100%;height:100%;object-fit:cover;"
+                     onerror="this.outerHTML='<span style=\\'font-size:11px;font-weight:600;color:#374151;text-align:center;padding:4px;\\'>Picture<br>Here</span>'">
+            </div>
+        </div>
+
+        <!-- Date row -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+            ${label('Date:')} ${filled(r.approved_at, 100)}
+        </div>
+
+        <!-- APPLICANT'S PERSONAL INFORMATION -->
+        <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;">
+            ${sectionTitle('APPLICANT\'S PERSONAL INFORMATION:')}
+            ${row(`${label('Last Name:')} ${filled(r.last_name,100)} ${label('First Name:')} ${filled(r.first_name,100)} ${label('Middle Name:')} ${filled(r.middle_name,90)}`)}
+            ${row(`${label('Date of Birth:')} ${filled(r.date_of_birth,80)} ${label('Gender:')} ${filled(r.gender,60)} ${label('Age:')} ${filled(r.age,35)} ${label('Contact No:')} ${filled(r.contact_no,100)}`)}
+            ${row(`${label('Complete Address:')} <span style="border-bottom:1.5px solid #374151;flex:1;min-width:100px;font-size:11px;font-weight:700;color:#111827;padding:0 4px 2px;">${r.address||'—'}</span>`)}
+            ${row(`${label('Email Address:')} ${filled(r.email,200)}`)}
+        </div>
+
+        <!-- ACADEMIC INFORMATION -->
+        <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;">
+            ${sectionTitle('ACADEMIC INFORMATION:')}
+            ${row(`${label('Name of School:')} <span style="border-bottom:1.5px solid #374151;flex:1;min-width:100px;font-size:11px;font-weight:700;color:#111827;padding:0 4px 2px;">${r.school_name||'—'}</span>`)}
+            ${row(`${label('School Address:')} <span style="border-bottom:1.5px solid #374151;flex:1;min-width:100px;font-size:11px;font-weight:700;color:#111827;padding:0 4px 2px;">${r.school_address||'—'}</span>`)}
+            ${row(`${label('Year/Grade Level:')} ${filled(r.year_level,100)} <span style="margin-left:14px;"></span> ${label('Program/Strand:')} ${filled(r.program_strand,100)}`)}
+        </div>
+
+        <!-- SCHOLARSHIP INFO + SUBMITTED REQUIREMENTS side by side -->
+        <div style="display:flex;gap:28px;align-items:flex-start;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;">
+            <div style="flex:1;">
+                ${sectionTitle('SCHOLARSHIP INFORMATION:')}
+                <p style="font-size:11px;font-weight:600;color:#111827;margin-bottom:6px;">Purpose of Scholarship:</p>
+                ${purposeHTML}
+            </div>
+            <div style="flex:1;">
+                ${sectionTitle('SUBMITTED REQUIREMENTS:')}
+                <p style="font-size:10px;color:#6b7280;margin-bottom:10px;">Note: To be filled out by SK officials</p>
+
+                <!-- COR -->
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#111827;margin-bottom:6px;">
+                        ${corBox}
+                        COR – CERTIFIED TRUE COPY
+                    </div>
+                    ${r.cor_certified ? `
+                    <a href="${samplePdfUrl}" download="COR-sample.pdf"
+                       style="display:inline-flex;align-items:center;gap:8px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:7px 12px;text-decoration:none;cursor:pointer;transition:background 0.2s;margin-left:20px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        <div>
+                            <div style="font-size:11px;font-weight:700;color:#1d4ed8;">COR-Certified-True-Copy.pdf</div>
+                            <div style="font-size:10px;color:#6b7280;">Click to download</div>
+                        </div>
+                    </a>` : `<span style="margin-left:20px;font-size:10px;color:#9ca3af;font-style:italic;">No file submitted</span>`}
+                </div>
+
+                <!-- Photo ID -->
+                <div>
+                    <div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#111827;margin-bottom:6px;">
+                        ${photoBox}
+                        PHOTO COPY OF ID (FRONT AND BACK)
+                    </div>
+                    ${r.photo_id ? `
+                    <a href="${samplePdfUrl}" download="PhotoID-sample.pdf"
+                       style="display:inline-flex;align-items:center;gap:8px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:7px 12px;text-decoration:none;cursor:pointer;transition:background 0.2s;margin-left:20px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <div>
+                            <div style="font-size:11px;font-weight:700;color:#1d4ed8;">Photo-ID-Front-Back.pdf</div>
+                            <div style="font-size:10px;color:#6b7280;">Click to download</div>
+                        </div>
+                    </a>` : `<span style="margin-left:20px;font-size:10px;color:#9ca3af;font-style:italic;">No file submitted</span>`}
+                </div>
+            </div>
+        </div>
+
+        <!-- Signature -->
+        <div style="text-align:center;padding-top:20px;">
+            <!-- Scholar's name rendered as cursive signature above the line -->
+            <div style="width:280px;margin:0 auto 0;height:52px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;">
+                <span style="font-family:'Brush Script MT','Segoe Script','Comic Sans MS',cursive;font-size:28px;color:#1e3a5f;line-height:1;letter-spacing:1px;white-space:nowrap;transform:rotate(-3deg);display:inline-block;padding-bottom:2px;">
+                    ${r.first_name||''} ${r.last_name||''}
+                </span>
+            </div>
+            <div style="border-bottom:2px solid #374151;width:280px;margin:0 auto 6px;"></div>
+            <p style="font-size:10px;color:#6b7280;margin-top:2px;">Signature over printed name</p>
+        </div>
+
+    </div>
+    `;
+
+    modal.style.display = 'flex';
+
+    const closeModal = () => {
+        modal.style.display = 'none';
+        modal.classList.remove('sp-modal-maximized');
+        box.classList.remove('sp-modal-maximized');
+        const maxBtn = document.getElementById('spPassedViewMaximize');
+        if (maxBtn) maxBtn.textContent = '□';
+    };
+    const box = document.getElementById('spPassedViewBox');
+    const maxBtn = document.getElementById('spPassedViewMaximize');
+    if (maxBtn && box) {
+        maxBtn.onclick = function(e) {
+            e.stopPropagation();
+            const isMax = !box.classList.contains('sp-modal-maximized');
+            modal.classList.toggle('sp-modal-maximized', isMax);
+            box.classList.toggle('sp-modal-maximized', isMax);
+            maxBtn.textContent = isMax ? '⧉' : '□';
+        };
+    }
+    document.getElementById('spPassedViewClose').onclick = closeModal;
+    modal.onclick = e => { if (e.target === modal) closeModal(); };
+}
+
+// ── Export Passed Scholars to CSV ─────────────────────────────────────────
+function exportPassedToCsv(passed) {
+    const headers = ['Name', 'School', 'Year / Level', 'Program / Strand', 'Purpose', 'Date Approved', 'Result'];
+    const rows = passed.map(r => [
+        `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}`,
+        r.school_name    || '',
+        r.year_level     || '',
+        r.program_strand || '',
+        r.purpose        || '',
+        r.approved_at    || '',
+        'Passed',
+    ]);
+
+    const csvContent = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'passed-scholars.csv';
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────

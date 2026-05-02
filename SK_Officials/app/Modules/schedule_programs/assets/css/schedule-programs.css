@@ -760,6 +760,16 @@ body {
     border-color: #22c55e;
 }
 
+.committee-card.committee-active {
+    border-color: #22c55e;
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.25);
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.committee-card.committee-active::before {
+    transform: scaleX(1);
+}
+
 .committee-card.committee-disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -822,11 +832,45 @@ body {
 }
 
 .committee-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: #111827;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     line-height: 1.3;
+    text-align: center;
+}
+
+.committee-activities {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    width: 100%;
+}
+
+.committee-activities li {
+    font-size: 11px;
+    color: #4b5563;
+    line-height: 1.5;
+    padding: 2px 0 2px 14px;
+    position: relative;
+}
+
+.committee-activities li::before {
+    content: '◆';
+    position: absolute;
+    left: 0;
+    font-size: 7px;
+    color: #22c55e;
+    top: 4px;
+}
+
+.committee-card.committee-disabled .committee-activities li {
+    color: #9ca3af;
+}
+
+.committee-card.committee-disabled .committee-activities li::before {
+    color: #9ca3af;
 }
 
 .committee-desc {
@@ -868,4 +912,78 @@ body {
     .committee-desc {
         font-size: 12px;
     }
+}
+
+/* ── Activity Chips (shown on 1st click) ── */
+.sp-activities-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 0 4px;
+}
+
+.sp-activity-chip {
+    display: inline-flex;
+    align-items: center;
+    background: #f0fdf4;
+    border: 1.5px solid #86efac;
+    color: #15803d;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.sp-activity-chip::before {
+    content: '◆';
+    font-size: 7px;
+    margin-right: 6px;
+    color: #22c55e;
+}
+
+/* ── Scholarship / Sports link button ── */
+.sp-scholarship-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #2c2c3e;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(44,44,62,0.25);
+    flex-shrink: 0;
+}
+
+.sp-scholarship-link:hover {
+    background: #1a1a28;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(44,44,62,0.35);
+}
+
+.sp-scholarship-link svg {
+    flex-shrink: 0;
+}
+
+/* ── Modal Maximize / Restore ── */
+.sp-modal-overlay.sp-modal-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+}
+.sp-modal-box.sp-modal-maximized {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+}
+.sp-modal-box.sp-modal-maximized .sp-modal-body {
+    flex: 1;
+    min-height: 0;
 }

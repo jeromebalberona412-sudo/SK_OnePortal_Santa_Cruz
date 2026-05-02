@@ -169,7 +169,7 @@
                 </li>
 
                 <!-- ── Archived (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown" id="archivedDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholarship') ? 'open' : '' }}" id="archivedDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="archivedToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="21 8 21 21 3 21 3 8"></polyline>
@@ -231,6 +231,16 @@
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                 </svg>
                                 <span>Rejected KK Profiling</span>
+                            </a>
+                        </li>
+
+                        <!-- Rejected Scholarship -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('rejected-scholarship') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-scholarship') ? 'active' : '' }}">
+                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
+                                </svg>
+                                <span>Rejected Scholarships</span>
                             </a>
                         </li>
 

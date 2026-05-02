@@ -97,7 +97,7 @@ function initializeKKProfilingRequestsUI() {
 
         paginatedData.forEach((r) => {
             const tr = document.createElement('tr');
-            const statusClass = r.status === 'Not in Census' ? 'approved'
+            const statusClass = r.status === 'New Kabataan' ? 'approved'
                 : r.status === 'Duplicate' ? 'duplicate'
                 : r.status === 'Wrong Credential' ? 'rejected'
                 : r.status === 'New Applicant' ? 'new-applicant'
@@ -457,17 +457,17 @@ function initializeKKProfilingRequestsUI() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     All fields corrected — record matches census data.
                     <button type="button" class="kk-inline-save-btn" id="kkInlineSaveBtn">
-                        Save &amp; Mark as Not in Census
+                        Save &amp; Mark as New Kabataan
                     </button>
                 </div>`;
             const saveBtn = document.getElementById('kkInlineSaveBtn');
             if (saveBtn) {
                 saveBtn.addEventListener('click', () => {
-                    request.status = 'Not in Census';
+                    request.status = 'New Kabataan';
                     request.censusErrors = [];
                     request._fixedFields = new Set();
                     renderTable();
-                    showToast('Corrections saved — record marked as Not in Census', 'success');
+                    showToast('Corrections saved — record marked as New Kabataan', 'success');
                     closeAllModals();
                 });
             }
@@ -659,7 +659,7 @@ function initializeKKProfilingRequestsUI() {
     }
 
     function updateStatCards() {
-        const valid      = requests.filter(r => r.status === 'Not in Census').length;
+        const valid      = requests.filter(r => r.status === 'New Kabataan').length;
         const duplicate  = requests.filter(r => r.status === 'Duplicate').length;
         const wrong      = requests.filter(r => r.status === 'Wrong Credential').length;
         const newApp     = requests.filter(r => r.status === 'New Applicant').length;

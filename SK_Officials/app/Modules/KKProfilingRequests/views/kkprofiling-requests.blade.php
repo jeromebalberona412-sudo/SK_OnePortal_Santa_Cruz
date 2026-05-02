@@ -86,12 +86,14 @@
                     <label for="kkStatusFilter" class="filter-label">Status</label>
                     <select id="kkStatusFilter" class="filter-select" onchange="document.querySelectorAll('.status-tab').forEach(t=>t.classList.remove('active')); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.classList.add('active'); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.click();">
                         <option value="All">All</option>
+                        <option value="New Kabataan">New Kabataan</option>
                         <option value="Duplicate">Duplicate Records</option>
                         <option value="Wrong Credential">Wrong Credential</option>
                     </select>
                     {{-- Hidden tabs still used by JS logic --}}
                     <div class="status-tabs d-none" id="kkStatusTabs" style="display:none!important;">
                         <button type="button" class="status-tab active" data-status-filter="All">All</button>
+                        <button type="button" class="status-tab" data-status-filter="New Kabataan">New Kabataan</button>
                         <button type="button" class="status-tab" data-status-filter="Duplicate">Duplicate Records</button>
                         <button type="button" class="status-tab" data-status-filter="Wrong Credential">Wrong Credential</button>
                     </div>
@@ -393,7 +395,17 @@
 
             <div class="kk-qs-signature-row">
                 <div class="kk-qs-sig-field">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewSignature"></span>
+                    <div class="kk-qs-sig-container">
+                        <div class="kk-qs-sig-overlay" id="kkViewSignatureOverlay">
+                            <svg class="kk-qs-sig-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10,40 Q20,20 30,35 T50,30 Q60,25 70,40" />
+                                <path d="M75,25 L85,45 M80,35 L95,35" />
+                                <path d="M100,25 Q110,40 120,25 Q130,10 140,25" />
+                                <path d="M145,30 Q155,20 165,30 L175,45" />
+                            </svg>
+                        </div>
+                        <span class="kk-qs-field-value kk-qs-underline" id="kkViewSignature"></span>
+                    </div>
                     <span class="kk-qs-col-label">Name and Signature of Participant</span>
                 </div>
             </div>

@@ -115,4 +115,13 @@ Route::middleware([
     Route::get('/sports-application-form', function () {
         return view('schedule_programs::sports_application_form');
     })->name('sports-application-form');
+
+    // ── Scholarship routes (pure front-end, no DB) ──
+    Route::get('/scholarship', function () {
+        return view('schedule_programs::scholarship_requests');
+    })->name('scholarship.index');
+
+    Route::get('/rejected-scholarship', function () {
+        return view('Rejected_Scholarship::rejected-scholarship');
+    })->name('rejected-scholarship');
 });

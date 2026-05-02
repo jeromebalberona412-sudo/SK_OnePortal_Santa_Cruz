@@ -76,110 +76,158 @@
             </div>
         </div>
 
-        <!-- ── SK Committees Section ── -->
+        <!-- ── SK Programs Section ── -->
         <section class="committees-section">
             <div class="section-heading-row">
-                <h2 class="section-title">SK Committees</h2>
-                <p class="section-subtitle">Select a committee to manage programs and activities</p>
+                <h2 class="section-title">SK Youth Development and Empowerment Programs</h2>
+                <p class="section-subtitle">Select a program to manage schedules and activities</p>
             </div>
 
             <div class="committees-grid">
-                <!-- Sports Committee -->
+
+                <!-- A. Equitable Access to Quality Education -->
+                <div class="committee-card" data-committee="education">
+                    <div class="committee-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    </div>
+                    <h3 class="committee-title">Equitable Access to Quality Education</h3>
+                    <ul class="committee-activities">
+                        <li>Support to ALS and RIC</li>
+                        <li>150 Students for Educational Assistance</li>
+                        <li>Support to Elementary and Daycare</li>
+                    </ul>
+                </div>
+
+                <!-- B. Environmental Protection -->
+                <div class="committee-card" data-committee="environment">
+                    <div class="committee-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 2v20M2 12h20"/></svg>
+                    </div>
+                    <h3 class="committee-title">Environmental Protection</h3>
+                    <ul class="committee-activities">
+                        <li>Clean-Up Drive</li>
+                        <li>Payroll for Laborer</li>
+                        <li>Tree Planting</li>
+                    </ul>
+                </div>
+
+                <!-- C. Disaster Risk Reduction and Resiliency -->
+                <div class="committee-card" data-committee="disaster">
+                    <div class="committee-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <h3 class="committee-title">Disaster Risk Reduction and Resiliency</h3>
+                    <ul class="committee-activities">
+                        <li>Training on Disaster Preparedness for Youth Volunteer Groups</li>
+                        <li>Distribution of Relief Goods for KK Members</li>
+                    </ul>
+                </div>
+
+                <!-- D. Youth Employment and Livelihood -->
+                <div class="committee-card" data-committee="livelihood">
+                    <div class="committee-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    </div>
+                    <h3 class="committee-title">Youth Employment and Livelihood</h3>
+                    <ul class="committee-activities">
+                        <li>Livelihood Training</li>
+                        <li>Food and Other Supplies</li>
+                    </ul>
+                </div>
+
+                <!-- E. Health -->
+                <div class="committee-card" data-committee="health">
+                    <div class="committee-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <h3 class="committee-title">Health</h3>
+                    <ul class="committee-activities">
+                        <li>Medicines / Medical Equipment</li>
+                        <li>Campaigning Materials for Anti-Drugs (Leaflets, Posters, Tarpaulins)</li>
+                    </ul>
+                </div>
+
+                <!-- F. Anti-Drug and Peace and Order -->
+                <div class="committee-card" data-committee="anti-drug">
+                    <div class="committee-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    </div>
+                    <h3 class="committee-title">Anti-Drug and Peace and Order</h3>
+                    <ul class="committee-activities">
+                        <li>Orientation for Anti-Drug and Physical Abuse</li>
+                        <li>Foods and Accommodations</li>
+                    </ul>
+                </div>
+
+                <!-- G. Gender Sensitivity -->
+                <div class="committee-card" data-committee="gender">
+                    <div class="committee-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <h3 class="committee-title">Gender Sensitivity</h3>
+                    <ul class="committee-activities">
+                        <li>Orientation on GAD and VAWC</li>
+                        <li>Foods and Accommodations</li>
+                    </ul>
+                </div>
+
+                <!-- H. Feeding Program for KK Members -->
+                <div class="committee-card" data-committee="feeding">
+                    <div class="committee-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                    </div>
+                    <h3 class="committee-title">Feeding Program for KK Members</h3>
+                    <ul class="committee-activities">
+                        <li>Improve health and physique of children</li>
+                        <li>Youth and Children in the vicinity of Barangay</li>
+                    </ul>
+                </div>
+
+                <!-- I. Sports Development -->
                 <div class="committee-card" data-committee="sports">
                     <div class="committee-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
                     </div>
-                    <h3 class="committee-title">Sports & Recreation</h3>
-                    <p class="committee-desc">Manage sports programs and activities</p>
+                    <h3 class="committee-title">Sports Development</h3>
+                    <ul class="committee-activities">
+                        <li>Supplies and Materials</li>
+                        <li>Food and Accommodation</li>
+                        <li>Officiating Fees</li>
+                    </ul>
                 </div>
 
-                <!-- Education/Scholarships Committee -->
-                <div class="committee-card committee-disabled" data-committee="education">
+                <!-- J. Other Programs -->
+                <div class="committee-card" data-committee="other">
                     <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     </div>
-                    <h3 class="committee-title">Education & Scholarships</h3>
-                    <p class="committee-desc">Coming soon</p>
+                    <h3 class="committee-title">Other Programs</h3>
+                    <ul class="committee-activities">
+                        <li>Katipunan ng Kabataan (KK) General Assembly</li>
+                        <li>Barangay Day Celebration</li>
+                        <li>Youth Week</li>
+                    </ul>
                 </div>
 
-                <!-- Health Care Committee -->
-                <div class="committee-card committee-disabled" data-committee="health">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    </div>
-                    <h3 class="committee-title">Health Care</h3>
-                    <p class="committee-desc">Coming soon</p>
-                </div>
-
-                <!-- Anti-Drugs Committee -->
-                <div class="committee-card committee-disabled" data-committee="anti-drugs">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                    </div>
-                    <h3 class="committee-title">Anti-Drugs & Substance Abuse</h3>
-                    <p class="committee-desc">Coming soon</p>
-                </div>
-
-                <!-- Environment Committee -->
-                <div class="committee-card committee-disabled" data-committee="environment">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 2v20M2 12h20"/></svg>
-                    </div>
-                    <h3 class="committee-title">Environment & Sanitation</h3>
-                    <p class="committee-desc">Coming soon</p>
-                </div>
-
-                <!-- Livelihood Committee -->
-                <div class="committee-card committee-disabled" data-committee="livelihood">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                    </div>
-                    <h3 class="committee-title">Livelihood & Employment</h3>
-                    <p class="committee-desc">Coming soon</p>
-                </div>
-
-                <!-- Peace & Order Committee -->
-                <div class="committee-card committee-disabled" data-committee="peace">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
-                    <h3 class="committee-title">Peace & Order</h3>
-                    <p class="committee-desc">Coming soon</p>
-                </div>
-
-                <!-- Social Services Committee -->
-                <div class="committee-card committee-disabled" data-committee="social">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                    <h3 class="committee-title">Social Services</h3>
-                    <p class="committee-desc">Coming soon</p>
-                </div>
-
-                <!-- Youth Development Committee -->
-                <div class="committee-card committee-disabled" data-committee="youth">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                    </div>
-                    <h3 class="committee-title">Youth Development</h3>
-                    <p class="committee-desc">Coming soon</p>
-                </div>
-
-                <!-- Culture & Arts Committee -->
-                <div class="committee-card committee-disabled" data-committee="culture">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                    </div>
-                    <h3 class="committee-title">Culture & Arts</h3>
-                    <p class="committee-desc">Coming soon</p>
-                </div>
             </div>
         </section>
 
         <!-- ── Table ── -->
-        <section class="page-content-section" style="display: none;">
-            <div class="section-heading-row">
-                <h2 class="section-title">Program Schedules</h2>
+        <section class="page-content-section" id="spProgramSection" style="display: none;">
+            <div class="section-heading-row" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h2 class="section-title" id="spProgramSectionTitle">Program Schedules</h2>
+                    <p class="section-subtitle" id="spProgramSectionSubtitle" style="margin-top:4px;"></p>
+                </div>
+                <a href="/sports-application-form" id="spSportsLink" class="sp-scholarship-link" style="display:none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    Go to Sports Application Form
+                </a>
+            </div>
+
+            <!-- Activities list for the selected committee -->
+            <div id="spActivitiesPanel" style="display:none;margin-bottom:18px;">
+                <div class="sp-activities-list" id="spActivitiesList"></div>
             </div>
 
             <div class="table-card">
@@ -214,8 +262,61 @@
             </div>
         </section>
 
+        <!-- ── Passed Scholars Table (shown on click of education card) ── -->
+        <section class="page-content-section" id="spPassedSection" style="display:none;margin-top:20px;">
+            <div class="section-heading-row" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+                <div>
+                    <h2 class="section-title">Passed Scholars</h2>
+                    <p class="section-subtitle">List of approved scholarship applicants with a Passed result.</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <button type="button" id="spExportCsvBtn" class="sp-scholarship-link" style="background:#22c55e;box-shadow:0 4px 12px rgba(34,197,94,0.3);border:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export to CSV
+                    </button>
+                    <a href="/scholarship" id="spScholarshipLink" class="sp-scholarship-link" style="display:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        Go to Scholarship Application List
+                    </a>
+                </div>
+            </div>
+            <div class="table-card">
+                <div class="table-wrapper">
+                    <table class="sp-table">
+                        <thead>
+                            <tr>
+                                <th>FULL NAME<div class="column-hint" style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
+                                <th>School</th>
+                                <th>Year / Level</th>
+                                <th>Program / Strand</th>
+                                <th>Purpose</th>
+                                <th>Date Approved</th>
+                                <th>Result</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spPassedTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
     </div>
 </main>
+
+<!-- ── Passed Scholar View Modal ── -->
+<div class="sp-modal-overlay" id="spPassedViewModal" style="display:none;">
+    <div class="sp-modal-box" id="spPassedViewBox" style="max-width:680px;">
+        <div class="sp-modal-header">
+            <h3>Scholar Details — Application Form</h3>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="sp-modal-close" id="spPassedViewMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="sp-modal-close" id="spPassedViewClose" title="Close">&times;</button>
+            </div>
+        </div>
+        <div class="sp-modal-body" id="spPassedViewBody" style="background:#f0f1f5;padding:20px;"></div>
+    </div>
+</div>
 
 <!-- ── Add / Edit Schedule Modal ── -->
 <div class="sp-modal-overlay" id="spFormOverlay" style="display:none;">

@@ -87,7 +87,10 @@ body {
 }
 
 /* ── Filters ── */
-.page-filters-section { margin-bottom: 18px; }
+.page-filters-section {
+    margin-bottom: 18px;
+    width: 100%;
+}
 
 .table-action-bar {
     display: flex;
@@ -102,9 +105,13 @@ body {
     flex-wrap: nowrap;
     gap: 10px;
     align-items: flex-end;
+    width: 100%;
 }
 
-.filter-item { flex: 1 1 0; min-width: 0; }
+.filter-item {
+    flex: 1 1 0;
+    min-width: 0;
+}
 
 .filter-label {
     display: block;
@@ -119,17 +126,17 @@ body {
 
 .filter-select {
     width: 100%;
-    padding: 8px 28px 8px 10px;
+    padding: 10px 32px 10px 12px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
-    font-size: 13px;
+    font-size: 14px;
     color: #111827;
     background: #fff;
     appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 14px;
+    background-position: right 10px center;
+    background-size: 15px;
 }
 
 .filter-select:focus {
@@ -729,10 +736,69 @@ body {
 
 @media (max-width: 768px) {
     .main-content { margin-left: 0; margin-top: 60px; padding: 12px; }
-    .page-header-section { flex-direction: column; gap: 10px; }
-    .page-header-actions { width: 100%; justify-content: flex-end; }
-    .filters-row { flex-wrap: wrap; }
-    .filter-item { flex: 1 1 140px; }
+
+    /* Page header: title stacks, upload + search share one row below */
+    .page-header-section {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .page-header-left { width: 100%; }
+
+    /* Upload button + search bar: one horizontal row */
+    .page-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+    /* Search stretches to fill remaining space */
+    .page-header-actions .abyip-search-inline {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+    .page-header-actions .abyip-search-wrapper { width: 100%; }
+    .page-header-actions .abyip-filter-search-inline {
+        width: 100%;
+        font-size: 12px;
+        height: 36px;
+    }
+    /* Shrink the upload button on mobile */
+    .page-header-actions .primary-btn {
+        font-size: 12px;
+        padding: 8px 10px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .page-header-actions .primary-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* Keep all 3 filters in one horizontal row — shrink to fit */
+    .filters-row {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 6px;
+        align-items: flex-end;
+    }
+    .filter-item {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+    .filter-label {
+        font-size: 9px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .filter-select {
+        width: 100%;
+        font-size: 11px;
+        padding: 6px 20px 6px 6px;
+        background-size: 11px;
+        background-position: right 5px center;
+    }
+
     .modal-box { max-width: 95%; max-height: 90vh; margin: 10px; }
     .kkf-demo-grid { grid-template-columns: 1fr; }
     .kkf-name-row { flex-wrap: wrap; }
@@ -755,6 +821,33 @@ body {
 .upload-modal-box--wide.is-previewing {
     max-width: 96vw;
     width: 96vw;
+}
+
+/* Upload modal maximize */
+.upload-modal-backdrop.modal-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.upload-modal-backdrop.modal-maximized .upload-modal-box--wide {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.upload-modal-backdrop.modal-maximized .modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.upload-modal-backdrop.modal-maximized .preview-table-wrap {
+    max-height: none;
+    flex: 1;
 }
 
 /* ── Full preview table ── */

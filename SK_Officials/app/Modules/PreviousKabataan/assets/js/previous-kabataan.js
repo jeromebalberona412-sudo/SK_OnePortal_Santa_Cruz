@@ -350,6 +350,21 @@ if (uploadModal) uploadModal.addEventListener('click', e => {
     if (e.target === uploadModal) { uploadModal.style.display = 'none'; resetUploadModal(); }
 });
 
+/* ── Upload modal maximize/restore toggle ── */
+const uploadToggleBtn = document.getElementById('prevKabUploadModalToggle');
+if (uploadToggleBtn) {
+    uploadToggleBtn.addEventListener('click', () => {
+        uploadModal?.classList.toggle('modal-maximized');
+        const isMax = uploadModal?.classList.contains('modal-maximized');
+        uploadToggleBtn.textContent = isMax ? '❐' : '□';
+        // When maximizing while previewing, also ensure wide class stays
+        const modalBox = uploadModal?.querySelector('.upload-modal-box--wide');
+        if (modalBox && isMax && uploadedRows.length > 0) {
+            modalBox.classList.add('is-previewing');
+        }
+    });
+}
+
 if (uploadZone) {
     uploadZone.addEventListener('click', () => fileInput?.click());
     uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
@@ -409,6 +424,10 @@ function resetUploadModal() {
     if (uploadZone)       uploadZone.style.display = 'block';
     const modalBox = uploadModal?.querySelector('.upload-modal-box--wide');
     if (modalBox) modalBox.classList.remove('is-previewing');
+    // Reset maximize state
+    if (uploadModal) uploadModal.classList.remove('modal-maximized');
+    const uploadToggleBtn = document.getElementById('prevKabUploadModalToggle');
+    if (uploadToggleBtn) uploadToggleBtn.textContent = '□';
 }
 
 /* ── Generate full mock rows for preview ── */
@@ -565,18 +584,29 @@ if (confirmSaveBtn) {
     });
 }
 
-/* ── Toast ── */
+/* ── Header center banner (replaces bottom toast) ── */
 function showToast(msg) {
-    let toast = document.getElementById('prevKabToast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'prevKabToast';
-        toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#22c55e;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(34,197,94,.4);transition:opacity .3s ease;';
-        document.body.appendChild(toast);
+    const banner     = document.getElementById('headerCenterBanner');
+    const bannerText = document.getElementById('headerSuccessBannerText');
+    if (!banner || !bannerText) return;
+
+    bannerText.textContent = msg;
+    banner.style.display = 'flex';
+
+    // Reset animation
+    const inner = document.getElementById('headerSuccessBanner');
+    if (inner) {
+        inner.style.animation = 'none';
+        // Force reflow then re-apply
+        void inner.offsetWidth;
+        inner.style.animation = 'bannerFadeIn 0.3s ease';
     }
-    toast.textContent = msg;
-    toast.style.opacity = '1';
-    setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+
+    // Auto-hide after 4 seconds
+    clearTimeout(window._prevKabBannerTimer);
+    window._prevKabBannerTimer = setTimeout(() => {
+        banner.style.display = 'none';
+    }, 4000);
 }
 
 /* ── Event Listeners ── */

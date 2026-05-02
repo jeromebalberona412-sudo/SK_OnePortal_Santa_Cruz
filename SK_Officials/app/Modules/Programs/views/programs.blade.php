@@ -73,30 +73,25 @@
         </div>
 
         <section class="page-filters-section">
-            <!-- ── Action Bar: Search ── -->
-            <div class="table-action-bar">
-                <div class="abyip-search-inline">
-                    <label for="programSearch" class="abyip-sr-only">Search programs</label>
-                    <div class="abyip-search-wrapper">
-                        <span class="abyip-search-icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        </span>
-                        <input type="text" id="programSearch" class="abyip-filter-search-inline" placeholder="Search by title or objective" autocomplete="off">
-                    </div>
-                </div>
-            </div>
             <div class="filters-row">
+                <!-- Committee -->
                 <div class="filter-item">
                     <label for="programCommitteeFilter" class="filter-label">Committee</label>
                     <select id="programCommitteeFilter" class="filter-select">
                         <option value="">All committees</option>
-                        <option value="education">Education</option>
-                        <option value="health">Health</option>
-                        <option value="sports">Sports Development</option>
-                        <option value="environment">Environment</option>
+                        <option value="Equitable Access to Quality Education">Equitable Access to Quality Education</option>
+                        <option value="Environmental Protection">Environmental Protection</option>
+                        <option value="Disaster Risk Reduction and Resiliency">Disaster Risk Reduction and Resiliency</option>
+                        <option value="Youth Employment and Livelihood">Youth Employment and Livelihood</option>
+                        <option value="Health">Health</option>
+                        <option value="Anti-Drug and Peace and Order">Anti-Drug and Peace and Order</option>
+                        <option value="Feeding Program for KK Members">Feeding Program for KK Members</option>
+                        <option value="Sports Development">Sports Development</option>
+                        <option value="Other Programs">Other Programs</option>
                     </select>
                 </div>
 
+                <!-- Status -->
                 <div class="filter-item">
                     <label for="programStatusFilter" class="filter-label">Status</label>
                     <select id="programStatusFilter" class="filter-select">
@@ -105,6 +100,17 @@
                         <option value="ongoing">Ongoing</option>
                         <option value="completed">Completed</option>
                     </select>
+                </div>
+
+                <!-- Search (right side) -->
+                <div class="filter-item filter-item-search">
+                    <label for="programSearch" class="filter-label">Search</label>
+                    <div class="abyip-search-wrapper">
+                        <span class="abyip-search-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </span>
+                        <input type="text" id="programSearch" class="abyip-filter-search-inline" placeholder="Search by title or description" autocomplete="off">
+                    </div>
                 </div>
             </div>
         </section>
@@ -118,6 +124,7 @@
                             <thead>
                                 <tr>
                                     <th>Program Title</th>
+                                    <th>Description</th>
                                     <th>Committee</th>
                                     <th>Budget</th>
                                     <th>Duration</th>
@@ -203,16 +210,16 @@
         </div>
         <div class="modal-body">
             <div class="modal-field">
-                <label>Program Type</label>
+                <label>Program Type / Committee</label>
                 <input type="text" id="viewProgramType" readonly>
             </div>
             <div class="modal-field">
-                <label>Program Name</label>
-                <input type="text" id="viewProgramName" readonly>
+                <label>Program Title</label>
+                <input type="text" id="viewProgramTitle" readonly>
             </div>
             <div class="modal-field">
-                <label>Program Title/Theme</label>
-                <input type="text" id="viewProgramTitle" readonly>
+                <label>Description</label>
+                <textarea id="viewProgramName" readonly rows="4" style="width:100%;border-radius:10px;border:1px solid #d1d5db;padding:8px 10px;font-size:13px;font-family:inherit;color:#374151;background:#f9fafb;resize:none;line-height:1.6;"></textarea>
             </div>
             <div class="modal-field">
                 <label>Budget</label>
@@ -228,6 +235,31 @@
             </div>
         </div>
         <!-- Footer intentionally removed (use top-right close button) -->
+    </div>
+</div>
+
+<!-- Edit Duration Modal -->
+<div class="modal-backdrop" id="editDurationModal" style="display:none;">
+    <div class="modal-box" style="max-width:420px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Edit Duration</h2>
+            <button type="button" class="modal-close" id="editDurationClose" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding-bottom:16px;">
+            <input type="hidden" id="editDurationIndex">
+            <div class="modal-field">
+                <label for="editStartDate">Start Date <span style="color:#ef4444;">*</span></label>
+                <input type="date" id="editStartDate" class="modal-date-input">
+            </div>
+            <div class="modal-field">
+                <label for="editEndDate">End Date <span style="color:#ef4444;">*</span></label>
+                <input type="date" id="editEndDate" class="modal-date-input">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;" id="editDurationCancel">Cancel</button>
+            <button type="button" class="btn primary-btn" id="editDurationSave">Update</button>
+        </div>
     </div>
 </div>
 
