@@ -17,48 +17,10 @@
 
     @include('dashboard::loading')
 
-    {{-- Navbar --}}
-    <nav class="top-navbar">
-        <div class="navbar-container">
-            <a href="{{ route('homepage') }}" class="navbar-left">
-                <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="navbar-logo">
-                <span class="navbar-title">SK OnePortal</span>
-            </a>
-            <div class="navbar-links">
-                <a href="{{ route('homepage') }}" class="nav-link">Home</a>
-                <a href="{{ route('about') }}" class="nav-link">About</a>
-                <a href="{{ route('about') }}#services" class="nav-link">Services</a>
-                <a href="{{ route('about') }}#barangay" class="nav-link">Barangay</a>
-                <a href="{{ route('about') }}#contact" class="nav-link">Contact</a>
-            </div>
-            <div class="navbar-right">
-                <button type="button" class="nav-btn solid" id="navLoginBtn">Login</button>
-                <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
-                    <span></span><span></span><span></span>
-                </button>
-            </div>
-        </div>
-    </nav>
 
-    <div class="nav-drawer" id="navDrawer">
-        <a href="{{ route('homepage') }}" class="nav-link">Home</a>
-        <a href="{{ route('about') }}" class="nav-link">About</a>
-        <a href="{{ route('about') }}#services" class="nav-link">Services</a>
-        <a href="{{ route('about') }}#barangay" class="nav-link">Barangay</a>
-        <a href="{{ route('about') }}#contact" class="nav-link">Contact</a>
-        <div class="nav-drawer-actions">
-            <button type="button" class="nav-btn solid" id="navDrawerLoginBtn">Login</button>
-        </div>
-    </div>
 
     <main class="kkp-main">
         <div class="kkp-page-wrap">
-
-            {{-- Back link --}}
-            <a href="{{ route('about') }}#barangay" class="kkp-back-link" id="kkpBackLink">
-                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
-                Back to Barangays
-            </a>
 
             {{-- Success Alert --}}
             @if (session('success'))

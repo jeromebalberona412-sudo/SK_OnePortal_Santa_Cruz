@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 class KKProfilingController extends Controller
 {
     /**
+     * Display signup page with barangay selector
+     */
+    public function showSignup()
+    {
+        return view('kkprofiling::signup');
+    }
+
+    /**
      * Display the KK Profiling form for a specific barangay
      */
     public function show(string $barangay)

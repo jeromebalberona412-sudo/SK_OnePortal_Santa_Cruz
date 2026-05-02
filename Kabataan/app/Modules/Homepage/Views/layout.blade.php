@@ -15,13 +15,14 @@
         'app/Modules/Homepage/assets/css/homepage.css',
         'app/Modules/Homepage/assets/css/about.css',
         'app/Modules/Homepage/assets/css/pages.css',
+        'app/Modules/Homepage/assets/css/faqs.css',
         'app/Modules/Shared/assets/css/loading.css',
         'app/Modules/Shared/assets/js/loading.js',
     ])
 
     @stack('styles')
 </head>
-<body class="homepage-body @if(Route::currentRouteName() === 'about') about-body @endif">
+<body class="homepage-body @if(Route::currentRouteName() === 'about') about-body @endif @if(Route::currentRouteName() === 'faqs') faqs-body @endif">
     {{-- LOADING OVERLAY --}}
     @include('dashboard::loading')
 
