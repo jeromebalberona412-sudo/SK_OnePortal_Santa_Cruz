@@ -3,29 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Waiting for Email Verification</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Verify Email - SK Officials</title>
+    @vite([
+        'app/Modules/Authentication/assets/css/login.css',
+    ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
-        .countdown-text {
-            font-size: 14px;
-            color: #64748b;
-            margin-bottom: 24px;
+        .verify-content {
             text-align: center;
+        }
+
+        .verify-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, #f5c518 0%, #e6a800 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(245, 197, 24, 0.3);
+            animation: pulse-icon 2s ease-in-out infinite;
+        }
+
+        .verify-icon svg {
+            width: 40px;
+            height: 40px;
+            color: white;
+        }
+
+        @keyframes pulse-icon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .countdown-text {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin: 1.5rem 0;
+            font-weight: 500;
         }
 
         .email-highlight {
-            color: #213F99;
-            font-weight: 600;
+            color: #f5c518;
+            font-weight: 700;
+        }
+
+        .resend-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
         }
 
         .resend-cooldown {
-            font-size: 13px;
+            font-size: 0.85rem;
             color: #dc3545;
             text-align: center;
-            margin-top: 8px;
-            margin-bottom: 16px;
+            margin-top: 0.75rem;
+            font-weight: 500;
+        }
+
+        .btn-resend {
+            background: #f5c518 !important;
+            color: #1a1a2e !important;
+            font-weight: 700 !important;
+            border: none !important;
+            box-shadow: 0 8px 24px rgba(245, 197, 24, 0.3) !important;
+        }
+
+        .btn-resend:hover:not(:disabled) {
+            background: #e6a800 !important;
+            box-shadow: 0 12px 32px rgba(245, 197, 24, 0.4) !important;
         }
 
         .btn-resend:disabled {
@@ -33,7 +85,38 @@
             cursor: not-allowed;
         }
 
-        /* Success Modal Styles */
+        .verification-state {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .verification-state.waiting {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.12) 100%);
+            color: #1e40af;
+            border: 1.5px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .verification-state.success {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.12) 100%);
+            color: #15803d;
+            border: 1.5px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .verification-state.warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.12) 100%);
+            color: #92400e;
+            border: 1.5px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .verification-state.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.12) 100%);
+            color: #b91c1c;
+            border: 1.5px solid rgba(239, 68, 68, 0.2);
+        }
+
         .success-modal-overlay {
             position: fixed;
             top: 0;
@@ -144,35 +227,9 @@
             }
         }
 
-        .success-modal h2 {
-            color: #213F99;
-            margin-bottom: 12px;
-            font-size: 28px;
-            font-weight: 700;
-            animation: fadeInText 0.6s 0.4s ease-in backwards;
-        }
-
-        .success-modal p {
-            color: #64748b;
-            margin-bottom: 0;
-            font-size: 16px;
-            animation: fadeInText 0.6s 0.5s ease-in backwards;
-        }
-
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
-        }
-
-        @keyframes fadeInText {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         @keyframes slideUp {
@@ -195,18 +252,42 @@
             animation: fadeOut 0.3s ease forwards;
         }
 
+        .success-modal h2 {
+            color: #1a1a2e;
+            margin-bottom: 12px;
+            font-size: 28px;
+            font-weight: 700;
+            animation: fadeInText 0.6s 0.4s ease-in backwards;
+        }
+
+        .success-modal p {
+            color: #64748b;
+            margin-bottom: 0;
+            font-size: 16px;
+            animation: fadeInText 0.6s 0.5s ease-in backwards;
+        }
+
+        @keyframes fadeInText {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @media (max-width: 640px) {
-            .countdown-text {
-                font-size: 13px;
+            .verify-icon {
+                width: 70px;
+                height: 70px;
+                margin: 0 auto 1.5rem;
             }
 
-            .email-highlight {
-                display: inline-block;
-                word-break: break-word;
-            }
-
-            .resend-cooldown {
-                font-size: 12px;
+            .verify-icon svg {
+                width: 35px;
+                height: 35px;
             }
 
             .success-modal {
@@ -237,93 +318,72 @@
                 font-size: 14px;
             }
         }
-
-        @media (max-width: 480px) {
-            .countdown-text {
-                font-size: 12px;
-            }
-
-            .resend-cooldown {
-                font-size: 11px;
-            }
-
-            .check-wrap {
-                width: 90px;
-                height: 90px;
-                margin-bottom: 20px;
-            }
-
-            .checkmark {
-                width: 25px;
-                height: 50px;
-                border-right: 5px solid white;
-                border-bottom: 5px solid white;
-                margin-left: 5px;
-                margin-bottom: 5px;
-            }
-
-            .success-modal h2 {
-                font-size: 20px;
-            }
-
-            .success-modal p {
-                font-size: 13px;
-            }
-        }
     </style>
 </head>
-<body>
-    <div class="login-page">
-        {{-- Background --}}
-        <div class="bg-wrapper">
-            <div class="bg-image"></div>
-            <div class="gradient-overlay"></div>
-            <div class="floating-shapes">
-                <div class="shape shape-1"></div>
-                <div class="shape shape-2"></div>
-                <div class="shape shape-3"></div>
+<body class="sk-login-page">
+    <!-- Animated Background -->
+    <div class="sk-bg-wrapper">
+        <div class="sk-bg-image"></div>
+        <div class="sk-gradient-overlay"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+
+    <main class="sk-login-container">
+        <!-- Left Side - Logo & Branding -->
+        <div class="sk-branding-section">
+            <div class="branding-content">
+                <div class="logo-wrapper">
+                    <img
+                        src="{{ asset('images/logo.png') }}"
+                        alt="SK Officials Logo"
+                        class="sk-logo"
+                    >
+                </div>
+                <h1 class="sk-main-title">SK OnePortal</h1>
+                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
             </div>
         </div>
 
-        <div class="login-container">
-            {{-- LEFT: Logo --}}
-            <div class="logo-container">
-                <div class="logo-glow-wrapper">
-                    <img src="{{ url('/images/logo.png') }}" alt="SK Officials Logo" class="large-logo">
+        <!-- Right Side - Verification Card -->
+        <div class="sk-login-section">
+            <div class="sk-login-card">
+                <div class="card-header">
+                    <h2 class="card-title">Verify Your Email</h2>
+                    <p class="card-subtitle">Complete verification to access your account</p>
                 </div>
-                <h1 class="brand-title">SK Officials</h1>
-                <p class="brand-subtitle">Santa Cruz Leadership Portal</p>
-            </div>
 
-            {{-- RIGHT: Content Card --}}
-            <div class="login-form-container">
-                <div class="login-card-inner">
-                    <div class="form-header">
-                        <h2>Verify Your Email to Continue</h2>
-                        <p>We sent a verification email to <span class="email-highlight">{{ $email }}</span>. You can verify on any device. This page will continue automatically when verification is complete.</p>
+                <div class="verify-content">
+
+                    <div class="verification-state waiting" id="verification-state">
+                        Waiting for email verification...
                     </div>
 
-                    <div class="alert alert-info" role="alert" id="verification-state">
-                        Waiting for verification...
-                    </div>
-                    <div id="inline-error-container"></div>
-
-                    <p class="countdown-text" id="countdown">
-                        Email verification expires in: {{ sprintf('%02d:%02d', $waitMinutes, 0) }}
+                    <p class="countdown-text">
+                        We sent a verification link to <span class="email-highlight">{{ $email }}</span>
                     </p>
 
-                    <form method="POST" action="{{ route('sk_official.verification.resend', [], false) }}" class="login-form" id="resend-form">
-                        @csrf
-                        <input type="hidden" name="email" value="{{ $email }}">
-                        <button type="submit" class="login-btn btn btn-primary w-100 mb-3 btn-resend" id="resend-btn">
-                            Resend Verification Email
-                        </button>
-                    </form>
-                    <div class="resend-cooldown" id="resend-cooldown" style="display: none;"></div>
+                    <p class="countdown-text" id="countdown">
+                        Expires in: <span id="countdown-timer">{{ sprintf('%02d:%02d', $waitMinutes, 0) }}</span>
+                    </p>
 
-                    <div class="form-footer">
-                        <a href="{{ route('login', [], false) }}">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <div class="resend-section">
+                        <form method="POST" action="{{ route('sk_official.verification.resend', [], false) }}" id="resend-form">
+                            @csrf
+                            <input type="hidden" name="email" value="{{ $email }}">
+                            <button type="submit" class="sk-submit-btn btn-resend" id="resend-btn">
+                                Resend Verification Email
+                            </button>
+                        </form>
+                        <div class="resend-cooldown" id="resend-cooldown" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-footer" style="margin-top: 2rem;">
+                        <a href="{{ route('login', [], false) }}" style="font-size: 0.95rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px; display: inline;">
                                 <path d="M19 12H5M12 19l-7-7 7-7"/>
                             </svg>
                             Back to login
@@ -332,35 +392,32 @@
                 </div>
             </div>
         </div>
+    </main>
 
-        {{-- Success Modal (outside card, inside login-page) --}}
-        <div class="success-modal-overlay" id="success-modal">
-            <div class="success-modal">
-                <div class="check-wrap" aria-hidden="true">
-                    <span class="checkmark"></span>
-                </div>
-                <h2>Verified Successfully!</h2>
-                <p>Redirecting to dashboard...</p>
+    <!-- Success Modal -->
+    <div class="success-modal-overlay" id="success-modal">
+        <div class="success-modal">
+            <div class="check-wrap" aria-hidden="true">
+                <span class="checkmark"></span>
             </div>
+            <h2>Verified Successfully!</h2>
+            <p>Redirecting to dashboard...</p>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
         (() => {
             const statusUrl = "{{ route('sk_official.verification.wait.status', [], false) }}";
             const expiresAt = new Date("{{ $expiresAtIso }}");
             const stateElement = document.getElementById('verification-state');
-            const countdownElement = document.getElementById('countdown');
+            const countdownElement = document.getElementById('countdown-timer');
             const resendBtn = document.getElementById('resend-btn');
             const resendCooldownElement = document.getElementById('resend-cooldown');
             const resendForm = document.getElementById('resend-form');
-            const inlineErrorContainer = document.getElementById('inline-error-container');
 
-            // Resend cooldown management using localStorage
             const COOLDOWN_KEY = 'sk_official_resend_cooldown_{{ $email }}';
-            const COOLDOWN_DURATION = 600; // 600 seconds = 10 minutes cooldown
+            const COOLDOWN_DURATION = 600;
 
             function getResendCooldownExpiry() {
                 const stored = localStorage.getItem(COOLDOWN_KEY);
@@ -391,32 +448,17 @@
                 if (remaining > 0) {
                     resendBtn.disabled = true;
                     resendCooldownElement.style.display = 'block';
-                    resendCooldownElement.textContent = `You already requested a verification email. Please try again later.`;
+                    resendCooldownElement.textContent = `Please try again in ${remaining} seconds`;
                 } else {
                     resendBtn.disabled = false;
                     resendCooldownElement.style.display = 'none';
                 }
             }
 
-            function showInlineError(message) {
-                inlineErrorContainer.innerHTML = `<div class="invalid-feedback d-block" style="text-align: center; margin-bottom: 16px;">${message}</div>`;
-                setTimeout(() => {
-                    const errorEl = inlineErrorContainer.querySelector('.invalid-feedback');
-                    if (errorEl) {
-                        errorEl.classList.add('fade-out');
-                        setTimeout(() => {
-                            inlineErrorContainer.innerHTML = '';
-                        }, 300);
-                    }
-                }, 5000);
-            }
-
-            // Handle form submission
             resendForm.addEventListener('submit', function(e) {
                 const remaining = getRemainingCooldown();
                 if (remaining > 0) {
                     e.preventDefault();
-                    showInlineError(`You already requested a verification email. Please try again in 10 minutes.`);
                     return false;
                 }
                 setResendCooldownExpiry();
@@ -428,7 +470,7 @@
                 const remainingSeconds = seconds % 60;
                 const formattedMinutes = String(minutes).padStart(2, '0');
                 const formattedSeconds = String(remainingSeconds).padStart(2, '0');
-                countdownElement.textContent = `Email verification expires in: ${formattedMinutes}:${formattedSeconds}`;
+                countdownElement.textContent = `${formattedMinutes}:${formattedSeconds}`;
             }
 
             async function checkStatus() {
@@ -444,15 +486,13 @@
                     const payload = await response.json();
 
                     if (payload.state === 'verified' && payload.redirect) {
-                        stateElement.className = 'alert alert-success';
-                        stateElement.textContent = 'Email verified. Redirecting...';
+                        stateElement.className = 'verification-state success';
+                        stateElement.textContent = 'Email verified successfully!';
                         clearResendCooldown();
 
-                        // Show success modal
                         const successModal = document.getElementById('success-modal');
                         successModal.classList.add('show');
 
-                        // Wait 3 seconds, then show loading screen and redirect
                         setTimeout(() => {
                             successModal.classList.add('fade-out');
                             setTimeout(() => {
@@ -466,20 +506,20 @@
                     }
 
                     if (payload.state === 'expired') {
-                        stateElement.className = 'alert alert-warning';
+                        stateElement.className = 'verification-state warning';
                         stateElement.textContent = 'Verification window expired. Please sign in again.';
                         clearResendCooldown();
                         return;
                     }
 
                     if (payload.state === 'missing') {
-                        stateElement.className = 'alert alert-warning';
+                        stateElement.className = 'verification-state warning';
                         stateElement.textContent = 'Verification session not found. Please sign in again.';
                         clearResendCooldown();
                         return;
                     }
                 } catch (error) {
-                    stateElement.className = 'alert alert-danger';
+                    stateElement.className = 'verification-state error';
                     stateElement.textContent = 'Unable to check verification status. Retrying...';
                 }
 
@@ -492,10 +532,8 @@
             updateResendButton();
             checkStatus();
 
-            // Update resend button every second
             setInterval(updateResendButton, 1000);
 
-            // Show loading on back to login
             document.querySelector('.form-footer a').addEventListener('click', function(e) {
                 e.preventDefault();
                 LoadingScreen.show('Redirecting', 'Taking you to login...');

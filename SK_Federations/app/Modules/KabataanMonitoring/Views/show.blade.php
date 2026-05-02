@@ -115,9 +115,6 @@
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
             </a>
             <div class="menu-divider"></div>
-            <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()">
-                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
-            </button>
         </nav>
     </aside>
 

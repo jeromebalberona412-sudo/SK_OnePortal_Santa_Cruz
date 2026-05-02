@@ -99,7 +99,6 @@
             <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item active" data-tooltip="Kabataan Monitoring"><i class="fas fa-users"></i><span>Kabataan Monitoring</span></a>
             <div class="menu-divider"></div>
-            <button type="button" class="menu-item logout-item" data-tooltip="Logout" onclick="showLogoutModal()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
         </nav>
     </aside>
 

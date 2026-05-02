@@ -1,29 +1,30 @@
 <!-- Logout Confirmation Modal -->
 <div id="logoutModal" class="modal">
     <div class="modal-content logout-modal-content">
-        <button type="button" class="modal-close-icon" onclick="closeLogoutModal()">
+        <button type="button" class="logout-modal-close" onclick="closeLogoutModal()">
             <i class="fas fa-times"></i>
         </button>
-        <div class="modal-body" style="padding: 48px 40px;">
-            <div style="text-align: center;">
-                <div class="logout-icon-wrapper">
-                    <i class="fas fa-sign-out-alt"></i>
-                </div>
-                <h2 style="font-size: 24px; font-weight: 700; color: #1e293b; margin: 24px 0 12px 0;">
-                    Logout Confirmation
-                </h2>
-                <p style="font-size: 16px; color: #64748b; line-height: 1.6; margin: 0 0 32px 0;">
-                    Are you sure you want to logout?
-                </p>
-                <div style="display: flex; gap: 12px; justify-content: center;">
-                    <button type="button" class="btn-cancel-modern" onclick="closeLogoutModal()">
-                        Cancel
-                    </button>
-                    <button type="button" class="btn-logout-modern" onclick="confirmLogout()">
-                        Yes, Logout
-                        <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
-                    </button>
-                </div>
+        <div class="logout-modal-body">
+            <div class="logout-modal-icon-wrapper">
+                <svg class="logout-modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </div>
+            <h2 class="logout-modal-title">Logout Confirmation</h2>
+            <p class="logout-modal-message">Are you sure you want to logout?</p>
+            <div class="logout-modal-actions">
+                <button type="button" class="logout-btn-cancel" onclick="closeLogoutModal()">
+                    Cancel
+                </button>
+                <button type="button" class="logout-btn-confirm" onclick="confirmLogout()">
+                    Yes, Logout
+                    <svg class="logout-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="5 12 19 12"></polyline>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -32,58 +33,197 @@
 <style>
     /* Logout Modal Styles */
     .logout-modal-content {
-        max-width: 480px;
-        border-radius: 16px;
+        max-width: 420px;
+        width: 90%;
+        background: white;
+        border-radius: 20px;
         position: relative;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        animation: logoutModalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .logout-icon-wrapper {
-        width: 80px;
-        height: 80px;
+    @keyframes logoutModalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .logout-modal-close {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        z-index: 10;
+    }
+
+    .logout-modal-close:hover {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .logout-modal-body {
+        padding: 56px 40px 40px;
+        text-align: center;
+    }
+
+    .logout-modal-icon-wrapper {
+        width: 100px;
+        height: 100px;
         border-radius: 50%;
         background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto;
-        box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
-        animation: scaleIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        margin: 0 auto 28px;
+        box-shadow: 0 12px 32px rgba(239, 68, 68, 0.2);
+        animation: logoutIconPulse 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        position: relative;
     }
 
-    .logout-icon-wrapper i {
-        font-size: 36px;
+    .logout-modal-icon-wrapper::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        opacity: 0.3;
+        animation: logoutIconRing 1.5s ease-out infinite;
+    }
+
+    @keyframes logoutIconPulse {
+        0% {
+            transform: scale(0) rotate(-180deg);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1) rotate(10deg);
+        }
+        100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+        }
+    }
+
+    @keyframes logoutIconRing {
+        0% {
+            transform: scale(1);
+            opacity: 0.3;
+        }
+        50% {
+            transform: scale(1.15);
+            opacity: 0.15;
+        }
+        100% {
+            transform: scale(1.3);
+            opacity: 0;
+        }
+    }
+
+    .logout-modal-icon {
+        width: 48px;
+        height: 48px;
         color: #dc2626;
+        position: relative;
+        z-index: 1;
     }
 
-    .btn-logout-modern {
-        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-        color: white;
-        border: none;
-        padding: 14px 32px;
+    .logout-modal-title {
+        font-size: 26px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .logout-modal-message {
+        font-size: 15px;
+        color: #64748b;
+        line-height: 1.6;
+        margin: 0 0 32px 0;
+    }
+
+    .logout-modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .logout-btn-cancel {
+        background: white;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+        padding: 12px 28px;
         border-radius: 10px;
         font-size: 15px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s ease;
+        min-width: 120px;
+    }
+
+    .logout-btn-cancel:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #475569;
+    }
+
+    .logout-btn-cancel:active {
+        transform: scale(0.98);
+    }
+
+    .logout-btn-confirm {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
         min-width: 160px;
         justify-content: center;
     }
 
-    .btn-logout-modern:hover {
+    .logout-btn-confirm:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+        box-shadow: 0 8px 28px rgba(220, 38, 38, 0.4);
     }
 
-    .btn-logout-modern i {
-        transition: transform 0.3s ease;
+    .logout-btn-confirm:active {
+        transform: translateY(0);
     }
 
-    .btn-logout-modern:hover i {
-        transform: translateX(3px);
+    .logout-btn-icon {
+        width: 18px;
+        height: 18px;
+        transition: transform 0.2s ease;
+    }
+
+    .logout-btn-confirm:hover .logout-btn-icon {
+        transform: translateX(2px);
     }
 
     @media (max-width: 640px) {
@@ -91,23 +231,60 @@
             max-width: 95%;
         }
 
-        .logout-modal-content .modal-body {
-            padding: 40px 24px !important;
+        .logout-modal-body {
+            padding: 48px 24px 32px;
         }
 
-        .logout-icon-wrapper {
-            width: 70px;
-            height: 70px;
+        .logout-modal-icon-wrapper {
+            width: 88px;
+            height: 88px;
+            margin-bottom: 24px;
         }
 
-        .logout-icon-wrapper i {
-            font-size: 32px;
+        .logout-modal-icon {
+            width: 44px;
+            height: 44px;
         }
 
-        .btn-logout-modern {
-            padding: 12px 24px;
+        .logout-modal-title {
+            font-size: 22px;
+        }
+
+        .logout-modal-message {
             font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .logout-modal-actions {
+            gap: 10px;
+        }
+
+        .logout-btn-cancel,
+        .logout-btn-confirm {
+            padding: 11px 20px;
+            font-size: 14px;
+            min-width: 100px;
+        }
+
+        .logout-btn-confirm {
             min-width: 140px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .logout-modal-body {
+            padding: 40px 20px 28px;
+        }
+
+        .logout-modal-actions {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .logout-btn-cancel,
+        .logout-btn-confirm {
+            width: 100%;
+            min-width: unset;
         }
     }
 </style>
