@@ -130,6 +130,11 @@ Route::middleware([
         return view('schedule_programs::scholar_list');
     })->name('scholar.list');
 
+    // ── Sports List route (pure front-end, no DB) ──
+    Route::get('/sport_list', function () {
+        return view('schedule_programs::sports_list');
+    })->name('sport.list');
+
     // ── Sports requests route (pure front-end, no DB) ──
     Route::get('/sports-requests', function () {
         return view('schedule_programs::sports_requests');

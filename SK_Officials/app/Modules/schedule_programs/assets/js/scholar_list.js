@@ -154,14 +154,30 @@ function initializeModal() {
     const maxBtn     = document.getElementById('slViewMaximize');
     const modalBox   = document.getElementById('slViewBox');
 
-    if (closeBtn)  closeBtn.addEventListener('click',  () => { modal.style.display = 'none'; });
-    if (modal)     modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+    if (closeBtn)  closeBtn.addEventListener('click',  () => {
+        modal.style.display = 'none';
+        modalBox.classList.remove('sl-modal-maximized');
+        modal.classList.remove('sl-overlay-maximized');
+        maxBtn.textContent = '□';
+        maxBtn.title = 'Maximize';
+    });
+    if (modal)     modal.addEventListener('click', e => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            modalBox.classList.remove('sl-modal-maximized');
+            modal.classList.remove('sl-overlay-maximized');
+            maxBtn.textContent = '□';
+            maxBtn.title = 'Maximize';
+        }
+    });
     if (maxBtn && modalBox) {
         maxBtn.addEventListener('click', () => {
             modalBox.classList.toggle('sl-modal-maximized');
             const isMax = modalBox.classList.contains('sl-modal-maximized');
             maxBtn.textContent = isMax ? '⧉' : '□';
             maxBtn.title = isMax ? 'Restore Down' : 'Maximize';
+            // Toggle overlay padding so modal truly fills the screen
+            if (modal) modal.classList.toggle('sl-overlay-maximized', isMax);
         });
     }
 }
@@ -193,9 +209,9 @@ function openScholarModal(r) {
         return `<div class="sl-pdf-chk-row">${chk(isChecked)} <span>${p.label}${extra}</span></div>`;
     }).join('');
 
-    // Full name for signature (cursive) — First MI. Last
-    const fullName = `${r.first_name || ''} ${r.middle_name ? r.middle_name.charAt(0) + '. ' : ''}${r.last_name || ''}${r.suffix ? ' ' + r.suffix : ''}`.trim();
-    // Printed name below line — same format: First MI. Last
+    // Cursive signature above line — First Last (no middle initial, like a real signature)
+    const fullName = `${r.first_name || ''} ${r.last_name || ''}${r.suffix ? ' ' + r.suffix : ''}`.trim();
+    // Printed name below line — First MI. Last
     const printedName = `${r.first_name || ''} ${r.middle_name ? r.middle_name.charAt(0) + '. ' : ''}${r.last_name || ''}${r.suffix ? ' ' + r.suffix : ''}`.trim();
 
     body.innerHTML = `

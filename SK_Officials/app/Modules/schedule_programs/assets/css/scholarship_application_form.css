@@ -59,6 +59,31 @@ body {
 .schol-btn-approve:hover { background: #16a34a; }
 .schol-btn-reject { background: #ef4444; color: #fff; }
 .schol-btn-reject:hover { background: #dc2626; }
+
+/* Back to Scholar List button */
+.schol-btn-back-list {
+    background: #2c2c3e;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(44,44,62,0.2);
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+.schol-btn-back-list:hover {
+    background: #1a1a28;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(44,44,62,0.3);
+    color: #fff !important;
+}
+.schol-btn-reject:hover { background: #dc2626; }
 .schol-btn-danger { background: #ef4444; color: #fff; }
 .schol-btn-danger:hover { background: #dc2626; }
 
