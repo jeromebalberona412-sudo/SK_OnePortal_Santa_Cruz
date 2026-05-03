@@ -123,32 +123,6 @@
     margin-top: 8px;
 }
 
-/* ── Filters Bar (outside table card) ── */
-.aroff-filters-bar {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-}
-
-.aroff-filter-select {
-    padding: 7px 12px;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    font-size: 13px;
-    color: #374151;
-    background: #fff;
-    cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    min-width: 140px;
-}
-
-.aroff-filter-select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
-}
-
 /* ── Table Card ── */
 .aroff-table-card {
     background: #fff;

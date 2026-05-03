@@ -108,6 +108,8 @@ let dsoCurrentPage = 1;
 const dsoPerPage = 10;
 let dsoPendingId = null;
 let dsoActiveFilter = 'all';
+let dsoActiveBarangay = '';
+let dsoActivePosition = '';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function dsoNow() { return new Date('2026-04-26T12:00:00'); }
@@ -139,9 +141,11 @@ function dsoApplyFilter(records, filter) {
 
 function initDeletedSkOfficials() {
     renderDsoStats();
+    populateDsoDropdowns();
     renderDsoTable();
     bindDsoSearch();
     bindDsoFilterTabs();
+    bindDsoDropdowns();
     bindDsoRestoreModal();
     bindDsoViewModal();
 }
@@ -184,6 +188,62 @@ function renderDsoStats() {
         </div>`;
 }
 
+// ── Populate Dropdowns ────────────────────────────────────────────────────────
+function populateDsoDropdowns() {
+    const barangaySelect = document.getElementById('dsoFilterBarangay');
+    if (barangaySelect) {
+        const barangays = [...new Set(dsoRecords.map(r => r.barangay).filter(Boolean))].sort();
+        barangays.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b; opt.textContent = b;
+            barangaySelect.appendChild(opt);
+        });
+    }
+    const positionSelect = document.getElementById('dsoFilterPosition');
+    if (positionSelect) {
+        const positions = [...new Set(dsoRecords.map(r => r.position).filter(Boolean))].sort();
+        positions.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p; opt.textContent = p;
+            positionSelect.appendChild(opt);
+        });
+    }
+}
+
+// ── Bind Dropdowns ────────────────────────────────────────────────────────────
+function bindDsoDropdowns() {
+    const barangaySelect = document.getElementById('dsoFilterBarangay');
+    if (barangaySelect) {
+        barangaySelect.addEventListener('change', function () {
+            dsoActiveBarangay = this.value;
+            dsoCurrentPage = 1;
+            dsoApplyAllFilters();
+        });
+    }
+    const positionSelect = document.getElementById('dsoFilterPosition');
+    if (positionSelect) {
+        positionSelect.addEventListener('change', function () {
+            dsoActivePosition = this.value;
+            dsoCurrentPage = 1;
+            dsoApplyAllFilters();
+        });
+    }
+}
+
+function dsoApplyAllFilters() {
+    let result = dsoApplyFilter(dsoRecords, dsoActiveFilter);
+    if (dsoActiveBarangay) result = result.filter(r => r.barangay === dsoActiveBarangay);
+    if (dsoActivePosition) result = result.filter(r => r.position === dsoActivePosition);
+    const q = (document.getElementById('dsoSearch')?.value || '').toLowerCase();
+    if (q) result = result.filter(r =>
+        `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
+        (r.barangay || '').toLowerCase().includes(q) ||
+        (r.position || '').toLowerCase().includes(q)
+    );
+    dsoFiltered = result;
+    renderDsoTable();
+}
+
 // ── Filter Tabs ───────────────────────────────────────────────────────────────
 function bindDsoFilterTabs() {
     document.querySelectorAll('.dso-tab').forEach(btn => {
@@ -191,12 +251,13 @@ function bindDsoFilterTabs() {
             document.querySelectorAll('.dso-tab').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             dsoActiveFilter = this.dataset.filter;
-            const labels = { all: 'All Deleted Records', today: 'Deleted Today', week: 'Deleted This Week', month: 'Deleted This Month' };
             const label = document.getElementById('dsoSectionLabel');
-            if (label) label.textContent = labels[dsoActiveFilter] || 'Deleted Records';
-            dsoFiltered = dsoApplyFilter(dsoRecords, dsoActiveFilter);
+            if (label) {
+                const labels = { all: 'All Deleted Records', today: 'Deleted Today', week: 'Deleted This Week', month: 'Deleted This Month' };
+                label.textContent = labels[dsoActiveFilter] || 'Deleted Records';
+            }
             dsoCurrentPage = 1;
-            renderDsoTable();
+            dsoApplyAllFilters();
         });
     });
 }
@@ -212,7 +273,7 @@ function renderDsoTable() {
     const page  = dsoFiltered.slice(start, end);
 
     if (dsoFiltered.length === 0) {
-        tbody.innerHTML = `<tr class="dso-empty-row"><td colspan="6">No deleted SK Officials records found.</td></tr>`;
+        tbody.innerHTML = `<tr class="dso-empty-row"><td colspan="7">No deleted SK Officials records found.</td></tr>`;
         if (info) info.textContent = 'No records found';
         renderDsoPagination(0);
         return;
@@ -224,7 +285,8 @@ function renderDsoTable() {
         <tr>
             <td class="dso-name-cell">${fullName}</td>
             <td>${r.position || '—'}</td>
-            <td>${r.barangay ? r.barangay + (r.municipality ? ', ' + r.municipality : '') : '—'}</td>
+            <td>${r.barangay || '—'}</td>
+            <td>${r.municipality || '—'}</td>
             <td><span class="dso-deleted-badge">${r.deletedDate}</span></td>
             <td><span class="dso-time-badge">${r.deletedTime}</span></td>
             <td>
@@ -271,15 +333,8 @@ function bindDsoSearch() {
     const input = document.getElementById('dsoSearch');
     if (!input) return;
     input.addEventListener('input', function () {
-        const q = this.value.toLowerCase();
-        const base = dsoApplyFilter(dsoRecords, dsoActiveFilter);
-        dsoFiltered = base.filter(r =>
-            `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
-            (r.barangay || '').toLowerCase().includes(q) ||
-            (r.position || '').toLowerCase().includes(q)
-        );
         dsoCurrentPage = 1;
-        renderDsoTable();
+        dsoApplyAllFilters();
     });
 }
 

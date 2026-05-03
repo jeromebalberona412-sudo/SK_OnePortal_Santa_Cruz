@@ -84,7 +84,7 @@
             <p class="abyip-doc-sk">SANGGUNIANG KABATAAN NG CALIOS</p>
             <div class="abyip-doc-title-block">
                 <h1 class="abyip-doc-h1">ANNUAL BARANGAY YOUTH INVESTMENT PROGRAM (ABYIP)</h1>
-                <h2 class="abyip-doc-h2">CY 2025</h2>
+                <h2 class="abyip-doc-h2">CY 2026</h2>
             </div>
         </div>
     </header>
@@ -410,14 +410,14 @@
         <div class="modal-box abyip-meta-modal-box" role="dialog" aria-labelledby="abyipMetaHeading">
             <div class="abyip-meta-modal-inner">
                 <h4 id="abyipMetaHeading">Save ABYIP record</h4>
-                <p class="abyip-meta-hint">Set the record title and remarks. Title defaults to ABYIP CY 2025 (editable).</p>
+                <p class="abyip-meta-hint">Set the record title and add optional remarks. Title is pre-filled as ABYIP CY 2026 — you can edit it. Maximum 100 characters each.</p>
                 <div class="abyip-meta-field">
-                    <label for="abyipMetaTitleInput">Title</label>
-                    <input type="text" id="abyipMetaTitleInput" class="abyip-meta-input" maxlength="500" autocomplete="off">
+                    <label for="abyipMetaTitleInput">Title <span class="abyip-meta-char-hint" id="abyipTitleCharCount">0/100</span></label>
+                    <input type="text" id="abyipMetaTitleInput" class="abyip-meta-input" maxlength="100" autocomplete="off">
                 </div>
                 <div class="abyip-meta-field">
-                    <label for="abyipMetaRemarksInput">Remarks</label>
-                    <textarea id="abyipMetaRemarksInput" class="abyip-meta-textarea" rows="3" maxlength="500" placeholder="Optional"></textarea>
+                    <label for="abyipMetaRemarksInput">Remarks <span class="abyip-meta-char-hint" id="abyipRemarksCharCount">0/100</span></label>
+                    <textarea id="abyipMetaRemarksInput" class="abyip-meta-textarea" rows="3" maxlength="100" placeholder="Optional" style="resize: none;"></textarea>
                 </div>
                 <div class="abyip-meta-actions">
                     <button type="button" class="btn-cancel" id="abyipMetaCancel">Cancel</button>
@@ -429,14 +429,22 @@
 
     <!-- Delete confirmation -->
     <div class="modal-backdrop" id="deleteConfirmModal" aria-hidden="true">
-        <div class="modal-box" role="dialog" aria-labelledby="deleteConfirmHeading">
-            <div class="confirmation-content">
-                <div class="confirmation-message">
-                    <h4 id="deleteConfirmHeading">Delete this ABYIP record?</h4>
-                    <p>This removes the record from your list. This action cannot be undone.</p>
+        <div class="modal-box abyip-delete-modal-box" role="dialog" aria-labelledby="deleteConfirmHeading">
+            <div class="abyip-delete-modal-inner">
+                <div class="abyip-delete-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                    </svg>
                 </div>
+                <h4 id="deleteConfirmHeading">Delete this ABYIP record?</h4>
+                <p class="abyip-delete-desc">This removes the record from your list. This action cannot be undone.</p>
+                <p class="delete-remaining-info" id="deleteRemainingInfo"></p>
             </div>
-            <div class="modal-footer">
+            <div class="abyip-delete-modal-footer">
                 <button type="button" class="btn-cancel" id="deleteCancelBtn">Cancel</button>
                 <button type="button" class="btn-delete" id="deleteConfirmBtn">Delete</button>
             </div>
@@ -471,7 +479,7 @@
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
                         <span class="btn-option-title">Import MS Word</span>
-                        <span class="btn-option-desc">Import from existing Word document (Editable)</span>
+                        <span class="btn-option-desc">Import from existing Word document (View Only)</span>
                     </button>
                     <button type="button" class="btn-option btn-import-pdf" id="selectImportPdfBtn">
                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

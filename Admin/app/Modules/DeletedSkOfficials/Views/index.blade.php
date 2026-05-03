@@ -25,12 +25,22 @@
     <!-- Stats -->
     <div class="dso-stats-row" id="dsoStatsRow"></div>
 
-    <!-- Filter Tabs -->
-    <div class="dso-filter-tabs">
-        <button class="dso-tab active" data-filter="all">All Deleted</button>
-        <button class="dso-tab" data-filter="today">Deleted Today</button>
-        <button class="dso-tab" data-filter="week">This Week</button>
-        <button class="dso-tab" data-filter="month">This Month</button>
+    <!-- Filter Tabs + Dropdowns -->
+    <div class="dso-filter-bar">
+        <div class="dso-filter-tabs">
+            <button class="dso-tab active" data-filter="all">All Deleted</button>
+            <button class="dso-tab" data-filter="today">Deleted Today</button>
+            <button class="dso-tab" data-filter="week">This Week</button>
+            <button class="dso-tab" data-filter="month">This Month</button>
+        </div>
+        <div class="dso-filter-dropdowns">
+            <select id="dsoFilterBarangay" class="dso-filter-select">
+                <option value="">All Barangays</option>
+            </select>
+            <select id="dsoFilterPosition" class="dso-filter-select">
+                <option value="">All Positions</option>
+            </select>
+        </div>
     </div>
 
     <!-- Table -->
@@ -41,7 +51,8 @@
                     <tr>
                         <th>Full Name<div class="dso-col-hint">LN, FN, MN</div></th>
                         <th>Position</th>
-                        <th>Barangay / Municipality</th>
+                        <th>Barangay</th>
+                        <th>Municipality</th>
                         <th>Date Deleted</th>
                         <th>Time Deleted</th>
                         <th class="dso-col-actions">Actions</th>

@@ -36,6 +36,7 @@ let dsfCurrentPage = 1;
 const dsfPerPage = 10;
 let dsfPendingId = null;
 let dsfActiveFilter = 'all';
+let dsfActiveBarangay = '';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function dsfNow() { return new Date('2026-04-26T12:00:00'); }
@@ -67,9 +68,11 @@ function dsfApplyFilter(records, filter) {
 
 function initDeletedSkFederation() {
     renderDsfStats();
+    populateDsfDropdowns();
     renderDsfTable();
     bindDsfSearch();
     bindDsfFilterTabs();
+    bindDsfDropdowns();
     bindDsfRestoreModal();
     bindDsfViewModal();
 }
@@ -112,6 +115,44 @@ function renderDsfStats() {
         </div>`;
 }
 
+// ── Populate Dropdowns ────────────────────────────────────────────────────────
+function populateDsfDropdowns() {
+    const barangaySelect = document.getElementById('dsfFilterBarangay');
+    if (barangaySelect) {
+        const barangays = [...new Set(dsfRecords.map(r => r.barangay).filter(Boolean))].sort();
+        barangays.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b; opt.textContent = b;
+            barangaySelect.appendChild(opt);
+        });
+    }
+}
+
+// ── Bind Dropdowns ────────────────────────────────────────────────────────────
+function bindDsfDropdowns() {
+    const barangaySelect = document.getElementById('dsfFilterBarangay');
+    if (barangaySelect) {
+        barangaySelect.addEventListener('change', function () {
+            dsfActiveBarangay = this.value;
+            dsfCurrentPage = 1;
+            dsfApplyAllFilters();
+        });
+    }
+}
+
+function dsfApplyAllFilters() {
+    let result = dsfApplyFilter(dsfRecords, dsfActiveFilter);
+    if (dsfActiveBarangay) result = result.filter(r => r.barangay === dsfActiveBarangay);
+    const q = (document.getElementById('dsfSearch')?.value || '').toLowerCase();
+    if (q) result = result.filter(r =>
+        `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
+        (r.barangay || '').toLowerCase().includes(q) ||
+        (r.position || '').toLowerCase().includes(q)
+    );
+    dsfFiltered = result;
+    renderDsfTable();
+}
+
 // ── Filter Tabs ───────────────────────────────────────────────────────────────
 function bindDsfFilterTabs() {
     document.querySelectorAll('.dsf-tab').forEach(btn => {
@@ -119,12 +160,13 @@ function bindDsfFilterTabs() {
             document.querySelectorAll('.dsf-tab').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             dsfActiveFilter = this.dataset.filter;
-            const labels = { all: 'All Deleted Records', today: 'Deleted Today', week: 'Deleted This Week', month: 'Deleted This Month' };
             const label = document.getElementById('dsfSectionLabel');
-            if (label) label.textContent = labels[dsfActiveFilter] || 'Deleted Records';
-            dsfFiltered = dsfApplyFilter(dsfRecords, dsfActiveFilter);
+            if (label) {
+                const labels = { all: 'All Deleted Records', today: 'Deleted Today', week: 'Deleted This Week', month: 'Deleted This Month' };
+                label.textContent = labels[dsfActiveFilter] || 'Deleted Records';
+            }
             dsfCurrentPage = 1;
-            renderDsfTable();
+            dsfApplyAllFilters();
         });
     });
 }
@@ -140,7 +182,7 @@ function renderDsfTable() {
     const page  = dsfFiltered.slice(start, end);
 
     if (dsfFiltered.length === 0) {
-        tbody.innerHTML = `<tr class="dsf-empty-row"><td colspan="6">No deleted SK Federation records found.</td></tr>`;
+        tbody.innerHTML = `<tr class="dsf-empty-row"><td colspan="7">No deleted SK Federation records found.</td></tr>`;
         if (info) info.textContent = 'No records found';
         renderDsfPagination(0);
         return;
@@ -152,7 +194,8 @@ function renderDsfTable() {
         <tr>
             <td class="dsf-name-cell">${fullName}</td>
             <td>${r.position || '—'}</td>
-            <td>${r.barangay ? r.barangay + (r.municipality ? ', ' + r.municipality : '') : '—'}</td>
+            <td>${r.barangay || '—'}</td>
+            <td>${r.municipality || '—'}</td>
             <td><span class="dsf-deleted-badge">${r.deletedDate}</span></td>
             <td><span class="dsf-time-badge">${r.deletedTime}</span></td>
             <td>
@@ -199,15 +242,8 @@ function bindDsfSearch() {
     const input = document.getElementById('dsfSearch');
     if (!input) return;
     input.addEventListener('input', function () {
-        const q = this.value.toLowerCase();
-        const base = dsfApplyFilter(dsfRecords, dsfActiveFilter);
-        dsfFiltered = base.filter(r =>
-            `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
-            (r.barangay || '').toLowerCase().includes(q) ||
-            (r.position || '').toLowerCase().includes(q)
-        );
         dsfCurrentPage = 1;
-        renderDsfTable();
+        dsfApplyAllFilters();
     });
 }
 

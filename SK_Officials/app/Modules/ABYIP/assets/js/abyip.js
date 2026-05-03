@@ -2,8 +2,10 @@
 // Create flow: Save ABYIP (document) → meta modal (editable Title default "ABYIP CY 2025", Remarks) → record saved to table.
 // Table: Title, Date, Time (12h), Status, Remarks (read-only), Actions. View mode: Print ABYIP + header close only.
 
-const ABYIP_STORAGE_KEY = 'abyip_records_v2';
-const DEFAULT_RECORD_TITLE = 'ABYIP CY 2025';
+const ABYIP_STORAGE_KEY = 'abyip_records_v3';
+const ABYIP_DELETE_COUNT_KEY = 'abyip_delete_count_v3';
+const ABYIP_MAX_DELETES = 3;
+const DEFAULT_RECORD_TITLE = 'ABYIP CY 2026';
 
 let abyipRecords = [];
 let abyipModalMode = 'create';
@@ -11,6 +13,7 @@ let currentEditId = null;
 let recordPendingDeleteId = null;
 let pendingCreateDocumentHtml = null;
 let pendingPdfData = null; // Store PDF data temporarily
+let pendingIsImported = false; // Track if pending record is an imported Word doc
 
 let filterSearchText = '';
 let searchDebounceTimer = null;
@@ -191,6 +194,18 @@ function renderRecordsTable() {
     const tbody = document.getElementById('recordsTableBody');
     if (!tbody) return;
 
+    // Update Create button state based on record count
+    const createBtn = document.getElementById('addAbyipBtn');
+    if (createBtn) {
+        if (abyipRecords.length >= 1) {
+            createBtn.disabled = true;
+            createBtn.title = 'Delete the existing ABYIP record before creating a new one.';
+        } else {
+            createBtn.disabled = false;
+            createBtn.title = '';
+        }
+    }
+
     if (abyipRecords.length === 0) {
         tbody.innerHTML =
             '<tr><td colspan="6" class="abyip-records-empty">No ABYIP records yet. Click &ldquo;Create ABYIP&rdquo; to add one.</td></tr>';
@@ -207,6 +222,8 @@ function renderRecordsTable() {
     tbody.innerHTML = filtered
         .map((record) => {
             const remarksText = record.statusRemarks || '';
+            const remaining = getRemainingDeletes();
+            const deleteDisabled = remaining <= 0 ? ' disabled title="Maximum deletions reached (3/3)"' : '';
             return (
                 '<tr data-record-id="' +
                 record.id +
@@ -234,6 +251,9 @@ function renderRecordsTable() {
                 '<button type="button" class="btn-action-edit" data-action="edit" data-id="' +
                 record.id +
                 '">Edit</button>' +
+                '<button type="button" class="btn-action-delete" data-action="delete" data-id="' +
+                record.id +
+                '"' + deleteDisabled + '>Delete</button>' +
                 '</div></td></tr>'
             );
         })
@@ -347,15 +367,23 @@ function openAbyipModal(mode, recordId) {
         
         // Check if this is a PDF record
         if (record.isPdf && record.pdfData) {
-            // Render PDF from stored data
-            renderStoredPdf(record.pdfData, record.title);
-            
-            if (mode === 'view') {
-                setMainModalFooterMode('view');
-            } else {
-                // PDF records are view-only, even in "edit" mode
-                setMainModalFooterMode('view');
+            // PDF records are always view-only
+            if (mode === 'edit') {
+                showNotification('This document cannot be edited. Imported PDF files are view-only.', 'error');
+                return;
             }
+            renderStoredPdf(record.pdfData, record.title);
+            setMainModalFooterMode('view');
+        } else if (record.isImported) {
+            // Imported Word records are view-only
+            if (mode === 'edit') {
+                showNotification('This document cannot be edited. Imported MS Word files are view-only.', 'error');
+                return;
+            }
+            const html = record.documentHtml && record.documentHtml.length > 0 ? record.documentHtml : getDefaultDocumentHtml();
+            setFormRootHtml(html);
+            setMainModalFooterMode('view');
+            setMountContentEditable(false);
         } else {
             // Regular ABYIP document
             const html = record.documentHtml && record.documentHtml.length > 0 ? record.documentHtml : getDefaultDocumentHtml();
@@ -392,8 +420,27 @@ function openMetaModalForCreate() {
     const m = document.getElementById('abyipMetaModal');
     const titleIn = document.getElementById('abyipMetaTitleInput');
     const remIn = document.getElementById('abyipMetaRemarksInput');
-    if (titleIn) titleIn.value = DEFAULT_RECORD_TITLE;
-    if (remIn) remIn.value = '';
+    const titleCount = document.getElementById('abyipTitleCharCount');
+    const remarksCount = document.getElementById('abyipRemarksCharCount');
+
+    if (titleIn) {
+        titleIn.value = DEFAULT_RECORD_TITLE;
+        titleIn.readOnly = false; // Title is editable, pre-filled with default
+        if (titleCount) titleCount.textContent = titleIn.value.length + '/100';
+        // Wire up title character counter
+        titleIn.oninput = function () {
+            if (titleCount) titleCount.textContent = titleIn.value.length + '/100';
+        };
+    }
+    if (remIn) {
+        remIn.value = '';
+        if (remarksCount) remarksCount.textContent = '0/100';
+        // Wire up remarks character counter
+        remIn.oninput = function () {
+            if (remarksCount) remarksCount.textContent = remIn.value.length + '/100';
+        };
+    }
+
     if (m) {
         m.classList.add('active');
         m.setAttribute('aria-hidden', 'false');
@@ -432,6 +479,7 @@ function saveAbyip() {
 
     if (abyipModalMode === 'create' || abyipModalMode === 'import' || abyipModalMode === 'pdf-view') {
         pendingCreateDocumentHtml = documentHtml;
+        pendingIsImported = (abyipModalMode === 'import');
         closeAbyipModal();
         openMetaModalForCreate();
     }
@@ -465,10 +513,16 @@ function confirmMetaSave() {
         newRecord.pdfData = pendingPdfData;
     }
     
+    // Mark imported Word documents as view-only
+    if (pendingIsImported) {
+        newRecord.isImported = true;
+    }
+    
     abyipRecords.push(newRecord);
 
     pendingCreateDocumentHtml = null;
     pendingPdfData = null;
+    pendingIsImported = false;
     closeMetaModalOnly();
     persistRecords();
     renderRecordsTable();
@@ -478,6 +532,7 @@ function confirmMetaSave() {
 function cancelMetaSave() {
     pendingCreateDocumentHtml = null;
     pendingPdfData = null;
+    pendingIsImported = false;
     closeMetaModal();
 }
 
@@ -501,13 +556,30 @@ function printAbyipDocument() {
 }
 
 function loadRecords() {
-    // Clear all existing records and start fresh
-    abyipRecords = [];
-    persistRecords();
+    try {
+        const stored = localStorage.getItem(ABYIP_STORAGE_KEY);
+        abyipRecords = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        abyipRecords = [];
+    }
 }
 
 function persistRecords() {
     localStorage.setItem(ABYIP_STORAGE_KEY, JSON.stringify(abyipRecords));
+}
+
+function getDeleteCount() {
+    return parseInt(localStorage.getItem(ABYIP_DELETE_COUNT_KEY) || '0', 10);
+}
+
+function incrementDeleteCount() {
+    const count = getDeleteCount() + 1;
+    localStorage.setItem(ABYIP_DELETE_COUNT_KEY, String(count));
+    return count;
+}
+
+function getRemainingDeletes() {
+    return Math.max(0, ABYIP_MAX_DELETES - getDeleteCount());
 }
 
 function updateRecordStatus(id, status) {
@@ -526,7 +598,7 @@ function showNotification(message, type) {
     n.className = 'abyip-toast abyip-toast-' + (type || 'info') + ' abyip-toast-show';
 
     const icon = type === 'error' ? '✕' : '✓';
-    n.innerHTML = '<span class="abyip-toast-icon">' + icon + '</span> ' + message;
+    n.innerHTML = '<span class="abyip-toast-icon">' + icon + '</span> ' + escapeHtml(message);
 
     document.body.appendChild(n);
 
@@ -534,13 +606,30 @@ function showNotification(message, type) {
         n.classList.remove('abyip-toast-show');
         n.classList.add('abyip-toast-hide');
         setTimeout(() => n.remove(), 300);
-    }, 2800);
+    }, 3200);
 }
 
 function openDeleteModal(id) {
+    const remaining = getRemainingDeletes();
+    if (remaining <= 0) {
+        showNotification('You have reached the maximum of 3 deletions allowed. No more ABYIP records can be deleted.', 'error');
+        return;
+    }
+
     recordPendingDeleteId = id;
     const m = document.getElementById('deleteConfirmModal');
     if (m) {
+        // Update the modal message to show remaining deletes
+        const msgEl = m.querySelector('.delete-remaining-info');
+        if (msgEl) {
+            const afterDelete = remaining - 1;
+            if (afterDelete === 0) {
+                msgEl.textContent = 'Warning: This is your last allowed deletion. You will not be able to delete any more records after this.';
+            } else {
+                msgEl.textContent = 'You have ' + remaining + ' deletion' + (remaining !== 1 ? 's' : '') + ' remaining (including this one). Maximum is ' + ABYIP_MAX_DELETES + '.';
+            }
+            msgEl.style.display = '';
+        }
         m.classList.add('active');
         m.setAttribute('aria-hidden', 'false');
     }
@@ -825,13 +914,23 @@ function exportPdfToWord() {
 function confirmDeleteRecord() {
     if (recordPendingDeleteId == null) return;
     abyipRecords = abyipRecords.filter((r) => r.id !== recordPendingDeleteId);
+    incrementDeleteCount();
     persistRecords();
     renderRecordsTable();
     closeDeleteModal();
-    showNotification('Record deleted.', 'success');
+    const remaining = getRemainingDeletes();
+    const msg = remaining === 0
+        ? 'ABYIP deleted successfully. You have used all 3 allowed deletions.'
+        : `ABYIP deleted successfully. You have ${remaining} deletion${remaining !== 1 ? 's' : ''} remaining.`;
+    showNotification(msg, 'success');
 }
 
 function openCreateOptionsModal() {
+    // Enforce: only 1 ABYIP record allowed at a time
+    if (abyipRecords.length >= 1) {
+        showNotification('Cannot create a new ABYIP. An existing record is already present. Please delete it first before creating a new one.', 'error');
+        return;
+    }
     const m = document.getElementById('createOptionsModal');
     if (m) {
         m.classList.add('active');

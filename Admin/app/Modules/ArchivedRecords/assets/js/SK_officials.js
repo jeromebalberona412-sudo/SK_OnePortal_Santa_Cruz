@@ -88,52 +88,20 @@ let aroffFiltered = [...aroffRecords];
 let aroffCurrentPage = 1;
 const aroffPerPage = 10;
 let aroffSearchQ = '';
-let aroffFilterPosition = '';
-let aroffFilterTerm = '';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initArchivedSkOfficials() {
     renderAroffStats();
-    populateAroffFilters();
     applyAroffFilters();
     bindAroffSearch();
-    bindAroffFilters();
     bindAroffViewModal();
 }
 
-// ── Populate filter dropdowns ─────────────────────────────────────────────────
-function populateAroffFilters() {
-    const positions = [...new Set(aroffRecords.map(r => r.position))].sort();
-    const terms     = [...new Set(aroffRecords.map(r => `${r.termStart} – ${r.termEnd}`))].sort();
-
-    const posEl  = document.getElementById('aroffFilterPosition');
-    const termEl = document.getElementById('aroffFilterTerm');
-
-    if (posEl) {
-        positions.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p; opt.textContent = p;
-            posEl.appendChild(opt);
-        });
-    }
-    if (termEl) {
-        terms.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t; opt.textContent = t;
-            termEl.appendChild(opt);
-        });
-    }
-}
-
-// ── Apply all active filters ──────────────────────────────────────────────────
+// ── Apply filters (search only) ───────────────────────────────────────────────
 function applyAroffFilters() {
     aroffFiltered = aroffRecords.filter(r => {
         const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
-        const term = `${r.termStart} – ${r.termEnd}`;
-        const matchSearch   = !aroffSearchQ || fullName.includes(aroffSearchQ) || (r.position || '').toLowerCase().includes(aroffSearchQ) || (r.barangay || '').toLowerCase().includes(aroffSearchQ);
-        const matchPosition = !aroffFilterPosition || r.position === aroffFilterPosition;
-        const matchTerm     = !aroffFilterTerm || term === aroffFilterTerm;
-        return matchSearch && matchPosition && matchTerm;
+        return !aroffSearchQ || fullName.includes(aroffSearchQ) || (r.position || '').toLowerCase().includes(aroffSearchQ) || (r.barangay || '').toLowerCase().includes(aroffSearchQ);
     });
     aroffCurrentPage = 1;
     renderAroffTable();
@@ -247,14 +215,6 @@ function bindAroffSearch() {
         aroffSearchQ = this.value.toLowerCase();
         applyAroffFilters();
     });
-}
-
-// ── Filter dropdowns ──────────────────────────────────────────────────────────
-function bindAroffFilters() {
-    const posEl  = document.getElementById('aroffFilterPosition');
-    const termEl = document.getElementById('aroffFilterTerm');
-    if (posEl)  posEl.addEventListener('change',  function () { aroffFilterPosition = this.value; applyAroffFilters(); });
-    if (termEl) termEl.addEventListener('change', function () { aroffFilterTerm = this.value; applyAroffFilters(); });
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────

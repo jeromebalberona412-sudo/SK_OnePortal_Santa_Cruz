@@ -69,52 +69,20 @@ let arfedFiltered = [...arfedRecords];
 let arfedCurrentPage = 1;
 const arfedPerPage = 10;
 let arfedSearchQ = '';
-let arfedFilterPosition = '';
-let arfedFilterTerm = '';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initArchivedSkFederation() {
     renderArfedStats();
-    populateArfedFilters();
     applyArfedFilters();
     bindArfedSearch();
-    bindArfedFilters();
     bindArfedViewModal();
 }
 
-// ── Populate filter dropdowns ─────────────────────────────────────────────────
-function populateArfedFilters() {
-    const positions = [...new Set(arfedRecords.map(r => r.position))].sort();
-    const terms     = [...new Set(arfedRecords.map(r => `${r.termStart} – ${r.termEnd}`))].sort();
-
-    const posEl = document.getElementById('arfedFilterPosition');
-    const termEl = document.getElementById('arfedFilterTerm');
-
-    if (posEl) {
-        positions.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p; opt.textContent = p;
-            posEl.appendChild(opt);
-        });
-    }
-    if (termEl) {
-        terms.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t; opt.textContent = t;
-            termEl.appendChild(opt);
-        });
-    }
-}
-
-// ── Apply all active filters ──────────────────────────────────────────────────
+// ── Apply filters (search only) ───────────────────────────────────────────────
 function applyArfedFilters() {
     arfedFiltered = arfedRecords.filter(r => {
         const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
-        const term = `${r.termStart} – ${r.termEnd}`;
-        const matchSearch   = !arfedSearchQ || fullName.includes(arfedSearchQ) || (r.position || '').toLowerCase().includes(arfedSearchQ) || (r.barangay || '').toLowerCase().includes(arfedSearchQ);
-        const matchPosition = !arfedFilterPosition || r.position === arfedFilterPosition;
-        const matchTerm     = !arfedFilterTerm || term === arfedFilterTerm;
-        return matchSearch && matchPosition && matchTerm;
+        return !arfedSearchQ || fullName.includes(arfedSearchQ) || (r.position || '').toLowerCase().includes(arfedSearchQ) || (r.barangay || '').toLowerCase().includes(arfedSearchQ);
     });
     arfedCurrentPage = 1;
     renderArfedTable();
@@ -228,14 +196,6 @@ function bindArfedSearch() {
         arfedSearchQ = this.value.toLowerCase();
         applyArfedFilters();
     });
-}
-
-// ── Filter dropdowns ──────────────────────────────────────────────────────────
-function bindArfedFilters() {
-    const posEl  = document.getElementById('arfedFilterPosition');
-    const termEl = document.getElementById('arfedFilterTerm');
-    if (posEl)  posEl.addEventListener('change',  function () { arfedFilterPosition = this.value; applyArfedFilters(); });
-    if (termEl) termEl.addEventListener('change', function () { arfedFilterTerm = this.value; applyArfedFilters(); });
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────
