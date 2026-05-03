@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy application files
-COPY . .
+COPY Kabataan/ .
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
