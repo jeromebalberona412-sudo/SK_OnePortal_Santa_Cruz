@@ -36,4 +36,4 @@ EXPOSE 8000
 
 # Run migrations and start server
 CMD php artisan migrate --force --no-interaction && \
-    php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+    php artisan serve --host=0.0.0.0 --port=${PORT:-8000} 2>&1
