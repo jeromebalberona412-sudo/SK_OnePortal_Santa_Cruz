@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
-    public function index()
+    public function settings()
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please login first.');
