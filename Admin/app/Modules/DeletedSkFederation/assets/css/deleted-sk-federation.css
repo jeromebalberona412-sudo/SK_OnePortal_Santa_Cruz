@@ -172,18 +172,6 @@
     overflow: hidden;
 }
 
-.dsf-section-heading {
-    padding: 18px 22px 12px;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-.dsf-section-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #111827;
-    margin: 0;
-}
-
 .dsf-table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

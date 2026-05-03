@@ -25,21 +25,18 @@
     <!-- Stats -->
     <div class="aroff-stats-row" id="aroffStatsRow"></div>
 
+    <!-- Filters (outside table card) -->
+    <div class="aroff-filters-bar">
+        <select id="aroffFilterPosition" class="aroff-filter-select">
+            <option value="">All Positions</option>
+        </select>
+        <select id="aroffFilterTerm" class="aroff-filter-select">
+            <option value="">All Terms</option>
+        </select>
+    </div>
+
     <!-- Table Card -->
     <div class="aroff-table-card">
-        <div class="aroff-section-heading">
-            <div class="aroff-heading-row">
-                <h2 class="aroff-section-title">SK Officials — Completed Terms</h2>
-                <div class="aroff-filters">
-                    <select id="aroffFilterPosition" class="aroff-filter-select">
-                        <option value="">All Positions</option>
-                    </select>
-                    <select id="aroffFilterTerm" class="aroff-filter-select">
-                        <option value="">All Terms</option>
-                    </select>
-                </div>
-            </div>
-        </div>
         <div class="aroff-table-wrapper">
             <table class="aroff-table">
                 <thead>

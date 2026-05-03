@@ -78,9 +78,11 @@
                    data-nav-key="accounts-federation"
                    data-tooltip="SK Federation"
                    aria-label="SK Federation">
+                    {{-- Single person with ID badge icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 8v4l3 3"></path>
+                        <circle cx="12" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M5 21v-1a7 7 0 0 1 14 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <rect x="9" y="3" width="6" height="2.5" rx="1" stroke="currentColor" stroke-width="1.5"/>
                     </svg>
                     <span>SK Federation</span>
                 </a>
@@ -89,9 +91,14 @@
                    data-nav-key="accounts-officials"
                    data-tooltip="SK Officials"
                    aria-label="SK Officials">
+                    {{-- Group / network icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        <circle cx="12" cy="5" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M5.5 21v-1.5a3.5 3.5 0 0 1 3.5-3.5h6a3.5 3.5 0 0 1 3.5 3.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="4.5" cy="9" r="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M1 19.5v-1a3 3 0 0 1 3-3h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="19.5" cy="9" r="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M23 19.5v-1a3 3 0 0 0-3-3h-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                     <span>SK Officials</span>
                 </a>
@@ -151,9 +158,11 @@
                    data-nav-key="archived-deleted-sk-federation"
                    data-tooltip="Deleted SK Federation"
                    aria-label="Deleted SK Federation">
+                    {{-- Single person with ID badge icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 8v4l3 3"></path>
+                        <circle cx="12" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M5 21v-1a7 7 0 0 1 14 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <rect x="9" y="3" width="6" height="2.5" rx="1" stroke="currentColor" stroke-width="1.5"/>
                     </svg>
                     <span>Deleted SK Federation</span>
                 </a>
@@ -162,9 +171,14 @@
                    data-nav-key="archived-deleted-sk-officials"
                    data-tooltip="Deleted SK Officials"
                    aria-label="Deleted SK Officials">
+                    {{-- Group / network icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        <circle cx="12" cy="5" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M5.5 21v-1.5a3.5 3.5 0 0 1 3.5-3.5h6a3.5 3.5 0 0 1 3.5 3.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="4.5" cy="9" r="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M1 19.5v-1a3 3 0 0 1 3-3h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="19.5" cy="9" r="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M23 19.5v-1a3 3 0 0 0-3-3h-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                     <span>Deleted SK Officials</span>
                 </a>
@@ -174,11 +188,11 @@
                    data-nav-key="archived-sk-federation-records"
                    data-tooltip="SK Federation Records"
                    aria-label="SK Federation Records">
+                    {{-- Single person with ID badge icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <circle cx="12" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M5 21v-1a7 7 0 0 1 14 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <rect x="9" y="3" width="6" height="2.5" rx="1" stroke="currentColor" stroke-width="1.5"/>
                     </svg>
                     <span>SK Federation Records</span>
                 </a>
@@ -187,9 +201,14 @@
                    data-nav-key="archived-sk-officials-records"
                    data-tooltip="SK Officials Records"
                    aria-label="SK Officials Records">
+                    {{-- Group / network icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        <circle cx="12" cy="5" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M5.5 21v-1.5a3.5 3.5 0 0 1 3.5-3.5h6a3.5 3.5 0 0 1 3.5 3.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="4.5" cy="9" r="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M1 19.5v-1a3 3 0 0 1 3-3h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="19.5" cy="9" r="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M23 19.5v-1a3 3 0 0 0-3-3h-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                     <span>SK Officials Records</span>
                 </a>
