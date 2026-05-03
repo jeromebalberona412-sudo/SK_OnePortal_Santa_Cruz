@@ -89,7 +89,7 @@ Route::middleware([
     })->name('budget-finance');
 
     Route::get('/kk-profiling-requests', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
-    Route::get('/kk-profiling-requests/data', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'data'])->name('kkprofiling-requests.data');
+    Route::get('/kk-profiling-requests/data', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'data'])->name('kk-profiling-requests.data');
     Route::post('/kk-profiling-requests/{id}/approve', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'approve'])->name('kkprofiling-requests.approve');
     Route::post('/kk-profiling-requests/{id}/reject', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'reject'])->name('kkprofiling-requests.reject');
 
