@@ -25,21 +25,18 @@
     <!-- Stats -->
     <div class="arfed-stats-row" id="arfedStatsRow"></div>
 
+    <!-- Filters (outside table card) -->
+    <div class="arfed-filters-bar">
+        <select id="arfedFilterPosition" class="arfed-filter-select">
+            <option value="">All Positions</option>
+        </select>
+        <select id="arfedFilterTerm" class="arfed-filter-select">
+            <option value="">All Terms</option>
+        </select>
+    </div>
+
     <!-- Table Card -->
     <div class="arfed-table-card">
-        <div class="arfed-section-heading">
-            <div class="arfed-heading-row">
-                <h2 class="arfed-section-title">SK Federation — Completed Terms</h2>
-                <div class="arfed-filters">
-                    <select id="arfedFilterPosition" class="arfed-filter-select">
-                        <option value="">All Positions</option>
-                    </select>
-                    <select id="arfedFilterTerm" class="arfed-filter-select">
-                        <option value="">All Terms</option>
-                    </select>
-                </div>
-            </div>
-        </div>
         <div class="arfed-table-wrapper">
             <table class="arfed-table">
                 <thead>

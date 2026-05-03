@@ -35,9 +35,6 @@
 
     <!-- Table -->
     <div class="dsf-table-card">
-        <div class="dsf-section-heading">
-            <h2 class="dsf-section-title" id="dsfSectionLabel">All Deleted Records</h2>
-        </div>
         <div class="dsf-table-wrapper">
             <table class="dsf-table">
                 <thead>

@@ -35,9 +35,6 @@
 
     <!-- Table -->
     <div class="dso-table-card">
-        <div class="dso-section-heading">
-            <h2 class="dso-section-title" id="dsoSectionLabel">All Deleted Records</h2>
-        </div>
         <div class="dso-table-wrapper">
             <table class="dso-table">
                 <thead>
