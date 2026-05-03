@@ -37,6 +37,8 @@
     </style>
 </head>
 <body class="youth-login-page">
+    @include('dashboard::loading')
+    
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>

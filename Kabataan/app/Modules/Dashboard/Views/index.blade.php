@@ -10,6 +10,7 @@
     <title>Home</title>
     @vite([
         'app/Modules/Dashboard/assets/css/dashboard.css',
+        'app/Modules/Programs/assets/css/scholarship_application.css',
         'app/Modules/Dashboard/assets/js/dashboard.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
@@ -359,7 +360,7 @@
                     
                     <div class="program-categories">
                         <!-- Education -->
-                        <div class="program-category" data-category="education">
+                        <div class="program-category" onclick="openEducationModal()" style="cursor: pointer;">
                             <div class="category-icon education">
                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
@@ -375,7 +376,7 @@
                         </div>
 
                         <!-- Anti-Drugs -->
-                        <div class="program-category" data-category="anti-drugs">
+                        <div class="program-category" data-category="anti-drugs" onclick="handleCategoryClick('anti-drugs')">
                             <div class="category-icon anti-drugs">
                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
@@ -391,7 +392,7 @@
                         </div>
 
                         <!-- Agriculture -->
-                        <div class="program-category" data-category="agriculture">
+                        <div class="program-category" data-category="agriculture" onclick="handleCategoryClick('agriculture')">
                             <div class="category-icon agriculture">
                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
@@ -407,7 +408,7 @@
                         </div>
 
                         <!-- Disaster Preparedness -->
-                        <div class="program-category" data-category="disaster">
+                        <div class="program-category" data-category="disaster" onclick="handleCategoryClick('disaster')">
                             <div class="category-icon disaster">
                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/>
@@ -423,7 +424,7 @@
                         </div>
 
                         <!-- Sports Development -->
-                        <div class="program-category" data-category="sports">
+                        <div class="program-category" data-category="sports" onclick="handleCategoryClick('sports')">
                             <div class="category-icon sports">
                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
@@ -439,7 +440,7 @@
                         </div>
 
                         <!-- Gender and Development -->
-                        <div class="program-category" data-category="gender">
+                        <div class="program-category" data-category="gender" onclick="handleCategoryClick('gender')">
                             <div class="category-icon gender">
                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
@@ -455,7 +456,7 @@
                         </div>
 
                         <!-- Health -->
-                        <div class="program-category" data-category="health">
+                        <div class="program-category" data-category="health" onclick="handleCategoryClick('health')">
                             <div class="category-icon health">
                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
@@ -471,7 +472,7 @@
                         </div>
 
                         <!-- Others -->
-                        <div class="program-category" data-category="others">
+                        <div class="program-category" data-category="others" onclick="handleCategoryClick('others')">
                             <div class="category-icon others">
                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
@@ -539,7 +540,7 @@
         <div class="modal-container">
             <div class="modal-header">
                 <h2>Education Programs</h2>
-                <button class="modal-close">
+                <button class="modal-close" onclick="closeEducationModal()">
                     <svg viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                     </svg>
@@ -557,149 +558,14 @@
                         <span>📅 Deadline: March 31, 2026</span>
                         <span>👥 50 slots available</span>
                     </div>
-                    <button class="apply-btn">Apply Now</button>
+                    <button class="apply-btn" onclick="openScholarshipModal()">Apply Now</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scholarship Application Form Modal -->
-    <div id="scholarshipFormModal" class="program-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-container large">
-            <div class="modal-header">
-                <h2>Scholarship Application Form</h2>
-                <button class="modal-close">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                <form class="scholarship-form">
-                    <div class="form-section">
-                        <h3>Personal Information</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Full Name *</label>
-                                <input type="text" required placeholder="Juan Dela Cruz">
-                            </div>
-                            <div class="form-group">
-                                <label>Date of Birth *</label>
-                                <input type="date" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Email Address *</label>
-                                <input type="email" required placeholder="juan@example.com">
-                            </div>
-                            <div class="form-group">
-                                <label>Contact Number *</label>
-                                <input type="tel" required placeholder="09XX XXX XXXX">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Complete Address *</label>
-                            <textarea rows="2" required placeholder="House No., Street, Barangay, Santa Cruz, Laguna"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Educational Background</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>School/University *</label>
-                                <input type="text" required placeholder="Name of Institution">
-                            </div>
-                            <div class="form-group">
-                                <label>Course/Program *</label>
-                                <input type="text" required placeholder="e.g., BS Computer Science">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Year Level *</label>
-                                <select required>
-                                    <option value="">Select Year Level</option>
-                                    <option value="1">1st Year</option>
-                                    <option value="2">2nd Year</option>
-                                    <option value="3">3rd Year</option>
-                                    <option value="4">4th Year</option>
-                                    <option value="5">5th Year</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>GPA/General Average *</label>
-                                <input type="text" required placeholder="e.g., 1.75 or 90%">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Family Information</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Parent/Guardian Name *</label>
-                                <input type="text" required placeholder="Full Name">
-                            </div>
-                            <div class="form-group">
-                                <label>Occupation *</label>
-                                <input type="text" required placeholder="Occupation">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Monthly Family Income *</label>
-                                <select required>
-                                    <option value="">Select Income Range</option>
-                                    <option value="below-10k">Below ₱10,000</option>
-                                    <option value="10k-20k">₱10,000 - ₱20,000</option>
-                                    <option value="20k-30k">₱20,000 - ₱30,000</option>
-                                    <option value="30k-50k">₱30,000 - ₱50,000</option>
-                                    <option value="above-50k">Above ₱50,000</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Number of Siblings *</label>
-                                <input type="number" required min="0" placeholder="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Required Documents</h3>
-                        <div class="form-group">
-                            <label>Certificate of Enrollment/Registration *</label>
-                            <input type="file" required accept=".pdf,.jpg,.jpeg,.png">
-                        </div>
-                        <div class="form-group">
-                            <label>Grade Report (Previous Semester) *</label>
-                            <input type="file" required accept=".pdf,.jpg,.jpeg,.png">
-                        </div>
-                        <div class="form-group">
-                            <label>Barangay Certificate of Indigency *</label>
-                            <input type="file" required accept=".pdf,.jpg,.jpeg,.png">
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Essay</h3>
-                        <div class="form-group">
-                            <label>Why do you deserve this scholarship? (200-500 words) *</label>
-                            <textarea rows="6" required placeholder="Share your story, goals, and why you need this scholarship..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary modal-close">Cancel</button>
-                        <button type="submit" class="btn-primary">Submit Application</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <!-- Scholarship Application Form Modal (New PDF-style) -->
+    @include('programs::scholarship_application')
 
     <!-- No Available Program Modal -->
     <div id="noProgramModal" class="program-modal">
@@ -839,14 +705,80 @@
         ?.addEventListener('click', () => {
             document.getElementById('programSuccessModal').classList.remove('active');
         });
+
+    // ── Education Modal Functions ──
+    window.openEducationModal = function() {
+        document.getElementById('educationModal').classList.add('active');
+    };
+
+    window.closeEducationModal = function() {
+        document.getElementById('educationModal').classList.remove('active');
+    };
+
+    // ── Scholarship Modal Functions ──
+    window.openScholarshipModal = function() {
+        console.log('Opening scholarship modal');
+        const modal = document.getElementById('scholarshipApplicationModal');
+        if (modal) {
+            closeEducationModal();
+            modal.classList.add('active');
+            console.log('Scholarship modal opened');
+        } else {
+            console.error('Scholarship modal not found');
+        }
+    };
+
+    window.closeScholarshipModal = function() {
+        const modal = document.getElementById('scholarshipApplicationModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    };
+
+    // Close modals on overlay click
+    const educationModal = document.getElementById('educationModal');
+    if (educationModal) {
+        educationModal.querySelector('.modal-overlay')?.addEventListener('click', closeEducationModal);
+    }
+
+    const scholarshipModal = document.getElementById('scholarshipApplicationModal');
+    if (scholarshipModal) {
+        const closeBtn = document.getElementById('scholarshipModalClose');
+        const cancelBtn = document.getElementById('scholarshipModalCancel');
+        const overlay = scholarshipModal.querySelector('.schol-modal-overlay');
+        
+        if (closeBtn) closeBtn.addEventListener('click', closeScholarshipModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeScholarshipModal);
+        if (overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) closeScholarshipModal();
+            });
+        }
+
+        // Submit button
+        const submitBtn = document.getElementById('scholarshipModalSubmit');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function() {
+                const toast = document.getElementById('scholarshipToast');
+                const toastMsg = document.getElementById('scholarshipToastMsg');
+                if (toast && toastMsg) {
+                    toastMsg.textContent = 'Application submitted successfully!';
+                    toast.classList.add('schol-toast-show');
+                    setTimeout(() => {
+                        toast.classList.remove('schol-toast-show');
+                        closeScholarshipModal();
+                    }, 2000);
+                }
+            });
+        }
+    } else {
+        console.warn('Scholarship modal element not found in DOM');
+    }
     </script>
 
     <script>
     // Disqualify page from bfcache — back button will always hit the server
     window.addEventListener('unload', function () {});
-    window.addEventListener('pageshow', function (e) {
-        if (e.persisted) { window.location.replace('/dashboard'); }
-    });
     </script>
 </body>
 </html>

@@ -4,64 +4,49 @@ namespace App\Modules\Profile\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
     public function settings(Request $request)
     {
-        if (!$request->session()->has('prototype_authenticated')) {
+        if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please login first.');
         }
 
-        $sessionUser = $request->session()->get('prototype_user', []);
-        $prototypeUser = array_merge([
-            'id' => 1,
-            'first_name' => 'Juan',
-            'last_name' => 'Dela Cruz',
-            'email' => 'youth@skportal.com',
-        ], $sessionUser);
+        $user = Auth::user();
 
-        if (isset($prototypeUser['name']) && !isset($prototypeUser['first_name'])) {
-            $nameParts = explode(' ', $prototypeUser['name']);
-            $prototypeUser['first_name'] = $nameParts[0] ?? 'Youth';
-            $prototypeUser['last_name']  = $nameParts[1] ?? 'User';
+        return view('profile::settings', ['user' => $user])->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma'        => 'no-cache',
+            'Expires'       => 'Sat, 01 Jan 2000 00:00:00 GMT',
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Please login first.');
         }
 
-        return view('profile::settings', ['user' => (object) $prototypeUser]);
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
+
+        // Prototype: just return success
+        return redirect()->route('settings')->with('success', 'Password changed successfully!');
     }
 
     public function index(Request $request)
     {
-        // PROTOTYPE MODE: Check for prototype authentication
-        if (!$request->session()->has('prototype_authenticated')) {
+        // Check for authentication
+        if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please login first.');
         }
         
-        // Get prototype user data from session
-        $sessionUser = $request->session()->get('prototype_user', []);
-        
-        // Merge with default prototype data structure
-        $prototypeUser = array_merge([
-            'id' => 1,
-            'first_name' => 'Juan',
-            'last_name' => 'Dela Cruz',
-            'middle_initial' => 'M',
-            'suffix' => '',
-            'email' => 'youth@skportal.com',
-            'barangay' => 'Poblacion I',
-            'municipality' => 'Santa Cruz',
-            'province' => 'Laguna',
-            'birthdate' => '2000-01-15',
-            'age' => 26,
-            'contact_number' => '09123456789',
-        ], $sessionUser);
-        
-        // If session has 'name' instead of first_name/last_name, split it
-        if (isset($prototypeUser['name']) && !isset($prototypeUser['first_name'])) {
-            $nameParts = explode(' ', $prototypeUser['name']);
-            $prototypeUser['first_name'] = $nameParts[0] ?? 'Youth';
-            $prototypeUser['last_name'] = $nameParts[1] ?? 'User';
-        }
+        // Get authenticated user
+        $user = Auth::user();
         
         // Get user's program participation (sample data)
         $programs = collect([
@@ -98,7 +83,7 @@ class ProfileController extends Controller
         
         // Pass data to view
         return view('profile::index', [
-            'user' => (object) $prototypeUser,
+            'user' => $user,
             'programs' => $programs,
             'totalPrograms' => $totalPrograms,
             'ongoingPrograms' => $ongoingPrograms,
@@ -108,5 +93,39 @@ class ProfileController extends Controller
             'Pragma'        => 'no-cache',
             'Expires'       => 'Sat, 01 Jan 2000 00:00:00 GMT',
         ]);
+    }
+
+    public function uploadProfilePicture(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        $user = Auth::user();
+        
+        try {
+            // Store the file in storage/app/public/profile-pictures
+            $file = $request->file('profile_picture');
+            $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('profile-pictures', $filename, 'public');
+            
+            // Update user's profile picture path in session or database
+            // For prototype, store in session
+            session(['user_profile_picture' => '/storage/' . $path]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile picture uploaded successfully',
+                'picture_url' => '/storage/' . $path,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to upload profile picture: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

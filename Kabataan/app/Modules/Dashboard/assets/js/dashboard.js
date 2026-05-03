@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Global handler for category clicks
+    window.handleCategoryClick = function(categoryId) {
+        console.log('Category clicked:', categoryId);
+        if (window.programsModule && window.programsModule.openCategoryModal) {
+            window.programsModule.openCategoryModal(categoryId);
+        } else {
+            console.error('programsModule not available');
+        }
+    };
+
     // Comment toggle functionality
     const commentButtons = document.querySelectorAll('.comment-btn');
     commentButtons.forEach(button => {
@@ -19,57 +29,11 @@ document.addEventListener('DOMContentLoaded', function() {
     programCategories.forEach(category => {
         category.addEventListener('click', function() {
             const categoryType = this.dataset.category;
-            
-            if (categoryType === 'education') {
-                openEducationModal();
-            } else {
-                // For other categories, show "No Available Program" modal
-                showNoProgramModal();
-            }
+            window.programsModule.openCategoryModal(categoryType);
         });
     });
 
-    // Education modal
-    function openEducationModal() {
-        const modal = document.getElementById('educationModal');
-        if (modal) {
-            modal.classList.add('active');
-        }
-    }
-
-    // Show "No Available Program" modal
-    function showNoProgramModal() {
-        const modal = document.getElementById('noProgramModal');
-        const modalTitle = document.getElementById('noProgramModalTitle');
-        
-        if (modal && modalTitle) {
-            // Get the category name from the clicked element
-            const clickedCategory = event.target.closest('.program-category');
-            const categoryName = clickedCategory.querySelector('.category-content h3').textContent;
-            
-            // Set the modal title to the category name
-            modalTitle.textContent = categoryName + ' Programs';
-            
-            modal.classList.add('active');
-        }
-    }
-
-    // Apply button in education modal
-    const applyButtons = document.querySelectorAll('.apply-btn');
-    applyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const educationModal = document.getElementById('educationModal');
-            const scholarshipModal = document.getElementById('scholarshipFormModal');
-            
-            if (educationModal) {
-                educationModal.classList.remove('active');
-            }
-            
-            if (scholarshipModal) {
-                scholarshipModal.classList.add('active');
-            }
-        });
-    });
+    // Program modals are now handled by the programs module
 
     // Modal close buttons
     const modalCloseButtons = document.querySelectorAll('.modal-close');
@@ -93,25 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Scholarship form submission
-    const scholarshipForm = document.querySelector('.scholarship-form');
-    if (scholarshipForm) {
-        scholarshipForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Close form modal
-            const formModal = document.getElementById('scholarshipFormModal');
-            if (formModal) formModal.classList.remove('active');
-
-            // Reset form
-            this.reset();
-
-            // Show success modal
-            if (typeof showProgramSuccessModal === 'function') {
-                showProgramSuccessModal();
-            }
-        });
-    }
+    // Scholarship form submission is now handled by the programs module
 
     // Send comment functionality
     const sendCommentButtons = document.querySelectorAll('.send-comment-btn');
@@ -217,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const viewDetailsButtons = document.querySelectorAll('.view-details-btn');
     viewDetailsButtons.forEach(button => {
         button.addEventListener('click', function() {
-            openEducationModal();
+            window.programsModule.openCategoryModal('education');
         });
     });
 

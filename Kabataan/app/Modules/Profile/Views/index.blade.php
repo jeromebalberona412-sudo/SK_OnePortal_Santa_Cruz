@@ -221,7 +221,7 @@
                 <div class="profile-info-section">
                     <div class="profile-avatar-wrapper">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&size=150&background=667eea&color=fff" alt="Profile" class="profile-avatar" id="profileAvatar">
-                        <button class="change-photo-btn" id="changePhotoBtn" onclick="alert('Photo upload feature will be available when the backend is implemented!')">
+                        <button class="change-photo-btn" id="changePhotoBtn" type="button">
                             <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
                             </svg>
@@ -989,9 +989,6 @@
 
     <script>
     window.addEventListener('unload', function () {});
-    window.addEventListener('pageshow', function (e) {
-        if (e.persisted) { window.location.replace('/profile'); }
-    });
     </script>
 </body>
 </html>
