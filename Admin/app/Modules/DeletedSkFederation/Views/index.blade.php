@@ -25,12 +25,19 @@
     <!-- Stats -->
     <div class="dsf-stats-row" id="dsfStatsRow"></div>
 
-    <!-- Filter Tabs -->
-    <div class="dsf-filter-tabs">
-        <button class="dsf-tab active" data-filter="all">All Deleted</button>
-        <button class="dsf-tab" data-filter="today">Deleted Today</button>
-        <button class="dsf-tab" data-filter="week">This Week</button>
-        <button class="dsf-tab" data-filter="month">This Month</button>
+    <!-- Filter Tabs + Dropdowns -->
+    <div class="dsf-filter-bar">
+        <div class="dsf-filter-tabs">
+            <button class="dsf-tab active" data-filter="all">All Deleted</button>
+            <button class="dsf-tab" data-filter="today">Deleted Today</button>
+            <button class="dsf-tab" data-filter="week">This Week</button>
+            <button class="dsf-tab" data-filter="month">This Month</button>
+        </div>
+        <div class="dsf-filter-dropdowns">
+            <select id="dsfFilterBarangay" class="dsf-filter-select">
+                <option value="">All Barangays</option>
+            </select>
+        </div>
     </div>
 
     <!-- Table -->
@@ -41,7 +48,8 @@
                     <tr>
                         <th>Full Name<div class="dsf-col-hint">LN, FN, MN</div></th>
                         <th>Position</th>
-                        <th>Barangay / Municipality</th>
+                        <th>Barangay</th>
+                        <th>Municipality</th>
                         <th>Date Deleted</th>
                         <th>Time Deleted</th>
                         <th class="dsf-col-actions">Actions</th>

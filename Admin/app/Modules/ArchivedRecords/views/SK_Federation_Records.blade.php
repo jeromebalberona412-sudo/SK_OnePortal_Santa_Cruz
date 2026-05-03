@@ -25,16 +25,6 @@
     <!-- Stats -->
     <div class="arfed-stats-row" id="arfedStatsRow"></div>
 
-    <!-- Filters (outside table card) -->
-    <div class="arfed-filters-bar">
-        <select id="arfedFilterPosition" class="arfed-filter-select">
-            <option value="">All Positions</option>
-        </select>
-        <select id="arfedFilterTerm" class="arfed-filter-select">
-            <option value="">All Terms</option>
-        </select>
-    </div>
-
     <!-- Table Card -->
     <div class="arfed-table-card">
         <div class="arfed-table-wrapper">

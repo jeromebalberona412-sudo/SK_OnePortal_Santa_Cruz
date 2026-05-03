@@ -25,16 +25,6 @@
     <!-- Stats -->
     <div class="aroff-stats-row" id="aroffStatsRow"></div>
 
-    <!-- Filters (outside table card) -->
-    <div class="aroff-filters-bar">
-        <select id="aroffFilterPosition" class="aroff-filter-select">
-            <option value="">All Positions</option>
-        </select>
-        <select id="aroffFilterTerm" class="aroff-filter-select">
-            <option value="">All Terms</option>
-        </select>
-    </div>
-
     <!-- Table Card -->
     <div class="aroff-table-card">
         <div class="aroff-table-wrapper">

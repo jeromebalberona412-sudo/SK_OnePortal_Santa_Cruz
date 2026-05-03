@@ -129,11 +129,18 @@
     margin-top: 8px;
 }
 
-/* ── Filter Tabs ── */
+/* ── Filter Bar (tabs + dropdowns) ── */
+.dso-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
 .dso-filter-tabs {
     display: flex;
     gap: 8px;
-    margin-bottom: 16px;
     flex-wrap: wrap;
 }
 
@@ -161,6 +168,37 @@
     color: #fff;
     border-color: #1E3A5F;
     box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
+}
+
+.dso-filter-dropdowns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.dso-filter-select {
+    padding: 8px 32px 8px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 150px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dso-filter-select:focus {
+    outline: none;
+    border-color: #1E3A5F;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
 }
 
 /* ── Table Card ── */
@@ -684,6 +722,15 @@
     background: #1e3a5f;
     border-color: #1e3a5f;
     color: #f1f5f9;
+}
+:root.dark .dso-filter-select {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+:root.dark .dso-filter-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 /* Table card */
