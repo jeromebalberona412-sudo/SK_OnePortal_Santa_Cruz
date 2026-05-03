@@ -1,126 +1,96 @@
 /* ── SK Community Feed JS ── */
 'use strict';
 
-const POSTS_PER_PAGE = 5;
 let currentFilter = 'all';
 let currentPage   = 1;
 let editingPostId = null;
 let pendingImageDataUrl = null;
 let pendingLinkUrl = null;
-const likedPosts = new Set();
+let isUploading = false;
 const commentSections = new Set();
 
 const FED_AVATAR = 'https://ui-avatars.com/api/?name=SK+Federation&background=213F99&color=fff&size=80';
 
-const posts = [
-    {
-        id: 1, type: 'announcement', owned: true,
-        author: 'SK Federation Santa Cruz', avatar: FED_AVATAR,
-        time: 'Mar 16, 2026 · 9:00 AM',
-        title: 'Quarterly Assembly — April 5, 2026',
-        text: 'The SK Federation Santa Cruz will hold its quarterly assembly on April 5, 2026 at the Municipal Hall. All SK officials are required to attend. Please confirm your attendance by March 30.',
-        image: null, link: null, likes: 24,
-        comments: [{ author: 'Juan Dela Cruz', avatar: 'https://ui-avatars.com/api/?name=Juan+Dela+Cruz&background=667eea&color=fff', text: 'Noted! Will be there.', time: '1 hour ago' }]
-    },
-    {
-        id: 2, type: 'event', owned: false,
-        author: 'SK Brgy. I (Poblacion)', avatar: 'https://ui-avatars.com/api/?name=SK+Poblacion&background=d0242b&color=fff&size=80',
-        time: 'Mar 15, 2026 · 2:30 PM',
-        title: 'Leadership Summit — March 25, 2026',
-        text: 'Join us for the Leadership Summit on March 25, 2026 at Brgy. Labuin covered court. Open to all SK officials and youth leaders. Registration is free.',
-        image: 'https://via.placeholder.com/600x300/213F99/ffffff?text=Leadership+Summit',
-        link: null, likes: 18, comments: [],
-        details: { date: 'March 25, 2026 | 8:00 AM', location: 'Brgy. Labuin Covered Court' }
-    },
-    {
-        id: 3, type: 'activity', owned: false,
-        author: 'SK Brgy. Gatid', avatar: 'https://ui-avatars.com/api/?name=SK+Gatid&background=10b981&color=fff&size=80',
-        time: 'Mar 14, 2026 · 11:00 AM',
-        title: 'Community Clean-Up Drive 🌱',
-        text: 'We successfully completed the Livelihood Training Program with 120 participants from Brgy. I (Poblacion). Thank you to all volunteers and sponsors who made this possible.',
-        image: 'https://via.placeholder.com/600x300/4CAF50/ffffff?text=Clean-Up+Drive',
-        link: null, likes: 42,
-        comments: [{ author: 'Maria Santos', avatar: 'https://ui-avatars.com/api/?name=Maria+Santos&background=e91e63&color=fff', text: 'Great initiative! 👏', time: '3 hours ago' }],
-        details: { date: 'March 14, 2026 | 7:00 AM', location: 'Brgy. Gatid Plaza' }
-    },
-    {
-        id: 4, type: 'program', owned: false,
-        author: 'SK Brgy. Pagsawitan', avatar: 'https://ui-avatars.com/api/?name=SK+Pagsawitan&background=9C27B0&color=fff&size=80',
-        time: 'Mar 12, 2026 · 10:00 AM',
-        title: '🎓 Scholarship Program Now Open!',
-        text: 'Great news! Our Education Assistance Program is now accepting applications for the upcoming semester. This program provides financial support to deserving youth pursuing their education.',
-        image: 'https://via.placeholder.com/600x300/9C27B0/ffffff?text=Scholarship+Program',
-        link: null, likes: 67, comments: [],
-        programInfo: { category: 'Education', deadline: 'March 31, 2026' }
-    },
-    {
-        id: 5, type: 'announcement', owned: true,
-        author: 'SK Federation Santa Cruz', avatar: FED_AVATAR,
-        time: 'Mar 10, 2026 · 8:00 AM',
-        title: 'Q1 2026 Report Submission Deadline',
-        text: 'Reminder: Submission of Barangay Program Reports for Q1 2026 is due on March 31. Please coordinate with your respective SK Chairpersons.',
-        image: null, link: 'https://skoneportal.gov.ph/reports', likes: 15, comments: []
-    },
-    {
-        id: 6, type: 'activity', owned: false,
-        author: 'SK Brgy. Bubukal', avatar: 'https://ui-avatars.com/api/?name=SK+Bubukal&background=f97316&color=fff&size=80',
-        time: 'Mar 8, 2026 · 3:15 PM',
-        title: 'Environmental Drive Completed!',
-        text: '95 participants joined the clean-up activity along the river banks of Brgy. Bubukal. Great job, youth!',
-        image: null, link: null, likes: 56, comments: []
-    },
-    {
-        id: 7, type: 'event', owned: false,
-        author: 'SK Brgy. San Juan', avatar: 'https://ui-avatars.com/api/?name=SK+San+Juan&background=8b5cf6&color=fff&size=80',
-        time: 'Mar 6, 2026 · 5:00 PM',
-        title: 'Anti-Drug Awareness Campaign',
-        text: 'Anti-Drug Awareness Campaign is ongoing at Brgy. San Juan. We encourage all youth to participate and spread awareness in your communities.',
-        image: null, link: null, likes: 31, comments: [],
-        details: { date: 'March 6–20, 2026', location: 'Brgy. San Juan' }
-    },
-];
+/* ── API STATE ── */
+let posts      = [];
+let lastPage   = 1;
+let isLoading  = false;
 
-/* ── HELPERS ── */
-function getFiltered() {
-    return currentFilter === 'all' ? posts : posts.filter(p => p.type === currentFilter);
+function csrfToken() {
+    // Try meta tag first, then XSRF-TOKEN cookie (always fresh)
+    var meta = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (meta) return meta;
+    var match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
 }
 
-/* ── RENDER ── */
+function apiFetch(url, options) {
+    return fetch(url, Object.assign({
+        headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+    }, options));
+}
+
+/* ── LOAD POSTS FROM API ── */
+function loadPosts(reset) {
+    if (isLoading) return;
+    isLoading = true;
+
+    var container = document.getElementById('feed-posts');
+    if (reset) { posts = []; currentPage = 1; container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Loading...</div>'; }
+
+    var url = '/api/community-feed?page=' + currentPage + (currentFilter !== 'all' ? '&filter=' + currentFilter : '');
+
+    apiFetch(url, { method: 'GET' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (reset) container.innerHTML = '';
+            lastPage = data.last_page || 1;
+
+            var newPosts = data.data || [];
+            posts = reset ? newPosts : posts.concat(newPosts);
+
+            if (!posts.length) {
+                container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">No posts found.</div>';
+            } else {
+                newPosts.forEach(function(p) {
+                    var el = document.createElement('div');
+                    el.className = 'post-card';
+                    el.dataset.postId = p.id;
+                    el.innerHTML = buildPost(p);
+                    container.appendChild(el);
+                });
+            }
+
+            var btn = document.getElementById('load-more-btn');
+            if (btn) btn.style.display = currentPage >= lastPage ? 'none' : 'inline-flex';
+        })
+        .catch(function() {
+            if (reset) container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Failed to load posts.</div>';
+        })
+        .finally(function() { isLoading = false; });
+}
+
+/* ── RENDER (alias kept for filter/search callers) ── */
 function renderPosts(reset) {
-    const container = document.getElementById('feed-posts');
-    if (reset) { container.innerHTML = ''; currentPage = 1; }
-
-    const filtered = getFiltered();
-    const slice = filtered.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
-
-    if (!slice.length && currentPage === 1) {
-        container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">No posts found.</div>';
-    }
-
-    slice.forEach(function(p) {
-        var el = document.createElement('div');
-        el.className = 'post-card';
-        el.dataset.postId = p.id;
-        el.innerHTML = buildPost(p);
-        container.appendChild(el);
-    });
-
-    var btn = document.getElementById('load-more-btn');
-    if (btn) btn.style.display = currentPage * POSTS_PER_PAGE >= filtered.length ? 'none' : 'inline-flex';
+    loadPosts(reset);
 }
 
 function buildPost(p) {
-    var liked = likedPosts.has(p.id);
+    var liked = p.liked || false;
     var showComments = commentSections.has(p.id);
+    var avatar = p.is_federation_wide
+        ? FED_AVATAR
+        : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.author_name || 'SK') + '&background=213F99&color=fff&size=80';
 
     var mediaHtml = '';
-    if (p.image) {
-        mediaHtml += '<div class="post-image"><img src="' + p.image + '" alt="Post image" loading="lazy"></div>';
+    if (p.image_url) {
+        mediaHtml += '<div class="post-image"><img src="' + p.image_url + '" alt="Post image" loading="lazy"></div>';
     }
-    if (p.link) {
-        mediaHtml += '<a href="' + p.link + '" target="_blank" rel="noopener" class="post-link-preview">'
+    if (p.link_url) {
+        mediaHtml += '<a href="' + p.link_url + '" target="_blank" rel="noopener" class="post-link-preview">'
             + '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/></svg>'
-            + p.link + '</a>';
+            + p.link_url + '</a>';
     }
 
     var detailsHtml = '';
@@ -157,15 +127,15 @@ function buildPost(p) {
     var commentsHtml = showComments ? buildComments(p) : '';
 
     return '<div class="post-header">'
-        + '<img src="' + p.avatar + '" alt="' + p.author + '" class="post-avatar">'
+        + '<img src="' + avatar + '" alt="' + p.author_name + '" class="post-avatar">'
         + '<div class="post-info">'
-        + '<h3 class="post-author">' + p.author + '</h3>'
+        + '<h3 class="post-author">' + p.author_name + (p.barangay_name && !p.is_federation_wide ? ' <small style="font-weight:400;color:#888;">· ' + p.barangay_name + '</small>' : '') + '</h3>'
         + '<p class="post-meta"><span class="post-type ' + p.type + '">' + p.type + '</span><span class="post-time">' + p.time + '</span></p>'
         + '</div>' + optionsHtml + '</div>'
         + '<div class="post-content">'
         + (p.title ? '<h2 class="post-title">' + p.title + '</h2>' : '')
-        + '<p class="post-text">' + p.text + '</p>'
-        + mediaHtml + detailsHtml + programHtml
+        + '<p class="post-text">' + p.body + '</p>'
+        + mediaHtml
         + '</div>'
         + '<div class="post-actions">'
         + '<button class="action-btn' + (liked ? ' liked' : '') + '" onclick="toggleLike(' + p.id + ', this)">'
@@ -173,7 +143,7 @@ function buildPost(p) {
         + '<span id="like-count-' + p.id + '">Like (' + p.likes + ')</span></button>'
         + '<button class="action-btn comment-btn" onclick="toggleComments(' + p.id + ')">'
         + '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>'
-        + '<span id="comment-count-' + p.id + '">Comment (' + p.comments.length + ')</span></button>'
+        + '<span id="comment-count-' + p.id + '">Comment (' + (p.comments ? p.comments.length : 0) + ')</span></button>'
         + '</div>'
         + '<div class="comments-section" id="comments-' + p.id + '" style="' + (showComments ? '' : 'display:none;') + '">'
         + commentsHtml + '</div>';
@@ -181,12 +151,12 @@ function buildPost(p) {
 
 function buildComments(p) {
     var userAvatar = window.currentAvatar || FED_AVATAR;
-    var items = p.comments.map(function(c) {
+    var items = (p.comments || []).map(function(c) {
         return '<div class="comment-item">'
-            + '<img src="' + c.avatar + '" alt="' + c.author + '">'
+            + '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.author_name) + '&background=667eea&color=fff" alt="' + c.author_name + '">'
             + '<div class="comment-content">'
-            + '<p class="comment-author">' + c.author + '</p>'
-            + '<p class="comment-text">' + c.text + '</p>'
+            + '<p class="comment-author">' + c.author_name + '</p>'
+            + '<p class="comment-text">' + c.body + '</p>'
             + '<span class="comment-time">' + c.time + '</span>'
             + '</div></div>';
     }).join('');
@@ -202,19 +172,15 @@ function buildComments(p) {
 
 /* ── INTERACTIONS ── */
 function toggleLike(id, btn) {
-    var p = posts.find(function(x) { return x.id === id; });
-    if (!p) return;
-    if (likedPosts.has(id)) {
-        likedPosts.delete(id);
-        p.likes--;
-        btn.classList.remove('liked');
-    } else {
-        likedPosts.add(id);
-        p.likes++;
-        btn.classList.add('liked');
-    }
-    var el = document.getElementById('like-count-' + id);
-    if (el) el.textContent = 'Like (' + p.likes + ')';
+    apiFetch('/api/community-feed/' + id + '/react', { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var el = document.getElementById('like-count-' + id);
+            if (el) el.textContent = 'Like (' + data.count + ')';
+            if (data.liked) btn.classList.add('liked'); else btn.classList.remove('liked');
+            var p = posts.find(function(x) { return x.id === id; });
+            if (p) { p.likes = data.count; p.liked = data.liked; }
+        });
 }
 
 function toggleComments(id) {
@@ -245,22 +211,20 @@ function submitCommentBtn(id, btn) {
 function addComment(id, input) {
     var text = input.value.trim();
     if (!text) return;
-    var p = posts.find(function(x) { return x.id === id; });
-    if (!p) return;
-
-    p.comments.push({
-        author: 'You',
-        avatar: window.currentAvatar || FED_AVATAR,
-        text: text,
-        time: 'Just now'
-    });
-
     input.value = '';
-    var section = document.getElementById('comments-' + id);
-    if (section) section.innerHTML = buildComments(p);
 
-    var countEl = document.getElementById('comment-count-' + id);
-    if (countEl) countEl.textContent = 'Comment (' + p.comments.length + ')';
+    apiFetch('/api/community-feed/' + id + '/comment', { method: 'POST', body: JSON.stringify({ body: text }) })
+        .then(function(r) { return r.json(); })
+        .then(function(c) {
+            var p = posts.find(function(x) { return x.id === id; });
+            if (p) {
+                p.comments.push({ author_name: c.author_name, body: c.body, time: c.time });
+                var section = document.getElementById('comments-' + id);
+                if (section) section.innerHTML = buildComments(p);
+                var countEl = document.getElementById('comment-count-' + id);
+                if (countEl) countEl.textContent = 'Comment (' + p.comments.length + ')';
+            }
+        });
 }
 
 function setFeedFilter(btn, filter) {
@@ -284,23 +248,36 @@ function togglePostOptions(id, e) {
     if (!isOpen) menu.classList.add('open');
 }
 
+
+function deletePost(id) {
+    if (!confirm('Delete this post?')) return;
+    apiFetch('/api/community-feed/' + id, { method: 'DELETE' })
+        .then(function(r) { return r.json(); })
+        .then(function() {
+            posts = posts.filter(function(x) { return x.id !== id; });
+            var el = document.querySelector('[data-post-id="' + id + '"]');
+            if (el) el.remove();
+            document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
+        });
+}
+
 function editPost(id) {
     var p = posts.find(function(x) { return x.id === id; });
     if (!p) return;
     editingPostId = id;
     document.getElementById('compose-modal-title').textContent = 'Edit Post';
     document.getElementById('edit-post-id').value = id;
-    document.getElementById('compose-content').value = p.text;
+    document.getElementById('compose-content').value = p.body;
     document.getElementById('compose-type').value = p.type;
-    pendingImageDataUrl = p.image || null;
-    pendingLinkUrl = p.link || null;
+    pendingImageDataUrl = p.image_url || null;
+    pendingLinkUrl = p.link_url || null;
 
-    if (p.image) {
-        document.getElementById('compose-preview-img').src = p.image;
+    if (p.image_url) {
+        document.getElementById('compose-preview-img').src = p.image_url;
         document.getElementById('compose-image-preview').style.display = 'block';
     }
-    if (p.link) {
-        document.getElementById('compose-link-input').value = p.link;
+    if (p.link_url) {
+        document.getElementById('compose-link-input').value = p.link_url;
         document.getElementById('compose-link-input-wrap').style.display = 'block';
     }
 
@@ -308,12 +285,53 @@ function editPost(id) {
     document.getElementById('composeModal').classList.add('active');
 }
 
-function deletePost(id) {
-    if (!confirm('Delete this post?')) return;
-    var idx = posts.findIndex(function(x) { return x.id === id; });
-    if (idx !== -1) posts.splice(idx, 1);
-    document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
-    renderPosts(true);
+function submitPost() {
+    if (isUploading) { alert('Please wait for the image to finish uploading.'); return; }
+    var content = document.getElementById('compose-content').value.trim();
+    if (!content) { alert('Please write something.'); return; }
+
+    var type     = document.getElementById('compose-type').value;
+    var linkVal  = document.getElementById('compose-link-input').value.trim();
+    var titleVal = document.getElementById('compose-title') ? document.getElementById('compose-title').value.trim() : '';
+    pendingLinkUrl = linkVal || null;
+
+    var payload = { type: type, body: content, link_url: pendingLinkUrl, title: titleVal || null };
+
+    if (pendingImageDataUrl) payload.image_url = pendingImageDataUrl;
+    savePost(payload);
+}
+
+function dataURLtoFile(dataUrl, filename) {
+    var arr = dataUrl.split(','), mime = arr[0].match(/:(.*?);/)[1];
+    var bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new File([u8arr], filename, { type: mime });
+}
+
+function savePost(payload) {
+    var isEdit  = editingPostId !== null;
+    var url     = isEdit ? '/api/community-feed/' + editingPostId : '/api/community-feed';
+    var method  = isEdit ? 'PUT' : 'POST';
+
+    apiFetch(url, { method: method, body: JSON.stringify(payload) })
+        .then(function(r) { return r.json(); })
+        .then(function(saved) {
+            if (isEdit) {
+                var idx = posts.findIndex(function(x) { return x.id === saved.id; });
+                if (idx !== -1) posts[idx] = saved;
+                var el = document.querySelector('[data-post-id="' + saved.id + '"]');
+                if (el) el.innerHTML = buildPost(saved);
+            } else {
+                posts.unshift(saved);
+                var container = document.getElementById('feed-posts');
+                var el = document.createElement('div');
+                el.className = 'post-card';
+                el.dataset.postId = saved.id;
+                el.innerHTML = buildPost(saved);
+                container.insertBefore(el, container.firstChild);
+            }
+            closeComposeModal();
+        });
 }
 
 function openComposeModal(type) {
@@ -339,18 +357,64 @@ function closeComposeModal() {
     editingPostId = null;
     pendingImageDataUrl = null;
     pendingLinkUrl = null;
+    isUploading = false;
 }
 
 function previewImage(input) {
     var file = input.files[0];
     if (!file) return;
+
+    // Show local preview immediately
     var reader = new FileReader();
     reader.onload = function(e) {
-        pendingImageDataUrl = e.target.result;
         document.getElementById('compose-preview-img').src = e.target.result;
         document.getElementById('compose-image-preview').style.display = 'block';
     };
     reader.readAsDataURL(file);
+
+    // Upload to server and store the returned URL
+    isUploading = true;
+    var postBtn = document.querySelector('.modal-footer-btns .btn-primary');
+    if (postBtn) { postBtn.disabled = true; postBtn.textContent = 'Uploading…'; }
+
+    var fd = new FormData();
+    fd.append('image', file);
+    fetch('/api/community-feed/upload-image', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
+        credentials: 'same-origin',
+        body: fd,
+    })
+    .then(function(r) {
+        if (!r.ok) {
+            return r.text().then(function(text) {
+                try {
+                    var json = JSON.parse(text);
+                    throw new Error(json.message || 'HTTP ' + r.status);
+                } catch (e) {
+                    throw new Error('HTTP ' + r.status + ': ' + text.substring(0, 200));
+                }
+            });
+        }
+        return r.json();
+    })
+    .then(function(data) {
+        if (data.url) {
+            pendingImageDataUrl = data.url;
+            document.getElementById('compose-preview-img').src = data.url;
+        } else {
+            pendingImageDataUrl = null;
+            alert('Image upload failed: ' + (data.message || 'No URL returned'));
+        }
+    })
+    .catch(function(err) {
+        pendingImageDataUrl = null;
+        alert('Image upload failed: ' + err.message);
+    })
+    .finally(function() {
+        isUploading = false;
+        if (postBtn) { postBtn.disabled = false; postBtn.textContent = 'Post'; }
+    });
 }
 
 function removeImagePreview() {
@@ -362,37 +426,6 @@ function removeImagePreview() {
 function toggleLinkInput() {
     var wrap = document.getElementById('compose-link-input-wrap');
     wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
-}
-
-function submitPost() {
-    var content = document.getElementById('compose-content').value.trim();
-    if (!content) { alert('Please write something.'); return; }
-
-    var type = document.getElementById('compose-type').value;
-    var linkVal = document.getElementById('compose-link-input').value.trim();
-    pendingLinkUrl = linkVal || null;
-
-    if (editingPostId !== null) {
-        var p = posts.find(function(x) { return x.id === editingPostId; });
-        if (p) {
-            p.text = content;
-            p.type = type;
-            p.image = pendingImageDataUrl || p.image;
-            p.link = pendingLinkUrl || p.link;
-        }
-    } else {
-        var newId = posts.length ? Math.max.apply(null, posts.map(function(x) { return x.id; })) + 1 : 1;
-        posts.unshift({
-            id: newId, type: type, owned: true,
-            author: 'SK Federation Santa Cruz', avatar: FED_AVATAR,
-            time: 'Just now', title: '', text: content,
-            image: pendingImageDataUrl, link: pendingLinkUrl,
-            likes: 0, comments: []
-        });
-    }
-
-    closeComposeModal();
-    renderPosts(true);
 }
 
 /* ── PROGRAM MODALS ── (defined in blade inline script for success modal support) ── */
@@ -447,8 +480,8 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = '';
             var filtered = posts.filter(function(p) {
                 return (p.title && p.title.toLowerCase().includes(q))
-                    || p.text.toLowerCase().includes(q)
-                    || p.author.toLowerCase().includes(q)
+                    || (p.body && p.body.toLowerCase().includes(q))
+                    || (p.author_name && p.author_name.toLowerCase().includes(q))
                     || p.type.toLowerCase().includes(q);
             });
             if (!filtered.length) {

@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Announcement extends Model
 {
-    protected $fillable = ['user_id', 'barangay_id', 'type', 'title', 'body', 'image_url', 'link_url'];
+    protected $fillable = ['user_id', 'barangay_id', 'type', 'title', 'body', 'image_url', 'link_url', 'is_federation_wide'];
+
+    protected $casts = [
+        'is_federation_wide' => 'boolean',
+    ];
 
     public function user(): BelongsTo
     {

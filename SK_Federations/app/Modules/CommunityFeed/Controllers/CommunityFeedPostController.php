@@ -1,31 +1,26 @@
 <?php
 
-namespace App\Modules\Announcement\Controllers;
+namespace App\Modules\CommunityFeed\Controllers;
 
-use App\Models\Announcement;
-use App\Models\AnnouncementComment;
-use App\Models\AnnouncementReaction;
-use App\Modules\Announcement\Services\CloudinaryService;
+use App\Modules\CommunityFeed\Services\CloudinaryService;
+use App\Modules\Shared\Controllers\Controller;
+use App\Modules\Shared\Models\Announcement;
+use App\Modules\Shared\Models\AnnouncementComment;
+use App\Modules\Shared\Models\AnnouncementReaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Throwable;
 
-class AnnouncementController extends Controller
+class CommunityFeedPostController extends Controller
 {
-    // GET /api/announcements?filter=all&page=1
+    // GET /api/community-feed?filter=all&page=1
     public function feed(Request $request): JsonResponse
     {
-        $user = Auth::user();
-
+        $user  = Auth::user();
         $query = Announcement::with(['barangay', 'comments', 'user'])
             ->withCount('reactions')
-            ->where(function ($q) use ($user) {
-                $q->where('barangay_id', $user->barangay_id)
-                  ->orWhereRaw('"is_federation_wide" = true');
-            })
             ->orderByDesc('created_at');
 
         if ($request->filter && $request->filter !== 'all') {
@@ -35,69 +30,76 @@ class AnnouncementController extends Controller
         $posts = $query->paginate(10);
 
         return response()->json([
-            'data'         => collect($posts->items())->map(fn($p) => $this->formatPost($p, $user->id, 'sk_official')),
+            'data'         => collect($posts->items())->map(fn($p) => $this->formatPost($p, $user->id)),
             'current_page' => $posts->currentPage(),
             'last_page'    => $posts->lastPage(),
             'total'        => $posts->total(),
             'user_id'      => $user->id,
-            'barangay_id'  => $user->barangay_id,
         ]);
     }
 
-    // POST /api/announcements
+    // POST /api/community-feed
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'type'      => 'required|in:announcement,event,activity,program,update',
             'title'     => 'nullable|string|max:255',
             'body'      => 'required|string',
-            'image_url' => 'nullable|string|max:2048',
-            'link_url'  => 'nullable|url',
+            'image_url' => 'nullable|string|max:4096',
+            'link_url'  => 'nullable|url|max:4096',
         ]);
 
         $user = Auth::user();
         $post = Announcement::create(array_merge($validated, [
-            'user_id'    => $user->id,
-            'barangay_id' => $user->barangay_id,
+            'user_id'            => $user->id,
+            'barangay_id'        => null,
+            'is_federation_wide' => true,
         ]));
 
-        return response()->json($this->formatPost($post->load(['barangay', 'comments', 'user']), $user->id, 'sk_official'), 201);
+        return response()->json($this->formatPost($post->load(['comments', 'user']), $user->id), 201);
     }
 
-    // PUT /api/announcements/{id}
+    // PUT /api/community-feed/{id}
     public function update(Request $request, int $id): JsonResponse
     {
-        $post = Announcement::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $post = Announcement::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->whereRaw('"is_federation_wide" = true')
+            ->firstOrFail();
 
         $validated = $request->validate([
             'type'      => 'sometimes|in:announcement,event,activity,program,update',
             'title'     => 'nullable|string|max:255',
             'body'      => 'sometimes|string',
-            'image_url' => 'nullable|string|max:2048',
-            'link_url'  => 'nullable|url',
+            'image_url' => 'nullable|string|max:4096',
+            'link_url'  => 'nullable|url|max:4096',
         ]);
 
         $post->update($validated);
 
-        return response()->json($this->formatPost($post->load(['barangay', 'comments']), Auth::id(), 'sk_official'));
+        return response()->json($this->formatPost($post->load(['barangay', 'comments', 'user']), Auth::id()));
     }
 
-    // DELETE /api/announcements/{id}
+    // DELETE /api/community-feed/{id}
     public function destroy(int $id): JsonResponse
     {
-        Announcement::where('id', $id)->where('user_id', Auth::id())->firstOrFail()->delete();
+        Announcement::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->whereRaw('"is_federation_wide" = true')
+            ->firstOrFail()
+            ->delete();
+
         return response()->json(['success' => true]);
     }
 
-    // POST /api/announcements/{id}/react
+    // POST /api/community-feed/{id}/react
     public function react(int $id): JsonResponse
     {
-        $user = Auth::user();
-
+        $user     = Auth::user();
         $existing = AnnouncementReaction::where([
             'announcement_id' => $id,
             'user_id'         => $user->id,
-            'user_type'       => 'sk_official',
+            'user_type'       => 'sk_fed',
         ])->first();
 
         if ($existing) {
@@ -107,7 +109,7 @@ class AnnouncementController extends Controller
             AnnouncementReaction::create([
                 'announcement_id' => $id,
                 'user_id'         => $user->id,
-                'user_type'       => 'sk_official',
+                'user_type'       => 'sk_fed',
             ]);
             $liked = true;
         }
@@ -116,7 +118,7 @@ class AnnouncementController extends Controller
         return response()->json(['liked' => $liked, 'count' => $count]);
     }
 
-    // POST /api/announcements/{id}/comment
+    // POST /api/community-feed/{id}/comment
     public function comment(Request $request, int $id): JsonResponse
     {
         $request->validate(['body' => 'required|string|max:1000']);
@@ -125,7 +127,7 @@ class AnnouncementController extends Controller
         $comment = AnnouncementComment::create([
             'announcement_id' => $id,
             'user_id'         => $user->id,
-            'user_type'       => 'sk_official',
+            'user_type'       => 'sk_fed',
             'author_name'     => $user->name,
             'body'            => $request->body,
         ]);
@@ -138,26 +140,27 @@ class AnnouncementController extends Controller
         ], 201);
     }
 
-    // POST /api/announcements/upload-image
+    // POST /api/community-feed/upload-image
     public function uploadImage(Request $request): JsonResponse
     {
         $request->validate(['image' => 'required|image|max:5120']);
 
         try {
-            $publicId = 'post_' . Auth::id() . '_' . Str::random(8);
+            $publicId = 'fed_post_' . Auth::id() . '_' . Str::random(8);
             $result   = (new CloudinaryService())->upload($request->file('image'), $publicId);
             return response()->json(['url' => $result['url']]);
-        } catch (Throwable) {
-            return response()->json(['message' => 'Upload failed.'], 500);
+        } catch (Throwable $e) {
+            \Log::error('Cloudinary upload failed: ' . $e->getMessage());
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    private function formatPost(Announcement $post, int $userId, string $userType): array
+    private function formatPost(Announcement $post, int $userId): array
     {
         $liked = AnnouncementReaction::where([
             'announcement_id' => $post->id,
             'user_id'         => $userId,
-            'user_type'       => $userType,
+            'user_type'       => 'sk_fed',
         ])->exists();
 
         $authorName = $post->user?->name
@@ -172,9 +175,8 @@ class AnnouncementController extends Controller
             'link_url'           => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name'      => $post->barangay?->name,
-            'barangay_id'        => $post->barangay_id,
             'author_name'        => $authorName,
-            'owned'              => $post->user_id === $userId && !$post->is_federation_wide,
+            'owned'              => $post->user_id === $userId && $post->is_federation_wide,
             'likes'              => $post->reactions_count ?? $post->reactions()->count(),
             'liked'              => $liked,
             'time'               => $post->created_at->diffForHumans(),

@@ -35,7 +35,10 @@ class AnnouncementFeedController extends Controller
 
         $query = Announcement::with(['barangay', 'comments', 'user'])
             ->withCount('reactions')
-            ->where('barangay_id', $barangayId)
+            ->where(function ($q) use ($barangayId) {
+                $q->where('barangay_id', $barangayId)
+                  ->orWhereRaw('"is_federation_wide" = true');
+            })
             ->orderByDesc('created_at');
 
         if ($request->filter && $request->filter !== 'all') {
@@ -114,19 +117,23 @@ class AnnouncementFeedController extends Controller
             'user_type'       => 'kabataan',
         ])->exists();
 
+        $authorName = $post->user?->name
+            ?? ($post->is_federation_wide ? 'SK Federation' : ('SK Brgy. ' . ($post->barangay?->name ?? '')));
+
         return [
-            'id'            => $post->id,
-            'type'          => $post->type,
-            'title'         => $post->title,
-            'body'          => $post->body,
-            'image_url'     => $post->image_url,
-            'link_url'      => $post->link_url,
-            'barangay_name' => $post->barangay?->name,
-            'author_name'   => $post->user?->name ?? ('SK Brgy. ' . ($post->barangay?->name ?? '')),
-            'likes'         => $post->reactions_count,
-            'liked'         => $liked,
-            'time'          => $post->created_at->diffForHumans(),
-            'comments'      => $post->comments->map(fn($c) => [
+            'id'                 => $post->id,
+            'type'               => $post->type,
+            'title'              => $post->title,
+            'body'               => $post->body,
+            'image_url'          => $post->image_url,
+            'link_url'           => $post->link_url,
+            'is_federation_wide' => (bool) $post->is_federation_wide,
+            'barangay_name'      => $post->barangay?->name,
+            'author_name'        => $authorName,
+            'likes'              => $post->reactions_count,
+            'liked'              => $liked,
+            'time'               => $post->created_at->diffForHumans(),
+            'comments'           => $post->comments->map(fn($c) => [
                 'id'          => $c->id,
                 'author_name' => $c->author_name,
                 'body'        => $c->body,
