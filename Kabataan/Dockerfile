@@ -27,8 +27,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm ci && npm run build
 
 # Cache Laravel configuration
-RUN php artisan config:cache && \
-    php artisan route:cache && \
+RUN php artisan route:cache && \
     php artisan view:cache
 
 # Expose port
