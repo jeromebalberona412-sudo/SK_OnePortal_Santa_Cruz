@@ -20,7 +20,9 @@ class TenantContextService
 
         try {
             if (! Schema::hasTable('tenants')) {
-                return null;
+                // No tenants table — return a default ID so tenant-gated
+                // features (password reset, role checks) still work.
+                return $this->resolvedTenantId = 1;
             }
 
             $tenant = DB::table('tenants')
