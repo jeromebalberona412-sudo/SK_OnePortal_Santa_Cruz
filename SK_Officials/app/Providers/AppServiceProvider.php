@@ -13,6 +13,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        \Illuminate\Support\Facades\Mail::extend('brevo', function () {
+            return new \Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoApiTransport(
+                (string) env('BREVO_KEY', '')
+            );
+        });
+
         $this->loadModuleRoutes();
         $this->loadModuleViews();
         $this->shareBarangayLogo();
