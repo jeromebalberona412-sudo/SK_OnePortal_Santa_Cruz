@@ -1,0 +1,294 @@
+/* ── Scholarship Application Modal CSS ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Modal Overlay */
+.schol-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1100; padding: 20px;
+}
+
+.schol-modal-overlay.active {
+    display: flex;
+}
+
+.schol-modal-box {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 780px;
+    max-height: 90vh; display: flex; flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    animation: scholModalIn 0.18s ease-out; overflow: hidden;
+}
+
+@keyframes scholModalIn { from { opacity:0; transform:scale(0.96) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
+
+.schol-modal-header {
+    padding: 14px 20px; background: #2c2c3e; color: #fff;
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+
+.schol-modal-header h3 { font-size: 15px; font-weight: 700; color: #fff; }
+
+.schol-modal-close { background: none; border: none; font-size: 20px; font-weight: 700; cursor: pointer; color: #fff; padding: 2px 6px; line-height: 1; }
+
+.schol-modal-close:hover { opacity: 0.8; }
+
+.schol-modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #f0f1f5; }
+
+.schol-modal-footer { padding: 12px 20px 16px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f3f4f6; flex-shrink: 0; }
+
+/* Buttons */
+.schol-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 10px; border: none;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease; text-decoration: none;
+}
+
+.schol-btn-save { background: #22c55e; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+
+.schol-btn-save:hover { background: #16a34a; transform: translateY(-1px); }
+
+.schol-btn-outline { background: #fff; color: #374151; border: 1.5px solid #d1d5db; }
+
+.schol-btn-outline:hover { background: #f3f4f6; }
+
+/* PDF Form Styles */
+.schol-pdf-form {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.schol-pdf-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 16px; padding-bottom: 14px;
+    border-bottom: 2px solid #2c2c3e;
+}
+
+.schol-pdf-logo-area { display: flex; align-items: center; gap: 14px; }
+
+.schol-pdf-logo-img {
+    width: 56px; height: 56px;
+    object-fit: contain; flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.schol-pdf-title { font-size: 17px; font-weight: 900; color: #111827; letter-spacing: 0.02em; }
+
+.schol-pdf-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+.schol-pdf-picture-box {
+    width: 76px; height: 86px; border: 2px solid #374151;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #6b7280; text-align: center;
+    border-radius: 4px; flex-shrink: 0;
+}
+
+.schol-pdf-section {
+    margin-bottom: 14px; padding-bottom: 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.schol-pdf-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+.schol-pdf-section-title {
+    font-size: 11px; font-weight: 800; color: #111827;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-bottom: 2px solid #2c2c3e; padding-bottom: 5px; margin-bottom: 12px;
+}
+
+.schol-pdf-row { display: grid; gap: 10px; margin-bottom: 10px; }
+
+.schol-pdf-row:last-child { margin-bottom: 0; }
+
+.schol-pdf-col-1 { grid-template-columns: 1fr; }
+
+.schol-pdf-col-2 { grid-template-columns: repeat(2, 1fr); }
+
+.schol-pdf-col-3 { grid-template-columns: repeat(3, 1fr); }
+
+.schol-pdf-col-4 { grid-template-columns: repeat(4, 1fr); }
+
+.schol-pdf-field { display: flex; flex-direction: column; gap: 3px; }
+
+.schol-pdf-field label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.schol-pdf-line { border-bottom: 1.5px solid #374151; min-height: 20px; }
+
+.schol-pdf-filled {
+    border-bottom: 1.5px solid #374151; min-height: 20px;
+    font-size: 13px; font-weight: 600; color: #111827;
+    padding: 2px 0; line-height: 1.4;
+}
+
+.schol-pdf-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.schol-pdf-purpose-label { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 8px; }
+
+.schol-pdf-note { font-size: 11px; color: #6b7280; margin-bottom: 8px; }
+
+.schol-pdf-check-list { display: flex; flex-direction: column; gap: 7px; }
+
+.schol-pdf-check-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #374151; }
+
+.schol-pdf-checkbox {
+    width: 14px; height: 14px; flex-shrink: 0;
+    border: 1.5px solid #374151; border-radius: 2px;
+    display: inline-block; position: relative;
+}
+
+.schol-pdf-checked {
+    background: #2c2c3e; border-color: #2c2c3e;
+}
+
+.schol-pdf-checked::after {
+    content: ''; position: absolute; left: 3px; top: 0px;
+    width: 5px; height: 9px;
+    border: 2px solid #fff; border-top: none; border-left: none;
+    transform: rotate(45deg);
+}
+
+.schol-pdf-sig-section { text-align: center; padding-top: 20px; }
+
+.schol-pdf-sig-line { border-bottom: 2px solid #374151; width: 260px; margin: 0 auto 8px; }
+
+.schol-pdf-sig-label { font-size: 12px; font-weight: 700; color: #374151; }
+
+/* Inline title (bold underlined like PDF) */
+.schol-pdf-inline-title {
+    font-size: 12px; font-weight: 800; color: #111827;
+    text-decoration: underline; text-transform: uppercase;
+    margin-bottom: 10px; letter-spacing: 0.02em;
+}
+
+/* Inline row — label + underline side by side */
+.schol-pdf-inline-row {
+    display: flex; align-items: flex-end;
+    gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
+}
+
+.schol-pdf-inline-label {
+    font-size: 12px; font-weight: 600; color: #111827;
+    white-space: nowrap; flex-shrink: 0; padding-bottom: 2px;
+}
+
+/* Underline spans */
+.schol-pdf-inline-line {
+    border-bottom: 1.5px solid #374151;
+    display: inline-block; flex-shrink: 0;
+}
+
+.schol-pdf-line-xs { width: 50px; }
+
+.schol-pdf-line-sm { width: 80px; }
+
+.schol-pdf-line-md { width: 130px; }
+
+.schol-pdf-line-lg { width: 240px; }
+
+.schol-pdf-line-full { flex: 1; min-width: 100px; }
+
+/* Bottom section: Scholarship Info + Requirements side by side */
+.schol-pdf-bottom-section {
+    display: flex; gap: 32px; align-items: flex-start;
+}
+
+.schol-pdf-bottom-left { flex: 1; }
+
+.schol-pdf-bottom-right { flex: 1; }
+
+/* Input Fields */
+.schol-input-inline {
+    border: none; border-bottom: 1.5px solid #374151;
+    background: transparent; padding: 2px 4px;
+    font-size: 13px; color: #111827; font-family: inherit;
+    outline: none; transition: border-color 0.2s;
+}
+
+.schol-input-inline:focus {
+    border-bottom-color: #2c2c3e; box-shadow: 0 1px 0 #2c2c3e;
+}
+
+.schol-input-inline::placeholder {
+    color: #9ca3af;
+}
+
+.schol-textarea {
+    resize: vertical; min-height: 40px; padding: 4px 4px;
+}
+
+.schol-checkbox {
+    display: none;
+}
+
+.schol-checkbox:checked + .schol-pdf-checkbox {
+    background: #2c2c3e; border-color: #2c2c3e;
+}
+
+.schol-checkbox:checked + .schol-pdf-checkbox::after {
+    content: ''; position: absolute; left: 3px; top: 0px;
+    width: 5px; height: 9px;
+    border: 2px solid #fff; border-top: none; border-left: none;
+    transform: rotate(45deg);
+}
+
+.schol-pdf-date-field {
+    display: flex; align-items: center; gap: 6px; justify-content: center;
+    margin-top: 8px; font-size: 12px;
+}
+
+.schol-pdf-date-field input {
+    border: none; border-bottom: 1.5px solid #374151;
+    background: transparent; padding: 2px 4px;
+    font-size: 12px; color: #111827; font-family: inherit;
+    outline: none;
+}
+
+/* E-Signature Canvas */
+.schol-sig-canvas-wrapper {
+    border: 2px solid #374151; border-radius: 4px;
+    padding: 8px; background: #fafafa;
+    margin-bottom: 12px;
+}
+
+.schol-sig-canvas {
+    display: block; width: 100%; height: 120px;
+    border: 1px solid #d1d5db; border-radius: 2px;
+    background: #fff; cursor: crosshair;
+    touch-action: none;
+}
+
+/* Toast */
+.schol-toast {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    padding: 12px 22px; border-radius: 10px;
+    background: #22c55e; color: #fff;
+    font-weight: 600; font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    z-index: 9999; opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    display: flex; align-items: center; gap: 8px;
+    pointer-events: none;
+}
+
+.schol-toast.schol-toast-show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+
+.schol-toast.schol-toast-error { background: #ef4444; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .schol-pdf-col-3, .schol-pdf-col-4 { grid-template-columns: repeat(2, 1fr); }
+    .schol-pdf-two-col { grid-template-columns: 1fr; }
+    .schol-pdf-bottom-section { flex-direction: column; gap: 16px; }
+    .schol-modal-box { max-width: 95vw; }
+}
+
+@media (max-width: 480px) {
+    .schol-pdf-col-2, .schol-pdf-col-3, .schol-pdf-col-4 { grid-template-columns: 1fr; }
+    .schol-pdf-inline-row { gap: 4px; }
+    .schol-pdf-line-md { width: 90px; }
+    .schol-pdf-line-lg { width: 160px; }
+}

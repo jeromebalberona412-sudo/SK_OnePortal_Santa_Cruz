@@ -145,7 +145,7 @@
                             </div>
                         @endif
 
-                        <form class="password-form" id="passwordForm" onsubmit="handlePasswordChange(event)">
+                        <form class="password-form" id="passwordForm" method="POST" action="{{ route('change-password') }}">
                             @csrf
 
                             <!-- Current Password -->
@@ -316,8 +316,8 @@
         document.getElementById(id)?.addEventListener('input', () => clearFieldError(id));
     });
 
-    // Form submit handler (prototype — no real backend yet)
-    function handlePasswordChange(e) {
+    // Form submit handler
+    document.getElementById('passwordForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
         clearAllFieldErrors();
 
@@ -346,10 +346,39 @@
             hasError = true;
         }
 
-        // Prototype: treat any non-empty current password as "incorrect" only when
-        // new password is valid — simulated incorrect password check
-        if (!hasError && current !== 'correct') {
-            setFieldError('current_password', 'Incorrect password.');
+        if (hasError) return;
+
+        // Show loading and submit
+        if (window.showLoading) showLoading('Updating password');
+        this.submit();
+    });
+
+    function handlePasswordChange(e) {
+        e.preventDefault();
+        clearAllFieldErrors();
+
+        const current = document.getElementById('current_password').value.trim();
+        const newPw   = document.getElementById('new_password').value.trim();
+        const confirm = document.getElementById('confirm_password').value.trim();
+
+        let hasError = false;
+
+        if (!current) {
+            setFieldError('current_password', 'Please enter your current password.');
+            hasError = true;
+        }
+        if (!newPw) {
+            setFieldError('new_password', 'Please enter a new password.');
+            hasError = true;
+        } else if (newPw.length < 8) {
+            setFieldError('new_password', 'Password must be at least 8 characters.');
+            hasError = true;
+        }
+        if (!confirm) {
+            setFieldError('confirm_password', 'Please confirm your new password.');
+            hasError = true;
+        } else if (newPw && newPw !== confirm) {
+            setFieldError('confirm_password', "Password doesn't match.");
             hasError = true;
         }
 
