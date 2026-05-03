@@ -117,9 +117,11 @@ Route::middleware([
         return view('Rejected_KKProfiling::rejected-kkprofiling');
     })->name('rejected-kkprofiling');
 
-    Route::get('/schedule-kk-profiling', function () {
-        return view('ScheduleKKProfiling::schedule-kkprofiling');
-    })->name('schedule-kk-profiling');
+    Route::get('/schedule-kk-profiling', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'index'])->name('schedule-kk-profiling');
+    Route::get('/api/schedule-kk-profiling/data', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'data'])->name('schedule-kk-profiling.data');
+    Route::post('/api/schedule-kk-profiling', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'store'])->name('schedule-kk-profiling.store');
+    Route::put('/api/schedule-kk-profiling/{id}', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'update'])->name('schedule-kk-profiling.update');
+    Route::delete('/api/schedule-kk-profiling/{id}', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'destroy'])->name('schedule-kk-profiling.destroy');
 
     Route::get('/schedule-programs', function () {
         return view('schedule_programs::schedule-programs');

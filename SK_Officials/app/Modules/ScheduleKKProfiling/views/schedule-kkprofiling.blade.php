@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Schedule KK Profiling - SK Officials Portal</title>
 
     @vite([
@@ -170,6 +171,7 @@
                         <option value="Cancelled">Cancelled</option>
                         <option value="Rescheduled">Rescheduled</option>
                     </select>
+                    <div id="skkpStatusHint" class="skkp-status-hint"></div>
                 </div>
             </div>
         </div>
