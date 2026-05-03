@@ -133,6 +133,7 @@
                         alt="{{ $barangay->name }} logo"
                         class="bl-logo-img"
                         style="{{ $existingLogo && $logosVisible ?? true ? 'display:block;' : 'display:none;' }}"
+                        onerror="this.style.display='none';document.getElementById('placeholder-{{ $index }}').style.display='';"
                     />
 
                     {{-- Hidden overlay (logos hidden state) --}}

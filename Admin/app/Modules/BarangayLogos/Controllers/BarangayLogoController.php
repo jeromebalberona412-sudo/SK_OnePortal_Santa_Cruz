@@ -40,9 +40,10 @@ class BarangayLogoController extends Controller
             ->keyBy('barangay_id');
 
         return view('barangay_logos::barangay-logos', [
-            'user'      => $user,
-            'barangays' => $barangays,
-            'logos'     => $logos,
+            'user'         => $user,
+            'barangays'    => $barangays,
+            'logos'        => $logos,
+            'logosVisible' => true,
         ]);
     }
 

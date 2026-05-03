@@ -1,7 +1,7 @@
 SK_ONEPORTAL: Main Context (Current + Future)
 
 LAST UPDATED
-- March 8, 2026
+- May 3, 2026
 
 PROJECT OVERVIEW
 - Product: SK_ONEPORTAL (web app ecosystem for Santa Cruz SK governance)
@@ -18,173 +18,163 @@ TARGET USER SCALE
 TECH STACK
 - Backend: Laravel
 - Frontend: Blade, HTML, CSS, JavaScript
-- Database: Supabase (centralized)
+- Database: Supabase/PostgreSQL (centralized, shared across all apps)
 - Cache: Redis
+- File storage: Cloudinary (for images/logos), Supabase Storage (planned for docs)
+- Reporting: barryvdh/laravel-dompdf + phpoffice/phpword (SK_Officials)
 
 SYSTEM VISION
 SK_ONEPORTAL combines multiple systems in one platform:
-1) Social network
+1) Social network / community feed
 2) Document/reporting system
-3) Identity registry
+3) Identity registry (Kabataan profiling)
 4) Governance workflow system
 5) Notification + engagement layer
-6) Chatbot assistant
+6) Chatbot assistant (planned)
 
-CURRENT IMPLEMENTED FEATURES (AS OF MARCH 8, 2026)
+DATABASE STRUCTURE SUMMARY (as of May 3, 2026)
+All apps share one PostgreSQL database. Tables by origin:
 
-Admin (Implemented, with some placeholders)
-- Authentication:
-	- Custom login/logout UI and flow
-	- Fortify integration via custom authentication service
-	- Two-factor setup/challenge/recovery flows
-- Access control:
-	- `auth`, `ensure2fa`, and role-based middleware for protected modules
-- Core pages:
-	- Authenticated dashboard and profile pages
-- Account governance module (SK-Federations and SK-Officials accounts):
-	- List by role with search, barangay filter, status filter, and pagination
-	- Create account + assign role + create official profile + assign term/barangay
-	- Update account/profile/term details
-	- Deactivate account
-	- Reset password (admin-triggered)
-	- Extend official term
-- Tenant bootstrap support:
-	- Resolves tenant context and seeds barangays when missing
-- Audit/security:
-	- Login/logout and governance audit events
-	- Login attempt and lockout support in auth services
-- Password reset status in Admin app:
-	- Forgot/reset routes and views exist
-	- Controller logic is still placeholder/UI-level and not fully production-grade reset workflow
+Core/Shared:
+  tenants, barangays, users, sessions, password_reset_tokens,
+  cache, cache_locks, jobs, job_batches, failed_jobs
 
-SK-Federations (Most complete security implementation so far)
-- Authentication and login:
-	- Login entry UI
-	- Fortify authenticateUsing bound to custom authentication service
+Admin app:
+  official_profiles, official_terms, login_attempts,
+  admin_activity_logs, barangay_logos
+
+SK_Federations auth:
+  sk_fed_trusted_devices, sk_fed_login_attempts,
+  sk_fed_auth_audit_logs, sk_fed_feature_flags,
+  sk_fed_email_verified_devices
+
+SK_Officials auth:
+  sk_official_trusted_devices, sk_official_login_attempts,
+  sk_official_auth_audit_logs, sk_official_feature_flags,
+  sk_official_email_verified_devices
+
+SK_Officials features (added May 2026):
+  announcements, announcement_reactions, announcement_comments,
+  kk_profiling_schedules, previous_kabataan
+
+Kabataan app (added May 2026):
+  kabataan_registrations (includes evaluation_status, evaluation_notes)
+
+CURRENT IMPLEMENTED FEATURES (AS OF MAY 3, 2026)
+
+Admin (Production-grade)
+- Authentication: custom login/logout, Fortify, 2FA setup/challenge/recovery
+- Access control: auth, ensure2fa, role-based middleware
+- Account governance (SK-Fed and SK-Officials):
+  - List, create, update, deactivate, reset password, extend term
+  - Assign role, official profile, term, barangay
+- Barangay Logos module: upload/manage per-barangay logos via Cloudinary
+- Tenant bootstrap: resolves tenant context, seeds barangays when missing
+- Audit/security: login/logout and governance audit events, lockout support
+- Deleted accounts views: DeletedSkOfficials, DeletedSkFederation
+- Archived Records module
+- Contact Us module
+- Password reset: routes and views exist; controller logic is placeholder-level
+
+SK-Federations (Most complete security implementation)
+- Authentication: login UI, Fortify authenticateUsing with custom auth service
 - Security controls:
-	- Role + tenant scope enforcement
-	- Email verification wait/notice/success flow with resend and signed links
-	- Re-verification on changed/new device fingerprint
-	- Single-session enforcement with heartbeat checks
-	- Session takeover flow with OTP send/verify
-	- Login attempt tracking, lockout handling, trusted-device registration,
-		suspicious-login detection, and auth audit logging
-- Password reset (implemented end-to-end):
-	- Forgot password form and reset form/success views
-	- Password broker link sending and token validation
-	- Tenant/role checks for reset eligibility
-	- Password complexity and confirmation validation
-	- Password reuse blocking
-	- Session invalidation after successful reset
-	- Turnstile middleware and configurable rate limiting
-	- Custom SK-Federations reset notification email
-- Protected modules:
-	- Dashboard route protected by `auth`, `verified`, `single.session`,
-		`sk_fed.access`, `trusted.device`, and `prevent.back`
-	- Profile page available under same protection
-- Profile editing status:
-	- Profile update and password update endpoints currently return disabled messages
-- UX/reliability additions:
-	- Shared loading screen assets (`/shared/css/loading.css`, `/shared/js/loading.js`)
-	- Network error page and DB/network exception mapping in bootstrap exception handling
+  - Role + tenant scope enforcement
+  - Email verification flow with resend and signed links
+  - Re-verification on changed/new device fingerprint
+  - Single-session enforcement with heartbeat checks
+  - Session takeover flow with OTP send/verify
+  - Login attempt tracking, lockout, trusted-device registration,
+    suspicious-login detection, auth audit logging
+- Password reset: full end-to-end (forgot form, reset form, broker, token validation,
+  tenant/role checks, complexity validation, reuse blocking, session invalidation,
+  Turnstile middleware, rate limiting, custom reset email)
+- Protected modules: Dashboard, Profile (under full auth + session middleware stack)
+- Profile editing: currently returns disabled messages
+- Community Feed module: reads announcements + reactions + comments
+- Barangay Monitoring module
+- Kabataan Monitoring module
+- Reports module
+- Archive module
+- Barangay ABYIP module
+- UX: shared loading screen assets, network error page
 
-SK-Officials (Prototype stage; no longer scaffold-only)
-- Has custom routes and screens for:
-	- Login/forgot-password entry
-	- Dashboard
-	- Profile
-	- Calendar
-	- Announcements
-- Current auth behavior is demo-level:
-	- Uses simple session flag and hardcoded credentials in controller
-	- Not yet connected to production-grade role/tenant/auth security stack
+SK-Officials (Production-grade as of May 2026 — no longer demo-level)
+- Authentication: full production security stack matching SK-Federations
+  (trusted devices, login attempts, auth audit logs, feature flags,
+   email verified devices, OTP, single-session, lockout)
+- Modules with views/routes/controllers:
+  Dashboard, Profile, Calendar, Committees, Programs, ABYIP, BudgetFinance,
+  Kabataan (list/view), KKProfilingRequests (review workflow),
+  PreviousKabataan (archive view), Announcement (create/list/view),
+  ScheduleKKProfiling (create/manage schedules),
+  schedule_programs, Rejected_KKProfiling, Rejected_Scholarship,
+  Deleted_Kabataan, layout
+- KK Profiling: SK Officials can schedule profiling windows (date_start, date_expiry,
+  link, status enum) and review kabataan_registrations with evaluation_status/notes
+- Announcements: SK Officials post announcements (type enum, title, body, image, link)
+  visible in community feed; reactions and comments are polymorphic
+- PDF/DOCX export: barryvdh/laravel-dompdf + phpoffice/phpword installed
 
-Kabataan (Current status)
-- Base Laravel scaffold only
-- Default welcome route present
-- No production feature modules implemented yet
+Kabataan (Active development as of May 2026)
+- Active modules: Authentication, Dashboard, Homepage, Profile, KKProfiling, Programs
+- KK Profiling registration flow:
+  - Multi-step state machine: pending_verification → email_verified → password_set → active
+  - Form data stored as JSON (form_data column)
+  - evaluation_status + evaluation_notes added for SK Officials review
+  - RegistrationEvaluationService handles evaluation logic
+  - KabataanVerifyEmail notification for email verification
+- Dashboard: shows community feed (announcements from SK Officials)
+- Homepage, Profile, Programs modules in place
 
 FUTURE FEATURES BY ROLE (PRODUCT ROADMAP)
 
 Admin Web App (Planned)
-- Login: email/password, forgot password hardening
 - Dashboard metrics: total users, role counts, platform health
-- Account governance: add/edit/manage SK-Fed and SK-Officials accounts
-- Audit log center for governance actions
 - System maintenance panel (feature flags, config, scheduled jobs)
+- Full password reset workflow (currently placeholder)
 
 SK-Federations Web App (Planned)
-- Dashboard expansion:
-	- Total Kabataan list
-	- Total programs per year
-	- Total Kabataan users
+- Dashboard expansion: total Kabataan, programs per year, Kabataan users
 - Profile management full enablement
-- Social feed:
-	- SK barangay posts across barangays
-	- Ongoing programs, participants, budget amount, uploaded annual budget
-- SK-Fed post and settings modules
+- Social feed: SK barangay posts, programs, budget uploads
 
 SK-Officials Web App (Planned)
-- Production login flow:
-	- Admin-provided credentials
-	- Forgot password
-	- One-time email verification per device change
-- Shared barangay dashboard for 12 officials:
-	- Total Kabataan in barangay
-	- Total programs per year
-	- Total accomplishments
-	- Total barangay users
-	- Upcoming programs list
-	- Calendar
-- Social feed and real-time posting
-- Program posting sectors:
-	- Education, Agriculture, Health, Sports, GAD,
-		Anti-Drugs, Disaster, Others
-- Common posting flow:
-	- Title, description, image upload
-	- Printable reporting button
-	- Download as DOCX/PDF with pre-configured report format
-- Education special case:
-	- Scholarship flow with and without assessment
+- Full barangay dashboard metrics
+- Real-time posting and social feed
+- Program posting by sector (Education, Agriculture, Health, Sports, GAD,
+  Anti-Drugs, Disaster, Others)
+- Scholarship flow (with/without assessment)
+- Printable reporting: DOCX/PDF with pre-configured report format
 
 Kabataan Web App (Planned)
-- Registration:
-	- First/last/middle/suffix
-	- DOB, address, contact number, email
-	- Password + confirm password
-	- Email verification
-	- One government valid ID upload
-- Login: email/password, forgot password,
-	one-time email verification per device change
-- Dashboard:
-	- Social feed
-	- Barangay announcements from SK officials
-	- View-only SK posts from other barangays
-- Programs view:
-	- Education, Agriculture, Health, Anti-Drugs,
-		Disaster, Sports, GAD, Others
+- Full registration flow with government ID upload
+- Login: email/password, forgot password, per-device email verification
+- Dashboard: social feed, barangay announcements, view-only cross-barangay posts
+- Programs view by sector
 - Profile, activity history, built-in chatbot
 
 CROSS-CUTTING COMPLEXITY AND RISKS
 - Main project risk is scope/complexity, not core technology
 - Hidden complexity areas:
-	- Notifications across channels: email, realtime, in-app
-	- Multi-role authorization and tenant boundaries
-	- Large-scale file/document management
-	- Reporting automation for LGU workflows
+  - Notifications across channels: email, realtime, in-app
+  - Multi-role authorization and tenant boundaries
+  - Large-scale file/document management
+  - Reporting automation for LGU workflows
 
 FILE STORAGE STRATEGY (DECISION)
 - Do not store uploaded files on Laravel server disk
 - Store IDs, images, reports, PDFs, DOCX in external object storage:
-	- Preferred: Supabase Storage
-	- Alternative: Cloudinary or S3
+  - Current: Cloudinary (logos, images)
+  - Preferred: Supabase Storage (documents, reports)
+  - Alternative: S3
 
 REPORTING ENGINE (HIGH PRIORITY)
-- Build this early; this can be a strong differentiator
+- Build this early; strong differentiator for LGU compliance
 - Required capabilities:
-	- DOCX template engine
-	- Auto-generated accomplishment reports
-	- Yearly analytics and printable compliance outputs
+  - DOCX template engine (phpoffice/phpword installed in SK_Officials)
+  - Auto-generated accomplishment reports
+  - Yearly analytics and printable compliance outputs
 
 EARLY FOUNDATION RECOMMENDATIONS
 - Create a notification module early
