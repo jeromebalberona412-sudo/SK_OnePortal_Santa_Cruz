@@ -37,6 +37,8 @@
     </style>
 </head>
 <body class="youth-login-page">
+    @include('dashboard::loading')
+    
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -75,28 +77,14 @@
                     <p class="card-subtitle">Login to your account</p>
                 </div>
 
-                <!-- Alert Messages -->
-                @if (session('success'))
-                    <div class="youth-alert youth-alert-success">
-                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        {{ session('success') }}
-                    </div>
-                @endif
 
-                @if ($errors->any())
-                    <div class="youth-alert youth-alert-error">
-                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                        {{ $errors->first() }}
-                    </div>
-                @endif
 
                 <!-- Login Form -->
                 <form class="youth-login-form" id="loginForm" method="POST" action="{{ route('login') }}" novalidate>
                     @csrf
+                    @if (session('login_error'))
+                        <input type="hidden" id="serverError" value="{{ session('login_error') }}">
+                    @endif
 
                     <!-- Email Field -->
                     <div class="youth-form-group">
@@ -117,7 +105,7 @@
                             autocomplete="email"
                             placeholder="Enter your email"
                         >
-                        <div class="youth-field-error" id="email-error" hidden></div>
+                        <div class="youth-field-error" id="email-error" hidden style="display: none !important;"></div>
                     </div>
 
                     <!-- Password Field -->
@@ -151,7 +139,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="youth-field-error" id="password-error" hidden></div>
+                        <div class="youth-field-error" id="password-error" hidden style="display: none !important;"></div>
                     </div>
 
                     <!-- Remember Me & Forgot Password -->
@@ -210,56 +198,55 @@
                 input.classList.add('error');
                 errorElement.textContent = message;
                 errorElement.hidden = false;
+                errorElement.style.display = 'block';
             }
 
             function clearError(input, errorElement) {
                 input.classList.remove('error');
                 errorElement.hidden = true;
+                errorElement.style.display = 'none';
             }
 
-            emailInput.addEventListener('blur', () => {
-                if (!emailInput.value.trim()) {
-                    showError(emailInput, emailError, 'Email is required');
-                } else if (!validateEmail(emailInput.value)) {
-                    showError(emailInput, emailError, 'Please enter a valid email address');
-                } else {
-                    clearError(emailInput, emailError);
+            // Check for server-side validation errors and display as inline
+            function handleServerErrors() {
+                const serverErrorInput = document.getElementById('serverError');
+                
+                if (serverErrorInput) {
+                    const message = serverErrorInput.value;
+                    // Show error on email field for all login errors
+                    showError(emailInput, emailError, message);
                 }
+            }
+
+            // Handle server errors on page load
+            handleServerErrors();
+
+            // Prevent browser's default validation messages
+            emailInput.addEventListener('invalid', (e) => {
+                e.preventDefault();
             });
 
-            emailInput.addEventListener('input', () => {
-                if (emailInput.value.trim() && validateEmail(emailInput.value)) {
-                    clearError(emailInput, emailError);
-                }
+            passwordInput.addEventListener('invalid', (e) => {
+                e.preventDefault();
             });
 
-            passwordInput.addEventListener('blur', () => {
-                if (!passwordInput.value.trim()) {
-                    showError(passwordInput, passwordError, 'Password is required');
-                } else {
-                    clearError(passwordInput, passwordError);
-                }
-            });
-
-            passwordInput.addEventListener('input', () => {
-                if (passwordInput.value.trim()) {
-                    clearError(passwordInput, passwordError);
-                }
-            });
-
+            // Only validate on submit, not on blur/input
             form.addEventListener('submit', (e) => {
                 let isValid = true;
 
+                // Clear all errors first
+                clearError(emailInput, emailError);
+                clearError(passwordInput, passwordError);
+
+                // Validate email
                 if (!emailInput.value.trim()) {
-                    showError(emailInput, emailError, 'Email is required');
                     isValid = false;
                 } else if (!validateEmail(emailInput.value)) {
-                    showError(emailInput, emailError, 'Please enter a valid email address');
                     isValid = false;
                 }
 
+                // Validate password
                 if (!passwordInput.value.trim()) {
-                    showError(passwordInput, passwordError, 'Password is required');
                     isValid = false;
                 }
 
@@ -268,15 +255,22 @@
                     return false;
                 }
 
-                LoadingScreen.show('Signing In', 'Please wait...');
+                // Show loading screen on successful validation
+                if (typeof showLoading !== 'undefined') {
+                    showLoading('Signing In');
+                }
             });
 
             document.getElementById('forgotBtn').addEventListener('click', (e) => {
                 e.preventDefault();
-                LoadingScreen.show('Redirecting', 'Taking you to password recovery...');
-                setTimeout(() => {
-                    window.location.href = this.href;
-                }, 300);
+                if (typeof showLoading !== 'undefined') {
+                    showLoading('Redirecting to password recovery');
+                    setTimeout(() => {
+                        window.location.href = e.target.href;
+                    }, 300);
+                } else {
+                    window.location.href = e.target.href;
+                }
             });
         })();
     </script>

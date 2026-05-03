@@ -51,10 +51,10 @@
                     <p class="card-subtitle">Enter your new password below</p>
                 </div>
 
-                <!-- Alert Messages (removed - not needed for reset password page) -->
+
 
                 <!-- Reset Password Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('password.update') }}" id="resetPasswordForm">
+                <form class="youth-login-form" method="POST" action="{{ route('password.update') }}" id="resetPasswordForm" novalidate>
                     @csrf
                     <input type="hidden" name="token" value="{{ $token ?? '' }}">
                     <input type="hidden" name="email" value="{{ $email ?? request()->email }}">

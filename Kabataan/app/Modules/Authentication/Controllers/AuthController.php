@@ -31,15 +31,15 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => 'The provided credentials do not match our records.',
-            ]);
+            return back()
+                ->withInput($request->only('email'))
+                ->with('login_error', 'The provided credentials do not match our records.');
         }
 
         if ($user->status === 'PENDING_APPROVAL') {
-            throw ValidationException::withMessages([
-                'email' => 'Your account is pending approval by SK officials.',
-            ]);
+            return back()
+                ->withInput($request->only('email'))
+                ->with('login_error', 'Your account is pending approval by SK officials.');
         }
 
         if ($user->status === 'REJECTED') {
@@ -49,15 +49,15 @@ class AuthController extends Controller
                 ? 'Reason: ' . $registration->review_notes
                 : 'Please contact your SK officials for more information.';
 
-            throw ValidationException::withMessages([
-                'email' => 'Your KK Profiling registration has been rejected. ' . $reason,
-            ]);
+            return back()
+                ->withInput($request->only('email'))
+                ->with('login_error', 'Your KK Profiling registration has been rejected. ' . $reason);
         }
 
         if ($user->status === 'INACTIVE') {
-            throw ValidationException::withMessages([
-                'email' => 'Your account has been deactivated. Please contact your SK officials.',
-            ]);
+            return back()
+                ->withInput($request->only('email'))
+                ->with('login_error', 'Your account has been deactivated. Please contact your SK officials.');
         }
 
         Auth::login($user, $request->boolean('remember'));

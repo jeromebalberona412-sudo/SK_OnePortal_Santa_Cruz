@@ -50,27 +50,10 @@
                     <p class="card-subtitle">Enter the email address associated with your account and we will send you a link to reset your password.</p>
                 </div>
 
-                <!-- Alert Messages -->
-                @if (session('status'))
-                    <div class="youth-alert youth-alert-success">
-                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        {{ session('status') }}
-                    </div>
-                @endif
 
-                @if ($errors->any())
-                    <div class="youth-alert youth-alert-error">
-                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                        {{ $errors->first() }}
-                    </div>
-                @endif
 
                 <!-- Forgot Password Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}">
+                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}" novalidate>
                     @csrf
 
                     <!-- Email Field -->

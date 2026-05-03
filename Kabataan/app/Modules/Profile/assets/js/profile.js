@@ -1,5 +1,107 @@
 // Profile Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    // ── Profile Picture Upload ──────────────────────────────────────────────
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
+    const photoUpload = document.getElementById('photoUpload');
+    const profileAvatar = document.getElementById('profileAvatar');
+
+    if (changePhotoBtn && photoUpload) {
+        changePhotoBtn.onclick = function(e) {
+            e.preventDefault();
+            photoUpload.click();
+        };
+
+        photoUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+
+            // Show loading
+            showLoading('Uploading profile picture');
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('profile_picture', file);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+            // Upload file
+            fetch('/upload-profile-picture', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    // Update avatar image
+                    if (profileAvatar) {
+                        profileAvatar.src = data.picture_url;
+                    }
+                    // Show success message
+                    showToast('Profile picture updated successfully!', 'success');
+                    // Reset file input
+                    photoUpload.value = '';
+                } else {
+                    showToast(data.error || 'Failed to upload profile picture', 'error');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Upload error:', error);
+                showToast('Error uploading profile picture', 'error');
+            });
+        });
+    }
+
+    // ── Toast Notification ──────────────────────────────────────────────────
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `profile-toast profile-toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
     // Elements
     const filterTabs = document.querySelectorAll('.tab-btn');
     const programItems = document.querySelectorAll('.program-item');
