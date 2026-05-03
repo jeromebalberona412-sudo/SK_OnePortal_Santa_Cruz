@@ -123,9 +123,6 @@
                     <h2 style="font-size:28px;font-weight:800;color:#0d1b4b;margin-bottom:4px;">Reports</h2>
                     <p style="font-size:14px;color:#64748b;"><i class="fas fa-file-chart-line" style="margin-right:6px;color:#213F99;"></i>Barangay compliance and submission reports overview</p>
                 </div>
-                <a href="{{ route('barangay.abyip') }}" style="padding:10px 20px;background:#213F99;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;">
-                    <i class="fas fa-file-invoice-dollar"></i> Barangay ABYIP
-                </a>
             </div>
 
             {{-- Summary Cards --}}
@@ -188,18 +185,6 @@
                             <div style="width:{{ $reportsData['summary']['accomplishment_rate'] }}%;height:100%;background:#3b82f6;border-radius:4px;"></div>
                         </div>
                         <div style="font-size:11px;color:#64748b;margin-top:4px;">{{ $reportsData['summary']['accomplishment_submitted'] }} submitted, {{ $reportsData['summary']['accomplishment_not_submitted'] }} not submitted</div>
-                    </div>
-
-                    {{-- ABYIP Reports --}}
-                    <div style="margin-bottom:24px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                            <span style="font-size:13px;font-weight:600;color:#0d1b4b;">ABYIP (Annual Barangay Youth Investment Plan)</span>
-                            <span style="font-size:13px;font-weight:700;color:#0d1b4b;">{{ $reportsData['summary']['abyip_rate'] }}%</span>
-                        </div>
-                        <div style="width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
-                            <div style="width:{{ $reportsData['summary']['abyip_rate'] }}%;height:100%;background:#3b82f6;border-radius:4px;"></div>
-                        </div>
-                        <div style="font-size:11px;color:#64748b;margin-top:4px;">{{ $reportsData['summary']['abyip_submitted'] }} submitted, {{ $reportsData['summary']['abyip_not_submitted'] }} not submitted</div>
                     </div>
 
                     {{-- KK Profiling --}}
@@ -301,13 +286,13 @@
 
             {{-- Reports Tabs with Filters --}}
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-bottom:2px solid #e2e8f0;flex-wrap:wrap;gap:12px;">
-                <div style="display:flex;gap:4px;">
+                <div style="display:flex;gap:4px;align-items:center;">
                     <button onclick="switchReportsTab('accomplishment')" id="reports-tab-accomplishment" style="padding:10px 20px;border:none;background:none;font-size:14px;font-weight:600;color:#213F99;border-bottom:2px solid #213F99;margin-bottom:-2px;cursor:pointer;">
                         <i class="fas fa-trophy"></i> Accomplishment
                     </button>
-                    <button onclick="switchReportsTab('abyip')" id="reports-tab-abyip" style="padding:10px 20px;border:none;background:none;font-size:14px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;">
-                        <i class="fas fa-file-invoice-dollar"></i> ABYIP
-                    </button>
+                    <a href="{{ route('barangay.abyip') }}" style="padding:8px 16px;background:#213F99;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;margin-left:12px;">
+                        <i class="fas fa-file-invoice-dollar"></i> Barangay ABYIP
+                    </a>
                 </div>
                 <div style="display:flex;gap:12px;flex-wrap:wrap;">
                     <select id="tabTimeFilter" onchange="filterTabReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;white-space:nowrap;">
