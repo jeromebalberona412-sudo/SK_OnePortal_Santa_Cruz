@@ -13,8 +13,10 @@
         'app/Modules/Profile/assets/css/change-email.css',
         'app/Modules/Profile/assets/js/change-email.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sk-login-page">
+    @include('loading')
 
     <!-- Animated Background -->
     <div class="sk-bg-wrapper">
@@ -222,6 +224,7 @@
 
     </main>
 
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>

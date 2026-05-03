@@ -11,9 +11,11 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css'
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
+@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -497,7 +499,7 @@
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/KKProfilingRequests/assets/js/kkprofiling-requests.js'
 ])
-
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
 

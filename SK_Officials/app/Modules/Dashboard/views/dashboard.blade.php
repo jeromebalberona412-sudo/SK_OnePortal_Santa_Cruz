@@ -13,9 +13,11 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/Dashboard/assets/css/dashboard.css'
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
+@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -741,6 +743,6 @@
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

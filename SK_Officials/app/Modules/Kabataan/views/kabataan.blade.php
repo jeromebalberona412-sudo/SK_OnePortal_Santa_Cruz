@@ -11,9 +11,11 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/Kabataan/assets/css/kabataan.css'
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
+@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -1014,6 +1016,6 @@
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/Kabataan/assets/js/kabataan.js'
 ])
-
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

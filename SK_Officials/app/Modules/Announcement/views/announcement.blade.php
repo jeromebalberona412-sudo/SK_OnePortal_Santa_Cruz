@@ -12,9 +12,11 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/Announcement/assets/css/announcement.css',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
+@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -294,5 +296,6 @@ async function loadPreviewFeed() {
     }
 }
 </script>
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

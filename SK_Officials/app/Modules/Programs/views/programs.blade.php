@@ -10,9 +10,11 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/Programs/assets/css/programs.css'
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
+@include('loading')
 <!-- ================= HEADER ================= -->
 @include('layout::header')
 
@@ -268,7 +270,7 @@
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/Programs/assets/js/programs.js'
 ])
-
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
 

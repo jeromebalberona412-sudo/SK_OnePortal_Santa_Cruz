@@ -17,6 +17,7 @@
         'app/Modules/ABYIP/assets/css/abyip.css',
         'app/Modules/ABYIP/assets/js/abyip.js'
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
@@ -498,6 +499,6 @@
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/ABYIP/assets/js/abyip.js'
 ])
-
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
