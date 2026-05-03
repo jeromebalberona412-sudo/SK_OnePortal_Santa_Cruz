@@ -65,37 +65,29 @@
 
         function updateProfile(event) {
             event.preventDefault();
-            
+
             const form = document.getElementById('editProfileForm');
             const formData = new FormData(form);
-            
-            const updatedData = {
-                first_name: formData.get('first_name'),
-                middle_initial: formData.get('middle_initial'),
-                last_name: formData.get('last_name'),
-                suffix: formData.get('suffix'),
-                username: formData.get('username'),
-                birthdate: formData.get('birthdate'),
-                age: formData.get('age'),
-                email: formData.get('email'),
-                contact_number: formData.get('contact_number'),
-                province: formData.get('province'),
-                municipality: formData.get('municipality'),
-                barangay: formData.get('barangay')
-            };
-            
-            sessionStorage.setItem('profile_updated', JSON.stringify(updatedData));
-            
-            closeEditModal();
-            
-            setTimeout(() => {
-                const successModal = document.getElementById('successModal');
-                if (successModal) {
-                    successModal.style.display = 'flex';
-                    document.body.style.overflow = 'hidden';
-                }
-            }, 300);
-            
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+            fetch('{{ route("profile.update") }}', { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        closeEditModal();
+                        setTimeout(() => {
+                            const successModal = document.getElementById('successModal');
+                            if (successModal) {
+                                successModal.style.display = 'flex';
+                                document.body.style.overflow = 'hidden';
+                            }
+                        }, 300);
+                    } else {
+                        alert('Update failed. Please try again.');
+                    }
+                })
+                .catch(() => alert('Update failed. Please try again.'));
+
             return false;
         }
 

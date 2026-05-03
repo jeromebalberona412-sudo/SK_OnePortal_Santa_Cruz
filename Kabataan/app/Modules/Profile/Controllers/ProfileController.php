@@ -3,12 +3,13 @@
 namespace App\Modules\Profile\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\KabataanRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
-    public function settings(Request $request)
+    public function index()
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please login first.');

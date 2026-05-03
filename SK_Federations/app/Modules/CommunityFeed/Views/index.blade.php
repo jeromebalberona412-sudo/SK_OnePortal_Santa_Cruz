@@ -479,7 +479,7 @@
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
-    <script src="{{ url('/modules/community_feed/js/community-feed.js') }}"></script>
+    <script src="{{ url('/modules/community_feed/js/community-feed.js') }}?v={{ filemtime(public_path('modules/community_feed/js/community-feed.js')) }}"></script>
     <script>
         window.logoutRoute  = "{{ route('logout') }}";
         window.loginRoute   = "{{ route('login') }}";

@@ -20,7 +20,44 @@ class KKProfilingController extends Controller
      */
     public function showSignup()
     {
-        return view('kkprofiling::signup');
+        // Load barangays from DB so we have their IDs for the schedule gate
+        $barangays = Barangay::orderBy('name')->get(['id', 'name']);
+        return view('kkprofiling::signup', compact('barangays'));
+    }
+
+    /**
+     * Return the most relevant schedule status per barangay for the signup page.
+     * Priority: Ongoing > Upcoming > Rescheduled > Completed > Cancelled
+     */
+    public function openBarangays()
+    {
+        $today = now()->toDateString();
+
+        // All schedules within date range (any status)
+        $rows = DB::table('kk_profiling_schedules')
+            ->where('date_start', '<=', $today)
+            ->where('date_expiry', '>=', $today)
+            ->get(['barangay_id', 'status', 'date_start', 'date_expiry']);
+
+        $priority = ['Ongoing' => 0, 'Upcoming' => 1, 'Rescheduled' => 2, 'Completed' => 3, 'Cancelled' => 4];
+
+        $map = [];
+        foreach ($rows as $row) {
+            $id = $row->barangay_id;
+            $p  = $priority[$row->status] ?? 99;
+            if (!isset($map[$id]) || $p < ($priority[$map[$id]->status] ?? 99)) {
+                $map[$id] = $row;
+            }
+        }
+
+        $result = array_values(array_map(fn($row) => [
+            'barangay_id' => $row->barangay_id,
+            'status'      => $row->status,
+            'date_start'  => $row->date_start,
+            'date_expiry' => $row->date_expiry,
+        ], $map));
+
+        return response()->json(['schedules' => $result]);
     }
 
     /**
@@ -33,39 +70,34 @@ class KKProfilingController extends Controller
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
         $slug = trim($slug, '-');
 
-        // Map display names
+        // Map display names — must match exact names in the barangays DB table
         $barangayMap = [
-            'alipit'                    => 'Alipit',
-            'bagumbayan'                => 'Bagumbayan',
-            'barangay-i'                => 'Barangay I (Poblacion I)',
-            'barangay-i-poblacion-i'    => 'Barangay I (Poblacion I)',
-            'barangay-ii'               => 'Barangay II (Poblacion II)',
-            'barangay-ii-poblacion-ii'  => 'Barangay II (Poblacion II)',
-            'barangay-iii'              => 'Barangay III (Poblacion III)',
-            'barangay-iii-poblacion-iii'=> 'Barangay III (Poblacion III)',
-            'barangay-iv'               => 'Barangay IV (Poblacion IV)',
-            'barangay-iv-poblacion-iv'  => 'Barangay IV (Poblacion IV)',
-            'barangay-v'                => 'Barangay V (Poblacion V)',
-            'barangay-v-poblacion-v'    => 'Barangay V (Poblacion V)',
-            'bubukal'                   => 'Bubukal',
-            'calios'                    => 'Calios',
-            'duhat'                     => 'Duhat',
-            'gatid'                     => 'Gatid',
-            'jasaan'                    => 'Jasaan',
-            'labuin'                    => 'Labuin',
-            'malinao'                   => 'Malinao',
-            'oogong'                    => 'Oogong',
-            'pagsawitan'                => 'Pagsawitan',
-            'palasan'                   => 'Palasan',
-            'patimbao'                  => 'Patimbao',
-            'san-jose'                  => 'San Jose',
-            'san-juan'                  => 'San Juan',
-            'san-pablo-norte'           => 'San Pablo Norte',
-            'san-pablo-sur'             => 'San Pablo Sur',
-            'santisima-cruz'            => 'Santisima Cruz',
-            'santo-angel-central'       => 'Santo Angel Central',
-            'santo-angel-norte'         => 'Santo Angel Norte',
-            'santo-angel-sur'           => 'Santo Angel Sur',
+            'alipit'          => 'Alipit',
+            'bagumbayan'      => 'Bagumbayan',
+            'poblacion-i'     => 'Poblacion I',
+            'poblacion-ii'    => 'Poblacion II',
+            'poblacion-iii'   => 'Poblacion III',
+            'poblacion-iv'    => 'Poblacion IV',
+            'poblacion-v'     => 'Poblacion V',
+            'bubukal'         => 'Bubukal',
+            'calios'          => 'Calios',
+            'duhat'           => 'Duhat',
+            'gatid'           => 'Gatid',
+            'jasaan'          => 'Jasaan',
+            'labuin'          => 'Labuin',
+            'malinao'         => 'Malinao',
+            'oogong'          => 'Oogong',
+            'pagsawitan'      => 'Pagsawitan',
+            'palasan'         => 'Palasan',
+            'patimbao'        => 'Patimbao',
+            'san-jose'        => 'San Jose',
+            'san-juan'        => 'San Juan',
+            'san-pablo-norte' => 'San Pablo Norte',
+            'san-pablo-sur'   => 'San Pablo Sur',
+            'santisima-cruz'  => 'Santisima Cruz',
+            'santo-angel-central' => 'Santo Angel Central',
+            'santo-angel-norte'   => 'Santo Angel Norte',
+            'santo-angel-sur'     => 'Santo Angel Sur',
         ];
 
         if (!array_key_exists($slug, $barangayMap)) {
@@ -73,6 +105,28 @@ class KKProfilingController extends Controller
         }
 
         $displayName = $barangayMap[$slug];
+
+        // ── Schedule gate ──────────────────────────────────────────────────
+        // Block access if the barangay has no active KK Profiling schedule.
+        $barangayRecord = Barangay::where('name', $displayName)->first();
+
+        if (!$barangayRecord) {
+            abort(404);
+        }
+
+        $today = now()->toDateString();
+        $hasActiveSchedule = DB::table('kk_profiling_schedules')
+            ->where('barangay_id', $barangayRecord->id)
+            ->where('status', 'Ongoing')
+            ->where('date_start', '<=', $today)
+            ->where('date_expiry', '>=', $today)
+            ->exists();
+
+        if (!$hasActiveSchedule) {
+            return redirect()->route('kkprofiling.signup')
+                ->withErrors(['schedule' => 'KK Profiling sign-up for ' . $displayName . ' is not currently open.']);
+        }
+        // ──────────────────────────────────────────────────────────────────
 
         return view('kkprofiling::kkprofiling', [
             'barangay' => $displayName,
@@ -214,37 +268,32 @@ class KKProfilingController extends Controller
     private function getBarangayName(string $slug): ?string
     {
         $barangayMap = [
-            'alipit'                    => 'Alipit',
-            'bagumbayan'                => 'Bagumbayan',
-            'barangay-i'                => 'Barangay I (Poblacion I)',
-            'barangay-i-poblacion-i'    => 'Barangay I (Poblacion I)',
-            'barangay-ii'               => 'Barangay II (Poblacion II)',
-            'barangay-ii-poblacion-ii'  => 'Barangay II (Poblacion II)',
-            'barangay-iii'              => 'Barangay III (Poblacion III)',
-            'barangay-iii-poblacion-iii'=> 'Barangay III (Poblacion III)',
-            'barangay-iv'               => 'Barangay IV (Poblacion IV)',
-            'barangay-iv-poblacion-iv'  => 'Barangay IV (Poblacion IV)',
-            'barangay-v'                => 'Barangay V (Poblacion V)',
-            'barangay-v-poblacion-v'    => 'Barangay V (Poblacion V)',
-            'bubukal'                   => 'Bubukal',
-            'calios'                    => 'Calios',
-            'duhat'                     => 'Duhat',
-            'gatid'                     => 'Gatid',
-            'jasaan'                    => 'Jasaan',
-            'labuin'                    => 'Labuin',
-            'malinao'                   => 'Malinao',
-            'oogong'                    => 'Oogong',
-            'pagsawitan'                => 'Pagsawitan',
-            'palasan'                   => 'Palasan',
-            'patimbao'                  => 'Patimbao',
-            'san-jose'                  => 'San Jose',
-            'san-juan'                  => 'San Juan',
-            'san-pablo-norte'           => 'San Pablo Norte',
-            'san-pablo-sur'             => 'San Pablo Sur',
-            'santisima-cruz'            => 'Santisima Cruz',
-            'santo-angel-central'       => 'Santo Angel Central',
-            'santo-angel-norte'         => 'Santo Angel Norte',
-            'santo-angel-sur'           => 'Santo Angel Sur',
+            'alipit'          => 'Alipit',
+            'bagumbayan'      => 'Bagumbayan',
+            'poblacion-i'     => 'Poblacion I',
+            'poblacion-ii'    => 'Poblacion II',
+            'poblacion-iii'   => 'Poblacion III',
+            'poblacion-iv'    => 'Poblacion IV',
+            'poblacion-v'     => 'Poblacion V',
+            'bubukal'         => 'Bubukal',
+            'calios'          => 'Calios',
+            'duhat'           => 'Duhat',
+            'gatid'           => 'Gatid',
+            'jasaan'          => 'Jasaan',
+            'labuin'          => 'Labuin',
+            'malinao'         => 'Malinao',
+            'oogong'          => 'Oogong',
+            'pagsawitan'      => 'Pagsawitan',
+            'palasan'         => 'Palasan',
+            'patimbao'        => 'Patimbao',
+            'san-jose'        => 'San Jose',
+            'san-juan'        => 'San Juan',
+            'san-pablo-norte' => 'San Pablo Norte',
+            'san-pablo-sur'   => 'San Pablo Sur',
+            'santisima-cruz'  => 'Santisima Cruz',
+            'santo-angel-central' => 'Santo Angel Central',
+            'santo-angel-norte'   => 'Santo Angel Norte',
+            'santo-angel-sur'     => 'Santo Angel Sur',
         ];
 
         return $barangayMap[$slug] ?? null;
@@ -284,32 +333,32 @@ class KKProfilingController extends Controller
     private function getBarangaySlug(string $name): string
     {
         $slugMap = [
-            'Alipit' => 'alipit',
-            'Bagumbayan' => 'bagumbayan',
-            'Barangay I (Poblacion I)' => 'barangay-i-poblacion-i',
-            'Barangay II (Poblacion II)' => 'barangay-ii-poblacion-ii',
-            'Barangay III (Poblacion III)' => 'barangay-iii-poblacion-iii',
-            'Barangay IV (Poblacion IV)' => 'barangay-iv-poblacion-iv',
-            'Barangay V (Poblacion V)' => 'barangay-v-poblacion-v',
-            'Bubukal' => 'bubukal',
-            'Calios' => 'calios',
-            'Duhat' => 'duhat',
-            'Gatid' => 'gatid',
-            'Jasaan' => 'jasaan',
-            'Labuin' => 'labuin',
-            'Malinao' => 'malinao',
-            'Oogong' => 'oogong',
-            'Pagsawitan' => 'pagsawitan',
-            'Palasan' => 'palasan',
-            'Patimbao' => 'patimbao',
-            'San Jose' => 'san-jose',
-            'San Juan' => 'san-juan',
-            'San Pablo Norte' => 'san-pablo-norte',
-            'San Pablo Sur' => 'san-pablo-sur',
-            'Santisima Cruz' => 'santisima-cruz',
+            'Alipit'              => 'alipit',
+            'Bagumbayan'          => 'bagumbayan',
+            'Poblacion I'         => 'poblacion-i',
+            'Poblacion II'        => 'poblacion-ii',
+            'Poblacion III'       => 'poblacion-iii',
+            'Poblacion IV'        => 'poblacion-iv',
+            'Poblacion V'         => 'poblacion-v',
+            'Bubukal'             => 'bubukal',
+            'Calios'              => 'calios',
+            'Duhat'               => 'duhat',
+            'Gatid'               => 'gatid',
+            'Jasaan'              => 'jasaan',
+            'Labuin'              => 'labuin',
+            'Malinao'             => 'malinao',
+            'Oogong'              => 'oogong',
+            'Pagsawitan'          => 'pagsawitan',
+            'Palasan'             => 'palasan',
+            'Patimbao'            => 'patimbao',
+            'San Jose'            => 'san-jose',
+            'San Juan'            => 'san-juan',
+            'San Pablo Norte'     => 'san-pablo-norte',
+            'San Pablo Sur'       => 'san-pablo-sur',
+            'Santisima Cruz'      => 'santisima-cruz',
             'Santo Angel Central' => 'santo-angel-central',
-            'Santo Angel Norte' => 'santo-angel-norte',
-            'Santo Angel Sur' => 'santo-angel-sur',
+            'Santo Angel Norte'   => 'santo-angel-norte',
+            'Santo Angel Sur'     => 'santo-angel-sur',
         ];
 
         return $slugMap[$name] ?? strtolower(str_replace(' ', '-', $name));

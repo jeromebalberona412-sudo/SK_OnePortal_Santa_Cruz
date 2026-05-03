@@ -8,6 +8,9 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     @vite([
         'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Programs/assets/css/scholarship_application.css',
@@ -27,7 +30,7 @@
         <div class="navbar-container">
             <div class="navbar-left">
                 <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="navbar-logo">
-                <span class="navbar-title">SK OnePortal</span>
+                <span class="navbar-title">Kabataan<small>SK OnePortal Santa Cruz</small></span>
             </div>
             
             <div class="navbar-center">
@@ -116,240 +119,27 @@
                 @endif
                 
                 <div class="feed-header">
-                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                        <div>
-                            <h1>SK Community Feed</h1>
-                            <p>See the latest posts, events, and programs from SK officials.</p>
-                        </div>
-                        <a href="http://192.168.100.241:8000/community-feed" class="view-details-btn" style="font-size:13px;padding:8px 16px;text-decoration:none;">
-                            <svg viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;">
-                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                            View Full Feed
-                        </a>
+                    <div>
+                        <h1>SK Community Feed</h1>
+                        <p>See the latest posts, events, and programs from SK officials.</p>
                     </div>
                 </div>
 
-                <!-- Sample Post 1 - Activity -->
-                <article class="post-card">
-                    <div class="post-header">
-                        <a href="{{ route('barangay', 'alipit') }}" class="post-author-link">
-                            <img src="https://ui-avatars.com/api/?name=SK+Barangay+1&background=4CAF50&color=fff" alt="SK Official" class="post-avatar">
-                        </a>
-                        <div class="post-info">
-                            <h3 class="post-author"><a href="{{ route('barangay', 'alipit') }}" class="post-author-link">SK Barangay 1 - Poblacion</a></h3>
-                            <p class="post-meta">
-                                <span class="post-type activity">Activity</span>
-                                <span class="post-time">2 hours ago</span>
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="post-content">
-                        <h2 class="post-title">Community Clean-Up Drive 🌱</h2>
-                        <p class="post-text">Join us this Saturday for our monthly community clean-up drive! Let's work together to keep our barangay clean and green. Bring your friends and family!</p>
-                        <div class="post-image">
-                            <img src="https://via.placeholder.com/600x400/4CAF50/ffffff?text=Clean-Up+Drive" alt="Clean-Up Drive">
-                        </div>
-                        <div class="post-details">
-                            <div class="detail-item">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>March 15, 2026 | 7:00 AM</span>
-                            </div>
-                            <div class="detail-item">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Barangay 1 Plaza</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="post-actions">
-                        <button class="action-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
-                            </svg>
-                            <span>Like (24)</span>
-                        </button>
-                        <button class="action-btn comment-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
-                            </svg>
-                            <span>Comment (8)</span>
-                        </button>
-                    </div>
-                    
-                    <div class="comments-section" style="display: none;">
-                        <div class="comment-item">
-                            <img src="https://ui-avatars.com/api/?name=Juan+Dela+Cruz&background=667eea&color=fff" alt="User">
-                            <div class="comment-content">
-                                <p class="comment-author">Juan Dela Cruz</p>
-                                <p class="comment-text">Count me in! This is a great initiative. 👍</p>
-                                <span class="comment-time">1 hour ago</span>
-                            </div>
-                        </div>
-                        <div class="comment-input-wrapper">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=667eea&color=fff" alt="You">
-                            <input type="text" placeholder="Write a comment..." class="comment-input">
-                            <button class="send-comment-btn">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </article>
+                <div class="feed-filter-bar" style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0;">
+                    <button class="feed-tab active" onclick="setFeedFilter(this,'all')">All</button>
+                    <button class="feed-tab" onclick="setFeedFilter(this,'announcement')">Announcements</button>
+                    <button class="feed-tab" onclick="setFeedFilter(this,'event')">Events</button>
+                    <button class="feed-tab" onclick="setFeedFilter(this,'activity')">Activities</button>
+                    <button class="feed-tab" onclick="setFeedFilter(this,'program')">Programs</button>
+                </div>
 
-                <!-- Sample Post 2 - Event -->
-                <article class="post-card">
-                    <div class="post-header">
-                        <a href="{{ route('barangay', 'san-jose') }}" class="post-author-link">
-                            <img src="https://ui-avatars.com/api/?name=SK+Barangay+5&background=FF9800&color=fff" alt="SK Official" class="post-avatar">
-                        </a>
-                        <div class="post-info">
-                            <h3 class="post-author"><a href="{{ route('barangay', 'san-jose') }}" class="post-author-link">SK Barangay 5 - San Jose</a></h3>
-                            <p class="post-meta">
-                                <span class="post-type event">Event</span>
-                                <span class="post-time">5 hours ago</span>
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="post-content">
-                        <h2 class="post-title">Youth Leadership Summit 2026 🎯</h2>
-                        <p class="post-text">Calling all aspiring youth leaders! Join us for an inspiring day of workshops, networking, and skill-building sessions. Learn from experienced leaders and connect with fellow youth from across Santa Cruz.</p>
-                        <div class="post-image">
-                            <img src="https://via.placeholder.com/600x400/FF9800/ffffff?text=Leadership+Summit" alt="Leadership Summit">
-                        </div>
-                        <div class="post-details">
-                            <div class="detail-item">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>March 20, 2026 | 8:00 AM - 5:00 PM</span>
-                            </div>
-                            <div class="detail-item">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Santa Cruz Municipal Hall</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="post-actions">
-                        <button class="action-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
-                            </svg>
-                            <span>Like (45)</span>
-                        </button>
-                        <button class="action-btn comment-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
-                            </svg>
-                            <span>Comment (12)</span>
-                        </button>
-                    </div>
-                </article>
+                <div id="feed-posts"></div>
 
-                <!-- Sample Post 3 - Announcement -->
-                <article class="post-card">
-                    <div class="post-header">
-                        <a href="{{ route('barangay', 'duhat') }}" class="post-author-link">
-                            <img src="https://ui-avatars.com/api/?name=SK+Barangay+3&background=2196F3&color=fff" alt="SK Official" class="post-avatar">
-                        </a>
-                        <div class="post-info">
-                            <h3 class="post-author"><a href="{{ route('barangay', 'duhat') }}" class="post-author-link">SK Barangay 3 - Duhat</a></h3>
-                            <p class="post-meta">
-                                <span class="post-type announcement">Announcement</span>
-                                <span class="post-time">1 day ago</span>
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="post-content">
-                        <h2 class="post-title">📢 Important: SK Meeting Schedule</h2>
-                        <p class="post-text">Reminder to all SK members: Our monthly meeting has been rescheduled to next Friday. Please mark your calendars and ensure your attendance. We'll be discussing upcoming projects and budget allocation.</p>
-                    </div>
-                    
-                    <div class="post-actions">
-                        <button class="action-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
-                            </svg>
-                            <span>Like (18)</span>
-                        </button>
-                        <button class="action-btn comment-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
-                            </svg>
-                            <span>Comment (5)</span>
-                        </button>
-                    </div>
-                </article>
-
-                <!-- Sample Post 4 - Youth Program -->
-                <article class="post-card">
-                    <div class="post-header">
-                        <a href="{{ route('barangay', 'pagsawitan') }}" class="post-author-link">
-                            <img src="https://ui-avatars.com/api/?name=SK+Barangay+7&background=9C27B0&color=fff" alt="SK Official" class="post-avatar">
-                        </a>
-                        <div class="post-info">
-                            <h3 class="post-author"><a href="{{ route('barangay', 'pagsawitan') }}" class="post-author-link">SK Barangay 7 - Pagsawitan</a></h3>
-                            <p class="post-meta">
-                                <span class="post-type program">Youth Program</span>
-                                <span class="post-time">2 days ago</span>
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="post-content">
-                        <h2 class="post-title">🎓 Scholarship Program Now Open!</h2>
-                        <p class="post-text">Great news! Our Education Assistance Program is now accepting applications for the upcoming semester. This program provides financial support to deserving youth pursuing their education. Don't miss this opportunity!</p>
-                        <div class="post-image">
-                            <img src="https://via.placeholder.com/600x400/9C27B0/ffffff?text=Scholarship+Program" alt="Scholarship Program">
-                        </div>
-                        <div class="program-info">
-                            <div class="info-badge">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
-                                </svg>
-                                <span>Education Category</span>
-                            </div>
-                            <div class="info-badge">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Deadline: March 31, 2026</span>
-                            </div>
-                        </div>
-                        <button class="view-details-btn">
-                            View Program Details & Apply
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                    </div>
-                    
-                    <div class="post-actions">
-                        <button class="action-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
-                            </svg>
-                            <span>Like (67)</span>
-                        </button>
-                        <button class="action-btn comment-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
-                            </svg>
-                            <span>Comment (23)</span>
-                        </button>
-                    </div>
-                </article>
+                <div style="text-align:center;padding:8px 0 16px;">
+                    <button class="view-details-btn" id="load-more-btn" onclick="loadMorePosts()" style="display:none;">
+                        Load More
+                    </button>
+                </div>
             </div>
 
             <!-- Right Sidebar -->
@@ -779,6 +569,142 @@
     <script>
     // Disqualify page from bfcache — back button will always hit the server
     window.addEventListener('unload', function () {});
+    </script>
+
+    <script>
+    // ── Community Feed ────────────────────────────────────────────────────────
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    let feedPage = 1, feedLastPage = 1, feedFilter = 'all';
+
+    async function apiFeed(url, opts = {}) {
+        const { headers: extraHeaders, ...rest } = opts;
+        const r = await fetch(url, {
+            ...rest,
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', ...(extraHeaders ?? {}) },
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+    }
+
+    async function loadFeed(reset = true) {
+        if (reset) { feedPage = 1; document.getElementById('feed-posts').innerHTML = ''; }
+        const params = new URLSearchParams({ page: feedPage, filter: feedFilter });
+        const data   = await apiFeed(`/api/feed?${params}`).catch(e => { console.error('Feed error:', e); return null; });
+        if (!data) return;
+        feedLastPage = data.last_page;
+        (data.data ?? []).forEach(p => {
+            const el = document.createElement('article');
+            el.className = 'post-card';
+            el.dataset.postId = p.id;
+            el.innerHTML = buildFeedPost(p);
+            document.getElementById('feed-posts').appendChild(el);
+        });
+        const btn = document.getElementById('load-more-btn');
+        if (btn) btn.style.display = feedPage >= feedLastPage ? 'none' : 'inline-flex';
+    }
+
+    function loadMorePosts() { feedPage++; loadFeed(false); }
+
+    function setFeedFilter(btn, filter) {
+        feedFilter = filter;
+        document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        loadFeed(true);
+    }
+
+    function buildFeedPost(p) {
+        const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent('SK ' + (p.barangay_name ?? ''))}&background=0450a8&color=fff`;
+        const media  = p.image_url ? `<div class="post-image"><img src="${p.image_url}" loading="lazy"></div>` : '';
+        const link   = p.link_url  ? `<a href="${p.link_url}" target="_blank" rel="noopener" class="post-link-preview">${p.link_url}</a>` : '';
+        const comments = (p.comments ?? []).map(c =>
+            `<div class="comment-item">
+               <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.author_name)}&background=667eea&color=fff" alt="${c.author_name}">
+               <div class="comment-content">
+                 <p class="comment-author">${c.author_name}</p>
+                 <p class="comment-text">${c.body}</p>
+                 <span class="comment-time">${c.time}</span>
+               </div>
+             </div>`
+        ).join('');
+        return `
+          <div class="post-header">
+            <img src="${avatar}" alt="${p.barangay_name}" class="post-avatar">
+            <div class="post-info">
+              <h3 class="post-author">${p.author_name ?? ('SK Brgy. ' + (p.barangay_name ?? ''))}</h3>
+              <p class="post-meta">
+                <span class="post-type ${p.type}">${p.type}</span>
+                <span class="post-time">${p.time}</span>
+              </p>
+            </div>
+          </div>
+          <div class="post-content">
+            ${p.title ? `<h2 class="post-title">${p.title}</h2>` : ''}
+            <p class="post-text">${p.body}</p>
+            ${media}${link}
+          </div>
+          <div class="post-actions">
+            <button class="action-btn${p.liked ? ' liked' : ''}" onclick="feedToggleLike(${p.id}, this)">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>
+              <span id="feed-like-${p.id}">Like (${p.likes})</span>
+            </button>
+            <button class="action-btn comment-btn" onclick="feedToggleComments(${p.id})">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
+              <span id="feed-comment-count-${p.id}">Comment (${(p.comments ?? []).length})</span>
+            </button>
+          </div>
+          <div class="comments-section" id="feed-comments-${p.id}" style="display:none;">
+            <div id="feed-comments-list-${p.id}">${comments}</div>
+            <div class="comment-input-wrapper">
+              <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=667eea&color=fff" alt="You">
+              <input type="text" class="comment-input" placeholder="Write a comment..."
+                     onkeydown="if(event.key==='Enter')feedSubmitComment(${p.id},this)">
+              <button class="send-comment-btn" onclick="feedSubmitComment(${p.id},this.previousElementSibling)">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+              </button>
+            </div>
+          </div>`;
+    }
+
+    async function feedToggleLike(id, btn) {
+        const data = await apiFeed(`/api/feed/${id}/react`, { method: 'POST' }).catch(() => null);
+        if (!data) return;
+        btn.classList.toggle('liked', data.liked);
+        const el = document.getElementById(`feed-like-${id}`);
+        if (el) el.textContent = `Like (${data.count})`;
+    }
+
+    function feedToggleComments(id) {
+        const s = document.getElementById(`feed-comments-${id}`);
+        if (s) s.style.display = s.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function feedSubmitComment(id, input) {
+        const text = input.value.trim();
+        if (!text) return;
+        const c = await apiFeed(`/api/feed/${id}/comment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ body: text }),
+        }).catch(() => null);
+        if (!c) return;
+        input.value = '';
+        const list = document.getElementById(`feed-comments-list-${id}`);
+        if (list) list.insertAdjacentHTML('beforeend',
+            `<div class="comment-item">
+               <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.author_name)}&background=667eea&color=fff" alt="${c.author_name}">
+               <div class="comment-content">
+                 <p class="comment-author">${c.author_name}</p>
+                 <p class="comment-text">${c.body}</p>
+                 <span class="comment-time">${c.time}</span>
+               </div>
+             </div>`
+        );
+        const cnt = document.getElementById(`feed-comment-count-${id}`);
+        if (cnt) { const n = parseInt(cnt.textContent.match(/\d+/)?.[0] ?? '0'); cnt.textContent = `Comment (${n + 1})`; }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => loadFeed(true));
     </script>
 </body>
 </html>

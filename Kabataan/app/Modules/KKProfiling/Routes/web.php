@@ -4,6 +4,7 @@ use App\Modules\KKProfiling\Controllers\KKProfilingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/kkprofiling-signup', [KKProfilingController::class, 'showSignup'])->name('kkprofiling.signup');
+Route::get('/api/kkprofiling/open-barangays', [KKProfilingController::class, 'openBarangays'])->name('kkprofiling.open-barangays');
 
 // Email verification
 Route::get('/kkprofiling/verify/{id}/{hash}', [KKProfilingController::class, 'verifyEmail'])->name('kkprofiling.verify');
