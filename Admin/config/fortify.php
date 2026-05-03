@@ -25,10 +25,10 @@ return [
         // Password update disabled for now
         // Features::updateProfileInformation(),
         // Features::updatePasswords(),
-        // Two-Factor Authentication ENABLED with password confirmation required
+        // Two-Factor Authentication ENABLED
         Features::twoFactorAuthentication([
             'confirm' => true,
-            'confirmPassword' => true,
+            'confirmPassword' => false,
         ]),
     ],
 ];

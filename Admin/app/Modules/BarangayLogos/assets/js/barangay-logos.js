@@ -260,6 +260,7 @@
         }
 
         // Optimistic UI
+        var wasAlreadyUploaded = card.classList.contains('has-logo');
         applyLogoToCard(index, previewDataUrl, null);
         setCardLoading(index, true);
 
@@ -286,7 +287,7 @@
             }
             // Update card with real URL and logo ID from DB
             applyLogoToCard(index, result.data.url, result.data.id);
-            var msg = card.classList.contains('has-logo') ? 'Logo successfully changed' : 'Logo successfully uploaded';
+            var msg = wasAlreadyUploaded ? 'Logo changed successfully!' : 'Logo uploaded successfully!';
             blToast(msg, 'success');
         })
         .catch(function () {
@@ -330,7 +331,7 @@
                 return;
             }
             clearLogoFromCard(index);
-            blToast('Logo successfully removed', 'success');
+            blToast('Logo deleted successfully!', 'success');
         })
         .catch(function () {
             setCardLoading(index, false);
