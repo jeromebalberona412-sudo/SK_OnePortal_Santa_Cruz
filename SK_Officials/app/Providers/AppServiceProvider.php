@@ -15,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
     {
         \Illuminate\Support\Facades\Mail::extend('brevo', function () {
             return new \Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoApiTransport(
-                (string) env('BREVO_KEY', '')
+                (string) config('services.brevo.key', env('BREVO_KEY', ''))
             );
         });
 
