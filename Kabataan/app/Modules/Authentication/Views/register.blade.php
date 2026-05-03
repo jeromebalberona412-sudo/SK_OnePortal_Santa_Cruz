@@ -72,7 +72,7 @@
                 </div>
 
                 <!-- Registration Form -->
-                <form class="youth-login-form youth-register-form" method="POST" action="{{ route('register') }}" enctype="multipart/form-data">
+                <form class="youth-login-form youth-register-form" method="POST" action="{{ route('register') }}" enctype="multipart/form-data" novalidate>
                     @csrf
 
                     <!-- STEP 1: PERSONAL & CONTACT INFORMATION -->
@@ -96,6 +96,7 @@
                                     maxlength="150"
                                     placeholder="Juan"
                                 >
+                                <div class="youth-field-error" id="first_name-error" hidden></div>
                             </div>
 
                             <div class="youth-form-group">
@@ -114,6 +115,7 @@
                                     maxlength="150"
                                     placeholder="Dela Cruz"
                                 >
+                                <div class="youth-field-error" id="last_name-error" hidden></div>
                             </div>
                         </div>
 
@@ -163,6 +165,7 @@
                                     class="youth-input"
                                     required
                                 >
+                                <div class="youth-field-error" id="birthdate-error" hidden></div>
                             </div>
 
                             <div class="youth-form-group">
@@ -201,6 +204,7 @@
                                 required
                                 placeholder="juan@example.com"
                             >
+                            <div class="youth-field-error" id="email-error" hidden></div>
                         </div>
 
                         <div class="youth-form-group">
@@ -218,6 +222,7 @@
                                 placeholder="09XX XXX XXXX"
                                 pattern="[0-9]{11}"
                             >
+                            <div class="youth-field-error" id="contact_number-error" hidden></div>
                         </div>
 
                         <div class="step-navigation">
@@ -300,6 +305,7 @@
                                 <option value="Santo Angel Norte">Santo Angel Norte</option>
                                 <option value="Santo Angel Sur">Santo Angel Sur</option>
                             </select>
+                            <div class="youth-field-error" id="barangay-error" hidden></div>
                         </div>
 
                         <div class="youth-form-group">
@@ -328,6 +334,7 @@
                                 </label>
                                 <div class="file-name-display" id="file_name_display"></div>
                             </div>
+                            <div class="youth-field-error" id="valid_id-error" hidden></div>
                         </div>
 
                         <div class="step-navigation">
@@ -380,6 +387,7 @@
                             </div>
                             <p class="field-hint">Must contain: 8+ characters, 1 uppercase letter, 1 number</p>
                             <div class="password-strength" id="password_strength"></div>
+                            <div class="youth-field-error" id="password-error" hidden></div>
                         </div>
 
                         <div class="youth-form-group">
@@ -410,6 +418,7 @@
                                     </svg>
                                 </button>
                             </div>
+                            <div class="youth-field-error" id="password_confirmation-error" hidden></div>
                         </div>
 
                         <label class="youth-checkbox agreement-checkbox">
