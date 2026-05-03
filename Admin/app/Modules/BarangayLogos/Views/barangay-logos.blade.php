@@ -132,7 +132,7 @@
                         src="{{ $existingLogo?->url ?? '' }}"
                         alt="{{ $barangay->name }} logo"
                         class="bl-logo-img"
-                        style="{{ $existingLogo && $logosVisible ?? true ? 'display:block;' : 'display:none;' }}"
+                        style="{{ $existingLogo ? 'display:block;' : 'display:none;' }}"
                     />
 
                     {{-- Hidden overlay (logos hidden state) --}}
