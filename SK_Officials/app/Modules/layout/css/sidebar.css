@@ -163,17 +163,17 @@
 
 .nav-link.active {
     background: #f4c20d;
-    color: #ffffff;
+    color: #1a2a4a;
     box-shadow: 0 4px 12px rgba(244, 194, 13, 0.5);
 }
 
 .nav-link.active .nav-icon {
-    color: #ffffff;
-    stroke: #ffffff;
+    color: #1a2a4a;
+    stroke: #1a2a4a;
 }
 
 .nav-link.active .nav-text {
-    color: #ffffff;
+    color: #1a2a4a;
 }
 
 .nav-icon {
@@ -632,13 +632,13 @@
 /* Active — solid yellow, same as top-level active */
 .nav-sublink.active {
     background: #f4c20d;
-    color: #ffffff;
+    color: #1a2a4a;
     box-shadow: 0 4px 12px rgba(244, 194, 13, 0.5);
 }
 
 .nav-sublink.active .nav-subicon {
-    color: #ffffff;
-    stroke: #ffffff;
+    color: #1a2a4a;
+    stroke: #1a2a4a;
 }
 
 .nav-subicon {

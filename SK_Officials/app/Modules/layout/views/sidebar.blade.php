@@ -59,14 +59,17 @@
                     </a>
                 </li>
 
-                <!-- Announcements -->
+                <!-- Community Feed -->
                 <li class="nav-item">
                     <a href="{{ route('announcements') }}" class="nav-link {{ request()->routeIs('announcements') ? 'active' : '' }}">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 11l18-5v6l-18 5z"></path>
-                            <path d="M6 21v-5.5"></path>
+                            <!-- Group of people: 3 persons together -->
+                            <circle cx="9" cy="6" r="3"></circle>
+                            <path d="M2 21v-2a5 5 0 0 1 10 0v2"></path>
+                            <circle cx="18" cy="7" r="2.5"></circle>
+                            <path d="M14 21v-1.5a4 4 0 0 1 8 0V21"></path>
                         </svg>
-                        <span class="nav-text">Announcements</span>
+                        <span class="nav-text">Community Feed</span>
                     </a>
                 </li>
 
