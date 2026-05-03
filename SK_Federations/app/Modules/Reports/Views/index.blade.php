@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url('/modules/reports/css/reports.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    @vite('app/Modules/Reports/assets/js/reports.js')
 </head>
 <body>
     <script>
@@ -122,6 +123,9 @@
                     <h2 style="font-size:28px;font-weight:800;color:#0d1b4b;margin-bottom:4px;">Reports</h2>
                     <p style="font-size:14px;color:#64748b;"><i class="fas fa-file-chart-line" style="margin-right:6px;color:#213F99;"></i>Barangay compliance and submission reports overview</p>
                 </div>
+                <a href="{{ route('barangay.abyip') }}" style="padding:10px 20px;background:#213F99;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;">
+                    <i class="fas fa-file-invoice-dollar"></i> Barangay ABYIP
+                </a>
             </div>
 
             {{-- Summary Cards --}}
@@ -469,8 +473,8 @@
                                     </span>
                                 </td>
                                 <td style="padding:12px 16px;text-align:center;">
-                                    <button onclick="editAbyipStatus({{ $report['id'] }})" style="background:none;border:none;color:#8b5cf6;cursor:pointer;font-size:13px;" title="Edit Status">
-                                        <i class="fas fa-edit"></i>
+                                    <button onclick="viewAbyipDetail({{ $report['id'] }})" style="background:none;border:none;color:#213F99;cursor:pointer;font-size:13px;" title="View Details">
+                                        <i class="fas fa-eye"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -663,461 +667,58 @@
         </div>
     </div>
 
+    {{-- View ABYIP Detail Modal --}}
+    <div id="viewAbyipModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:12px;width:90%;max-width:800px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+            <div style="padding:20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                <h3 style="margin:0;font-size:18px;font-weight:700;color:#0d1b4b;">ABYIP Report Details</h3>
+                <button onclick="closeViewAbyipModal()" style="background:none;border:none;font-size:20px;color:#94a3b8;cursor:pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                    <div>
+                        <p style="font-size:11px;color:#94a3b8;margin:0 0 4px 0;font-weight:600;">Report Name</p>
+                        <p style="font-size:14px;color:#0d1b4b;margin:0;font-weight:600;" id="abyipModalReportName"></p>
+                    </div>
+                    <div>
+                        <p style="font-size:11px;color:#94a3b8;margin:0 0 4px 0;font-weight:600;">Barangay</p>
+                        <p style="font-size:14px;color:#0d1b4b;margin:0;font-weight:600;" id="abyipModalBarangay"></p>
+                    </div>
+                    <div>
+                        <p style="font-size:11px;color:#94a3b8;margin:0 0 4px 0;font-weight:600;">Date Submitted</p>
+                        <p style="font-size:14px;color:#0d1b4b;margin:0;font-weight:600;" id="abyipModalDate"></p>
+                    </div>
+                    <div>
+                        <p style="font-size:11px;color:#94a3b8;margin:0 0 4px 0;font-weight:600;">Submitted By</p>
+                        <p style="font-size:14px;color:#0d1b4b;margin:0;font-weight:600;" id="abyipModalSubmittedBy"></p>
+                    </div>
+                    <div>
+                        <p style="font-size:11px;color:#94a3b8;margin:0 0 4px 0;font-weight:600;">Status</p>
+                        <span id="abyipModalStatus" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;">
+                            <i class="fas fa-circle" style="font-size:6px;"></i>
+                        </span>
+                    </div>
+                </div>
+                <div style="border-top:1px solid #e2e8f0;padding-top:20px;">
+                    <p style="font-size:11px;color:#94a3b8;margin:0 0 8px 0;font-weight:600;">PDF Preview</p>
+                    <div style="width:100%;height:500px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;">
+                        <div style="text-align:center;color:#94a3b8;">
+                            <i class="fas fa-file-pdf" style="font-size:48px;margin-bottom:12px;"></i>
+                            <p style="margin:0;font-size:13px;">PDF Preview will be displayed here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
     <script>
         window.logoutRoute = "{{ route('logout') }}";
         window.loginRoute  = "{{ route('login') }}";
-
-        const itemsPerPage = 10;
-        let accomplishmentCurrentPage = 1;
-        let abyipCurrentPage = 1;
-        let currentEditAccomplishmentId = null;
-        let currentEditAbyipId = null;
-        let pendingValidation = null; // Store pending validation data
-
-        function switchReportsTab(tab) {
-            document.getElementById('reports-accomplishment').style.display = tab === 'accomplishment' ? 'block' : 'none';
-            document.getElementById('reports-abyip').style.display = tab === 'abyip' ? 'block' : 'none';
-            const accBtn = document.getElementById('reports-tab-accomplishment');
-            const abyipBtn = document.getElementById('reports-tab-abyip');
-            accBtn.style.color = tab === 'accomplishment' ? '#213F99' : '#64748b';
-            accBtn.style.borderColor = tab === 'accomplishment' ? '#213F99' : 'transparent';
-            abyipBtn.style.color = tab === 'abyip' ? '#213F99' : '#64748b';
-            abyipBtn.style.borderColor = tab === 'abyip' ? '#213F99' : 'transparent';
-            document.getElementById('tabTimeFilter').value = 'all';
-            document.getElementById('tabStatusFilter').value = 'all';
-            document.getElementById('tabBarangayFilter').value = 'all';
-            document.getElementById('reportsSearchInput').value = '';
-            accomplishmentCurrentPage = 1;
-            abyipCurrentPage = 1;
-            filterTabReports();
-        }
-
-        function filterReportsByTime() {
-            const timeFilter = document.getElementById('reportsTimeFilter').value;
-            console.log('Filtering reports by time:', timeFilter);
-        }
-
-        function getVisibleRows(selector) {
-            const rows = document.querySelectorAll(selector);
-            return Array.from(rows).filter(row => row.style.display !== 'none');
-        }
-
-        function displayAccomplishmentPage() {
-            const visibleRows = getVisibleRows('.accomplishment-row');
-            const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
-            if (accomplishmentCurrentPage > totalPages && totalPages > 0) accomplishmentCurrentPage = totalPages;
-            if (accomplishmentCurrentPage < 1) accomplishmentCurrentPage = 1;
-
-            const allRows = document.querySelectorAll('.accomplishment-row');
-            allRows.forEach(row => row.style.display = 'none');
-
-            visibleRows.forEach((row, index) => {
-                const pageStart = (accomplishmentCurrentPage - 1) * itemsPerPage;
-                const pageEnd = pageStart + itemsPerPage;
-                if (index >= pageStart && index < pageEnd) {
-                    row.style.display = '';
-                }
-            });
-
-            const pageStart = (accomplishmentCurrentPage - 1) * itemsPerPage + 1;
-            const pageEnd = Math.min(accomplishmentCurrentPage * itemsPerPage, visibleRows.length);
-            document.getElementById('accomplishmentStart').textContent = visibleRows.length > 0 ? pageStart : 0;
-            document.getElementById('accomplishmentEnd').textContent = pageEnd;
-            
-            // Disable/enable buttons
-            const prevBtn = document.querySelector('[onclick="prevAccomplishmentPage()"]');
-            const nextBtn = document.querySelector('[onclick="nextAccomplishmentPage()"]');
-            if (prevBtn) prevBtn.disabled = accomplishmentCurrentPage === 1;
-            if (nextBtn) nextBtn.disabled = accomplishmentCurrentPage >= totalPages;
-        }
-
-        function displayAbyipPage() {
-            const visibleRows = getVisibleRows('.abyip-row');
-            const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
-            if (abyipCurrentPage > totalPages && totalPages > 0) abyipCurrentPage = totalPages;
-            if (abyipCurrentPage < 1) abyipCurrentPage = 1;
-
-            const allRows = document.querySelectorAll('.abyip-row');
-            allRows.forEach(row => row.style.display = 'none');
-
-            visibleRows.forEach((row, index) => {
-                const pageStart = (abyipCurrentPage - 1) * itemsPerPage;
-                const pageEnd = pageStart + itemsPerPage;
-                if (index >= pageStart && index < pageEnd) {
-                    row.style.display = '';
-                }
-            });
-
-            const pageStart = (abyipCurrentPage - 1) * itemsPerPage + 1;
-            const pageEnd = Math.min(abyipCurrentPage * itemsPerPage, visibleRows.length);
-            document.getElementById('abyipStart').textContent = visibleRows.length > 0 ? pageStart : 0;
-            document.getElementById('abyipEnd').textContent = pageEnd;
-            
-            // Disable/enable buttons
-            const prevBtn = document.querySelectorAll('[onclick="prevAbyipPage()"]')[0];
-            const nextBtn = document.querySelectorAll('[onclick="nextAbyipPage()"]')[0];
-            if (prevBtn) prevBtn.disabled = abyipCurrentPage === 1;
-            if (nextBtn) nextBtn.disabled = abyipCurrentPage >= totalPages;
-        }
-
-        function nextAccomplishmentPage() {
-            const visibleRows = getVisibleRows('.accomplishment-row');
-            const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
-            if (accomplishmentCurrentPage < totalPages) {
-                accomplishmentCurrentPage++;
-                displayAccomplishmentPage();
-            }
-        }
-
-        function prevAccomplishmentPage() {
-            if (accomplishmentCurrentPage > 1) {
-                accomplishmentCurrentPage--;
-                displayAccomplishmentPage();
-            }
-        }
-
-        function nextAbyipPage() {
-            const visibleRows = getVisibleRows('.abyip-row');
-            const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
-            if (abyipCurrentPage < totalPages) {
-                abyipCurrentPage++;
-                displayAbyipPage();
-            }
-        }
-
-        function prevAbyipPage() {
-            if (abyipCurrentPage > 1) {
-                abyipCurrentPage--;
-                displayAbyipPage();
-            }
-        }
-
-        function filterTabReports() {
-            const timeFilter = document.getElementById('tabTimeFilter').value;
-            const statusFilter = document.getElementById('tabStatusFilter').value;
-            const barangayFilter = document.getElementById('tabBarangayFilter').value;
-            const searchTerm = document.getElementById('reportsSearchInput').value.toLowerCase();
-            const activeTab = document.getElementById('reports-accomplishment').style.display === 'block' ? 'accomplishment' : 'abyip';
-            
-            if (activeTab === 'accomplishment') {
-                const rows = document.querySelectorAll('.accomplishment-row');
-                rows.forEach(row => {
-                    const rowStatus = row.getAttribute('data-status');
-                    const rowBarangay = row.getAttribute('data-barangay');
-                    const rowProgram = row.getAttribute('data-program');
-                    const rowDate = row.getAttribute('data-date');
-                    
-                    const statusMatch = (statusFilter === 'all' || rowStatus === statusFilter);
-                    const barangayMatch = (barangayFilter === 'all' || rowBarangay === barangayFilter);
-                    const searchMatch = rowProgram.includes(searchTerm) || rowBarangay.toLowerCase().includes(searchTerm);
-                    const timeMatch = isDateInTimeRange(rowDate, timeFilter);
-                    
-                    row.style.display = (statusMatch && barangayMatch && searchMatch && timeMatch) ? '' : 'none';
-                });
-                accomplishmentCurrentPage = 1;
-                displayAccomplishmentPage();
-            } else {
-                const rows = document.querySelectorAll('.abyip-row');
-                rows.forEach(row => {
-                    const rowStatus = row.getAttribute('data-status');
-                    const rowBarangay = row.getAttribute('data-barangay');
-                    const rowReport = row.getAttribute('data-report');
-                    const rowDate = row.getAttribute('data-date');
-                    
-                    const statusMatch = (statusFilter === 'all' || rowStatus === statusFilter);
-                    const barangayMatch = (barangayFilter === 'all' || rowBarangay === barangayFilter);
-                    const searchMatch = rowReport.includes(searchTerm) || rowBarangay.toLowerCase().includes(searchTerm);
-                    const timeMatch = isDateInTimeRange(rowDate, timeFilter);
-                    
-                    row.style.display = (statusMatch && barangayMatch && searchMatch && timeMatch) ? '' : 'none';
-                });
-                abyipCurrentPage = 1;
-                displayAbyipPage();
-            }
-        }
-
-        function isDateInTimeRange(dateStr, timeFilter) {
-            if (timeFilter === 'all') return true;
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const rowDate = new Date(dateStr);
-            rowDate.setHours(0, 0, 0, 0);
-            
-            const daysDiff = Math.floor((today - rowDate) / (1000 * 60 * 60 * 24));
-            
-            switch(timeFilter) {
-                case 'today':
-                    return daysDiff === 0;
-                case 'week':
-                    return daysDiff >= 0 && daysDiff < 7;
-                case 'month':
-                    return daysDiff >= 0 && daysDiff < 30;
-                case 'year':
-                    return daysDiff >= 0 && daysDiff < 365;
-                default:
-                    return true;
-            }
-        }
-
-        function performReportsSearch() {
-            filterTabReports();
-        }
-
-        function viewAccomplishmentDetail(id) {
-            const row = document.querySelector(`.accomplishment-row[data-id="${id}"]`);
-            if (row) {
-                document.getElementById('modalProgramName').textContent = row.getAttribute('data-program-name');
-                document.getElementById('modalBarangay').textContent = row.getAttribute('data-barangay');
-                document.getElementById('modalDate').textContent = row.getAttribute('data-date');
-                document.getElementById('modalAttendance').textContent = row.getAttribute('data-attendance');
-                document.getElementById('modalEvaluation').textContent = row.getAttribute('data-evaluation') + '/5';
-                document.getElementById('viewAccomplishmentModal').style.display = 'flex';
-            }
-        }
-
-        function closeViewAccomplishmentModal() {
-            document.getElementById('viewAccomplishmentModal').style.display = 'none';
-        }
-
-        function editAccomplishmentStatus(id) {
-            const row = document.querySelector(`.accomplishment-row[data-id="${id}"]`);
-            if (row) {
-                currentEditAccomplishmentId = id;
-                document.getElementById('editModalProgramName').textContent = row.getAttribute('data-program-name');
-                document.getElementById('editStatusSelect').value = row.getAttribute('data-status');
-                document.getElementById('editAccomplishmentModal').style.display = 'flex';
-            }
-        }
-
-        function closeEditAccomplishmentModal() {
-            document.getElementById('editAccomplishmentModal').style.display = 'none';
-            currentEditAccomplishmentId = null;
-        }
-
-        function saveAccomplishmentStatus() {
-            const newStatus = document.getElementById('editStatusSelect').value;
-            let rejectionReason = '';
-            
-            if (newStatus === 'rejected') {
-                rejectionReason = document.getElementById('accomplishmentRejectionReason').value;
-                if (!rejectionReason) {
-                    alert('Please select a reason for rejection');
-                    return;
-                }
-                if (rejectionReason === 'Others') {
-                    const otherReason = document.getElementById('accomplishmentOtherReasonText').value.trim();
-                    if (!otherReason) {
-                        alert('Please specify the rejection reason');
-                        return;
-                    }
-                    rejectionReason = otherReason;
-                }
-            }
-            
-            // Close edit modal first
-            document.getElementById('editAccomplishmentModal').style.display = 'none';
-            
-            // Show validation modal instead of saving directly
-            const row = document.querySelector(`.accomplishment-row[data-id="${currentEditAccomplishmentId}"]`);
-            if (row) {
-                const programName = row.getAttribute('data-program-name');
-                const statusText = document.querySelector(`#editStatusSelect option[value="${newStatus}"]`).textContent;
-                
-                pendingValidation = {
-                    type: 'accomplishment',
-                    id: currentEditAccomplishmentId,
-                    status: newStatus,
-                    rejectionReason: rejectionReason,
-                    programName: programName
-                };
-                
-                document.getElementById('validationReportName').textContent = programName;
-                document.getElementById('validationNewStatus').textContent = statusText;
-                document.getElementById('editValidationModal').style.display = 'flex';
-            }
-        }
-
-        function handleAccomplishmentStatusChange() {
-            const status = document.getElementById('editStatusSelect').value;
-            const reasonDiv = document.getElementById('accomplishmentRejectionReasonDiv');
-            if (status === 'rejected') {
-                reasonDiv.style.display = 'block';
-            } else {
-                reasonDiv.style.display = 'none';
-                document.getElementById('accomplishmentOtherReasonDiv').style.display = 'none';
-            }
-        }
-
-        function handleAccomplishmentReasonChange() {
-            const reason = document.getElementById('accomplishmentRejectionReason').value;
-            const otherReasonDiv = document.getElementById('accomplishmentOtherReasonDiv');
-            if (reason === 'Others') {
-                otherReasonDiv.style.display = 'block';
-                document.getElementById('accomplishmentOtherReasonText').value = '';
-            } else {
-                otherReasonDiv.style.display = 'none';
-            }
-        }
-
-        function editAbyipStatus(id) {
-            const row = document.querySelector(`.abyip-row[data-id="${id}"]`);
-            if (row) {
-                currentEditAbyipId = id;
-                document.getElementById('editAbyipModalReportName').textContent = row.getAttribute('data-report-name');
-                document.getElementById('editAbyipStatusSelect').value = row.getAttribute('data-status');
-                document.getElementById('editAbyipModal').style.display = 'flex';
-            }
-        }
-
-        function closeEditAbyipModal() {
-            document.getElementById('editAbyipModal').style.display = 'none';
-            currentEditAbyipId = null;
-        }
-
-        function saveAbyipStatus() {
-            const newStatus = document.getElementById('editAbyipStatusSelect').value;
-            let rejectionReason = '';
-            
-            if (newStatus === 'rejected') {
-                rejectionReason = document.getElementById('abyipRejectionReason').value;
-                if (!rejectionReason) {
-                    alert('Please select a reason for rejection');
-                    return;
-                }
-                if (rejectionReason === 'Others') {
-                    const otherReason = document.getElementById('abyipOtherReasonText').value.trim();
-                    if (!otherReason) {
-                        alert('Please specify the rejection reason');
-                        return;
-                    }
-                    rejectionReason = otherReason;
-                }
-            }
-            
-            // Close edit modal first
-            document.getElementById('editAbyipModal').style.display = 'none';
-            
-            // Show validation modal instead of saving directly
-            const row = document.querySelector(`.abyip-row[data-id="${currentEditAbyipId}"]`);
-            if (row) {
-                const reportName = row.getAttribute('data-report-name');
-                const statusText = document.querySelector(`#editAbyipStatusSelect option[value="${newStatus}"]`).textContent;
-                
-                pendingValidation = {
-                    type: 'abyip',
-                    id: currentEditAbyipId,
-                    status: newStatus,
-                    rejectionReason: rejectionReason,
-                    reportName: reportName
-                };
-                
-                document.getElementById('validationReportName').textContent = reportName;
-                document.getElementById('validationNewStatus').textContent = statusText;
-                document.getElementById('editValidationModal').style.display = 'flex';
-            }
-        }
-
-        function handleAbyipStatusChange() {
-            const status = document.getElementById('editAbyipStatusSelect').value;
-            const reasonDiv = document.getElementById('abyipRejectionReasonDiv');
-            if (status === 'rejected') {
-                reasonDiv.style.display = 'block';
-            } else {
-                reasonDiv.style.display = 'none';
-                document.getElementById('abyipOtherReasonDiv').style.display = 'none';
-            }
-        }
-
-        function handleAbyipReasonChange() {
-            const reason = document.getElementById('abyipRejectionReason').value;
-            const otherReasonDiv = document.getElementById('abyipOtherReasonDiv');
-            if (reason === 'Others') {
-                otherReasonDiv.style.display = 'block';
-                document.getElementById('abyipOtherReasonText').value = '';
-            } else {
-                otherReasonDiv.style.display = 'none';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            displayAccomplishmentPage();
-            displayAbyipPage();
-        });
-
-        function toggleMobileSummary(section) {
-            const content = document.getElementById(section + 'Content');
-            const chevron = document.getElementById(section + 'Chevron');
-            
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                chevron.style.transform = 'rotate(180deg)';
-            } else {
-                content.style.display = 'none';
-                chevron.style.transform = 'rotate(0deg)';
-            }
-        }
-
-        function cancelEditValidation() {
-            document.getElementById('editValidationModal').style.display = 'none';
-            pendingValidation = null;
-        }
-
-        function confirmEditValidation() {
-            if (!pendingValidation) return;
-            
-            // Show loading screen
-            LoadingScreen.show('Updating Status', 'Please wait...');
-            
-            // Simulate processing delay
-            setTimeout(() => {
-                const statusColors = {
-                    'compliant': { bg: '#dcfce7', color: '#15803d', text: 'Compliant' },
-                    'partial': { bg: '#fef3c7', color: '#b45309', text: 'Partial' },
-                    'rejected': { bg: '#fee2e2', color: '#dc2626', text: 'Rejected' },
-                    'non-compliant': { bg: '#fee2e2', color: '#dc2626', text: 'Non-Compliant' }
-                };
-                
-                if (pendingValidation.type === 'accomplishment') {
-                    const row = document.querySelector(`.accomplishment-row[data-id="${pendingValidation.id}"]`);
-                    if (row) {
-                        row.setAttribute('data-status', pendingValidation.status);
-                        row.setAttribute('data-rejection-reason', pendingValidation.rejectionReason);
-                        const statusCell = row.querySelector('span');
-                        const colors = statusColors[pendingValidation.status];
-                        statusCell.style.background = colors.bg;
-                        statusCell.style.color = colors.color;
-                        statusCell.textContent = colors.text;
-                    }
-                } else if (pendingValidation.type === 'abyip') {
-                    const row = document.querySelector(`.abyip-row[data-id="${pendingValidation.id}"]`);
-                    if (row) {
-                        row.setAttribute('data-status', pendingValidation.status);
-                        row.setAttribute('data-rejection-reason', pendingValidation.rejectionReason);
-                        const statusCell = row.querySelector('span');
-                        const colors = statusColors[pendingValidation.status];
-                        statusCell.style.background = colors.bg;
-                        statusCell.style.color = colors.color;
-                        statusCell.textContent = colors.text;
-                    }
-                }
-                
-                // Hide loading screen
-                LoadingScreen.hide();
-                
-                // Close validation modal
-                document.getElementById('editValidationModal').style.display = 'none';
-                
-                // Show success message
-                alert('Status updated successfully!');
-                
-                // Clear pending validation
-                pendingValidation = null;
-            }, 1500);
-        }
     </script>
 </body>
 </html>
