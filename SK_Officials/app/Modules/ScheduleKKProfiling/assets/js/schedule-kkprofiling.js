@@ -30,44 +30,78 @@ function formatTime(timeStr) {
 
 function formatDate(dateStr) {
     if (!dateStr) return '—';
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// ── CSRF helper ────────────────────────────────────────────────────────────
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
+
+async function apiFetch(url, options = {}) {
+    const res = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken(),
+            'Accept': 'application/json',
+            ...options.headers,
+        },
+        ...options,
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    return res.json();
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
 function initializeScheduleKKProfiling() {
     let schedules = [];
-    let nextId = 1;
     let activeId = null;
     let currentPage = 1;
     const perPage = 10;
 
-    // Filter state
     let filterStatus = '';
     let filterSearch = '';
 
     // DOM refs
-    const tbody       = document.getElementById('skkpTableBody');
-    const searchInput = document.getElementById('skkpSearch');
+    const tbody        = document.getElementById('skkpTableBody');
+    const searchInput  = document.getElementById('skkpSearch');
     const statusFilter = document.getElementById('skkpStatusFilter');
-    const createBtn   = document.getElementById('skkpCreateBtn');
+    const createBtn    = document.getElementById('skkpCreateBtn');
 
-    // Form modal
-    const formModal    = document.getElementById('skkpFormModal');
-    const formTitle    = document.getElementById('skkpFormModalTitle');
-    const formSaveBtn  = document.getElementById('skkpFormSaveBtn');
+    const formModal     = document.getElementById('skkpFormModal');
+    const formTitle     = document.getElementById('skkpFormModalTitle');
+    const formSaveBtn   = document.getElementById('skkpFormSaveBtn');
     const formCancelBtn = document.getElementById('skkpFormCancelBtn');
     const formRestoreBtn = document.getElementById('skkpFormRestoreBtn');
-    const editIdInput  = document.getElementById('skkpEditId');
+    const editIdInput   = document.getElementById('skkpEditId');
 
-    // View modal
-    const viewModal = document.getElementById('skkpViewModal');
+    const viewModal     = document.getElementById('skkpViewModal');
     const viewRestoreBtn = document.getElementById('skkpViewRestoreBtn');
 
-    // Delete modal
     const deleteModal      = document.getElementById('skkpDeleteModal');
     const deleteCancelBtn  = document.getElementById('skkpDeleteCancelBtn');
     const deleteConfirmBtn = document.getElementById('skkpDeleteConfirmBtn');
+
+    // ── API ─────────────────────────────────────────────────────────────────
+    async function loadData() {
+        try {
+            const res = await apiFetch('/api/schedule-kk-profiling/data');
+            schedules = res.data.map(s => ({
+                id:          s.id,
+                dateStart:   s.date_start,
+                dateExpiry:  s.date_expiry,
+                link:        s.link,
+                status:      s.status,
+            }));
+            renderTable();
+        } catch (e) {
+            showToast('Failed to load schedules.', 'error');
+        }
+    }
 
     // ── Render ──────────────────────────────────────────────────────────────
     function getFiltered() {
@@ -106,11 +140,9 @@ function initializeScheduleKKProfiling() {
             page.forEach(s => {
                 const tr = document.createElement('tr');
                 const statusClass = s.status.toLowerCase().replace(/\s+/g, '-');
-
                 const linkHtml = s.link
                     ? `<a href="${s.link}" target="_blank" rel="noopener noreferrer" class="skkp-link skkp-link-full">${s.link}</a>`
                     : '—';
-
                 tr.innerHTML = `
                     <td>${formatDate(s.dateStart)}</td>
                     <td>${formatDate(s.dateExpiry)}</td>
@@ -149,14 +181,11 @@ function initializeScheduleKKProfiling() {
                 ? 'No records found'
                 : `Showing ${start}–${end} of ${total} records`;
         }
-
         const prevBtn  = document.getElementById('skkpPrevBtn');
         const nextBtn  = document.getElementById('skkpNextBtn');
         const pageNums = document.getElementById('skkpPageNumbers');
-
         if (prevBtn) prevBtn.disabled = currentPage === 1;
         if (nextBtn) nextBtn.disabled = currentPage === totalPages;
-
         if (pageNums) {
             pageNums.innerHTML = '';
             const s = Math.max(1, currentPage - 2);
@@ -184,16 +213,11 @@ function initializeScheduleKKProfiling() {
     function resetModalSize() {
         isMaximized = false;
         if (formModalBox) {
-            formModalBox.style.maxWidth    = '';
-            formModalBox.style.maxHeight   = '';
-            formModalBox.style.width       = '';
-            formModalBox.style.height      = '';
+            formModalBox.style.maxWidth = formModalBox.style.maxHeight =
+            formModalBox.style.width    = formModalBox.style.height    =
             formModalBox.style.borderRadius = '';
         }
-        if (formRestoreBtn) {
-            formRestoreBtn.innerHTML = maximizeIcon;
-            formRestoreBtn.title = 'Maximize / Restore';
-        }
+        if (formRestoreBtn) { formRestoreBtn.innerHTML = maximizeIcon; formRestoreBtn.title = 'Maximize / Restore'; }
     }
 
     if (formRestoreBtn) {
@@ -201,37 +225,27 @@ function initializeScheduleKKProfiling() {
             isMaximized = !isMaximized;
             if (formModalBox) {
                 if (isMaximized) {
-                    formModalBox.style.maxWidth    = '100vw';
-                    formModalBox.style.maxHeight   = '100vh';
-                    formModalBox.style.width       = '100vw';
-                    formModalBox.style.height      = '100vh';
+                    formModalBox.style.maxWidth = formModalBox.style.width  = '100vw';
+                    formModalBox.style.maxHeight = formModalBox.style.height = '100vh';
                     formModalBox.style.borderRadius = '0';
                     formRestoreBtn.innerHTML = restoreIcon;
                     formRestoreBtn.title = 'Restore Down';
-                } else {
-                    resetModalSize();
-                }
+                } else { resetModalSize(); }
             }
         });
     }
 
-    // ── View modal maximize / restore ───────────────────────────────────────
     let isViewMaximized = false;
     const viewModalBox = viewModal ? viewModal.querySelector('.skkp-view-modal-box') : null;
 
     function resetViewModalSize() {
         isViewMaximized = false;
         if (viewModalBox) {
-            viewModalBox.style.maxWidth    = '';
-            viewModalBox.style.maxHeight   = '';
-            viewModalBox.style.width       = '';
-            viewModalBox.style.height      = '';
+            viewModalBox.style.maxWidth = viewModalBox.style.maxHeight =
+            viewModalBox.style.width    = viewModalBox.style.height    =
             viewModalBox.style.borderRadius = '';
         }
-        if (viewRestoreBtn) {
-            viewRestoreBtn.innerHTML = maximizeIcon;
-            viewRestoreBtn.title = 'Maximize / Restore';
-        }
+        if (viewRestoreBtn) { viewRestoreBtn.innerHTML = maximizeIcon; viewRestoreBtn.title = 'Maximize / Restore'; }
     }
 
     if (viewRestoreBtn) {
@@ -239,16 +253,12 @@ function initializeScheduleKKProfiling() {
             isViewMaximized = !isViewMaximized;
             if (viewModalBox) {
                 if (isViewMaximized) {
-                    viewModalBox.style.maxWidth    = '100vw';
-                    viewModalBox.style.maxHeight   = '100vh';
-                    viewModalBox.style.width       = '100vw';
-                    viewModalBox.style.height      = '100vh';
+                    viewModalBox.style.maxWidth = viewModalBox.style.width  = '100vw';
+                    viewModalBox.style.maxHeight = viewModalBox.style.height = '100vh';
                     viewModalBox.style.borderRadius = '0';
                     viewRestoreBtn.innerHTML = restoreIcon;
                     viewRestoreBtn.title = 'Restore Down';
-                } else {
-                    resetViewModalSize();
-                }
+                } else { resetViewModalSize(); }
             }
         });
     }
@@ -265,19 +275,34 @@ function initializeScheduleKKProfiling() {
     });
 
     // ── Form helpers ────────────────────────────────────────────────────────
-    function getFormField(id) {
-        const el = document.getElementById(id);
-        return el ? el.value.trim() : '';
-    }
-
-    function setFormField(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.value = val || '';
-    }
-
+    const getFormField = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    const setFormField = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
     function clearForm() {
         ['skkpFormDateStart', 'skkpFormDateExpiry', 'skkpFormLink'].forEach(id => setFormField(id, ''));
         setFormField('skkpFormStatus', 'Upcoming');
+    }
+
+    // ── Status hint ─────────────────────────────────────────────────────────
+    const statusHints = {
+        Upcoming:    { cls: 'hint-info',    msg: '📅 Scheduled but not yet open. Kabataan will see the date range but cannot sign up yet.' },
+        Ongoing:     { cls: 'hint-success', msg: '✅ Sign-up is currently open. Kabataan can select this barangay and submit the form.' },
+        Completed:   { cls: 'hint-warning', msg: '⚠️ Profiling is done. Sign-up will be closed for this barangay.' },
+        Cancelled:   { cls: 'hint-danger',  msg: '🚫 Profiling is cancelled. Sign-up will be closed for this barangay.' },
+        Rescheduled: { cls: 'hint-warning', msg: '🔄 Profiling has been moved. Update the dates to reflect the new schedule.' },
+    };
+
+    const statusHintEl = document.getElementById('skkpStatusHint');
+
+    function updateStatusHint(val) {
+        if (!statusHintEl) return;
+        const h = statusHints[val];
+        statusHintEl.className = 'skkp-status-hint' + (h ? ' ' + h.cls : '');
+        statusHintEl.textContent = h ? h.msg : '';
+    }
+
+    const statusSelectEl = document.getElementById('skkpFormStatus');
+    if (statusSelectEl) {
+        statusSelectEl.addEventListener('change', () => updateStatusHint(statusSelectEl.value));
     }
 
     // ── Create ──────────────────────────────────────────────────────────────
@@ -287,6 +312,7 @@ function initializeScheduleKKProfiling() {
             formTitle.textContent = 'Create Schedule';
             formSaveBtn.textContent = 'Save Schedule';
             clearForm();
+            updateStatusHint('Upcoming');
             openModal(formModal);
         });
     }
@@ -294,46 +320,49 @@ function initializeScheduleKKProfiling() {
     if (formCancelBtn) formCancelBtn.addEventListener('click', () => {
         closeModal(formModal);
         resetModalSize();
+        if (statusHintEl) statusHintEl.className = 'skkp-status-hint';
     });
-    
+
     if (formSaveBtn) {
-        formSaveBtn.addEventListener('click', () => {
+        formSaveBtn.addEventListener('click', async () => {
             const dateStart  = getFormField('skkpFormDateStart');
             const dateExpiry = getFormField('skkpFormDateExpiry');
             const link       = getFormField('skkpFormLink');
             const status     = getFormField('skkpFormStatus') || 'Upcoming';
 
-            // Validation
             if (!dateStart || !dateExpiry || !status) {
                 showToast('Please fill in all required fields.', 'error');
                 return;
             }
-
             if (dateExpiry < dateStart) {
                 showToast('Date Expiry must be on or after Date Start.', 'error');
                 return;
             }
-
             if (link && !isValidUrl(link)) {
                 showToast('Please enter a valid URL (e.g. https://example.com).', 'error');
                 return;
             }
 
             const id = editIdInput.value ? parseInt(editIdInput.value, 10) : null;
+            const payload = { date_start: dateStart, date_expiry: dateExpiry, link: link || null, status };
 
-            if (id) {
-                const idx = schedules.findIndex(s => s.id === id);
-                if (idx !== -1) {
-                    schedules[idx] = { id, dateStart, dateExpiry, link, status };
+            try {
+                formSaveBtn.disabled = true;
+                if (id) {
+                    await apiFetch(`/api/schedule-kk-profiling/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
                     showToast('Schedule updated successfully!', 'success');
+                } else {
+                    await apiFetch('/api/schedule-kk-profiling', { method: 'POST', body: JSON.stringify(payload) });
+                    showToast('Schedule created successfully!', 'success');
                 }
-            } else {
-                schedules.push({ id: nextId++, dateStart, dateExpiry, link, status });
-                showToast('Schedule created successfully!', 'success');
+                closeModal(formModal);
+                resetModalSize();
+                await loadData();
+            } catch (e) {
+                showToast(e.message || 'Failed to save schedule.', 'error');
+            } finally {
+                formSaveBtn.disabled = false;
             }
-
-            closeModal(formModal);
-            renderTable();
         });
     }
 
@@ -361,6 +390,7 @@ function initializeScheduleKKProfiling() {
             setFormField('skkpFormDateExpiry', sched.dateExpiry);
             setFormField('skkpFormLink',       sched.link);
             setFormField('skkpFormStatus',     sched.status);
+            updateStatusHint(sched.status);
             openModal(formModal);
         } else if (action === 'delete') {
             openModal(deleteModal);
@@ -369,24 +399,15 @@ function initializeScheduleKKProfiling() {
 
     // ── View modal ──────────────────────────────────────────────────────────
     function populateViewModal(s) {
-        const set = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val || '—';
-        };
-
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '—'; };
         set('skkpViewDateStart',  formatDate(s.dateStart));
         set('skkpViewDateExpiry', formatDate(s.dateExpiry));
-
-        // Link
         const linkEl = document.getElementById('skkpViewLink');
         if (linkEl) {
-            if (s.link) {
-                linkEl.innerHTML = `<a href="${s.link}" target="_blank" rel="noopener noreferrer" class="skkp-link">${s.link}</a>`;
-            } else {
-                linkEl.textContent = '—';
-            }
+            linkEl.innerHTML = s.link
+                ? `<a href="${s.link}" target="_blank" rel="noopener noreferrer" class="skkp-link">${s.link}</a>`
+                : '—';
         }
-        // Status badge
         const statusEl = document.getElementById('skkpViewStatus');
         if (statusEl) {
             const cls = s.status.toLowerCase().replace(/\s+/g, '-');
@@ -395,31 +416,29 @@ function initializeScheduleKKProfiling() {
     }
 
     // ── Delete ──────────────────────────────────────────────────────────────
-    if (deleteCancelBtn)  deleteCancelBtn.addEventListener('click', () => closeModal(deleteModal));
+    if (deleteCancelBtn) deleteCancelBtn.addEventListener('click', () => closeModal(deleteModal));
     if (deleteConfirmBtn) {
-        deleteConfirmBtn.addEventListener('click', () => {
-            schedules = schedules.filter(s => s.id !== activeId);
-            closeModal(deleteModal);
-            renderTable();
-            showToast('Schedule deleted successfully!', 'success');
+        deleteConfirmBtn.addEventListener('click', async () => {
+            try {
+                deleteConfirmBtn.disabled = true;
+                await apiFetch(`/api/schedule-kk-profiling/${activeId}`, { method: 'DELETE' });
+                closeModal(deleteModal);
+                showToast('Schedule deleted successfully!', 'success');
+                await loadData();
+            } catch (e) {
+                showToast('Failed to delete schedule.', 'error');
+            } finally {
+                deleteConfirmBtn.disabled = false;
+            }
         });
     }
 
     // ── Filters ─────────────────────────────────────────────────────────────
     if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            filterSearch = searchInput.value.trim();
-            currentPage = 1;
-            renderTable();
-        });
+        searchInput.addEventListener('input', () => { filterSearch = searchInput.value.trim(); currentPage = 1; renderTable(); });
     }
-
     if (statusFilter) {
-        statusFilter.addEventListener('change', () => {
-            filterStatus = statusFilter.value;
-            currentPage = 1;
-            renderTable();
-        });
+        statusFilter.addEventListener('change', () => { filterStatus = statusFilter.value; currentPage = 1; renderTable(); });
     }
 
     // ── Pagination ──────────────────────────────────────────────────────────
@@ -429,10 +448,8 @@ function initializeScheduleKKProfiling() {
     if (nextBtn) nextBtn.addEventListener('click', () => { currentPage++; renderTable(); });
 
     // ── Utility ─────────────────────────────────────────────────────────────
-    function isValidUrl(str) {
-        try { new URL(str); return true; } catch { return false; }
-    }
+    function isValidUrl(str) { try { new URL(str); return true; } catch { return false; } }
 
-    // ── Initial render ──────────────────────────────────────────────────────
-    renderTable();
+    // ── Boot ────────────────────────────────────────────────────────────────
+    loadData();
 }

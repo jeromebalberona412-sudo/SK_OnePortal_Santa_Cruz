@@ -911,3 +911,17 @@ body {
 @media (min-width: 769px) {
     .main-content.sidebar-collapsed { margin-left: 80px; }
 }
+
+/* ── Status hint ─────────────────────────────────────────────────────────── */
+.skkp-status-hint {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: none;
+    line-height: 1.4;
+}
+.skkp-status-hint.hint-info    { display: block; background: #e3f2fd; color: #1565c0; border-left: 3px solid #1565c0; }
+.skkp-status-hint.hint-success { display: block; background: #e8f5e9; color: #2e7d32; border-left: 3px solid #2e7d32; }
+.skkp-status-hint.hint-warning { display: block; background: #fff8e1; color: #e65100; border-left: 3px solid #e65100; }
+.skkp-status-hint.hint-danger  { display: block; background: #fce4ec; color: #b71c1c; border-left: 3px solid #b71c1c; }

@@ -1,50 +1,52 @@
 /**
  * barangay-logos.js
- * Frontend-only. Uses addEventListener (not onclick attrs) so that
- * fileInput.click() is always called synchronously inside a user gesture.
+ * Handles UI interactions and calls the backend API for upload/delete.
  */
 
 (function () {
     'use strict';
 
+    var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
     /* ── Shared state ──────────────────────────────────────── */
-    var uploadedCount   = 0;
-    var logosVisible    = true;
+    var uploadedCount  = 0;
+    var logosVisible   = true;
 
     // Change-logo flow
-    var selectedFileInput  = null;   // the <input type="file"> to trigger
-    var selectedCardIndex  = null;   // which card index
-    var isChangingLogo     = false;  // true when coming from Change Logo confirm
+    var selectedFileInput = null;
+    var selectedCardIndex = null;
+    var isChangingLogo    = false;
 
     // Remove-logo flow
-    var removeCardIndex    = null;
+    var removeCardIndex = null;
+
+    // Pending upload (preview modal)
+    var pendingIndex   = null;
+    var pendingFile    = null;
+    var pendingDataUrl = null;
 
     /* ══════════════════════════════════════════════════════════
-       INIT — wire everything up after DOM is ready
+       INIT
     ══════════════════════════════════════════════════════════ */
     document.addEventListener('DOMContentLoaded', function () {
 
         updateCounter();
 
-        // Sidebar active state
         var sidebarLink = document.querySelector('[data-nav-key="barangay-logos"]');
         if (sidebarLink) sidebarLink.classList.add('active');
 
-        /* ── Change-logo confirm button ── */
+        /* ── Change-logo confirm ── */
         var changeConfirmBtn = document.getElementById('blChangeConfirmBtn');
         if (changeConfirmBtn) {
             changeConfirmBtn.addEventListener('click', function () {
-                // Hide modal instantly — must stay synchronous for file picker
                 hideModal('blChangeModal');
-
                 if (selectedFileInput) {
-                    isChangingLogo = true;       // flag: next file pick = change, not fresh upload
-                    selectedFileInput.click();   // 🔥 triggers file picker
+                    isChangingLogo = true;
+                    selectedFileInput.click();
                 }
             });
         }
 
-        /* ── Change-logo cancel button ── */
         var changeCancelBtn = document.getElementById('blChangeCancelBtn');
         if (changeCancelBtn) {
             changeCancelBtn.addEventListener('click', function () {
@@ -55,20 +57,18 @@
             });
         }
 
-        /* ── Remove-logo confirm button ── */
+        /* ── Remove-logo confirm ── */
         var removeConfirmBtn = document.getElementById('blRemoveConfirmBtn');
         if (removeConfirmBtn) {
             removeConfirmBtn.addEventListener('click', function () {
                 hideModal('blRemoveModal');
                 if (removeCardIndex !== null) {
                     doRemoveLogo(removeCardIndex);
-                    blToast('Logo successfully removed', 'success');
                     removeCardIndex = null;
                 }
             });
         }
 
-        /* ── Remove-logo cancel button ── */
         var removeCancelBtn = document.getElementById('blRemoveCancelBtn');
         if (removeCancelBtn) {
             removeCancelBtn.addEventListener('click', function () {
@@ -77,7 +77,7 @@
             });
         }
 
-        /* ── Upload confirm button (fresh upload preview modal) ── */
+        /* ── Upload confirm (preview modal) ── */
         var uploadConfirmBtn = document.getElementById('blUploadConfirmBtn');
         if (uploadConfirmBtn) {
             uploadConfirmBtn.addEventListener('click', function () {
@@ -85,19 +85,14 @@
             });
         }
 
-        /* ── Upload cancel button ── */
         var uploadCancelBtn = document.getElementById('blUploadCancelBtn');
         if (uploadCancelBtn) {
-            uploadCancelBtn.addEventListener('click', function () {
-                blCancelUpload();
-            });
+            uploadCancelBtn.addEventListener('click', function () { blCancelUpload(); });
         }
 
         var uploadCancelBtn2 = document.getElementById('blUploadCancelBtn2');
         if (uploadCancelBtn2) {
-            uploadCancelBtn2.addEventListener('click', function () {
-                blCancelUpload();
-            });
+            uploadCancelBtn2.addEventListener('click', function () { blCancelUpload(); });
         }
 
         /* ── Backdrop clicks ── */
@@ -105,12 +100,11 @@
             var el = document.getElementById(id);
             if (!el) return;
             el.addEventListener('click', function (e) {
-                if (e.target === el) {
-                    if (id === 'blChangeModal')  { selectedFileInput = null; selectedCardIndex = null; }
-                    if (id === 'blRemoveModal')  { removeCardIndex = null; }
-                    if (id === 'blConfirmModal') { blCancelUpload(); return; }
-                    hideModal(id);
-                }
+                if (e.target !== el) return;
+                if (id === 'blChangeModal')  { selectedFileInput = null; selectedCardIndex = null; }
+                if (id === 'blRemoveModal')  { removeCardIndex = null; }
+                if (id === 'blConfirmModal') { blCancelUpload(); return; }
+                hideModal(id);
             });
         });
 
@@ -126,13 +120,13 @@
             });
         });
 
-        /* ── File inputs: wire change event on each card ── */
+        /* ── File inputs ── */
         document.querySelectorAll('.bl-file-input').forEach(function (input) {
             input.addEventListener('change', function () {
                 var idx  = parseInt(this.getAttribute('data-index'), 10);
                 var name = this.getAttribute('data-name') || '';
                 var file = this.files[0];
-                this.value = ''; // reset so same file can be re-selected
+                this.value = '';
 
                 if (!file) return;
 
@@ -143,11 +137,14 @@
 
                 var reader = new FileReader();
                 reader.onload = function (e) {
-                    // Always apply directly — no second confirmation
-                    var msg = isChangingLogo ? 'Logo successfully changed' : 'Logo successfully uploaded';
-                    isChangingLogo = false;
-                    applyLogoToCard(idx, e.target.result);
-                    blToast(msg, 'success');
+                    if (isChangingLogo) {
+                        // Skip preview modal for change — upload directly
+                        isChangingLogo = false;
+                        doUploadLogo(idx, file, e.target.result);
+                    } else {
+                        // Show preview modal for fresh upload
+                        showUploadPreviewModal(idx, name, file, e.target.result);
+                    }
                 };
                 reader.onerror = function () {
                     blToast('Failed to read the image. Please try again.', 'error');
@@ -165,12 +162,10 @@
 
                 if (card && card.classList.contains('has-logo')) {
                     e.preventDefault();
-                    // Show change-logo confirmation
                     selectedFileInput = document.getElementById('fileInput-' + idx);
                     selectedCardIndex = idx;
                     showChangeModal(name);
                 }
-                // else: label's for= opens file picker normally
             });
         });
 
@@ -187,11 +182,8 @@
         /* ── Hide/Show toggle ── */
         var toggleBtn = document.getElementById('toggleLogosBtn');
         if (toggleBtn) {
-            // Logos are visible on load → start green
             toggleBtn.classList.add('logos-visible');
-            toggleBtn.addEventListener('click', function () {
-                blToggleLogos();
-            });
+            toggleBtn.addEventListener('click', function () { blToggleLogos(); });
         }
 
         /* ── Search ── */
@@ -218,20 +210,230 @@
     }); // end DOMContentLoaded
 
     /* ══════════════════════════════════════════════════════════
-       SHOW MODALS
+       UPLOAD PREVIEW MODAL
+    ══════════════════════════════════════════════════════════ */
+    function showUploadPreviewModal(idx, name, file, dataUrl) {
+        pendingIndex   = idx;
+        pendingFile    = file;
+        pendingDataUrl = dataUrl;
+
+        var subtitle = document.getElementById('blModalSubtitle');
+        var previewImg = document.getElementById('blModalPreviewImg');
+        var fileName = document.getElementById('blModalFileName');
+        var fileSize = document.getElementById('blModalFileSize');
+
+        if (subtitle)   subtitle.textContent  = name;
+        if (previewImg) previewImg.src         = dataUrl;
+        if (fileName)   fileName.textContent   = file.name;
+        if (fileSize)   fileSize.textContent   = formatFileSize(file.size);
+
+        showModal(document.getElementById('blConfirmModal'));
+    }
+
+    window.blConfirmUpload = function () {
+        if (pendingIndex === null || !pendingFile) return;
+        doUploadLogo(pendingIndex, pendingFile, pendingDataUrl);
+        hideModal('blConfirmModal');
+        pendingIndex   = null;
+        pendingFile    = null;
+        pendingDataUrl = null;
+    };
+
+    window.blCancelUpload = function () {
+        pendingIndex   = null;
+        pendingFile    = null;
+        pendingDataUrl = null;
+        hideModal('blConfirmModal');
+    };
+
+    /* ══════════════════════════════════════════════════════════
+       API: UPLOAD
+    ══════════════════════════════════════════════════════════ */
+    function doUploadLogo(index, file, previewDataUrl) {
+        var card = document.getElementById('card-' + index);
+        if (!card) return;
+
+        var barangayId = card.getAttribute('data-barangay-id');
+        if (!barangayId) {
+            blToast('Barangay not found in database. Please refresh.', 'error');
+            return;
+        }
+
+        // Optimistic UI
+        applyLogoToCard(index, previewDataUrl, null);
+        setCardLoading(index, true);
+
+        var formData = new FormData();
+        formData.append('barangay_id', barangayId);
+        formData.append('logo', file);
+
+        fetch('/barangay-logos/upload', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            body: formData,
+        })
+        .then(function (res) {
+            return res.json().then(function (data) {
+                return { ok: res.ok, data: data };
+            });
+        })
+        .then(function (result) {
+            setCardLoading(index, false);
+            if (!result.ok) {
+                revertCard(index);
+                blToast(result.data.message || 'Upload failed.', 'error');
+                return;
+            }
+            // Update card with real URL and logo ID from DB
+            applyLogoToCard(index, result.data.url, result.data.id);
+            var msg = card.classList.contains('has-logo') ? 'Logo successfully changed' : 'Logo successfully uploaded';
+            blToast(msg, 'success');
+        })
+        .catch(function () {
+            setCardLoading(index, false);
+            revertCard(index);
+            blToast('Upload failed. Please try again.', 'error');
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       API: DELETE
+    ══════════════════════════════════════════════════════════ */
+    function doRemoveLogo(index) {
+        var card = document.getElementById('card-' + index);
+        if (!card) return;
+
+        var logoId = card.getAttribute('data-logo-id');
+        if (!logoId) {
+            blToast('Logo ID not found. Please refresh.', 'error');
+            return;
+        }
+
+        setCardLoading(index, true);
+
+        fetch('/barangay-logos/' + logoId, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            },
+        })
+        .then(function (res) {
+            return res.json().then(function (data) {
+                return { ok: res.ok, data: data };
+            });
+        })
+        .then(function (result) {
+            setCardLoading(index, false);
+            if (!result.ok) {
+                blToast(result.data.message || 'Delete failed.', 'error');
+                return;
+            }
+            clearLogoFromCard(index);
+            blToast('Logo successfully removed', 'success');
+        })
+        .catch(function () {
+            setCardLoading(index, false);
+            blToast('Delete failed. Please try again.', 'error');
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       CARD DOM HELPERS
+    ══════════════════════════════════════════════════════════ */
+    function applyLogoToCard(index, url, logoId) {
+        var img         = document.getElementById('img-'           + index);
+        var placeholder = document.getElementById('placeholder-'   + index);
+        var removeBtn   = document.getElementById('removeBtn-'     + index);
+        var card        = document.getElementById('card-'          + index);
+        var btnText     = document.getElementById('uploadBtnText-' + index);
+        var overlay     = document.getElementById('overlay-'       + index);
+
+        if (!img || !placeholder || !removeBtn || !card) return;
+
+        img.src           = url;
+        img.style.display = logosVisible ? 'block' : 'none';
+
+        placeholder.style.display = 'none';
+
+        if (overlay) overlay.style.display = logosVisible ? 'none' : 'flex';
+
+        removeBtn.style.display = 'block';
+
+        if (!card.classList.contains('has-logo')) {
+            card.classList.add('has-logo');
+            uploadedCount++;
+            updateCounter();
+        }
+
+        if (btnText) btnText.textContent = 'Change Logo';
+
+        if (logoId !== null) {
+            card.setAttribute('data-logo-id', logoId);
+        }
+    }
+
+    function clearLogoFromCard(index) {
+        var img         = document.getElementById('img-'           + index);
+        var placeholder = document.getElementById('placeholder-'   + index);
+        var removeBtn   = document.getElementById('removeBtn-'     + index);
+        var card        = document.getElementById('card-'          + index);
+        var btnText     = document.getElementById('uploadBtnText-' + index);
+        var overlay     = document.getElementById('overlay-'       + index);
+
+        if (!img || !placeholder || !removeBtn || !card) return;
+
+        img.src           = '';
+        img.style.display = 'none';
+
+        placeholder.style.display = '';
+
+        if (overlay) overlay.style.display = 'none';
+
+        removeBtn.style.display = 'none';
+
+        if (card.classList.contains('has-logo')) {
+            card.classList.remove('has-logo');
+            uploadedCount = Math.max(0, uploadedCount - 1);
+            updateCounter();
+        }
+
+        if (btnText) btnText.textContent = 'Upload Logo';
+
+        card.setAttribute('data-logo-id', '');
+    }
+
+    function revertCard(index) {
+        // If the card didn't have a logo before the failed upload, clear it
+        var card = document.getElementById('card-' + index);
+        if (card && !card.getAttribute('data-logo-id')) {
+            clearLogoFromCard(index);
+        }
+    }
+
+    function setCardLoading(index, loading) {
+        var card = document.getElementById('card-' + index);
+        if (!card) return;
+        if (loading) {
+            card.classList.add('bl-card-loading');
+        } else {
+            card.classList.remove('bl-card-loading');
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SHOW / HIDE MODALS
     ══════════════════════════════════════════════════════════ */
     function showChangeModal(barangayName) {
-        var el = document.getElementById('blChangeModal');
         var nameEl = document.getElementById('blChangeBarangayName');
         if (nameEl) nameEl.textContent = barangayName;
-        showModal(el);
+        showModal(document.getElementById('blChangeModal'));
     }
 
     function showRemoveModal(barangayName) {
-        var el = document.getElementById('blRemoveModal');
         var nameEl = document.getElementById('blRemoveBarangayName');
         if (nameEl) nameEl.textContent = barangayName;
-        showModal(el);
+        showModal(document.getElementById('blRemoveModal'));
     }
 
     function showModal(el) {
@@ -248,233 +450,82 @@
         var el = document.getElementById(id);
         if (!el) return;
         el.classList.remove('bl-modal-visible');
-        // Use a short timeout instead of transitionend to avoid async issues
-        setTimeout(function () {
-            el.style.display = 'none';
-        }, 230);
+        setTimeout(function () { el.style.display = 'none'; }, 230);
     }
 
     /* ══════════════════════════════════════════════════════════
-       UPLOAD PREVIEW MODAL (fresh upload — no logo yet)
+       COUNTER / TOGGLE / SEARCH / TOAST
     ══════════════════════════════════════════════════════════ */
-    var pendingIndex   = null;
-    var pendingDataUrl = null;
-
-    window.blConfirmUpload = function () {
-        if (pendingIndex === null || !pendingDataUrl) return;
-        applyLogoToCard(pendingIndex, pendingDataUrl);
-        hideModal('blConfirmModal');
-        blToast('Logo successfully uploaded', 'success');
-        pendingIndex   = null;
-        pendingDataUrl = null;
-    };
-
-    window.blCancelUpload = function () {
-        pendingIndex   = null;
-        pendingDataUrl = null;
-        hideModal('blConfirmModal');
-    };
-
-    /* ══════════════════════════════════════════════════════════
-       APPLY LOGO TO CARD
-    ══════════════════════════════════════════════════════════ */
-    function applyLogoToCard(index, dataUrl) {
-        var img         = document.getElementById('img-'           + index);
-        var placeholder = document.getElementById('placeholder-'   + index);
-        var removeBtn   = document.getElementById('removeBtn-'     + index);
-        var card        = document.getElementById('card-'          + index);
-        var btnText     = document.getElementById('uploadBtnText-' + index);
-        var overlay     = document.getElementById('overlay-'       + index);
-
-        if (!img || !placeholder || !removeBtn || !card) {
-            console.error('[BL] Missing elements for index', index);
-            return;
-        }
-
-        img.src             = dataUrl;
-        img.style.display   = logosVisible ? 'block' : 'none';
-        img.style.zIndex    = '5';
-
-        placeholder.style.display = 'none';
-
-        if (overlay) overlay.style.display = logosVisible ? 'none' : 'flex';
-
-        removeBtn.style.display = 'flex';
-        removeBtn.style.zIndex  = '20';
-
-        var wasUploaded = card.classList.contains('has-logo');
-        card.classList.add('has-logo');
-
-        if (!wasUploaded) {
-            uploadedCount++;
-            updateCounter();
-        }
-
-        if (btnText) btnText.textContent = 'Change Logo';
-
-        // Pulse animation
-        card.classList.remove('just-uploaded');
-        void card.offsetWidth;
-        card.classList.add('just-uploaded');
-        card.addEventListener('animationend', function handler() {
-            card.classList.remove('just-uploaded');
-            card.removeEventListener('animationend', handler);
-        });
+    function updateCounter() {
+        var el = document.getElementById('uploadedCount');
+        if (el) el.textContent = uploadedCount;
     }
 
-    /* ══════════════════════════════════════════════════════════
-       REMOVE LOGO
-    ══════════════════════════════════════════════════════════ */
-    function doRemoveLogo(index) {
-        var img         = document.getElementById('img-'           + index);
-        var placeholder = document.getElementById('placeholder-'   + index);
-        var removeBtn   = document.getElementById('removeBtn-'     + index);
-        var card        = document.getElementById('card-'          + index);
-        var btnText     = document.getElementById('uploadBtnText-' + index);
-        var overlay     = document.getElementById('overlay-'       + index);
-
-        if (!img || !placeholder || !removeBtn || !card) return;
-
-        img.src                   = '';
-        img.style.display         = 'none';
-        placeholder.style.display = '';
-        removeBtn.style.display   = 'none';
-        if (overlay) overlay.style.display = 'none';
-
-        if (card.classList.contains('has-logo')) {
-            card.classList.remove('has-logo');
-            uploadedCount = Math.max(0, uploadedCount - 1);
-            updateCounter();
-        }
-
-        if (btnText) btnText.textContent = 'Upload Logo';
-    }
-
-    /* ══════════════════════════════════════════════════════════
-       HIDE / SHOW LOGOS TOGGLE
-    ══════════════════════════════════════════════════════════ */
     function blToggleLogos() {
         logosVisible = !logosVisible;
 
-        var btn     = document.getElementById('toggleLogosBtn');
-        var btnText = document.getElementById('toggleBtnText');
-        var icon    = document.getElementById('toggleIcon');
+        var toggleBtn  = document.getElementById('toggleLogosBtn');
+        var toggleText = document.getElementById('toggleBtnText');
+
+        if (toggleBtn) toggleBtn.classList.toggle('logos-visible', logosVisible);
+        if (toggleText) toggleText.textContent = logosVisible ? 'Hide Logos' : 'Show Logos';
 
         document.querySelectorAll('.bl-card.has-logo').forEach(function (card) {
             var idx     = card.id.replace('card-', '');
             var img     = document.getElementById('img-'     + idx);
             var overlay = document.getElementById('overlay-' + idx);
 
-            if (logosVisible) {
-                if (img)     img.style.display     = 'block';
-                if (overlay) overlay.style.display = 'none';
-            } else {
-                if (img)     img.style.display     = 'none';
-                if (overlay) overlay.style.display = 'flex';
-            }
+            if (img)     img.style.display     = logosVisible ? 'block' : 'none';
+            if (overlay) overlay.style.display = logosVisible ? 'none'  : 'flex';
         });
-
-        if (logosVisible) {
-            // Logos now visible → green button
-            btn.classList.remove('logos-hidden');
-            btn.classList.add('logos-visible');
-            btnText.textContent = 'Hide Logos';
-            icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>'
-                + '<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>';
-        } else {
-            // Logos now hidden → gray button
-            btn.classList.remove('logos-visible');
-            btn.classList.add('logos-hidden');
-            btnText.textContent = 'Show Logos';
-            icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
-                + '<path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
-                + '<line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
-        }
     }
 
-    /* ══════════════════════════════════════════════════════════
-       SEARCH / FILTER CARDS BY BARANGAY NAME
-    ══════════════════════════════════════════════════════════ */
     function blFilterCards(query) {
-        var q = query.toLowerCase().trim();
-        var cards = document.querySelectorAll('.bl-card');
-        var visibleCount = 0;
+        var q       = query.toLowerCase();
+        var cards   = document.querySelectorAll('.bl-card');
+        var visible = 0;
 
         cards.forEach(function (card) {
             var nameEl = card.querySelector('.bl-barangay-name');
             var name   = nameEl ? nameEl.textContent.toLowerCase() : '';
-            var match  = !q || name.includes(q);
-
-            card.style.display = match ? '' : 'none';
-            if (match) visibleCount++;
+            var show   = !q || name.includes(q);
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
         });
 
-        // Show/hide no-results message
         var noResults = document.getElementById('blNoResults');
-        if (noResults) {
-            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
-        }
-    }
-
-    /* ── Helpers ─────────────────────────────────────────────── */
-
-    function updateCounter() {
-        var el = document.getElementById('uploadedCount');
-        if (el) el.textContent = uploadedCount;
+        if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
     }
 
     function blToast(message, type) {
-        // Remove any existing toast immediately
-        var existing = document.getElementById('bl-toast');
-        if (existing) {
-            clearTimeout(existing._timer);
-            existing.remove();
-        }
+        var existing = document.querySelector('.bl-toast');
+        if (existing) existing.remove();
 
         var toast = document.createElement('div');
-        toast.id = 'bl-toast';
-        toast.setAttribute('role', 'status');
-        toast.setAttribute('aria-live', 'polite');
-
-        Object.assign(toast.style, {
-            position:        'fixed',
-            top:             '72px',          // just below the header
-            left:            '50%',
-            transform:       'translateX(-50%) translateY(-18px)',
-            zIndex:          '99999',
-            padding:         '11px 28px',
-            borderRadius:    '8px',
-            fontSize:        '0.875rem',
-            fontWeight:      '600',
-            fontFamily:      'inherit',
-            color:           '#fff',
-            boxShadow:       '0 4px 18px rgba(0,0,0,.18)',
-            opacity:         '0',
-            transition:      'opacity 0.22s ease, transform 0.22s ease',
-            whiteSpace:      'nowrap',
-            pointerEvents:   'none',
-            background:      type === 'error' ? '#dc2626' : '#16a34a',
-        });
-
+        toast.className = 'bl-toast bl-toast-' + (type || 'info');
         toast.textContent = message;
         document.body.appendChild(toast);
 
-        // Slide down + fade in
         requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-                toast.style.opacity   = '1';
-                toast.style.transform = 'translateX(-50%) translateY(0)';
-            });
+            requestAnimationFrame(function () { toast.classList.add('bl-toast-visible'); });
         });
 
-        // Auto-dismiss after 2.5 s
-        toast._timer = setTimeout(function () {
-            toast.style.opacity   = '0';
-            toast.style.transform = 'translateX(-50%) translateY(-10px)';
-            setTimeout(function () {
-                if (toast.parentNode) toast.remove();
-            }, 250);
-        }, 2500);
+        setTimeout(function () {
+            toast.classList.remove('bl-toast-visible');
+            setTimeout(function () { toast.remove(); }, 300);
+        }, 3000);
     }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024)       return bytes + ' B';
+        if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    /* ── Init uploadedCount from DOM (cards already marked has-logo by Blade) ── */
+    document.addEventListener('DOMContentLoaded', function () {
+        uploadedCount = document.querySelectorAll('.bl-card.has-logo').length;
+        updateCounter();
+    });
 
 })();

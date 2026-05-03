@@ -353,10 +353,13 @@ class AuthenticationService
 
         // OTP valid — clear OTP fields and complete login
         $clearUpdates = [];
-        foreach (['otp_code', 'otp_expires_at', 'otp_attempts', 'otp_last_sent_at'] as $col) {
+        foreach (['otp_code', 'otp_expires_at', 'otp_last_sent_at'] as $col) {
             if ($this->hasColumn('users', $col)) {
                 $clearUpdates[$col] = null;
             }
+        }
+        if ($this->hasColumn('users', 'otp_attempts')) {
+            $clearUpdates['otp_attempts'] = 0;
         }
         if ($clearUpdates !== []) {
             $user->forceFill($clearUpdates)->save();

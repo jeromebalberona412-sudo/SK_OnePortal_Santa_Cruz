@@ -35,8 +35,24 @@ Route::middleware([
     })->name('calendar');
 
     Route::get('/announcements', function () {
-        return view('Announcement::announcement');
+        $user  = auth()->user();
+        $brgy  = \App\Models\Barangay::find($user->barangay_id);
+        $slug  = $brgy ? \Illuminate\Support\Str::slug($brgy->name) : 'san-jose';
+        $name  = $brgy?->name ?? 'Your Barangay';
+        $color = '#f5c518';
+        return view('Announcement::announcement', compact('slug', 'name', 'color', 'user'));
     })->name('announcements');
+
+    // Announcement API
+    Route::prefix('api/announcements')->group(function () {
+        Route::get('/',              [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'feed'])->name('api.announcements.feed');
+        Route::post('/',             [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'store'])->name('api.announcements.store');
+        Route::post('/upload-image', [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'uploadImage'])->name('api.announcements.upload-image');
+        Route::put('/{id}',          [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'update'])->name('api.announcements.update');
+        Route::delete('/{id}',       [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'destroy'])->name('api.announcements.destroy');
+        Route::post('/{id}/react',   [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'react'])->name('api.announcements.react');
+        Route::post('/{id}/comment', [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'comment'])->name('api.announcements.comment');
+    });
 
     Route::get('/announcements/barangay/{slug}', function ($slug) {
         $brgyList = [
@@ -101,9 +117,11 @@ Route::middleware([
         return view('Rejected_KKProfiling::rejected-kkprofiling');
     })->name('rejected-kkprofiling');
 
-    Route::get('/schedule-kk-profiling', function () {
-        return view('ScheduleKKProfiling::schedule-kkprofiling');
-    })->name('schedule-kk-profiling');
+    Route::get('/schedule-kk-profiling', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'index'])->name('schedule-kk-profiling');
+    Route::get('/api/schedule-kk-profiling/data', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'data'])->name('schedule-kk-profiling.data');
+    Route::post('/api/schedule-kk-profiling', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'store'])->name('schedule-kk-profiling.store');
+    Route::put('/api/schedule-kk-profiling/{id}', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'update'])->name('schedule-kk-profiling.update');
+    Route::delete('/api/schedule-kk-profiling/{id}', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'destroy'])->name('schedule-kk-profiling.destroy');
 
     Route::get('/schedule-programs', function () {
         return view('schedule_programs::schedule-programs');

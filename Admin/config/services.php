@@ -38,4 +38,11 @@ return [
     'sk_officials_app_url' => env('SK_OFFICIALS_APP_URL'),
     'sk_fed_app_url' => env('SK_FED_APP_URL'),
 
+    'cloudinary' => [
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key'    => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
+        'folder'     => env('CLOUDINARY_FOLDER', 'sk_oneportal/barangay_logos'),
+    ],
+
 ];

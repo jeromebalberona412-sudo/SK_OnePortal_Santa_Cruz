@@ -3,6 +3,7 @@
 @section('title', 'SK Barangay Logos')
 
 @section('head')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['app/Modules/BarangayLogos/assets/css/barangay-logos.css'])
 @endsection
 
@@ -50,7 +51,7 @@
                         <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.8"/>
                         <polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="1.8"/>
                     </svg>
-                    <span id="uploadedCount">0</span>
+                    <span id="uploadedCount">{{ $logos->count() }}</span>
                     <span class="bl-counter-sep">/</span>
                     <span>26</span>
                     <span class="bl-counter-label">Uploaded</span>
@@ -71,44 +72,52 @@
         <div class="bl-grid" id="barangayGrid">
 
             @php
-                $barangays = [
-                    'Alipit',
-                    'Bagumbayan',
-                    'Barangay I (Poblacion)',
-                    'Barangay II (Poblacion)',
-                    'Barangay III (Poblacion)',
-                    'Barangay IV (Poblacion)',
-                    'Barangay V (Poblacion)',
-                    'Bubukal',
-                    'Calios',
-                    'Duhat',
-                    'Gatid',
-                    'Jasaan',
-                    'Labuin',
-                    'Malinao',
-                    'Oogong',
-                    'Pagsawitan',
-                    'Palasan',
-                    'Patimbao',
-                    'San Jose',
-                    'San Juan',
-                    'San Pablo Norte',
-                    'San Pablo Sur',
-                    'Santisima Cruz',
-                    'Santo Angel Central',
-                    'Santo Angel Norte',
-                    'Santo Angel Sur',
-                ];
+                $barangayList = $barangays->isNotEmpty() ? $barangays : collect([
+                    (object)['id' => null, 'name' => 'Alipit'],
+                    (object)['id' => null, 'name' => 'Bagumbayan'],
+                    (object)['id' => null, 'name' => 'Barangay I (Poblacion)'],
+                    (object)['id' => null, 'name' => 'Barangay II (Poblacion)'],
+                    (object)['id' => null, 'name' => 'Barangay III (Poblacion)'],
+                    (object)['id' => null, 'name' => 'Barangay IV (Poblacion)'],
+                    (object)['id' => null, 'name' => 'Barangay V (Poblacion)'],
+                    (object)['id' => null, 'name' => 'Bubukal'],
+                    (object)['id' => null, 'name' => 'Calios'],
+                    (object)['id' => null, 'name' => 'Duhat'],
+                    (object)['id' => null, 'name' => 'Gatid'],
+                    (object)['id' => null, 'name' => 'Jasaan'],
+                    (object)['id' => null, 'name' => 'Labuin'],
+                    (object)['id' => null, 'name' => 'Malinao'],
+                    (object)['id' => null, 'name' => 'Oogong'],
+                    (object)['id' => null, 'name' => 'Pagsawitan'],
+                    (object)['id' => null, 'name' => 'Palasan'],
+                    (object)['id' => null, 'name' => 'Patimbao'],
+                    (object)['id' => null, 'name' => 'San Jose'],
+                    (object)['id' => null, 'name' => 'San Juan'],
+                    (object)['id' => null, 'name' => 'San Pablo Norte'],
+                    (object)['id' => null, 'name' => 'San Pablo Sur'],
+                    (object)['id' => null, 'name' => 'Santisima Cruz'],
+                    (object)['id' => null, 'name' => 'Santo Angel Central'],
+                    (object)['id' => null, 'name' => 'Santo Angel Norte'],
+                    (object)['id' => null, 'name' => 'Santo Angel Sur'],
+                ]);
             @endphp
 
-            @foreach($barangays as $index => $barangay)
-            <div class="bl-card" id="card-{{ $index }}">
+            @foreach($barangayList as $index => $barangay)
+            @php
+                $existingLogo = $barangay->id ? ($logos[$barangay->id] ?? null) : null;
+            @endphp
+            <div
+                class="bl-card{{ $existingLogo ? ' has-logo' : '' }}"
+                id="card-{{ $index }}"
+                data-barangay-id="{{ $barangay->id }}"
+                data-logo-id="{{ $existingLogo?->id }}"
+            >
 
                 {{-- Preview area --}}
                 <div class="bl-preview-box" id="previewBox-{{ $index }}">
 
                     {{-- Placeholder --}}
-                    <div class="bl-placeholder" id="placeholder-{{ $index }}">
+                    <div class="bl-placeholder" id="placeholder-{{ $index }}" style="{{ $existingLogo ? 'display:none;' : '' }}">
                         <svg viewBox="0 0 24 24" fill="none" class="bl-placeholder-icon" aria-hidden="true">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="1.5"/>
                             <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/>
@@ -120,10 +129,10 @@
                     {{-- Uploaded image --}}
                     <img
                         id="img-{{ $index }}"
-                        src=""
-                        alt="{{ $barangay }} logo"
+                        src="{{ $existingLogo?->url ?? '' }}"
+                        alt="{{ $barangay->name }} logo"
                         class="bl-logo-img"
-                        style="display:none;"
+                        style="{{ $existingLogo && $logosVisible ?? true ? 'display:block;' : 'display:none;' }}"
                     />
 
                     {{-- Hidden overlay (logos hidden state) --}}
@@ -142,10 +151,10 @@
                         class="bl-remove-btn"
                         id="removeBtn-{{ $index }}"
                         data-index="{{ $index }}"
-                        data-name="{{ $barangay }}"
-                        style="display:none;"
+                        data-name="{{ $barangay->name }}"
+                        style="{{ $existingLogo ? '' : 'display:none;' }}"
                         title="Remove logo"
-                        aria-label="Remove logo for {{ $barangay }}"
+                        aria-label="Remove logo for {{ $barangay->name }}"
                     >
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <polyline points="3 6 5 6 21 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -158,7 +167,7 @@
 
                 {{-- Card footer --}}
                 <div class="bl-card-footer">
-                    <p class="bl-barangay-name" title="{{ $barangay }}">{{ $barangay }}</p>
+                    <p class="bl-barangay-name" title="{{ $barangay->name }}">{{ $barangay->name }}</p>
 
                     {{--
                         Upload label:
@@ -171,14 +180,14 @@
                         id="uploadBtn-{{ $index }}"
                         for="fileInput-{{ $index }}"
                         data-index="{{ $index }}"
-                        data-name="{{ $barangay }}"
+                        data-name="{{ $barangay->name }}"
                     >
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
-                        <span id="uploadBtnText-{{ $index }}">Upload Logo</span>
+                        <span id="uploadBtnText-{{ $index }}">{{ $existingLogo ? 'Change Logo' : 'Upload Logo' }}</span>
                     </label>
 
                     {{-- Hidden file input — separate from label so .click() works reliably --}}
@@ -187,7 +196,7 @@
                         id="fileInput-{{ $index }}"
                         class="bl-file-input"
                         data-index="{{ $index }}"
-                        data-name="{{ $barangay }}"
+                        data-name="{{ $barangay->name }}"
                         accept="image/*"
                         style="display:none;"
                     />
