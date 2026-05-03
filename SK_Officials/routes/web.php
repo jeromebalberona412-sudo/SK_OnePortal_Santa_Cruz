@@ -35,8 +35,24 @@ Route::middleware([
     })->name('calendar');
 
     Route::get('/announcements', function () {
-        return view('Announcement::announcement');
+        $user  = auth()->user();
+        $brgy  = \App\Models\Barangay::find($user->barangay_id);
+        $slug  = $brgy ? \Illuminate\Support\Str::slug($brgy->name) : 'san-jose';
+        $name  = $brgy?->name ?? 'Your Barangay';
+        $color = '#f5c518';
+        return view('Announcement::announcement', compact('slug', 'name', 'color', 'user'));
     })->name('announcements');
+
+    // Announcement API
+    Route::prefix('api/announcements')->group(function () {
+        Route::get('/',              [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'feed'])->name('api.announcements.feed');
+        Route::post('/',             [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'store'])->name('api.announcements.store');
+        Route::post('/upload-image', [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'uploadImage'])->name('api.announcements.upload-image');
+        Route::put('/{id}',          [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'update'])->name('api.announcements.update');
+        Route::delete('/{id}',       [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'destroy'])->name('api.announcements.destroy');
+        Route::post('/{id}/react',   [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'react'])->name('api.announcements.react');
+        Route::post('/{id}/comment', [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'comment'])->name('api.announcements.comment');
+    });
 
     Route::get('/announcements/barangay/{slug}', function ($slug) {
         $brgyList = [

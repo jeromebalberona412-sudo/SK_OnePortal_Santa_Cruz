@@ -24,36 +24,20 @@
         {{-- CENTER: Feed --}}
         <div class="feed-section">
 
-            {{-- SK Officials Info Card --}}
-            <div class="sk-fed-card" style="cursor:pointer;" onclick="window.location.href='{{ route('sk-officials.barangay-profile', ['slug' => 'san-jose']) }}'">
+            {{-- SK Officials Info Card (with compose embedded) --}}
+            <div class="sk-fed-card">
                 <div class="sk-fed-card-banner">
                     <img src="{{ asset('images/logo.png') }}" alt="SK Officials Logo" class="sk-fed-card-logo">
                     <div class="sk-fed-card-info">
-                        <h2 class="sk-fed-card-name">SK OnePortal</h2>
+                        <h2 class="sk-fed-card-name">SK Barangay {{ $name }}</h2>
                         <p class="sk-fed-card-sub">SK Officials Portal · Santa Cruz, Laguna</p>
-                        <p style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;">View Your Barangay Profile →</p>
+                        <p style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;cursor:pointer;" onclick="openProfilePreviewModal()">View Your Barangay Profile →</p>
                     </div>
                 </div>
-            </div>
-
-            {{-- Compose Post --}}
-            <div class="post-card compose-card">
-                <div class="compose-row">
-                    <div class="compose-avatar-sm-placeholder"><i class="fas fa-user"></i></div>
-                    <button class="compose-trigger" onclick="openComposeModal()">What's happening in your barangay?</button>
-                </div>
-                <div class="compose-actions">
-                    <button class="compose-action-btn" onclick="openComposeModal('announcement')">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z"/></svg>
-                        Announcement
-                    </button>
-                    <button class="compose-action-btn" onclick="openComposeModal('event')">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
-                        Event
-                    </button>
-                    <button class="compose-action-btn" onclick="openComposeModal('photo')">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg>
-                        Photo
+                {{-- Create Post button --}}
+                <div style="padding:12px 16px;background:#fff;border-top:1px solid #f0f0f0;">
+                    <button onclick="openComposeModal()" style="width:100%;padding:9px;background:linear-gradient(135deg,#f5c518,#e6a800);color:#1a1a2e;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+                        + Create Post
                     </button>
                 </div>
             </div>
@@ -234,6 +218,81 @@ function openProgramModal(cat) {
     else { var t={'anti-drugs':'Anti-Drugs Programs','sports':'Sports Development','health':'Health Programs','disaster':'Disaster Preparedness','others':'Other Programs'}; document.getElementById('noProgramModalTitle').textContent=t[cat]||'Programs'; document.getElementById('noProgramModal').classList.add('active'); }
 }
 function closeProgramModal(id) { document.getElementById(id).classList.remove('active'); }
+</script>
+
+{{-- Barangay Profile Preview Modal --}}
+<div id="profilePreviewModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);overflow-y:auto;padding:24px 16px;">
+    <div style="max-width:760px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+        {{-- Header --}}
+        <div style="background:linear-gradient(135deg,#2c2c3e,#3a3a4a);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #f5c518;">
+            <div>
+                <p style="font-size:11px;color:#f5c518;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Preview — What Kabataan Sees</p>
+                <h2 style="color:#fff;font-size:18px;font-weight:800;margin:0;">SK Barangay {{ $name }}</h2>
+                <p style="color:rgba(255,255,255,.7);font-size:12px;margin-top:2px;">Barangay {{ $name }}, Santa Cruz, Laguna</p>
+            </div>
+            <button onclick="closeProfilePreviewModal()" style="background:rgba(255,255,255,.1);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
+        </div>
+        {{-- Stats bar --}}
+        <div style="display:flex;gap:32px;padding:16px 24px;border-bottom:1px solid #f1f5f9;background:#fafafa;">
+            <div><strong id="preview-post-count" style="font-size:20px;font-weight:800;color:#2c2c3e;">—</strong><br><span style="font-size:11px;color:#94a3b8;">Posts</span></div>
+            <div><strong style="font-size:20px;font-weight:800;color:#2c2c3e;">2023–2026</strong><br><span style="font-size:11px;color:#94a3b8;">SK Term</span></div>
+        </div>
+        {{-- Feed preview --}}
+        <div style="padding:20px 24px;">
+            <p style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:12px;">Recent Posts</p>
+            <div id="preview-feed" style="display:flex;flex-direction:column;gap:12px;">
+                <div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Loading posts…</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openProfilePreviewModal() {
+    document.getElementById('profilePreviewModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    loadPreviewFeed();
+}
+function closeProfilePreviewModal() {
+    document.getElementById('profilePreviewModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.getElementById('profilePreviewModal').addEventListener('click', function(e) {
+    if (e.target === this) closeProfilePreviewModal();
+});
+
+async function loadPreviewFeed() {
+    const container = document.getElementById('preview-feed');
+    container.innerHTML = '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Loading posts…</div>';
+    try {
+        const data = await fetch('/api/announcements?page=1&filter=all', {
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+        }).then(r => r.json());
+
+        document.getElementById('preview-post-count').textContent = data.total ?? (data.data?.length ?? 0);
+
+        if (!data.data?.length) {
+            container.innerHTML = '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">No posts yet.</div>';
+            return;
+        }
+        container.innerHTML = data.data.slice(0, 5).map(p => `
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#f5c51820;color:#b88600;border:1px solid #f5c51840;">${p.type}</span>
+                    <span style="font-size:11px;color:#94a3b8;">${p.time}</span>
+                </div>
+                ${p.title ? `<p style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;">${p.title}</p>` : ''}
+                <p style="font-size:13px;color:#475569;line-height:1.5;">${p.body}</p>
+                ${p.image_url ? `<img src="${p.image_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:160px;object-fit:cover;">` : ''}
+                <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#94a3b8;">
+                    <span>👍 ${p.likes} likes</span>
+                    <span>💬 ${p.comments?.length ?? 0} comments</span>
+                </div>
+            </div>`).join('');
+    } catch(e) {
+        container.innerHTML = '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Could not load posts.</div>';
+    }
+}
 </script>
 </body>
 </html>
