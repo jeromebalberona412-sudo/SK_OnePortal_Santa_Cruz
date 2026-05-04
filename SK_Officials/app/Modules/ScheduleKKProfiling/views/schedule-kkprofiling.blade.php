@@ -155,14 +155,17 @@
                 <div class="modal-field">
                     <label for="skkpFormDateStart">Date Start <span class="required">*</span></label>
                     <input type="date" id="skkpFormDateStart" class="skkp-input" required>
+                    <span class="skkp-field-error" id="skkpDateStartError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field">
                     <label for="skkpFormDateExpiry">Date Expiry <span class="required">*</span></label>
                     <input type="date" id="skkpFormDateExpiry" class="skkp-input" required>
+                    <span class="skkp-field-error" id="skkpDateExpiryError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field modal-field-full">
                     <label for="skkpFormLink">Link</label>
                     <input type="url" id="skkpFormLink" class="skkp-input" placeholder="https://example.com/form" maxlength="300">
+                    <span class="skkp-field-error" id="skkpLinkError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field">
                     <label for="skkpFormStatus">Status <span class="required">*</span></label>
@@ -242,6 +245,102 @@
     'app/Modules/ScheduleKKProfiling/assets/js/schedule-kkprofiling.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script>
+// Inline date validation for Schedule KK Profiling
+document.addEventListener('DOMContentLoaded', function() {
+    const dateStartInput = document.getElementById('skkpFormDateStart');
+    const dateExpiryInput = document.getElementById('skkpFormDateExpiry');
+    const dateStartError = document.getElementById('skkpDateStartError');
+    const dateExpiryError = document.getElementById('skkpDateExpiryError');
+    const saveBtn = document.getElementById('skkpFormSaveBtn');
+
+    function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function validateDateStart() {
+        const value = dateStartInput.value;
+        const today = getTodayDate();
+        
+        if (!value) {
+            dateStartError.textContent = '';
+            dateStartError.style.display = 'none';
+            return true;
+        }
+        
+        if (value < today) {
+            dateStartError.textContent = 'Bawal yung past dates';
+            dateStartError.style.display = 'block';
+            return false;
+        }
+        
+        dateStartError.textContent = '';
+        dateStartError.style.display = 'none';
+        return true;
+    }
+
+    function validateDateExpiry() {
+        const startValue = dateStartInput.value;
+        const expiryValue = dateExpiryInput.value;
+        const today = getTodayDate();
+        
+        if (!expiryValue) {
+            dateExpiryError.textContent = '';
+            dateExpiryError.style.display = 'none';
+            return true;
+        }
+        
+        if (expiryValue < today) {
+            dateExpiryError.textContent = 'Bawal yung past dates';
+            dateExpiryError.style.display = 'block';
+            return false;
+        }
+        
+        if (startValue && expiryValue && expiryValue < startValue) {
+            dateExpiryError.textContent = 'Date Expiry must be after Date Start';
+            dateExpiryError.style.display = 'block';
+            return false;
+        }
+        
+        dateExpiryError.textContent = '';
+        dateExpiryError.style.display = 'none';
+        return true;
+    }
+
+    if (dateStartInput) {
+        dateStartInput.addEventListener('input', function() {
+            validateDateStart();
+            validateDateExpiry();
+        });
+    }
+
+    if (dateExpiryInput) {
+        dateExpiryInput.addEventListener('input', validateDateExpiry);
+    }
+
+    if (saveBtn) {
+        const originalSaveHandler = saveBtn.onclick;
+        saveBtn.onclick = function(e) {
+            const isDateStartValid = validateDateStart();
+            const isDateExpiryValid = validateDateExpiry();
+            
+            if (!isDateStartValid || !isDateExpiryValid) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            
+            if (originalSaveHandler) {
+                return originalSaveHandler.call(this, e);
+            }
+        };
+    }
+});
+</script>
 </body>
 </html>
 <!-- PLACEHOLDER_KABATAAN_MODAL -->

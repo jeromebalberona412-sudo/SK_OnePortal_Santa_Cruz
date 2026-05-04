@@ -170,6 +170,7 @@
                     <div class="schol-field">
                         <label for="schedOpenDate">Open Date <span class="schol-req">*</span></label>
                         <input type="date" id="schedOpenDate" class="schol-input">
+                        <span class="schol-field-error" id="schedOpenDateError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                     </div>
                     <div class="schol-field">
                         <label for="schedOpenTime">Open Time</label>
@@ -178,6 +179,7 @@
                     <div class="schol-field">
                         <label for="schedCloseDate">Close Date <span class="schol-req">*</span></label>
                         <input type="date" id="schedCloseDate" class="schol-input">
+                        <span class="schol-field-error" id="schedCloseDateError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                     </div>
                     <div class="schol-field">
                         <label for="schedCloseTime">Close Time</label>
@@ -517,5 +519,101 @@
     'app/Modules/schedule_programs/assets/js/scholarship_requests.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script>
+// Inline date validation for Scholarship Requests
+document.addEventListener('DOMContentLoaded', function() {
+    const openDateInput = document.getElementById('schedOpenDate');
+    const closeDateInput = document.getElementById('schedCloseDate');
+    const openDateError = document.getElementById('schedOpenDateError');
+    const closeDateError = document.getElementById('schedCloseDateError');
+    const saveBtn = document.getElementById('btnSaveSchedule');
+
+    function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function validateOpenDate() {
+        const value = openDateInput.value;
+        const today = getTodayDate();
+        
+        if (!value) {
+            openDateError.textContent = '';
+            openDateError.style.display = 'none';
+            return true;
+        }
+        
+        if (value < today) {
+            openDateError.textContent = 'Bawal yung past dates';
+            openDateError.style.display = 'block';
+            return false;
+        }
+        
+        openDateError.textContent = '';
+        openDateError.style.display = 'none';
+        return true;
+    }
+
+    function validateCloseDate() {
+        const openValue = openDateInput.value;
+        const closeValue = closeDateInput.value;
+        const today = getTodayDate();
+        
+        if (!closeValue) {
+            closeDateError.textContent = '';
+            closeDateError.style.display = 'none';
+            return true;
+        }
+        
+        if (closeValue < today) {
+            closeDateError.textContent = 'Bawal yung past dates';
+            closeDateError.style.display = 'block';
+            return false;
+        }
+        
+        if (openValue && closeValue && closeValue < openValue) {
+            closeDateError.textContent = 'Close Date must be after Open Date';
+            closeDateError.style.display = 'block';
+            return false;
+        }
+        
+        closeDateError.textContent = '';
+        closeDateError.style.display = 'none';
+        return true;
+    }
+
+    if (openDateInput) {
+        openDateInput.addEventListener('input', function() {
+            validateOpenDate();
+            validateCloseDate();
+        });
+    }
+
+    if (closeDateInput) {
+        closeDateInput.addEventListener('input', validateCloseDate);
+    }
+
+    if (saveBtn) {
+        const originalSaveHandler = saveBtn.onclick;
+        saveBtn.onclick = function(e) {
+            const isOpenValid = validateOpenDate();
+            const isCloseValid = validateCloseDate();
+            
+            if (!isOpenValid || !isCloseValid) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            
+            if (originalSaveHandler) {
+                return originalSaveHandler.call(this, e);
+            }
+        };
+    }
+});
+</script>
 </body>
 </html>
