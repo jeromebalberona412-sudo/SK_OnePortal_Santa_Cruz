@@ -646,5 +646,108 @@
     'app/Modules/schedule_programs/assets/js/sports_application_form.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script>
+// Inline date validation for Sports Application Form
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const startDateError = document.createElement('span');
+    const endDateError = document.createElement('span');
+    
+    startDateError.className = 'spfb-field-error';
+    startDateError.style.cssText = 'display:none;font-size:11px;color:#ef4444;margin-top:3px;';
+    endDateError.className = 'spfb-field-error';
+    endDateError.style.cssText = 'display:none;font-size:11px;color:#ef4444;margin-top:3px;';
+    
+    if (startDateInput && startDateInput.parentNode) {
+        startDateInput.parentNode.appendChild(startDateError);
+    }
+    if (endDateInput && endDateInput.parentNode) {
+        endDateInput.parentNode.appendChild(endDateError);
+    }
+
+    function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function validateStartDate() {
+        const value = startDateInput.value;
+        const today = getTodayDate();
+        
+        if (!value) {
+            startDateError.textContent = '';
+            startDateError.style.display = 'none';
+            return true;
+        }
+        
+        if (value < today) {
+            startDateError.textContent = 'Bawal yung past dates';
+            startDateError.style.display = 'block';
+            return false;
+        }
+        
+        startDateError.textContent = '';
+        startDateError.style.display = 'none';
+        return true;
+    }
+
+    function validateEndDate() {
+        const startValue = startDateInput.value;
+        const endValue = endDateInput.value;
+        const today = getTodayDate();
+        
+        if (!endValue) {
+            endDateError.textContent = '';
+            endDateError.style.display = 'none';
+            return true;
+        }
+        
+        if (endValue < today) {
+            endDateError.textContent = 'Bawal yung past dates';
+            endDateError.style.display = 'block';
+            return false;
+        }
+        
+        if (startValue && endValue && endValue < startValue) {
+            endDateError.textContent = 'End Date must be after Start Date';
+            endDateError.style.display = 'block';
+            return false;
+        }
+        
+        endDateError.textContent = '';
+        endDateError.style.display = 'none';
+        return true;
+    }
+
+    if (startDateInput) {
+        startDateInput.addEventListener('input', function() {
+            validateStartDate();
+            validateEndDate();
+        });
+    }
+
+    if (endDateInput) {
+        endDateInput.addEventListener('input', validateEndDate);
+    }
+
+    const form = document.getElementById('sportsApplicationForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const isStartValid = validateStartDate();
+            const isEndValid = validateEndDate();
+            
+            if (!isStartValid || !isEndValid) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+    }
+});
+</script>
 </body>
 </html>

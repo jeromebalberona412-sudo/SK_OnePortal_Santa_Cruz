@@ -366,6 +366,7 @@
                 <div class="sp-form-field">
                     <label for="spDate">Date Planned <span class="required">*</span></label>
                     <input type="date" id="spDate" class="sp-input">
+                    <span class="sp-field-error" id="spDateError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="sp-form-field">
                     <label for="spStartTime">Start Time <span class="required">*</span></label>
@@ -378,10 +379,12 @@
                 <div class="sp-form-field">
                     <label for="spVenue">Venue <span class="required">*</span></label>
                     <input type="text" id="spVenue" class="sp-input" placeholder="e.g. Barangay Hall" maxlength="150">
+                    <span class="sp-field-error" id="spVenueError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="sp-form-field">
                     <label for="spOfficials">Assigned Officials</label>
                     <input type="text" id="spOfficials" class="sp-input" placeholder="e.g. Juan dela Cruz, Maria Santos" maxlength="200">
+                    <span class="sp-field-error" id="spOfficialsError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="sp-form-field">
                     <label for="spParticipants">Expected Participants</label>
@@ -429,5 +432,63 @@
     'app/Modules/schedule_programs/assets/js/schedule-programs.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script>
+// Inline date validation for Schedule Programs
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('spDate');
+    const dateError = document.getElementById('spDateError');
+    const saveBtn = document.getElementById('spBtnSave');
+
+    function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function validateDate() {
+        const value = dateInput.value;
+        const today = getTodayDate();
+        
+        if (!value) {
+            dateError.textContent = '';
+            dateError.style.display = 'none';
+            return true;
+        }
+        
+        if (value < today) {
+            dateError.textContent = 'Bawal yung past dates';
+            dateError.style.display = 'block';
+            return false;
+        }
+        
+        dateError.textContent = '';
+        dateError.style.display = 'none';
+        return true;
+    }
+
+    if (dateInput) {
+        dateInput.addEventListener('input', validateDate);
+    }
+
+    if (saveBtn) {
+        const originalSaveHandler = saveBtn.onclick;
+        saveBtn.onclick = function(e) {
+            const isValid = validateDate();
+            
+            if (!isValid) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            
+            if (originalSaveHandler) {
+                return originalSaveHandler.call(this, e);
+            }
+        };
+    }
+});
+</script>
 </body>
 </html>

@@ -183,14 +183,13 @@
             }
         }
 
-        // Form Validation
+        // Inline Validation
         (() => {
             const form = document.getElementById('loginForm');
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
             const emailError = document.getElementById('email-error');
             const passwordError = document.getElementById('password-error');
-            const loginBtn = document.getElementById('loginBtn');
 
             function validateEmail(email) {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -208,7 +207,8 @@
                 errorElement.hidden = true;
             }
 
-            emailInput.addEventListener('blur', () => {
+            // Email validation on input
+            emailInput.addEventListener('input', () => {
                 if (!emailInput.value.trim()) {
                     showError(emailInput, emailError, 'Email is required');
                 } else if (!validateEmail(emailInput.value)) {
@@ -218,24 +218,13 @@
                 }
             });
 
-            emailInput.addEventListener('input', () => {
-                if (emailInput.value.trim() && validateEmail(emailInput.value)) {
-                    clearError(emailInput, emailError);
-                }
-            });
-
-            passwordInput.addEventListener('blur', () => {
+            // Password validation on input
+            passwordInput.addEventListener('input', () => {
                 if (!passwordInput.value.trim()) {
                     showError(passwordInput, passwordError, 'Password is required');
                 } else if (passwordInput.value.length < 8) {
                     showError(passwordInput, passwordError, 'Password must be at least 8 characters');
                 } else {
-                    clearError(passwordInput, passwordError);
-                }
-            });
-
-            passwordInput.addEventListener('input', () => {
-                if (passwordInput.value.trim() && passwordInput.value.length >= 8) {
                     clearError(passwordInput, passwordError);
                 }
             });

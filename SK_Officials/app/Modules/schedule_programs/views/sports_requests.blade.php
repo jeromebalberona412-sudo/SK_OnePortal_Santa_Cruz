@@ -162,6 +162,7 @@
                         <option value="Other">Other</option>
                     </select>
                     <input type="text" id="programNameOther" class="sports-input" placeholder="Enter program name..." maxlength="150" style="display:none;margin-top:8px;">
+                    <span class="spfb-field-error" id="programNameError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
 
                 <div class="sports-field-row" style="margin-bottom:14px;">
@@ -456,5 +457,101 @@
     'app/Modules/schedule_programs/assets/js/sports_requests.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script>
+// Inline date validation for Sports Requests
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const startDateError = document.getElementById('startDateError');
+    const endDateError = document.getElementById('endDateError');
+    const saveBtn = document.getElementById('programSaveBtn');
+
+    function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function validateStartDate() {
+        const value = startDateInput.value;
+        const today = getTodayDate();
+        
+        if (!value) {
+            startDateError.textContent = '';
+            startDateError.style.display = 'none';
+            return true;
+        }
+        
+        if (value < today) {
+            startDateError.textContent = 'Bawal yung past dates';
+            startDateError.style.display = 'block';
+            return false;
+        }
+        
+        startDateError.textContent = '';
+        startDateError.style.display = 'none';
+        return true;
+    }
+
+    function validateEndDate() {
+        const startValue = startDateInput.value;
+        const endValue = endDateInput.value;
+        const today = getTodayDate();
+        
+        if (!endValue) {
+            endDateError.textContent = '';
+            endDateError.style.display = 'none';
+            return true;
+        }
+        
+        if (endValue < today) {
+            endDateError.textContent = 'Bawal yung past dates';
+            endDateError.style.display = 'block';
+            return false;
+        }
+        
+        if (startValue && endValue && endValue < startValue) {
+            endDateError.textContent = 'End Date must be after Start Date';
+            endDateError.style.display = 'block';
+            return false;
+        }
+        
+        endDateError.textContent = '';
+        endDateError.style.display = 'none';
+        return true;
+    }
+
+    if (startDateInput) {
+        startDateInput.addEventListener('input', function() {
+            validateStartDate();
+            validateEndDate();
+        });
+    }
+
+    if (endDateInput) {
+        endDateInput.addEventListener('input', validateEndDate);
+    }
+
+    if (saveBtn) {
+        const originalSaveHandler = saveBtn.onclick;
+        saveBtn.onclick = function(e) {
+            const isStartValid = validateStartDate();
+            const isEndValid = validateEndDate();
+            
+            if (!isStartValid || !isEndValid) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            
+            if (originalSaveHandler) {
+                return originalSaveHandler.call(this, e);
+            }
+        };
+    }
+});
+</script>
 </body>
 </html>
