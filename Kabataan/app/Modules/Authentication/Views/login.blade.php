@@ -37,7 +37,6 @@
     </style>
 </head>
 <body class="youth-login-page">
-    @include('dashboard::loading')
     
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
@@ -168,6 +167,9 @@
         </div>
     </main>
 
+    <!-- Load loading script AFTER the overlay HTML is rendered -->
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
+
     <script>
         (function () {
             var btn   = document.getElementById('pwToggleBtn');
@@ -274,7 +276,5 @@
             });
         })();
     </script>
-
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

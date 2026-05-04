@@ -45,9 +45,9 @@
     width: 100%;
     height: 100%;
     border: 5px solid rgba(255, 255, 255, 0.25);
-    border-top-color: #44a53e;
-    border-right-color: #fdc020;
-    border-bottom-color: #0450a8;
+    border-top-color: #1e40af;
+    border-right-color: #fbbf24;
+    border-bottom-color: #0891b2;
     border-radius: 50%;
     animation: glSpin 1s linear infinite;
 }

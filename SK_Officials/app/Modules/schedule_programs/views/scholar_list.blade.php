@@ -11,9 +11,11 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/schedule_programs/assets/css/scholar_list.css'
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
+@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -99,6 +101,6 @@
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/schedule_programs/assets/js/scholar_list.js'
 ])
-
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

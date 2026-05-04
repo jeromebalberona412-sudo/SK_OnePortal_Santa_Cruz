@@ -11,6 +11,7 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/Announcement/assets/css/announcement.css',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .bfp-wrap { padding: 24px; }
         .bfp-back { display:inline-flex;align-items:center;gap:6px;color:#b88600;font-size:13px;font-weight:600;text-decoration:none;margin-bottom:16px;transition:color .2s; }
@@ -366,5 +367,6 @@ function submitBfpPost() {
     closeBfpCompose();
 }
 </script>
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
