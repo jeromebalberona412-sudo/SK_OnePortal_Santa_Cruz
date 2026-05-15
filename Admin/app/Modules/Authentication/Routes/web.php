@@ -2,23 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\Authentication\Controllers\AuthController;
-use App\Modules\Authentication\Controllers\TwoFactorAuthController;
 use App\Modules\Authentication\Controllers\TwoFactorChallengeController;
 
 // Login routes (guest only)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
-
-    // Password Reset Routes
-    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])
-        ->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
-        ->name('password.email');
-    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])
-        ->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
-        ->name('password.update');
 
     // Two-Factor Challenge (after password verification)
     Route::get('/two-factor-challenge', [TwoFactorChallengeController::class, 'show'])
@@ -38,16 +27,4 @@ Route::middleware('auth')->group(function () {
     Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail'])
         ->name('verification.send')
         ->middleware('throttle:6,1');
-});
-
-// Two-Factor Authentication routes (authenticated users)
-Route::middleware('auth')->group(function () {
-    Route::get('/user/two-factor-authentication', [TwoFactorAuthController::class, 'show'])
-        ->name('two-factor.setup');
-    Route::post('/user/confirmed-two-factor-authentication', [TwoFactorAuthController::class, 'confirm'])
-        ->name('two-factor.confirm');
-    Route::get('/user/two-factor-recovery-codes', [TwoFactorAuthController::class, 'showRecoveryCodes'])
-        ->name('two-factor.recovery-codes');
-    Route::post('/user/two-factor-recovery-codes', [TwoFactorAuthController::class, 'regenerateRecoveryCodes'])
-        ->name('two-factor.recovery-codes.regenerate');
 });
