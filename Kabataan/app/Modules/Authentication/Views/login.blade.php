@@ -73,7 +73,7 @@
                         Welcome, Kabataan! 
                         <span class="wave-emoji">👋</span>
                     </h2>
-                    <p class="card-subtitle">Login to your account</p>
+                    <p class="card-subtitle">Sign in to your account</p>
                 </div>
 
 

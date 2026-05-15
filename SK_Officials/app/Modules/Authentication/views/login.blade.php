@@ -57,12 +57,17 @@
         <!-- Left Side - Logo & Branding -->
         <div class="sk-branding-section">
             <div class="branding-content">
-                <div class="logo-wrapper">
-                    <img
-                        src="{{ asset('images/logo.png') }}"
-                        alt="SK Officials Logo"
-                        class="sk-logo"
-                    >
+                <div class="collab-logo-wrapper">
+                    <div class="logo-glow-wrapper logo-left">
+                        <img src="{{ asset('images/skoneportal_logo.webp') }}"
+                             alt="SK OnePortal Logo"
+                             class="collab-logo">
+                    </div>
+                    <div class="logo-glow-wrapper logo-right">
+                        <img src="{{ asset('images/logo.png') }}"
+                             alt="SK Officials Logo"
+                             class="collab-logo">
+                    </div>
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
                 <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
@@ -77,7 +82,7 @@
                         Welcome Back!
                         <span class="wave-emoji">👋</span>
                     </h2>
-                    <p class="card-subtitle">Login to your account</p>
+                    <p class="card-subtitle">Sign in to your account</p>
                 </div>
 
                 <!-- Login Form -->
