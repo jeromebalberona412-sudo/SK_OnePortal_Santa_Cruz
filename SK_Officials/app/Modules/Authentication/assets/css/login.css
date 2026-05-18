@@ -261,6 +261,58 @@ html {
     }
 }
 
+/* Collaborative Logo Layout - Overlapping/Connected Style */
+.collab-logo-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 3rem;
+    height: 240px;
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.collab-logo-wrapper .logo-glow-wrapper {
+    margin-bottom: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.collab-logo-wrapper .logo-left {
+    left: 0;
+    z-index: 1;
+}
+
+.collab-logo-wrapper .logo-right {
+    right: 0;
+    z-index: 2;
+}
+
+.collab-logo-wrapper .logo-glow-wrapper::before {
+    width: 280px;
+    height: 280px;
+}
+
+/* Logo: 240px for collaborative display - same size as original */
+.collab-logo {
+    width: 240px; 
+    height: 240px; 
+    object-fit: cover; 
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.98); 
+    padding: 1rem;
+    border: 5px solid rgba(255, 255, 255, 0.9); 
+    position: relative; 
+    z-index: 1;
+    animation: logoFloat 4s ease-in-out infinite;
+    filter: drop-shadow(0 20px 40px rgba(245, 197, 24, 0.35));
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Legacy single logo support */
 .sk-logo {
     width: 240px;
     height: 240px;
@@ -871,6 +923,21 @@ html {
         padding: 0 3rem 4rem;
         overflow-y: visible;
     }
+
+    .collab-logo {
+        width: 200px;
+        height: 200px;
+    }
+
+    .collab-logo-wrapper {
+        height: 200px;
+        width: 340px;
+    }
+
+    .collab-logo-wrapper .logo-glow-wrapper::before {
+        width: 240px;
+        height: 240px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -907,6 +974,21 @@ html {
 
     .card-title {
         font-size: 2.25rem;
+    }
+
+    .collab-logo {
+        width: 180px;
+        height: 180px;
+    }
+
+    .collab-logo-wrapper {
+        height: 180px;
+        width: 300px;
+    }
+
+    .collab-logo-wrapper .logo-glow-wrapper::before {
+        width: 220px;
+        height: 220px;
     }
 }
 
@@ -960,6 +1042,22 @@ html {
         justify-content: space-between;
         gap: 1rem;
     }
+
+    .collab-logo {
+        width: 150px;
+        height: 150px;
+    }
+
+    .collab-logo-wrapper {
+        height: 150px;
+        width: 250px;
+        margin-bottom: 2rem;
+    }
+
+    .collab-logo-wrapper .logo-glow-wrapper::before {
+        width: 180px;
+        height: 180px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -994,7 +1092,7 @@ html {
     }
 
     .sk-login-card {
-        padding: 2rem 1.75rem;
+        padding: 2rem 3rem;
         border-radius: 20px;
     }
 
@@ -1016,6 +1114,23 @@ html {
     .sk-submit-btn {
         padding: 1rem 1.5rem;
         font-size: 1rem;
+    }
+
+    .collab-logo {
+        width: 120px;
+        height: 120px;
+        padding: 0.75rem;
+    }
+
+    .collab-logo-wrapper {
+        height: 120px;
+        width: 200px;
+        margin-bottom: 1.5rem;
+    }
+
+    .collab-logo-wrapper .logo-glow-wrapper::before {
+        width: 150px;
+        height: 150px;
     }
 }
 

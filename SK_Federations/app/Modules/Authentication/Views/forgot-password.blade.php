@@ -41,11 +41,20 @@
         <div class="login-container">
             {{-- LEFT: Logo --}}
             <div class="logo-container">
-                <div class="logo-glow-wrapper">
-                    <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="large-logo">
+                <div class="collab-logo-wrapper">
+                    <div class="logo-glow-wrapper logo-left">
+                        <img src="{{ url('/modules/authentication/images/skoneportal_logo.webp') }}"
+                             alt="SK OnePortal Logo"
+                             class="collab-logo">
+                    </div>
+                    <div class="logo-glow-wrapper logo-right">
+                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}"
+                             alt="SK Federations Logo"
+                             class="collab-logo">
+                    </div>
                 </div>
-                <h1 class="brand-title">SK Federation</h1>
-                <p class="brand-subtitle">Santa Cruz Youth Leadership Portal</p>
+                <h1 class="brand-title">SK OnePortal</h1>
+                <p class="brand-subtitle">SK Federation Portal – Santa Cruz, Laguna</p>
             </div>
 
             {{-- RIGHT: Content Card --}}

@@ -18,7 +18,7 @@ return [
     'features' => [
         // Registration disabled for admin-only application
         // Features::registration(),
-        // Password reset disabled (login-only requirement)
+        // Password reset disabled for admin-only application
         // Features::resetPasswords(),
         // Email verification disabled
         // Features::emailVerification(),

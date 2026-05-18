@@ -10,16 +10,15 @@
                     <span class="kabataan-eyebrow">Pre-auth public homepage</span>
                     <h1>Your Voice. Your Programs. Your Barangay.</h1>
                     <p class="kabataan-hero-text">
-                        Join <strong>10,000+</strong> young leaders transforming Santa Cruz through transparent programs,
-                        community announcements, and cross-barangay discovery.
+                        Connect with your community through transparent programs and cross-barangay discovery.
                     </p>
 
                     <div class="kabataan-hero-actions">
                         <a href="{{ route('register') }}" class="kabataan-button kabataan-button-primary">Get Started</a>
-                        <a href="{{ route('programs') }}" class="kabataan-button kabataan-button-secondary">Explore Programs</a>
+                        <a href="{{ route('about') }}" class="kabataan-button kabataan-button-secondary">Learn More</a>
                     </div>
 
-                    <div class="kabataan-hero-stats" aria-label="Platform highlights">
+                    <div class="kabataan-hero-stats" aria-label="Platform highlights" style="display: none;">
                         @foreach ($heroStats as $stat)
                             <article class="kabataan-stat-pill">
                                 <span>{{ $stat['value'] }}</span>
@@ -38,7 +37,7 @@
                         @endforeach
                     </div>
 
-                    <div class="kabataan-float-card">
+                    <div class="kabataan-float-card" style="display: none;">
                         <div class="kabataan-float-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20"/><path d="M5 9l7-7 7 7"/></svg>
                         </div>
@@ -75,125 +74,132 @@
             </div>
         </section>
 
-        <section class="kabataan-section" id="programs">
+        <section class="kabataan-section" id="programs" style="display: none;">
             <div class="kabataan-shell">
                 <div class="kabataan-section-heading kabataan-section-heading-row">
                     <div>
                         <span class="kabataan-eyebrow">Featured programs</span>
                         <h2>What's Happening This Month?</h2>
-                        <p>Highlighted programs and activities are shown as polished cards with progress, budget, and location context.</p>
+                        <p>Programs and activities will be shown here once they are available.</p>
                     </div>
-                    <a href="{{ route('about') }}#barangay" class="kabataan-text-link">See barangay discovery →</a>
                 </div>
 
                 <div class="kabataan-program-grid">
-                    @foreach ($featuredPrograms as $program)
-                        <article class="kabataan-program-card">
-                            <div class="kabataan-program-media">
-                                <img src="{{ $program['image'] }}" alt="{{ $program['title'] }}">
-                                <span class="kabataan-badge kabataan-badge-{{ strtolower($program['badge']) }}">{{ $program['badge'] }}</span>
-                            </div>
-
-                            <div class="kabataan-program-body">
-                                <p class="kabataan-program-location">📍 {{ $program['barangay'] }}</p>
-                                <h3>{{ $program['title'] }}</h3>
-                                <p>{{ $program['summary'] }}</p>
-
-                                <div class="kabataan-program-meta">
-                                    <span>👥 {{ $program['joined'] }}</span>
-                                    <span>💰 {{ $program['budget'] }}</span>
+                    @if(count($featuredPrograms) === 0)
+                        <p style="text-align: center; padding: 2rem; color: #666;">No programs available at this time.</p>
+                    @else
+                        @foreach ($featuredPrograms as $program)
+                            <article class="kabataan-program-card">
+                                <div class="kabataan-program-media">
+                                    <img src="{{ $program['image'] }}" alt="{{ $program['title'] }}">
+                                    <span class="kabataan-badge kabataan-badge-{{ strtolower($program['badge']) }}">{{ $program['badge'] }}</span>
                                 </div>
 
-                                <div class="kabataan-progress">
-                                    <div class="kabataan-progress-bar" style="width: {{ $program['progress'] }}%;"></div>
-                                </div>
+                                <div class="kabataan-program-body">
+                                    <p class="kabataan-program-location">📍 {{ $program['barangay'] }}</p>
+                                    <h3>{{ $program['title'] }}</h3>
+                                    <p>{{ $program['summary'] }}</p>
 
-                                <div class="kabataan-program-actions">
-                                    <a href="{{ route('login') }}" class="kabataan-text-link">Learn More →</a>
+                                    <div class="kabataan-program-meta">
+                                        <span>👥 {{ $program['joined'] }}</span>
+                                        <span>💰 {{ $program['budget'] }}</span>
+                                    </div>
+
+                                    <div class="kabataan-progress">
+                                        <div class="kabataan-progress-bar" style="width: {{ $program['progress'] }}%;"></div>
+                                    </div>
+
+                                    <div class="kabataan-program-actions">
+                                        <a href="{{ route('login') }}" class="kabataan-text-link">Learn More →</a>
+                                    </div>
                                 </div>
-                            </div>
-                        </article>
-                    @endforeach
+                            </article>
+                        @endforeach
+                    @endif
                 </div>
             </div>
         </section>
 
-        <section class="kabataan-section kabataan-section-alt" id="announcements">
+        <section class="kabataan-section kabataan-section-alt" id="announcements" style="display: none;">
             <div class="kabataan-shell">
                 <div class="kabataan-section-heading">
                     <span class="kabataan-eyebrow">Cross-barangay discovery</span>
                     <h2>Discover What's Happening Across Santa Cruz</h2>
                     <p>
-                        Browse activities across barangays, filter by location, and search by keyword to quickly surface relevant youth updates.
+                        Browse activities across barangays when they become available.
                     </p>
                 </div>
 
-                <div class="kabataan-discovery-toolbar">
-                    <div class="kabataan-tab-row" role="tablist" aria-label="Barangay filters">
-                        @foreach ($barangayTabs as $tab)
-                            <button
-                                type="button"
-                                class="kabataan-tab {{ $loop->first ? 'active' : '' }}"
-                                data-filter="{{ $tab['key'] }}"
+                @if(count($barangayCards) > 0)
+                    <div class="kabataan-discovery-toolbar">
+                        <div class="kabataan-tab-row" role="tablist" aria-label="Barangay filters">
+                            @foreach ($barangayTabs as $tab)
+                                <button
+                                    type="button"
+                                    class="kabataan-tab {{ $loop->first ? 'active' : '' }}"
+                                    data-filter="{{ $tab['key'] }}"
+                                >
+                                    {{ $tab['label'] }}
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <label class="kabataan-search">
+                            <span aria-hidden="true">🔍</span>
+                            <input type="search" id="barangaySearch" placeholder="Search barangays, programs, or activities...">
+                        </label>
+                    </div>
+
+                    <div class="kabataan-discovery-summary">
+                        <span id="barangayResultLabel">Showing {{ count($barangayCards) }} highlights</span>
+                        <span>Across 26 barangays</span>
+                    </div>
+
+                    <div class="kabataan-barangay-grid" id="barangayGrid">
+                        @foreach ($barangayCards as $card)
+                            <article
+                                class="kabataan-barangay-card"
+                                data-barangay="{{ strtolower($card['barangay']) }}"
+                                data-category="{{ strtolower($card['category']) }}"
+                                data-type="{{ strtolower($card['type']) }}"
                             >
-                                {{ $tab['label'] }}
-                            </button>
+                                <div class="kabataan-barangay-top">
+                                    <div>
+                                        <span class="kabataan-barangay-name">{{ $card['barangay'] }}</span>
+                                        <span class="kabataan-barangay-type {{ $card['badgeClass'] }}">{{ $card['type'] }}</span>
+                                    </div>
+                                    <span class="kabataan-barangay-category">{{ $card['category'] }}</span>
+                                </div>
+
+                                <img src="{{ $card['image'] }}" alt="{{ $card['title'] }}">
+
+                                <div class="kabataan-barangay-body">
+                                    <h3>{{ $card['title'] }}</h3>
+                                    <p>{{ $card['summary'] }}</p>
+
+                                    <div class="kabataan-barangay-meta">
+                                        <span>📅 {{ $card['date'] }}</span>
+                                        <span>👥 {{ $card['interested'] }}</span>
+                                        <span>💰 {{ $card['budget'] }}</span>
+                                    </div>
+
+                                    <div class="kabataan-barangay-actions">
+                                        <a href="{{ route('login') }}" class="kabataan-button kabataan-button-primary kabataan-button-sm">View Details</a>
+                                        <button type="button" class="kabataan-chip-button">Save</button>
+                                        <button type="button" class="kabataan-chip-button">Share</button>
+                                    </div>
+                                </div>
+                            </article>
                         @endforeach
                     </div>
 
-                    <label class="kabataan-search">
-                        <span aria-hidden="true">🔍</span>
-                        <input type="search" id="barangaySearch" placeholder="Search barangays, programs, or activities...">
-                    </label>
-                </div>
-
-                <div class="kabataan-discovery-summary">
-                    <span id="barangayResultLabel">Showing {{ count($barangayCards) }} highlights</span>
-                    <span>Across 26 barangays</span>
-                </div>
-
-                <div class="kabataan-barangay-grid" id="barangayGrid">
-                    @foreach ($barangayCards as $card)
-                        <article
-                            class="kabataan-barangay-card"
-                            data-barangay="{{ strtolower($card['barangay']) }}"
-                            data-category="{{ strtolower($card['category']) }}"
-                            data-type="{{ strtolower($card['type']) }}"
-                        >
-                            <div class="kabataan-barangay-top">
-                                <div>
-                                    <span class="kabataan-barangay-name">{{ $card['barangay'] }}</span>
-                                    <span class="kabataan-barangay-type {{ $card['badgeClass'] }}">{{ $card['type'] }}</span>
-                                </div>
-                                <span class="kabataan-barangay-category">{{ $card['category'] }}</span>
-                            </div>
-
-                            <img src="{{ $card['image'] }}" alt="{{ $card['title'] }}">
-
-                            <div class="kabataan-barangay-body">
-                                <h3>{{ $card['title'] }}</h3>
-                                <p>{{ $card['summary'] }}</p>
-
-                                <div class="kabataan-barangay-meta">
-                                    <span>📅 {{ $card['date'] }}</span>
-                                    <span>👥 {{ $card['interested'] }}</span>
-                                    <span>💰 {{ $card['budget'] }}</span>
-                                </div>
-
-                                <div class="kabataan-barangay-actions">
-                                    <a href="{{ route('login') }}" class="kabataan-button kabataan-button-primary kabataan-button-sm">View Details</a>
-                                    <button type="button" class="kabataan-chip-button">Save</button>
-                                    <button type="button" class="kabataan-chip-button">Share</button>
-                                </div>
-                            </div>
-                        </article>
-                    @endforeach
-                </div>
-
-                <div class="kabataan-discovery-footer">
-                    <p>Showing 6 of 312 activities across 26 barangays.</p>
-                    <a href="{{ route('register') }}" class="kabataan-text-link">Create an account to follow barangays →</a>
-                </div>
+                    <div class="kabataan-discovery-footer">
+                        <p>Showing {{ count($barangayCards) }} activities across 26 barangays.</p>
+                        <a href="{{ route('register') }}" class="kabataan-text-link">Create an account to follow barangays →</a>
+                    </div>
+                @else
+                    <p style="text-align: center; padding: 2rem; color: #666;">No activities available at this time.</p>
+                @endif
             </div>
         </section>
 

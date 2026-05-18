@@ -16,7 +16,7 @@
                     It helps young residents discover programs, follow barangay updates, and understand how local youth governance works.
                 </p>
                 <div class="about-hero-actions">
-                    <a href="{{ route('programs') }}" class="about-btn about-btn-primary">Explore Programs</a>
+                    <a href="{{ route('register') }}" class="about-btn about-btn-primary">Get Started</a>
                     <a href="{{ route('homepage') }}" class="about-btn about-btn-secondary">View Homepage</a>
                 </div>
             </div>
@@ -206,7 +206,7 @@
             </div>
             <div class="about-hero-actions">
                 <a href="{{ route('homepage') }}" class="about-btn about-btn-primary">Home</a>
-                <a href="{{ route('programs') }}" class="about-btn about-btn-secondary">Programs</a>
+                <a href="{{ route('faqs') }}" class="about-btn about-btn-secondary">FAQs</a>
                 <a href="{{ route('contact') }}" class="about-btn about-btn-secondary">Contact</a>
             </div>
         </div>

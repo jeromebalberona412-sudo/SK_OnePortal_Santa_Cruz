@@ -1958,3 +1958,365 @@ body.homepage-body.kabataan-homepage::after {
         font-size: 0.9rem;
     }
 }
+
+/* ════════════════════
+   AUTH MODAL - Youth Edition 🎉
+   ════════════════════ */
+.kabataan-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.kabataan-modal.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.kabataan-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(4, 80, 168, 0.85) 0%, rgba(13, 95, 196, 0.9) 100%);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+}
+
+.kabataan-modal-content {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 24px;
+    padding: 2.5rem;
+    max-width: 520px;
+    width: 90%;
+    box-shadow: 0 25px 80px rgba(4, 80, 168, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.5);
+    animation: modalBounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    overflow: hidden;
+}
+
+@keyframes modalBounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(-50px);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Decorative sparkles */
+.kabataan-modal-decoration {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.modal-sparkle {
+    position: absolute;
+    font-size: 1.5rem;
+    animation: sparkleFloat 3s ease-in-out infinite;
+    opacity: 0.6;
+}
+
+.modal-sparkle-1 {
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.modal-sparkle-2 {
+    top: 20%;
+    right: 15%;
+    animation-delay: 1s;
+}
+
+.modal-sparkle-3 {
+    bottom: 15%;
+    left: 15%;
+    animation-delay: 2s;
+}
+
+@keyframes sparkleFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.4;
+    }
+    50% {
+        transform: translateY(-15px) rotate(180deg);
+        opacity: 0.8;
+    }
+}
+
+.kabataan-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #64748b;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    z-index: 10;
+}
+
+.kabataan-modal-close:hover {
+    color: #0f172a;
+    background: white;
+    border-color: #cbd5e1;
+    transform: rotate(90deg);
+}
+
+.kabataan-modal-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Big emoji icon */
+.kabataan-modal-emoji {
+    font-size: 4rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    animation: emojiPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s both;
+    filter: drop-shadow(0 4px 12px rgba(4, 80, 168, 0.2));
+}
+
+@keyframes emojiPop {
+    0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.kabataan-modal-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    padding: 0 1rem;
+}
+
+.kabataan-modal-header h3 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+    animation: slideInDown 0.5s ease 0.4s both;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.kabataan-modal-header p {
+    font-size: 1rem;
+    color: #64748b;
+    font-weight: 600;
+    animation: slideInDown 0.5s ease 0.5s both;
+}
+
+.kabataan-modal-body {
+    margin-bottom: 2rem;
+    text-align: center;
+    animation: fadeIn 0.5s ease 0.6s both;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.kabataan-modal-body p {
+    font-size: 1rem;
+    color: #475569;
+    line-height: 1.7;
+    padding: 0 0.5rem;
+}
+
+.kabataan-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    animation: slideInUp 0.5s ease 0.7s both;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.kabataan-modal-btn {
+    padding: 0.875rem 1.75rem;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.kabataan-modal-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.kabataan-modal-btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.kabataan-modal-btn-secondary {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+}
+
+.kabataan-modal-btn-secondary:hover {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.kabataan-modal-btn-primary {
+    background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
+    color: white;
+    box-shadow: 0 6px 20px rgba(4, 80, 168, 0.4);
+    border: 2px solid transparent;
+}
+
+.kabataan-modal-btn-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(4, 80, 168, 0.5);
+}
+
+.kabataan-modal-btn-primary:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.kabataan-modal-btn-primary svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+}
+
+.kabataan-modal-btn-primary:hover svg {
+    transform: translateX(4px);
+}
+
+@media (max-width: 640px) {
+    .kabataan-modal-content {
+        padding: 2rem 1.5rem;
+        max-width: 95%;
+        border-radius: 20px;
+    }
+
+    .kabataan-modal-emoji {
+        font-size: 3rem;
+    }
+
+    .kabataan-modal-header h3 {
+        font-size: 1.5rem;
+    }
+
+    .kabataan-modal-header p {
+        font-size: 0.95rem;
+    }
+
+    .kabataan-modal-body p {
+        font-size: 0.95rem;
+    }
+
+    .kabataan-modal-actions {
+        flex-direction: column;
+    }
+
+    .kabataan-modal-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .modal-sparkle {
+        font-size: 1.2rem;
+    }
+}
+
+/* Add a subtle pulse to the primary button */
+@keyframes buttonPulse {
+    0%, 100% {
+        box-shadow: 0 6px 20px rgba(4, 80, 168, 0.4);
+    }
+    50% {
+        box-shadow: 0 6px 25px rgba(4, 80, 168, 0.6);
+    }
+}
+
+.kabataan-modal-btn-primary {
+    animation: buttonPulse 2s ease-in-out infinite;
+}
+

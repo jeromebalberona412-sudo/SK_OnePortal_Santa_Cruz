@@ -21,165 +21,7 @@
         'completed' => ['label' => 'Completed', 'note' => 'Already concluded'],
     ];
 
-    $programs = [
-        [
-            'id' => 101,
-            'title' => 'Youth Tech Literacy Bootcamp',
-            'sector' => 'education',
-            'status' => 'active',
-            'barangay' => 'Pagsawitan',
-            'summary' => 'An intensive 8-week program that equips youth with coding basics, digital productivity, and online safety skills.',
-            'about' => 'Participants work on hands-on projects with mentors and present outputs during a community showcase. This program is designed for first-time learners and youth looking to improve digital confidence for school and work.',
-            'hero' => '/modules/homepage/image/5.png',
-            'participants' => 120,
-            'capacity' => 160,
-            'duration' => '8 weeks',
-            'budgetTotal' => 150000,
-            'budgetUtilization' => 75,
-            'timeline' => [
-                ['title' => 'Registration Period', 'date' => 'June 1 - June 30, 2026', 'status' => 'completed'],
-                ['title' => 'Bootcamp Sessions', 'date' => 'July 15 - Sept 15, 2026', 'status' => 'active'],
-                ['title' => 'Community Tech Showcase', 'date' => 'Sept 30, 2026', 'status' => 'upcoming'],
-            ],
-            'budgetItems' => [
-                ['label' => 'Instructors and Mentors', 'amount' => 60000],
-                ['label' => 'Equipment Rental', 'amount' => 50000],
-                ['label' => 'Materials and Software', 'amount' => 25000],
-                ['label' => 'Logistics and Meals', 'amount' => 15000],
-            ],
-        ],
-        [
-            'id' => 102,
-            'title' => 'Inter-Barangay Summer League',
-            'sector' => 'sports',
-            'status' => 'active',
-            'barangay' => 'Labuin',
-            'summary' => 'A barangay sports league focused on teamwork, discipline, and fitness with coaching clinics and youth tournaments.',
-            'about' => 'The summer league includes basketball and volleyball brackets, weekly coaching sessions, and health monitoring to keep participants active and engaged.',
-            'hero' => '/modules/homepage/image/3.png',
-            'participants' => 350,
-            'capacity' => 420,
-            'duration' => '10 weeks',
-            'budgetTotal' => 200000,
-            'budgetUtilization' => 45,
-            'timeline' => [
-                ['title' => 'Team Signups', 'date' => 'May 10 - June 5, 2026', 'status' => 'completed'],
-                ['title' => 'League Proper', 'date' => 'June 12 - August 20, 2026', 'status' => 'active'],
-                ['title' => 'Finals and Recognition', 'date' => 'August 30, 2026', 'status' => 'upcoming'],
-            ],
-            'budgetItems' => [
-                ['label' => 'Venue and Equipment', 'amount' => 90000],
-                ['label' => 'Coaching Staff', 'amount' => 50000],
-                ['label' => 'Uniform and Medals', 'amount' => 35000],
-                ['label' => 'Hydration and Safety', 'amount' => 25000],
-            ],
-        ],
-        [
-            'id' => 103,
-            'title' => 'Youth Mental Wellness Drive',
-            'sector' => 'health',
-            'status' => 'upcoming',
-            'barangay' => 'Alipit',
-            'summary' => 'A workshop and peer-support series that promotes awareness, stress management, and access to counseling.',
-            'about' => 'Sessions are facilitated by trained resource speakers with guided small-group activities and referral pathways for additional support.',
-            'hero' => '/modules/homepage/image/4.png',
-            'participants' => 0,
-            'capacity' => 120,
-            'duration' => '6 weeks',
-            'budgetTotal' => 120000,
-            'budgetUtilization' => 10,
-            'timeline' => [
-                ['title' => 'Participant Pre-Registration', 'date' => 'June 15 - July 5, 2026', 'status' => 'active'],
-                ['title' => 'Wellness Sessions', 'date' => 'July 12 - August 20, 2026', 'status' => 'upcoming'],
-                ['title' => 'Community Reflection Day', 'date' => 'August 28, 2026', 'status' => 'upcoming'],
-            ],
-            'budgetItems' => [
-                ['label' => 'Resource Speakers', 'amount' => 40000],
-                ['label' => 'Assessment Tools', 'amount' => 25000],
-                ['label' => 'Session Materials', 'amount' => 30000],
-                ['label' => 'Logistics', 'amount' => 25000],
-            ],
-        ],
-        [
-            'id' => 104,
-            'title' => 'Urban Youth Farming Initiative',
-            'sector' => 'agriculture',
-            'status' => 'active',
-            'barangay' => 'San Jose',
-            'summary' => 'Youth-led community garden conversion program with practical training in sustainable farming and food resilience.',
-            'about' => 'Participants are assigned garden plots, attend weekly skill labs, and learn how to run small produce distribution activities.',
-            'hero' => '/modules/homepage/image/1.png',
-            'participants' => 45,
-            'capacity' => 60,
-            'duration' => '12 weeks',
-            'budgetTotal' => 90000,
-            'budgetUtilization' => 85,
-            'timeline' => [
-                ['title' => 'Site Prep and Orientation', 'date' => 'April 8 - April 20, 2026', 'status' => 'completed'],
-                ['title' => 'Planting and Maintenance', 'date' => 'April 25 - July 15, 2026', 'status' => 'active'],
-                ['title' => 'Harvest and Market Day', 'date' => 'July 25, 2026', 'status' => 'upcoming'],
-            ],
-            'budgetItems' => [
-                ['label' => 'Seeds and Inputs', 'amount' => 28000],
-                ['label' => 'Tools and Equipment', 'amount' => 24000],
-                ['label' => 'Training Support', 'amount' => 19000],
-                ['label' => 'Distribution Logistics', 'amount' => 19000],
-            ],
-        ],
-        [
-            'id' => 105,
-            'title' => 'Safe Spaces and Equality Workshops',
-            'sector' => 'gad',
-            'status' => 'active',
-            'barangay' => 'Bagumbayan',
-            'summary' => 'A GAD-focused workshop track on inclusive leadership, respectful communication, and youth advocacy skills.',
-            'about' => 'The workshop series trains youth leaders to facilitate safe, inclusive spaces in schools and barangay organizations.',
-            'hero' => '/modules/homepage/image/2.png',
-            'participants' => 72,
-            'capacity' => 100,
-            'duration' => '5 weeks',
-            'budgetTotal' => 70000,
-            'budgetUtilization' => 62,
-            'timeline' => [
-                ['title' => 'Community Orientation', 'date' => 'May 5 - May 12, 2026', 'status' => 'completed'],
-                ['title' => 'Learning Sessions', 'date' => 'May 15 - June 18, 2026', 'status' => 'active'],
-                ['title' => 'Action Plan Presentations', 'date' => 'June 22, 2026', 'status' => 'upcoming'],
-            ],
-            'budgetItems' => [
-                ['label' => 'Facilitators', 'amount' => 28000],
-                ['label' => 'Workshop Kits', 'amount' => 17000],
-                ['label' => 'Venue and Snacks', 'amount' => 14000],
-                ['label' => 'Youth Advocacy Outputs', 'amount' => 11000],
-            ],
-        ],
-        [
-            'id' => 106,
-            'title' => 'Barkada Kontra Droga Campus Caravan',
-            'sector' => 'anti-drugs',
-            'status' => 'upcoming',
-            'barangay' => 'Poblacion I',
-            'summary' => 'Youth awareness caravan featuring prevention talks, peer education, and early intervention pathways.',
-            'about' => 'The caravan uses school-to-community outreach to strengthen prevention messaging and connect at-risk youth to support.',
-            'hero' => '/modules/homepage/image/3.png',
-            'participants' => 0,
-            'capacity' => 200,
-            'duration' => '4 weeks',
-            'budgetTotal' => 80000,
-            'budgetUtilization' => 18,
-            'timeline' => [
-                ['title' => 'Partner School Coordination', 'date' => 'June 1 - June 20, 2026', 'status' => 'active'],
-                ['title' => 'Campus Caravan', 'date' => 'July 1 - July 25, 2026', 'status' => 'upcoming'],
-                ['title' => 'Referral Follow-up', 'date' => 'July 30 - August 15, 2026', 'status' => 'upcoming'],
-            ],
-            'budgetItems' => [
-                ['label' => 'Education Materials', 'amount' => 25000],
-                ['label' => 'Speaker Honorarium', 'amount' => 22000],
-                ['label' => 'Transport and Coordination', 'amount' => 18000],
-                ['label' => 'Monitoring and Follow-up', 'amount' => 15000],
-            ],
-        ],
-    ];
-
+    $programs = [];
 @endphp
 
 <div class="programs-page">
@@ -191,7 +33,6 @@
             <p>Explore youth initiatives by sector, barangay, and status. Track participation and budget transparency before you join.</p>
             <div class="programs-hero-actions">
                 <a href="#programs-grid" class="programs-btn programs-btn-primary">Explore Programs</a>
-                <button id="openFeaturedModal" type="button" class="programs-btn programs-btn-ghost">View Program Details</button>
             </div>
         </div>
     </section>
@@ -223,9 +64,6 @@
 
                 <select id="barangayFilter" aria-label="Filter by barangay">
                     <option value="">All Barangays</option>
-                    @foreach(collect($programs)->pluck('barangay')->unique()->sort()->values() as $barangay)
-                        <option value="{{ strtolower($barangay) }}">{{ $barangay }}</option>
-                    @endforeach
                 </select>
 
                 <select id="statusFilter" aria-label="Filter by status">
@@ -239,57 +77,64 @@
             </div>
 
             <div class="programs-results-meta">
-                <p id="programCount">Showing {{ count($programs) }} programs</p>
-                <p class="programs-meta-help">Tap a card to open full program details.</p>
+                <p id="programCount">No programs available</p>
+                <p class="programs-meta-help">Programs will appear here once they are added.</p>
             </div>
 
             <div class="programs-grid-v2" id="programs-grid">
-                @foreach($programs as $program)
-                    @php
-                        $sector = $sectorMeta[$program['sector']] ?? ['label' => ucfirst($program['sector']), 'icon' => 'apps'];
-                        $status = $statusMeta[$program['status']] ?? ['label' => ucfirst($program['status']), 'note' => ''];
-                    @endphp
-                    <article
-                        class="program-card-v2"
-                        data-name="{{ strtolower($program['title']) }}"
-                        data-summary="{{ strtolower($program['summary']) }}"
-                        data-barangay="{{ strtolower($program['barangay']) }}"
-                        data-sector="{{ $program['sector'] }}"
-                        data-status="{{ $program['status'] }}"
-                    >
-                        <div class="program-card-media">
-                            <img src="{{ $program['hero'] }}" alt="{{ $program['title'] }}">
-                            <span class="program-badge program-badge-sector {{ $program['sector'] }}">{{ $sector['label'] }}</span>
-                            <span class="program-badge program-badge-status {{ $program['status'] }}">{{ $status['label'] }}</span>
-                        </div>
+                @if(count($programs) === 0)
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #666;">
+                        <h3>No Programs Available</h3>
+                        <p>Check back later for upcoming youth programs and activities.</p>
+                    </div>
+                @else
+                    @foreach($programs as $program)
+                        @php
+                            $sector = $sectorMeta[$program['sector']] ?? ['label' => ucfirst($program['sector']), 'icon' => 'apps'];
+                            $status = $statusMeta[$program['status']] ?? ['label' => ucfirst($program['status']), 'note' => ''];
+                        @endphp
+                        <article
+                            class="program-card-v2"
+                            data-name="{{ strtolower($program['title']) }}"
+                            data-summary="{{ strtolower($program['summary']) }}"
+                            data-barangay="{{ strtolower($program['barangay']) }}"
+                            data-sector="{{ $program['sector'] }}"
+                            data-status="{{ $program['status'] }}"
+                        >
+                            <div class="program-card-media">
+                                <img src="{{ $program['hero'] }}" alt="{{ $program['title'] }}">
+                                <span class="program-badge program-badge-sector {{ $program['sector'] }}">{{ $sector['label'] }}</span>
+                                <span class="program-badge program-badge-status {{ $program['status'] }}">{{ $status['label'] }}</span>
+                            </div>
 
-                        <div class="program-card-content">
-                            <p class="program-barangay-chip">{{ $program['barangay'] }}</p>
-                            <h3>{{ $program['title'] }}</h3>
-                            <p>{{ $program['summary'] }}</p>
+                            <div class="program-card-content">
+                                <p class="program-barangay-chip">{{ $program['barangay'] }}</p>
+                                <h3>{{ $program['title'] }}</h3>
+                                <p>{{ $program['summary'] }}</p>
 
-                            <div class="program-progress-wrap">
-                                <div class="program-progress-top">
-                                    <span>Budget Utilization</span>
-                                    <strong>{{ $program['budgetUtilization'] }}%</strong>
+                                <div class="program-progress-wrap">
+                                    <div class="program-progress-top">
+                                        <span>Budget Utilization</span>
+                                        <strong>{{ $program['budgetUtilization'] }}%</strong>
+                                    </div>
+                                    <div class="program-progress-track">
+                                        <div class="program-progress-fill" data-budget="{{ $program['budgetUtilization'] }}"></div>
+                                    </div>
                                 </div>
-                                <div class="program-progress-track">
-                                    <div class="program-progress-fill" data-budget="{{ $program['budgetUtilization'] }}"></div>
+
+                                <div class="program-card-meta">
+                                    <span>{{ number_format($program['participants']) }} participants</span>
+                                    <span>Budget: PHP {{ number_format($program['budgetTotal']) }}</span>
+                                </div>
+
+                                <div class="program-card-actions">
+                                    <button type="button" data-program-action="modal" data-program-id="{{ $program['id'] }}" class="programs-btn programs-btn-primary">View Details</button>
+                                    <a href="{{ route('register') }}" class="programs-btn programs-btn-ghost">Join</a>
                                 </div>
                             </div>
-
-                            <div class="program-card-meta">
-                                <span>{{ number_format($program['participants']) }} participants</span>
-                                <span>Budget: PHP {{ number_format($program['budgetTotal']) }}</span>
-                            </div>
-
-                            <div class="program-card-actions">
-                                <button type="button" data-program-action="modal" data-program-id="{{ $program['id'] }}" class="programs-btn programs-btn-primary">View Details</button>
-                                <a href="{{ route('register') }}" class="programs-btn programs-btn-ghost">Join</a>
-                            </div>
-                        </div>
-                    </article>
-                @endforeach
+                        </article>
+                    @endforeach
+                @endif
             </div>
 
             <div id="noProgramsMessage" class="programs-empty" hidden>
