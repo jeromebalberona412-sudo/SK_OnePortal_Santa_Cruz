@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Modules\ArchivedRecords\Providers;
+namespace App\Modules\Archive_Management\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 
-class ArchivedRecordsServiceProvider extends ServiceProvider
+class ArchiveManagementServiceProvider extends ServiceProvider
 {
     public function register(): void {}
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../views', 'archived-records');
+        $this->loadViewsFrom(__DIR__ . '/../views', 'archive-management');
 
         Route::middleware(['web', 'auth', 'ensure2fa', 'role:admin'])
             ->group(__DIR__ . '/../routes/web.php');

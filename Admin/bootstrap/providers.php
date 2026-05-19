@@ -16,7 +16,7 @@ App\Modules\BarangayLogos\Providers\BarangayLogosServiceProvider::class,
 App\Modules\ContactUs\Providers\ContactUsServiceProvider::class,
 App\Modules\DeletedSkFederation\Providers\DeletedSkFederationServiceProvider::class,
 App\Modules\DeletedSkOfficials\Providers\DeletedSkOfficialsServiceProvider::class,
-App\Modules\ArchivedRecords\Providers\ArchivedRecordsServiceProvider::class,
 App\Modules\Manage_Kabataan\ManageKabataanServiceProvider::class,
+App\Modules\Archive_Management\Providers\ArchiveManagementServiceProvider::class,
 
 ];

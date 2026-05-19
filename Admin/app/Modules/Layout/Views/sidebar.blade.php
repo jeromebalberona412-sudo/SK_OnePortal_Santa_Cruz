@@ -143,16 +143,16 @@
                 <span>Audit Log</span>
             </a>
 
-            {{-- Archived Dropdown --}}
+            {{-- Manage Archive Dropdown --}}
             @php
-                $isArchivedActive = request()->routeIs('archived.*');
+                $isArchivedActive = request()->routeIs('archived.*') || request()->routeIs('archive.*');
             @endphp
-            <div class="menu-section-label">Archived</div>
+            <div class="menu-section-label">Manage Archive</div>
             <button type="button"
                 class="menu-item archived-dropdown-btn {{ $isArchivedActive ? 'active' : '' }}"
                 data-nav-key="archived"
-                data-tooltip="Archived"
-                aria-label="Archived"
+                data-tooltip="Manage Archive"
+                aria-label="Manage Archive"
                 aria-expanded="{{ $isArchivedActive ? 'true' : 'false' }}"
                 onclick="toggleArchivedDropdown(this)">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -160,7 +160,7 @@
                     <rect x="1" y="3" width="22" height="5"></rect>
                     <line x1="10" y1="12" x2="14" y2="12"></line>
                 </svg>
-                <span>Archived</span>
+                <span>Manage Archive</span>
                 <svg class="dropdown-chevron {{ $isArchivedActive ? 'open' : '' }}" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
@@ -171,7 +171,6 @@
                    data-nav-key="archived-deleted-sk-federation"
                    data-tooltip="Deleted SK Federation"
                    aria-label="Deleted SK Federation">
-                    {{-- Single person with ID badge icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <circle cx="12" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/>
                         <path d="M5 21v-1a7 7 0 0 1 14 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -184,7 +183,6 @@
                    data-nav-key="archived-deleted-sk-officials"
                    data-tooltip="Deleted SK Officials"
                    aria-label="Deleted SK Officials">
-                    {{-- Group / network icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <circle cx="12" cy="5" r="2.5" stroke="currentColor" stroke-width="1.8"/>
                         <path d="M5.5 21v-1.5a3.5 3.5 0 0 1 3.5-3.5h6a3.5 3.5 0 0 1 3.5 3.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -201,7 +199,6 @@
                    data-nav-key="archived-sk-federation-records"
                    data-tooltip="SK Federation Records"
                    aria-label="SK Federation Records">
-                    {{-- Single person with ID badge icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <circle cx="12" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/>
                         <path d="M5 21v-1a7 7 0 0 1 14 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -214,7 +211,6 @@
                    data-nav-key="archived-sk-officials-records"
                    data-tooltip="SK Officials Records"
                    aria-label="SK Officials Records">
-                    {{-- Group / network icon --}}
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <circle cx="12" cy="5" r="2.5" stroke="currentColor" stroke-width="1.8"/>
                         <path d="M5.5 21v-1.5a3.5 3.5 0 0 1 3.5-3.5h6a3.5 3.5 0 0 1 3.5 3.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -224,6 +220,44 @@
                         <path d="M23 19.5v-1a3 3 0 0 0-3-3h-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                     <span>SK Officials Records</span>
+                </a>
+                {{-- SK Officials Archive sub-section --}}
+                <div class="submenu-section-label">SK Officials Archive</div>
+                <a href="{{ route('archive.deleted-kabataan') }}"
+                   class="menu-item submenu-item {{ request()->routeIs('archive.deleted-kabataan') ? 'active' : '' }}"
+                   data-nav-key="archive-deleted-kabataan"
+                   data-tooltip="Deleted Kabataan"
+                   aria-label="Deleted Kabataan">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+                        <path d="M6 12v5c0 1.657 2.686 3 6 3s6-1.343 6-3v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span>Deleted Kabataan</span>
+                </a>
+                <a href="{{ route('archive.rejected-kk-profiling') }}"
+                   class="menu-item submenu-item {{ request()->routeIs('archive.rejected-kk-profiling') ? 'active' : '' }}"
+                   data-nav-key="archive-rejected-kk-profiling"
+                   data-tooltip="Rejected KK Profiling"
+                   aria-label="Rejected KK Profiling">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="9" y1="13" x2="15" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <line x1="9" y1="17" x2="12" y2="17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span>Rejected KK Profiling</span>
+                </a>
+                <a href="{{ route('archive.rejected-scholarships') }}"
+                   class="menu-item submenu-item {{ request()->routeIs('archive.rejected-scholarships') ? 'active' : '' }}"
+                   data-nav-key="archive-rejected-scholarships"
+                   data-tooltip="Rejected Scholarships"
+                   aria-label="Rejected Scholarships">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Rejected Scholarships</span>
                 </a>
                 <div class="archived-dropdown-spacer"></div>
             </div>

@@ -1,0 +1,1083 @@
+================================================================================
+                SK ONE PORTAL SANTA CRUZ - SYSTEM FLOW DOCUMENTATION
+================================================================================
+
+Document Created: May 14, 2026
+System: SK One Portal Santa Cruz
+Location: Santa Cruz, Laguna
+Coverage: 26 Barangays
+
+================================================================================
+                            TABLE OF CONTENTS
+================================================================================
+
+1. SYSTEM OVERVIEW
+2. USER ROLES AND ACCESS LEVELS
+3. ADMIN PORTAL PROCESSES
+4. SK FEDERATION PORTAL PROCESSES
+5. SK OFFICIALS PORTAL PROCESSES
+6. KABATAAN PORTAL PROCESSES
+7. INTER-PORTAL WORKFLOWS
+8. DATA FLOW DIAGRAMS
+9. KEY FEATURES BY PORTAL
+
+================================================================================
+                            1. SYSTEM OVERVIEW
+================================================================================
+
+The SK One Portal Santa Cruz is a comprehensive multi-tenant web application 
+system designed to manage Sangguniang Kabataan (SK) operations across Santa 
+Cruz, Laguna. The system consists of four interconnected portals:
+
+1. Admin Portal - Central management and oversight
+2. SK Federation Portal - Municipal-level monitoring and coordination
+3. SK Officials Portal - Barangay-level operations and management
+4. Kabataan Portal - Youth registration and program participation
+
+Technology Stack:
+- Backend: Laravel (PHP)
+- Frontend: Blade Templates, JavaScript, CSS
+- Database: PostgreSQL/MySQL
+- Authentication: Laravel Fortify
+- Email: SMTP (Mailtrap for development)
+
+================================================================================
+                    2. USER ROLES AND ACCESS LEVELS
+================================================================================
+
+ADMIN (Super Administrator)
+- Full system access across all portals
+- Account management for SK Federation and SK Officials
+- Barangay configuration and management
+- Audit log monitoring
+- System-wide reporting
+- Archive management
+
+SK FEDERATION (Municipal Level)
+- Monitor all 26 barangays
+- View barangay compliance status
+- Review ABYIP reports
+- Monitor program implementation
+- Generate municipal reports
+- Track youth participation rates
+
+SK OFFICIALS (Barangay Level)
+- Manage barangay-specific operations
+- Process KK Profiling requests
+- Schedule programs (Sports, Scholarship, etc.)
+- Manage kabataan accounts
+- Submit ABYIP reports
+- Track program participants
+
+KABATAAN (Youth/Citizen)
+- Register through KK Profiling
+- View and apply for programs
+- Update personal profile
+- Participate in scheduled activities
+- View announcements
+
+================================================================================
+                        3. ADMIN PORTAL PROCESSES
+================================================================================
+
+3.1 ACCOUNT MANAGEMENT PROCESS
+-------------------------------
+
+A. SK Federation Account Creation
+   1. Admin logs into Admin Portal
+   2. Navigate to "Manage SK Federation Accounts"
+   3. Click "Add New Account"
+   4. Fill in account details:
+      - Name
+      - Email
+      - Barangay assignment
+      - Term start/end dates
+      - Position (SK Chairperson, Kagawad, etc.)
+   5. System generates temporary password
+   6. Account created with status "ACTIVE"
+   7. Email notification sent to SK Federation user
+   8. Audit log entry created
+
+B. SK Officials Account Creation
+   1. Admin logs into Admin Portal
+   2. Navigate to "Manage SK Officials Accounts"
+   3. Click "Add New Account"
+   4. Fill in account details:
+      - Name
+      - Email
+      - Barangay assignment
+      - Term start/end dates
+      - Position
+   5. System generates temporary password
+   6. Account created with status "ACTIVE"
+   7. Email notification sent to SK Official
+   8. Audit log entry created
+
+C. Account Status Management
+   - ACTIVE: Full access to portal
+   - INACTIVE: Temporarily suspended
+   - DEACTIVATED: Permanently disabled
+   - PENDING_APPROVAL: Awaiting admin approval
+
+D. Term Extension Process
+   1. Admin selects official profile
+   2. Click "Extend Term"
+   3. Enter new end date
+   4. System validates date (must be future date)
+   5. Term extended
+   6. Audit log entry created
+
+E. Password Reset Process
+   1. Admin selects user account
+   2. Click "Reset Password"
+   3. Option 1: Generate random password
+   4. Option 2: Set custom password
+   5. New password sent via email
+   6. User must change on first login
+
+3.2 BARANGAY MANAGEMENT
+-----------------------
+
+A. Barangay Configuration
+   - 26 Barangays in Santa Cruz:
+     * Alipit, Bagumbayan, Bubukal, Calios, Duhat
+     * Gatid, Jasaan, Labuin, Malinao, Oogong
+     * Pagsawitan, Palasan, Patimbao
+     * Poblacion I, II, III, IV, V
+     * San Jose, San Juan, San Pablo Norte, San Pablo Sur
+     * Santisima Cruz, Santo Angel Central, Norte, Sur
+
+B. Barangay Logo Management
+   1. Admin uploads barangay logo
+   2. Image stored in Cloudinary
+   3. Logo URL saved to database
+   4. Logo displayed across all portals
+
+3.3 AUDIT LOG MONITORING
+-------------------------
+
+A. Tracked Events
+   - Account creation/modification
+   - Password resets
+   - Status changes
+   - Term extensions
+   - Login attempts
+   - Data modifications
+
+B. Audit Log Fields
+   - Timestamp
+   - User ID
+   - Action performed
+   - IP address
+   - Changes made (before/after)
+   - Result (success/failure)
+
+3.4 ARCHIVED RECORDS MANAGEMENT
+--------------------------------
+
+A. SK Federation Archives
+   - View archived federation accounts
+   - Restore archived accounts
+   - Permanent deletion (with confirmation)
+
+B. SK Officials Archives
+   - View archived official accounts
+   - Restore archived accounts
+   - Permanent deletion (with confirmation)
+
+3.5 KABATAAN MANAGEMENT
+------------------------
+
+A. View All Kabataan Records
+   - Search by name, email, barangay
+   - Filter by status
+   - View registration details
+   - Export data
+
+================================================================================
+                    4. SK FEDERATION PORTAL PROCESSES
+================================================================================
+
+4.1 BARANGAY MONITORING SYSTEM
+-------------------------------
+
+A. Dashboard Overview
+   - Total barangays: 26
+   - Compliance statistics
+   - Active programs count
+   - Average participation rate
+   - Compliance rate percentage
+
+B. Barangay Status Categories
+   - COMPLIANT: All reports submitted on time
+   - PARTIAL: Some reports missing or late
+   - NON-COMPLIANT: Multiple missing reports
+
+C. Monitoring Metrics Per Barangay
+   - Reports submitted (out of 12 expected)
+   - On-time submissions
+   - Active programs count
+   - Youth participation rate
+   - Last update date
+   - SK Chairman name
+   - Report rate percentage
+
+D. Barangay Detail View
+   1. Click on barangay name
+   2. View comprehensive data:
+      - Municipality info
+      - Total kabataan count
+      - Verified accounts
+      - Compliance score
+      - Program statistics
+      - Officials list
+      - System data
+
+4.2 PROGRAM MONITORING
+----------------------
+
+A. Program Categories
+   - Previous Programs (Completed)
+   - Current Programs (Ongoing)
+   - Future Programs (Planned)
+
+B. Program Information Tracked
+   - Title
+   - Sector (Leadership, Environment, Livelihood, Sports, Health, Education)
+   - Timeline
+   - Status
+   - Participants count
+   - Budget allocated
+   - Budget used
+   - Description
+   - Reports submitted
+
+C. Program Statistics
+   - Total youth population
+   - Total programs created
+   - Total ongoing programs
+   - Total completed programs
+   - Total participants
+   - Overall performance rating
+
+D. Performance Metrics
+   - Completion rate
+   - Attendance rate
+   - Budget efficiency
+   - Most active sector
+   - Most successful program
+   - Low participation count
+
+4.3 ABYIP (Anti-Barangay Youth Investment Plan) MONITORING
+-----------------------------------------------------------
+
+A. ABYIP Report Tracking
+   - Quarterly report submissions
+   - Report submission dates
+   - Submitted by (official name)
+   - File attachments
+
+B. ABYIP Metrics
+   - Budget utilization percentage
+   - Remaining balance
+   - Project count
+   - Report history
+
+C. Compliance Calculation
+   - Check ABYIP reports for current year
+   - Check Accomplishment reports for current year
+   - Status determination:
+     * COMPLIANT: Both reports submitted this year
+     * PARTIAL: One report missing
+     * NON-COMPLIANT: No reports this year
+
+4.4 COMPLIANCE WARNINGS
+-----------------------
+
+A. Critical Warnings (Non-Compliant)
+   - Missing ABYIP Report
+   - Missing Accomplishment Report
+   - Delayed Submission
+   - Incomplete Documentation
+
+B. Warning Alerts (Partial Compliance)
+   - Missing ABYIP Report
+   - Missing Accomplishment Report
+   - Pending Review
+
+4.5 REPORTS GENERATION
+----------------------
+
+A. Municipal-Level Reports
+   - Overall compliance report
+   - Program participation summary
+   - Budget utilization report
+   - Youth population statistics
+   - Barangay comparison report
+
+================================================================================
+                    5. SK OFFICIALS PORTAL PROCESSES
+================================================================================
+
+5.1 KK PROFILING REQUEST MANAGEMENT
+------------------------------------
+
+A. KK Profiling Schedule Management
+   1. SK Official creates profiling schedule
+   2. Set schedule details:
+      - Barangay
+      - Date start
+      - Date expiry
+      - Status (Ongoing, Upcoming, Rescheduled, Completed, Cancelled)
+   3. Schedule published
+   4. Kabataan can register during active period
+
+B. Registration Request Processing
+   1. View pending KK Profiling requests
+   2. Filter by:
+      - Status (All, Not Profiled, Wrong Credentials, Duplicate)
+      - Search (name, email, contact)
+      - Purok/Zone
+      - SK Voter status
+   3. Review registration details:
+      - Personal information
+      - Contact details
+      - Civil status
+      - Youth classification
+      - Education level
+      - Work status
+      - Voter registration
+      - KK Assembly participation
+
+C. Evaluation Status Categories
+   - NOT PROFILED: New registration, not in previous records
+   - WRONG CREDENTIALS: Information mismatch
+   - DUPLICATE: Already registered
+   - AUTO APPROVED: Matched previous records, auto-approved
+   - ACTIVE: Manually approved by SK Official
+
+D. Approval Process
+   1. Review registration details
+   2. Verify information accuracy
+   3. Check for duplicates
+   4. Click "Approve"
+   5. If "Not Profiled":
+      - Create PreviousKabataan record
+      - Store in historical database
+   6. Update registration status to "active"
+   7. Update user account status to "ACTIVE"
+   8. Send approval email notification
+   9. Kabataan can now log in
+
+E. Rejection Process
+   1. Review registration details
+   2. Select rejection reasons:
+      - Incomplete information
+      - Invalid documents
+      - Duplicate registration
+      - Age requirement not met
+      - Not a resident
+      - Other (specify)
+   3. Click "Reject"
+   4. Update registration status to "rejected"
+   5. Update user account status to "REJECTED"
+   6. Send rejection email with reasons
+   7. Kabataan cannot access portal
+
+F. Statistics Dashboard
+   - Active kabataan count
+   - Pending verification count
+   - Rejected count
+   - Total registrations
+
+5.2 KABATAAN MANAGEMENT
+------------------------
+
+A. View Active Kabataan
+   - List all approved kabataan
+   - Search and filter options
+   - View profile details
+   - Export data
+
+B. Previous Kabataan Records
+   - Historical profiling data
+   - Previous year registrations
+   - Comparison with current data
+
+C. Rejected KK Profiling
+   - View rejected applications
+   - Review rejection reasons
+   - Option to reconsider
+
+5.3 PROGRAM SCHEDULING
+----------------------
+
+A. Sports Programs
+   1. Create sports program
+   2. Set program details:
+      - Program name
+      - Sport type
+      - Schedule
+      - Venue
+      - Participant limit
+      - Requirements
+   3. Publish program
+   4. Kabataan can view and apply
+
+B. Sports Application Management
+   1. View sports applications
+   2. Review applicant details
+   3. Approve/Reject applications
+   4. Track participants
+
+C. Scholarship Programs
+   1. Create scholarship program
+   2. Set scholarship details:
+      - Scholarship name
+      - Requirements
+      - Application deadline
+      - Number of slots
+      - Benefits
+   3. Publish program
+   4. Kabataan can apply
+
+D. Scholarship Application Management
+   1. View scholarship applications
+   2. Review documents
+   3. Evaluate eligibility
+   4. Approve/Reject applications
+   5. Maintain scholar list
+
+E. Scholar List Management
+   - View active scholars
+   - Track scholarship status
+   - Monitor academic performance
+   - Renewal processing
+
+5.4 ABYIP SUBMISSION
+--------------------
+
+A. ABYIP Report Creation
+   1. Navigate to ABYIP section
+   2. Select quarter/period
+   3. Fill in report details:
+      - Programs implemented
+      - Budget utilization
+      - Participants count
+      - Outcomes/Results
+      - Challenges faced
+      - Recommendations
+   4. Attach supporting documents
+   5. Submit report
+
+B. Report Status
+   - DRAFT: Work in progress
+   - SUBMITTED: Sent to Federation
+   - REVIEWED: Checked by Federation
+   - APPROVED: Accepted
+   - REVISION NEEDED: Requires changes
+
+5.5 ANNOUNCEMENTS
+-----------------
+
+A. Create Announcements
+   1. Write announcement title
+   2. Write announcement content
+   3. Set target audience:
+      - All kabataan
+      - Specific purok
+      - Program participants
+   4. Set priority (Normal, Important, Urgent)
+   5. Publish announcement
+
+B. Announcement Management
+   - Edit announcements
+   - Delete announcements
+   - View announcement reach
+   - Track engagement
+
+5.6 CALENDAR MANAGEMENT
+-----------------------
+
+A. Event Scheduling
+   1. Create calendar event
+   2. Set event details:
+      - Event name
+      - Date and time
+      - Venue
+      - Description
+      - Event type
+   3. Publish event
+   4. Visible to kabataan
+
+5.7 BUDGET AND FINANCE
+----------------------
+
+A. Budget Tracking
+   - View allocated budget
+   - Track expenses
+   - Monitor remaining balance
+   - Generate financial reports
+
+5.8 COMMITTEES MANAGEMENT
+-------------------------
+
+A. Committee Creation
+   - Create committee
+   - Assign members
+   - Set committee objectives
+   - Track committee activities
+
+================================================================================
+                        6. KABATAAN PORTAL PROCESSES
+================================================================================
+
+6.1 KK PROFILING REGISTRATION
+------------------------------
+
+A. Registration Flow
+   1. Visit Kabataan Portal
+   2. View signup page with barangay list
+   3. Check barangay schedule status:
+      - ONGOING: Can register
+      - UPCOMING: Registration not yet open
+      - COMPLETED: Registration closed
+      - CANCELLED: Registration unavailable
+   4. Select barangay
+   5. System checks if schedule is active
+   6. If active, proceed to registration form
+   7. If not active, show error message
+
+B. Registration Form Fields
+   PERSONAL INFORMATION:
+   - Last name (required)
+   - First name (required)
+   - Middle name (optional)
+   - Suffix (optional)
+   - Purok/Zone (required)
+   - Sex (required: Male/Female)
+   - Age (required: 15-30)
+   - Birthday (required)
+   - Email (required)
+   - Contact number (optional)
+
+   CLASSIFICATION:
+   - Civil status (Single, Married, Widowed, Separated)
+   - Youth classification (In-School, Out-of-School, Working, etc.)
+   - Youth age group (Child Youth, Core Youth, Young Adult)
+   - Work status (Employed, Unemployed, Student, etc.)
+   - Education level
+
+   VOTER INFORMATION:
+   - SK voter (Yes/No)
+   - National voter (Yes/No)
+   - SK voted in last election (Yes/No)
+   - Vote frequency
+
+   PARTICIPATION:
+   - KK Assembly attendance (Yes/No)
+   - Reasons for non-attendance (if applicable)
+
+   SOCIAL MEDIA:
+   - Facebook account
+   - Group chat participation
+
+   SIGNATURE:
+   - Digital signature (required)
+
+C. Form Submission Process
+   1. Fill out all required fields
+   2. Click "Submit"
+   3. System validates data
+   4. Check for existing registration (by email + barangay)
+   5. If exists, update registration
+   6. If new, create registration
+   7. Set status to "pending_verification"
+   8. Generate verification URL (valid 24 hours)
+   9. Send verification email
+   10. Redirect to "Check Email" page
+
+D. Email Verification Process
+   1. Kabataan receives verification email
+   2. Click verification link
+   3. System validates signed URL
+   4. Check if link is expired
+   5. If valid, mark email as verified
+   6. Update status to "email_verified"
+   7. Store registration ID in session
+   8. Redirect to "Set Password" page
+
+E. Password Setup Process
+   1. View "Set Password" page
+   2. Enter password (minimum 8 characters)
+   3. Confirm password
+   4. Click "Set Password"
+   5. System validates password
+   6. Check session for registration ID
+   7. Create or update user account:
+      - Name: Full name from registration
+      - Email: From registration
+      - Password: Hashed password
+      - Role: "kabataan"
+      - Status: "PENDING_APPROVAL"
+      - Tenant ID: From barangay
+      - Barangay ID: From registration
+   8. Mark password as set
+   9. Mark registration as active
+
+F. Auto-Approval Evaluation
+   1. System runs evaluation service
+   2. Check against previous kabataan records
+   3. Match criteria:
+      - Same name
+      - Same barangay
+      - Similar age
+      - Previous registration exists
+   4. If match found:
+      - Auto-approve registration
+      - Update user status to "ACTIVE"
+      - Send approval email
+      - Kabataan can log in immediately
+   5. If no match:
+      - Keep status as "PENDING_APPROVAL"
+      - Wait for SK Official review
+      - Send pending notification
+
+G. Registration Status Flow
+   pending_verification → email_verified → password_set → 
+   PENDING_APPROVAL → ACTIVE (or REJECTED)
+
+6.2 LOGIN PROCESS
+-----------------
+
+A. Login Flow
+   1. Visit Kabataan Portal login page
+   2. Enter email
+   3. Enter password
+   4. Click "Login"
+   5. System validates credentials
+   6. Check account status:
+      - ACTIVE: Allow login
+      - PENDING_APPROVAL: Show pending message
+      - REJECTED: Show rejection message
+      - INACTIVE: Show inactive message
+   7. If ACTIVE, create session
+   8. Redirect to dashboard
+
+6.3 DASHBOARD
+-------------
+
+A. Dashboard Features
+   - Welcome message
+   - Profile summary
+   - Available programs
+   - Upcoming events
+   - Announcements
+   - Quick actions
+
+6.4 PROFILE MANAGEMENT
+----------------------
+
+A. View Profile
+   - Personal information
+   - Contact details
+   - Barangay assignment
+   - Registration status
+   - Program participation history
+
+B. Update Profile
+   1. Click "Edit Profile"
+   2. Update allowed fields:
+      - Contact number
+      - Facebook account
+      - Profile picture
+   3. Save changes
+   4. System validates data
+   5. Update database
+   6. Show success message
+
+6.5 PROGRAMS
+------------
+
+A. View Available Programs
+   - Sports programs
+   - Scholarship programs
+   - Training programs
+   - Community activities
+
+B. Program Application
+   1. Browse available programs
+   2. Click "Apply"
+   3. Fill application form
+   4. Submit application
+   5. Wait for SK Official approval
+   6. Receive notification
+
+C. My Programs
+   - View applied programs
+   - Check application status
+   - View program schedule
+   - Track participation
+
+6.6 HOMEPAGE
+------------
+
+A. Public Homepage Features
+   - SK information
+   - Latest announcements
+   - Upcoming events
+   - Contact information
+   - Registration link
+
+================================================================================
+                        7. INTER-PORTAL WORKFLOWS
+================================================================================
+
+7.1 ACCOUNT CREATION WORKFLOW
+------------------------------
+
+Admin → SK Federation/Officials
+1. Admin creates account in Admin Portal
+2. System generates credentials
+3. Email sent to SK Federation/Official
+4. SK Federation/Official receives email
+5. First login requires password change
+6. Account activated
+
+7.2 KK PROFILING WORKFLOW
+--------------------------
+
+Kabataan → SK Officials → System
+1. Kabataan registers via Kabataan Portal
+2. Email verification sent
+3. Kabataan verifies email
+4. Kabataan sets password
+5. System evaluates against previous records
+6. If match: Auto-approve
+7. If no match: Send to SK Officials for review
+8. SK Official reviews in SK Officials Portal
+9. SK Official approves/rejects
+10. Notification sent to Kabataan
+11. If approved: Kabataan can log in
+12. If rejected: Kabataan cannot access
+
+7.3 PROGRAM MANAGEMENT WORKFLOW
+-------------------------------
+
+SK Officials → Kabataan → SK Federation
+1. SK Official creates program in SK Officials Portal
+2. Program published to Kabataan Portal
+3. Kabataan views and applies
+4. SK Official reviews applications
+5. SK Official approves participants
+6. Program conducted
+7. SK Official submits program report
+8. Report visible to SK Federation
+9. SK Federation monitors compliance
+
+7.4 ABYIP REPORTING WORKFLOW
+----------------------------
+
+SK Officials → SK Federation → Admin
+1. SK Official prepares ABYIP report
+2. SK Official submits via SK Officials Portal
+3. Report stored in database
+4. SK Federation views in monitoring dashboard
+5. SK Federation reviews compliance
+6. If non-compliant: Warning issued
+7. Admin can view all reports
+8. Admin generates municipal summary
+
+7.5 MONITORING WORKFLOW
+-----------------------
+
+SK Federation → SK Officials → Admin
+1. SK Federation monitors barangay compliance
+2. Check report submissions
+3. Check program implementation
+4. Calculate compliance status
+5. If non-compliant: Issue warning
+6. SK Officials receive notification
+7. SK Officials submit missing reports
+8. Compliance status updated
+9. Admin oversees entire process
+
+================================================================================
+                    8. DATA FLOW DIAGRAMS
+================================================================================
+
+8.1 USER AUTHENTICATION FLOW
+-----------------------------
+
+[User] → [Login Page] → [Validate Credentials] → [Check Status]
+                                                        ↓
+                                    [ACTIVE] → [Create Session] → [Dashboard]
+                                    [PENDING] → [Show Pending Message]
+                                    [REJECTED] → [Show Rejection Message]
+                                    [INACTIVE] → [Show Inactive Message]
+
+8.2 KK PROFILING DATA FLOW
+---------------------------
+
+[Kabataan] → [Registration Form] → [Submit]
+                                      ↓
+                            [Validate Data]
+                                      ↓
+                            [Save to Database]
+                                      ↓
+                            [Send Verification Email]
+                                      ↓
+                            [Verify Email]
+                                      ↓
+                            [Set Password]
+                                      ↓
+                            [Create User Account]
+                                      ↓
+                            [Evaluate Auto-Approval]
+                                      ↓
+                    [Match Found] → [Auto-Approve] → [ACTIVE]
+                    [No Match] → [Pending Review] → [SK Official Review]
+                                                            ↓
+                                            [Approve] → [ACTIVE]
+                                            [Reject] → [REJECTED]
+
+8.3 PROGRAM APPLICATION FLOW
+-----------------------------
+
+[SK Official] → [Create Program] → [Publish]
+                                        ↓
+                            [Kabataan Portal]
+                                        ↓
+                            [Kabataan Views]
+                                        ↓
+                            [Kabataan Applies]
+                                        ↓
+                            [Application Submitted]
+                                        ↓
+                            [SK Official Reviews]
+                                        ↓
+                    [Approve] → [Add to Participants]
+                    [Reject] → [Send Rejection Notice]
+
+8.4 COMPLIANCE MONITORING FLOW
+-------------------------------
+
+[SK Officials] → [Submit Reports] → [Database]
+                                        ↓
+                            [SK Federation Portal]
+                                        ↓
+                            [Calculate Compliance]
+                                        ↓
+                    [COMPLIANT] → [Green Status]
+                    [PARTIAL] → [Yellow Status] → [Warning]
+                    [NON-COMPLIANT] → [Red Status] → [Critical Warning]
+                                                            ↓
+                                            [Admin Notification]
+
+================================================================================
+                    9. KEY FEATURES BY PORTAL
+================================================================================
+
+9.1 ADMIN PORTAL KEY FEATURES
+------------------------------
+✓ Account Management (SK Federation & Officials)
+✓ Barangay Configuration
+✓ Audit Log Monitoring
+✓ Archive Management
+✓ System-wide Reporting
+✓ User Status Management
+✓ Term Extension
+✓ Password Reset
+✓ Barangay Logo Management
+✓ Contact Us Management
+
+9.2 SK FEDERATION PORTAL KEY FEATURES
+--------------------------------------
+✓ Barangay Monitoring Dashboard
+✓ Compliance Tracking
+✓ Program Monitoring
+✓ ABYIP Report Review
+✓ Performance Metrics
+✓ Municipal Reports
+✓ Warning System
+✓ Barangay Comparison
+✓ Youth Population Statistics
+✓ Budget Utilization Tracking
+
+9.3 SK OFFICIALS PORTAL KEY FEATURES
+-------------------------------------
+✓ KK Profiling Request Management
+✓ Registration Approval/Rejection
+✓ Schedule Management
+✓ Sports Program Management
+✓ Scholarship Program Management
+✓ Scholar List Management
+✓ ABYIP Report Submission
+✓ Announcement Creation
+✓ Calendar Management
+✓ Budget Tracking
+✓ Committee Management
+✓ Kabataan Database
+✓ Previous Kabataan Records
+✓ Rejected Applications Review
+
+9.4 KABATAAN PORTAL KEY FEATURES
+---------------------------------
+✓ KK Profiling Registration
+✓ Email Verification
+✓ Password Setup
+✓ Profile Management
+✓ Program Browsing
+✓ Program Application
+✓ Dashboard
+✓ Announcements View
+✓ Events Calendar
+✓ Homepage
+✓ Contact Information
+
+================================================================================
+                        10. TECHNICAL SPECIFICATIONS
+================================================================================
+
+10.1 DATABASE STRUCTURE
+-----------------------
+
+Key Tables:
+- users: All user accounts (Admin, SK Fed, SK Officials, Kabataan)
+- tenants: Municipality/tenant information
+- barangays: Barangay master data
+- kabataan_registrations: KK Profiling submissions
+- previous_kabataan: Historical profiling records
+- official_profiles: SK Official profile details
+- terms: Official term information
+- kk_profiling_schedules: Registration schedule management
+- programs: Sports, scholarship, and other programs
+- program_applications: Program application submissions
+- announcements: Announcement posts
+- events: Calendar events
+- abyip_reports: ABYIP report submissions
+- audit_logs: System audit trail
+
+10.2 USER ROLES
+---------------
+- admin: Super administrator
+- sk_federation: Municipal SK Federation
+- sk_official: Barangay SK Official
+- kabataan: Youth/citizen
+
+10.3 STATUS VALUES
+------------------
+
+User Status:
+- ACTIVE: Full access
+- PENDING_APPROVAL: Awaiting approval
+- REJECTED: Access denied
+- INACTIVE: Temporarily suspended
+- DEACTIVATED: Permanently disabled
+
+Registration Status:
+- pending_verification: Email not verified
+- email_verified: Email verified, password not set
+- password_set: Password set, awaiting approval
+- active: Approved and active
+- rejected: Rejected by SK Official
+- archived: Moved to archive
+
+Evaluation Status:
+- Not Profiled: New registration
+- Wrong Credentials: Information mismatch
+- Duplicate: Already registered
+- Auto Approved: Automatically approved
+- active: Manually approved
+
+Schedule Status:
+- Ongoing: Currently accepting registrations
+- Upcoming: Will open soon
+- Rescheduled: Date changed
+- Completed: Registration closed
+- Cancelled: Registration cancelled
+
+10.4 EMAIL NOTIFICATIONS
+------------------------
+- Account creation notification
+- Email verification
+- Approval notification
+- Rejection notification
+- Password reset
+- Program application confirmation
+- Program approval/rejection
+- Announcement notifications
+
+10.5 SECURITY FEATURES
+----------------------
+- Password hashing (bcrypt)
+- Email verification
+- Signed URLs (24-hour expiry)
+- Session management
+- CSRF protection
+- Role-based access control
+- Audit logging
+- IP tracking
+
+================================================================================
+                            11. BUSINESS RULES
+================================================================================
+
+11.1 REGISTRATION RULES
+------------------------
+- Age requirement: 15-30 years old
+- One registration per email per barangay
+- Email verification required
+- Password minimum 8 characters
+- Registration only during active schedule
+- Auto-approval if matched with previous records
+- Manual approval required for new registrations
+
+11.2 ACCOUNT RULES
+------------------
+- Unique email per user
+- One role per user
+- Term dates must be valid
+- Barangay assignment required for SK Officials
+- Admin can manage all accounts
+- SK Officials can only manage their barangay
+
+11.3 COMPLIANCE RULES
+---------------------
+- ABYIP report required quarterly
+- Accomplishment report required per program
+- Compliant: Both reports submitted this year
+- Partial: One report missing
+- Non-compliant: No reports this year
+- Warning issued for non-compliance
+
+11.4 PROGRAM RULES
+------------------
+- Program must have schedule
+- Participant limit can be set
+- Application deadline required
+- Approval required for participation
+- Report required after completion
+
+================================================================================
+                            12. SUPPORT INFORMATION
+================================================================================
+
+System Administrator: Admin Portal
+Technical Support: Contact through Admin Portal
+User Guides: Available in each portal
+Training: Provided by SK Federation
+
+For technical issues:
+1. Check system status
+2. Review audit logs
+3. Contact system administrator
+4. Submit support ticket
+
+================================================================================
+                            END OF DOCUMENTATION
+================================================================================
+
+Last Updated: May 14, 2026
+Version: 1.0
+Prepared by: System Documentation Team

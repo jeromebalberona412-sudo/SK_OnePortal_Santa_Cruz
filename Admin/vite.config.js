@@ -52,12 +52,6 @@ export default defineConfig({
                 'app/Modules/BarangayLogos/assets/css/barangay-logos.css',
                 'app/Modules/BarangayLogos/assets/js/barangay-logos.js',
 
-                // Archived Records Module
-                'app/Modules/ArchivedRecords/assets/css/SK_federation.css',
-                'app/Modules/ArchivedRecords/assets/js/SK_federation.js',
-                'app/Modules/ArchivedRecords/assets/css/SK_officials.css',
-                'app/Modules/ArchivedRecords/assets/js/SK_officials.js',
-
                 // Contact Us Module
                 'app/Modules/ContactUs/assets/css/contact.css',
                 'app/Modules/ContactUs/assets/js/contact.js',
@@ -65,6 +59,25 @@ export default defineConfig({
                 // Manage Kabataan Module
                 'app/Modules/Manage_Kabataan/assets/css/manage_kabataan.css',
                 'app/Modules/Manage_Kabataan/assets/js/manage_kabataan.js',
+
+                // ── Archive Management Module (unified) ──────────────────────
+                // Archived Data — SK Federation & Officials Records
+                'app/Modules/Archive_Management/assets/css/SK_federation.css',
+                'app/Modules/Archive_Management/assets/js/SK_federation.js',
+                'app/Modules/Archive_Management/assets/css/SK_officials.css',
+                'app/Modules/Archive_Management/assets/js/SK_officials.js',
+
+                // SK Officials Archive — Deleted Kabataan
+                'app/Modules/Archive_Management/assets/css/deleted-kabataan.css',
+                'app/Modules/Archive_Management/assets/js/deleted-kabataan.js',
+
+                // SK Officials Archive — Rejected KK Profiling
+                'app/Modules/Archive_Management/assets/css/rejected-kk-profiling.css',
+                'app/Modules/Archive_Management/assets/js/rejected-kk-profiling.js',
+
+                // SK Officials Archive — Rejected Scholarships
+                'app/Modules/Archive_Management/assets/css/rejected-scholarships.css',
+                'app/Modules/Archive_Management/assets/js/rejected-scholarships.js',
             ],
             refresh: true,
         }),

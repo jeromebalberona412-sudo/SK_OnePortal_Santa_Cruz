@@ -3,7 +3,7 @@
 @section('title', 'Archived SK Officials Records')
 
 @section('head')
-@vite(['app/Modules/ArchivedRecords/assets/css/SK_officials.css'])
+@vite(['app/Modules/Archive_Management/assets/css/SK_officials.css'])
 @endsection
 
 @section('content')
@@ -67,5 +67,5 @@
     </div>
 </div>
 
-@vite(['app/Modules/ArchivedRecords/assets/js/SK_officials.js'])
+@vite(['app/Modules/Archive_Management/assets/js/SK_officials.js'])
 @endsection
