@@ -13,20 +13,200 @@
 
 @php
 	$statCards = [
-		['label' => 'Total Users', 'metricKey' => 'totalUsers', 'tone' => 'azure', 'icon' => 'users'],
-		['label' => 'Federation Accounts Count', 'metricKey' => 'federationAccounts', 'tone' => 'teal', 'icon' => 'federation'],
-		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials'],
-		['label' => 'Current Active Accounts', 'metricKey' => 'currentActiveAccounts', 'tone' => 'indigo', 'icon' => 'activity'],
-		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan'],
+		['label' => 'Total Users', 'metricKey' => 'totalUsers', 'tone' => 'azure', 'icon' => 'users', 'route' => null],
+		['label' => 'Federation Accounts Count', 'metricKey' => 'federationAccounts', 'tone' => 'teal', 'icon' => 'federation', 'route' => null],
+		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials', 'route' => null],
+		['label' => 'Current Active Accounts', 'metricKey' => 'currentActiveAccounts', 'tone' => 'indigo', 'icon' => 'activity', 'route' => null],
+		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => null],
+		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-federation'],
+		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-officials'],
+		['label' => 'Archived Data', 'metricKey' => 'archivedData', 'tone' => 'red', 'icon' => 'archive', 'route' => 'archive.dashboard'],
+		['label' => 'SK Federation Records', 'metricKey' => 'skFederationRecords', 'tone' => 'red', 'icon' => 'federation', 'route' => 'archived.sk-federation-records'],
+		['label' => 'SK Officials Records', 'metricKey' => 'skOfficialsRecords', 'tone' => 'red', 'icon' => 'officials', 'route' => 'archived.sk-officials-records'],
+		['label' => 'SK Officials Archive', 'metricKey' => 'skOfficialsArchive', 'tone' => 'red', 'icon' => 'archive', 'route' => 'archive.dashboard'],
+		['label' => 'Deleted Kabataan', 'metricKey' => 'deletedKabataan', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archive.deleted-kabataan'],
+		['label' => 'Rejected KK Profiling', 'metricKey' => 'rejectedKkProfiling', 'tone' => 'red', 'icon' => 'reject', 'route' => 'archive.rejected-kk-profiling'],
+		['label' => 'Rejected Scholarships', 'metricKey' => 'rejectedScholarships', 'tone' => 'red', 'icon' => 'reject', 'route' => 'archive.rejected-scholarships'],
 	];
 @endphp
 
 <div id="mainContent" class="gov-dashboard dashboard-shell" x-data="dashboardConsole()" aria-label="Dashboard content">
-	<section class="dashboard-row dashboard-row--stats">
+	<!-- ══ Page Header ══════════════════════════════════════ -->
+	<div class="dash-page-header">
+		<div class="dash-page-header-left">
+			<h1 class="dash-page-title">Dashboard</h1>
+			<p class="dash-page-welcome">Welcome back Admin</p>
+		</div>
+		<div class="dash-year-filter">
+			<label for="yearSelect" class="dash-year-label">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+					<line x1="3" y1="10" x2="21" y2="10"></line>
+					<line x1="8" y1="2" x2="8" y2="6"></line>
+					<line x1="16" y1="2" x2="16" y2="6"></line>
+				</svg>
+				Year
+			</label>
+			<select id="yearSelect" class="dash-year-select">
+				<option value="2023">2023</option>
+				<option value="2024">2024</option>
+				<option value="2025">2025</option>
+				<option value="2026" selected>2026</option>
+			</select>
+		</div>
+	</div>
+
+	<!-- ══ Stat Cards — 2-row grid ═══════════════════════════ -->
+	<section class="stats-2row-grid">
 		@foreach ($statCards as $card)
 			@include('dashboard::components.statcard', $card)
 		@endforeach
 	</section>
+
+	<!-- ══ Quick Actions ═════════════════════════════════════ -->
+	<div class="dash-section-card">
+		<div class="dash-section-header">
+			<div>
+				<h2 class="dash-section-title">Quick Actions</h2>
+			</div>
+		</div>
+		<div class="quick-actions-scroll">
+			<a href="{{ route('profile') }}" class="qa-btn qa-blue">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="7" r="4"></circle>
+					<path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
+				</svg>
+				My Profile
+			</a>
+			<a href="{{ route('accounts.federation.index') }}" class="qa-btn qa-green">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="3" y="4" width="7" height="7" rx="1.4" />
+					<rect x="14" y="4" width="7" height="7" rx="1.4" />
+					<rect x="8.5" y="14" width="7" height="7" rx="1.4" />
+					<path d="M10 7.5h4" />
+					<path d="M12 11v3" />
+				</svg>
+				SK Federation
+			</a>
+			<a href="{{ route('accounts.officials.index') }}" class="qa-btn qa-green">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M12 4l8 4v2H4V8l8-4z" />
+					<path d="M5 10v7" />
+					<path d="M9 10v7" />
+					<path d="M15 10v7" />
+					<path d="M19 10v7" />
+					<path d="M3 19h18" />
+				</svg>
+				SK Officials
+			</a>
+			<a href="{{ route('manage-kabataan.index') }}" class="qa-btn qa-purple">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+					<circle cx="9" cy="7" r="4"></circle>
+					<line x1="19" y1="8" x2="19" y2="14"></line>
+					<line x1="22" y1="11" x2="16" y2="11"></line>
+				</svg>
+				Kabataan SK
+			</a>
+			<a href="{{ route('barangay-logos.index') }}" class="qa-btn qa-purple">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+					<circle cx="8.5" cy="8.5" r="1.5"></circle>
+					<polyline points="21 15 16 10 5 21"></polyline>
+				</svg>
+				Barangay Logos
+			</a>
+			<a href="{{ route('contact.manage') }}" class="qa-btn qa-yellow">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+				</svg>
+				Manage Contacts
+			</a>
+			<a href="{{ route('auditlogs.index') }}" class="qa-btn qa-yellow">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+					<polyline points="14,2 14,8 20,8"></polyline>
+					<line x1="16" y1="13" x2="8" y2="13"></line>
+					<line x1="16" y1="17" x2="8" y2="17"></line>
+				</svg>
+				Audit Log
+			</a>
+			<a href="{{ route('archived.deleted-sk-federation') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="3 6 5 6 21 6"></polyline>
+					<path d="M19 6l-1 14H6L5 6"></path>
+					<path d="M10 11v6"></path><path d="M14 11v6"></path>
+					<path d="M9 6V4h6v2"></path>
+				</svg>
+				Deleted SK Federation
+			</a>
+			<a href="{{ route('archived.deleted-sk-officials') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="3 6 5 6 21 6"></polyline>
+					<path d="M19 6l-1 14H6L5 6"></path>
+					<path d="M10 11v6"></path><path d="M14 11v6"></path>
+					<path d="M9 6V4h6v2"></path>
+				</svg>
+				Deleted SK Officials
+			</a>
+			<a href="{{ route('archive.dashboard') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+					<polyline points="14,2 14,8 20,8"></polyline>
+					<line x1="9" y1="15" x2="15" y2="15"></line>
+				</svg>
+				Archived Data
+			</a>
+			<a href="{{ route('archived.sk-federation-records') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="3" y="4" width="7" height="7" rx="1.4" />
+					<rect x="14" y="4" width="7" height="7" rx="1.4" />
+					<rect x="8.5" y="14" width="7" height="7" rx="1.4" />
+				</svg>
+				SK Federation Records
+			</a>
+			<a href="{{ route('archived.sk-officials-records') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M12 4l8 4v2H4V8l8-4z" />
+					<path d="M5 10v7" />
+					<path d="M9 10v7" />
+					<path d="M15 10v7" />
+					<path d="M19 10v7" />
+				</svg>
+				SK Officials Records
+			</a>
+			<a href="{{ route('archive.dashboard') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="21 8 21 21 3 21 3 8"></polyline>
+					<rect x="1" y="3" width="22" height="5"></rect>
+				</svg>
+				SK Officials Archive
+			</a>
+			<a href="{{ route('archive.deleted-kabataan') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="3 6 5 6 21 6"></polyline>
+					<path d="M19 6l-1 14H6L5 6"></path>
+					<path d="M10 11v6"></path><path d="M14 11v6"></path>
+				</svg>
+				Deleted Kabataan
+			</a>
+			<a href="{{ route('archive.rejected-kk-profiling') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="12" r="10"></circle>
+					<line x1="15" y1="9" x2="9" y2="15"></line>
+					<line x1="9" y1="9" x2="15" y2="15"></line>
+				</svg>
+				Rejected KK Profiling
+			</a>
+			<a href="{{ route('archive.rejected-scholarships') }}" class="qa-btn qa-red">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+					<path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+				</svg>
+				Rejected Scholarships
+			</a>
+		</div>
+	</div>
 
 	<section class="dashboard-row dashboard-row--analytics">
 		@include('dashboard::components.trendchart')

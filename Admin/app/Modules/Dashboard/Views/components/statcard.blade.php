@@ -1,19 +1,21 @@
-<article class="gov-card stat-card stat-card--{{ $tone }}">
-    <header class="stat-card__top">
-        <p class="stat-card__label">{{ $label }}</p>
-
-        <span class="stat-card__icon stat-card__icon--{{ $tone }}" aria-hidden="true">
+@php
+    $cardContent = function() use ($tone, $metricKey, $icon, $label) {
+        ob_start();
+@endphp
+    <div class="stat-card-top">
+        <span class="stat-card-value" x-text="dashboardMetrics.{{ $metricKey }}.value">0</span>
+        <div class="stat-card-icon stat-icon-{{ $tone }}">
             @switch($icon ?? '')
                 @case('users')
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path d="M16 20a4 4 0 0 0-8 0" />
-                        <circle cx="12" cy="10" r="3" />
-                        <path d="M7 20a3.5 3.5 0 0 0-3-2" />
-                        <path d="M17 18a3.5 3.5 0 0 1 3 2" />
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                     @break
                 @case('federation')
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="7" height="7" rx="1.4" />
                         <rect x="14" y="4" width="7" height="7" rx="1.4" />
                         <rect x="8.5" y="14" width="7" height="7" rx="1.4" />
@@ -22,7 +24,7 @@
                     </svg>
                     @break
                 @case('officials')
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 4l8 4v2H4V8l8-4z" />
                         <path d="M5 10v7" />
                         <path d="M9 10v7" />
@@ -32,29 +34,67 @@
                     </svg>
                     @break
                 @case('kabataan')
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    @break
+                @case('trash')
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14H6L5 6"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M9 6V4h6v2"></path>
+                    </svg>
+                    @break
+                @case('archive')
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                        <rect x="1" y="3" width="22" height="5"></rect>
+                        <line x1="10" y1="12" x2="14" y2="12"></line>
+                    </svg>
+                    @break
+                @case('reject')
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                    @break
+                @case('activity')
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                     </svg>
                     @break
                 @default
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 13a8 8 0 1 1 16 0" />
                         <path d="M6 13h2" />
                         <path d="M16 13h2" />
                         <path d="M12 13l3-3" />
                     </svg>
             @endswitch
-        </span>
-    </header>
-
-    <p class="stat-card__value" x-text="dashboardMetrics.{{ $metricKey }}.value"></p>
-
-    <div class="stat-card__meta">
-        <span class="status-dot" :class="'status-dot--' + dashboardMetrics.{{ $metricKey }}.statusTone" aria-hidden="true"></span>
-        <span class="stat-card__status" x-text="dashboardMetrics.{{ $metricKey }}.status"></span>
-        <span class="stat-card__delta" x-text="dashboardMetrics.{{ $metricKey }}.delta"></span>
+        </div>
     </div>
-</article>
+    <span class="stat-card-label">{{ $label }}</span>
+    <div class="stat-card-meta">
+        <span class="stat-card-status" x-text="dashboardMetrics.{{ $metricKey }}.status">System Stable</span>
+        <span class="stat-card-delta" x-text="dashboardMetrics.{{ $metricKey }}.delta">+2.7%</span>
+    </div>
+@php
+        return ob_get_clean();
+    };
+@endphp
+
+@if(isset($route) && $route)
+    <a href="{{ route($route) }}" class="stat-card stat-card-{{ $tone }}" style="text-decoration: none; color: inherit; cursor: pointer;">
+        {!! $cardContent() !!}
+    </a>
+@else
+    <div class="stat-card stat-card-{{ $tone }}">
+        {!! $cardContent() !!}
+    </div>
+@endif

@@ -1,49 +1,38 @@
-:root {
-    --dash-bg: #f1f4f8;
-    --dash-card: #ffffff;
-    --dash-card-soft: #f8fafc;
-    --dash-border: rgba(226, 232, 240, 0.8);
-    --dash-border-soft: rgba(226, 232, 240, 0.6);
-    --dash-text: #374151;
-    --dash-text-muted: #6b7280;
-    --dash-title: #1e293b;
-    --dash-blue: #1565c0;
-    --dash-cyan: #0891b2;
-    --dash-purple: #7c3aed;
-    --dash-indigo: #4f46e5;
-    --dash-green: #16a34a;
-    --dash-amber: #d97706;
-    --dash-red: #dc2626;
+/* ============================================================
+   Admin Dashboard CSS — Improved Layout
+   Matches SK Officials dashboard style
+   ============================================================ */
+
+*,
+*::before,
+*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f1f5 !important;
+    min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100%;
 }
 
-html,
-body {
-    background: #f1f4f8 !important;
-    overflow-x: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
+/* ── Main content layout ─────────────────────────────────── */
 .gov-dashboard {
     position: relative;
     z-index: 5;
-    padding: 0 0.9rem 1.5rem;
-    color: var(--dash-text);
-    font-family: "Rajdhani", "Arial Narrow", "Segoe UI", sans-serif;
+    padding: 20px 22px;
+    color: #374151;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
-    background: #f1f4f8 !important;
+    background: #f0f1f5 !important;
     width: auto;
     max-width: none;
     box-sizing: border-box;
+    animation: dashFadeIn 0.4s ease both;
 }
 
-.gov-dashboard::before {
-    display: none;
-}
-
-.gov-card p {
-    word-spacing: normal;
-    letter-spacing: normal;
+@keyframes dashFadeIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .dashboard-shell,
@@ -65,30 +54,6 @@ body.sidebar-collapsed #mainContent {
 
 #mainContent.gov-dashboard {
     padding-top: calc(var(--topbar-height) + 0.65rem) !important;
-    padding-left: 0.9rem;
-    padding-right: 0.9rem;
-}
-
-.table-scroll,
-.audit-table-wrap {
-    overflow-x: hidden;
-}
-
-.table-compact th,
-.table-compact td,
-#auditActivityTable thead th,
-#auditActivityTable tbody td {
-    white-space: normal;
-    word-break: break-word;
-}
-
-.dashboard-shell {
-    max-width: none;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    box-sizing: border-box;
 }
 
 .dashboard-row {
@@ -98,6 +63,339 @@ body.sidebar-collapsed #mainContent {
     width: 100%;
     box-sizing: border-box;
 }
+
+/* ── Page header ─────────────────────────────────────────── */
+.dash-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.dash-page-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+
+.dash-page-welcome {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.dash-page-sub {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 3px;
+}
+
+/* ── Year filter ─────────────────────────────────────────── */
+.dash-year-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 7px 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.dash-year-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.dash-year-label svg {
+    width: 15px;
+    height: 15px;
+    stroke: #f4c20d;
+    flex-shrink: 0;
+}
+
+.dash-year-select {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0 4px;
+    appearance: auto;
+}
+
+.dash-year-select:focus {
+    outline: 2px solid #f4c20d;
+    border-radius: 6px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   STAT CARDS — 2-row grid layout
+══════════════════════════════════════════════════════════ */
+
+.stats-2row-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+/* ── Base card ───────────────────────────────────────────── */
+.stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    min-height: 110px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+    border: 1.5px solid #e5e7eb;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+    transform: translateY(-2px);
+}
+
+/* ── Color variants — thin border all 4 sides ────────────── */
+.stat-card-azure,
+.stat-card-indigo { border-color: #3B82F6; }
+
+.stat-card-teal,
+.stat-card-cyan { border-color: #0891b2; }
+
+.stat-card-violet { border-color: #7c3aed; }
+
+.stat-card-red { border-color: #EF4444; }
+
+/* ── Top row: number left, icon right ────────────────────── */
+.stat-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* ── Value (number) — top left ───────────────────────────── */
+.stat-card-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111827;
+    line-height: 1.1;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
+    flex: 1;
+    min-width: 0;
+    display: block;
+    text-align: left;
+}
+
+/* ── Icon — top right ────────────────────────────────────── */
+.stat-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-card-icon svg { width: 20px; height: 20px; }
+
+.stat-icon-azure,
+.stat-icon-indigo  { background: #dbeafe; }
+.stat-icon-azure svg,
+.stat-icon-indigo svg { stroke: #2563eb; }
+
+.stat-icon-teal,
+.stat-icon-cyan  { background: rgba(8, 145, 178, 0.1); }
+.stat-icon-teal svg,
+.stat-icon-cyan svg { stroke: #0891b2; }
+
+.stat-icon-violet  { background: rgba(124, 58, 237, 0.1); }
+.stat-icon-violet svg { stroke: #7c3aed; }
+
+.stat-icon-red  { background: rgba(239, 68, 68, 0.1); }
+.stat-icon-red svg { stroke: #EF4444; }
+
+/* ── Label — bottom left ─────────────────────────────────── */
+.stat-card-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    line-height: 1.3;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* ── Meta (status + delta) ───────────────────────────────── */
+.stat-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 10px;
+    color: #9ca3af;
+    letter-spacing: 0.02em;
+    margin-top: 4px;
+}
+
+.stat-card-status {
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.stat-card-delta {
+    color: #1565c0;
+    font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════════════════
+   QUICK ACTIONS SECTION
+══════════════════════════════════════════════════════════ */
+
+.dash-section-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    margin-bottom: 20px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dash-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.dash-section-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.dash-section-sub {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
+
+/* Single horizontal scrollable row — no wrapping */
+.dash-section-card:has(.quick-actions-scroll) {
+    overflow: visible;
+}
+
+.quick-actions-scroll {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #e5e7eb transparent;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    width: 100%;
+}
+
+.quick-actions-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+.quick-actions-scroll {
+    cursor: default;
+}
+
+.qa-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: inherit;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.qa-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* 🔵 Blue — Records / Data */
+.qa-blue   { background: #3b82f6; color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,.35); }
+.qa-blue:hover   { background: #2563eb; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(59,130,246,.5); }
+
+/* 🟢 Green — System / Tools */
+.qa-green  { background: #22c55e; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,.35); }
+.qa-green:hover  { background: #16a34a; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(34,197,94,.5); }
+
+/* 🟣 Purple — Management */
+.qa-purple { background: #a855f7; color: #fff; box-shadow: 0 4px 12px rgba(168,85,247,.35); }
+.qa-purple:hover { background: #9333ea; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(168,85,247,.5); }
+
+/* 🟡 Yellow/Gold — Finance */
+.qa-yellow { background: #f4c20d; color: #fff; box-shadow: 0 4px 12px rgba(244,194,13,.35); }
+.qa-yellow:hover { background: #e6b800; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(244,194,13,.5); }
+
+/* 🔴 Red — Archive / Danger */
+.qa-red    { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,.35); }
+.qa-red:hover    { background: #dc2626; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(239,68,68,.5); }
 
 .stat-card--cyan::after {
     background: rgba(8, 145, 178, 0.25);
@@ -160,9 +458,9 @@ body.sidebar-collapsed #mainContent {
 }
 
 .gov-card {
-    border: 1px solid var(--dash-border);
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
-    background: var(--dash-card);
+    background: #ffffff;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
     padding: 1.25rem;
     overflow: hidden;
@@ -477,9 +775,9 @@ body.sidebar-collapsed #mainContent {
 .health-gauge-wrap,
 .health-pulse-wrap {
     position: relative;
-    border: 1px solid var(--dash-border);
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
-    background: var(--dash-card);
+    background: #ffffff;
     width: 100%;
     box-sizing: border-box;
 }
@@ -684,9 +982,9 @@ body.sidebar-collapsed #mainContent {
     max-height: 340px;
     overflow-y: auto;
     overflow-x: hidden;
-    border: 1px solid var(--dash-border);
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
-    background: var(--dash-card);
+    background: #ffffff;
     width: 100%;
     box-sizing: border-box;
 }
@@ -718,7 +1016,7 @@ body.sidebar-collapsed #mainContent {
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--dash-card);
+    background: #ffffff;
     color: #6b7280;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -841,20 +1139,35 @@ body.sidebar-collapsed #mainContent {
 }
 
 :root.dark .gov-card {
-    background: #1e293b;
-    border-color: #334155;
+    background: #ffffff;
+    border-color: #e5e7eb;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-:root.dark .gov-card__title {
-    color: #f1f5f9;
+.gov-card__title {
+    margin: 0;
+    color: #111827;
+    font-size: 0.96rem;
+    letter-spacing: 0.02em;
+    font-weight: 700;
 }
 
-:root.dark .gov-card__subtitle {
-    color: #64748b;
+.gov-card__subtitle {
+    margin: 0.2rem 0 0;
+    color: #6b7280;
+    font-size: 0.74rem;
+    letter-spacing: 0.03em;
 }
 
 :root.dark .stat-card__label {
+    color: #94a3b8;
+}
+
+:root.dark .dash-page-title {
+    color: #f1f5f9;
+}
+
+:root.dark .dash-page-welcome {
     color: #94a3b8;
 }
 
@@ -926,74 +1239,284 @@ body.sidebar-collapsed #mainContent {
 
 :root.dark .health-gauge-wrap,
 :root.dark .health-pulse-wrap {
-    background: #1e293b;
-    border-color: #334155;
+    background: #ffffff;
+    border-color: #e5e7eb;
 }
 
-:root.dark .health-gauge-center__label {
+.health-gauge-center__label {
     color: #64748b;
+    letter-spacing: 0.09em;
+    font-size: 0.62rem;
+    font-weight: 700;
 }
 
-:root.dark .health-gauge-center__value {
-    color: #f1f5f9;
+.health-gauge-center__value {
+    margin-top: 0.14rem;
+    color: #1e293b;
+    font-size: 1.54rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
 }
 
 :root.dark .health-metric-item {
-    background: rgba(96, 165, 250, 0.08);
-    border-color: rgba(96, 165, 250, 0.2);
+    background: #f0f7ff;
+    border-color: rgba(21, 101, 192, 0.2);
 }
 
-:root.dark .health-metric-item__label {
+.health-metric-item__label {
     color: #64748b;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
-:root.dark .health-metric-item__value {
-    color: #e2e8f0;
+.health-metric-item__value {
+    display: block;
+    margin-top: 0.15rem;
+    color: #1e293b;
+    font-size: 0.96rem;
+    font-variant-numeric: tabular-nums;
 }
 
 :root.dark .audit-table-wrap {
-    background: #1e293b;
-    border-color: rgba(96, 165, 250, 0.15);
+    background: #ffffff;
+    border-color: rgba(21, 101, 192, 0.2);
 }
 
 :root.dark #auditActivityTable thead th {
-    background: #0f172a;
-    color: #94a3b8;
-    border-bottom-color: #334155;
+    background: #f1f5f9;
+    color: #475569;
+    border-bottom-color: #e2e8f0;
 }
 
 :root.dark #auditActivityTable tbody tr:hover {
-    background: rgba(96, 165, 250, 0.06);
+    background: #f0f7ff;
 }
 
 :root.dark #auditActivityTable tbody td {
-    color: #cbd5e1;
-    border-bottom-color: #1e293b;
+    color: #374151;
+    border-bottom-color: #f1f5f9;
 }
 
 :root.dark .table-scroll {
-    background: #1e293b;
-    border-color: #334155;
+    background: #ffffff;
+    border-color: #e5e7eb;
 }
 
 :root.dark .table-compact thead th {
-    background: #1e293b;
-    color: #64748b;
-    border-bottom-color: #334155;
+    background: #ffffff;
+    color: #6b7280;
+    border-bottom-color: #e2e8f0;
 }
 
 :root.dark .table-compact td {
-    border-bottom-color: #334155;
-    color: #cbd5e1;
+    border-bottom-color: #f1f5f9;
+    color: #374151;
 }
 
 :root.dark .audit-action-link {
-    color: #60a5fa;
-    border-color: #334155;
+    color: #1565c0;
+    border-color: #e2e8f0;
 }
 
 :root.dark .audit-action-link:hover {
-    color: #93c5fd;
-    border-color: #475569;
-    background: rgba(96, 165, 250, 0.08);
+    color: #1e40af;
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE STYLES
+══════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+    .gov-dashboard {
+        padding: 16px 14px;
+    }
+
+    .stats-2row-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 11px 12px;
+        min-height: 96px;
+    }
+
+    .stat-card-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .stat-card-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .stat-card-value {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .gov-dashboard {
+        padding: 12px 10px;
+    }
+
+    .dash-page-header {
+        position: relative;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .dash-page-header-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .dash-page-title {
+        font-size: 20px;
+    }
+
+    .dash-page-sub {
+        font-size: 12px;
+    }
+
+    .dash-year-filter {
+        padding: 5px 10px;
+        gap: 5px;
+        flex-shrink: 0;
+        align-self: flex-start;
+    }
+
+    .dash-year-label {
+        font-size: 11px;
+        gap: 4px;
+    }
+
+    .dash-year-label svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .dash-year-select {
+        font-size: 12px;
+    }
+
+    .stats-2row-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 10px 10px 8px;
+        min-height: 90px;
+        border-radius: 9px;
+    }
+
+    .stat-card-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+    }
+
+    .stat-card-icon svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .stat-card-value {
+        font-size: 18px;
+        line-height: 1.1;
+    }
+
+    .stat-card-label {
+        font-size: 9px;
+        line-height: 1.2;
+        margin-top: 6px;
+    }
+
+    .quick-actions-scroll {
+        gap: 8px;
+    }
+
+    .qa-btn {
+        padding: 9px 14px;
+        font-size: 12px;
+    }
+
+    .dash-section-card {
+        padding: 14px;
+    }
+
+    .dashboard-row--analytics,
+    .dashboard-row--operations {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .gov-dashboard {
+        padding: 8px 6px;
+    }
+
+    .dash-page-title {
+        font-size: 17px;
+    }
+
+    .stats-2row-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 6px;
+    }
+
+    .stat-card {
+        padding: 8px 8px 6px;
+        min-height: 80px;
+        border-radius: 8px;
+    }
+
+    .stat-card-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+    }
+
+    .stat-card-icon svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .stat-card-value {
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .stat-card-label {
+        font-size: 8px;
+        line-height: 1.1;
+        margin-top: 5px;
+    }
+
+    .dash-year-filter {
+        padding: 4px 8px;
+    }
+
+    .dash-year-label svg {
+        display: block;
+    }
+
+    .dash-year-select {
+        font-size: 11px;
+    }
+}
+
+/* Fix for -webkit-line-clamp compatibility */
+.stat-card-label {
+    line-clamp: 2;
 }
