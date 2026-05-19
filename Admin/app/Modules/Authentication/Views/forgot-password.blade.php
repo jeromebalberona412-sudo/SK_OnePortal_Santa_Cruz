@@ -22,6 +22,166 @@
             }
         })();
     </script>
+    <style>
+        /* ── Forgot-password specific styles ── */
+        .fp-icon-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(8,48,128,0.08) 0%, rgba(13,71,161,0.12) 100%);
+            border: 1.5px solid rgba(8,48,128,0.12);
+            margin-bottom: 1.25rem;
+        }
+        .fp-icon-wrap svg {
+            width: 28px;
+            height: 28px;
+            color: #083080;
+        }
+
+        /* Success state */
+        .fp-success-state { display: none; }
+        .fp-success-state.is-visible { display: block; }
+        .fp-form-state.is-hidden { display: none; }
+
+        .fp-success-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(34,197,94,0.1);
+            border: 2px solid rgba(34,197,94,0.25);
+            margin: 0 auto 1.25rem;
+        }
+        .fp-success-icon svg {
+            width: 32px;
+            height: 32px;
+            color: #15803d;
+        }
+        .fp-success-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .fp-success-body {
+            font-size: 0.875rem;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        .fp-success-email {
+            font-weight: 700;
+            color: #083080;
+        }
+
+        /* Resend row */
+        .fp-resend-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+        .fp-resend-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .fp-resend-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #083080;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: color 150ms;
+        }
+        .fp-resend-btn:hover:not(:disabled) { color: #051e52; }
+        .fp-resend-btn:disabled {
+            color: #94a3b8;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        /* Countdown badge */
+        .fp-countdown-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .fp-countdown-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 42px;
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            background: rgba(8,48,128,0.07);
+            border: 1.5px solid rgba(8,48,128,0.12);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #083080;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.02em;
+        }
+        .fp-countdown-badge.is-expiring {
+            background: rgba(220,53,69,0.07);
+            border-color: rgba(220,53,69,0.2);
+            color: #b91c1c;
+        }
+
+        /* Progress bar */
+        .fp-timer-bar-wrap {
+            width: 100%;
+            height: 4px;
+            background: rgba(8,48,128,0.08);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .fp-timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #083080, #0d47a1);
+            border-radius: 99px;
+            transform-origin: left;
+            transition: width 1s linear, background 0.5s;
+        }
+        .fp-timer-bar.is-expiring {
+            background: linear-gradient(90deg, #dc3545, #f87171);
+        }
+
+        /* Sent confirmation flash */
+        .fp-resent-flash {
+            display: none;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #15803d;
+            background: rgba(34,197,94,0.08);
+            border: 1.5px solid rgba(34,197,94,0.2);
+            border-radius: 8px;
+            padding: 0.45rem 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .fp-resent-flash.is-visible { display: flex; }
+        .fp-resent-flash svg { flex-shrink: 0; }
+    </style>
 </head>
 <body class="login-page">
 
@@ -33,8 +193,8 @@
                 <div class="signin-spinner-ring signin-spinner-ring--2"></div>
                 <div class="signin-spinner-dot"></div>
             </div>
-            <p class="signin-overlay-title">Signing In</p>
-            <p class="signin-overlay-sub" id="signin-overlay-sub">Verifying credentials...</p>
+            <p class="signin-overlay-title">Sending Reset Link</p>
+            <p class="signin-overlay-sub" id="signin-overlay-sub">Please wait...</p>
         </div>
     </div>
 
@@ -79,46 +239,225 @@
             <div class="login-form-container">
                 <div class="login-card-inner">
 
-                    <div class="form-header">
-                        <h2>Reset Password</h2>
-                        <p>Enter your email to receive a reset link</p>
+                    {{-- ── FORM STATE ── --}}
+                    <div class="fp-form-state" id="fpFormState">
+
+                        <div class="fp-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </div>
+
+                        <div class="form-header">
+                            <h2>Forgot Password?</h2>
+                            <p>Enter your registered email and we'll send you a reset link.</p>
+                        </div>
+
+                        @if ($errors->any())
+                            <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
+                        @endif
+
+                        <form method="POST" action="{{ route('password.email') }}" novalidate id="fpForm">
+                            @csrf
+
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email"
+                                    class="form-control @error('email') is-invalid @enderror"
+                                    value="{{ old('email') }}" placeholder="Enter your registered email"
+                                    required autofocus autocomplete="email">
+                                @error('email')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <button type="submit" class="login-btn" id="fpSubmitBtn">
+                                Send Reset Link
+                            </button>
+                        </form>
+
+                        <div class="form-footer">
+                            <p>Remember your password? <a href="{{ route('login') }}">Back to Login</a></p>
+                        </div>
+
                     </div>
 
-                    @if (session('status'))
-                        <div class="login-alert login-alert--success" role="alert">
-                            <strong>Email sent!</strong> {{ session('status') }}
-                        </div>
-                    @endif
+                    {{-- ── SUCCESS STATE ── --}}
+                    <div class="fp-success-state" id="fpSuccessState" aria-live="polite">
 
-                    @if ($errors->any())
-                        <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
-                    @endif
-
-                    <form method="POST" action="{{ route('password.email') }}" novalidate>
-                        @csrf
-
-                        <div class="form-group">
-                            <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email"
-                                class="form-control @error('email') is-invalid @enderror"
-                                value="{{ old('email') }}" placeholder="Enter your email address"
-                                required autofocus autocomplete="email">
-                            @error('email')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
+                        <div class="fp-success-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                                <path d="M20 6L9 17l-5-5"/>
+                            </svg>
                         </div>
 
-                        <button type="submit" class="login-btn">Send Reset Link</button>
-                    </form>
+                        <p class="fp-success-title">Check your inbox!</p>
+                        <p class="fp-success-body">
+                            We sent a password reset link to<br>
+                            <span class="fp-success-email" id="fpSuccessEmail"></span>
+                        </p>
 
-                    <div class="form-footer">
-                        <p>Remember your password? <a href="{{ route('login') }}">Back to Login</a></p>
+                        {{-- Resent flash --}}
+                        <div class="fp-resent-flash" id="fpResentFlash" role="status">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                                <path d="M20 6L9 17l-5-5"/>
+                            </svg>
+                            Email resent successfully!
+                        </div>
+
+                        {{-- Timer progress bar --}}
+                        <div class="fp-timer-bar-wrap" aria-hidden="true">
+                            <div class="fp-timer-bar" id="fpTimerBar"></div>
+                        </div>
+
+                        {{-- Resend row --}}
+                        <div class="fp-resend-row">
+                            <span class="fp-resend-label">Didn't receive it?</span>
+                            <button type="button" class="fp-resend-btn" id="fpResendBtn" disabled>
+                                Resend email
+                            </button>
+                            <span class="fp-countdown-wrap" id="fpCountdownWrap">
+                                in <span class="fp-countdown-badge" id="fpCountdownBadge">1:00</span>
+                            </span>
+                        </div>
+
+                        <div class="form-footer">
+                            <p>
+                                <a href="{{ route('login') }}" style="display:inline-flex;align-items:center;gap:0.35rem;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                                    Back to Login
+                                </a>
+                            </p>
+                        </div>
+
                     </div>
 
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+    (function () {
+        var COOLDOWN_SECONDS = 60;
+
+        var formState    = document.getElementById('fpFormState');
+        var successState = document.getElementById('fpSuccessState');
+        var form         = document.getElementById('fpForm');
+        var submitBtn    = document.getElementById('fpSubmitBtn');
+        var emailInput   = document.getElementById('email');
+
+        var resendBtn      = document.getElementById('fpResendBtn');
+        var countdownWrap  = document.getElementById('fpCountdownWrap');
+        var countdownBadge = document.getElementById('fpCountdownBadge');
+        var timerBar       = document.getElementById('fpTimerBar');
+        var successEmail   = document.getElementById('fpSuccessEmail');
+        var resentFlash    = document.getElementById('fpResentFlash');
+
+        var countdownInterval = null;
+        var secondsLeft = COOLDOWN_SECONDS;
+
+        /* ── Format mm:ss ── */
+        function formatTime(s) {
+            var m = Math.floor(s / 60);
+            var sec = s % 60;
+            return m + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+
+        /* ── Start / restart the 1-minute countdown ── */
+        function startCountdown() {
+            secondsLeft = COOLDOWN_SECONDS;
+            resendBtn.disabled = true;
+            countdownWrap.style.display = '';
+            countdownBadge.textContent = formatTime(secondsLeft);
+            timerBar.style.width = '100%';
+            timerBar.classList.remove('is-expiring');
+            countdownBadge.classList.remove('is-expiring');
+
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(function () {
+                secondsLeft--;
+
+                var pct = (secondsLeft / COOLDOWN_SECONDS) * 100;
+                timerBar.style.width = pct + '%';
+                countdownBadge.textContent = formatTime(secondsLeft);
+
+                var expiring = secondsLeft <= 10;
+                timerBar.classList.toggle('is-expiring', expiring);
+                countdownBadge.classList.toggle('is-expiring', expiring);
+
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                    resendBtn.disabled = false;
+                    countdownWrap.style.display = 'none';
+                    timerBar.style.width = '0%';
+                }
+            }, 1000);
+        }
+
+        /* ── Show success state ── */
+        function showSuccess(email) {
+            successEmail.textContent = email || 'your email address';
+            formState.classList.add('is-hidden');
+            successState.classList.add('is-visible');
+            startCountdown();
+        }
+
+        /* ── Resend button ── */
+        resendBtn.addEventListener('click', function () {
+            /* Show flash */
+            resentFlash.classList.add('is-visible');
+            setTimeout(function () {
+                resentFlash.classList.remove('is-visible');
+            }, 3000);
+
+            /* Restart timer */
+            startCountdown();
+        });
+
+        /* ── Form submit (UI demo — intercept to show success state) ── */
+        @if (session('status'))
+            /* Server already confirmed — show success immediately */
+            document.addEventListener('DOMContentLoaded', function () {
+                showSuccess('{{ old('email') }}');
+            });
+        @else
+            form.addEventListener('submit', function (e) {
+                var email = emailInput.value.trim();
+                if (!email) return; /* let native validation handle */
+
+                /* Show loading overlay if present */
+                var overlay = document.getElementById('signin-overlay');
+                if (overlay) {
+                    overlay.removeAttribute('hidden');
+                    overlay.classList.add('is-visible');
+                }
+
+                /* For pure UI demo: prevent default and show success state */
+                /* Remove the next two lines when backend is wired up */
+                e.preventDefault();
+                setTimeout(function () {
+                    if (overlay) {
+                        overlay.classList.remove('is-visible');
+                        overlay.setAttribute('hidden', '');
+                    }
+                    showSuccess(email);
+                }, 1200);
+            });
+        @endif
+
+        /* ── Basic email validation for submit button ── */
+        function toggleSubmit() {
+            submitBtn.disabled = !emailInput.value.trim();
+        }
+        toggleSubmit();
+        emailInput.addEventListener('input', toggleSubmit);
+
+    })();
+    </script>
 
 </body>
 </html>

@@ -1,11 +1,11 @@
 import 'datatables.net-dt/css/dataTables.dataTables.css';
 
 const dashboardMetrics = {
-    totalUsers: { value: '1,245', status: 'System Stable', delta: '+2.7%', statusTone: 'healthy' },
-    federationAccounts: { value: '310', status: 'Within Quota', delta: '+1.2%', statusTone: 'healthy' },
-    officialAccounts: { value: '886', status: 'Active Review', delta: '+3.1%', statusTone: 'warning' },
-    currentActiveAccounts: { value: '1,131', status: 'Online Now', delta: '+5.4%', statusTone: 'healthy' },
-    kabataanAccounts: { value: '428', status: 'Registered Youth', delta: '+4.8%', statusTone: 'healthy' },
+    totalUsers: { value: '0', status: 'System Stable', delta: '+2.7%', statusTone: 'healthy' },
+    federationAccounts: { value: '0', status: 'Within Quota', delta: '+1.2%', statusTone: 'healthy' },
+    officialAccounts: { value: '0', status: 'Active Review', delta: '+3.1%', statusTone: 'warning' },
+    currentActiveAccounts: { value: '0', status: 'Online Now', delta: '+5.4%', statusTone: 'healthy' },
+    kabataanAccounts: { value: '0', status: 'Registered Youth', delta: '+4.8%', statusTone: 'healthy' },
 };
 
 const usersActiveLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'];

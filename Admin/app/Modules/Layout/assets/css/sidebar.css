@@ -544,7 +544,7 @@ body.sidebar-collapsed .menu-item span {
 }
 
 .dropdown-submenu.open {
-    max-height: 200px;
+    max-height: 320px;
 }
 
 .submenu-item {

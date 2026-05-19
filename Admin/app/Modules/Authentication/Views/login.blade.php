@@ -101,6 +101,7 @@
                                 <input class="form-check-input" type="checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="remember">Remember this device</label>
                             </div>
+                            <a href="{{ route('password.request') }}" class="forgot-password">Forgot password?</a>
                         </div>
 
                         <button type="submit" id="login-submit-btn" class="login-btn w-100" disabled>Sign In</button>

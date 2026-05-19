@@ -50,9 +50,10 @@
 
             {{-- Manage Accounts Dropdown --}}
             @php
-                $isManageAccountActive = request()->routeIs('accounts.*');
+                $isManageAccountActive = request()->routeIs('accounts.*') || request()->routeIs('manage-kabataan.*');
                 $isFederationActive    = request()->routeIs('accounts.federation.index') || (request()->routeIs('accounts.manage') && (request('account_type', 'sk_federation') === 'sk_federation'));
                 $isOfficialsActive     = request()->routeIs('accounts.officials.index');
+                $isKabataanActive      = request()->routeIs('manage-kabataan.*');
             @endphp
             <button type="button"
                 class="menu-item manage-account-btn {{ $isManageAccountActive ? 'active' : '' }}"
@@ -101,6 +102,18 @@
                         <path d="M23 19.5v-1a3 3 0 0 0-3-3h-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                     <span>SK Officials</span>
+                </a>
+                <a href="{{ route('manage-kabataan.index') }}"
+                   class="menu-item submenu-item {{ $isKabataanActive ? 'active' : '' }}"
+                   data-nav-key="manage-kabataan"
+                   data-tooltip="Kabataan"
+                   aria-label="Kabataan">
+                    {{-- Unique youth/graduation cap icon --}}
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+                        <path d="M6 12v5c0 1.657 2.686 3 6 3s6-1.343 6-3v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span>Kabataan</span>
                 </a>
             </div>
 

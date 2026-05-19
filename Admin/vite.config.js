@@ -61,6 +61,10 @@ export default defineConfig({
                 // Contact Us Module
                 'app/Modules/ContactUs/assets/css/contact.css',
                 'app/Modules/ContactUs/assets/js/contact.js',
+
+                // Manage Kabataan Module
+                'app/Modules/Manage_Kabataan/assets/css/manage_kabataan.css',
+                'app/Modules/Manage_Kabataan/assets/js/manage_kabataan.js',
             ],
             refresh: true,
         }),
