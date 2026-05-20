@@ -209,3 +209,250 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+
+// ── Feed Posts Rendering with Program Details ──────────────────────────────
+let feedPosts = [];
+let currentPage = 1;
+let currentFilter = 'all';
+let isLoadingFeed = false;
+
+async function loadFeedPosts(reset = true) {
+    if (isLoadingFeed) return;
+    isLoadingFeed = true;
+
+    const container = document.getElementById('feed-posts');
+    if (reset) {
+        currentPage = 1;
+        feedPosts = [];
+        container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Loading...</div>';
+    }
+
+    try {
+        // Mock data - replace with actual API call
+        const mockPosts = [
+            {
+                id: 1,
+                type: 'program',
+                author: 'SK Education Committee',
+                avatar: 'https://ui-avatars.com/api/?name=SK+Education&background=2196F3&color=fff',
+                time: '2 days ago',
+                title: 'Scholarship Assistance Program',
+                description: 'Financial assistance for deserving students pursuing higher education. Covers tuition fees and other educational expenses.',
+                program_details: {
+                    committee_handled_by: 'Education Committee',
+                    status: 'active',
+                    participant_quantity: 50,
+                    starting_date: '2026-03-01',
+                    end_date: '2026-03-31',
+                    venue: 'Barangay Hall, Santa Cruz',
+                    full_description: 'The Scholarship Assistance Program aims to provide financial support to deserving youth from Santa Cruz who wish to pursue higher education. This program covers tuition fees, books, and other educational expenses. Applicants must be residents of Santa Cruz, maintain good academic standing, and demonstrate financial need.',
+                    terms_and_conditions: [
+                        'Applicant must be a bonafide resident of Barangay Santa Cruz',
+                        'Must maintain a general weighted average of at least 85% or equivalent',
+                        'Must submit all required documents before the deadline',
+                        'Scholarship is renewable each semester subject to compliance with requirements',
+                        'Recipients must render 40 hours of community service per semester',
+                        'False information will result in automatic disqualification',
+                        'Scholarship grant is non-transferable',
+                    ],
+                    requirements: [
+                        'Certificate of Registration (COR) - Certified True Copy',
+                        'Photo copy of Valid ID (Front and Back)',
+                        'Certificate of Enrollment',
+                        'Barangay Certificate of Indigency',
+                        'Recent 2x2 ID Picture',
+                        'Essay (500 words minimum)',
+                    ],
+                    deadline: '2026-03-31',
+                    slots: 50,
+                    slots_remaining: 42,
+                }
+            }
+        ];
+
+        feedPosts = reset ? mockPosts : [...feedPosts, ...mockPosts];
+        renderFeedPosts();
+    } catch (error) {
+        console.error('Error loading feed:', error);
+        container.innerHTML = '<div class="post-card" style="text-align:center;color:#ef4444;padding:32px;">Failed to load posts</div>';
+    } finally {
+        isLoadingFeed = false;
+    }
+}
+
+function renderFeedPosts() {
+    const container = document.getElementById('feed-posts');
+    container.innerHTML = '';
+
+    const filtered = currentFilter === 'all' 
+        ? feedPosts 
+        : feedPosts.filter(p => p.type === currentFilter);
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">No posts found</div>';
+        return;
+    }
+
+    filtered.forEach(post => {
+        const postEl = createPostElement(post);
+        container.appendChild(postEl);
+    });
+}
+
+function createPostElement(post) {
+    const article = document.createElement('article');
+    article.className = 'post-card';
+    article.dataset.postType = post.type;
+
+    if (post.type === 'program' && post.program_details) {
+        article.innerHTML = createProgramPostHTML(post);
+    } else {
+        article.innerHTML = createRegularPostHTML(post);
+    }
+
+    return article;
+}
+
+function createProgramPostHTML(post) {
+    const details = post.program_details;
+    const startDate = new Date(details.starting_date).toLocaleDateString();
+    const endDate = new Date(details.end_date).toLocaleDateString();
+    const deadline = new Date(details.deadline).toLocaleDateString();
+
+    return `
+        <div class="post-header">
+            <img src="${post.avatar}" alt="${post.author}" class="post-avatar">
+            <div class="post-info">
+                <p class="post-author">${post.author}</p>
+                <div class="post-meta">
+                    <span class="post-type program">Program</span>
+                    <span class="post-time">${post.time}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="post-content">
+            <h3 class="post-title">${post.title}</h3>
+            <p class="post-text">${post.description}</p>
+
+            <!-- Program Meta Grid -->
+            <div class="program-meta-grid">
+                <div class="meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span><strong>Deadline:</strong> ${deadline}</span>
+                </div>
+                <div class="meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span><strong>Slots:</strong> ${details.slots_remaining} / ${details.slots} available</span>
+                </div>
+                <div class="meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span><strong>Venue:</strong> ${details.venue}</span>
+                </div>
+                <div class="meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                    <span><strong>Committee:</strong> ${details.committee_handled_by}</span>
+                </div>
+                <div class="meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span><strong>Duration:</strong> ${startDate} - ${endDate}</span>
+                </div>
+            </div>
+
+            <!-- More Details Expandable Section -->
+            <div class="program-details-section">
+                <button class="more-details-btn" onclick="toggleProgramDetails(this)">
+                    <span>More Details</span>
+                    <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                
+                <div class="details-content" style="display: none;">
+                    <!-- Full Description -->
+                    <div class="detail-block">
+                        <h4>📋 Full Description</h4>
+                        <p>${details.full_description}</p>
+                    </div>
+
+                    <!-- Requirements -->
+                    <div class="detail-block">
+                        <h4>📄 Requirements</h4>
+                        <ul class="requirements-list">
+                            ${details.requirements.map(req => `<li>${req}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="detail-block">
+                        <h4>⚖️ Terms & Conditions</h4>
+                        <ul class="terms-list">
+                            ${details.terms_and_conditions.map(term => `<li>${term}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <a href="/scholarship/apply" class="view-details-btn">
+                Apply Now
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+        </div>
+    `;
+}
+
+function createRegularPostHTML(post) {
+    return `
+        <div class="post-header">
+            <img src="${post.avatar}" alt="${post.author}" class="post-avatar">
+            <div class="post-info">
+                <p class="post-author">${post.author}</p>
+                <div class="post-meta">
+                    <span class="post-type ${post.type}">${post.type}</span>
+                    <span class="post-time">${post.time}</span>
+                </div>
+            </div>
+        </div>
+        <div class="post-content">
+            <h3 class="post-title">${post.title}</h3>
+            <p class="post-text">${post.description}</p>
+        </div>
+    `;
+}
+
+function toggleProgramDetails(button) {
+    const detailsContent = button.nextElementSibling;
+    const chevron = button.querySelector('.chevron-icon');
+    const span = button.querySelector('span');
+    
+    if (detailsContent.style.display === 'none') {
+        detailsContent.style.display = 'block';
+        chevron.style.transform = 'rotate(180deg)';
+        span.textContent = 'Less Details';
+    } else {
+        detailsContent.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+        span.textContent = 'More Details';
+    }
+}
+
+function setFeedFilter(button, filter) {
+    document.querySelectorAll('.feed-tab').forEach(tab => tab.classList.remove('active'));
+    button.classList.add('active');
+    currentFilter = filter;
+    renderFeedPosts();
+}
+
+function loadMorePosts() {
+    currentPage++;
+    loadFeedPosts(false);
+}
+
+// Initialize feed on page load
+if (document.getElementById('feed-posts')) {
+    loadFeedPosts();
+}
+
+// Make functions globally available
+window.toggleProgramDetails = toggleProgramDetails;
+window.setFeedFilter = setFeedFilter;
+window.loadMorePosts = loadMorePosts;

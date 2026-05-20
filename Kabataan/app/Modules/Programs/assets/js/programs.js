@@ -206,15 +206,9 @@ window.programsModule = {
 
 // Initialize programs module when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Program category click handlers
-    const programCategories = document.querySelectorAll('.program-category');
-    programCategories.forEach(category => {
-        category.addEventListener('click', function() {
-            const categoryType = this.dataset.category;
-            window.programsModule.openCategoryModal(categoryType);
-        });
-    });
-
+    // NOTE: Program category click handlers are now handled by inline onclick attributes
+    // in the HTML to prevent conflicts and unwanted modal triggers
+    
     // Apply button in education modal
     const applyButtons = document.querySelectorAll('.apply-btn');
     applyButtons.forEach(button => {
