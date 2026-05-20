@@ -26,7 +26,7 @@
     display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
 }
 
-.schol-modal-header h3 { font-size: 15px; font-weight: 700; color: #fff; }
+.schol-modal-header h3 { font-size: 16px; font-weight: 700; color: #fff; }
 
 .schol-modal-close { background: none; border: none; font-size: 20px; font-weight: 700; cursor: pointer; color: #fff; padding: 2px 6px; line-height: 1; }
 
@@ -40,7 +40,7 @@
 .schol-btn {
     display: inline-flex; align-items: center; gap: 7px;
     padding: 9px 18px; border-radius: 10px; border: none;
-    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-size: 14px; font-weight: 600; cursor: pointer;
     transition: all 0.2s ease; text-decoration: none;
 }
 
@@ -75,14 +75,14 @@
     border-radius: 50%;
 }
 
-.schol-pdf-title { font-size: 17px; font-weight: 900; color: #111827; letter-spacing: 0.02em; }
+.schol-pdf-title { font-size: 18px; font-weight: 900; color: #111827; letter-spacing: 0.02em; }
 
-.schol-pdf-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.schol-pdf-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
 
 .schol-pdf-picture-box {
     width: 76px; height: 86px; border: 2px solid #374151;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px; color: #6b7280; text-align: center;
+    font-size: 12px; color: #6b7280; text-align: center;
     border-radius: 4px; flex-shrink: 0;
 }
 
@@ -94,7 +94,7 @@
 .schol-pdf-section:last-child { border-bottom: none; margin-bottom: 0; }
 
 .schol-pdf-section-title {
-    font-size: 11px; font-weight: 800; color: #111827;
+    font-size: 12px; font-weight: 800; color: #111827;
     text-transform: uppercase; letter-spacing: 0.06em;
     border-bottom: 2px solid #2c2c3e; padding-bottom: 5px; margin-bottom: 12px;
 }
@@ -113,25 +113,25 @@
 
 .schol-pdf-field { display: flex; flex-direction: column; gap: 3px; }
 
-.schol-pdf-field label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
+.schol-pdf-field label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
 
 .schol-pdf-line { border-bottom: 1.5px solid #374151; min-height: 20px; }
 
 .schol-pdf-filled {
     border-bottom: 1.5px solid #374151; min-height: 20px;
-    font-size: 13px; font-weight: 600; color: #111827;
+    font-size: 14px; font-weight: 600; color: #111827;
     padding: 2px 0; line-height: 1.4;
 }
 
 .schol-pdf-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
-.schol-pdf-purpose-label { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 8px; }
+.schol-pdf-purpose-label { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 8px; }
 
-.schol-pdf-note { font-size: 11px; color: #6b7280; margin-bottom: 8px; }
+.schol-pdf-note { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
 
 .schol-pdf-check-list { display: flex; flex-direction: column; gap: 7px; }
 
-.schol-pdf-check-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #374151; }
+.schol-pdf-check-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; }
 
 .schol-pdf-checkbox {
     width: 14px; height: 14px; flex-shrink: 0;
@@ -154,11 +154,11 @@
 
 .schol-pdf-sig-line { border-bottom: 2px solid #374151; width: 260px; margin: 0 auto 8px; }
 
-.schol-pdf-sig-label { font-size: 12px; font-weight: 700; color: #374151; }
+.schol-pdf-sig-label { font-size: 13px; font-weight: 700; color: #374151; }
 
 /* Inline title (bold underlined like PDF) */
 .schol-pdf-inline-title {
-    font-size: 12px; font-weight: 800; color: #111827;
+    font-size: 13px; font-weight: 800; color: #111827;
     text-decoration: underline; text-transform: uppercase;
     margin-bottom: 10px; letter-spacing: 0.02em;
 }
@@ -170,7 +170,7 @@
 }
 
 .schol-pdf-inline-label {
-    font-size: 12px; font-weight: 600; color: #111827;
+    font-size: 13px; font-weight: 600; color: #111827;
     white-space: nowrap; flex-shrink: 0; padding-bottom: 2px;
 }
 
@@ -203,7 +203,7 @@
 .schol-input-inline {
     border: none; border-bottom: 1.5px solid #374151;
     background: transparent; padding: 2px 4px;
-    font-size: 13px; color: #111827; font-family: inherit;
+    font-size: 14px; color: #111827; font-family: inherit;
     outline: none; transition: border-color 0.2s;
 }
 
@@ -236,13 +236,13 @@
 
 .schol-pdf-date-field {
     display: flex; align-items: center; gap: 6px; justify-content: center;
-    margin-top: 8px; font-size: 12px;
+    margin-top: 8px; font-size: 13px;
 }
 
 .schol-pdf-date-field input {
     border: none; border-bottom: 1.5px solid #374151;
     background: transparent; padding: 2px 4px;
-    font-size: 12px; color: #111827; font-family: inherit;
+    font-size: 13px; color: #111827; font-family: inherit;
     outline: none;
 }
 
@@ -266,7 +266,7 @@
     transform: translateX(-50%) translateY(-100px);
     padding: 12px 22px; border-radius: 10px;
     background: #22c55e; color: #fff;
-    font-weight: 600; font-size: 14px;
+    font-weight: 600; font-size: 15px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     z-index: 9999; opacity: 0;
     transition: transform 0.3s ease, opacity 0.3s ease;

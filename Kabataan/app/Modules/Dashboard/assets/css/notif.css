@@ -62,7 +62,7 @@
 }
 
 .np-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: #ffffff;
 }
@@ -109,14 +109,14 @@
 }
 
 .np-empty-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: #334155;
     margin: 0;
 }
 
 .np-empty-sub {
-    font-size: 13px;
+    font-size: 14px;
     color: #94a3b8;
     line-height: 1.55;
     margin: 0;

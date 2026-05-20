@@ -86,7 +86,7 @@ body.youth-settings {
     padding: 10px 14px 10px 44px;
     border: 2px solid rgba(255,255,255,0.3);
     border-radius: 24px;
-    font-size: 14px;
+    font-size: 15px;
     transition: all 0.3s ease;
     background: rgba(255,255,255,0.95);
 }
@@ -182,8 +182,8 @@ body.youth-settings {
     border-radius: 50%;
 }
 
-.user-name { font-weight: 600; font-size: 14px; color: #333; margin-bottom: 2px; }
-.user-email { font-size: 12px; color: #999; }
+.user-name { font-weight: 600; font-size: 15px; color: #333; margin-bottom: 2px; }
+.user-email { font-size: 13px; color: #999; }
 
 .dropdown-divider { height: 1px; background: #e0e0e0; margin: 0 8px; }
 
@@ -194,7 +194,7 @@ body.youth-settings {
     padding: 12px 16px;
     color: #666;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 15px;
     transition: all 0.2s ease;
     border: none;
     background: none;
@@ -240,7 +240,7 @@ body.youth-settings {
 }
 
 .settings-sidebar-header h2 {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
     color: #1e293b;
     display: flex;
@@ -267,7 +267,7 @@ body.youth-settings {
     gap: 10px;
     padding: 11px 14px;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     color: #64748b;
     cursor: pointer;
@@ -332,14 +332,14 @@ body.youth-settings {
 }
 
 .settings-content-header-text h2 {
-    font-size: 20px;
+    font-size: 21px;
     font-weight: 700;
     color: #1e293b;
     margin-bottom: 2px;
 }
 
 .settings-content-header-text p {
-    font-size: 13px;
+    font-size: 14px;
     color: #94a3b8;
 }
 
@@ -360,7 +360,7 @@ body.youth-settings {
 }
 
 .form-group label {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     color: #334155;
 }
@@ -375,7 +375,7 @@ body.youth-settings {
     padding: 12px 44px 12px 16px;
     border: 2px solid #e2e8f0;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 15px;
     font-family: inherit;
     transition: all 0.2s ease;
     background: #f8fafc;
@@ -408,7 +408,7 @@ body.youth-settings {
 .toggle-password svg { width: 18px; height: 18px; }
 
 .form-hint {
-    font-size: 12px;
+    font-size: 13px;
     color: #94a3b8;
     margin-top: 4px;
 }
@@ -433,7 +433,7 @@ body.youth-settings {
 }
 
 .strength-label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: #94a3b8;
 }
@@ -456,7 +456,7 @@ body.youth-settings {
     color: white;
     border: none;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -481,7 +481,7 @@ body.youth-settings {
     color: #64748b;
     border: none;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -497,7 +497,7 @@ body.youth-settings {
     gap: 10px;
     padding: 14px 16px;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     margin-bottom: 24px;
 }
@@ -580,7 +580,7 @@ body.youth-settings {
 
 .field-error-msg {
     display: block;
-    font-size: 12px;
+    font-size: 13px;
     color: #ef4444;
     font-weight: 500;
     margin-top: 5px;
