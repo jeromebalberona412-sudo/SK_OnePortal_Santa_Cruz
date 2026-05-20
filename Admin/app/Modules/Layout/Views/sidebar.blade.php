@@ -117,6 +117,14 @@
                 </a>
             </div>
 
+            <a href="{{ route('manage-location.index') }}" class="menu-item nav-link manage-location-btn {{ request()->routeIs('manage-location.*') ? 'active' : '' }}" data-nav-key="manage-location" data-tooltip="Manage Location" aria-label="Manage Location">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>Manage Location</span>
+            </a>
+
             <a href="{{ route('barangay-logos.index') }}" class="menu-item nav-link barangay-logos-btn" data-nav-key="barangay-logos" data-tooltip="SK Barangay Logos" aria-label="SK Barangay Logos">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -192,6 +200,17 @@
                         <path d="M23 19.5v-1a3 3 0 0 0-3-3h-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                     <span>Deleted SK Officials</span>
+                </a>
+                <a href="{{ route('archived.deleted-barangay') }}"
+                   class="menu-item submenu-item {{ request()->routeIs('archived.deleted-barangay') ? 'active' : '' }}"
+                   data-nav-key="archived-deleted-barangay"
+                   data-tooltip="Deleted Barangay"
+                   aria-label="Deleted Barangay">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span>Deleted Barangay</span>
                 </a>
                 <div class="submenu-section-label">Archived Data</div>
                 <a href="{{ route('archived.sk-federation-records') }}"

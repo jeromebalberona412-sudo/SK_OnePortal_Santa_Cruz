@@ -29,6 +29,14 @@ Route::get('/manage-archive/rejected-scholarships', function () {
     return view('archive-management::rejected-scholarships');
 })->name('archive.rejected-scholarships');
 
+// ── Deleted Barangay (Archive) ────────────────────────────────────────────────
+Route::middleware(['web', 'auth', 'ensure2fa', 'role:admin'])->group(function () {
+    Route::get('/archived/deleted-barangay', function () {
+        return view('archive-management::deleted_barangay');
+    })->name('archived.deleted-barangay');
+});
+
 // NOTE: archived.deleted-sk-federation and archived.deleted-sk-officials are
 // registered by their own service providers (DeletedSkFederation / DeletedSkOfficials)
 // at /archived/deleted-sk-federation and /archived/deleted-sk-officials respectively.
+

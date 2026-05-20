@@ -60,6 +60,10 @@ export default defineConfig({
                 'app/Modules/Manage_Kabataan/assets/css/manage_kabataan.css',
                 'app/Modules/Manage_Kabataan/assets/js/manage_kabataan.js',
 
+                // Manage Location Module
+                'app/Modules/Manage_Location/assets/css/manage_location.css',
+                'app/Modules/Manage_Location/assets/js/manage_location.js',
+
                 // ── Archive Management Module (unified) ──────────────────────
                 // Archived Data — SK Federation & Officials Records
                 'app/Modules/Archive_Management/assets/css/SK_federation.css',
@@ -70,6 +74,10 @@ export default defineConfig({
                 // SK Officials Archive — Deleted Kabataan
                 'app/Modules/Archive_Management/assets/css/deleted-kabataan.css',
                 'app/Modules/Archive_Management/assets/js/deleted-kabataan.js',
+
+                // Deleted Barangay (Archive)
+                'app/Modules/Archive_Management/assets/css/deleted-barangay.css',
+                'app/Modules/Archive_Management/assets/js/deleted-barangay.js',
 
                 // SK Officials Archive — Rejected KK Profiling
                 'app/Modules/Archive_Management/assets/css/rejected-kk-profiling.css',
