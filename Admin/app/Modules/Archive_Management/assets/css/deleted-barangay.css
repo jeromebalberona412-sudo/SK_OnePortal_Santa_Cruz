@@ -149,13 +149,18 @@
     font-family: inherit;
 }
 .db-tab:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #ef4444;
 }
 .db-tab.active {
     background: #ef4444;
     color: #fff;
     border-color: #ef4444;
+}
+.db-tab.active:hover {
+    background: #dc2626;
+    border-color: #dc2626;
 }
 
 /* ── Section Heading ─────────────────────────────────────────── */
@@ -398,7 +403,7 @@
 @keyframes db-fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .db-modal-box {
     background: #fff;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0,0,0,.3);
     max-width: 900px;
     width: 100%;
@@ -484,13 +489,15 @@
 .db-modal-backdrop.db-maximized {
     align-items: stretch;
     justify-content: stretch;
+    padding: 0;
 }
 .db-modal-box.db-maximized {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    max-height: none;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
     border-radius: 0;
+    margin: 0;
 }
 
 /* ── View Modal ──────────────────────────────────────────────── */

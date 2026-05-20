@@ -18,6 +18,7 @@
 		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials', 'route' => null],
 		['label' => 'Current Active Accounts', 'metricKey' => 'currentActiveAccounts', 'tone' => 'indigo', 'icon' => 'activity', 'route' => null],
 		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => null],
+		['label' => 'Total Barangay', 'metricKey' => 'totalBarangay', 'tone' => 'emerald', 'icon' => 'location', 'route' => 'manage-location.index'],
 		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-federation'],
 		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-officials'],
 		['label' => 'Archived Data', 'metricKey' => 'archivedData', 'tone' => 'red', 'icon' => 'archive', 'route' => 'archive.dashboard'],
@@ -108,6 +109,13 @@
 				</svg>
 				Kabataan SK
 			</a>
+			<a href="{{ route('manage-location.index') }}" class="qa-btn qa-green">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+					<circle cx="12" cy="10" r="3"></circle>
+				</svg>
+				Manage Location
+			</a>
 			<a href="{{ route('barangay-logos.index') }}" class="qa-btn qa-purple">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 					<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -151,36 +159,10 @@
 			</a>
 			<a href="{{ route('archive.dashboard') }}" class="qa-btn qa-red">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-					<polyline points="14,2 14,8 20,8"></polyline>
-					<line x1="9" y1="15" x2="15" y2="15"></line>
-				</svg>
-				Archived Data
-			</a>
-			<a href="{{ route('archived.sk-federation-records') }}" class="qa-btn qa-red">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<rect x="3" y="4" width="7" height="7" rx="1.4" />
-					<rect x="14" y="4" width="7" height="7" rx="1.4" />
-					<rect x="8.5" y="14" width="7" height="7" rx="1.4" />
-				</svg>
-				SK Federation Records
-			</a>
-			<a href="{{ route('archived.sk-officials-records') }}" class="qa-btn qa-red">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M12 4l8 4v2H4V8l8-4z" />
-					<path d="M5 10v7" />
-					<path d="M9 10v7" />
-					<path d="M15 10v7" />
-					<path d="M19 10v7" />
-				</svg>
-				SK Officials Records
-			</a>
-			<a href="{{ route('archive.dashboard') }}" class="qa-btn qa-red">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 					<polyline points="21 8 21 21 3 21 3 8"></polyline>
 					<rect x="1" y="3" width="22" height="5"></rect>
 				</svg>
-				SK Officials Archive
+				Deleted Barangay
 			</a>
 			<a href="{{ route('archive.deleted-kabataan') }}" class="qa-btn qa-red">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -209,7 +191,7 @@
 	</div>
 
 	<section class="dashboard-row dashboard-row--analytics">
-		@include('dashboard::components.trendchart')
+		@include('dashboard::components.piechart')
 		@include('dashboard::components.platformhealth')
 	</section>
 

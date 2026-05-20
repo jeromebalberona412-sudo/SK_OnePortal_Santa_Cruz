@@ -41,10 +41,12 @@
     function buildStats() {
         if (!statsRow) return;
 
+        const totalBarangay = allRows.length;
         const totalPurok  = allRows.reduce((sum, r) => sum + parseInt(r.dataset.totalPurok || 0, 10), 0);
         const totalSitio  = allRows.reduce((sum, r) => sum + parseInt(r.dataset.totalSitio || 0, 10), 0);
 
         const cards = [
+            { label: 'Total Barangay', value: totalBarangay, colorClass: 'ml-stat-card-blue',   iconClass: 'ml-stat-icon-blue',   icon: locationIcon() },
             { label: 'Total Purok',    value: totalPurok, colorClass: 'ml-stat-card-green',  iconClass: 'ml-stat-icon-green',  icon: gridIcon() },
             { label: 'Total Sitio',    value: totalSitio, colorClass: 'ml-stat-card-yellow', iconClass: 'ml-stat-icon-yellow', icon: homeIcon() },
         ];

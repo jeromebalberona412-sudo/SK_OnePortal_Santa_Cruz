@@ -121,10 +121,30 @@
     function buildStats() {
         if (!statsRow) return;
 
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
         const totalDeleted = allRows.length;
+        const deletedToday = allRows.filter(r => {
+            const deletedAt = new Date(r.dataset.deletedAt);
+            return deletedAt >= today;
+        }).length;
+        const deletedThisWeek = allRows.filter(r => {
+            const deletedAt = new Date(r.dataset.deletedAt);
+            return deletedAt >= weekAgo;
+        }).length;
+        const deletedThisMonth = allRows.filter(r => {
+            const deletedAt = new Date(r.dataset.deletedAt);
+            return deletedAt >= monthAgo;
+        }).length;
 
         const cards = [
-            { label: 'Total Deleted', value: totalDeleted, colorClass: 'db-stat-card-red', iconClass: 'db-stat-icon-red', icon: trashIcon() },
+            { label: 'All Deleted', value: totalDeleted, colorClass: 'db-stat-card-red', iconClass: 'db-stat-icon-red', icon: trashIcon() },
+            { label: 'Deleted Today', value: deletedToday, colorClass: 'db-stat-card-red', iconClass: 'db-stat-icon-red', icon: trashIcon() },
+            { label: 'This Week', value: deletedThisWeek, colorClass: 'db-stat-card-red', iconClass: 'db-stat-icon-red', icon: trashIcon() },
+            { label: 'This Month', value: deletedThisMonth, colorClass: 'db-stat-card-red', iconClass: 'db-stat-icon-red', icon: trashIcon() },
         ];
 
         statsRow.innerHTML = cards.map(c => `
