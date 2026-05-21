@@ -202,8 +202,13 @@ body {
     padding: 12px;
     font-weight: 600;
     text-align: center;
-    border-bottom: none;
+    border-bottom: 2px solid #1f2937;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
     white-space: nowrap;
+}
+
+.committees-table thead th:last-child {
+    border-right: none;
 }
 
 /* Column widths */
@@ -567,6 +572,15 @@ body {
 .modal-field textarea {
     resize: vertical;
     min-height: 70px;
+    max-height: 200px;
+}
+
+.char-counter {
+    font-size: 11px;
+    color: #6b7280;
+    text-align: right;
+    margin-top: 4px;
+    font-weight: 500;
 }
 
 .modal-footer {
@@ -860,6 +874,17 @@ body {
 
 .cv-info-card:last-child {
     border-right: none;
+}
+
+/* Full-width info card */
+.cv-info-card-full {
+    grid-column: 1 / -1;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cv-info-card-full:last-child {
+    border-bottom: none;
 }
 
 .cv-info-label {

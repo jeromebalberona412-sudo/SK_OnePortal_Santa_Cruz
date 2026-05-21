@@ -284,11 +284,11 @@ function initializeScheduleKKProfiling() {
 
     // ── Status hint ─────────────────────────────────────────────────────────
     const statusHints = {
-        Upcoming:    { cls: 'hint-info',    msg: '📅 Scheduled but not yet open. Kabataan will see the date range but cannot sign up yet.' },
-        Ongoing:     { cls: 'hint-success', msg: '✅ Sign-up is currently open. Kabataan can select this barangay and submit the form.' },
-        Completed:   { cls: 'hint-warning', msg: '⚠️ Profiling is done. Sign-up will be closed for this barangay.' },
-        Cancelled:   { cls: 'hint-danger',  msg: '🚫 Profiling is cancelled. Sign-up will be closed for this barangay.' },
-        Rescheduled: { cls: 'hint-warning', msg: '🔄 Profiling has been moved. Update the dates to reflect the new schedule.' },
+        Upcoming:    { cls: 'hint-info',    msg: 'Scheduled but not yet open. Kabataan will see the date range but cannot sign up yet.' },
+        Ongoing:     { cls: 'hint-success', msg: 'Sign-up is currently open. Kabataan can select this barangay and submit the form.' },
+        Completed:   { cls: 'hint-warning', msg: 'Profiling is done. Sign-up will be closed for this barangay.' },
+        Cancelled:   { cls: 'hint-danger',  msg: 'Profiling is cancelled. Sign-up will be closed for this barangay.' },
+        Rescheduled: { cls: 'hint-warning', msg: 'Profiling has been moved. Update the dates to reflect the new schedule.' },
     };
 
     const statusHintEl = document.getElementById('skkpStatusHint');

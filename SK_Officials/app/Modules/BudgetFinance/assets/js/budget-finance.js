@@ -39,7 +39,106 @@ function initializeBudgetFinanceUI() {
     if (!tableBody) return;
 
     // Standalone sample data for Budget & Finance.
-    const budgets = [];
+    const budgets = [
+        {
+            title: 'Youth Development Program',
+            allocatedBudget: 150000,
+            description: 'Leadership training and youth empowerment activities',
+            status: 'Ongoing',
+            expenses: [
+                {
+                    name: 'Training Materials',
+                    amount: 25000,
+                    date: '2026-05-10',
+                    remarks: 'Workbooks and handouts for participants'
+                },
+                {
+                    name: 'Venue Rental',
+                    amount: 15000,
+                    date: '2026-05-12',
+                    remarks: 'Community hall rental for 3 days'
+                },
+                {
+                    name: 'Snacks and Meals',
+                    amount: 30000,
+                    date: '2026-05-15',
+                    remarks: 'Catering for 50 participants'
+                }
+            ]
+        },
+        {
+            title: 'Education Support Program',
+            allocatedBudget: 200000,
+            description: 'Scholarship and tutorial assistance for students',
+            status: 'Ongoing',
+            expenses: [
+                {
+                    name: 'School Supplies',
+                    amount: 45000,
+                    date: '2026-05-05',
+                    remarks: 'Notebooks, pens, and backpacks'
+                },
+                {
+                    name: 'Tutorial Sessions',
+                    amount: 60000,
+                    date: '2026-05-08',
+                    remarks: 'Math and Science tutors for 2 months'
+                }
+            ]
+        },
+        {
+            title: 'Sports Development Program',
+            allocatedBudget: 100000,
+            description: 'Basketball league and sports equipment',
+            status: 'Ongoing',
+            expenses: [
+                {
+                    name: 'Sports Equipment',
+                    amount: 35000,
+                    date: '2026-05-03',
+                    remarks: 'Basketballs, jerseys, and whistles'
+                },
+                {
+                    name: 'Court Maintenance',
+                    amount: 20000,
+                    date: '2026-05-07',
+                    remarks: 'Repainting and repair of basketball court'
+                }
+            ]
+        },
+        {
+            title: 'Environmental Program',
+            allocatedBudget: 80000,
+            description: 'Tree planting and clean-up drives',
+            status: 'Completed',
+            expenses: [
+                {
+                    name: 'Seedlings and Tools',
+                    amount: 25000,
+                    date: '2026-04-20',
+                    remarks: '500 tree seedlings and gardening tools'
+                },
+                {
+                    name: 'Transportation',
+                    amount: 15000,
+                    date: '2026-04-22',
+                    remarks: 'Vehicle rental for tree planting activity'
+                },
+                {
+                    name: 'Refreshments',
+                    amount: 10000,
+                    date: '2026-04-22',
+                    remarks: 'Water and snacks for volunteers'
+                },
+                {
+                    name: 'Cleanup Supplies',
+                    amount: 30000,
+                    date: '2026-04-25',
+                    remarks: 'Trash bags, gloves, and cleaning materials'
+                }
+            ]
+        }
+    ];
 
     // Internal selections for modals
     let modalExpenseProgramTitle = '';

@@ -33,13 +33,32 @@
                 <p class="page-subtitle">Create, view, and manage ABYIP records for the barangay.</p>
             </div>
             <div class="page-header-right">
-                <div class="abyip-search-inline">
-                    <label for="abyipRecordsSearch" class="abyip-sr-only">Search records by title, date, or time</label>
-                    <div class="abyip-search-wrapper">
-                        <span class="abyip-search-icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        </span>
-                        <input type="search" id="abyipRecordsSearch" class="abyip-filter-search-inline" placeholder="Search ABYIP records..." autocomplete="off">
+                <div class="abyip-filters-row">
+                    <div class="abyip-filter-item">
+                        <select id="abyipStatusFilter" class="abyip-filter-select">
+                            <option value="">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="abyip-filter-item">
+                        <select id="abyipYearFilter" class="abyip-filter-select">
+                            <option value="">All Years</option>
+                            <option value="2023">CY 2023</option>
+                            <option value="2024">CY 2024</option>
+                            <option value="2025">CY 2025</option>
+                            <option value="2026">CY 2026</option>
+                        </select>
+                    </div>
+                    <div class="abyip-search-inline">
+                        <label for="abyipRecordsSearch" class="abyip-sr-only">Search records by title, date, or time</label>
+                        <div class="abyip-search-wrapper">
+                            <span class="abyip-search-icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            </span>
+                            <input type="search" id="abyipRecordsSearch" class="abyip-filter-search-inline" placeholder="Search ABYIP records..." autocomplete="off">
+                        </div>
                     </div>
                 </div>
                 <button type="button" class="btn primary-btn" id="addAbyipBtn">Create New ABYIP</button>

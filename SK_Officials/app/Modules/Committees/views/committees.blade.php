@@ -140,7 +140,10 @@
             </div>
             <div class="modal-field">
                 <label for="committeeDescriptionInput">Description</label>
-                <textarea id="committeeDescriptionInput" rows="3" placeholder="Enter committee purpose and responsibilities..."></textarea>
+                <textarea id="committeeDescriptionInput" rows="3" placeholder="Enter committee purpose and responsibilities..." maxlength="500"></textarea>
+                <div class="char-counter">
+                    <span id="descCharCount">0</span>/500 characters
+                </div>
             </div>
         </div>
         <div class="modal-footer">
@@ -178,15 +181,19 @@
 
             {{-- Info grid --}}
             <div class="cv-info-grid">
-                <div class="cv-info-card">
-                    <div class="cv-info-label">Committee Head</div>
+                <div class="cv-info-card cv-info-card-full">
+                    <div class="cv-info-label">SK Official</div>
                     <div class="cv-info-value" id="viewCommitteeHead">—</div>
                 </div>
-                <div class="cv-info-card">
-                    <div class="cv-info-label">Status</div>
-                    <div class="cv-info-value" id="viewCommitteeStatusText">Active</div>
+                <div class="cv-info-card cv-info-card-full">
+                    <div class="cv-info-label">Committee</div>
+                    <div class="cv-info-value" id="viewCommitteeNameInfo">—</div>
                 </div>
-                <div class="cv-info-card">
+                <div class="cv-info-card cv-info-card-full">
+                    <div class="cv-info-label">Role</div>
+                    <div class="cv-info-value">Committee Head</div>
+                </div>
+                <div class="cv-info-card cv-info-card-full">
                     <div class="cv-info-label">Date Assigned</div>
                     <div class="cv-info-value" id="viewCommitteeDateAssigned">—</div>
                 </div>

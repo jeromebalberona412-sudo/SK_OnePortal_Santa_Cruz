@@ -516,12 +516,12 @@
 
     </div>
 
-    <!-- ══ Committees Section ════════════════════════════════ -->
+    <!-- ══ Account Status Section ═══════════════════════════ -->
     <div class="dash-section-card mb-3">
         <div class="dash-section-header">
             <div>
-                <h2 class="dash-section-title">Committees</h2>
-                <p class="dash-section-sub">SK committee overview and status</p>
+                <h2 class="dash-section-title">Account Status</h2>
+                <p class="dash-section-sub">SK Officials account overview and status</p>
             </div>
             <span class="dash-chart-badge">Overview</span>
         </div>

@@ -204,6 +204,8 @@ body {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
+    overflow: hidden;
+    border-radius: 12px;
 }
 
 .budget-table thead {
@@ -233,6 +235,14 @@ body {
 
 .budget-table thead th {
     background: #3a3a4a;
+}
+
+.budget-table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.budget-table thead th:last-child {
+    border-top-right-radius: 12px;
 }
 
 .budget-row-budget {

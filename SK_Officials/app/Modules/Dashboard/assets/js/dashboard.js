@@ -238,11 +238,16 @@ function renderActivity(d) {
         return;
     }
     list.innerHTML = d.activity.map(function (item) {
-        return `<div class="activity-item">
-            <div class="activity-dot ${item.type}">${ICONS[item.type] || ''}</div>
+        // Find the official in COMMITTEES to get their position
+        const official = COMMITTEES.find(c => c.name === item.who);
+        
+        // Get position from COMMITTEES, or use default if not found
+        const position = official ? official.head : 'SK Official';
+        
+        return `<div class="activity-item activity-item-no-icon">
             <div class="activity-body">
                 <strong>${esc(item.text)}</strong>
-                <span>${esc(item.who)}</span>
+                <span>${esc(item.who)} - ${esc(position)}</span>
             </div>
             <div class="activity-time">${esc(item.time)}</div>
         </div>`;
@@ -655,38 +660,103 @@ function renderReminder() {
     }
 }
 
-/* ── Committees ──────────────────────────────────────────── */
+/* ── Account Status ──────────────────────────────────────────── */
 const COMMITTEES = [
-    { name:'Education Committee',       head:'Maria Santos',    status:'Active' },
-    { name:'Sports Committee',          head:'Juan Dela Cruz',  status:'Active' },
-    { name:'Health Committee',          head:'Ana Lim',         status:'Active' },
-    { name:'Environment Committee',     head:'Pedro Reyes',     status:'Active' },
-    { name:'Livelihood Committee',      head:'Liza Mendoza',    status:'Active' },
-    { name:'Peace & Order Committee',   head:'Carlo Bautista',  status:'Active' },
+    { name:'Juan Dela Cruz',        head:'SK Chairperson',      status:'Active' },
+    { name:'Maria Santos',          head:'SK Kagawad',          status:'Active' },
+    { name:'Pedro Reyes',           head:'SK Kagawad',          status:'Active' },
+    { name:'Ana Lim',               head:'SK Kagawad',          status:'Offline' },
+    { name:'Liza Mendoza',          head:'SK Kagawad',          status:'Active' },
+    { name:'Carlo Bautista',        head:'SK Kagawad',          status:'Active' },
+    { name:'Rosa Garcia',           head:'SK Kagawad',          status:'Active' },
+    { name:'Miguel Torres',         head:'SK Kagawad',          status:'Offline' },
+    { name:'Sofia Ramos',           head:'SK Secretary',        status:'Active' },
+    { name:'Diego Fernandez',       head:'SK Treasurer',        status:'Active' },
 ];
 
 function renderCommittees() {
     const container = document.getElementById('committeesList');
     if (!container) return;
-    container.innerHTML = COMMITTEES.map(function (c) {
+    
+    // Sort: Active first, then Offline at the end
+    const sortedCommittees = [...COMMITTEES].sort((a, b) => {
+        if (a.status === 'Active' && b.status === 'Offline') return -1;
+        if (a.status === 'Offline' && b.status === 'Active') return 1;
+        return 0;
+    });
+    
+    // Calculate active and offline counts
+    const activeCount = COMMITTEES.filter(c => c.status === 'Active').length;
+    const offlineCount = COMMITTEES.filter(c => c.status === 'Offline').length;
+    
+    container.innerHTML = sortedCommittees.map(function (c, index) {
+        // Determine badge class based on status
+        const badgeClass = c.status === 'Active' ? 'committee-card-badge-active' : 'committee-card-badge-offline';
+        
+        // Show remove button only for Offline status
+        const removeButton = c.status === 'Offline' 
+            ? `<button class="committee-remove-btn" data-index="${index}" data-name="${esc(c.name)}" title="Remove Profile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14H6L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4h6v2"></path>
+                </svg>
+            </button>`
+            : '';
+        
         return `<div class="col-12 col-sm-6 col-lg-4">
-            <div class="committee-card">
-                <div class="committee-card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                </div>
+            <div class="committee-card committee-card-text-only">
                 <div class="committee-card-body">
                     <div class="committee-card-name">${esc(c.name)}</div>
-                    <div class="committee-card-meta">Head: ${esc(c.head)}</div>
+                    <div class="committee-card-meta">Position: ${esc(c.head)}</div>
                 </div>
-                <span class="committee-card-badge">${esc(c.status)}</span>
+                <div class="committee-card-actions">
+                    <span class="committee-card-badge ${badgeClass}">${esc(c.status)}</span>
+                    ${removeButton}
+                </div>
             </div>
         </div>`;
     }).join('');
+    
+    // Add event listeners for remove buttons
+    container.querySelectorAll('.committee-remove-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const name = btn.getAttribute('data-name');
+            if (confirm(`Are you sure you want to remove ${name}'s profile?`)) {
+                removeOfficialProfile(name);
+            }
+        });
+    });
+    
+    // Update status counters if they exist
+    updateStatusCounters(activeCount, offlineCount);
+}
+
+function removeOfficialProfile(name) {
+    // Find and remove the official from the array
+    const index = COMMITTEES.findIndex(c => c.name === name);
+    if (index !== -1) {
+        COMMITTEES.splice(index, 1);
+        // Re-render the list
+        renderCommittees();
+        // Show success message (optional)
+        console.log(`Profile removed: ${name}`);
+    }
+}
+
+function updateStatusCounters(activeCount, offlineCount) {
+    const totalCount = COMMITTEES.length;
+    
+    // Update any status counter elements on the page
+    const activeCountEl = document.getElementById('activeOfficialsCount');
+    const offlineCountEl = document.getElementById('offlineOfficialsCount');
+    const totalCountEl = document.getElementById('totalOfficialsCount');
+    
+    if (activeCountEl) activeCountEl.textContent = activeCount;
+    if (offlineCountEl) offlineCountEl.textContent = offlineCount;
+    if (totalCountEl) totalCountEl.textContent = totalCount;
 }
 
 /* ── Modal system ────────────────────────────────────────── */

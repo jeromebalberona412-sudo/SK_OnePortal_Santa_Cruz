@@ -68,12 +68,6 @@
         <section class="page-content-section no-print">
             <div class="section-heading-row">
                 <h2 class="section-title">Budget Table</h2>
-                <p class="section-description">
-                    Events represent the actual implementation of SK programs—so budgets, expenses, and remaining funds should be monitored per program.
-                </p>
-                <p class="section-description">
-                    About Events: track trainings, drives, and activities where these budgets are used.
-                </p>
             </div>
 
             <div class="table-wrapper budget-table-wrapper">

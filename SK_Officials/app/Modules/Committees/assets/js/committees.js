@@ -145,6 +145,12 @@ function initializeCommitteesUI() {
                     headInput.appendChild(option);
                 }
             });
+            
+            // Re-enable instruction option (will be disabled on focus)
+            const instructionOption = headInput.querySelector('option[value=""]');
+            if (instructionOption) {
+                instructionOption.disabled = false;
+            }
         }
 
         // Populate committee name dropdown with available committees
@@ -187,6 +193,12 @@ function initializeCommitteesUI() {
             // Restore previous selection if it still exists
             if (currentValue) {
                 nameInput.value = currentValue;
+            }
+            
+            // Re-enable instruction option (will be disabled on focus)
+            const instructionOption = nameInput.querySelector('option[value=""]');
+            if (instructionOption) {
+                instructionOption.disabled = false;
             }
         }
     }
@@ -287,6 +299,14 @@ function initializeCommitteesUI() {
 
     // Committee dropdown change event
     if (nameInput) {
+        // Disable instruction option when dropdown is opened/focused
+        nameInput.addEventListener('focus', () => {
+            const instructionOption = nameInput.querySelector('option[value=""]');
+            if (instructionOption) {
+                instructionOption.disabled = true;
+            }
+        });
+        
         nameInput.addEventListener('change', () => {
             if (otherCommitteeField && otherCommitteeInput) {
                 if (nameInput.value === 'Other') {
@@ -299,7 +319,26 @@ function initializeCommitteesUI() {
         });
     }
 
-    // Open / close modal
+    // Committee head dropdown - disable instruction option when opened
+    if (headInput) {
+        headInput.addEventListener('focus', () => {
+            const instructionOption = headInput.querySelector('option[value=""]');
+            if (instructionOption) {
+                instructionOption.disabled = true;
+            }
+        });
+    }
+
+    // Character counter for description
+    if (descInput) {
+        const charCount = document.getElementById('descCharCount');
+        descInput.addEventListener('input', () => {
+            if (charCount) {
+                charCount.textContent = descInput.value.length;
+            }
+        });
+    }
+
     function openModal() {
         if (!modal) return;
         populateDropdowns(); // Refresh dropdown to show available committee heads and committees
@@ -307,18 +346,38 @@ function initializeCommitteesUI() {
         resetModalMaximize(modal);
         editingIndex = -1;
         if (saveBtn) saveBtn.textContent = 'Save';
-        if (nameInput) nameInput.focus();
+        if (nameInput) {
+            nameInput.focus();
+            nameInput.disabled = false; // Ensure enabled when opening
+        }
+        if (headInput) {
+            headInput.disabled = false; // Ensure enabled when opening
+        }
+        
+        // Reset character counter
+        const charCount = document.getElementById('descCharCount');
+        if (charCount) charCount.textContent = '0';
     }
 
     function closeModal() {
         if (!modal) return;
         modal.style.display = 'none';
         resetModalMaximize(modal);
-        if (nameInput) nameInput.value = '';
+        if (nameInput) {
+            nameInput.value = '';
+            nameInput.disabled = false; // Re-enable when closing
+        }
         if (otherCommitteeInput) otherCommitteeInput.value = '';
         if (otherCommitteeField) otherCommitteeField.style.display = 'none';
-        if (headInput) headInput.value = '';
+        if (headInput) {
+            headInput.value = '';
+            headInput.disabled = false; // Re-enable when closing
+        }
         if (descInput) descInput.value = '';
+        
+        // Reset character counter
+        const charCount = document.getElementById('descCharCount');
+        if (charCount) charCount.textContent = '0';
     }
 
     if (addBtn) {
@@ -349,6 +408,7 @@ function initializeCommitteesUI() {
 
             if (action === 'view') {
                 const viewName = document.getElementById('viewCommitteeName');
+                const viewNameInfo = document.getElementById('viewCommitteeNameInfo');
                 const viewHead = document.getElementById('viewCommitteeHead');
                 const viewStatus = document.getElementById('viewCommitteeStatus');
                 const viewStatusText = document.getElementById('viewCommitteeStatusText');
@@ -358,10 +418,11 @@ function initializeCommitteesUI() {
                 const viewResp = document.getElementById('viewCommitteeResponsibilities');
 
                 if (viewName) viewName.textContent = committee.name || '—';
+                if (viewNameInfo) viewNameInfo.textContent = committee.name || '—';
                 if (viewHead) viewHead.textContent = committee.head || '—';
                 if (viewStatus) viewStatus.textContent = committee.status || 'Active';
                 if (viewStatusText) viewStatusText.textContent = committee.status || 'Active';
-                if (viewDate) viewDate.textContent = committee.dateCreated || '—';
+                if (viewDate) viewDate.textContent = committee.assignedDate || committee.dateCreated || '—';
                 if (viewDateCreated) viewDateCreated.textContent = committee.dateCreated ? 'Assigned ' + committee.dateCreated : '';
                 if (viewDesc) viewDesc.textContent = committee.description || committee.purpose || '—';
                 if (viewResp) viewResp.textContent = committee.responsibilities || '—';
@@ -374,8 +435,22 @@ function initializeCommitteesUI() {
             }
 
             editingIndex = index;
-            if (nameInput) nameInput.value = committee.name;
-            if (headInput) headInput.value = committee.head;
+            if (nameInput) {
+                nameInput.value = committee.name;
+                nameInput.disabled = false; // Enable for editing
+            }
+            if (headInput) {
+                headInput.value = committee.head;
+                headInput.disabled = false; // Enable for editing
+            }
+            if (descInput) {
+                descInput.value = committee.description || committee.purpose || '';
+                // Update character counter
+                const charCount = document.getElementById('descCharCount');
+                if (charCount) {
+                    charCount.textContent = descInput.value.length;
+                }
+            }
             if (saveBtn) saveBtn.textContent = 'Update';
             populateDropdowns(); // Refresh dropdown when editing
             if (modal) {

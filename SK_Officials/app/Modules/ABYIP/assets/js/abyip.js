@@ -16,6 +16,8 @@ let pendingPdfData = null; // Store PDF data temporarily
 let pendingIsImported = false; // Track if pending record is an imported Word doc
 
 let filterSearchText = '';
+let filterStatus = '';
+let filterYear = '';
 let searchDebounceTimer = null;
 
 // Static status - all records are always Pending
@@ -177,9 +179,30 @@ function getRecordSearchHaystack(record) {
 }
 
 function recordMatchesFilters(record) {
+    // Status filter
+    if (filterStatus && record.status !== filterStatus) {
+        return false;
+    }
+    
+    // Year filter
+    if (filterYear) {
+        const recordDate = record.dateCreated ? new Date(record.dateCreated) : null;
+        const recordYear = recordDate && !Number.isNaN(recordDate.getTime()) ? recordDate.getFullYear().toString() : '';
+        if (recordYear !== filterYear) {
+            return false;
+        }
+    }
+    
+    // Search text filter
     const q = filterSearchText.trim().toLowerCase();
-    if (!q) return true;
-    return getRecordSearchHaystack(record).indexOf(q) !== -1;
+    if (q) {
+        const haystack = getRecordSearchHaystack(record);
+        if (haystack.indexOf(q) === -1) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 function getFilteredRecords() {
@@ -194,16 +217,11 @@ function renderRecordsTable() {
     const tbody = document.getElementById('recordsTableBody');
     if (!tbody) return;
 
-    // Update Create button state based on record count
+    // DO NOT disable the Create button - keep it always enabled
     const createBtn = document.getElementById('addAbyipBtn');
     if (createBtn) {
-        if (abyipRecords.length >= 1) {
-            createBtn.disabled = true;
-            createBtn.title = 'Delete the existing ABYIP record before creating a new one.';
-        } else {
-            createBtn.disabled = false;
-            createBtn.title = '';
-        }
+        createBtn.disabled = false;
+        createBtn.title = '';
     }
 
     if (abyipRecords.length === 0) {
@@ -1272,6 +1290,14 @@ function renderStoredPdf(base64Data, filename) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Clear any existing sample data (one-time cleanup)
+    const hasCleared = localStorage.getItem('abyip_sample_cleared_v1');
+    if (!hasCleared) {
+        localStorage.removeItem(ABYIP_STORAGE_KEY);
+        localStorage.removeItem(ABYIP_DELETE_COUNT_KEY);
+        localStorage.setItem('abyip_sample_cleared_v1', 'true');
+    }
+    
     loadRecords();
     renderRecordsTable();
 
@@ -1281,7 +1307,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const printBtn = document.getElementById('abyipModalPrint');
     if (printBtn) printBtn.style.display = 'none';
 
-    document.getElementById('addAbyipBtn')?.addEventListener('click', openCreateOptionsModal);
+    document.getElementById('addAbyipBtn')?.addEventListener('click', function() {
+        // Check if an ABYIP record already exists for the current year (2026)
+        const currentYear = new Date().getFullYear();
+        const existingRecordForYear = abyipRecords.some(record => {
+            if (!record.dateCreated) return false;
+            const recordYear = new Date(record.dateCreated).getFullYear();
+            return recordYear === currentYear;
+        });
+
+        if (existingRecordForYear) {
+            showNotification('Cannot create another ABYIP for this year. Delete existing record first.', 'error');
+            return;
+        }
+        
+        openCreateOptionsModal();
+    });
 
     document.getElementById('selectTemplateBtn')?.addEventListener('click', useTemplate);
     document.getElementById('selectImportBtn')?.addEventListener('click', openImportWordFilePicker);
@@ -1328,6 +1369,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 filterSearchText = searchInput.value || '';
                 renderRecordsTable();
             }, 200);
+        });
+    }
+
+    // Status filter
+    const statusFilter = document.getElementById('abyipStatusFilter');
+    if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+            filterStatus = statusFilter.value || '';
+            renderRecordsTable();
+        });
+    }
+
+    // Year filter
+    const yearFilter = document.getElementById('abyipYearFilter');
+    if (yearFilter) {
+        yearFilter.addEventListener('change', function () {
+            filterYear = yearFilter.value || '';
+            renderRecordsTable();
         });
     }
 

@@ -262,6 +262,24 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${year}-${month}-${day}`;
     }
 
+    function getOneYearFromDate(dateStr) {
+        const date = new Date(dateStr);
+        date.setFullYear(date.getFullYear() + 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Set min date for both inputs to today
+    const today = getTodayDate();
+    if (dateStartInput) {
+        dateStartInput.setAttribute('min', today);
+    }
+    if (dateExpiryInput) {
+        dateExpiryInput.setAttribute('min', today);
+    }
+
     function validateDateStart() {
         const value = dateStartInput.value;
         const today = getTodayDate();
@@ -273,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (value < today) {
-            dateStartError.textContent = 'Bawal yung past dates';
+            dateStartError.textContent = 'Past dates are not allowed';
             dateStartError.style.display = 'block';
             return false;
         }
@@ -295,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (expiryValue < today) {
-            dateExpiryError.textContent = 'Bawal yung past dates';
+            dateExpiryError.textContent = 'Past dates are not allowed';
             dateExpiryError.style.display = 'block';
             return false;
         }
@@ -305,6 +323,16 @@ document.addEventListener('DOMContentLoaded', function() {
             dateExpiryError.style.display = 'block';
             return false;
         }
+
+        // Check if expiry date is more than one year from start date
+        if (startValue && expiryValue) {
+            const oneYearFromStart = getOneYearFromDate(startValue);
+            if (expiryValue > oneYearFromStart) {
+                dateExpiryError.textContent = 'Date range cannot exceed one year';
+                dateExpiryError.style.display = 'block';
+                return false;
+            }
+        }
         
         dateExpiryError.textContent = '';
         dateExpiryError.style.display = 'none';
@@ -313,7 +341,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (dateStartInput) {
         dateStartInput.addEventListener('input', function() {
-            validateDateStart();
+            const isValid = validateDateStart();
+            
+            // Update expiry date min and max based on start date
+            if (isValid && dateStartInput.value) {
+                dateExpiryInput.setAttribute('min', dateStartInput.value);
+                const oneYearFromStart = getOneYearFromDate(dateStartInput.value);
+                dateExpiryInput.setAttribute('max', oneYearFromStart);
+            } else {
+                dateExpiryInput.setAttribute('min', today);
+                dateExpiryInput.removeAttribute('max');
+            }
+            
             validateDateExpiry();
         });
     }

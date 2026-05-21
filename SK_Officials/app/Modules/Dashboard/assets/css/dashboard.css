@@ -320,13 +320,18 @@ html, body {
     padding: 12px 14px;
     background: #f9fafb;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    border: none;
     transition: box-shadow 0.2s ease;
 }
 
 .committee-card:hover {
     box-shadow: 0 4px 12px rgba(15,23,42,.08);
     background: #fff;
+}
+
+/* Text-only variant - no icon */
+.committee-card-text-only {
+    gap: 0;
 }
 
 .committee-card-icon {
@@ -344,6 +349,11 @@ html, body {
     width: 18px;
     height: 18px;
     stroke: #3b82f6;
+}
+
+/* Hide icon in text-only cards */
+.committee-card-text-only .committee-card-icon {
+    display: none;
 }
 
 .committee-card-body {
@@ -371,10 +381,19 @@ html, body {
     font-weight: 700;
     padding: 3px 8px;
     border-radius: 999px;
-    background: #dcfce7;
-    color: #166534;
     white-space: nowrap;
     flex-shrink: 0;
+}
+
+/* Status badge colors */
+.committee-card-badge-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.committee-card-badge-offline {
+    background: #f3f4f6;
+    color: #6b7280;
 }
 
 /* ── Section card margin override for Bootstrap rows ─────── */
@@ -719,6 +738,11 @@ html, body {
 
 .activity-item:last-child { border-bottom: none; }
 
+/* No icon variant */
+.activity-item-no-icon {
+    gap: 0;
+}
+
 .activity-dot {
     width: 34px;
     height: 34px;
@@ -737,6 +761,11 @@ html, body {
 .activity-dot.delete  { background: #fef3c7; color: #d97706; }
 .activity-dot.restore { background: #eff6ff; color: #2563eb; }
 .activity-dot.add     { background: #faf5ff; color: #9333ea; }
+
+/* Hide icon in no-icon variant */
+.activity-item-no-icon .activity-dot {
+    display: none;
+}
 
 .activity-body { flex: 1; min-width: 0; }
 
