@@ -21,8 +21,8 @@ const aroffRecords = [
         email: 'carlos.mendoza@example.com',
         dateOfBirth: 'Apr 10, 1999',
         age: 27,
-        termStart: 'Jan 1, 2019',
-        termEnd: 'Dec 31, 2021',
+        termStart: 'Jan 1, 2023',
+        termEnd: 'Dec 31, 2025',
         termStatus: 'Completed Term',
     },
     {
@@ -40,8 +40,8 @@ const aroffRecords = [
         email: 'liza.torres@example.com',
         dateOfBirth: 'Jul 22, 2000',
         age: 26,
-        termStart: 'Jan 1, 2019',
-        termEnd: 'Dec 31, 2021',
+        termStart: 'Jan 1, 2023',
+        termEnd: 'Dec 31, 2025',
         termStatus: 'Completed Term',
     },
     {
@@ -59,8 +59,8 @@ const aroffRecords = [
         email: 'roberto.villanueva@example.com',
         dateOfBirth: 'Nov 3, 1998',
         age: 28,
-        termStart: 'Jan 1, 2022',
-        termEnd: 'Dec 31, 2024',
+        termStart: 'Jan 1, 2024',
+        termEnd: 'Dec 31, 2026',
         termStatus: 'Completed Term',
     },
     {
@@ -78,8 +78,65 @@ const aroffRecords = [
         email: 'patricia.castillo@example.com',
         dateOfBirth: 'Feb 14, 2001',
         age: 25,
-        termStart: 'Jan 1, 2022',
-        termEnd: 'Dec 31, 2024',
+        termStart: 'Jan 1, 2024',
+        termEnd: 'Dec 31, 2026',
+        termStatus: 'Completed Term',
+    },
+    {
+        id: 'aroff-005',
+        firstName: 'Miguel',
+        middleName: 'Santos',
+        lastName: 'Reyes',
+        suffix: 'Jr.',
+        position: 'SK Auditor',
+        barangay: 'Pagsawitan',
+        municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09615556677',
+        email: 'miguel.reyes@example.com',
+        dateOfBirth: 'Mar 5, 1999',
+        age: 27,
+        termStart: 'Jan 1, 2025',
+        termEnd: 'Dec 31, 2027',
+        termStatus: 'Completed Term',
+    },
+    {
+        id: 'aroff-006',
+        firstName: 'Sofia',
+        middleName: 'Cruz',
+        lastName: 'Garcia',
+        suffix: '',
+        position: 'SK PRO',
+        barangay: 'Poblacion',
+        municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09726667788',
+        email: 'sofia.garcia@example.com',
+        dateOfBirth: 'Aug 12, 2000',
+        age: 26,
+        termStart: 'Jan 1, 2025',
+        termEnd: 'Dec 31, 2027',
+        termStatus: 'Completed Term',
+    },
+    {
+        id: 'aroff-007',
+        firstName: 'Daniel',
+        middleName: 'Lopez',
+        lastName: 'Martinez',
+        suffix: '',
+        position: 'SK Kagawad',
+        barangay: 'Santisima Cruz',
+        municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09837778899',
+        email: 'daniel.martinez@example.com',
+        dateOfBirth: 'Dec 20, 2001',
+        age: 25,
+        termStart: 'Jan 1, 2026',
+        termEnd: 'Dec 31, 2028',
         termStatus: 'Completed Term',
     },
 ];
@@ -88,6 +145,8 @@ let aroffFiltered = [...aroffRecords];
 let aroffCurrentPage = 1;
 const aroffPerPage = 10;
 let aroffSearchQ = '';
+let aroffYearFilter = 'all';
+let aroffTermFilter = 'all';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initArchivedSkOfficials() {
@@ -97,11 +156,44 @@ function initArchivedSkOfficials() {
     bindAroffViewModal();
 }
 
-// ── Apply filters (search only) ───────────────────────────────────────────────
+// ── Apply filters (search, year, and term) ────────────────────────────────────
 function applyAroffFilters() {
     aroffFiltered = aroffRecords.filter(r => {
-        const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
-        return !aroffSearchQ || fullName.includes(aroffSearchQ) || (r.position || '').toLowerCase().includes(aroffSearchQ) || (r.barangay || '').toLowerCase().includes(aroffSearchQ);
+        // Year filter - extract year from termStart (e.g., "Jan 1, 2019" -> 2019)
+        if (aroffYearFilter !== 'all') {
+            const termStartStr = r.termStart || '';
+            const yearMatch = termStartStr.match(/\d{4}/);
+            const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
+            
+            if (!recordYear || recordYear !== parseInt(aroffYearFilter, 10)) {
+                return false;
+            }
+        }
+        
+        // Term filter - check if record year falls within term range
+        if (aroffTermFilter !== 'all') {
+            const termStartStr = r.termStart || '';
+            const yearMatch = termStartStr.match(/\d{4}/);
+            const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
+            
+            if (!recordYear) return false;
+            
+            const [termStart, termEnd] = aroffTermFilter.split('-').map(y => parseInt(y, 10));
+            if (recordYear < termStart || recordYear > termEnd) {
+                return false;
+            }
+        }
+        
+        // Search filter
+        if (aroffSearchQ) {
+            const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
+            const matches = fullName.includes(aroffSearchQ) || 
+                          (r.position || '').toLowerCase().includes(aroffSearchQ) || 
+                          (r.barangay || '').toLowerCase().includes(aroffSearchQ);
+            if (!matches) return false;
+        }
+        
+        return true;
     });
     aroffCurrentPage = 1;
     renderAroffTable();
@@ -210,11 +302,29 @@ function renderAroffPagination(total) {
 // ── Search ────────────────────────────────────────────────────────────────────
 function bindAroffSearch() {
     const input = document.getElementById('aroffSearch');
-    if (!input) return;
-    input.addEventListener('input', function () {
-        aroffSearchQ = this.value.toLowerCase();
-        applyAroffFilters();
-    });
+    const yearSelect = document.getElementById('aroffYearFilter');
+    const termSelect = document.getElementById('aroffTermFilter');
+    
+    if (input) {
+        input.addEventListener('input', function () {
+            aroffSearchQ = this.value.toLowerCase();
+            applyAroffFilters();
+        });
+    }
+    
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function () {
+            aroffYearFilter = this.value;
+            applyAroffFilters();
+        });
+    }
+    
+    if (termSelect) {
+        termSelect.addEventListener('change', function () {
+            aroffTermFilter = this.value;
+            applyAroffFilters();
+        });
+    }
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────

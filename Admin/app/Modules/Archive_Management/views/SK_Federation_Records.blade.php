@@ -18,6 +18,19 @@
             <p class="arfed-page-subtitle">Completed term records — read-only historical archive.</p>
         </div>
         <div class="arfed-header-right">
+            <select id="arfedYearFilter" class="arfed-year-filter">
+                <option value="all">All Years</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
+            <select id="arfedTermFilter" class="arfed-term-filter">
+                <option value="all">All Terms</option>
+                <option value="2023-2026">2023 - 2026</option>
+                <option value="2024-2027">2024 - 2027</option>
+                <option value="2025-2028">2025 - 2028</option>
+            </select>
             <input type="text" id="arfedSearch" class="arfed-search-input" placeholder="Search by name or position…">
         </div>
     </div>
@@ -33,8 +46,8 @@
                     <tr>
                         <th>Full Name<div class="arfed-col-hint">FN, MN, LN, Suffix</div></th>
                         <th>Position</th>
-                        <th>Term</th>
-                        <th>Status</th>
+                        <th>Term Served</th>
+                        <th>Deleted Term</th>
                         <th class="arfed-col-actions">Actions</th>
                     </tr>
                 </thead>

@@ -36,6 +36,8 @@
     /* ── DOM refs ──────────────────────────────────────────────── */
     const tableBody       = document.getElementById('dbTableBody');
     const searchInput     = document.getElementById('dbSearch');
+    const yearFilter      = document.getElementById('dbYearFilter');
+    const termFilter      = document.getElementById('dbTermFilter');
     const paginationInfo  = document.getElementById('dbPaginationInfo');
     const prevBtn         = document.getElementById('dbPrevBtn');
     const nextBtn         = document.getElementById('dbNextBtn');
@@ -161,6 +163,8 @@
     /* ── Filter logic ──────────────────────────────────────────── */
     function applyFilters() {
         const search  = (searchInput?.value || '').toLowerCase().trim();
+        const yearValue = yearFilter?.value || 'all';
+        const termValue = termFilter?.value || 'all';
         const activeTab = document.querySelector('.db-tab.active');
         const filter = activeTab ? activeTab.dataset.filter : 'all';
 
@@ -171,6 +175,21 @@
             if (search) {
                 const haystack = [d.name].join(' ').toLowerCase();
                 if (!haystack.includes(search)) return false;
+            }
+
+            // Year filter
+            if (yearValue !== 'all') {
+                const deletedAt = new Date(d.deletedAt);
+                const deletedYear = deletedAt.getFullYear();
+                if (deletedYear !== parseInt(yearValue, 10)) return false;
+            }
+
+            // Term filter
+            if (termValue !== 'all') {
+                const deletedAt = new Date(d.deletedAt);
+                const deletedYear = deletedAt.getFullYear();
+                const [termStart, termEnd] = termValue.split('-').map(y => parseInt(y, 10));
+                if (deletedYear < termStart || deletedYear > termEnd) return false;
             }
 
             // Time filter
@@ -250,6 +269,8 @@
     /* ── Event bindings ────────────────────────────────────────── */
     function bindEvents() {
         searchInput?.addEventListener('input', applyFilters);
+        yearFilter?.addEventListener('change', applyFilters);
+        termFilter?.addEventListener('change', applyFilters);
 
         // Filter tabs
         filterTabs?.addEventListener('click', e => {

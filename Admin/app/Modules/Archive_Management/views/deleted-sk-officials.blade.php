@@ -3,7 +3,7 @@
 @section('title', 'Deleted SK Officials')
 
 @section('head')
-@vite(['app/Modules/DeletedSkOfficials/assets/css/deleted-sk-officials.css'])
+@vite(['app/Modules/Archive_Management/assets/css/deleted-sk-officials.css'])
 @endsection
 
 @section('content')
@@ -18,6 +18,13 @@
             <p class="dso-page-subtitle">Records removed from the SK Officials list.</p>
         </div>
         <div class="dso-header-right">
+            <select id="dsoYearFilter" class="dso-year-filter">
+                <option value="all">All Years</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
             <input type="text" id="dsoSearch" class="dso-search-input" placeholder="Search by name or barangay…">
         </div>
     </div>
@@ -27,12 +34,6 @@
 
     <!-- Filter Tabs + Dropdowns -->
     <div class="dso-filter-bar">
-        <div class="dso-filter-tabs">
-            <button class="dso-tab active" data-filter="all">All Deleted</button>
-            <button class="dso-tab" data-filter="today">Deleted Today</button>
-            <button class="dso-tab" data-filter="week">This Week</button>
-            <button class="dso-tab" data-filter="month">This Month</button>
-        </div>
         <div class="dso-filter-dropdowns">
             <select id="dsoFilterBarangay" class="dso-filter-select">
                 <option value="">All Barangays</option>
@@ -40,6 +41,15 @@
             <select id="dsoFilterPosition" class="dso-filter-select">
                 <option value="">All Positions</option>
             </select>
+            <select id="dsoFilterTerm" class="dso-filter-select">
+                <option value="">All Terms</option>
+            </select>
+        </div>
+        <div class="dso-filter-tabs">
+            <button class="dso-tab active" data-filter="all">All Deleted</button>
+            <button class="dso-tab" data-filter="today">Deleted Today</button>
+            <button class="dso-tab" data-filter="week">This Week</button>
+            <button class="dso-tab" data-filter="month">This Month</button>
         </div>
     </div>
 
@@ -53,6 +63,7 @@
                         <th>Position</th>
                         <th>Barangay</th>
                         <th>Municipality</th>
+                        <th>Term</th>
                         <th>Date Deleted</th>
                         <th>Time Deleted</th>
                         <th class="dso-col-actions">Actions</th>
@@ -104,5 +115,5 @@
     </div>
 </div>
 
-@vite(['app/Modules/DeletedSkOfficials/assets/js/deleted-sk-officials.js'])
+@vite(['app/Modules/Archive_Management/assets/js/deleted-sk-officials.js'])
 @endsection

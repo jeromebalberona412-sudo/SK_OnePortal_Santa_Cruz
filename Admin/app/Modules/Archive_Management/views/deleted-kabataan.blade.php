@@ -18,6 +18,19 @@
             <p class="adkab-page-subtitle">Records removed from the Kabataan list by SK Officials — read-only monitoring view.</p>
         </div>
         <div class="adkab-header-right">
+            <select id="adkabYearFilter" class="adkab-year-filter">
+                <option value="all">All Years</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
+            <select id="adkabTermFilter" class="adkab-term-filter">
+                <option value="all">All Terms</option>
+                <option value="2023-2026">2023 - 2026</option>
+                <option value="2024-2027">2024 - 2027</option>
+                <option value="2025-2028">2025 - 2028</option>
+            </select>
             <input type="text" id="adkabSearch" class="adkab-search-input" placeholder="Search by name or barangay…">
         </div>
     </div>

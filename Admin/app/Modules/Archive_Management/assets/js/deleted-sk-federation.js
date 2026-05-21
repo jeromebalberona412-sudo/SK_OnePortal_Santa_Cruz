@@ -23,6 +23,7 @@ const dsfRecords = [
         emailVerification: '04/24/2026 02:57 PM',
         termStart: 'Feb 9, 2023',
         termEnd: 'Apr 24, 2026',
+        term: '2023-2026',
         accountStatus: 'ACTIVE',
         termStatus: 'ACTIVE',
         deletedDate: 'Apr 24, 2026',
@@ -37,6 +38,9 @@ const dsfPerPage = 10;
 let dsfPendingId = null;
 let dsfActiveFilter = 'all';
 let dsfActiveBarangay = '';
+let dsfActiveTerm = '';
+let dsfSearchQ = '';
+let dsfYearFilter = 'all';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function dsfNow() { return new Date('2026-04-26T12:00:00'); }
@@ -126,6 +130,15 @@ function populateDsfDropdowns() {
             barangaySelect.appendChild(opt);
         });
     }
+    const termSelect = document.getElementById('dsfFilterTerm');
+    if (termSelect) {
+        const terms = [...new Set(dsfRecords.map(r => r.term).filter(Boolean))].sort();
+        terms.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t;
+            termSelect.appendChild(opt);
+        });
+    }
 }
 
 // ── Bind Dropdowns ────────────────────────────────────────────────────────────
@@ -138,11 +151,29 @@ function bindDsfDropdowns() {
             dsfApplyAllFilters();
         });
     }
+    const termSelect = document.getElementById('dsfFilterTerm');
+    if (termSelect) {
+        termSelect.addEventListener('change', function () {
+            dsfActiveTerm = this.value;
+            dsfCurrentPage = 1;
+            dsfApplyAllFilters();
+        });
+    }
 }
 
 function dsfApplyAllFilters() {
     let result = dsfApplyFilter(dsfRecords, dsfActiveFilter);
+    
+    // Year filter
+    if (dsfYearFilter !== 'all') {
+        result = result.filter(r => r._deletedTs.getFullYear() === parseInt(dsfYearFilter, 10));
+    }
+    
+    // Barangay and Term filters
     if (dsfActiveBarangay) result = result.filter(r => r.barangay === dsfActiveBarangay);
+    if (dsfActiveTerm) result = result.filter(r => r.term === dsfActiveTerm);
+    
+    // Search filter
     const q = (document.getElementById('dsfSearch')?.value || '').toLowerCase();
     if (q) result = result.filter(r =>
         `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
@@ -196,6 +227,7 @@ function renderDsfTable() {
             <td>${r.position || '—'}</td>
             <td>${r.barangay || '—'}</td>
             <td>${r.municipality || '—'}</td>
+            <td>${r.term || '—'}</td>
             <td><span class="dsf-deleted-badge">${r.deletedDate}</span></td>
             <td><span class="dsf-time-badge">${r.deletedTime}</span></td>
             <td>
@@ -240,11 +272,22 @@ function renderDsfPagination(total) {
 // ── Search ────────────────────────────────────────────────────────────────────
 function bindDsfSearch() {
     const input = document.getElementById('dsfSearch');
-    if (!input) return;
-    input.addEventListener('input', function () {
-        dsfCurrentPage = 1;
-        dsfApplyAllFilters();
-    });
+    const yearSelect = document.getElementById('dsfYearFilter');
+    
+    if (input) {
+        input.addEventListener('input', function () {
+            dsfCurrentPage = 1;
+            dsfApplyAllFilters();
+        });
+    }
+    
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function () {
+            dsfYearFilter = this.value;
+            dsfCurrentPage = 1;
+            dsfApplyAllFilters();
+        });
+    }
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────

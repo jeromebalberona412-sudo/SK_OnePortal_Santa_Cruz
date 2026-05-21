@@ -24,9 +24,9 @@ const adkabRecords = [
         workStatus: 'Student',
         civilStatus: 'Single',
         contactNumber: '09187654321',
-        deletedDate: 'Apr 20, 2026',
+        deletedDate: 'Apr 20, 2023',
         deletedTime: '09:45 AM',
-        _deletedTs: new Date('2026-04-20T09:45:00'),
+        _deletedTs: new Date('2023-04-20T09:45:00'),
     },
     {
         id: 'dk-002',
@@ -44,9 +44,9 @@ const adkabRecords = [
         workStatus: 'Student',
         civilStatus: 'Single',
         contactNumber: '09198765432',
-        deletedDate: 'Apr 12, 2026',
+        deletedDate: 'Apr 12, 2024',
         deletedTime: '02:30 PM',
-        _deletedTs: new Date('2026-04-12T14:30:00'),
+        _deletedTs: new Date('2024-04-12T14:30:00'),
     },
     {
         id: 'dk-003',
@@ -64,9 +64,9 @@ const adkabRecords = [
         workStatus: 'Employed',
         civilStatus: 'Single',
         contactNumber: '09201234567',
-        deletedDate: 'May 10, 2026',
+        deletedDate: 'May 10, 2024',
         deletedTime: '11:15 AM',
-        _deletedTs: new Date('2026-05-10T11:15:00'),
+        _deletedTs: new Date('2024-05-10T11:15:00'),
     },
     {
         id: 'dk-004',
@@ -84,9 +84,49 @@ const adkabRecords = [
         workStatus: 'Student',
         civilStatus: 'Single',
         contactNumber: '09301234567',
-        deletedDate: 'May 15, 2026',
+        deletedDate: 'May 15, 2025',
         deletedTime: '03:00 PM',
-        _deletedTs: new Date('2026-05-15T15:00:00'),
+        _deletedTs: new Date('2025-05-15T15:00:00'),
+    },
+    {
+        id: 'dk-005',
+        respondentNumber: '022',
+        firstName: 'Pedro',
+        middleName: 'Santos',
+        lastName: 'Gonzales',
+        suffix: '',
+        sex: 'Male',
+        age: 21,
+        barangay: 'LUPANG PANGAKO',
+        purokZone: 'Zone 4',
+        educationalBackground: 'College Level',
+        youthClassification: 'In School Youth',
+        workStatus: 'Student',
+        civilStatus: 'Single',
+        contactNumber: '09411234567',
+        deletedDate: 'Jun 20, 2025',
+        deletedTime: '10:30 AM',
+        _deletedTs: new Date('2025-06-20T10:30:00'),
+    },
+    {
+        id: 'dk-006',
+        respondentNumber: '025',
+        firstName: 'Sofia',
+        middleName: 'Cruz',
+        lastName: 'Mendoza',
+        suffix: '',
+        sex: 'Female',
+        age: 18,
+        barangay: 'BIGAYAN',
+        purokZone: 'Zone 6',
+        educationalBackground: 'High School Graduate',
+        youthClassification: 'Out of School Youth',
+        workStatus: 'Unemployed',
+        civilStatus: 'Single',
+        contactNumber: '09521234567',
+        deletedDate: 'Jul 10, 2026',
+        deletedTime: '02:15 PM',
+        _deletedTs: new Date('2026-07-10T14:15:00'),
     },
 ];
 
@@ -95,6 +135,8 @@ let adkabCurrentPage = 1;
 const adkabPerPage = 10;
 let adkabActiveFilter = 'all';
 let adkabSearchQ = '';
+let adkabYearFilter = 'all';
+let adkabTermFilter = 'all';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function adkabNow() { return new Date(); }
@@ -136,6 +178,22 @@ function initAdminDeletedKabataan() {
 // ── Apply all filters ─────────────────────────────────────────────────────────
 function applyAdkabFilters() {
     let base = adkabApplyTabFilter(adkabRecords, adkabActiveFilter);
+    
+    // Year filter
+    if (adkabYearFilter !== 'all') {
+        base = base.filter(r => r._deletedTs.getFullYear() === parseInt(adkabYearFilter, 10));
+    }
+    
+    // Term filter
+    if (adkabTermFilter !== 'all') {
+        const [termStart, termEnd] = adkabTermFilter.split('-').map(y => parseInt(y, 10));
+        base = base.filter(r => {
+            const year = r._deletedTs.getFullYear();
+            return year >= termStart && year <= termEnd;
+        });
+    }
+    
+    // Search filter
     if (adkabSearchQ) {
         base = base.filter(r => {
             const name = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
@@ -204,11 +262,29 @@ function bindAdkabFilterTabs() {
 // ── Search ────────────────────────────────────────────────────────────────────
 function bindAdkabSearch() {
     const input = document.getElementById('adkabSearch');
-    if (!input) return;
-    input.addEventListener('input', function () {
-        adkabSearchQ = this.value.toLowerCase();
-        applyAdkabFilters();
-    });
+    const yearSelect = document.getElementById('adkabYearFilter');
+    const termSelect = document.getElementById('adkabTermFilter');
+    
+    if (input) {
+        input.addEventListener('input', function () {
+            adkabSearchQ = this.value.toLowerCase();
+            applyAdkabFilters();
+        });
+    }
+    
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function () {
+            adkabYearFilter = this.value;
+            applyAdkabFilters();
+        });
+    }
+    
+    if (termSelect) {
+        termSelect.addEventListener('change', function () {
+            adkabTermFilter = this.value;
+            applyAdkabFilters();
+        });
+    }
 }
 
 // ── Render Table ──────────────────────────────────────────────────────────────

@@ -23,6 +23,7 @@ const dsoRecords = [
         emailVerification: '04/24/2026 02:57 PM',
         termStart: 'Feb 9, 2023',
         termEnd: 'Apr 24, 2026',
+        term: '2023-2026',
         accountStatus: 'ACTIVE',
         termStatus: 'ACTIVE',
         deletedDate: 'Apr 24, 2026',
@@ -47,6 +48,7 @@ const dsoRecords = [
         emailVerification: '01/10/2026 10:00 AM',
         termStart: 'Jan 2022',
         termEnd: 'Dec 2025',
+        term: '2022-2025',
         accountStatus: 'ACTIVE',
         termStatus: 'INACTIVE',
         deletedDate: 'Apr 20, 2026',
@@ -71,6 +73,7 @@ const dsoRecords = [
         emailVerification: '02/15/2026 08:30 AM',
         termStart: 'Jan 2022',
         termEnd: 'Dec 2025',
+        term: '2022-2025',
         accountStatus: 'ACTIVE',
         termStatus: 'INACTIVE',
         deletedDate: 'Apr 15, 2026',
@@ -95,6 +98,7 @@ const dsoRecords = [
         emailVerification: '03/01/2026 11:00 AM',
         termStart: 'Jan 2022',
         termEnd: 'Dec 2025',
+        term: '2022-2025',
         accountStatus: 'INACTIVE',
         termStatus: 'INACTIVE',
         deletedDate: 'Mar 30, 2026',
@@ -110,6 +114,9 @@ let dsoPendingId = null;
 let dsoActiveFilter = 'all';
 let dsoActiveBarangay = '';
 let dsoActivePosition = '';
+let dsoActiveTerm = '';
+let dsoSearchQ = '';
+let dsoYearFilter = 'all';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function dsoNow() { return new Date('2026-04-26T12:00:00'); }
@@ -208,6 +215,15 @@ function populateDsoDropdowns() {
             positionSelect.appendChild(opt);
         });
     }
+    const termSelect = document.getElementById('dsoFilterTerm');
+    if (termSelect) {
+        const terms = [...new Set(dsoRecords.map(r => r.term).filter(Boolean))].sort();
+        terms.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t;
+            termSelect.appendChild(opt);
+        });
+    }
 }
 
 // ── Bind Dropdowns ────────────────────────────────────────────────────────────
@@ -228,12 +244,30 @@ function bindDsoDropdowns() {
             dsoApplyAllFilters();
         });
     }
+    const termSelect = document.getElementById('dsoFilterTerm');
+    if (termSelect) {
+        termSelect.addEventListener('change', function () {
+            dsoActiveTerm = this.value;
+            dsoCurrentPage = 1;
+            dsoApplyAllFilters();
+        });
+    }
 }
 
 function dsoApplyAllFilters() {
     let result = dsoApplyFilter(dsoRecords, dsoActiveFilter);
+    
+    // Year filter
+    if (dsoYearFilter !== 'all') {
+        result = result.filter(r => r._deletedTs.getFullYear() === parseInt(dsoYearFilter, 10));
+    }
+    
+    // Barangay, Position, and Term filters
     if (dsoActiveBarangay) result = result.filter(r => r.barangay === dsoActiveBarangay);
     if (dsoActivePosition) result = result.filter(r => r.position === dsoActivePosition);
+    if (dsoActiveTerm) result = result.filter(r => r.term === dsoActiveTerm);
+    
+    // Search filter
     const q = (document.getElementById('dsoSearch')?.value || '').toLowerCase();
     if (q) result = result.filter(r =>
         `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
@@ -287,6 +321,7 @@ function renderDsoTable() {
             <td>${r.position || '—'}</td>
             <td>${r.barangay || '—'}</td>
             <td>${r.municipality || '—'}</td>
+            <td>${r.term || '—'}</td>
             <td><span class="dso-deleted-badge">${r.deletedDate}</span></td>
             <td><span class="dso-time-badge">${r.deletedTime}</span></td>
             <td>
@@ -331,11 +366,22 @@ function renderDsoPagination(total) {
 // ── Search ────────────────────────────────────────────────────────────────────
 function bindDsoSearch() {
     const input = document.getElementById('dsoSearch');
-    if (!input) return;
-    input.addEventListener('input', function () {
-        dsoCurrentPage = 1;
-        dsoApplyAllFilters();
-    });
+    const yearSelect = document.getElementById('dsoYearFilter');
+    
+    if (input) {
+        input.addEventListener('input', function () {
+            dsoCurrentPage = 1;
+            dsoApplyAllFilters();
+        });
+    }
+    
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function () {
+            dsoYearFilter = this.value;
+            dsoCurrentPage = 1;
+            dsoApplyAllFilters();
+        });
+    }
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────

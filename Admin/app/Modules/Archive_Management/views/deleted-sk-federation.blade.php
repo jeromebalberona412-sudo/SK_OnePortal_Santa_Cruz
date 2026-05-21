@@ -3,7 +3,7 @@
 @section('title', 'Deleted SK Federation')
 
 @section('head')
-@vite(['app/Modules/DeletedSkFederation/assets/css/deleted-sk-federation.css'])
+@vite(['app/Modules/Archive_Management/assets/css/deleted-sk-federation.css'])
 @endsection
 
 @section('content')
@@ -18,6 +18,13 @@
             <p class="dsf-page-subtitle">Records removed from the SK Federation list.</p>
         </div>
         <div class="dsf-header-right">
+            <select id="dsfYearFilter" class="dsf-year-filter">
+                <option value="all">All Years</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
             <input type="text" id="dsfSearch" class="dsf-search-input" placeholder="Search by name or barangay…">
         </div>
     </div>
@@ -27,16 +34,19 @@
 
     <!-- Filter Tabs + Dropdowns -->
     <div class="dsf-filter-bar">
+        <div class="dsf-filter-dropdowns">
+            <select id="dsfFilterBarangay" class="dsf-filter-select">
+                <option value="">All Barangays</option>
+            </select>
+            <select id="dsfFilterTerm" class="dsf-filter-select">
+                <option value="">All Terms</option>
+            </select>
+        </div>
         <div class="dsf-filter-tabs">
             <button class="dsf-tab active" data-filter="all">All Deleted</button>
             <button class="dsf-tab" data-filter="today">Deleted Today</button>
             <button class="dsf-tab" data-filter="week">This Week</button>
             <button class="dsf-tab" data-filter="month">This Month</button>
-        </div>
-        <div class="dsf-filter-dropdowns">
-            <select id="dsfFilterBarangay" class="dsf-filter-select">
-                <option value="">All Barangays</option>
-            </select>
         </div>
     </div>
 
@@ -50,6 +60,7 @@
                         <th>Position</th>
                         <th>Barangay</th>
                         <th>Municipality</th>
+                        <th>Term</th>
                         <th>Date Deleted</th>
                         <th>Time Deleted</th>
                         <th class="dsf-col-actions">Actions</th>
@@ -101,5 +112,5 @@
     </div>
 </div>
 
-@vite(['app/Modules/DeletedSkFederation/assets/js/deleted-sk-federation.js'])
+@vite(['app/Modules/Archive_Management/assets/js/deleted-sk-federation.js'])
 @endsection

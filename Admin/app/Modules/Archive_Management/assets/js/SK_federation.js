@@ -21,8 +21,8 @@ const arfedRecords = [
         email: 'maria.reyes@example.com',
         dateOfBirth: 'Mar 15, 1998',
         age: 28,
-        termStart: 'Jan 1, 2019',
-        termEnd: 'Dec 31, 2021',
+        termStart: 'Jan 1, 2023',
+        termEnd: 'Dec 31, 2025',
         termStatus: 'Completed Term',
     },
     {
@@ -40,8 +40,8 @@ const arfedRecords = [
         email: 'juan.delacruz@example.com',
         dateOfBirth: 'Jun 20, 1997',
         age: 29,
-        termStart: 'Jan 1, 2019',
-        termEnd: 'Dec 31, 2021',
+        termStart: 'Jan 1, 2023',
+        termEnd: 'Dec 31, 2025',
         termStatus: 'Completed Term',
     },
     {
@@ -59,8 +59,84 @@ const arfedRecords = [
         email: 'ana.garcia@example.com',
         dateOfBirth: 'Sep 5, 1999',
         age: 27,
-        termStart: 'Jan 1, 2022',
-        termEnd: 'Dec 31, 2024',
+        termStart: 'Jan 1, 2024',
+        termEnd: 'Dec 31, 2026',
+        termStatus: 'Completed Term',
+    },
+    {
+        id: 'arfed-004',
+        firstName: 'Roberto',
+        middleName: 'Flores',
+        lastName: 'Villanueva',
+        suffix: 'III',
+        position: 'Vice Chairperson',
+        barangay: 'Poblacion IV',
+        municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09401234567',
+        email: 'roberto.villanueva@example.com',
+        dateOfBirth: 'Nov 3, 1998',
+        age: 28,
+        termStart: 'Jan 1, 2024',
+        termEnd: 'Dec 31, 2026',
+        termStatus: 'Completed Term',
+    },
+    {
+        id: 'arfed-005',
+        firstName: 'Patricia',
+        middleName: 'Navarro',
+        lastName: 'Castillo',
+        suffix: '',
+        position: 'Auditor',
+        barangay: 'Poblacion V',
+        municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09511234567',
+        email: 'patricia.castillo@example.com',
+        dateOfBirth: 'Feb 14, 2001',
+        age: 25,
+        termStart: 'Jan 1, 2025',
+        termEnd: 'Dec 31, 2027',
+        termStatus: 'Completed Term',
+    },
+    {
+        id: 'arfed-006',
+        firstName: 'Carlos',
+        middleName: 'Bautista',
+        lastName: 'Mendoza',
+        suffix: '',
+        position: 'PRO',
+        barangay: 'Poblacion VI',
+        municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09621234567',
+        email: 'carlos.mendoza@example.com',
+        dateOfBirth: 'Apr 10, 1999',
+        age: 27,
+        termStart: 'Jan 1, 2025',
+        termEnd: 'Dec 31, 2027',
+        termStatus: 'Completed Term',
+    },
+    {
+        id: 'arfed-007',
+        firstName: 'Liza',
+        middleName: 'Ramos',
+        lastName: 'Torres',
+        suffix: '',
+        position: 'Kagawad',
+        barangay: 'Poblacion VII',
+        municipality: 'Santa Cruz',
+        province: 'Laguna',
+        region: 'IV-A CALABARZON',
+        contactNumber: '09731234567',
+        email: 'liza.torres@example.com',
+        dateOfBirth: 'Jul 22, 2000',
+        age: 26,
+        termStart: 'Jan 1, 2026',
+        termEnd: 'Dec 31, 2028',
         termStatus: 'Completed Term',
     },
 ];
@@ -69,6 +145,8 @@ let arfedFiltered = [...arfedRecords];
 let arfedCurrentPage = 1;
 const arfedPerPage = 10;
 let arfedSearchQ = '';
+let arfedYearFilter = 'all';
+let arfedTermFilter = 'all';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initArchivedSkFederation() {
@@ -78,11 +156,44 @@ function initArchivedSkFederation() {
     bindArfedViewModal();
 }
 
-// ── Apply filters (search only) ───────────────────────────────────────────────
+// ── Apply filters (search, year, and term) ────────────────────────────────────
 function applyArfedFilters() {
     arfedFiltered = arfedRecords.filter(r => {
-        const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
-        return !arfedSearchQ || fullName.includes(arfedSearchQ) || (r.position || '').toLowerCase().includes(arfedSearchQ) || (r.barangay || '').toLowerCase().includes(arfedSearchQ);
+        // Year filter - extract year from termStart (e.g., "Jan 1, 2019" -> 2019)
+        if (arfedYearFilter !== 'all') {
+            const termStartStr = r.termStart || '';
+            const yearMatch = termStartStr.match(/\d{4}/);
+            const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
+            
+            if (!recordYear || recordYear !== parseInt(arfedYearFilter, 10)) {
+                return false;
+            }
+        }
+        
+        // Term filter - check if record year falls within term range
+        if (arfedTermFilter !== 'all') {
+            const termStartStr = r.termStart || '';
+            const yearMatch = termStartStr.match(/\d{4}/);
+            const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
+            
+            if (!recordYear) return false;
+            
+            const [termStart, termEnd] = arfedTermFilter.split('-').map(y => parseInt(y, 10));
+            if (recordYear < termStart || recordYear > termEnd) {
+                return false;
+            }
+        }
+        
+        // Search filter
+        if (arfedSearchQ) {
+            const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
+            const matches = fullName.includes(arfedSearchQ) || 
+                          (r.position || '').toLowerCase().includes(arfedSearchQ) || 
+                          (r.barangay || '').toLowerCase().includes(arfedSearchQ);
+            if (!matches) return false;
+        }
+        
+        return true;
     });
     arfedCurrentPage = 1;
     renderArfedTable();
@@ -191,11 +302,29 @@ function renderArfedPagination(total) {
 // ── Search ────────────────────────────────────────────────────────────────────
 function bindArfedSearch() {
     const input = document.getElementById('arfedSearch');
-    if (!input) return;
-    input.addEventListener('input', function () {
-        arfedSearchQ = this.value.toLowerCase();
-        applyArfedFilters();
-    });
+    const yearSelect = document.getElementById('arfedYearFilter');
+    const termSelect = document.getElementById('arfedTermFilter');
+    
+    if (input) {
+        input.addEventListener('input', function () {
+            arfedSearchQ = this.value.toLowerCase();
+            applyArfedFilters();
+        });
+    }
+    
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function () {
+            arfedYearFilter = this.value;
+            applyArfedFilters();
+        });
+    }
+    
+    if (termSelect) {
+        termSelect.addEventListener('change', function () {
+            arfedTermFilter = this.value;
+            applyArfedFilters();
+        });
+    }
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────

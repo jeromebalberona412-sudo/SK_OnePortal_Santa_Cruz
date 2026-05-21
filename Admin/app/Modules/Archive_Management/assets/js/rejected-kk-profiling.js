@@ -24,9 +24,9 @@ const adrkkRecords = [
         educationalBackground: 'High School Graduate',
         registeredSKVoter: 'No',
         rejectionReason: 'Incomplete requirements submitted',
-        rejectedDate: 'Apr 20, 2026',
+        rejectedDate: 'Apr 20, 2023',
         rejectedTime: '10:20 AM',
-        _rejectedTs: new Date('2026-04-20T10:20:00'),
+        _rejectedTs: new Date('2023-04-20T10:20:00'),
     },
     {
         id: 'rkk-002',
@@ -44,9 +44,9 @@ const adrkkRecords = [
         educationalBackground: 'College Level',
         registeredSKVoter: 'Yes',
         rejectionReason: 'Age does not meet eligibility criteria',
-        rejectedDate: 'Apr 08, 2026',
+        rejectedDate: 'Apr 08, 2024',
         rejectedTime: '01:55 PM',
-        _rejectedTs: new Date('2026-04-08T13:55:00'),
+        _rejectedTs: new Date('2024-04-08T13:55:00'),
     },
     {
         id: 'rkk-003',
@@ -58,15 +58,15 @@ const adrkkRecords = [
         sex: 'Male',
         age: 25,
         purokZone: 'Zone 7',
-        barangay: 'BIGAYANVILLA ROSA',
+        barangay: 'BIGAYAN',
         youthClassification: 'Working Youth',
         workStatus: 'Employed',
         educationalBackground: 'College Graduate',
         registeredSKVoter: 'Yes',
         rejectionReason: 'Duplicate submission detected',
-        rejectedDate: 'Apr 14, 2026',
+        rejectedDate: 'Apr 14, 2024',
         rejectedTime: '04:10 PM',
-        _rejectedTs: new Date('2026-04-14T16:10:00'),
+        _rejectedTs: new Date('2024-04-14T16:10:00'),
     },
     {
         id: 'rkk-004',
@@ -84,9 +84,49 @@ const adrkkRecords = [
         educationalBackground: 'College Level',
         registeredSKVoter: 'Yes',
         rejectionReason: 'Invalid supporting documents',
-        rejectedDate: 'May 05, 2026',
+        rejectedDate: 'May 05, 2025',
         rejectedTime: '09:30 AM',
-        _rejectedTs: new Date('2026-05-05T09:30:00'),
+        _rejectedTs: new Date('2025-05-05T09:30:00'),
+    },
+    {
+        id: 'rkk-005',
+        respondentNumber: '024',
+        firstName: 'Eduardo',
+        middleName: 'Lopez',
+        lastName: 'Martinez',
+        suffix: '',
+        sex: 'Male',
+        age: 20,
+        purokZone: 'Zone 3',
+        barangay: 'IMELDA',
+        youthClassification: 'In School Youth',
+        workStatus: 'Student',
+        educationalBackground: 'College Level',
+        registeredSKVoter: 'No',
+        rejectionReason: 'Not a registered SK voter',
+        rejectedDate: 'Jun 12, 2025',
+        rejectedTime: '11:45 AM',
+        _rejectedTs: new Date('2025-06-12T11:45:00'),
+    },
+    {
+        id: 'rkk-006',
+        respondentNumber: '028',
+        firstName: 'Felicia',
+        middleName: 'Garcia',
+        lastName: 'Navarro',
+        suffix: '',
+        sex: 'Female',
+        age: 18,
+        purokZone: 'Zone 5',
+        barangay: 'POBLACION',
+        youthClassification: 'Out of School Youth',
+        workStatus: 'Unemployed',
+        educationalBackground: 'High School Level',
+        registeredSKVoter: 'No',
+        rejectionReason: 'Incomplete personal information',
+        rejectedDate: 'Jul 20, 2026',
+        rejectedTime: '03:30 PM',
+        _rejectedTs: new Date('2026-07-20T15:30:00'),
     },
 ];
 
@@ -95,6 +135,8 @@ let adrkkCurrentPage = 1;
 const adrkkPerPage = 10;
 let adrkkActiveFilter = 'all';
 let adrkkSearchQ = '';
+let adrkkYearFilter = 'all';
+let adrkkTermFilter = 'all';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function adrkkNow() { return new Date(); }
@@ -136,6 +178,22 @@ function initAdminRejectedKK() {
 // ── Apply all filters ─────────────────────────────────────────────────────────
 function applyAdrkkFilters() {
     let base = adrkkApplyTabFilter(adrkkRecords, adrkkActiveFilter);
+    
+    // Year filter
+    if (adrkkYearFilter !== 'all') {
+        base = base.filter(r => r._rejectedTs.getFullYear() === parseInt(adrkkYearFilter, 10));
+    }
+    
+    // Term filter
+    if (adrkkTermFilter !== 'all') {
+        const [termStart, termEnd] = adrkkTermFilter.split('-').map(y => parseInt(y, 10));
+        base = base.filter(r => {
+            const year = r._rejectedTs.getFullYear();
+            return year >= termStart && year <= termEnd;
+        });
+    }
+    
+    // Search filter
     if (adrkkSearchQ) {
         base = base.filter(r => {
             const name = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
@@ -206,11 +264,29 @@ function bindAdrkkFilterTabs() {
 // ── Search ────────────────────────────────────────────────────────────────────
 function bindAdrkkSearch() {
     const input = document.getElementById('adrkkSearch');
-    if (!input) return;
-    input.addEventListener('input', function () {
-        adrkkSearchQ = this.value.toLowerCase();
-        applyAdrkkFilters();
-    });
+    const yearSelect = document.getElementById('adrkkYearFilter');
+    const termSelect = document.getElementById('adrkkTermFilter');
+    
+    if (input) {
+        input.addEventListener('input', function () {
+            adrkkSearchQ = this.value.toLowerCase();
+            applyAdrkkFilters();
+        });
+    }
+    
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function () {
+            adrkkYearFilter = this.value;
+            applyAdrkkFilters();
+        });
+    }
+    
+    if (termSelect) {
+        termSelect.addEventListener('change', function () {
+            adrkkTermFilter = this.value;
+            applyAdrkkFilters();
+        });
+    }
 }
 
 // ── Render Table ──────────────────────────────────────────────────────────────

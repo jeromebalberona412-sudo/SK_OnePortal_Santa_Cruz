@@ -34,6 +34,50 @@
     margin: 4px 0 0;
 }
 
+.aroff-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.aroff-year-filter {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    min-width: 140px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.aroff-year-filter:focus {
+    outline: none;
+    border-color: #1E3A5F;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+}
+
+.aroff-term-filter {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    min-width: 160px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.aroff-term-filter:focus {
+    outline: none;
+    border-color: #1E3A5F;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+}
+
 .aroff-search-input {
     padding: 10px 14px;
     border-radius: 10px;

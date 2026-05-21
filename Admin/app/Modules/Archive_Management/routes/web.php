@@ -36,7 +36,12 @@ Route::middleware(['web', 'auth', 'ensure2fa', 'role:admin'])->group(function ()
     })->name('archived.deleted-barangay');
 });
 
-// NOTE: archived.deleted-sk-federation and archived.deleted-sk-officials are
-// registered by their own service providers (DeletedSkFederation / DeletedSkOfficials)
-// at /archived/deleted-sk-federation and /archived/deleted-sk-officials respectively.
+// ── Deleted SK Federation & Officials (Consolidated) ──────────────────────────
+Route::get('/archived/deleted-sk-federation', function () {
+    return view('archive-management::deleted-sk-federation');
+})->name('archived.deleted-sk-federation');
+
+Route::get('/archived/deleted-sk-officials', function () {
+    return view('archive-management::deleted-sk-officials');
+})->name('archived.deleted-sk-officials');
 

@@ -18,11 +18,26 @@
             <p class="db-page-subtitle">Soft-deleted barangay records — view, restore, or permanently delete.</p>
         </div>
         <div class="db-header-right">
-            <div class="db-search-wrap">
-                <svg class="db-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input type="text" id="dbSearch" class="db-search-input" placeholder="Search by Barangay name…" autocomplete="off">
+            <div class="db-filter-controls">
+                <select id="dbYearFilter" class="db-year-filter">
+                    <option value="all">All Years</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                </select>
+                <select id="dbTermFilter" class="db-term-filter">
+                    <option value="all">All Terms</option>
+                    <option value="2023-2026">2023 - 2026</option>
+                    <option value="2024-2027">2024 - 2027</option>
+                    <option value="2025-2028">2025 - 2028</option>
+                </select>
+                <div class="db-search-wrap">
+                    <svg class="db-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="dbSearch" class="db-search-input" placeholder="Search by Barangay name…" autocomplete="off">
+                </div>
             </div>
         </div>
     </div>

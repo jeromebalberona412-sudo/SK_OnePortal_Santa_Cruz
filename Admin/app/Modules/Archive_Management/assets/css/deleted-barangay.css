@@ -40,6 +40,45 @@
     gap: 10px;
     flex-wrap: wrap;
 }
+.db-filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.db-year-filter {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    min-width: 140px;
+    transition: border-color .2s, box-shadow .2s;
+    font-family: inherit;
+    cursor: pointer;
+}
+.db-year-filter:focus {
+    outline: none;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+}
+.db-term-filter {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    min-width: 160px;
+    transition: border-color .2s, box-shadow .2s;
+    font-family: inherit;
+    cursor: pointer;
+}
+.db-term-filter:focus {
+    outline: none;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+}
 .db-search-wrap {
     position: relative;
     display: flex;

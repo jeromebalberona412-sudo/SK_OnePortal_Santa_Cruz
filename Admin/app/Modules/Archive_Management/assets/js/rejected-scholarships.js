@@ -13,6 +13,8 @@ let adrscCurrentPage = 1;
 const adrscPerPage   = 10;
 let adrscActiveFilter = 'all';
 let adrscSearchQ      = '';
+let adrscYearFilter   = 'all';
+let adrscTermFilter   = 'all';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function adrscNow() { return new Date(); }
@@ -67,6 +69,27 @@ function loadAdrscRecords() {
 // ── Apply all filters ─────────────────────────────────────────────────────────
 function applyAdrscFilters() {
     let base = adrscApplyTabFilter(adrscAllRecords, adrscActiveFilter);
+    
+    // Year filter
+    if (adrscYearFilter !== 'all') {
+        base = base.filter(r => {
+            const date = adrscParseDate(r.submitted_at);
+            return date && date.getFullYear() === parseInt(adrscYearFilter, 10);
+        });
+    }
+    
+    // Term filter
+    if (adrscTermFilter !== 'all') {
+        const [termStart, termEnd] = adrscTermFilter.split('-').map(y => parseInt(y, 10));
+        base = base.filter(r => {
+            const date = adrscParseDate(r.submitted_at);
+            if (!date) return false;
+            const year = date.getFullYear();
+            return year >= termStart && year <= termEnd;
+        });
+    }
+    
+    // Search filter
     if (adrscSearchQ) {
         base = base.filter(r => {
             const name   = `${r.last_name || ''} ${r.first_name || ''}`.toLowerCase();
@@ -136,11 +159,29 @@ function bindAdrscFilterTabs() {
 // ── Search ────────────────────────────────────────────────────────────────────
 function bindAdrscSearch() {
     const input = document.getElementById('adrscSearch');
-    if (!input) return;
-    input.addEventListener('input', function () {
-        adrscSearchQ = this.value.toLowerCase();
-        applyAdrscFilters();
-    });
+    const yearSelect = document.getElementById('adrscYearFilter');
+    const termSelect = document.getElementById('adrscTermFilter');
+    
+    if (input) {
+        input.addEventListener('input', function () {
+            adrscSearchQ = this.value.toLowerCase();
+            applyAdrscFilters();
+        });
+    }
+    
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function () {
+            adrscYearFilter = this.value;
+            applyAdrscFilters();
+        });
+    }
+    
+    if (termSelect) {
+        termSelect.addEventListener('change', function () {
+            adrscTermFilter = this.value;
+            applyAdrscFilters();
+        });
+    }
 }
 
 // ── Render Table ──────────────────────────────────────────────────────────────

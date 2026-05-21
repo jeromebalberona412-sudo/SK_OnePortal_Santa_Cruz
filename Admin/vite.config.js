@@ -40,14 +40,6 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/css/login.css',
                 'app/Modules/Authentication/assets/js/login.js',
 
-                // Deleted SK Federation Module
-                'app/Modules/DeletedSkFederation/assets/css/deleted-sk-federation.css',
-                'app/Modules/DeletedSkFederation/assets/js/deleted-sk-federation.js',
-
-                // Deleted SK Officials Module
-                'app/Modules/DeletedSkOfficials/assets/css/deleted-sk-officials.css',
-                'app/Modules/DeletedSkOfficials/assets/js/deleted-sk-officials.js',
-
                 // Barangay Logos Module
                 'app/Modules/BarangayLogos/assets/css/barangay-logos.css',
                 'app/Modules/BarangayLogos/assets/js/barangay-logos.js',
@@ -65,6 +57,12 @@ export default defineConfig({
                 'app/Modules/Manage_Location/assets/js/manage_location.js',
 
                 // ── Archive Management Module (unified) ──────────────────────
+                // Deleted SK Federation & Officials (Consolidated)
+                'app/Modules/Archive_Management/assets/css/deleted-sk-federation.css',
+                'app/Modules/Archive_Management/assets/js/deleted-sk-federation.js',
+                'app/Modules/Archive_Management/assets/css/deleted-sk-officials.css',
+                'app/Modules/Archive_Management/assets/js/deleted-sk-officials.js',
+
                 // Archived Data — SK Federation & Officials Records
                 'app/Modules/Archive_Management/assets/css/SK_federation.css',
                 'app/Modules/Archive_Management/assets/js/SK_federation.js',

@@ -6,4 +6,5 @@ return [
     App\Providers\FortifyServiceProvider::class,
     App\Modules\Authentication\Providers\AuthenticationServiceProvider::class,
     App\Modules\Profile\Providers\ProfileServiceProvider::class,
+    App\Modules\HelpCenter\Providers\HelpCenterServiceProvider::class,
 ];
