@@ -18,6 +18,18 @@ Route::middleware([
         return view('Dashboard::dashboard');
     })->name('dashboard');
 
+    Route::get('/ai-assistant', function () {
+        $user = auth()->user();
+        $userName = $user->name ?? 'SK Official';
+        $userFirstName = explode(' ', trim($userName))[0] ?: 'there';
+        $parts = preg_split('/\s+/', trim($userName));
+        $userInitials = count($parts) >= 2
+            ? strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1))
+            : strtoupper(substr($userName, 0, 2));
+
+        return view('AI_Assistant::ai-assistant', compact('userName', 'userFirstName', 'userInitials'));
+    })->name('ai-assistant');
+
     Route::get('/profile', function () {
         return view('Profile::profile');
     })->name('profile');

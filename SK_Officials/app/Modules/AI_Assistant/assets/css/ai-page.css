@@ -162,37 +162,9 @@
     list-style: none;
     margin: 0;
     padding: 0;
-}
-
-.ai-chat-list-item {
-    margin-bottom: 2px;
-}
-
-.ai-chat-list-btn {
-    display: block;
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    border-radius: 10px;
-    background: transparent;
-    color: #374151;
-    font-size: 13px;
-    text-align: left;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: background 0.15s ease;
-}
-
-.ai-chat-list-btn:hover {
-    background: #ececec;
-}
-
-.ai-chat-list-btn.active {
-    background: #e8e8e8;
-    color: #0d0d0d;
-    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .ai-chat-list-empty {
@@ -316,26 +288,44 @@
 .ai-topbar-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    color: #0d0d0d;
+    gap: 10px;
+    min-width: 0;
 }
 
 .ai-topbar-avatar {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #4c20d0 0%, #ff9800 100%);
+    background: linear-gradient(135deg, #2c2c3e 0%, #1f3c6d 100%);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .ai-topbar-avatar svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     stroke: #fff;
+}
+
+.ai-topbar-brand {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.ai-topbar-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0d0d0d;
+}
+
+.ai-topbar-tagline {
+    font-size: 11px;
+    font-weight: 500;
+    color: #6b7280;
 }
 
 .ai-topbar-actions {
@@ -474,6 +464,98 @@
     color: #9ca3af;
 }
 
+.ai-composer-input-wrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ai-char-count {
+    font-size: 10px;
+    color: #9ca3af;
+    text-align: right;
+    padding-right: 4px;
+}
+
+.ai-char-count.is-limit {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.ai-attach-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+    max-width: 768px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.ai-attach-preview[hidden] {
+    display: none !important;
+}
+
+.ai-attach-chip {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.ai-attach-chip img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ai-attach-chip-name {
+    font-size: 9px;
+    padding: 4px;
+    text-align: center;
+    word-break: break-all;
+}
+
+.ai-attach-chip-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    cursor: pointer;
+}
+
+.ai-msg-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.ai-msg-attach-thumb {
+    max-width: 140px;
+    max-height: 100px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.ai-msg-attach-file {
+    font-size: 11px;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
 .ai-composer-send {
     display: flex;
     align-items: center;
@@ -482,16 +564,16 @@
     height: 36px;
     border: none;
     border-radius: 50%;
-    background: linear-gradient(135deg, #4c20d0 0%, #ff9800 100%);
+    background: linear-gradient(135deg, #2c2c3e 0%, #1f3c6d 100%);
     color: #fff;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+    transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
 .ai-composer-send:hover:not(:disabled) {
-    filter: brightness(1.08);
-    transform: scale(1.04);
+    transform: none;
+    box-shadow: none;
 }
 
 .ai-composer-send:disabled {
@@ -660,6 +742,10 @@
     .ai-topbar-title {
         flex: 1;
         justify-content: center;
+    }
+
+    .ai-topbar-tagline {
+        display: none;
     }
 
     .ai-topbar-actions .ai-topbar-link {

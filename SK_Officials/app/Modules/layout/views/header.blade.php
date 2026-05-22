@@ -26,9 +26,9 @@
         <!-- Right: AI Assistant + Notification Bell + User Menu -->
         <div class="header-right">
 
-            <!-- AI Assistant -->
+            <!-- AI Assistant modal -->
             <div class="ai-assistant-menu" id="aiAssistantMenu">
-                <button class="ai-assistant-btn" id="aiAssistantBtn" aria-label="AI Assistant" aria-expanded="false" title="AI Assistant">
+                <button type="button" class="ai-assistant-btn" id="aiAssistantBtn" aria-label="SKai" aria-expanded="false" title="SKai">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;">
                         <path d="M12 8V4H8"></path>
                         <rect width="16" height="12" x="4" y="8" rx="2"></rect>
@@ -39,10 +39,11 @@
                     </svg>
                     <span class="ai-glow-effect"></span>
                 </button>
-
-                <!-- Include AI Assistant Module -->
                 @include('AI_Assistant::ai')
-            </div><!-- /ai-assistant-menu -->
+                @include('AI_Assistant::components.recent-context-menu')
+                @include('AI_Assistant::components.toast-container')
+                @include('AI_Assistant::partials.modal-assets')
+            </div>
 
             <!-- Notification Bell -->
             <div class="notif-menu" id="notifMenu">

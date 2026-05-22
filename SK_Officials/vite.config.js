@@ -79,6 +79,17 @@ export default defineConfig({
                 // Rejected Scholarship module assets
                 'app/Modules/Rejected_Scholarship/assets/css/rejected-scholarship.css',
                 'app/Modules/Rejected_Scholarship/assets/js/rejected-scholarship.js',
+                // AI Assistant module assets
+                'app/Modules/AI_Assistant/assets/css/ai-page.css',
+                'app/Modules/AI_Assistant/assets/css/ai-recent-menu.css',
+                'app/Modules/AI_Assistant/assets/css/ai-modal.css',
+                'app/Modules/AI_Assistant/assets/js/ai-modal-close.js',
+                'app/Modules/AI_Assistant/assets/js/ai-storage.js',
+                'app/Modules/AI_Assistant/assets/js/ai-toast.js',
+                'app/Modules/AI_Assistant/assets/js/ai-attachments.js',
+                'app/Modules/AI_Assistant/assets/js/ai-recent-menu.js',
+                'app/Modules/AI_Assistant/assets/js/ai-modal.js',
+                'app/Modules/AI_Assistant/assets/js/ai-page.js',
                 // Layout module assets
                 'app/Modules/layout/css/header.css',
                 'app/Modules/layout/css/sidebar.css',

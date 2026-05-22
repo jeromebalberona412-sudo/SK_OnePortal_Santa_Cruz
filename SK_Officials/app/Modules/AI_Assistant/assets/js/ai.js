@@ -1,312 +1,315 @@
 // ══════════════════════════════════════════════════════════════════════════
-// AI ASSISTANT MODULE - JAVASCRIPT
+// AI ASSISTANT — Full-screen page
 // ══════════════════════════════════════════════════════════════════════════
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // DOM ELEMENTS
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    const aiAssistantBtn = document.getElementById('aiAssistantBtn');
-    const aiAssistantModal = document.getElementById('aiAssistantModal');
-    const aiCloseBtn = document.getElementById('aiCloseBtn');
-    const aiMaximizeBtn = document.getElementById('aiMaximizeBtn');
+document.addEventListener('DOMContentLoaded', function () {
+    const STORAGE_KEY = 'skAiChats';
+    const config = window.AI_ASSISTANT_CONFIG || {};
+
+    const aiWelcomeView = document.getElementById('aiWelcomeView');
+    const aiChatView = document.getElementById('aiChatView');
     const aiChatArea = document.getElementById('aiChatArea');
-    const aiInputField = document.getElementById('aiInputField');
-    const aiSendBtn = document.getElementById('aiSendBtn');
-    const aiSuggestions = document.getElementById('aiSuggestions');
-    const aiRecentPrompts = document.getElementById('aiRecentPrompts');
-    const aiRecentList = document.getElementById('aiRecentList');
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // STATE
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    let isModalOpen = false;
-    let isFullscreen = false;
-    let recentPrompts = JSON.parse(localStorage.getItem('aiRecentPrompts')) || [];
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // MODAL TOGGLE
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    function toggleModal() {
-        isModalOpen = !isModalOpen;
-        
-        if (isModalOpen) {
-            aiAssistantModal.classList.add('active');
-            aiAssistantBtn.setAttribute('aria-expanded', 'true');
-            aiInputField.focus();
-            loadRecentPrompts();
-        } else {
-            aiAssistantModal.classList.remove('active');
-            aiAssistantBtn.setAttribute('aria-expanded', 'false');
-            // Reset fullscreen when closing
-            if (isFullscreen) {
-                toggleFullscreen();
-            }
+    const aiChatList = document.getElementById('aiChatList');
+    const aiChatListEmpty = document.getElementById('aiChatListEmpty');
+    const aiNewChatBtn = document.getElementById('aiNewChatBtn');
+    const aiSearchChats = document.getElementById('aiSearchChats');
+    const aiSidebar = document.getElementById('aiSidebar');
+    const aiSidebarToggle = document.getElementById('aiSidebarToggle');
+    const aiSidebarOverlay = document.getElementById('aiSidebarOverlay');
+
+    const inputWelcome = document.getElementById('aiInputField');
+    const inputChat = document.getElementById('aiInputFieldChat');
+    const sendWelcome = document.getElementById('aiSendBtn');
+    const sendChat = document.getElementById('aiSendBtnChat');
+
+    let chats = loadChats();
+    let activeChatId = null;
+    let isTyping = false;
+
+    function loadChats() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // FULLSCREEN TOGGLE
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    function toggleFullscreen() {
-        isFullscreen = !isFullscreen;
-        
-        if (isFullscreen) {
-            aiAssistantModal.classList.add('fullscreen');
-            aiMaximizeBtn.setAttribute('title', 'Restore');
-        } else {
-            aiAssistantModal.classList.remove('fullscreen');
-            aiMaximizeBtn.setAttribute('title', 'Maximize');
+
+    function saveChats() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
+    }
+
+    function generateId() {
+        return 'chat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+    }
+
+    function getActiveChat() {
+        return chats.find(c => c.id === activeChatId) || null;
+    }
+
+    function truncateLabel(text, max) {
+        const t = (text || '').trim();
+        if (t.length <= max) return t;
+        return t.slice(0, max).trim() + '…';
+    }
+
+    /** Show welcome OR chat — never both (fixes duplicate Ask anything) */
+    function syncViewState() {
+        const chat = getActiveChat();
+        const hasMessages = !!(chat && chat.messages.length > 0);
+
+        if (aiWelcomeView) aiWelcomeView.hidden = hasMessages;
+        if (aiChatView) aiChatView.hidden = !hasMessages;
+
+        if (!hasMessages) {
+            if (inputWelcome) inputWelcome.focus();
+        } else if (inputChat) {
+            inputChat.focus();
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // SEND MESSAGE
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    function sendMessage() {
-        const message = aiInputField.value.trim();
-        
-        if (!message) return;
-        
-        // Hide welcome message and suggestions on first message
-        const welcomeMessage = aiChatArea.querySelector('.ai-welcome-message');
-        if (welcomeMessage) {
-            welcomeMessage.style.display = 'none';
+
+    function buildMessageEl(text, sender) {
+        const row = document.createElement('div');
+        row.className = `ai-msg ai-msg--${sender}`;
+
+        if (sender === 'user') {
+            const bubble = document.createElement('div');
+            bubble.className = 'ai-msg-bubble';
+            bubble.textContent = text;
+            row.appendChild(bubble);
+        } else {
+            const textEl = document.createElement('div');
+            textEl.className = 'ai-msg-text';
+            textEl.textContent = text;
+            row.appendChild(textEl);
         }
-        aiSuggestions.style.display = 'none';
-        
-        // Add user message
-        addChatBubble(message, 'user');
-        
-        // Clear input
-        aiInputField.value = '';
-        aiInputField.style.height = 'auto';
-        
-        // Save to recent prompts
-        saveRecentPrompt(message);
-        
-        // Show typing indicator
+        return row;
+    }
+
+    function renderMessages() {
+        if (!aiChatArea) return;
+
+        const chat = getActiveChat();
+        aiChatArea.innerHTML = '';
+        syncViewState();
+
+        if (!chat || !chat.messages.length) return;
+
+        chat.messages.forEach(msg => {
+            aiChatArea.appendChild(buildMessageEl(msg.text, msg.sender));
+        });
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        if (aiChatArea) aiChatArea.scrollTop = aiChatArea.scrollHeight;
+    }
+
+    function setActiveChat(id) {
+        activeChatId = id || null;
+        renderChatList();
+        renderMessages();
+        closeMobileSidebar();
+    }
+
+    function startNewChat() {
+        activeChatId = null;
+        if (aiChatArea) aiChatArea.innerHTML = '';
+        syncViewState();
+        clearInputs();
+        renderChatList();
+        if (inputWelcome) inputWelcome.focus();
+    }
+
+    function renderChatList(filter = '') {
+        if (!aiChatList) return;
+
+        const query = filter.trim().toLowerCase();
+        const filtered = query
+            ? chats.filter(c => c.title.toLowerCase().includes(query))
+            : chats;
+
+        aiChatList.innerHTML = '';
+
+        filtered.forEach(chat => {
+            const li = document.createElement('li');
+            li.className = 'ai-chat-list-item';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ai-chat-list-btn' + (chat.id === activeChatId ? ' active' : '');
+            btn.textContent = truncateLabel(chat.title, 22);
+            btn.title = chat.title;
+            btn.addEventListener('click', () => setActiveChat(chat.id));
+
+            li.appendChild(btn);
+            aiChatList.appendChild(li);
+        });
+
+        if (aiChatListEmpty) {
+            aiChatListEmpty.classList.toggle('hidden', filtered.length > 0);
+        }
+    }
+
+    function showTypingIndicator() {
+        const row = document.createElement('div');
+        row.className = 'ai-msg ai-msg--ai';
+        row.id = 'aiTypingBubble';
+        row.innerHTML = '<div class="ai-msg-typing"><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span></div>';
+        aiChatArea.appendChild(row);
+        scrollToBottom();
+    }
+
+    function hideTypingIndicator() {
+        const el = document.getElementById('aiTypingBubble');
+        if (el) el.remove();
+    }
+
+    function setSendDisabled(disabled) {
+        isTyping = disabled;
+        [inputWelcome, inputChat, sendWelcome, sendChat].forEach(el => {
+            if (el) el.disabled = disabled;
+        });
+    }
+
+    function generateAIResponse(userMessage) {
+        const lower = userMessage.toLowerCase();
+        if (lower.includes('resolution')) {
+            return "I can help you create an SK Resolution. Include title, whereas clauses, and resolved clauses. Would you like a template?";
+        }
+        if (lower.includes('proposal') || lower.includes('project') || lower.includes('write')) {
+            return "For a project proposal: background, objectives, beneficiaries, timeline, budget, and outcomes. Which section should we draft first?";
+        }
+        if (lower.includes('event') || lower.includes('planning')) {
+            return "Event planning: objectives, date, venue, budget, committee, program flow, and logistics. What event are you planning?";
+        }
+        if (lower.includes('budget')) {
+            return "SK budget tips: review allocations, prioritize programs, add contingency, and get council approval.";
+        }
+        if (lower.includes('guideline') || lower.includes('look')) {
+            return "Key SK areas: KK Profiling, ABYIP, resolutions, budgets, and youth programs. Which topic do you need?";
+        }
+        return "I'm here for SK tasks — resolutions, proposals, events, and budgets. How can I help?";
+    }
+
+    function sendMessage(rawMessage) {
+        const message = (rawMessage || '').trim();
+        if (!message || isTyping) return;
+
+        let chat = getActiveChat();
+        if (!chat) {
+            activeChatId = generateId();
+            chat = {
+                id: activeChatId,
+                title: truncateLabel(message, 28),
+                messages: [],
+                updatedAt: Date.now(),
+            };
+            chats.unshift(chat);
+        }
+
+        chat.messages.push({ text: message, sender: 'user' });
+        chat.updatedAt = Date.now();
+        chat.title = truncateLabel(message, 28);
+        chats = [chat, ...chats.filter(c => c.id !== chat.id)].slice(0, 30);
+        saveChats();
+
+        renderMessages();
+        clearInputs();
+        setSendDisabled(true);
         showTypingIndicator();
-        
-        // Simulate AI response
+
         setTimeout(() => {
             hideTypingIndicator();
-            const response = generateAIResponse(message);
-            addChatBubble(response, 'ai');
-        }, 1500);
+            chat.messages.push({ text: generateAIResponse(message), sender: 'ai' });
+            chat.updatedAt = Date.now();
+            saveChats();
+            renderMessages();
+            renderChatList(aiSearchChats ? aiSearchChats.value : '');
+            setSendDisabled(false);
+        }, 1100 + Math.random() * 600);
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // CHAT BUBBLE
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    function addChatBubble(message, sender) {
-        const bubble = document.createElement('div');
-        bubble.className = `ai-chat-bubble ${sender}`;
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'ai-bubble-avatar';
-        avatar.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                ${sender === 'ai' 
-                    ? '<path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path>'
-                    : '<circle cx="12" cy="7" r="4"></circle><path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>'
-                }
-            </svg>
-        `;
-        
-        const content = document.createElement('div');
-        content.className = 'ai-bubble-content';
-        content.textContent = message;
-        
-        bubble.appendChild(avatar);
-        bubble.appendChild(content);
-        
-        aiChatArea.appendChild(bubble);
-        aiChatArea.scrollTop = aiChatArea.scrollHeight;
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // TYPING INDICATOR
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    function showTypingIndicator() {
-        const typingBubble = document.createElement('div');
-        typingBubble.className = 'ai-chat-bubble ai';
-        typingBubble.id = 'aiTypingBubble';
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'ai-bubble-avatar';
-        avatar.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 8V4H8"></path>
-                <rect width="16" height="12" x="4" y="8" rx="2"></rect>
-                <path d="M2 14h2"></path>
-                <path d="M20 14h2"></path>
-                <path d="M15 13v2"></path>
-                <path d="M9 13v2"></path>
-            </svg>
-        `;
-        
-        const typingIndicator = document.createElement('div');
-        typingIndicator.className = 'ai-typing-indicator';
-        typingIndicator.innerHTML = `
-            <span class="ai-typing-dot"></span>
-            <span class="ai-typing-dot"></span>
-            <span class="ai-typing-dot"></span>
-        `;
-        
-        typingBubble.appendChild(avatar);
-        typingBubble.appendChild(typingIndicator);
-        
-        aiChatArea.appendChild(typingBubble);
-        aiChatArea.scrollTop = aiChatArea.scrollHeight;
-    }
-    
-    function hideTypingIndicator() {
-        const typingBubble = document.getElementById('aiTypingBubble');
-        if (typingBubble) {
-            typingBubble.remove();
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // AI RESPONSE GENERATOR (DUMMY)
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    function generateAIResponse(message) {
-        const lowerMessage = message.toLowerCase();
-        
-        // Simple keyword-based responses
-        if (lowerMessage.includes('resolution')) {
-            return "I can help you create an SK Resolution. A typical resolution includes: Title, Whereas clauses (background/justification), and Resolved clauses (actions to be taken). Would you like me to provide a template?";
-        } else if (lowerMessage.includes('proposal') || lowerMessage.includes('project')) {
-            return "For a project proposal, you'll need: Executive Summary, Project Background, Objectives, Target Beneficiaries, Implementation Plan, Budget, and Expected Outcomes. I can help you draft each section.";
-        } else if (lowerMessage.includes('event') || lowerMessage.includes('program')) {
-            return "Planning an event? Let's organize it step by step: Event Title, Date & Venue, Target Participants, Program Flow, Budget Allocation, and Logistics. What type of event are you planning?";
-        } else if (lowerMessage.includes('budget')) {
-            return "Budget planning is crucial for SK activities. I can help you create a budget breakdown with categories like: Venue, Food & Refreshments, Materials & Supplies, Transportation, Honorarium, and Contingency. What's your estimated total budget?";
-        } else if (lowerMessage.includes('sports')) {
-            return "A sports festival program typically includes: Opening Ceremony, Sports Events Schedule, Awarding Ceremony, and Closing Program. Would you like suggestions for specific sports activities suitable for youth?";
-        } else if (lowerMessage.includes('scholarship')) {
-            return "For a scholarship program, consider these components: Eligibility Criteria, Application Requirements, Selection Process, Scholarship Benefits, and Monitoring & Evaluation. What type of scholarship are you planning?";
-        } else {
-            return "I'm here to assist with SK-related tasks like creating resolutions, proposals, event planning, budget preparation, and more. How can I help you today?";
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // RECENT PROMPTS
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    function saveRecentPrompt(prompt) {
-        // Add to beginning of array
-        recentPrompts.unshift(prompt);
-        
-        // Keep only last 5 prompts
-        if (recentPrompts.length > 5) {
-            recentPrompts = recentPrompts.slice(0, 5);
-        }
-        
-        // Save to localStorage
-        localStorage.setItem('aiRecentPrompts', JSON.stringify(recentPrompts));
-        
-        // Update UI
-        loadRecentPrompts();
-    }
-    
-    function loadRecentPrompts() {
-        if (recentPrompts.length === 0) {
-            aiRecentPrompts.style.display = 'none';
-            return;
-        }
-        
-        aiRecentPrompts.style.display = 'block';
-        aiRecentList.innerHTML = '';
-        
-        recentPrompts.forEach(prompt => {
-            const item = document.createElement('div');
-            item.className = 'ai-recent-item';
-            item.textContent = prompt;
-            item.addEventListener('click', () => {
-                aiInputField.value = prompt;
-                aiInputField.focus();
-            });
-            aiRecentList.appendChild(item);
+
+    function clearInputs() {
+        [inputWelcome, inputChat].forEach(el => {
+            if (el) {
+                el.value = '';
+                el.style.height = 'auto';
+            }
         });
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // AUTO-RESIZE TEXTAREA
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    function autoResizeTextarea() {
-        aiInputField.style.height = 'auto';
-        aiInputField.style.height = aiInputField.scrollHeight + 'px';
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // EVENT LISTENERS
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    // Toggle modal
-    aiAssistantBtn.addEventListener('click', toggleModal);
-    aiCloseBtn.addEventListener('click', toggleModal);
-    
-    // Toggle fullscreen
-    aiMaximizeBtn.addEventListener('click', toggleFullscreen);
-    
-    // Send message
-    aiSendBtn.addEventListener('click', sendMessage);
-    
-    // Enter key to send
-    aiInputField.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
+
+    function bindComposer(input, sendBtn) {
+        if (!input) return;
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => sendMessage(input.value));
         }
-    });
-    
-    // Auto-resize textarea
-    aiInputField.addEventListener('input', autoResizeTextarea);
-    
-    // Suggestion cards
-    const suggestionCards = document.querySelectorAll('.ai-suggestion-card');
-    suggestionCards.forEach(card => {
-        card.addEventListener('click', function() {
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(input.value);
+            }
+        });
+        input.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        });
+    }
+
+    function closeMobileSidebar() {
+        if (aiSidebar) aiSidebar.classList.remove('open');
+        if (aiSidebarOverlay) aiSidebarOverlay.classList.remove('show');
+    }
+
+    if (aiNewChatBtn) {
+        aiNewChatBtn.addEventListener('click', () => {
+            startNewChat();
+            closeMobileSidebar();
+        });
+    }
+
+    if (aiSearchChats) {
+        aiSearchChats.addEventListener('input', function () {
+            renderChatList(this.value);
+        });
+    }
+
+    document.querySelectorAll('.ai-quick-chip').forEach(chip => {
+        chip.addEventListener('click', function () {
             const prompt = this.getAttribute('data-prompt');
-            aiInputField.value = prompt;
-            sendMessage();
+            if (prompt) sendMessage(prompt);
         });
     });
-    
-    // Close modal when clicking outside
-    document.addEventListener('click', function(e) {
-        if (isModalOpen && 
-            !aiAssistantModal.contains(e.target) && 
-            !aiAssistantBtn.contains(e.target)) {
-            toggleModal();
+
+    if (aiSidebarToggle) {
+        aiSidebarToggle.addEventListener('click', () => {
+            if (aiSidebar && aiSidebar.classList.contains('open')) {
+                closeMobileSidebar();
+            } else if (aiSidebar) {
+                aiSidebar.classList.add('open');
+                if (aiSidebarOverlay) aiSidebarOverlay.classList.add('show');
+            }
+        });
+    }
+
+    if (aiSidebarOverlay) {
+        aiSidebarOverlay.addEventListener('click', closeMobileSidebar);
+    }
+
+    bindComposer(inputWelcome, sendWelcome);
+    bindComposer(inputChat, sendChat);
+
+    renderChatList();
+
+    const urlChatId = new URLSearchParams(window.location.search).get('chat');
+    if (urlChatId && chats.some(c => c.id === urlChatId)) {
+        setActiveChat(urlChatId);
+    } else {
+        const latestWithMessages = chats.find(c => c.messages && c.messages.length > 0);
+        if (latestWithMessages) {
+            setActiveChat(latestWithMessages.id);
+        } else {
+            startNewChat();
         }
-    });
-    
-    // Escape key to close
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && isModalOpen) {
-            toggleModal();
-        }
-    });
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // INITIALIZATION
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    // Load recent prompts on init
-    loadRecentPrompts();
-    
+    }
 });
