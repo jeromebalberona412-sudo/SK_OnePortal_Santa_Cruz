@@ -56,6 +56,9 @@ function initializeHeader() {
         initializeNotifications();
     }
 
+    // ── AI Assistant ────────────────────────────────────────────────────────
+    initializeAIAssistant();
+
     // ── Global outside-click — single listener on document ──────────────────
     document.addEventListener('click', function (e) {
         // Close profile dropdown when clicking outside
@@ -71,6 +74,7 @@ function initializeHeader() {
         if (e.key === 'Escape') {
             closeProfileDropdown();
             closeNotifDropdown();
+            closeAIAssistant();
             const logoutModal = document.getElementById('logoutModal');
             if (logoutModal && logoutModal.style.display === 'flex') {
                 logoutModal.style.display = 'none';
@@ -363,3 +367,345 @@ window.HeaderFunctions = {
     initializeLogout:       initializeLogout,
     handleLogout:           handleLogout,
 };
+
+// ══════════════════════════════════════════════════════════════════════════
+// AI ASSISTANT FUNCTIONALITY
+// ══════════════════════════════════════════════════════════════════════════
+
+function initializeAIAssistant() {
+    const aiBtn = document.getElementById('aiAssistantBtn');
+    const aiModal = document.getElementById('aiAssistantModal');
+    const aiMenu = document.getElementById('aiAssistantMenu');
+    const aiCloseBtn = document.getElementById('aiCloseBtn');
+    const aiInputField = document.getElementById('aiInputField');
+    const aiSendBtn = document.getElementById('aiSendBtn');
+    const aiChatArea = document.getElementById('aiChatArea');
+    const aiSuggestions = document.getElementById('aiSuggestions');
+    const aiRecentPrompts = document.getElementById('aiRecentPrompts');
+    const aiRecentList = document.getElementById('aiRecentList');
+
+    if (!aiBtn || !aiModal) return;
+
+    // State
+    let isTyping = false;
+    let chatHistory = [];
+    let recentPrompts = loadRecentPrompts();
+
+    // Toggle AI Assistant
+    aiBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isOpen = aiModal.classList.contains('open');
+
+        closeProfileDropdown();
+        closeNotifDropdown();
+
+        if (isOpen) {
+            closeAIAssistant();
+        } else {
+            aiModal.classList.add('open');
+            aiBtn.setAttribute('aria-expanded', 'true');
+            aiInputField.focus();
+            updateRecentPrompts();
+        }
+    });
+
+    // Close button
+    if (aiCloseBtn) {
+        aiCloseBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            closeAIAssistant();
+        });
+    }
+
+    // Close on outside click
+    document.addEventListener('click', function (e) {
+        if (aiMenu && !aiMenu.contains(e.target)) {
+            closeAIAssistant();
+        }
+    });
+
+    // Suggestion cards
+    const suggestionCards = document.querySelectorAll('.ai-suggestion-card');
+    suggestionCards.forEach(card => {
+        card.addEventListener('click', function () {
+            const prompt = this.getAttribute('data-prompt');
+            if (prompt) {
+                aiInputField.value = prompt;
+                sendMessage();
+            }
+        });
+    });
+
+    // Send button
+    if (aiSendBtn) {
+        aiSendBtn.addEventListener('click', sendMessage);
+    }
+
+    // Enter key to send
+    if (aiInputField) {
+        aiInputField.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        aiInputField.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+    }
+
+    // Send message function
+    function sendMessage() {
+        const message = aiInputField.value.trim();
+        if (!message || isTyping) return;
+
+        // Add user message
+        addMessage(message, 'user');
+        
+        // Save to recent prompts
+        saveRecentPrompt(message);
+        
+        // Clear input
+        aiInputField.value = '';
+        aiInputField.style.height = 'auto';
+
+        // Hide suggestions after first message
+        if (aiSuggestions) {
+            aiSuggestions.style.display = 'none';
+        }
+
+        // Show typing indicator
+        showTypingIndicator();
+
+        // Simulate AI response
+        setTimeout(() => {
+            hideTypingIndicator();
+            const response = generateAIResponse(message);
+            addMessage(response, 'ai');
+        }, 1500 + Math.random() * 1000);
+    }
+
+    // Add message to chat
+    function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `ai-chat-message ${sender}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = `ai-message-avatar ${sender}`;
+        
+        if (sender === 'ai') {
+            avatar.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 8V4H8"></path>
+                    <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                    <path d="M2 14h2"></path>
+                    <path d="M20 14h2"></path>
+                    <path d="M15 13v2"></path>
+                    <path d="M9 13v2"></path>
+                </svg>
+            `;
+        } else {
+            avatar.textContent = 'U';
+        }
+
+        const content = document.createElement('div');
+        content.className = 'ai-message-content';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'ai-message-bubble';
+        bubble.textContent = text;
+
+        const time = document.createElement('div');
+        time.className = 'ai-message-time';
+        time.textContent = getCurrentTime();
+
+        content.appendChild(bubble);
+        content.appendChild(time);
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(content);
+
+        // Remove welcome message if exists
+        const welcomeMsg = aiChatArea.querySelector('.ai-welcome-message');
+        if (welcomeMsg) {
+            welcomeMsg.remove();
+        }
+
+        aiChatArea.appendChild(messageDiv);
+        scrollToBottom();
+
+        chatHistory.push({ text, sender, time: getCurrentTime() });
+    }
+
+    // Typing indicator
+    function showTypingIndicator() {
+        isTyping = true;
+        aiSendBtn.disabled = true;
+        aiInputField.disabled = true;
+
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'ai-typing-indicator';
+        typingDiv.id = 'aiTypingIndicator';
+
+        typingDiv.innerHTML = `
+            <div class="ai-message-avatar ai">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 8V4H8"></path>
+                    <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                    <path d="M2 14h2"></path>
+                    <path d="M20 14h2"></path>
+                    <path d="M15 13v2"></path>
+                    <path d="M9 13v2"></path>
+                </svg>
+            </div>
+            <div class="ai-message-content">
+                <div class="ai-message-bubble">
+                    <div class="ai-typing-dot"></div>
+                    <div class="ai-typing-dot"></div>
+                    <div class="ai-typing-dot"></div>
+                </div>
+            </div>
+        `;
+
+        aiChatArea.appendChild(typingDiv);
+        scrollToBottom();
+    }
+
+    function hideTypingIndicator() {
+        isTyping = false;
+        aiSendBtn.disabled = false;
+        aiInputField.disabled = false;
+
+        const typingIndicator = document.getElementById('aiTypingIndicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+
+    // Generate AI response (dummy responses)
+    function generateAIResponse(userMessage) {
+        const msg = userMessage.toLowerCase();
+
+        // Resolution keywords
+        if (msg.includes('resolution')) {
+            return "I can help you create an SK Resolution! A typical SK Resolution includes: (1) Title and Resolution Number, (2) Whereas clauses stating the background, (3) Resolved clauses with specific actions, (4) Signatures of SK officials. Would you like me to provide a template?";
+        }
+
+        // Proposal keywords
+        if (msg.includes('proposal') || msg.includes('project')) {
+            return "For a project proposal, you'll need: (1) Project Title, (2) Background/Rationale, (3) Objectives, (4) Target Beneficiaries, (5) Activities and Timeline, (6) Budget Requirements, (7) Expected Outcomes. I can help you draft each section!";
+        }
+
+        // Event keywords
+        if (msg.includes('event') || msg.includes('planning')) {
+            return "Event planning checklist: (1) Define event objectives, (2) Set date and venue, (3) Create budget, (4) Form organizing committee, (5) Prepare program flow, (6) Coordinate logistics, (7) Promote the event, (8) Prepare documentation. What type of event are you planning?";
+        }
+
+        // Budget keywords
+        if (msg.includes('budget')) {
+            return "For SK budget planning: (1) Review your allocated funds, (2) Prioritize programs based on community needs, (3) Allocate funds per project, (4) Include contingency (10-15%), (5) Get approval from SK Council, (6) Submit to Sanggunian. Need help with a specific budget item?";
+        }
+
+        // Sports keywords
+        if (msg.includes('sports') || msg.includes('fest')) {
+            return "Youth Sports Festival ideas: (1) Basketball/Volleyball tournaments, (2) Fun runs, (3) Zumba sessions, (4) Chess competitions, (5) E-sports tournaments, (6) Traditional Filipino games (Patintero, Tumbang Preso). Which sports would you like to include?";
+        }
+
+        // Scholarship keywords
+        if (msg.includes('scholarship')) {
+            return "SK Scholarship Program components: (1) Eligibility criteria (age, residency, academic performance), (2) Application requirements, (3) Selection process, (4) Scholarship amount/coverage, (5) Renewal conditions, (6) Monitoring system. Would you like help designing the application form?";
+        }
+
+        // Youth program keywords
+        if (msg.includes('youth') || msg.includes('program')) {
+            return "Popular SK Youth Programs: (1) Skills training workshops, (2) Mental health awareness campaigns, (3) Environmental projects, (4) Livelihood programs, (5) Arts and culture activities, (6) Leadership seminars. What area interests you most?";
+        }
+
+        // Tree planting keywords
+        if (msg.includes('tree') || msg.includes('environment')) {
+            return "Tree Planting Project guide: (1) Coordinate with DENR/LGU, (2) Select appropriate tree species, (3) Identify planting site, (4) Recruit volunteers, (5) Prepare tools and materials, (6) Conduct orientation, (7) Document with photos, (8) Plan monitoring schedule. Need help with the proposal?";
+        }
+
+        // Mental health keywords
+        if (msg.includes('mental') || msg.includes('health')) {
+            return "Mental Health Seminar planning: (1) Partner with health professionals, (2) Topics: stress management, self-care, seeking help, (3) Interactive activities, (4) Provide resource materials, (5) Create safe space for sharing, (6) Follow-up support system. Would you like speaker suggestions?";
+        }
+
+        // Default response
+        const responses = [
+            "That's an interesting question! As an SK official, you have many resources available. Could you provide more details so I can assist you better?",
+            "I'm here to help with SK-related tasks! Could you clarify what specific assistance you need?",
+            "Great question! For SK officials, I can help with resolutions, proposals, event planning, budgeting, and program ideas. What would you like to focus on?",
+            "I'd be happy to help! Could you tell me more about what you're trying to accomplish?",
+            "As your AI assistant for SK tasks, I can provide guidance on various topics. What specific area do you need help with?"
+        ];
+
+        return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    // Recent prompts management
+    function saveRecentPrompt(prompt) {
+        recentPrompts = recentPrompts.filter(p => p !== prompt);
+        recentPrompts.unshift(prompt);
+        recentPrompts = recentPrompts.slice(0, 5);
+        localStorage.setItem('aiRecentPrompts', JSON.stringify(recentPrompts));
+        updateRecentPrompts();
+    }
+
+    function loadRecentPrompts() {
+        try {
+            const saved = localStorage.getItem('aiRecentPrompts');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function updateRecentPrompts() {
+        if (!aiRecentList || !aiRecentPrompts) return;
+
+        if (recentPrompts.length === 0) {
+            aiRecentPrompts.style.display = 'none';
+            return;
+        }
+
+        aiRecentPrompts.style.display = 'block';
+        aiRecentList.innerHTML = '';
+
+        recentPrompts.forEach(prompt => {
+            const item = document.createElement('div');
+            item.className = 'ai-recent-item';
+            item.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+                <span>${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}</span>
+            `;
+            item.addEventListener('click', function () {
+                aiInputField.value = prompt;
+                aiInputField.focus();
+            });
+            aiRecentList.appendChild(item);
+        });
+    }
+
+    // Utility functions
+    function scrollToBottom() {
+        aiChatArea.scrollTop = aiChatArea.scrollHeight;
+    }
+
+    function getCurrentTime() {
+        const now = new Date();
+        return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+}
+
+function closeAIAssistant() {
+    const aiModal = document.getElementById('aiAssistantModal');
+    const aiBtn = document.getElementById('aiAssistantBtn');
+    if (aiModal) aiModal.classList.remove('open');
+    if (aiBtn) aiBtn.setAttribute('aria-expanded', 'false');
+}
