@@ -75,6 +75,39 @@ body {
     font-weight: 700;
 }
 
+a.reports-tab--link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.reports-panel--cta {
+    padding: 32px 24px;
+    text-align: center;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.reports-cta-text {
+    margin: 0 0 16px;
+    color: #6b7280;
+    font-size: 14px;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.reports-btn-primary {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #2b579a;
+    color: #fff !important;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
 .reports-panel--hidden {
     display: none;
 }

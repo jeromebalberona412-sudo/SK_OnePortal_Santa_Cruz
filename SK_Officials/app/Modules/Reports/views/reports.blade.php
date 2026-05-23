@@ -7,12 +7,11 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
-        'app/Modules/Reports/assets/css/reports.css',
-        'app/Modules/schedule_programs/assets/css/sk-report-editor.css'
+        'app/Modules/Reports/assets/css/reports.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body>
+<body data-reports-make-url="{{ route('reports.make') }}">
 @include('loading')
 @include('layout::header')
 @include('layout::sidebar')
@@ -28,7 +27,7 @@
 
     <nav class="reports-tab-bar" aria-label="Reports sections">
         <button type="button" class="reports-tab active" data-reports-tab="list">My Reports</button>
-        <button type="button" class="reports-tab" data-reports-tab="make">Make Reports</button>
+        <a href="{{ route('reports.make') }}" class="reports-tab reports-tab--link">Make Reports</a>
     </nav>
 
     {{-- My Reports --}}
@@ -56,35 +55,9 @@
         </div>
     </section>
 
-    {{-- Make Reports (MS Word style) --}}
-    <section class="reports-panel reports-panel--hidden" id="reportsPanelMake">
-        <div class="word-editor-meta">
-            <select id="reportTypeSelect" class="reports-select scholar-report-select" aria-label="Report type">
-                <option value="activity">Activity Report</option>
-                <option value="resolution">SK Resolution</option>
-                <option value="minutes">Meeting Minutes</option>
-                <option value="financial">Financial Report</option>
-                <option value="scholarship">Scholarship Program Report</option>
-                <option value="custom">Custom Document</option>
-            </select>
-            <input type="text" id="reportTitleInput" class="reports-title-input scholar-report-title-input" placeholder="Document title..." maxlength="200">
-            <button type="button" class="reports-btn reports-btn-save" id="reportSaveBtn">Save Report</button>
-        </div>
-
-        @include('schedule_programs::partials.word-report-shell', [
-            'shellId' => 'reportWordShell',
-            'editorId' => 'reportEditor',
-            'pageId' => 'reportPage',
-            'paperSelectId' => 'reportPaperSelect',
-            'imageInputId' => 'reportImageInput',
-            'cropBtnId' => 'reportCropBtn',
-            'deleteImgBtnId' => 'reportDeleteImgBtn',
-            'placeholder' => 'Start typing your SK report here, or click Generate for a template...',
-            'showGenerate' => true,
-            'generateId' => 'reportGenerateBtn',
-            'showPrint' => true,
-            'printId' => 'reportPrintBtn',
-        ])
+    <section class="reports-panel reports-panel--cta" id="reportsPanelMake">
+        <p class="reports-cta-text">Create reports with CKEditor 5 — rich formatting, PDF/Word export, comments, and track changes.</p>
+        <a href="{{ route('reports.make') }}" class="reports-btn reports-btn-primary">Open Make a Report</a>
     </section>
 </div>
 </main>
@@ -94,7 +67,6 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
-    'app/Modules/schedule_programs/assets/js/sk-report-editor.js',
     'app/Modules/Reports/assets/js/reports.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

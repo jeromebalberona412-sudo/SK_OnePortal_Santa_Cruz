@@ -104,6 +104,10 @@ Route::middleware([
         return view('Reports::reports');
     })->name('reports');
 
+    Route::get('/reports/make', function () {
+        return view('Reports::make-report');
+    })->name('reports.make');
+
     Route::get('/kk-profiling-requests', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
     Route::get('/kk-profiling-requests/data', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'data'])->name('kk-profiling-requests.data');
     Route::post('/kk-profiling-requests/{id}/approve', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'approve'])->name('kk-profiling-requests.approve');

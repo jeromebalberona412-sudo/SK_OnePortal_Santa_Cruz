@@ -10,8 +10,7 @@
         'app/Modules/schedule_programs/assets/css/scholarship_application_form.css',
         'app/Modules/schedule_programs/assets/css/sports_requests.css',
         'app/Modules/schedule_programs/assets/css/scholar_application_from.css',
-        'app/Modules/schedule_programs/assets/css/scholar_report.css',
-        'app/Modules/schedule_programs/assets/css/sk-report-editor.css'
+        'app/Modules/schedule_programs/assets/css/scholar_report.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -97,8 +96,6 @@
 </main>
 
 @include('schedule_programs::partials.scholar-form-builder-modal', ['formId' => $formId ?? ''])
-@include('schedule_programs::partials.scholar-report-modal')
-
 <div class="sports-modal-overlay" id="safPreviewModal" style="display:none;">
     <div class="sports-modal-box" style="max-width:560px;">
         <div class="sports-modal-header">
@@ -115,7 +112,6 @@
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/schedule_programs/assets/js/spfb-form-builder.js',
-    'app/Modules/schedule_programs/assets/js/sk-report-editor.js',
     'app/Modules/schedule_programs/assets/js/scholar_application_from.js',
     'app/Modules/schedule_programs/assets/js/scholar_report.js'
 ])
