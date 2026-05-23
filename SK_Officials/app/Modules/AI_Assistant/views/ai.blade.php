@@ -12,7 +12,14 @@
         {{-- Collapsible recent chats (left) --}}
         <aside class="ai-recents-sidebar" id="aiRecentsSidebar" aria-hidden="true">
             <div class="ai-recents-sidebar-inner">
-                <p class="ai-recents-sidebar-label">Recent</p>
+                <p class="ai-recents-sidebar-label">Recent Prompts</p>
+                <div class="ai-recents-search-wrap">
+                    <svg class="ai-recents-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="search" id="aiRecentSearch" class="ai-recents-search-input" placeholder="Search prompts..." autocomplete="off" aria-label="Search recent prompts">
+                </div>
                 <ul class="ai-recent-list" id="aiRecentList"></ul>
                 <p class="ai-recent-empty" id="aiRecentEmpty">No chats yet</p>
             </div>
@@ -21,13 +28,14 @@
         <div class="ai-modal-main">
 
             <div class="ai-modal-header">
-                <button type="button" class="ai-recents-header-btn" id="aiRecentsToggle"
-                        title="Chat history" aria-label="Chat history" aria-expanded="false"
+                <button type="button" class="ai-recents-header-btn ai-hamburger-btn" id="aiRecentsToggle"
+                        title="Recent prompts" aria-label="Show or hide recent prompts" aria-expanded="false"
                         aria-controls="aiRecentsSidebar">
-                    <svg class="ai-recents-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <svg class="ai-hamburger-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="18" x2="20" y2="18"></line>
                     </svg>
-                    <span class="ai-recents-btn-text">History</span>
                 </button>
 
                 <div class="ai-modal-title">
@@ -75,12 +83,7 @@
                     <h2 class="ai-modal-greeting">How can I help, {{ $modalUserFirstName }}?</h2>
                     <div class="ai-welcome-composer">
                         <div class="ai-composer-box">
-                            <button type="button" class="ai-composer-attach" id="aiModalAttachWelcome" title="Attach files or photos" aria-label="Attach files or photos">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                            </button>
+                            @include('AI_Assistant::components.attach-picker', ['pickerId' => 'aiModalAttachWelcome'])
                             <div class="ai-composer-input-wrap">
                                 <textarea class="ai-composer-input ai-input-field" id="aiInputFieldWelcome" placeholder="Ask anything" rows="1" maxlength="500"></textarea>
                                 <span class="ai-char-count" id="aiCharCountWelcome">0/500</span>
@@ -106,12 +109,7 @@
                     <div class="ai-chat-area" id="aiChatArea"></div>
                     <div class="ai-input-area">
                         <div class="ai-composer-box ai-composer-box--chat">
-                            <button type="button" class="ai-composer-attach" id="aiModalAttachChat" title="Attach files or photos" aria-label="Attach files or photos">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                            </button>
+                            @include('AI_Assistant::components.attach-picker', ['pickerId' => 'aiModalAttachChat'])
                             <div class="ai-composer-input-wrap">
                                 <textarea class="ai-composer-input ai-input-field" id="aiInputField" placeholder="Ask anything..." rows="1" maxlength="500"></textarea>
                                 <span class="ai-char-count" id="aiCharCountChat">0/500</span>

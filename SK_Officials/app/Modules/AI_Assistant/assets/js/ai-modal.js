@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const aiModalLayout = document.getElementById('aiModalLayout');
     const aiRecentList = document.getElementById('aiRecentList');
     const aiRecentEmpty = document.getElementById('aiRecentEmpty');
+    const aiRecentSearch = document.getElementById('aiRecentSearch');
     const aiNewChatBtn = document.getElementById('aiModalNewChatBtn');
 
     if (!aiBtn || !aiModal || !aiChatArea || !store) return;
@@ -154,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
             variant: 'modal',
             limit: 12,
             activeChatId,
+            filter: aiRecentSearch?.value || '',
             onLoadChat: loadChatInModal,
             onChange: updateRecentList,
         });
@@ -188,8 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function canSend(input) {
         const hasText = (input?.value || '').trim().length > 0;
         const pool = getActiveAttachPool();
-        const hasFiles = pool?.hasFiles?.() || false;
-        return hasText || hasFiles;
+        return hasText || (pool?.hasFiles?.() || false);
     }
 
     function updateSendState(input, sendBtn) {
@@ -224,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function generateAIResponse(userMessage, hasAttachments) {
         const msg = userMessage.toLowerCase();
         if (hasAttachments) {
-            return "I've received your file(s). I can help summarize or guide you on SK documents — tell me what you need.";
+            return "I've received your file(s). Tell me how you'd like help with these SK documents.";
         }
         if (msg.includes('resolution')) return 'I can help you create an SK Resolution. Would you like a template?';
         if (msg.includes('proposal') || msg.includes('write')) return 'For a project proposal: background, objectives, timeline, and budget.';
@@ -445,9 +446,18 @@ document.addEventListener('DOMContentLoaded', function () {
     bindComposer(aiInputField, aiSendBtn, aiCharCountChat, attachChat);
     bindComposer(aiInputWelcome, aiSendWelcome, aiCharCountWelcome, attachWelcome);
 
+    if (window.SkAiModalForm?.initAttachTypePickers) {
+        window.SkAiModalForm.initAttachTypePickers();
+    }
+
+    if (aiRecentSearch) {
+        aiRecentSearch.addEventListener('input', updateRecentList);
+    }
+
     recentMenu.renderList(aiRecentList, {
         variant: 'modal',
         activeChatId,
+        filter: aiRecentSearch?.value || '',
         onLoadChat: loadChatInModal,
         onChange: updateRecentList,
     });

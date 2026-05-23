@@ -263,8 +263,14 @@
     flex-shrink: 0;
 }
 
+.ai-app--sidebar-hidden .ai-sidebar {
+    margin-left: -260px;
+    transform: translateX(-100%);
+    pointer-events: none;
+}
+
 .ai-sidebar-toggle {
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     width: 36px;

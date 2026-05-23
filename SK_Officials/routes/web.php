@@ -100,6 +100,10 @@ Route::middleware([
         return view('BudgetFinance::budget-finance');
     })->name('budget-finance');
 
+    Route::get('/reports', function () {
+        return view('Reports::reports');
+    })->name('reports');
+
     Route::get('/kk-profiling-requests', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
     Route::get('/kk-profiling-requests/data', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'data'])->name('kk-profiling-requests.data');
     Route::post('/kk-profiling-requests/{id}/approve', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'approve'])->name('kk-profiling-requests.approve');
@@ -148,9 +152,19 @@ Route::middleware([
     })->name('sports-application-form');
 
     // ── Scholarship routes (pure front-end, no DB) ──
-    Route::get('/scholarship', function () {
+    Route::get('/scholarship-application-request', function () {
         return view('schedule_programs::scholarship_requests');
-    })->name('scholarship.index');
+    })->name('scholarship.application-request');
+
+    Route::redirect('/scholarship', '/scholarship-application-request');
+
+    Route::get('/scholar-application-form', function () {
+        return view('schedule_programs::scholar_application_from');
+    })->name('scholar.application-form');
+
+    Route::get('/scholar-application-form/{id}', function ($id) {
+        return view('schedule_programs::scholar_application_from', ['formId' => $id]);
+    })->name('scholar.application-form.edit');
 
     Route::get('/rejected-scholarship', function () {
         return view('Rejected_Scholarship::rejected-scholarship');

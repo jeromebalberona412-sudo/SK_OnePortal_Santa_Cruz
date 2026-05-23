@@ -1,0 +1,108 @@
+/* Make Scholar Application Form / Published Scholarship Forms page */
+.saf-page-wrap {
+    width: 100%;
+    max-width: 100%;
+}
+
+.saf-page-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.saf-page-header-text {
+    flex: 1;
+    min-width: 240px;
+}
+
+.saf-open-form-btn {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.saf-forms-table-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+}
+
+.saf-table-wrap {
+    overflow-x: auto;
+}
+
+.saf-forms-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.saf-forms-table thead {
+    background: #2c2c3e;
+}
+
+.saf-forms-table th {
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.saf-forms-table th:last-child {
+    border-right: none;
+}
+
+.saf-forms-table th.col-actions {
+    width: 220px;
+}
+
+.saf-forms-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.saf-forms-table td:last-child {
+    border-right: none;
+}
+
+.saf-forms-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.saf-table-empty {
+    text-align: center;
+    color: #9ca3af;
+    padding: 28px 16px !important;
+}
+
+.saf-form-title-cell {
+    font-weight: 600;
+    color: #111827;
+}
+
+.saf-form-meta {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.saf-date-cell {
+    font-size: 12px;
+    color: #4b5563;
+    white-space: nowrap;
+}
+
+.saf-forms-table .prog-tbl-actions {
+    justify-content: center;
+}

@@ -41,6 +41,9 @@ export default defineConfig({
                 // Budget & Finance module assets
                 'app/Modules/BudgetFinance/assets/css/budget-finance.css',
                 'app/Modules/BudgetFinance/assets/js/budget-finance.js',
+                // Reports module assets
+                'app/Modules/Reports/assets/css/reports.css',
+                'app/Modules/Reports/assets/js/reports.js',
                 // Kabataan module assets
                 'app/Modules/Kabataan/assets/css/kabataan.css',
                 'app/Modules/Kabataan/assets/js/kabataan.js',
@@ -73,6 +76,13 @@ export default defineConfig({
                 'app/Modules/schedule_programs/assets/js/scholarship_requests.js',
                 'app/Modules/schedule_programs/assets/css/scholar_list.css',
                 'app/Modules/schedule_programs/assets/js/scholar_list.js',
+                'app/Modules/schedule_programs/assets/css/scholar_application_from.css',
+                'app/Modules/schedule_programs/assets/js/spfb-form-builder.js',
+                'app/Modules/schedule_programs/assets/js/scholar_application_from.js',
+                'app/Modules/schedule_programs/assets/css/scholar_report.css',
+                'app/Modules/schedule_programs/assets/css/sk-report-editor.css',
+                'app/Modules/schedule_programs/assets/js/sk-report-editor.js',
+                'app/Modules/schedule_programs/assets/js/scholar_report.js',
                 // Sports List module assets
                 'app/Modules/schedule_programs/assets/css/sports_list.css',
                 'app/Modules/schedule_programs/assets/js/sports_list.js',
@@ -80,6 +90,8 @@ export default defineConfig({
                 'app/Modules/Rejected_Scholarship/assets/css/rejected-scholarship.css',
                 'app/Modules/Rejected_Scholarship/assets/js/rejected-scholarship.js',
                 // AI Assistant module assets
+                'app/Modules/AI_Assistant/assets/css/ai-assistant-modal-form.css',
+                'app/Modules/AI_Assistant/assets/js/ai-assistant-modal-form.js',
                 'app/Modules/AI_Assistant/assets/css/ai-page.css',
                 'app/Modules/AI_Assistant/assets/css/ai-recent-menu.css',
                 'app/Modules/AI_Assistant/assets/css/ai-modal.css',

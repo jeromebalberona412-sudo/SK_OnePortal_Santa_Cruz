@@ -85,6 +85,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeModal();
 });
 
+function escapeSl(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 // ── Render Scholar Table ───────────────────────────────────────────────────
 function renderScholarTable(scholars) {
     const tbody = document.getElementById('slTableBody');
@@ -107,8 +115,12 @@ function renderScholarTable(scholars) {
             <td class="sl-td-center sl-td-purpose">${r.purpose || '—'}</td>
             <td class="sl-td-center">${r.approved_at || '—'}</td>
             <td class="sl-td-center"><span class="sl-badge sl-badge-passed">PASSED</span></td>
-            <td class="sl-td-center">
-                <button class="sl-action-btn" data-scholar-idx="${i}">View</button>
+            <td class="sl-td-center sl-actions">
+                <div class="prog-tbl-actions">
+                    <button type="button" class="prog-btn prog-btn-view" data-scholar-idx="${i}">View</button>
+                    <button type="button" class="prog-btn prog-btn-edit" data-scholar-edit="${i}">Edit</button>
+                    <button type="button" class="prog-btn prog-btn-delete" data-scholar-delete="${i}">Delete</button>
+                </div>
             </td>
         </tr>`;
     }).join('');
@@ -117,6 +129,29 @@ function renderScholarTable(scholars) {
         btn.addEventListener('click', function () {
             const idx = parseInt(this.getAttribute('data-scholar-idx'), 10);
             if (SL_SCHOLARS[idx]) openScholarModal(SL_SCHOLARS[idx]);
+        });
+    });
+
+    tbody.querySelectorAll('[data-scholar-edit]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const idx = parseInt(this.getAttribute('data-scholar-edit'), 10);
+            const s = SL_SCHOLARS[idx];
+            if (!s) return;
+            const school = prompt('School name:', s.school_name || '');
+            if (school === null) return;
+            s.school_name = school;
+            const level = prompt('Year / Level:', s.year_level || '');
+            if (level !== null) s.year_level = level;
+            renderScholarTable(SL_SCHOLARS);
+        });
+    });
+
+    tbody.querySelectorAll('[data-scholar-delete]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const idx = parseInt(this.getAttribute('data-scholar-delete'), 10);
+            if (!confirm('Remove this scholar from the list?')) return;
+            SL_SCHOLARS.splice(idx, 1);
+            renderScholarTable(SL_SCHOLARS);
         });
     });
 }

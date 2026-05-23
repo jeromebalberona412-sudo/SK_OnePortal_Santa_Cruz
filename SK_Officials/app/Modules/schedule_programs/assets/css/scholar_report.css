@@ -1,0 +1,89 @@
+.saf-page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.saf-report-btn {
+    background: #2c2c3e;
+    color: #f5c518;
+}
+
+.saf-report-btn:hover {
+    background: #1a1a28;
+}
+
+.scholar-report-modal-box {
+    max-width: 1100px;
+    width: 98vw;
+    max-height: 96vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.scholar-report-modal-box .sports-modal-header {
+    flex-shrink: 0;
+    margin: 0;
+    border-radius: 0;
+}
+
+.scholar-report-modal-box .word-editor-shell {
+    flex: 1;
+    min-height: 0;
+}
+
+.scholar-report-modal-box .sports-modal-footer {
+    flex-shrink: 0;
+    margin: 0;
+    border-radius: 0;
+}
+
+.scholar-report-select,
+.scholar-report-title-input {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.scholar-report-title-input {
+    flex: 1;
+    min-width: 140px;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .scholar-report-modal-box,
+    .scholar-report-modal-box * {
+        visibility: visible;
+    }
+
+    .scholar-report-modal-box {
+        position: fixed;
+        inset: 0;
+        max-width: none !important;
+        width: 100% !important;
+        max-height: none !important;
+        box-shadow: none;
+    }
+
+    .sports-modal-header,
+    .word-editor-meta,
+    .word-ribbon,
+    .word-status-bar,
+    .sports-modal-footer {
+        display: none !important;
+    }
+
+    .word-workspace {
+        background: #fff !important;
+    }
+}

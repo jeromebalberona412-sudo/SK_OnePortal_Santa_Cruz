@@ -188,7 +188,7 @@ function initializeCommitteeCards() {
                 '150 Students for Educational Assistance',
                 'Support to Elementary and Daycare',
             ],
-            link: '/scholarship',
+            link: '/scholarship-application-request',
             linkLabel: 'Go to Scholarship Application List',
             type: 'education',
         },

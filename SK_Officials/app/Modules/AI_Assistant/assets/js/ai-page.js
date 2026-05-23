@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const store = window.SkAiStorage;
     const recentMenu = window.SkAiRecentMenu;
     const toast = window.SkAiToast;
-    const attachments = window.SkAiAttachments;
 
     const aiWelcomeView = document.getElementById('aiWelcomeView');
     const aiChatView = document.getElementById('aiChatView');
@@ -33,29 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let isTyping = false;
     let limitToastShown = false;
 
-    const attachWelcome = attachments?.bind({
-        key: 'pageWelcome',
-        attachBtn: document.getElementById('aiPageAttachWelcome'),
-        previewEl: document.getElementById('aiAttachPreviewPageWelcome'),
-        toast,
-        onChange: syncComposerState,
-    });
-
-    const attachChat = attachments?.bind({
-        key: 'pageChat',
-        attachBtn: document.getElementById('aiPageAttachChat'),
-        previewEl: document.getElementById('aiAttachPreviewPageChat'),
-        toast,
-        onChange: syncComposerState,
-    });
-
     function getActiveChat() {
         return store.find(store.load(), activeChatId);
-    }
-
-    function getActiveAttachPool() {
-        if (aiChatView && !aiChatView.hidden) return attachChat;
-        return attachWelcome;
     }
 
     function syncViewState() {
@@ -80,25 +58,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const t = document.createElement('div');
                 t.textContent = msg.text;
                 bubble.appendChild(t);
-            }
-            if (msg.attachments?.length) {
-                const wrap = document.createElement('div');
-                wrap.className = 'ai-msg-attachments';
-                msg.attachments.forEach(att => {
-                    if (att.isImage) {
-                        const img = document.createElement('img');
-                        img.className = 'ai-msg-attach-thumb';
-                        img.src = att.dataUrl;
-                        img.alt = att.name;
-                        wrap.appendChild(img);
-                    } else {
-                        const span = document.createElement('span');
-                        span.className = 'ai-msg-attach-file';
-                        span.textContent = att.name;
-                        wrap.appendChild(span);
-                    }
-                });
-                bubble.appendChild(wrap);
             }
             row.appendChild(bubble);
         } else {
@@ -136,9 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function canSend(input) {
-        const hasText = (input?.value || '').trim().length > 0;
-        const pool = getActiveAttachPool();
-        return hasText || (pool?.hasFiles?.() || false);
+        return (input?.value || '').trim().length > 0;
     }
 
     function syncComposerState() {
@@ -190,8 +147,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function startNewChat() {
         activeChatId = null;
         aiChatArea.innerHTML = '';
-        attachWelcome?.clear?.();
-        attachChat?.clear?.();
         syncViewState();
         clearInputs();
         updateChatList();
@@ -227,11 +182,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function generateAIResponse(userMessage, hasAttachments) {
+    function generateAIResponse(userMessage) {
         const lower = (userMessage || '').toLowerCase();
-        if (hasAttachments) {
-            return "I've received your file(s). Tell me how you'd like help with these SK documents.";
-        }
         if (lower.includes('resolution')) return 'I can help you create an SK Resolution. Would you like a template?';
         if (lower.includes('proposal') || lower.includes('project') || lower.includes('write')) {
             return 'For a project proposal: background, objectives, timeline, budget, and outcomes.';
@@ -262,28 +214,20 @@ document.addEventListener('DOMContentLoaded', function () {
         return { chats, chat };
     }
 
-    function sendMessage(rawMessage, pool) {
-        const attachPool = pool || getActiveAttachPool();
-        const pendingFiles = attachPool?.getPending?.() || [];
+    function sendMessage(rawMessage) {
         const message = (rawMessage || '').trim().slice(0, MAX_INPUT_CHARS);
-        if ((!message && !pendingFiles.length) || isTyping) return;
+        if (!message || isTyping) return;
 
-        const displayText = message || (pendingFiles.length === 1
-            ? '📎 ' + pendingFiles[0].name
-            : '📎 ' + pendingFiles.length + ' files');
-
-        const { chats, chat } = ensureChat(displayText);
+        const { chats, chat } = ensureChat(message);
         activeChatId = chat.id;
         chat.messages.push({
             text: message,
             sender: 'user',
-            attachments: pendingFiles.length ? pendingFiles : undefined,
         });
         chat.updatedAt = Date.now();
-        chat.title = store.truncate(message || pendingFiles[0]?.name || 'Attachment', 28);
+        chat.title = store.truncate(message, 28);
         store.save([chat, ...chats.filter(c => c.id !== chat.id)]);
 
-        attachPool?.clear?.();
         renderMessages();
         clearInputs();
         setSendDisabled(true);
@@ -296,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const c = store.find(list, activeChatId);
             if (!c) return;
             c.messages.push({
-                text: generateAIResponse(message, pendingFiles.length > 0),
+                text: generateAIResponse(message),
                 sender: 'ai',
             });
             c.updatedAt = Date.now();
@@ -325,16 +269,16 @@ document.addEventListener('DOMContentLoaded', function () {
         toast?.show('Maximum 500 characters reached', 'success');
     }
 
-    function bindComposer(input, sendBtn, counterEl, attachPool) {
+    function bindComposer(input, sendBtn, counterEl) {
         if (!input) return;
         input.setAttribute('maxlength', String(MAX_INPUT_CHARS));
         if (sendBtn) {
-            sendBtn.addEventListener('click', () => sendMessage(input.value, attachPool));
+            sendBtn.addEventListener('click', () => sendMessage(input.value));
         }
         input.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage(input.value, attachPool);
+                sendMessage(input.value);
             }
         });
         input.addEventListener('input', function () {
@@ -348,9 +292,32 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSendState(input, sendBtn);
     }
 
+    const aiApp = document.getElementById('aiApp');
+
     function closeMobileSidebar() {
         if (aiSidebar) aiSidebar.classList.remove('open');
         if (aiSidebarOverlay) aiSidebarOverlay.classList.remove('show');
+    }
+
+    function isMobileSidebar() {
+        return window.innerWidth <= 768;
+    }
+
+    function toggleRecentSidebar() {
+        if (!aiApp) return;
+        if (isMobileSidebar()) {
+            if (aiSidebar && aiSidebar.classList.contains('open')) {
+                closeMobileSidebar();
+            } else if (aiSidebar) {
+                aiSidebar.classList.add('open');
+                if (aiSidebarOverlay) aiSidebarOverlay.classList.add('show');
+            }
+            return;
+        }
+        aiApp.classList.toggle('ai-app--sidebar-hidden');
+        try {
+            sessionStorage.setItem('skaiSidebarHidden', aiApp.classList.contains('ai-app--sidebar-hidden') ? '1' : '0');
+        } catch (_) { /* ignore */ }
     }
 
     if (aiBackPortal) {
@@ -375,27 +342,26 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.ai-quick-chip').forEach(chip => {
         chip.addEventListener('click', function () {
             const prompt = this.getAttribute('data-prompt');
-            if (prompt) sendMessage(prompt, attachWelcome);
+            if (prompt) sendMessage(prompt);
         });
     });
 
     if (aiSidebarToggle) {
-        aiSidebarToggle.addEventListener('click', () => {
-            if (aiSidebar && aiSidebar.classList.contains('open')) {
-                closeMobileSidebar();
-            } else if (aiSidebar) {
-                aiSidebar.classList.add('open');
-                if (aiSidebarOverlay) aiSidebarOverlay.classList.add('show');
-            }
-        });
+        aiSidebarToggle.addEventListener('click', toggleRecentSidebar);
     }
+
+    try {
+        if (aiApp && sessionStorage.getItem('skaiSidebarHidden') === '1' && !isMobileSidebar()) {
+            aiApp.classList.add('ai-app--sidebar-hidden');
+        }
+    } catch (_) { /* ignore */ }
 
     if (aiSidebarOverlay) {
         aiSidebarOverlay.addEventListener('click', closeMobileSidebar);
     }
 
-    bindComposer(inputWelcome, sendWelcome, charWelcome, attachWelcome);
-    bindComposer(inputChat, sendChat, charChat, attachChat);
+    bindComposer(inputWelcome, sendWelcome, charWelcome);
+    bindComposer(inputChat, sendChat, charChat);
 
     updateChatList();
 

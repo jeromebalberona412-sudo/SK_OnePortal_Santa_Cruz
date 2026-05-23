@@ -18,6 +18,7 @@ function showLoading(message = 'Loading') {
     const messageEl = overlay.querySelector('.gl-message');
     if (messageEl) messageEl.textContent = message;
     overlay.classList.add('gl-visible');
+    document.body.classList.add('gl-loading-active');
     document.body.style.overflow = 'hidden';
 }
 
@@ -25,6 +26,7 @@ function hideLoading() {
     const overlay = document.getElementById('globalLoadingOverlay');
     if (!overlay) return;
     overlay.classList.remove('gl-visible');
+    document.body.classList.remove('gl-loading-active');
     document.body.style.overflow = '';
 }
 

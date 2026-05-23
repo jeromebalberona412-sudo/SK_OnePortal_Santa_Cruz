@@ -553,7 +553,7 @@ function initSportsRequests() {
 
     // ── Parse time string HH:MM AM/PM → minutes since midnight ──────────
     function parseTimeToMinutes(str) {
-        const m = str.trim().match(/^(1[0-2]|0?[1-9]):([1-9]|[0-5][0-9])\s*(AM|PM)$/i);
+        const m = str.trim().match(/^(1[0-2]|0?[1-9]):([0-5][0-9])\s*(AM|PM)$/i);
         if (!m) return null;
         let h = parseInt(m[1], 10);
         const min = parseInt(m[2], 10);

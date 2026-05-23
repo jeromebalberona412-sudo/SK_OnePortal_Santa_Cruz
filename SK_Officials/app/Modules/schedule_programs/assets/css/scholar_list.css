@@ -126,6 +126,48 @@ body {
     box-shadow: 0 6px 16px rgba(44, 44, 62, 0.35);
 }
 
+.sl-btn-gold {
+    background: linear-gradient(135deg, #f4c20d 0%, #e6b800 100%);
+    color: #2c2c3e;
+    border: none;
+    box-shadow: 0 4px 12px rgba(244, 194, 13, 0.35);
+}
+
+.sl-btn-gold:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+}
+
+.sl-section-head {
+    padding: 16px 20px 0;
+}
+
+.sl-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 4px;
+}
+
+.sl-section-sub {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 12px;
+}
+
+.sl-action-btn--edit {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+.sl-action-btn--delete {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+    margin-left: 4px;
+}
+
 /* Back to Schedule Programs — solid dark button */
 .sl-btn-back {
     background: #2c2c3e;
@@ -318,8 +360,11 @@ body {
 /* ── View Action Button ── */
 .sl-actions {
     display: flex;
+    flex-direction: row;
+    align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
+    flex-wrap: nowrap;
 }
 
 .sl-action-btn {

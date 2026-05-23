@@ -179,8 +179,66 @@ function initScholarshipRequests() {
     const searchInput   = document.getElementById('scholSearch');
     const startDateFilter = document.getElementById('scholStartDate');
     const endDateFilter = document.getElementById('scholEndDate');
-    const startTimeFilter = document.getElementById('scholStartTime');
-    const endTimeFilter = document.getElementById('scholEndTime');
+    function getTimeFromDropdowns(prefix) {
+        const h = document.getElementById(prefix + 'Hour')?.value || '';
+        const m = document.getElementById(prefix + 'Min')?.value || '';
+        const p = document.getElementById(prefix + 'Period')?.value || '';
+        if (!h || !m || !p) return '';
+        return `${h}:${m} ${p}`;
+    }
+
+    function parseTime12ToMinutes(str) {
+        if (!str) return null;
+        const m = String(str).trim().match(/^(1[0-2]|0?[1-9]):([0-5][0-9])\s*(AM|PM)$/i);
+        if (!m) return null;
+        let h = parseInt(m[1], 10);
+        const min = parseInt(m[2], 10);
+        const period = m[3].toUpperCase();
+        if (period === 'AM' && h === 12) h = 0;
+        if (period === 'PM' && h !== 12) h += 12;
+        return h * 60 + min;
+    }
+
+    function time12To24Hour(str) {
+        const mins = parseTime12ToMinutes(str);
+        if (mins === null) return '';
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function setTimeToDropdowns(prefix, timeStr) {
+        if (!timeStr) return;
+        let h12, min, period;
+        const m24 = String(timeStr).match(/^(\d{1,2}):(\d{2})$/);
+        if (m24) {
+            let h = parseInt(m24[1], 10);
+            min = m24[2];
+            period = h >= 12 ? 'PM' : 'AM';
+            if (h === 0) h = 12;
+            else if (h > 12) h -= 12;
+            h12 = String(h);
+        } else {
+            const parsed = String(timeStr).trim().match(/^(1[0-2]|0?[1-9]):([0-5][0-9])\s*(AM|PM)$/i);
+            if (!parsed) return;
+            h12 = String(parseInt(parsed[1], 10));
+            min = parsed[2];
+            period = parsed[3].toUpperCase();
+        }
+        const hourEl = document.getElementById(prefix + 'Hour');
+        const minEl = document.getElementById(prefix + 'Min');
+        const periodEl = document.getElementById(prefix + 'Period');
+        if (hourEl) hourEl.value = h12;
+        if (minEl) minEl.value = min;
+        if (periodEl) periodEl.value = period;
+    }
+
+    function bindTimeFilter(prefix, onChange) {
+        ['Hour', 'Min', 'Period'].forEach(part => {
+            const el = document.getElementById(prefix + part);
+            if (el) el.addEventListener('change', onChange);
+        });
+    }
     const viewModal     = document.getElementById('scholViewModal');
     const viewBody      = document.getElementById('scholViewBody');
     const viewClose     = document.getElementById('scholViewClose');
@@ -355,9 +413,9 @@ function initScholarshipRequests() {
             const schedule = JSON.parse(localStorage.getItem('scholarship_schedule') || 'null');
             if (schedule) {
                 document.getElementById('schedOpenDate').value = schedule.openDate;
-                document.getElementById('schedOpenTime').value = schedule.openTime;
+                setTimeToDropdowns('schedOpenTime', schedule.openTime);
                 document.getElementById('schedCloseDate').value = schedule.closeDate;
-                document.getElementById('schedCloseTime').value = schedule.closeTime;
+                setTimeToDropdowns('schedCloseTime', schedule.closeTime);
                 document.getElementById('schedStatus').value = schedule.status || 'auto';
             }
         });
@@ -566,16 +624,18 @@ function initScholarshipRequests() {
     if (btnSaveSchedule) {
         btnSaveSchedule.addEventListener('click', () => {
             const openDate  = document.getElementById('schedOpenDate').value;
-            const openTime  = document.getElementById('schedOpenTime').value;
+            const openTime  = getTimeFromDropdowns('schedOpenTime');
             const closeDate = document.getElementById('schedCloseDate').value;
-            const closeTime = document.getElementById('schedCloseTime').value;
+            const closeTime = getTimeFromDropdowns('schedCloseTime');
             const status    = document.getElementById('schedStatus').value;
 
             if (!openDate || !closeDate) {
                 showScholToast('Please set both open and close dates.', 'error');
                 return;
             }
-            if (closeDate < openDate || (closeDate === openDate && closeTime <= openTime)) {
+            const openMins = parseTime12ToMinutes(openTime);
+            const closeMins = parseTime12ToMinutes(closeTime);
+            if (closeDate < openDate || (closeDate === openDate && openMins !== null && closeMins !== null && closeMins <= openMins)) {
                 showScholToast('Close date/time must be after open date/time.', 'error');
                 return;
             }
@@ -700,8 +760,10 @@ function initScholarshipRequests() {
                     <td style="text-align:center;">${r.submitted_at || '—'}</td>
                     <td style="text-align:center;font-size:12px;color:#6b7280;">${r.submitted_time || '—'}</td>
                     <td style="text-align:center;">
-                        <div class="schol-tbl-actions">
-                            <button class="schol-tbl-btn schol-tbl-btn-view" data-action="view" data-id="${r.id}">View</button>
+                        <div class="schol-tbl-actions prog-tbl-actions">
+                            <button class="schol-tbl-btn schol-tbl-btn-view prog-btn prog-btn-view" data-action="view" data-id="${r.id}">View</button>
+                            <button class="schol-tbl-btn schol-tbl-btn-edit prog-btn prog-btn-edit" data-action="edit" data-id="${r.id}">Edit</button>
+                            <button class="schol-tbl-btn schol-tbl-btn-delete prog-btn prog-btn-delete" data-action="delete" data-id="${r.id}">Delete</button>
                         </div>
                     </td>
                 `;
@@ -731,6 +793,7 @@ function initScholarshipRequests() {
         if (!record) return;
 
         if (action === 'view') { viewTargetId = id; openViewModal(record); }
+        else if (action === 'edit') { viewTargetId = id; openViewModal(record); }
         else if (action === 'delete') { deleteTargetId = id; deleteModal.style.display = 'flex'; }
     });
 
@@ -996,8 +1059,17 @@ function initScholarshipRequests() {
     if (searchInput) searchInput.addEventListener('input', () => { filterSearch = searchInput.value.trim(); render(); });
     if (startDateFilter) startDateFilter.addEventListener('change', () => { filterStartDate = startDateFilter.value; render(); });
     if (endDateFilter) endDateFilter.addEventListener('change', () => { filterEndDate = endDateFilter.value; render(); });
-    if (startTimeFilter) startTimeFilter.addEventListener('change', () => { filterStartTime = startTimeFilter.value; render(); });
-    if (endTimeFilter) endTimeFilter.addEventListener('change', () => { filterEndTime = endTimeFilter.value; render(); });
+    bindTimeFilter('scholFilterStartTime', () => {
+        filterStartTime = time12To24Hour(getTimeFromDropdowns('scholFilterStartTime'));
+        render();
+    });
+    bindTimeFilter('scholFilterEndTime', () => {
+        filterEndTime = time12To24Hour(getTimeFromDropdowns('scholFilterEndTime'));
+        render();
+    });
+
+    setTimeToDropdowns('schedOpenTime', '8:00 AM');
+    setTimeToDropdowns('schedCloseTime', '5:00 PM');
 
     render();
 }

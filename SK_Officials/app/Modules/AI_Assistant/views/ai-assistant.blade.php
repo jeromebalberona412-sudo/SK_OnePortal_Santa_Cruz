@@ -7,9 +7,9 @@
     @vite([
         'app/Modules/AI_Assistant/assets/css/ai-page.css',
         'app/Modules/AI_Assistant/assets/css/ai-recent-menu.css',
+        'app/Modules/AI_Assistant/assets/js/ai-assistant-modal-form.js',
         'app/Modules/AI_Assistant/assets/js/ai-storage.js',
         'app/Modules/AI_Assistant/assets/js/ai-toast.js',
-        'app/Modules/AI_Assistant/assets/js/ai-attachments.js',
         'app/Modules/AI_Assistant/assets/js/ai-recent-menu.js',
         'app/Modules/AI_Assistant/assets/js/ai-page.js',
     ])
@@ -47,7 +47,7 @@
         </div>
 
         <div class="ai-sidebar-recents">
-            <div class="ai-recents-label">Recents</div>
+            <div class="ai-recents-label">Recent Prompts</div>
             <ul class="ai-chat-list" id="aiChatList"></ul>
             <p class="ai-chat-list-empty" id="aiChatListEmpty">No conversations yet</p>
         </div>
@@ -67,7 +67,7 @@
     <div class="ai-main">
 
         <header class="ai-topbar">
-            <button type="button" class="ai-sidebar-toggle" id="aiSidebarToggle" aria-label="Toggle sidebar">
+            <button type="button" class="ai-sidebar-toggle" id="aiSidebarToggle" aria-label="Show or hide recent prompts" title="Recent prompts">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -105,12 +105,6 @@
 
                 <div class="ai-composer">
                     <div class="ai-composer-box">
-                        <button type="button" class="ai-composer-attach" id="aiPageAttachWelcome" title="Attach files or photos" aria-label="Attach">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                        </button>
                         <div class="ai-composer-input-wrap">
                             <textarea
                                 class="ai-composer-input"
@@ -128,8 +122,6 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="ai-attach-preview" id="aiAttachPreviewPageWelcome" hidden></div>
-
                     <div class="ai-quick-actions">
                         <button type="button" class="ai-quick-chip" data-prompt="Help me create an SK Resolution">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -163,12 +155,6 @@
 
                 <div class="ai-composer ai-composer--bottom">
                     <div class="ai-composer-box">
-                        <button type="button" class="ai-composer-attach" id="aiPageAttachChat" title="Attach files or photos" aria-label="Attach">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                        </button>
                         <div class="ai-composer-input-wrap">
                             <textarea
                                 class="ai-composer-input"
@@ -186,7 +172,6 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="ai-attach-preview" id="aiAttachPreviewPageChat" hidden></div>
                 </div>
             </div>
 

@@ -11,6 +11,7 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
     border: 2px solid #f5c518;
     z-index: 1003;
+    display: none;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px) scale(0.97);
@@ -20,6 +21,7 @@
 }
 
 .ai-assistant-modal.open {
+    display: block;
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
@@ -75,6 +77,44 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin: 0 0 8px 4px;
+}
+
+.ai-recents-search-wrap {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.ai-recents-search-icon {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 13px;
+    height: 13px;
+    stroke: #9ca3af;
+    pointer-events: none;
+}
+
+.ai-recents-search-input {
+    width: 100%;
+    padding: 7px 8px 7px 28px;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 11px;
+    font-family: inherit;
+    color: #374151;
+    box-sizing: border-box;
+}
+
+.ai-recents-search-input:focus {
+    outline: none;
+    border-color: #f5c518;
+    box-shadow: 0 0 0 2px rgba(245, 197, 24, 0.2);
+}
+
+.ai-recents-search-input::placeholder {
+    color: #9ca3af;
 }
 
 .ai-recent-list {
@@ -135,6 +175,35 @@
     background: linear-gradient(135deg, #2c2c3e 0%, #3a3a4a 100%);
     border-bottom: 3px solid #f5c518;
     flex-shrink: 0;
+}
+
+.ai-recents-header-btn.ai-hamburger-btn {
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent !important;
+    border-color: transparent !important;
+}
+
+.ai-recents-header-btn.ai-hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.ai-recents-header-btn.ai-hamburger-btn[aria-expanded="true"] {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(245, 197, 24, 0.45) !important;
+}
+
+.ai-hamburger-icon {
+    width: 18px;
+    height: 18px;
+    stroke: #fff;
+}
+
+.ai-recents-header-btn[aria-expanded="true"] .ai-hamburger-icon {
+    stroke: #f5c518;
 }
 
 .ai-recents-header-btn {
@@ -309,8 +378,8 @@
 
 .ai-composer-box {
     display: flex;
-    align-items: flex-end;
-    gap: 4px;
+    align-items: center;
+    gap: 8px;
     width: 100%;
     padding: 8px 10px 8px 12px;
     background: #fff;

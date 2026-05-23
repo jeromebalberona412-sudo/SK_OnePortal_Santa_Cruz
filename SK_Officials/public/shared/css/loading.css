@@ -5,14 +5,14 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.72);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: 100000;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -93,6 +93,21 @@
 }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
+/* Hide header dropdowns / AI modal chrome while global loading is active */
+body.gl-loading-active .ai-assistant-modal,
+body.gl-loading-active .notif-dropdown,
+body.gl-loading-active .user-dropdown,
+body.gl-loading-active .logout-modal,
+body.gl-loading-active #aiChatContextMenu {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.gl-loading-active .ai-assistant-modal {
+    display: none !important;
+}
+
 @media (max-width: 640px) {
     .gl-spinner {
         width: 60px;

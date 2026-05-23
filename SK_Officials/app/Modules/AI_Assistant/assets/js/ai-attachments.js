@@ -119,20 +119,27 @@
 
         if (!attachBtn) return null;
 
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.multiple = true;
-        fileInput.accept = ACCEPT;
-        fileInput.hidden = true;
-        fileInput.className = 'ai-file-input-hidden';
-        attachBtn.after(fileInput);
+        const pickerWrap = attachBtn.closest('[data-ai-attach-picker]');
+        let fileInput = pickerWrap
+            ? pickerWrap.querySelector('input[type="file"]')
+            : null;
+
+        if (!fileInput) {
+            fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.multiple = true;
+            fileInput.accept = ACCEPT;
+            fileInput.hidden = true;
+            fileInput.className = 'ai-file-input-hidden';
+            attachBtn.after(fileInput);
+
+            attachBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                fileInput.click();
+            });
+        }
 
         getPool(key)._onChange = onChange;
-
-        attachBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            fileInput.click();
-        });
 
         fileInput.addEventListener('change', async function () {
             await addFiles(key, fileInput.files, toast, onChange);
