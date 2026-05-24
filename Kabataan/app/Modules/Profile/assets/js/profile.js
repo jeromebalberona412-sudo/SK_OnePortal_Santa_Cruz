@@ -171,7 +171,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let message = 'No programs found';
         if (filter === 'pending') message = 'No pending programs';
-        if (filter === 'ongoing') message = 'No ongoing programs';
+        if (filter === 'approved') message = 'No approved programs';
+        if (filter === 'evaluation') message = 'No programs in evaluation';
         if (filter === 'completed') message = 'No completed programs';
         
         emptyDiv.innerHTML = `
