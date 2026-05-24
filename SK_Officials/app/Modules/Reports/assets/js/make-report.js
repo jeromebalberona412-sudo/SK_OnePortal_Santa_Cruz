@@ -2,6 +2,7 @@
  * Make a Report — CKEditor 5 Premium + multi-page + localStorage
  */
 import { createMakeReportEditor } from './make-report-ckeditor-config.js';
+import { attachEditorToRibbon, clearRibbon, initRibbon } from './make-report-ribbon.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const STORAGE_KEY = 'sk_official_reports';
@@ -40,6 +41,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const PAPER_EXPORT = { a4: 'A4', letter: 'Letter', legal: 'Legal', short: 'Letter', long: 'Legal' };
+    const reportsUrl = app.dataset.reportsUrl || '/reports';
+
+    initRibbon();
+
+    function isPageEmpty(html) {
+        const text = (html || '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        return !text;
+    }
+
+    function normalizeEditorHtml(html) {
+        if (isPageEmpty(html)) return '';
+        return html || '';
+    }
 
     function buildChannelId() {
         const id = currentId || ('sk-new-' + Date.now());
@@ -47,8 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return id;
     }
 
+    function getReportTitle() {
+        const stored = document.getElementById('mrDetailTitle')?.value?.trim();
+        if (stored) return stored;
+        const plain = getCombinedPlainText();
+        const first = plain.split(/\s+/).slice(0, 8).join(' ');
+        return first || 'Untitled Report';
+    }
+
     function getExportFileBase() {
-        const title = document.getElementById('mrDetailTitle')?.value?.trim() || 'sk-report';
+        const title = getReportTitle();
         return title.replace(/[^\w\s-]/g, '_') || 'sk-report';
     }
 
@@ -61,15 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const pageNum = index + 1;
         return `
             <div class="mr-sheet-label">Page ${pageNum}</div>
-            <div class="mr-paper-header" id="mrPaperHeader" contenteditable="true" data-placeholder="Header (optional)">${page.header || ''}</div>
-            <div class="editor-container editor-container_classic-editor editor-container_include-word-count editor-container_include-fullscreen mr-ckeditor-root" id="mr-editor-container">
+            <div class="mr-ckeditor-root mr-ckeditor-body" id="mr-editor-container">
                 <div class="presence" id="mr-editor-presence"></div>
-                <div class="editor-container__editor-wrapper">
-                    <div class="editor-container__editor">
-                        <div id="mrEditor"></div>
-                        <div class="editor_container__word-count" id="mr-editor-word-count"></div>
-                    </div>
-                </div>
+                <div id="mrEditor"></div>
+                <div class="editor_container__word-count" id="mr-editor-word-count"></div>
             </div>
             <div class="revision-history" id="mr-editor-revision-history" hidden>
                 <div class="revision-history__wrapper">
@@ -77,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="revision-history__sidebar" id="mr-editor-revision-history-sidebar"></div>
                 </div>
             </div>
-            <div class="mr-paper-footer" id="mrPaperFooter" contenteditable="true" data-placeholder="Footer (optional)">${page.footer || ''}</div>
             <div class="mr-sheet-page-num">Page ${pageNum}</div>`;
     }
 
@@ -109,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 sheet.innerHTML = `
                     <div class="mr-sheet-label">Page ${i + 1}</div>
-                    <div class="mr-page-preview">${page.html?.trim() ? page.html : '<p class="mr-preview-empty">Empty page — click to edit</p>'}</div>
+                    <div class="mr-page-preview">${isPageEmpty(page.html) ? '' : page.html}</div>
                     <div class="mr-sheet-page-num">Page ${i + 1}</div>`;
                 sheet.addEventListener('click', () => switchDocPage(i));
             }
@@ -138,8 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function destroyEditor() {
-        if (!ckEditor) return;
+        if (!ckEditor) {
+            clearRibbon();
+            return;
+        }
         try {
+            clearRibbon();
             await ckEditor.destroy();
         } catch (e) {
             console.warn(e);
@@ -169,6 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 exportFileBase: getExportFileBase(),
                 paperFormat: getPaperFormat(),
             });
+
+            attachEditorToRibbon(ckEditor);
 
             ckEditor.model.document.on('change:data', () => {
                 updateStats();
@@ -239,17 +265,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function splitHtmlIntoPages(html, limit) {
+        if (isPageEmpty(html)) return [''];
         if (plainTextLength(html) <= limit) {
-            return [html || '<p></p>'];
+            return [html];
         }
 
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = html || '<p></p>';
+        wrapper.innerHTML = html;
         const nodes = [...wrapper.childNodes].filter(n =>
             (n.nodeType === Node.ELEMENT_NODE && n.textContent?.trim()) || (n.nodeType === Node.TEXT_NODE && n.textContent?.trim())
         );
 
-        if (!nodes.length) return ['<p></p>'];
+        if (!nodes.length) return [''];
 
         const pages = [];
         let bucket = document.createElement('div');
@@ -282,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         flush();
-        return pages.length ? pages : ['<p></p>'];
+        return pages.length ? pages : [''];
     }
 
     function scheduleAutoPagination() {
@@ -334,20 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
         indicator.classList.toggle('is-over-limit', len > PAGE_CHAR_LIMIT);
     }
 
-    document.getElementById('mrPaperStack')?.addEventListener('input', (e) => {
-        if (e.target.id === 'mrPaperHeader' || e.target.id === 'mrPaperFooter') {
-            saveCurrentDocPage();
-            triggerAutosave();
-        }
-    });
-
     function saveCurrentDocPage() {
         if (!documentPages[activeDocPage]) {
             documentPages[activeDocPage] = { html: '', header: '', footer: '' };
         }
-        documentPages[activeDocPage].html = getEditorHtml();
-        documentPages[activeDocPage].header = document.getElementById('mrPaperHeader')?.innerHTML || '';
-        documentPages[activeDocPage].footer = document.getElementById('mrPaperFooter')?.innerHTML || '';
+        documentPages[activeDocPage].html = normalizeEditorHtml(getEditorHtml());
     }
 
     async function switchDocPage(index) {
@@ -356,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await destroyEditor();
         activeDocPage = index;
         renderPageStack();
-        await mountEditor(documentPages[index]?.html || '<p></p>');
+        await mountEditor(documentPages[index]?.html || '');
         renderDocPageTabs();
         updateStats();
         scrollToActiveSheet();
@@ -365,10 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function addDocPage() {
         saveCurrentDocPage();
         await destroyEditor();
-        documentPages.push({ html: '<p></p>', header: '', footer: '' });
+        documentPages.push({ html: '', header: '', footer: '' });
         activeDocPage = documentPages.length - 1;
         renderPageStack(activeDocPage);
-        await mountEditor('<p></p>');
+        await mountEditor('');
         renderDocPageTabs();
         updateStats();
         scrollToActiveSheet();
@@ -474,7 +492,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const submitted = document.getElementById('mrDetailSubmitted');
-    if (submitted && !submitted.value) submitted.value = new Date().toISOString().slice(0, 10);
+    if (submitted && !submitted.value) {
+        submitted.value = new Date().toISOString().slice(0, 10);
+    }
+
+    function syncHiddenTitle() {
+        const el = document.getElementById('mrDetailTitle');
+        if (!el) return;
+        const plain = getCombinedPlainText();
+        const words = plain ? plain.split(/\s+/).filter(Boolean).slice(0, 8).join(' ') : '';
+        if (!el.value.trim() && words) el.value = words;
+    }
 
     function setStatusBadge(status) {
         const el = document.getElementById('mrStatusBadge');
@@ -511,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (wc) wc.textContent = words + (words === 1 ? ' word' : ' words');
         if (cc) cc.textContent = chars + ' characters';
         if (rt) rt.textContent = readMin + ' min read';
+        syncHiddenTitle();
     }
 
     const paperMap = {
@@ -596,9 +625,9 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCurrentDocPage();
         return {
             id: currentId || ('rpt_' + Date.now()),
-            title: document.getElementById('mrDetailTitle')?.value?.trim() || 'Untitled Report',
+            title: getReportTitle(),
             type: document.getElementById('mrDetailCategory')?.value || 'accomplishment',
-            category: document.getElementById('mrDetailCategory')?.selectedOptions?.[0]?.text || 'Report',
+            category: document.getElementById('mrDetailCategory')?.value || 'accomplishment',
             barangay: document.getElementById('mrDetailBarangay')?.value || 'Santa Cruz',
             submittedBy: document.getElementById('mrDetailPrepared')?.value || 'SK Official',
             period: document.getElementById('mrDetailPeriod')?.value || '',
@@ -669,14 +698,42 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (action === 'pdf') downloadPdf();
             else if (action === 'word') downloadWord();
             else if (action === 'print') window.print();
-            else if (action === 'submit') openModal('mrModalSubmit');
+            else if (action === 'save-exit') openSaveNameModal();
         });
     });
 
-    document.getElementById('mrConfirmSubmit')?.addEventListener('click', () => {
-        persistReport('pending');
+    function openSaveNameModal() {
+        saveCurrentDocPage();
+        const input = document.getElementById('mrSaveFileName');
+        if (input) {
+            input.value = getReportTitle();
+            input.focus();
+            input.select();
+        }
+        openModal('mrModalSaveName');
+    }
+
+    function saveAndRedirectToReports() {
+        const input = document.getElementById('mrSaveFileName');
+        const name = input?.value?.trim();
+        if (!name) {
+            toast('Please enter a file name.');
+            input?.focus();
+            return;
+        }
+        const titleEl = document.getElementById('mrDetailTitle');
+        if (titleEl) titleEl.value = name;
+        persistReport('draft');
         closeModals();
-        toast('Report submitted for review.');
+        window.location.href = reportsUrl;
+    }
+
+    document.getElementById('mrConfirmSaveName')?.addEventListener('click', saveAndRedirectToReports);
+    document.getElementById('mrSaveFileName')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveAndRedirectToReports();
+        }
     });
 
     function openModal(id) {
@@ -690,30 +747,65 @@ document.addEventListener('DOMContentLoaded', () => {
         m.addEventListener('click', e => { if (e.target === m) closeModals(); });
     });
 
-    function buildPreviewHtml() {
+    function getPreviewPaperClasses() {
+        const size = document.getElementById('mrPaperSize')?.value || 'a4';
+        const orient = document.getElementById('mrOrientation')?.value || 'portrait';
+        const paperClass = paperMap[size] || 'mr-paper-a4';
+        const landscape = orient === 'landscape' ? ' mr-paper-landscape' : '';
+        return `${paperClass}${landscape}`;
+    }
+
+    function getPreviewPadding() {
+        const margin = document.getElementById('mrMargins')?.value || 'normal';
+        const pads = { narrow: '12mm 14mm', normal: '18mm 20mm', moderate: '16mm 18mm', wide: '24mm 26mm' };
+        return pads[margin] || pads.normal;
+    }
+
+    function getPreviewSheetContents() {
         saveCurrentDocPage();
-        return documentPages.map((p, i) => {
-            let block = '';
-            if (p.header) block += `<div class="mr-preview-header">${p.header}</div>`;
-            block += p.html || '';
-            if (p.footer) block += `<div class="mr-preview-footer">${p.footer}</div>`;
-            if (documentPages.length > 1) block += `<p class="mr-preview-pagenum">Page ${i + 1} of ${documentPages.length}</p>`;
-            return `<div class="mr-preview-page">${block}</div>`;
-        }).join('');
+        const sheets = [];
+        documentPages.forEach((p) => {
+            const html = p.html?.trim() || '';
+            if (isPageEmpty(html)) {
+                sheets.push('');
+                return;
+            }
+            const parts = splitHtmlIntoPages(html, PAGE_CHAR_LIMIT);
+            parts.forEach(part => sheets.push(part));
+        });
+        return sheets.length ? sheets : [''];
     }
 
     function openPreview() {
         const body = document.getElementById('mrPreviewBody');
-        const title = document.getElementById('mrDetailTitle')?.value || 'Report';
         if (body) {
-            body.innerHTML = `<div class="mr-preview-paper" id="mrPreviewPaper"><h1>${escapeHtml(title)}</h1>${buildPreviewHtml()}</div>`;
+            const sheets = getPreviewSheetContents();
+            const total = sheets.length;
+            const paperClasses = getPreviewPaperClasses();
+            const pad = getPreviewPadding();
+            const pagesHtml = sheets.map((pageBody, i) => {
+                const pageNum = i + 1;
+                return `
+                <article class="mr-preview-sheet ${paperClasses}" style="padding:${pad}">
+                    <span class="mr-preview-sheet-label">Page ${pageNum}</span>
+                    <div class="mr-preview-sheet-body">${pageBody}</div>
+                    <span class="mr-preview-sheet-footer">Page ${pageNum} of ${total}</span>
+                </article>`;
+            }).join('');
+            body.innerHTML = `
+                <div class="mr-preview-stack" id="mrPreviewStack">
+                    <p class="mr-preview-meta">${total} page${total === 1 ? '' : 's'} · matches PDF/Word export</p>
+                    ${pagesHtml}
+                </div>`;
+            const zoom = document.getElementById('mrPreviewZoom')?.value || '1';
+            body.style.setProperty('--mr-preview-zoom', zoom);
         }
         openModal('mrModalPreview');
     }
 
     document.getElementById('mrPreviewZoom')?.addEventListener('change', e => {
-        const paper = document.getElementById('mrPreviewPaper');
-        if (paper) paper.style.transform = `scale(${e.target.value})`;
+        const body = document.getElementById('mrPreviewBody');
+        if (body) body.style.setProperty('--mr-preview-zoom', e.target.value);
     });
     document.getElementById('mrPreviewPrint')?.addEventListener('click', () => window.print());
     document.getElementById('mrPreviewPdf')?.addEventListener('click', () => downloadPdf());
@@ -730,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function downloadHtml() {
-        const title = document.getElementById('mrDetailTitle')?.value || 'report';
+        const title = getReportTitle();
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body>${getAllPagesHtml()}</body></html>`;
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
@@ -738,32 +830,6 @@ document.addEventListener('DOMContentLoaded', () => {
         a.click();
         toast('HTML downloaded.');
     }
-
-    document.getElementById('mrDetailsToggle')?.addEventListener('click', () => {
-        document.getElementById('mrDetailsPanel')?.classList.toggle('is-collapsed');
-    });
-
-    const dropzone = document.getElementById('mrDropzone');
-    const fileInput = document.getElementById('mrFileInput');
-    const fileList = document.getElementById('mrFileList');
-
-    function addFileCard(file) {
-        const li = document.createElement('li');
-        li.className = 'mr-file-card';
-        li.innerHTML = `
-            <span class="mr-file-badge">FILE</span>
-            <div style="flex:1;min-width:0">
-                <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(file.name)}</div>
-                <div style="font-size:10px;color:#6b7280">${(file.size / 1024).toFixed(1)} KB</div>
-            </div>
-            <button type="button" class="mr-icon-btn" data-remove>&times;</button>`;
-        fileList?.appendChild(li);
-        li.querySelector('[data-remove]')?.addEventListener('click', () => li.remove());
-    }
-
-    dropzone?.addEventListener('click', () => fileInput?.click());
-    document.getElementById('mrBrowseFiles')?.addEventListener('click', e => { e.stopPropagation(); fileInput?.click(); });
-    fileInput?.addEventListener('change', () => { [...fileInput.files].forEach(addFileCard); fileInput.value = ''; });
 
     const darkBtn = document.getElementById('mrDarkToggle');
     function syncDarkLabel() {

@@ -44,15 +44,21 @@
     </div>
 </div>
 
-<div class="mr-modal-backdrop" id="mrModalSubmit" hidden>
+<div class="mr-modal-backdrop" id="mrModalSaveName" hidden>
     <div class="mr-modal mr-modal-sm">
-        <div class="mr-modal-body mr-modal-center">
-            <div class="mr-modal-icon-badge">Submit</div>
-            <h3>Submit this report?</h3>
-            <p class="mr-muted">Status will change to Pending for review.</p>
-            <div class="mr-modal-actions">
+        <div class="mr-modal-head">
+            <h3>Save report</h3>
+            <button type="button" class="mr-modal-close" data-close-modal aria-label="Close">&times;</button>
+        </div>
+        <div class="mr-modal-body">
+            <label class="mr-field" for="mrSaveFileName">
+                <span>File name</span>
+                <input type="text" id="mrSaveFileName" maxlength="200" placeholder="Accomplishment Report" autocomplete="off">
+            </label>
+            <p class="mr-muted" style="margin:8px 0 0;font-size:12px;">Saved to My Reports. You can open it again from the reports list.</p>
+            <div class="mr-modal-actions" style="justify-content:flex-end;margin-top:16px;">
                 <button type="button" class="mr-btn mr-btn-outline" data-close-modal>Cancel</button>
-                <button type="button" class="mr-btn mr-btn-primary" id="mrConfirmSubmit">Submit</button>
+                <button type="button" class="mr-btn mr-btn-primary" id="mrConfirmSaveName">Save</button>
             </div>
         </div>
     </div>

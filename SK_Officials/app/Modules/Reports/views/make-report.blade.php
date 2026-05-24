@@ -19,7 +19,8 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
-        'app/Modules/Reports/assets/css/make-report.css'
+        'app/Modules/Reports/assets/css/make-report.css',
+        'app/Modules/Reports/assets/css/make-report-ribbon.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -28,7 +29,7 @@
 @include('layout::header')
 @include('layout::sidebar')
 
-<div id="mrApp" class="mr-app">
+<div id="mrApp" class="mr-app" data-reports-url="{{ route('reports') }}">
     <header class="mr-header mr-no-print">
         <nav class="mr-breadcrumb" aria-label="Breadcrumb">
             <a href="{{ route('dashboard') }}">Dashboard</a>
@@ -59,7 +60,7 @@
                 <button type="button" class="mr-btn mr-btn-outline" data-mr-action="word">Download Word</button>
                 <button type="button" class="mr-btn mr-btn-outline" data-mr-action="export">Export</button>
                 <button type="button" class="mr-btn mr-btn-outline" data-mr-action="print">Print</button>
-                <button type="button" class="mr-btn mr-btn-primary" data-mr-action="submit">Submit</button>
+                <button type="button" class="mr-btn mr-btn-primary" data-mr-action="save-exit">Save</button>
             </div>
         </div>
     </header>
@@ -109,6 +110,8 @@
                 <span class="mr-page-indicator" id="mrPageIndicator">Page 1 of 1</span>
             </nav>
 
+            @include('Reports::components.make-report-ribbon')
+
             <div class="mr-workspace" id="mrWorkspace">
                 <div class="mr-zoom-wrap" id="mrZoomWrap" style="--mr-zoom: 1">
                     <div class="mr-paper-stack" id="mrPaperStack" aria-label="Document pages"></div>
@@ -123,60 +126,15 @@
                 <span id="mrLastEdited">Last edited: —</span>
             </footer>
         </div>
-
-        <aside class="mr-details-panel mr-no-print" id="mrDetailsPanel">
-            <div class="mr-panel-head">
-                <h2>Report Details</h2>
-                <button type="button" class="mr-icon-btn" id="mrDetailsToggle" title="Collapse panel">Hide</button>
-            </div>
-            <div class="mr-details-body">
-                <label class="mr-field">
-                    <span>Report Title</span>
-                    <input type="text" id="mrDetailTitle" maxlength="200" placeholder="Accomplishment Report">
-                </label>
-                <label class="mr-field">
-                    <span>Category</span>
-                    <select id="mrDetailCategory">
-                        <option value="scholarship">Scholarship Program Report</option>
-                        <option value="activity">Activity Report</option>
-                        <option value="resolution">SK Resolution</option>
-                        <option value="minutes">Meeting Minutes</option>
-                        <option value="financial">Financial Report</option>
-                        <option value="accomplishment">Accomplishment Report</option>
-                    </select>
-                </label>
-                <label class="mr-field">
-                    <span>Reporting Period</span>
-                    <input type="text" id="mrDetailPeriod" placeholder="Q1 2026">
-                </label>
-                <label class="mr-field">
-                    <span>Barangay</span>
-                    <select id="mrDetailBarangay">
-                        <option>Santa Cruz</option>
-                        <option>Poblacion</option>
-                    </select>
-                </label>
-                <label class="mr-field">
-                    <span>Prepared By</span>
-                    <input type="text" id="mrDetailPrepared" value="{{ auth()->user()->name ?? 'SK Official' }}">
-                </label>
-                <label class="mr-field">
-                    <span>Submission Date</span>
-                    <input type="date" id="mrDetailSubmitted">
-                </label>
-                <div class="mr-attach-block">
-                    <h3 class="mr-attach-title">Attachments</h3>
-                    <div class="mr-dropzone" id="mrDropzone">
-                        <input type="file" id="mrFileInput" multiple accept=".docx,.pdf,image/*" hidden>
-                        <p class="mr-dropzone-title">Upload files</p>
-                        <p class="mr-dropzone-sub">Drag and drop or browse</p>
-                        <button type="button" class="mr-btn mr-btn-sm mr-btn-outline" id="mrBrowseFiles">Browse</button>
-                    </div>
-                    <ul class="mr-file-list" id="mrFileList"></ul>
-                </div>
-            </div>
-        </aside>
     </div>
+
+    {{-- Metadata kept for save/export (no side panel) --}}
+    <input type="hidden" id="mrDetailTitle" value="">
+    <input type="hidden" id="mrDetailCategory" value="accomplishment">
+    <input type="hidden" id="mrDetailPeriod" value="">
+    <input type="hidden" id="mrDetailBarangay" value="Santa Cruz">
+    <input type="hidden" id="mrDetailPrepared" value="{{ auth()->user()->name ?? 'SK Official' }}">
+    <input type="hidden" id="mrDetailSubmitted" value="">
 </div>
 
 @include('Reports::components.make-report-modals')

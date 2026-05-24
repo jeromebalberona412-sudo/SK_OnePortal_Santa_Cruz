@@ -271,7 +271,6 @@ export function buildMakeReportEditorConfig({
         mention: { feeds: [{ marker: '@', feed: [] }] },
         menuBar: { isVisible: true },
         mergeFields: {},
-        placeholder: 'Type or paste your report content here...',
         presenceList: { container: document.querySelector('#mr-editor-presence') || undefined },
         table: {
             contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties'],
@@ -281,13 +280,15 @@ export function buildMakeReportEditorConfig({
 }
 
 export async function createMakeReportEditor(element, options) {
-    const { ClassicEditor } = window.CKEDITOR;
+    const CK = window.CKEDITOR;
+    const EditorClass = CK.DecoupledEditor || CK.ClassicEditor;
     const config = buildMakeReportEditorConfig(options);
-    const editor = await ClassicEditor.create(element, config);
+    const editor = await EditorClass.create(element, config);
 
     const wordCount = editor.plugins.get('WordCount');
     const wordCountEl = document.querySelector('#mr-editor-word-count');
     if (wordCountEl && wordCount?.wordCountContainer) {
+        wordCountEl.innerHTML = '';
         wordCountEl.appendChild(wordCount.wordCountContainer);
     }
 

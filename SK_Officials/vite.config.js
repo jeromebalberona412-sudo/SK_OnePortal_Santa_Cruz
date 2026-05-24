@@ -45,6 +45,7 @@ export default defineConfig({
                 'app/Modules/Reports/assets/css/reports.css',
                 'app/Modules/Reports/assets/js/reports.js',
                 'app/Modules/Reports/assets/css/make-report.css',
+                'app/Modules/Reports/assets/css/make-report-ribbon.css',
                 'app/Modules/Reports/assets/js/make-report.js',
                 // Kabataan module assets
                 'app/Modules/Kabataan/assets/css/kabataan.css',
