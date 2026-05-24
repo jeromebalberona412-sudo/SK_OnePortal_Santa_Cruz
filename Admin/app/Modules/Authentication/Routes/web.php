@@ -19,12 +19,26 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/login', [AuthController::class, 'login']);
 
-    // Forgot Password
+    // Forgot Password — Step 1: email form
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])
         ->name('password.request');
 
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
         ->name('password.email');
+
+    // Forgot Password — Step 2: OTP page
+    Route::get('/forgot-password/otp', [AuthController::class, 'showOtp'])
+        ->name('password.otp');
+
+    Route::post('/forgot-password/otp', [AuthController::class, 'verifyOtp'])
+        ->name('password.verify-otp');
+
+    // Forgot Password — Step 3: Set new password page
+    Route::get('/forgot-password/set-new-password', [AuthController::class, 'showSetNewPassword'])
+        ->name('password.set-new-password');
+
+    Route::post('/forgot-password/set-new-password', [AuthController::class, 'setNewPassword'])
+        ->name('password.set-new');
 
     // Reset Password
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])
