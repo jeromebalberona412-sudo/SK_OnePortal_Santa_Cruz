@@ -63,7 +63,7 @@ class ProfileController extends Controller
                 'id' => 2,
                 'name' => 'Youth Leadership Training',
                 'category' => 'Leadership Development',
-                'status' => 'ongoing',
+                'status' => 'approved',
                 'created_at' => '2026-02-15',
                 'description' => 'Develop leadership skills for SK youth',
             ],
@@ -71,15 +71,24 @@ class ProfileController extends Controller
                 'id' => 3,
                 'name' => 'Community Service Program',
                 'category' => 'Community Development',
-                'status' => 'completed',
+                'status' => 'evaluation',
                 'created_at' => '2026-01-20',
                 'description' => 'Volunteer program for community improvement',
+            ],
+            (object)[
+                'id' => 4,
+                'name' => 'Sports Development Program',
+                'category' => 'Sports & Recreation',
+                'status' => 'completed',
+                'created_at' => '2025-12-05',
+                'description' => 'Sports training and development for youth athletes',
             ],
         ]);
         
         // Calculate statistics
         $totalPrograms = $programs->count();
-        $ongoingPrograms = $programs->where('status', 'ongoing')->count();
+        $approvedPrograms = $programs->where('status', 'approved')->count();
+        $evaluationPrograms = $programs->where('status', 'evaluation')->count();
         $completedPrograms = $programs->where('status', 'completed')->count();
         
         // Pass data to view
@@ -87,7 +96,8 @@ class ProfileController extends Controller
             'user' => $user,
             'programs' => $programs,
             'totalPrograms' => $totalPrograms,
-            'ongoingPrograms' => $ongoingPrograms,
+            'approvedPrograms' => $approvedPrograms,
+            'evaluationPrograms' => $evaluationPrograms,
             'completedPrograms' => $completedPrograms,
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
