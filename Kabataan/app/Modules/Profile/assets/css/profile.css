@@ -696,12 +696,16 @@ body.youth-profile {
     background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
 }
 
-.program-icon.ongoing {
-    background: linear-gradient(135deg, #2196F3 0%, #03A9F4 100%);
+.program-icon.approved {
+    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+}
+
+.program-icon.evaluation {
+    background: linear-gradient(135deg, #0288d1 0%, #03A9F4 100%);
 }
 
 .program-icon.completed {
-    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+    background: linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%);
 }
 
 .program-icon.declined,
@@ -763,14 +767,19 @@ body.youth-profile {
     color: #FF9800;
 }
 
-.status-badge.ongoing {
-    background: #e3f2fd;
-    color: #2196F3;
+.status-badge.approved {
+    background: #e8f5e9;
+    color: #4CAF50;
+}
+
+.status-badge.evaluation {
+    background: #e1f5fe;
+    color: #0288d1;
 }
 
 .status-badge.completed {
-    background: #e8f5e9;
-    color: #4CAF50;
+    background: #f3e5f5;
+    color: #7b1fa2;
 }
 
 .status-badge.declined,

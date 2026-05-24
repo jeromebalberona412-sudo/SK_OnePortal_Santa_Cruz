@@ -318,20 +318,32 @@
                                     </div>
                                 </div>
                                 <div class="stat-item">
-                                    <div class="stat-icon ongoing">
+                                    <div class="stat-icon approved">
                                         <svg viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                         </svg>
                                     </div>
                                     <div class="stat-info">
-                                        <p class="stat-label">Ongoing</p>
-                                        <p class="stat-value">{{ $ongoingPrograms ?? 0 }}</p>
+                                        <p class="stat-label">Approved</p>
+                                        <p class="stat-value">{{ $approvedPrograms ?? 0 }}</p>
+                                    </div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-icon evaluation">
+                                        <svg viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <div class="stat-info">
+                                        <p class="stat-label">Evaluation</p>
+                                        <p class="stat-value">{{ $evaluationPrograms ?? 0 }}</p>
                                     </div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-icon completed">
                                         <svg viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                         </svg>
                                     </div>
                                     <div class="stat-info">
@@ -377,17 +389,24 @@
                                     </svg>
                                     Pending
                                 </button>
-                                <button class="tab-btn" data-filter="ongoing">
-                                    <svg viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Ongoing
-                                </button>
-                                <button class="tab-btn" data-filter="completed">
+                                <button class="tab-btn" data-filter="approved">
                                     <svg viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                     </svg>
-                                    History
+                                    Approved
+                                </button>
+                                <button class="tab-btn" data-filter="evaluation">
+                                    <svg viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Evaluation
+                                </button>
+                                <button class="tab-btn" data-filter="completed">
+                                    <svg viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Completed
                                 </button>
                             </div>
 
@@ -416,13 +435,18 @@
                                                 <svg viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
                                                 </svg>
-                                            @elseif($program->status === 'ongoing')
+                                            @elseif($program->status === 'approved')
                                                 <svg viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            @elseif($program->status === 'evaluation')
+                                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                                 </svg>
                                             @elseif($program->status === 'completed')
                                                 <svg viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                                 </svg>
                                             @elseif($program->status === 'declined')
                                                 <svg viewBox="0 0 20 20" fill="currentColor">
@@ -972,14 +996,621 @@
         </div>
     </div>
 
+    <!-- Program Details Modal -->
+    <div id="programDetailsModal" class="program-modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-container" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="programModalTitle">Program Details</h2>
+                <button class="modal-close" onclick="closeProgramDetailsModal()">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 32px; overflow-y: auto; max-height: calc(90vh - 80px); min-height: 400px;">
+                <div class="modern-program-card" id="programDetailsContent">
+                    <!-- Content will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
     @keyframes modalSlideIn {
         from { opacity: 0; transform: scale(0.9) translateY(20px); }
         to   { opacity: 1; transform: scale(1) translateY(0); }
     }
+    
+    /* Program Modal Styles */
+    .program-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .program-modal .modal-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+    
+    .program-modal .modal-container {
+        position: relative;
+        background: white;
+        border-radius: 20px;
+        width: 90%;
+        max-height: 90vh;
+        overflow: hidden;
+        animation: modalSlideIn 0.3s ease;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modern-program-card {
+        background: white;
+    }
+    
+    .program-card-header {
+        padding: 24px;
+        border-radius: 12px 12px 0 0;
+        margin-bottom: 24px;
+    }
+    
+    .program-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .program-category-tag {
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 8px;
+        opacity: 0.9;
+    }
+    
+    .program-card-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+    }
+    
+    .program-status-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        white-space: nowrap;
+    }
+    
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: white;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .program-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .detail-card {
+        display: flex;
+        gap: 12px;
+        padding: 16px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .detail-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    
+    .detail-icon svg {
+        width: 20px;
+        height: 20px;
+        color: white;
+    }
+    
+    .detail-content {
+        flex: 1;
+    }
+    
+    .detail-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    
+    .detail-value {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .program-description-section {
+        margin-bottom: 24px;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border-left: 4px solid #0450a8;
+    }
+    
+    .section-heading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 12px;
+    }
+    
+    .section-heading svg {
+        width: 20px;
+        height: 20px;
+        color: #0450a8;
+    }
+    
+    .description-text {
+        font-size: 14px;
+        line-height: 1.6;
+        color: #475569;
+        margin: 0;
+    }
+    
+    .terms-section {
+        margin-bottom: 24px;
+    }
+    
+    .terms-toggle {
+        width: 100%;
+        padding: 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .terms-toggle:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+    
+    .terms-toggle.active {
+        border-color: #0450a8;
+        background: #eff6ff;
+    }
+    
+    .terms-toggle-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chevron-icon {
+        width: 20px;
+        height: 20px;
+        color: #64748b;
+        transition: transform 0.3s ease;
+    }
+    
+    .terms-toggle.active .chevron-icon {
+        transform: rotate(180deg);
+    }
+    
+    .terms-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .terms-list {
+        list-style: none;
+        padding: 16px 0 0 0;
+        margin: 0;
+    }
+    
+    .terms-list li {
+        padding: 8px 0 8px 28px;
+        position: relative;
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.6;
+    }
+    
+    .terms-list li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #22c55e;
+        font-weight: 700;
+    }
+    
+    .terms-agreement {
+        padding-top: 16px;
+        border-top: 1px solid #e2e8f0;
+        margin-top: 16px;
+    }
+    
+    .agreement-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .agreement-checkbox input[type="checkbox"] {
+        display: none;
+    }
+    
+    .checkbox-custom {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+    
+    .agreement-checkbox input[type="checkbox"]:checked + .checkbox-custom {
+        background: #0450a8;
+        border-color: #0450a8;
+    }
+    
+    .agreement-checkbox input[type="checkbox"]:checked + .checkbox-custom:after {
+        content: "✓";
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+    }
+    
+    .agreement-text {
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 500;
+    }
+    
+    .program-action {
+        text-align: center;
+    }
+    
+    .apply-now-button {
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #0450a8 0%, #022a54 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(4, 80, 168, 0.3);
+    }
+    
+    .apply-now-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(4, 80, 168, 0.4);
+    }
+    
+    .apply-now-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .apply-now-button svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .apply-note {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #64748b;
+    }
     </style>
 
     <script>
+    // Program details data
+    const programsData = {
+        1: {
+            name: 'SK Scholarship Program',
+            category: 'Education',
+            status: 'pending',
+            committee: 'Committee on Education and Training',
+            participants: '50 Students',
+            startDate: 'March 10, 2026',
+            endDate: 'December 15, 2026',
+            venue: 'Barangay Hall Conference Room',
+            description: 'Education Assistance Program for deserving youth. This scholarship program provides financial support for tuition fees, school supplies, and other educational expenses. Priority is given to honor students and those from low-income families.',
+            terms: [
+                'Must be a resident of Santa Cruz, Laguna aged 15-30',
+                'Must be currently enrolled or planning to enroll in college',
+                'Must maintain a general weighted average of 85% or higher',
+                'Must submit complete documentary requirements',
+                'Must attend orientation and scholarship briefing',
+                'Willing to render community service hours'
+            ]
+        },
+        2: {
+            name: 'Youth Leadership Training',
+            category: 'Leadership Development',
+            status: 'approved',
+            committee: 'Committee on Youth Development',
+            participants: '40 Youth Leaders',
+            startDate: 'February 15, 2026',
+            endDate: 'May 30, 2026',
+            venue: 'Municipal Youth Development Office',
+            description: 'Develop leadership skills for SK youth through comprehensive training modules covering public speaking, project management, team building, and community organizing. Participants will receive certification upon completion.',
+            terms: [
+                'Must be a resident of Santa Cruz, Laguna aged 15-30',
+                'Must attend all training sessions and workshops',
+                'Complete all assigned projects and assessments',
+                'Participate actively in group activities',
+                'Apply learned skills in community service projects',
+                'Maintain good standing throughout the program'
+            ]
+        },
+        3: {
+            name: 'Community Service Program',
+            category: 'Community Development',
+            status: 'evaluation',
+            committee: 'Committee on Community Affairs',
+            participants: '60 Volunteers',
+            startDate: 'January 20, 2026',
+            endDate: 'April 30, 2026',
+            venue: 'Various Community Sites',
+            description: 'Volunteer program for community improvement focusing on environmental cleanup, feeding programs, and assistance to vulnerable sectors. Participants will gain hands-on experience in community development work.',
+            terms: [
+                'Must be a resident of Santa Cruz, Laguna aged 15-30',
+                'Must commit to minimum 40 hours of volunteer work',
+                'Must attend orientation and safety briefing',
+                'Follow all safety protocols and guidelines',
+                'Maintain professional conduct during activities',
+                'Submit activity reports and documentation'
+            ]
+        },
+        4: {
+            name: 'Sports Development Program',
+            category: 'Sports & Recreation',
+            status: 'completed',
+            committee: 'Committee on Sports and Recreation',
+            participants: '80 Youth Athletes',
+            startDate: 'December 5, 2025',
+            endDate: 'March 15, 2026',
+            venue: 'Barangay Sports Complex',
+            description: 'Sports training and development for youth athletes featuring basketball, volleyball, and athletics. Professional coaches provide training and participants compete in inter-barangay tournaments.',
+            terms: [
+                'Must be a resident of Santa Cruz, Laguna aged 15-30',
+                'Must be physically fit and provide medical clearance',
+                'Must attend all training sessions',
+                'Maintain good sportsmanship and discipline',
+                'Commit to represent barangay in competitions',
+                'Follow all safety protocols'
+            ]
+        }
+    };
+
+    function viewProgramDetails(programId) {
+        const program = programsData[programId];
+        if (!program) {
+            alert('Program details not found!');
+            return;
+        }
+
+        // Update modal title
+        document.getElementById('programModalTitle').textContent = program.category + ' Program';
+
+        // Get status colors
+        const statusColors = {
+            pending: { bg: '#fff7ed', text: '#c2410c', label: 'Pending Review' },
+            approved: { bg: '#eff6ff', text: '#1d4ed8', label: 'Approved' },
+            evaluation: { bg: '#fef3c7', text: '#b45309', label: 'Under Evaluation' },
+            completed: { bg: '#f0fdf4', text: '#15803d', label: 'Completed' }
+        };
+
+        const categoryColors = {
+            'Education': '#3b82f6',
+            'Leadership Development': '#8b5cf6',
+            'Community Development': '#22c55e',
+            'Sports & Recreation': '#0ea5e9'
+        };
+
+        const statusColor = statusColors[program.status] || statusColors.pending;
+        const headerColor = categoryColors[program.category] || '#0450a8';
+
+        // Build terms list
+        let termsHtml = '';
+        program.terms.forEach(term => {
+            termsHtml += `<li>${term}</li>`;
+        });
+
+        // Build modal content
+        const content = `
+            <div class="program-card-header" style="background: linear-gradient(135deg, ${headerColor} 0%, ${headerColor}dd 100%);">
+                <div class="program-title-row">
+                    <div>
+                        <span class="program-category-tag">${getCategoryIcon(program.category)} ${program.category}</span>
+                        <h3 class="program-card-title">${program.name}</h3>
+                    </div>
+                    <span class="program-status-badge" style="background: ${statusColor.bg}; color: ${statusColor.text};">
+                        <span class="status-dot" style="background: ${statusColor.text};"></span>
+                        ${statusColor.label}
+                    </span>
+                </div>
+            </div>
+            <div class="program-details-grid">
+                <div class="detail-card">
+                    <div class="detail-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Committee Handled By</span>
+                        <span class="detail-value">${program.committee}</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Program Status</span>
+                        <span class="detail-value">${statusColor.label}</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Participant Quantity</span>
+                        <span class="detail-value">${program.participants}</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Starting Date</span>
+                        <span class="detail-value">${program.startDate}</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">End Date</span>
+                        <span class="detail-value">${program.endDate}</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Venue</span>
+                        <span class="detail-value">${program.venue}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="program-description-section">
+                <h4 class="section-heading">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                    Description
+                </h4>
+                <p class="description-text">${program.description}</p>
+            </div>
+            <div class="terms-section">
+                <button class="terms-toggle" onclick="toggleProgramTerms(event)" id="termsToggleProgram" type="button">
+                    <div class="terms-toggle-header">
+                        <h4 class="section-heading" style="margin: 0;">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                            Terms & Conditions
+                        </h4>
+                        <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </div>
+                </button>
+                <div class="terms-content" id="termsContentProgram">
+                    <ul class="terms-list">
+                        ${termsHtml}
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('programDetailsContent').innerHTML = content;
+        document.getElementById('programDetailsModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function getCategoryIcon(category) {
+        const icons = {
+            'Education': '📚',
+            'Leadership Development': '👥',
+            'Community Development': '🏘️',
+            'Sports & Recreation': '⚽'
+        };
+        return icons[category] || '📋';
+    }
+
+    function closeProgramDetailsModal() {
+        document.getElementById('programDetailsModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    function toggleProgramTerms(event) {
+        event.stopPropagation();
+        const content = document.getElementById('termsContentProgram');
+        const toggle = document.getElementById('termsToggleProgram');
+        const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
+        
+        if (isExpanded) {
+            content.style.maxHeight = '0';
+            toggle.classList.remove('active');
+        } else {
+            content.style.maxHeight = content.scrollHeight + 'px';
+            toggle.classList.add('active');
+        }
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-overlay')) {
+            closeProgramDetailsModal();
+        }
+    });
+
+    // Close modal on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeProgramDetailsModal();
+        }
+    });
+
     window.addEventListener('unload', function () {});
     </script>
 </body>
