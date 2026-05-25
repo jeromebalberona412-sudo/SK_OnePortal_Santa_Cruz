@@ -47,7 +47,7 @@
                         <th>Type</th>
                         <th>Paper</th>
                         <th>Date</th>
-                        <th>Time</th>
+                        <th>Time Created</th>
                         <th class="col-actions">Actions</th>
                     </tr>
                 </thead>

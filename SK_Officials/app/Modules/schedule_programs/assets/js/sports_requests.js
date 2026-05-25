@@ -159,6 +159,8 @@ const SAMPLE_SPORTS_DATA = [
 ];
 
 function initSportsRequests() {
+    const pageMode = document.body.getAttribute('data-sports-page') || 'requests';
+
     // Seed sample data if localStorage is empty
     if (!localStorage.getItem('sports_applications_seeded_v2')) {
         localStorage.setItem('sports_applications', JSON.stringify(SAMPLE_SPORTS_DATA));
@@ -198,9 +200,11 @@ function initSportsRequests() {
     let filterSportValue = '';
     let filterDivisionValue = '';
 
-    // ── Initialize ──────────────────────────────────────────────────────────
-    renderTable();
-    updateStats();
+    // ── Initialize (applications page only) ─────────────────────────────────
+    if (pageMode === 'requests' && tbody) {
+        renderTable();
+        updateStats();
+    }
 
     // ── Event Listeners ─────────────────────────────────────────────────────
     if (searchInput) {
@@ -434,8 +438,11 @@ function initSportsRequests() {
     let spfbEditingId = null; // ID of question currently being edited inline
 
     function closeCreateProgramModal() {
-        createProgramModal.style.display = 'none';
+        if (createProgramModal) createProgramModal.style.display = 'none';
         resetProgramForm();
+        if (pageMode === 'create-program') {
+            window.location.href = '/sports-requests';
+        }
     }
 
     function resetProgramForm() {
@@ -457,6 +464,8 @@ function initSportsRequests() {
         if (programNameSelect) programNameSelect.value = '';
         const programNameOther = document.getElementById('programNameOther');
         if (programNameOther) { programNameOther.value = ''; programNameOther.style.display = 'none'; }
+        const committeeHeadEl = document.getElementById('committeeHead');
+        if (committeeHeadEl) committeeHeadEl.value = committeeHeadEl.defaultValue || 'SK Jerome Balberona';
         // Reset announcement
         const announcementEl = document.getElementById('spfbAnnouncement');
         if (announcementEl) announcementEl.value = '';
@@ -576,6 +585,7 @@ function initSportsRequests() {
         }
         const announcementEl = document.getElementById('spfbAnnouncement');
         const announcement = announcementEl ? announcementEl.value.trim() : '';
+        const committeeHead = (document.getElementById('committeeHead')?.value || '').trim();
 
         // Date values (YYYY-MM-DD from native date input)
         const startDateRaw = (document.getElementById('startDate')?.value || '').trim();
@@ -587,6 +597,7 @@ function initSportsRequests() {
 
         // ── Required field check ──
         if (!programName) { showToast('Please select a Program Name.', 'error'); return; }
+        if (!committeeHead) { showToast('Please enter the Program / Committee Head (SK).', 'error'); return; }
         if (!announcement) { showToast('Please enter an Announcement.', 'error'); return; }
         if (!startDateRaw) { showToast('Please select a Start Date.', 'error'); return; }
         if (!endDateRaw)   { showToast('Please select an End Date.', 'error'); return; }
@@ -619,26 +630,69 @@ function initSportsRequests() {
             return `${mo}/${d}/${y}`;
         };
 
-        // Build program object
-        const program = {
-            id: Date.now(),
-            programName,
-            announcement,
-            startDate: fmtDate(startDateRaw),
-            endDate:   fmtDate(endDateRaw),
-            startTime: startTimeStr,
-            endTime:   endTimeStr,
-            questions: JSON.parse(JSON.stringify(spfbQuestions)),
-            createdAt: new Date().toISOString()
+        const qCount = spfbQuestions.length;
+
+        const finishCreate = () => {
+            const program = {
+                id: Date.now(),
+                programName,
+                committeeHead,
+                announcement,
+                startDate: fmtDate(startDateRaw),
+                endDate:   fmtDate(endDateRaw),
+                startTime: startTimeStr,
+                endTime:   endTimeStr,
+                questions: JSON.parse(JSON.stringify(spfbQuestions)),
+                createdAt: new Date().toISOString()
+            };
+
+            const programs = JSON.parse(localStorage.getItem('sports_programs') || '[]');
+            programs.push(program);
+            localStorage.setItem('sports_programs', JSON.stringify(programs));
+
+            if (typeof window.hideLoading === 'function') window.hideLoading();
+
+            if (pageMode === 'create-program') {
+                showProgramSuccessModal(programName, qCount);
+                return;
+            }
+            showToast(`Sports program created with ${qCount} question${qCount !== 1 ? 's' : ''}!`, 'success');
+            closeCreateProgramModal();
         };
 
-        const programs = JSON.parse(localStorage.getItem('sports_programs') || '[]');
-        programs.push(program);
-        localStorage.setItem('sports_programs', JSON.stringify(programs));
+        if (typeof window.showLoading === 'function') {
+            window.showLoading('Creating sports program');
+        }
+        setTimeout(finishCreate, 500);
+    }
 
-        const qCount = spfbQuestions.length;
-        showToast(`Sports program created with ${qCount} question${qCount !== 1 ? 's' : ''}!`, 'success');
-        closeCreateProgramModal();
+    function showProgramSuccessModal(programName, qCount) {
+        const modal = document.getElementById('sportsProgramSuccessModal');
+        const msgEl = document.getElementById('sportsProgramSuccessMessage');
+        const okBtn = document.getElementById('sportsProgramSuccessOk');
+        if (!modal) {
+            window.location.href = '/sports-application-history';
+            return;
+        }
+        if (msgEl) {
+            msgEl.textContent = `"${programName}" was created successfully with ${qCount} question${qCount !== 1 ? 's' : ''}.`;
+        }
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        const goHistory = () => {
+            if (typeof window.showLoading === 'function') window.showLoading('Loading');
+            window.location.href = '/sports-application-history';
+        };
+
+        if (okBtn && !okBtn.dataset.wired) {
+            okBtn.dataset.wired = '1';
+            okBtn.addEventListener('click', goHistory);
+        }
+        if (!modal.dataset.wired) {
+            modal.dataset.wired = '1';
+            modal.addEventListener('click', (e) => { if (e.target === modal) goHistory(); });
+        }
     }
 
     // ── Question Builder ─────────────────────────────────────────────────
@@ -1062,31 +1116,39 @@ function initSportsRequests() {
     })();
 
     // Initialize date/time formatters when modal opens
-    if (btnCreateProgram) {
+    function wireCreateProgramForm() {
+        initDateInputs();
+        initTimeInputs();
+
+        const programNameSelect = document.getElementById('programName');
+        const programNameOther = document.getElementById('programNameOther');
+        if (programNameSelect && programNameOther && !programNameSelect.dataset.wired) {
+            programNameSelect.dataset.wired = '1';
+            programNameSelect.addEventListener('change', function () {
+                programNameOther.style.display = this.value === 'Other' ? 'block' : 'none';
+                if (this.value !== 'Other') programNameOther.value = '';
+            });
+        }
+
+        const announcementEl = document.getElementById('spfbAnnouncement');
+        const countEl = document.getElementById('spfbAnnouncementCount');
+        if (announcementEl && countEl && !announcementEl.dataset.wired) {
+            announcementEl.dataset.wired = '1';
+            announcementEl.addEventListener('input', function () {
+                countEl.textContent = String(this.value.length);
+            });
+        }
+    }
+
+    if (btnCreateProgram && createProgramModal) {
         btnCreateProgram.addEventListener('click', () => {
             createProgramModal.style.display = 'flex';
-            initDateInputs();
-            initTimeInputs();
-
-            // Wire up programName "Other" toggle
-            const programNameSelect = document.getElementById('programName');
-            const programNameOther = document.getElementById('programNameOther');
-            if (programNameSelect && programNameOther) {
-                programNameSelect.addEventListener('change', function () {
-                    programNameOther.style.display = this.value === 'Other' ? 'block' : 'none';
-                    if (this.value !== 'Other') programNameOther.value = '';
-                });
-            }
-
-            // Wire up announcement character counter
-            const announcementEl = document.getElementById('spfbAnnouncement');
-            const countEl = document.getElementById('spfbAnnouncementCount');
-            if (announcementEl && countEl) {
-                announcementEl.addEventListener('input', function () {
-                    countEl.textContent = this.value.length;
-                });
-            }
+            wireCreateProgramForm();
         });
+    }
+
+    if (pageMode === 'create-program') {
+        wireCreateProgramForm();
     }
 
     // ── Created Sports Programs Modal ─────────────────────────────────────
@@ -1097,7 +1159,11 @@ function initSportsRequests() {
     const createdProgramsMaximize = document.getElementById('createdProgramsMaximize');
     const createdProgramsTableBody = document.getElementById('createdProgramsTableBody');
 
-    if (btnViewCreatedPrograms) {
+    if (pageMode === 'history' && createdProgramsTableBody) {
+        renderCreatedProgramsTable();
+    }
+
+    if (btnViewCreatedPrograms && createdProgramsModal) {
         btnViewCreatedPrograms.addEventListener('click', () => {
             renderCreatedProgramsTable();
             createdProgramsModal.style.display = 'flex';
@@ -1138,7 +1204,7 @@ function initSportsRequests() {
         if (!createdProgramsTableBody) return;
 
         if (programs.length === 0) {
-            createdProgramsTableBody.innerHTML = `<tr class="sports-empty-row"><td colspan="9" style="text-align:center;padding:32px;color:#6b7280;font-size:13px;">No sports programs created yet.</td></tr>`;
+            createdProgramsTableBody.innerHTML = `<tr class="sports-empty-row"><td colspan="10" style="text-align:center;padding:32px;color:#6b7280;font-size:13px;">No sports programs created yet. <a href="/sports-create-program" style="color:#2563eb;font-weight:600;">Create Sports Program</a></td></tr>`;
             return;
         }
 
@@ -1155,6 +1221,7 @@ function initSportsRequests() {
             return `
             <tr>
                 <td style="font-weight:600;text-align:center;padding-left:12px;">${p.programName || '—'}</td>
+                <td style="text-align:center;">${p.committeeHead || '—'}</td>
                 <td style="text-align:center;">${p.startDate || '—'}</td>
                 <td style="text-align:center;">${p.endDate || '—'}</td>
                 <td style="text-align:center;">${p.startTime || '—'}</td>
@@ -1261,6 +1328,10 @@ function initSportsRequests() {
                     <label>Program Name</label>
                     <span>${p.programName || '—'}</span>
                 </div>
+                <div class="sports-info-item sports-info-full">
+                    <label>Program / Committee Head (SK)</label>
+                    <span>${p.committeeHead || '—'}</span>
+                </div>
                 <div class="sports-info-item">
                     <label>Date Created</label>
                     <span>${p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
@@ -1283,6 +1354,12 @@ function initSportsRequests() {
                 </div>
             </div>
         </div>
+
+        ${p.committeeHead ? `
+        <div class="spfb-gc-head-banner" style="margin-bottom:14px;">
+            <span class="spfb-gc-head-label">Program / Committee Head</span>
+            <span class="spfb-gc-head-name">${p.committeeHead}</span>
+        </div>` : ''}
 
         ${p.announcement ? `
         <div class="sports-info-section">

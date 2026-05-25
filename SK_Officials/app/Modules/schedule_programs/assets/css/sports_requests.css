@@ -1046,3 +1046,87 @@ input[type="date"].sports-input {
     padding: 10px 20px;
     font-size: 13px;
 }
+
+/* Full-page create program (not modal) */
+.sports-page-form-card {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px 22px 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sports-page-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Google Forms–style committee head on applicant preview */
+.spfb-gc-head-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    border: 1.5px solid #c7d2fe;
+    border-radius: 10px;
+}
+
+.spfb-gc-head-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #4f46e5;
+}
+
+.spfb-gc-head-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.sports-success-modal-box {
+    max-width: 440px;
+    width: calc(100% - 32px);
+}
+
+.sports-history-table {
+    min-width: 1180px;
+}
+
+.sports-history-table thead th {
+    white-space: nowrap;
+    text-align: center;
+    padding: 12px 10px;
+}
+
+.sports-history-table tbody td {
+    text-align: center;
+    padding: 10px 10px;
+    vertical-align: middle;
+}
+
+.sports-history-table th:nth-child(1),
+.sports-history-table td:nth-child(1) {
+    min-width: 120px;
+    text-align: left;
+}
+
+.sports-history-table th:nth-child(9),
+.sports-history-table td:nth-child(9) {
+    min-width: 100px;
+    white-space: nowrap;
+}
+
+.sports-history-table th.col-actions,
+.sports-history-table td.col-actions {
+    min-width: 96px;
+    width: 96px;
+    white-space: nowrap;
+}

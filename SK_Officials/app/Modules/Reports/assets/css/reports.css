@@ -41,33 +41,6 @@ body.reports-body {
     }
 }
 
-/* Header icons alignment on Reports page */
-.reports-body .header-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.reports-body .ai-assistant-menu,
-.reports-body .notif-menu,
-.reports-body .user-menu {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.reports-body .notification-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.reports-body .notification-badge {
-    top: 2px;
-    right: 2px;
-}
-
 .reports-page {
     width: 100%;
     max-width: 100%;
@@ -288,10 +261,38 @@ body.reports-body {
     text-align: center;
 }
 
+.reports-table th:nth-child(1),
+.reports-table td:nth-child(1) {
+    min-width: 160px;
+    max-width: 280px;
+}
+
+.reports-table th:nth-child(2),
+.reports-table td:nth-child(2) {
+    min-width: 120px;
+}
+
+.reports-table th:nth-child(3),
+.reports-table td:nth-child(3) {
+    min-width: 72px;
+}
+
+.reports-table th:nth-child(4),
+.reports-table td:nth-child(4) {
+    min-width: 110px;
+}
+
+.reports-table th:nth-child(5),
+.reports-table td:nth-child(5) {
+    min-width: 100px;
+    white-space: nowrap;
+}
+
 .col-actions {
     white-space: nowrap;
-    width: 1%;
-    padding: 8px 10px !important;
+    min-width: 200px;
+    width: 200px;
+    padding: 8px 12px !important;
 }
 
 .prog-tbl-actions {
@@ -611,14 +612,6 @@ body.reports-modal-open {
         min-width: 640px;
     }
 
-    .reports-body .header-right {
-        gap: 4px;
-    }
-
-    .reports-body .notification-btn svg {
-        width: 20px;
-        height: 20px;
-    }
 }
 
 @media (max-width: 480px) {

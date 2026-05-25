@@ -24,6 +24,7 @@ const deletedKabataanRecords = [
         deletedDate: 'Apr 20, 2026',
         deletedTime: '09:45 AM',
         _deletedTs: new Date('2026-04-20T09:45:00'),
+        skTerm: '2025-2027',
     },
     {
         id: 'dk-002',
@@ -44,10 +45,37 @@ const deletedKabataanRecords = [
         deletedDate: 'Apr 12, 2026',
         deletedTime: '02:30 PM',
         _deletedTs: new Date('2026-04-12T14:30:00'),
+        skTerm: '2025-2027',
+    },
+    {
+        id: 'dk-003',
+        respondentNumber: '007',
+        firstName: 'Marco',
+        middleName: 'Luis',
+        lastName: 'Fernandez',
+        suffix: '',
+        sex: 'Male',
+        age: 21,
+        barangay: 'POBLACION II',
+        purokZone: 'Zone 1',
+        educationalBackground: 'College Graduate',
+        youthClassification: 'Working Youth',
+        workStatus: 'Employed',
+        civilStatus: 'Single',
+        contactNumber: '09171230001',
+        deletedDate: 'Oct 15, 2024',
+        deletedTime: '11:20 AM',
+        _deletedTs: new Date('2024-10-15T11:20:00'),
+        skTerm: '2022-2025',
     },
 ];
 
-let dkFiltered = [...deletedKabataanRecords];
+deletedKabataanRecords.forEach(r => {
+    if (!r.skTerm) r.skTerm = window.SkArchive ? SkArchive.inferTermFromDate(r._deletedTs) : '2025-2027';
+});
+
+let dkArchiveTerm = '2025-2027';
+let dkFiltered = [];
 let dkCurrentPage = 1;
 const dkPerPage = 10;
 let dkPendingRestoreId = null;
@@ -81,7 +109,24 @@ function dkApplyFilter(records, filter) {
     return records;
 }
 
+function dkApplyAllFilters() {
+    const byDate = dkApplyFilter(deletedKabataanRecords, dkActiveFilter);
+    return window.SkArchive
+        ? SkArchive.filterByArchiveTerm(byDate, dkArchiveTerm, ['_deletedTs'])
+        : byDate;
+}
+
 function initDeletedKabataan() {
+    if (window.SkArchive) {
+        SkArchive.mountShowArchiveFilter((termId) => {
+            dkArchiveTerm = termId;
+            dkFiltered = dkApplyAllFilters();
+            dkCurrentPage = 1;
+            renderTable();
+        });
+    } else {
+        dkFiltered = dkApplyAllFilters();
+    }
     renderStats();
     renderTable();
     bindSearch();
@@ -138,7 +183,7 @@ function bindFilterTabs() {
             const labels = { all: 'All Deleted Records', today: 'Deleted Today', week: 'Deleted This Week', month: 'Deleted This Month' };
             const label = document.getElementById('dkSectionLabel');
             if (label) label.textContent = labels[dkActiveFilter] || 'Deleted Records';
-            dkFiltered = dkApplyFilter(deletedKabataanRecords, dkActiveFilter);
+            dkFiltered = dkApplyAllFilters();
             dkCurrentPage = 1;
             renderTable();
         });
@@ -176,7 +221,9 @@ function renderTable() {
             <td>
                 <div class="action-btns">
                     <button class="btn-view-action" data-id="${r.id}">View</button>
-                    <button class="btn-restore-action" data-id="${r.id}">Restore</button>
+                    ${(window.SkArchive && SkArchive.canRestoreRecord(r, ['_deletedTs']))
+                        ? `<button class="btn-restore-action" data-id="${r.id}">Restore</button>`
+                        : `<button type="button" class="btn-restore-action is-disabled" disabled title="Past term — view only">Restore</button>`}
                 </div>
             </td>
         </tr>`;
@@ -218,7 +265,7 @@ function bindSearch() {
     if (!input) return;
     input.addEventListener('input', function () {
         const q = this.value.toLowerCase();
-        const base = dkApplyFilter(deletedKabataanRecords, dkActiveFilter);
+        const base = dkApplyAllFilters();
         dkFiltered = base.filter(r =>
             `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
             (r.barangay || '').toLowerCase().includes(q)
@@ -302,6 +349,10 @@ function bindViewModal() {
 function openRestoreModal(id) {
     const record = deletedKabataanRecords.find(r => r.id === id);
     if (!record) return;
+    if (window.SkArchive && !SkArchive.canRestoreRecord(record, ['_deletedTs'])) {
+        alert('This record is from a past SK term and cannot be restored. View-only archive.');
+        return;
+    }
     dkPendingRestoreId = id;
     const nameEl = document.getElementById('dkRestoreName');
     if (nameEl) nameEl.textContent = `${record.lastName}, ${record.firstName}${record.middleName ? ' ' + record.middleName : ''}`;

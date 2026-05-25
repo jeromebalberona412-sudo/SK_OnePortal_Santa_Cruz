@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveBtn = document.getElementById('safFormSaveBtn');
     const editIdInput = document.getElementById('safEditFormId');
     const titleInput = document.getElementById('safFormTitleInput');
+    const committeeHeadInput = document.getElementById('safCommitteeHead');
     const announcementEl = document.getElementById('spfbAnnouncement');
     const countEl = document.getElementById('spfbAnnouncementCount');
     const modalTitleText = document.getElementById('safModalTitleText');
@@ -99,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editingId = '';
         if (editIdInput) editIdInput.value = '';
         if (titleInput) titleInput.value = '';
+        if (committeeHeadInput) committeeHeadInput.value = committeeHeadInput.defaultValue || 'SK Jerome Balberona';
         if (announcementEl) announcementEl.value = '';
         if (countEl) countEl.textContent = '0';
         ['safStartDate', 'safEndDate'].forEach(id => {
@@ -120,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 editingId = form.id;
                 if (editIdInput) editIdInput.value = form.id;
                 if (titleInput) titleInput.value = form.title || '';
+                if (committeeHeadInput) committeeHeadInput.value = form.committeeHead || committeeHeadInput.defaultValue || '';
                 if (announcementEl) announcementEl.value = form.announcement || '';
                 if (countEl) countEl.textContent = String((form.announcement || '').length);
                 if (document.getElementById('safStartDate')) document.getElementById('safStartDate').value = form.startDateRaw || '';
@@ -203,7 +206,12 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
         }).join('');
 
+        const headBanner = f.committeeHead
+            ? `<div class="spfb-gc-head-banner"><span class="spfb-gc-head-label">Program / Committee Head</span><span class="spfb-gc-head-name">${escapeHtml(f.committeeHead)}</span></div>`
+            : '';
+
         previewBody.innerHTML = `
+            ${headBanner}
             <h2 style="font-size:18px;font-weight:800;margin:0 0 8px;">${escapeHtml(f.title)}</h2>
             <p style="font-size:13px;color:#4b5563;line-height:1.6;white-space:pre-wrap;margin-bottom:14px;">${escapeHtml(f.announcement)}</p>
             <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;">Questions</h3>
@@ -213,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleSave() {
         const title = titleInput?.value?.trim();
+        const committeeHead = committeeHeadInput?.value?.trim() || '';
         const announcement = announcementEl?.value?.trim() || '';
         const startDateRaw = document.getElementById('safStartDate')?.value?.trim() || '';
         const endDateRaw = document.getElementById('safEndDate')?.value?.trim() || '';
@@ -221,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const questions = builder.getQuestions();
 
         if (!title) { showToast('Please enter a form title.', 'error'); return; }
+        if (!committeeHead) { showToast('Please enter the Program / Committee Head (SK).', 'error'); return; }
         if (!announcement) { showToast('Please enter an announcement.', 'error'); return; }
         if (!startDateRaw || !endDateRaw) { showToast('Please select start and end dates.', 'error'); return; }
         if (!startTime || !endTime) { showToast('Please complete start and end times.', 'error'); return; }
@@ -230,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = {
             id: editingId || uid(),
             title,
+            committeeHead,
             announcement,
             startDateRaw,
             endDateRaw,

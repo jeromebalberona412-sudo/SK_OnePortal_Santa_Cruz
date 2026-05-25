@@ -192,4 +192,12 @@ Route::middleware([
     Route::get('/sports-requests', function () {
         return view('schedule_programs::sports_requests');
     })->name('sports-requests');
+
+    Route::get('/sports-application-history', function () {
+        return view('schedule_programs::sports_application_history');
+    })->name('sports.application-history');
+
+    Route::get('/sports-create-program', function () {
+        return view('schedule_programs::sports_create_program');
+    })->name('sports.create-program');
 });

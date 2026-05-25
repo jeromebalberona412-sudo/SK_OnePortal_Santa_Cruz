@@ -11,6 +11,7 @@
         'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
 </head>
 <body>
 
@@ -40,12 +41,14 @@
             <span class="restore-banner-text" id="dkRestoreBannerText"></span>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="filter-tabs-row">
-            <button class="filter-tab active" data-filter="all">All Deleted</button>
-            <button class="filter-tab" data-filter="today">Deleted Today</button>
-            <button class="filter-tab" data-filter="week">This Week</button>
-            <button class="filter-tab" data-filter="month">This Month</button>
+        <div class="filter-tabs-row filter-tabs-row--with-archive">
+            <div class="filter-tabs-group">
+                <button class="filter-tab active" data-filter="all">All Deleted</button>
+                <button class="filter-tab" data-filter="today">Deleted Today</button>
+                <button class="filter-tab" data-filter="week">This Week</button>
+                <button class="filter-tab" data-filter="month">This Month</button>
+            </div>
+            @include('layout::partials.archive-show-filter')
         </div>
 
         <section class="page-content-section">
@@ -126,5 +129,6 @@
     'app/Modules/Deleted_Kabataan/assets/js/deleted-kabataan.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script src="{{ url('/shared/js/sk-archive-terms.js') }}"></script>
 </body>
 </html>

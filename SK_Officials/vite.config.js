@@ -62,6 +62,7 @@ export default defineConfig({
                 // Deleted Kabataan module assets
                 'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css',
                 'app/Modules/Deleted_Kabataan/assets/js/deleted-kabataan.js',
+                'app/Modules/Deleted_Abyip/assets/js/deleted-abyip.js',
                 // Rejected KK Profiling module assets
                 'app/Modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css',
                 'app/Modules/Rejected_KKProfiling/assets/js/rejected-kkprofiling.js',

@@ -27,6 +27,8 @@
                            placeholder="e.g., SK Educational Assistance Application 2026">
                 </div>
 
+                @include('schedule_programs::partials.committee-head-field', ['inputId' => 'safCommitteeHead'])
+
                 <div class="sports-field-row" style="margin-bottom:14px;">
                     <div class="sports-field">
                         <label for="safStartDate">Start Date <span class="sports-req">*</span></label>

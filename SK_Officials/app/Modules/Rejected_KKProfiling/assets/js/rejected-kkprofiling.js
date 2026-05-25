@@ -24,6 +24,7 @@ const rejectedKKRecords = [
         rejectedDate: 'Apr 20, 2026',
         rejectedTime: '10:20 AM',
         _rejectedTs: new Date('2026-04-20T10:20:00'),
+        skTerm: '2025-2027',
     },
     {
         id: 'rkk-002',
@@ -44,6 +45,7 @@ const rejectedKKRecords = [
         rejectedDate: 'Apr 08, 2026',
         rejectedTime: '01:55 PM',
         _rejectedTs: new Date('2026-04-08T13:55:00'),
+        skTerm: '2025-2027',
     },
     {
         id: 'rkk-003',
@@ -64,10 +66,37 @@ const rejectedKKRecords = [
         rejectedDate: 'Apr 14, 2026',
         rejectedTime: '04:10 PM',
         _rejectedTs: new Date('2026-04-14T16:10:00'),
+        skTerm: '2025-2027',
+    },
+    {
+        id: 'rkk-004',
+        respondentNumber: '008',
+        firstName: 'Elena',
+        middleName: 'G.',
+        lastName: 'Castro',
+        suffix: '',
+        sex: 'Female',
+        age: 20,
+        purokZone: 'Zone 1',
+        barangay: 'POBLACION II',
+        youthClassification: 'In School Youth',
+        workStatus: 'Student',
+        educationalBackground: 'College Level',
+        registeredSKVoter: 'Yes',
+        rejectionReason: 'Incomplete supporting documents',
+        rejectedDate: 'Nov 02, 2024',
+        rejectedTime: '03:15 PM',
+        _rejectedTs: new Date('2024-11-02T15:15:00'),
+        skTerm: '2022-2025',
     },
 ];
 
-let rkkFiltered = [...rejectedKKRecords];
+rejectedKKRecords.forEach(r => {
+    if (!r.skTerm) r.skTerm = window.SkArchive ? SkArchive.inferTermFromDate(r._rejectedTs) : '2025-2027';
+});
+
+let rkkArchiveTerm = '2025-2027';
+let rkkFiltered = [];
 let rkkCurrentPage = 1;
 const rkkPerPage = 10;
 let rkkPendingRestoreId = null;
@@ -100,7 +129,24 @@ function rkkApplyFilter(records, filter) {
     return records;
 }
 
+function rkkApplyAllFilters() {
+    const byDate = rkkApplyFilter(rejectedKKRecords, rkkActiveFilter);
+    return window.SkArchive
+        ? SkArchive.filterByArchiveTerm(byDate, rkkArchiveTerm, ['_rejectedTs'])
+        : byDate;
+}
+
 function initRejectedKK() {
+    if (window.SkArchive) {
+        SkArchive.mountShowArchiveFilter((termId) => {
+            rkkArchiveTerm = termId;
+            rkkFiltered = rkkApplyAllFilters();
+            rkkCurrentPage = 1;
+            renderTable();
+        });
+    } else {
+        rkkFiltered = rkkApplyAllFilters();
+    }
     renderStats();
     renderTable();
     bindSearch();
@@ -155,7 +201,7 @@ function bindFilterTabs() {
             const labels = { all: 'All Rejected Records', today: 'Rejected Today', week: 'Rejected This Week', month: 'Rejected This Month' };
             const label = document.getElementById('rkkSectionLabel');
             if (label) label.textContent = labels[rkkActiveFilter] || 'Rejected Records';
-            rkkFiltered = rkkApplyFilter(rejectedKKRecords, rkkActiveFilter);
+            rkkFiltered = rkkApplyAllFilters();
             rkkCurrentPage = 1;
             renderTable();
         });
@@ -180,6 +226,10 @@ function renderTable() {
 
     tbody.innerHTML = page.map(r => {
         const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const canRestore = window.SkArchive ? SkArchive.canRestoreRecord(r, ['_rejectedTs']) : true;
+        const restoreBtn = canRestore
+            ? `<button class="btn-restore-action" data-id="${r.id}">Restore</button>`
+            : `<button type="button" class="btn-restore-action is-disabled" disabled title="Past term — view only">Restore</button>`;
         return `
         <tr>
             <td style="font-weight:600;color:#111827;">${fullName}</td>
@@ -193,7 +243,7 @@ function renderTable() {
             <td>
                 <div class="action-btns">
                     <button class="btn-view-action" data-id="${r.id}">View</button>
-                    <button class="btn-restore-action" data-id="${r.id}">Restore</button>
+                    ${restoreBtn}
                 </div>
             </td>
         </tr>`;
@@ -234,7 +284,7 @@ function bindSearch() {
     if (!input) return;
     input.addEventListener('input', function () {
         const q = this.value.toLowerCase();
-        const base = rkkApplyFilter(rejectedKKRecords, rkkActiveFilter);
+        const base = rkkApplyAllFilters();
         rkkFiltered = base.filter(r =>
             `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
             (r.purokZone || '').toLowerCase().includes(q) ||
@@ -323,6 +373,10 @@ function bindViewModal() {
 function openRestoreModal(id) {
     const record = rejectedKKRecords.find(r => r.id === id);
     if (!record) return;
+    if (window.SkArchive && !SkArchive.canRestoreRecord(record, ['_rejectedTs'])) {
+        alert('This record is from a past SK term and cannot be restored. View-only archive.');
+        return;
+    }
     rkkPendingRestoreId = id;
     const nameEl = document.getElementById('rkkRestoreName');
     if (nameEl) nameEl.textContent = `${record.lastName}, ${record.firstName}${record.middleName ? ' ' + record.middleName : ''}`;
@@ -351,7 +405,7 @@ function bindRestoreModal() {
             const name = record ? `${record.lastName}, ${record.firstName}` : 'Record';
             const idx = rejectedKKRecords.findIndex(r => r.id === rkkPendingRestoreId);
             if (idx !== -1) rejectedKKRecords.splice(idx, 1);
-            rkkFiltered = rkkApplyFilter(rejectedKKRecords, rkkActiveFilter);
+            rkkFiltered = rkkApplyAllFilters();
             closeRestoreModal();
             rkkCurrentPage = 1;
             renderStats();

@@ -12,6 +12,7 @@ let rsCurrentPage = 1;
 const rsPerPage   = 10;
 let rsPendingRestoreId = null;
 let rsActiveFilter     = 'all';
+let rsArchiveTerm      = '2025-2027';
 
 // ── Simulated "now" — uses real Date so filter tabs work live ─────────────────
 function rsNow() { return new Date(); }
@@ -51,10 +52,26 @@ function rsApplyTabFilter(records, filter) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+function rsApplyAllFilters() {
+    const byTab = rsApplyTabFilter(rsAllRecords, rsActiveFilter);
+    return window.SkArchive
+        ? SkArchive.filterByArchiveTerm(byTab, rsArchiveTerm, ['submitted_at', 'rejected_at'])
+        : byTab;
+}
+
 function initRejectedScholarship() {
-    loadRecords();
-    renderStats();
-    renderTable();
+    if (window.SkArchive) {
+        SkArchive.mountShowArchiveFilter((termId) => {
+            rsArchiveTerm = termId;
+            loadRecords();
+            renderStats();
+            renderTable();
+        });
+    } else {
+        loadRecords();
+        renderStats();
+        renderTable();
+    }
     bindSearch();
     bindFilterTabs();
     bindRestoreModal();
@@ -64,8 +81,13 @@ function initRejectedScholarship() {
 // ── Load from localStorage ────────────────────────────────────────────────────
 function loadRecords() {
     const all = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
-    rsAllRecords = all.filter(r => r.status === 'Rejected');
-    rsFiltered   = rsApplyTabFilter(rsAllRecords, rsActiveFilter);
+    rsAllRecords = all.filter(r => r.status === 'Rejected').map(r => ({
+        ...r,
+        skTerm: r.skTerm || (window.SkArchive
+            ? SkArchive.inferTermFromDate(rsParseDate(r.submitted_at || r.rejected_at))
+            : '2025-2027'),
+    }));
+    rsFiltered = rsApplyAllFilters();
 }
 
 function saveRecords(records) {
@@ -134,7 +156,7 @@ function bindFilterTabs() {
             const label = document.getElementById('rsSectionLabel');
             if (label) label.textContent = labels[rsActiveFilter] || 'Rejected Records';
 
-            rsFiltered    = rsApplyTabFilter(rsAllRecords, rsActiveFilter);
+            rsFiltered = rsApplyAllFilters();
             rsCurrentPage = 1;
             renderTable();
         });
@@ -169,8 +191,10 @@ function renderTable() {
             <td><span class="rs-date-badge">${r.submitted_at || '—'}</span></td>
             <td>
                 <div class="action-btns">
-                    <button class="btn-view-action"    data-action="view"    data-id="${r.id}">View</button>
-                    <button class="btn-restore-action" data-action="restore" data-id="${r.id}">Restore</button>
+                    <button class="btn-view-action" data-action="view" data-id="${r.id}">View</button>
+                    ${(window.SkArchive && SkArchive.canRestoreRecord(r, ['submitted_at', 'rejected_at']))
+                        ? `<button class="btn-restore-action" data-action="restore" data-id="${r.id}">Restore</button>`
+                        : `<button type="button" class="btn-restore-action is-disabled" disabled title="Past term — view only">Restore</button>`}
                 </div>
             </td>
         </tr>`;
@@ -213,7 +237,7 @@ function bindSearch() {
     if (!input) return;
     input.addEventListener('input', function () {
         const q = this.value.toLowerCase();
-        const base = rsApplyTabFilter(rsAllRecords, rsActiveFilter);
+        const base = rsApplyAllFilters();
         rsFiltered = base.filter(r => {
             const name   = `${r.last_name || ''} ${r.first_name || ''}`.toLowerCase();
             const school = (r.school_name || '').toLowerCase();
@@ -364,6 +388,13 @@ function openRestoreModal(id) {
     const all    = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
     const record = all.find(r => r.id === id);
     if (!record) return;
+    const termId = window.SkArchive
+        ? SkArchive.resolveRecordTerm(record, ['submitted_at', 'rejected_at'])
+        : '2025-2027';
+    if (window.SkArchive && SkArchive.isArchivedTerm(termId)) {
+        alert('This record is from a past SK term and cannot be restored. View-only archive.');
+        return;
+    }
 
     rsPendingRestoreId = id;
     const nameEl = document.getElementById('rsRestoreName');

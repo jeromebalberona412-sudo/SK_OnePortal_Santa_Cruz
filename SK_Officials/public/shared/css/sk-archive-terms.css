@@ -1,0 +1,77 @@
+/* Show Archive dropdown — shared archive modules */
+.filter-tabs-row--with-archive {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-tabs-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.show-archive-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.show-archive-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.show-archive-select {
+    min-width: 200px;
+    padding: 8px 32px 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.show-archive-select:focus {
+    outline: none;
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
+}
+
+.btn-restore-action.is-disabled,
+.btn-restore-action:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(0.3);
+}
+
+@media (max-width: 768px) {
+    .filter-tabs-row--with-archive {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .show-archive-wrap {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .show-archive-select {
+        flex: 1;
+        min-width: 0;
+    }
+}
