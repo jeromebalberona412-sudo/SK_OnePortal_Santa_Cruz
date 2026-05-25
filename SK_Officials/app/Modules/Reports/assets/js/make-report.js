@@ -65,6 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return id;
     }
 
+    /** Unique CKEditor cloud channel per page so new pages do not inherit prior page content */
+    function getPageChannelId(pageIndex = activeDocPage) {
+        const base = String(currentId || channelId).replace(/[^a-zA-Z0-9_-]/g, '_');
+        return `${base}_p${pageIndex}`;
+    }
+
     function getReportTitle() {
         const stored = document.getElementById('mrDetailTitle')?.value?.trim();
         if (stored) return stored;
@@ -88,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <div class="mr-sheet-label">Page ${pageNum}</div>
             <div class="mr-ckeditor-root mr-ckeditor-body" id="mr-editor-container">
-                <div class="presence" id="mr-editor-presence"></div>
+                <div class="presence" id="mr-editor-presence" hidden aria-hidden="true"></div>
                 <div id="mrEditor"></div>
                 <div class="editor_container__word-count" id="mr-editor-word-count"></div>
             </div>
@@ -183,13 +189,15 @@ document.addEventListener('DOMContentLoaded', () => {
         await destroyEditor();
         channelId = currentId || channelId;
 
+        const pageHtml = normalizeEditorHtml(initialData);
+
         try {
             ckEditor = await createMakeReportEditor(el, {
-                documentId: channelId,
+                documentId: getPageChannelId(activeDocPage),
                 licenseKey: window.MR_CKEDITOR_CONFIG.licenseKey,
                 cloudTokenUrl: window.MR_CKEDITOR_CONFIG.cloudTokenUrl,
                 cloudWebSocketUrl: window.MR_CKEDITOR_CONFIG.cloudWebSocketUrl,
-                initialData,
+                initialData: pageHtml,
                 exportFileBase: getExportFileBase(),
                 paperFormat: getPaperFormat(),
             });
@@ -197,18 +205,17 @@ document.addEventListener('DOMContentLoaded', () => {
             attachEditorToRibbon(ckEditor);
 
             ckEditor.model.document.on('change:data', () => {
-                updateStats();
                 triggerAutosave();
                 scheduleAutoPagination();
+                updatePageIndicator();
             });
 
             editorReady = true;
             renderDocPageTabs();
-            updateStats();
             updatePageIndicator();
         } catch (err) {
-            console.error(err);
-            toast('Could not initialize CKEditor. Check license and network.');
+            console.error('[Make Report] CKEditor init failed:', err);
+            toast('Editor could not load. Using offline mode — refresh or check your connection.');
         }
     }
 
@@ -383,14 +390,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function addDocPage() {
         saveCurrentDocPage();
         await destroyEditor();
+        const newIndex = documentPages.length;
         documentPages.push({ html: '', header: '', footer: '' });
-        activeDocPage = documentPages.length - 1;
+        activeDocPage = newIndex;
         renderPageStack(activeDocPage);
         await mountEditor('');
+        if (ckEditor && documentPages[activeDocPage]) {
+            documentPages[activeDocPage].html = normalizeEditorHtml(getEditorHtml());
+        }
         renderDocPageTabs();
-        updateStats();
         scrollToActiveSheet();
-        toast('New page added.');
+        toast('New empty page added.');
     }
 
     function getVisibleTabIndices() {
@@ -523,23 +533,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.classList.remove('is-saving');
                 el.innerHTML = '<span class="mr-autosave-dot"></span> All changes saved';
             }
-            const last = document.getElementById('mrLastEdited');
-            if (last) last.textContent = 'Last edited: ' + new Date().toLocaleTimeString();
         }, 700);
     }
 
     function updateStats() {
-        const plain = getCombinedPlainText();
-        const words = plain ? plain.split(' ').filter(Boolean).length : 0;
-        const chars = plain.length;
-        const readMin = Math.max(1, Math.ceil(words / 200));
-        const wc = document.getElementById('mrWordCount');
-        const cc = document.getElementById('mrCharCount');
-        const rt = document.getElementById('mrReadTime');
-        if (wc) wc.textContent = words + (words === 1 ? ' word' : ' words');
-        if (cc) cc.textContent = chars + ' characters';
-        if (rt) rt.textContent = readMin + ' min read';
         syncHiddenTitle();
+        updatePageIndicator();
     }
 
     const paperMap = {

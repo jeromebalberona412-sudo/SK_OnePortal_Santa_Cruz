@@ -1,65 +1,98 @@
-/* Floating / sticky CKEditor ribbon (DecoupledEditor toolbar mount) */
+/* CKEditor decoupled ribbon — sticky toolbar + floating menu overlays */
 
 .mr-ribbon-dock {
-    position: sticky;
-    top: 0;
-    z-index: 120;
     flex-shrink: 0;
     background: #fff;
     border-bottom: 1px solid #e5e7eb;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: visible !important;
 }
 
 .mr-ribbon-inner {
     max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: visible !important;
     -webkit-overflow-scrolling: touch;
 }
 
 .mr-ribbon-toolbar {
-    min-height: 40px;
+    min-height: 36px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     width: 100%;
+    overflow: visible !important;
+    position: relative;
 }
 
 .mr-ribbon-toolbar:empty {
     min-height: 0;
 }
 
-/* CKEditor toolbar + menu bar inside ribbon */
 .mr-ribbon-toolbar .ck.ck-toolbar,
 .mr-ribbon-toolbar .ck.ck-menu-bar {
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     background: transparent !important;
+    overflow: visible !important;
 }
 
 .mr-ribbon-toolbar .ck.ck-menu-bar {
     border-bottom: 1px solid #e5e7eb !important;
+    overflow: visible !important;
 }
 
 .mr-ribbon-toolbar .ck.ck-toolbar {
     flex-wrap: wrap;
+    overflow-x: auto;
+    overflow-y: visible !important;
 }
 
-/* Hide duplicate toolbar if any renders inside the paper sheet */
+.mr-sticky-chrome {
+    overflow: visible !important;
+}
+
+/* Floating menu panels (ported to body) — overlap page, no side scrollbar on ribbon */
+.mr-ck-panel-portal {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10040;
+}
+
+.mr-ck-panel-portal > * {
+    pointer-events: auto;
+}
+
+.mr-ck-panel--floating,
+.mr-ck-panel-portal .ck-menu-bar__menu__panel,
+.mr-ck-panel-portal .ck-dropdown-menu__nested-menu__panel,
+.mr-ck-panel-portal .ck.ck-balloon-panel {
+    z-index: 10050 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18) !important;
+}
+
+body.mr-body .ck-menu-bar__menu__panel:not(.mr-ck-panel--floating),
+body.mr-body .ck-dropdown-menu__nested-menu__panel {
+    z-index: 10050 !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
 .mr-ckeditor-body .ck.ck-editor__top,
 .mr-ckeditor-body > .ck.ck-toolbar {
     display: none !important;
 }
 
-.mr-main.is-fullscreen .mr-ribbon-dock {
+.mr-main.is-fullscreen .mr-sticky-chrome {
     display: none !important;
 }
 
 .mr-dark .mr-ribbon-dock {
     background: #1a2332;
     border-color: #2d3a4d;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 .mr-dark .mr-ribbon-toolbar .ck.ck-menu-bar {
@@ -68,7 +101,8 @@
 
 @media (max-width: 640px) {
     .mr-ribbon-toolbar .ck.ck-toolbar {
-        max-height: 120px;
-        overflow-y: auto;
+        max-height: 100px;
+        overflow-x: auto;
+        overflow-y: visible !important;
     }
 }

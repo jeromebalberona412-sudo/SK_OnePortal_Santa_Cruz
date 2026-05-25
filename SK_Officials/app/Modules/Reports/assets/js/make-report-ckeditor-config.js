@@ -9,6 +9,7 @@ export function buildMakeReportEditorConfig({
     initialData = '',
     exportFileBase = 'sk-report',
     paperFormat = 'A4',
+    mode = 'local',
 }) {
     const CK = window.CKEDITOR;
     const PREMIUM = window.CKEDITOR_PREMIUM_FEATURES;
@@ -18,10 +19,7 @@ export function buildMakeReportEditorConfig({
     }
 
     const {
-        ClassicEditor,
         Autosave,
-        Essentials,
-        Paragraph,
         Alignment,
         AutoImage,
         Autoformat,
@@ -96,6 +94,8 @@ export function buildMakeReportEditorConfig({
         Underline,
         WordCount,
         BalloonToolbar,
+        Essentials,
+        Paragraph,
     } = CK;
 
     const {
@@ -125,64 +125,71 @@ export function buildMakeReportEditorConfig({
         TrackChangesPreview,
     } = PREMIUM;
 
+    const useCollaboration = mode === 'collaboration';
     const cdnVersion = window.MR_CKEDITOR_CONFIG?.cdnVersion || '47.6.1';
     const stylesheetBase = `https://cdn.ckeditor.com/ckeditor5/${cdnVersion}`;
 
-    return {
+    const toolbarItems = [
+        'undo', 'redo', '|',
+        ...(useCollaboration ? ['trackChanges', 'comment', '|'] : []),
+        'insertMergeField', 'previewMergeFields', '|',
+        'importWord', 'exportWord', 'exportPdf', 'showBlocks', 'formatPainter', 'caseChange',
+        'findAndReplace', 'textPartLanguage', 'fullscreen', '|',
+        'heading', '|',
+        'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
+        'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'code', 'removeFormat', '|',
+        'specialCharacters', 'horizontalLine', 'pageBreak', 'link', 'insertFootnote', 'bookmark',
+        'insertImage', 'insertImageViaUrl', 'ckbox', 'mediaEmbed', 'insertTable', 'insertTableLayout',
+        'tableOfContents', 'insertTemplate', 'highlight', 'blockQuote', 'codeBlock', 'htmlEmbed', '|',
+        'alignment', 'lineHeight', '|',
+        'bulletedList', 'numberedList', 'multiLevelList', 'todoList', 'outdent', 'indent',
+    ];
+
+    const plugins = [
+        Alignment, Autoformat, AutoImage, AutoLink, BalloonToolbar,
+        BlockQuote, Bold, Bookmark, CaseChange, CKBox, CKBoxImageEdit,
+        Code, CodeBlock, Essentials, ExportInlineStyles, ExportPdf, ExportWord,
+        Emoji, FindAndReplace, FontBackgroundColor, FontColor, FontFamily, FontSize,
+        Footnotes, FormatPainter, Fullscreen, GeneralHtmlSupport, Heading, Highlight,
+        HorizontalLine, HtmlEmbed, ImageBlock, ImageCaption, ImageEditing, ImageInline,
+        ImageInsert, ImageInsertViaUrl, ImageResize, ImageStyle, ImageTextAlternative,
+        ImageToolbar, ImageUpload, ImageUtils, ImportWord, Indent, IndentBlock, Italic,
+        LineHeight, Link, LinkImage, List, ListProperties, MediaEmbed, Mention, MergeFields,
+        MultiLevelList, PageBreak, Paragraph, PasteFromOffice, PasteFromOfficeEnhanced,
+        PictureEditing, PlainTableOutput, RemoveFormat, ShowBlocks,
+        SlashCommand, SpecialCharacters, SpecialCharactersArrows, SpecialCharactersCurrency,
+        SpecialCharactersEssentials, SpecialCharactersLatin, SpecialCharactersMathematical,
+        SpecialCharactersText, Strikethrough, Subscript, Superscript, Table, TableCaption,
+        TableCellProperties, TableColumnResize, TableLayout, TableOfContents, TableProperties,
+        TableToolbar, Template, TextPartLanguage, TextTransformation, TodoList, Underline, WordCount,
+    ];
+
+    if (useCollaboration) {
+        plugins.push(
+            Autosave,
+            CloudServices,
+            Comments,
+            PresenceList,
+            RealTimeCollaborativeComments,
+            RealTimeCollaborativeEditing,
+            RealTimeCollaborativeRevisionHistory,
+            RealTimeCollaborativeTrackChanges,
+            RevisionHistory,
+            TrackChanges,
+            TrackChangesData,
+            TrackChangesPreview,
+        );
+    }
+
+    const config = {
         toolbar: {
-            items: [
-                'undo', 'redo', '|',
-                'trackChanges', 'comment', '|',
-                'insertMergeField', 'previewMergeFields', '|',
-                'importWord', 'exportWord', 'exportPdf', 'showBlocks', 'formatPainter', 'caseChange',
-                'findAndReplace', 'textPartLanguage', 'fullscreen', '|',
-                'heading', '|',
-                'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
-                'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'code', 'removeFormat', '|',
-                'specialCharacters', 'horizontalLine', 'pageBreak', 'link', 'insertFootnote', 'bookmark',
-                'insertImage', 'insertImageViaUrl', 'ckbox', 'mediaEmbed', 'insertTable', 'insertTableLayout',
-                'tableOfContents', 'insertTemplate', 'highlight', 'blockQuote', 'codeBlock', 'htmlEmbed', '|',
-                'alignment', 'lineHeight', '|',
-                'bulletedList', 'numberedList', 'multiLevelList', 'todoList', 'outdent', 'indent',
-            ],
+            items: toolbarItems,
             shouldNotGroupWhenFull: false,
         },
-        plugins: [
-            Alignment, Autoformat, AutoImage, AutoLink, Autosave, BalloonToolbar,
-            BlockQuote, Bold, Bookmark, CaseChange, CKBox, CKBoxImageEdit, CloudServices,
-            Code, CodeBlock, Comments, Essentials, ExportInlineStyles, ExportPdf, ExportWord,
-            Emoji, FindAndReplace, FontBackgroundColor, FontColor, FontFamily, FontSize,
-            Footnotes, FormatPainter, Fullscreen, GeneralHtmlSupport, Heading, Highlight,
-            HorizontalLine, HtmlEmbed, ImageBlock, ImageCaption, ImageEditing, ImageInline,
-            ImageInsert, ImageInsertViaUrl, ImageResize, ImageStyle, ImageTextAlternative,
-            ImageToolbar, ImageUpload, ImageUtils, ImportWord, Indent, IndentBlock, Italic,
-            LineHeight, Link, LinkImage, List, ListProperties, MediaEmbed, Mention, MergeFields,
-            MultiLevelList, PageBreak, Paragraph, PasteFromOffice, PasteFromOfficeEnhanced,
-            PictureEditing, PlainTableOutput, PresenceList, RealTimeCollaborativeComments,
-            RealTimeCollaborativeEditing, RealTimeCollaborativeRevisionHistory,
-            RealTimeCollaborativeTrackChanges, RemoveFormat, RevisionHistory, ShowBlocks,
-            SlashCommand, SpecialCharacters, SpecialCharactersArrows, SpecialCharactersCurrency,
-            SpecialCharactersEssentials, SpecialCharactersLatin, SpecialCharactersMathematical,
-            SpecialCharactersText, Strikethrough, Subscript, Superscript, Table, TableCaption,
-            TableCellProperties, TableColumnResize, TableLayout, TableOfContents, TableProperties,
-            TableToolbar, Template, TextPartLanguage, TextTransformation, TodoList, TrackChanges,
-            TrackChangesData, TrackChangesPreview, Underline, WordCount,
-        ],
-        balloonToolbar: [
-            'comment', '|', 'bold', 'italic', '|',
-            'link', 'insertImage', '|', 'bulletedList', 'numberedList',
-        ],
-        cloudServices: {
-            tokenUrl: cloudTokenUrl,
-            webSocketUrl: cloudWebSocketUrl,
-        },
-        collaboration: { channelId: documentId },
-        comments: {
-            editorConfig: {
-                extraPlugins: [Autoformat, Bold, Italic, List, Mention],
-                mention: { feeds: [{ marker: '@', feed: [] }] },
-            },
-        },
+        plugins,
+        balloonToolbar: useCollaboration
+            ? ['comment', '|', 'bold', 'italic', '|', 'link', 'insertImage', '|', 'bulletedList', 'numberedList']
+            : ['bold', 'italic', '|', 'link', 'insertImage', '|', 'bulletedList', 'numberedList'],
         exportInlineStyles: {
             stylesheets: [
                 `${stylesheetBase}/ckeditor5.css`,
@@ -271,26 +278,69 @@ export function buildMakeReportEditorConfig({
         mention: { feeds: [{ marker: '@', feed: [] }] },
         menuBar: { isVisible: true },
         mergeFields: {},
-        presenceList: { container: document.querySelector('#mr-editor-presence') || undefined },
         table: {
             contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties'],
         },
         template: { definitions: [] },
     };
+
+    if (useCollaboration) {
+        config.cloudServices = {
+            tokenUrl: cloudTokenUrl,
+            webSocketUrl: cloudWebSocketUrl,
+        };
+        config.collaboration = { channelId: documentId };
+        config.comments = {
+            editorConfig: {
+                extraPlugins: [Autoformat, Bold, Italic, List, Mention],
+                mention: { feeds: [{ marker: '@', feed: [] }] },
+            },
+        };
+        const presenceEl = document.querySelector('#mr-editor-presence');
+        if (presenceEl) {
+            config.presenceList = { container: presenceEl };
+        }
+    }
+
+    return config;
+}
+
+function canUseCollaboration(options) {
+    return Boolean(
+        options.licenseKey
+        && options.cloudTokenUrl
+        && options.cloudWebSocketUrl
+        && options.documentId
+    );
 }
 
 export async function createMakeReportEditor(element, options) {
     const CK = window.CKEDITOR;
     const EditorClass = CK.DecoupledEditor || CK.ClassicEditor;
-    const config = buildMakeReportEditorConfig(options);
-    const editor = await EditorClass.create(element, config);
+    const tryModes = canUseCollaboration(options)
+        ? ['collaboration', 'local']
+        : ['local'];
 
-    const wordCount = editor.plugins.get('WordCount');
-    const wordCountEl = document.querySelector('#mr-editor-word-count');
-    if (wordCountEl && wordCount?.wordCountContainer) {
-        wordCountEl.innerHTML = '';
-        wordCountEl.appendChild(wordCount.wordCountContainer);
+    let lastError = null;
+
+    for (const mode of tryModes) {
+        try {
+            const config = buildMakeReportEditorConfig({ ...options, mode });
+            const editor = await EditorClass.create(element, config);
+            await editor.isReady;
+
+            const wordCountEl = document.querySelector('#mr-editor-word-count');
+            if (wordCountEl) {
+                wordCountEl.innerHTML = '';
+            }
+
+            editor._mrMode = mode;
+            return editor;
+        } catch (err) {
+            lastError = err;
+            console.warn(`[Make Report] CKEditor mode "${mode}" failed:`, err);
+        }
     }
 
-    return editor;
+    throw lastError || new Error('CKEditor failed to initialize.');
 }

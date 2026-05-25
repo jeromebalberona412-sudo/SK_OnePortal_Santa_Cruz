@@ -30,87 +30,91 @@
 @include('layout::sidebar')
 
 <div id="mrApp" class="mr-app" data-reports-url="{{ route('reports') }}">
-    <header class="mr-header mr-no-print">
-        <nav class="mr-breadcrumb" aria-label="Breadcrumb">
-            <a href="{{ route('dashboard') }}">Dashboard</a>
-            <span> / </span>
-            <a href="{{ route('reports') }}">Reports</a>
-            <span> / </span>
-            <span class="mr-breadcrumb-current">Make a Report</span>
-        </nav>
-        <div class="mr-header-row">
-            <div>
-                <h1 class="mr-title">Make a Report</h1>
-                <div class="mr-header-meta">
-                    <span id="mrCurrentDate"></span>
-                    <span class="mr-dot">·</span>
-                    <span id="mrAutosaveStatus" class="mr-autosave">
-                        <span class="mr-autosave-dot"></span> All changes saved
-                    </span>
-                    <span id="mrStatusBadge" class="mr-badge mr-badge-draft">Draft</span>
-                </div>
-            </div>
-            <div class="mr-header-actions">
-                <a href="{{ route('reports') }}" class="mr-btn mr-btn-outline">My Reports</a>
-                <button type="button" class="mr-btn mr-btn-ghost" id="mrDarkToggle">Dark</button>
-                <button type="button" class="mr-btn mr-btn-outline" data-mr-action="draft">Save Draft</button>
-                <button type="button" class="mr-btn mr-btn-outline" data-mr-action="save">Save</button>
-                <button type="button" class="mr-btn mr-btn-outline" data-mr-action="preview">Preview</button>
-                <button type="button" class="mr-btn mr-btn-outline" data-mr-action="pdf">Download PDF</button>
-                <button type="button" class="mr-btn mr-btn-outline" data-mr-action="word">Download Word</button>
-                <button type="button" class="mr-btn mr-btn-outline" data-mr-action="export">Export</button>
-                <button type="button" class="mr-btn mr-btn-outline" data-mr-action="print">Print</button>
-                <button type="button" class="mr-btn mr-btn-primary" data-mr-action="save-exit">Save</button>
-            </div>
-        </div>
-    </header>
-
     <div class="mr-layout">
         <div class="mr-main">
-            <div class="mr-doc-controls mr-no-print">
-                <label>Paper
-                    <select id="mrPaperSize">
-                        <option value="a4" selected>A4 (Default)</option>
-                        <option value="letter">Letter</option>
-                        <option value="legal">Legal</option>
-                        <option value="short">Short Bond</option>
-                        <option value="long">Long Bond</option>
-                    </select>
-                </label>
-                <label>Orientation
-                    <select id="mrOrientation">
-                        <option value="portrait">Portrait</option>
-                        <option value="landscape">Landscape</option>
-                    </select>
-                </label>
-                <label>Margins
-                    <select id="mrMargins">
-                        <option value="normal">Normal</option>
-                        <option value="narrow">Narrow</option>
-                        <option value="moderate">Moderate</option>
-                        <option value="wide">Wide</option>
-                    </select>
-                </label>
-                <label>Zoom
-                    <select id="mrZoom">
-                        <option value="0.5">50%</option>
-                        <option value="0.75">75%</option>
-                        <option value="1" selected>100%</option>
-                        <option value="1.25">125%</option>
-                    </select>
-                </label>
-                <button type="button" class="mr-btn mr-btn-ghost mr-btn-sm" id="mrFullscreenBtn">Fullscreen</button>
+            <div class="mr-sticky-chrome mr-no-print" id="mrStickyChrome">
+                <header class="mr-header">
+                    <nav class="mr-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{{ route('dashboard') }}">Dashboard</a>
+                        <span> / </span>
+                        <a href="{{ route('reports') }}">Reports</a>
+                        <span> / </span>
+                        <span class="mr-breadcrumb-current">Make a Report</span>
+                    </nav>
+                    <div class="mr-header-row">
+                        <div class="mr-header-left">
+                            <h1 class="mr-title">Make a Report</h1>
+                            <div class="mr-header-meta">
+                                <span id="mrCurrentDate"></span>
+                                <span class="mr-dot">·</span>
+                                <span id="mrAutosaveStatus" class="mr-autosave">
+                                    <span class="mr-autosave-dot"></span> All changes saved
+                                </span>
+                                <span id="mrStatusBadge" class="mr-badge mr-badge-draft">Draft</span>
+                            </div>
+                        </div>
+                        <div class="mr-header-actions">
+                            <a href="{{ route('reports') }}" class="mr-btn mr-btn-outline mr-btn-sm">My Reports</a>
+                            <button type="button" class="mr-btn mr-btn-ghost mr-btn-sm" id="mrDarkToggle">Dark</button>
+                            <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" data-mr-action="draft">Save Draft</button>
+                            <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" data-mr-action="save">Save</button>
+                            <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" data-mr-action="preview">Preview</button>
+                            <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" data-mr-action="pdf">Download PDF</button>
+                            <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" data-mr-action="word">Download Word</button>
+                            <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" data-mr-action="export">Export</button>
+                            <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" data-mr-action="print">Print</button>
+                            <button type="button" class="mr-btn mr-btn-primary mr-btn-sm" data-mr-action="save-exit">Save &amp; Exit</button>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="mr-doc-controls">
+                    <div class="mr-doc-controls-left">
+                        <label>Paper
+                            <select id="mrPaperSize">
+                                <option value="a4" selected>A4 (Default)</option>
+                                <option value="letter">Letter</option>
+                                <option value="legal">Legal</option>
+                                <option value="short">Short Bond</option>
+                                <option value="long">Long Bond</option>
+                            </select>
+                        </label>
+                        <label>Orientation
+                            <select id="mrOrientation">
+                                <option value="portrait">Portrait</option>
+                                <option value="landscape">Landscape</option>
+                            </select>
+                        </label>
+                        <label>Margins
+                            <select id="mrMargins">
+                                <option value="normal">Normal</option>
+                                <option value="narrow">Narrow</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="wide">Wide</option>
+                            </select>
+                        </label>
+                        <label>Zoom
+                            <select id="mrZoom">
+                                <option value="0.5">50%</option>
+                                <option value="0.75">75%</option>
+                                <option value="1" selected>100%</option>
+                                <option value="1.25">125%</option>
+                            </select>
+                        </label>
+                        <button type="button" class="mr-btn mr-btn-ghost mr-btn-sm" id="mrFullscreenBtn">Fullscreen</button>
+                    </div>
+
+                    <nav class="mr-page-nav" aria-label="Document pages">
+                        <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" id="mrPrevPage" disabled>Previous</button>
+                        <div class="mr-page-tabs" id="mrDocPageTabs" role="tablist"></div>
+                        <button type="button" class="mr-btn mr-btn-outline mr-btn-sm mr-page-add" id="mrAddPage" title="Add page">+</button>
+                        <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" id="mrNextPage" disabled>Next</button>
+                        <span class="mr-page-indicator" id="mrPageIndicator">Page 1 of 1</span>
+                    </nav>
+                </div>
+
+                @include('Reports::components.make-report-ribbon')
             </div>
-
-            <nav class="mr-page-nav mr-no-print" aria-label="Document pages">
-                <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" id="mrPrevPage" disabled>Previous</button>
-                <div class="mr-page-tabs" id="mrDocPageTabs" role="tablist"></div>
-                <button type="button" class="mr-btn mr-btn-outline mr-btn-sm mr-page-add" id="mrAddPage" title="Add page">+</button>
-                <button type="button" class="mr-btn mr-btn-outline mr-btn-sm" id="mrNextPage" disabled>Next</button>
-                <span class="mr-page-indicator" id="mrPageIndicator">Page 1 of 1</span>
-            </nav>
-
-            @include('Reports::components.make-report-ribbon')
 
             <div class="mr-workspace" id="mrWorkspace">
                 <div class="mr-zoom-wrap" id="mrZoomWrap" style="--mr-zoom: 1">
@@ -118,13 +122,6 @@
                 </div>
             </div>
 
-            <footer class="mr-doc-footer mr-no-print">
-                <span id="mrWordCount">0 words</span>
-                <span id="mrCharCount">0 characters</span>
-                <span id="mrReadTime">0 min read</span>
-                <span class="mr-flex-spacer"></span>
-                <span id="mrLastEdited">Last edited: —</span>
-            </footer>
         </div>
     </div>
 
@@ -133,7 +130,7 @@
     <input type="hidden" id="mrDetailCategory" value="accomplishment">
     <input type="hidden" id="mrDetailPeriod" value="">
     <input type="hidden" id="mrDetailBarangay" value="Santa Cruz">
-    <input type="hidden" id="mrDetailPrepared" value="{{ auth()->user()->name ?? 'SK Official' }}">
+    <input type="hidden" id="mrDetailPrepared" value="SK Official">
     <input type="hidden" id="mrDetailSubmitted" value="">
 </div>
 
