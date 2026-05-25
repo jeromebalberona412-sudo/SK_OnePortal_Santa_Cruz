@@ -89,126 +89,106 @@
 
                 <!-- A. Equitable Access to Quality Education -->
                 <a href="/scholar-list" class="committee-card" data-committee="education" style="text-decoration:none;color:inherit;">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                    </div>
                     <h3 class="committee-title">Equitable Access to Quality Education</h3>
                     <ul class="committee-activities">
                         <li>Support to ALS and RIC</li>
                         <li>150 Students for Educational Assistance</li>
                         <li>Support to Elementary and Daycare</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Jerome Balberona</span></p>
                 </a>
 
                 <!-- B. Environmental Protection -->
                 <div class="committee-card" data-committee="environment">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 2v20M2 12h20"/></svg>
-                    </div>
                     <h3 class="committee-title">Environmental Protection</h3>
                     <ul class="committee-activities">
                         <li>Clean-Up Drive</li>
                         <li>Payroll for Laborer</li>
                         <li>Tree Planting</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Juan dela Cruz</span></p>
                 </div>
 
                 <!-- C. Disaster Risk Reduction and Resiliency -->
                 <div class="committee-card" data-committee="disaster">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
                     <h3 class="committee-title">Disaster Risk Reduction and Resiliency</h3>
                     <ul class="committee-activities">
                         <li>Training on Disaster Preparedness for Youth Volunteer Groups</li>
                         <li>Distribution of Relief Goods for KK Members</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Carlo Reyes</span></p>
                 </div>
 
                 <!-- D. Youth Employment and Livelihood -->
                 <div class="committee-card" data-committee="livelihood">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                    </div>
                     <h3 class="committee-title">Youth Employment and Livelihood</h3>
                     <ul class="committee-activities">
                         <li>Livelihood Training</li>
                         <li>Food and Other Supplies</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Ana Villanueva</span></p>
                 </div>
 
                 <!-- E. Health -->
                 <div class="committee-card" data-committee="health">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    </div>
                     <h3 class="committee-title">Health</h3>
                     <ul class="committee-activities">
                         <li>Medicines / Medical Equipment</li>
                         <li>Campaigning Materials for Anti-Drugs (Leaflets, Posters, Tarpaulins)</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Jose Mendoza</span></p>
                 </div>
 
                 <!-- F. Anti-Drug and Peace and Order -->
                 <div class="committee-card" data-committee="anti-drug">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                    </div>
                     <h3 class="committee-title">Anti-Drug and Peace and Order</h3>
                     <ul class="committee-activities">
                         <li>Orientation for Anti-Drug and Physical Abuse</li>
                         <li>Foods and Accommodations</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Ramon Garcia</span></p>
                 </div>
 
                 <!-- G. Gender Sensitivity -->
                 <div class="committee-card" data-committee="gender">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
                     <h3 class="committee-title">Gender Sensitivity</h3>
                     <ul class="committee-activities">
                         <li>Orientation on GAD and VAWC</li>
                         <li>Foods and Accommodations</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Liza Torres</span></p>
                 </div>
 
                 <!-- H. Feeding Program for KK Members -->
                 <div class="committee-card" data-committee="feeding">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-                    </div>
                     <h3 class="committee-title">Feeding Program for KK Members</h3>
                     <ul class="committee-activities">
                         <li>Improve health and physique of children</li>
                         <li>Youth and Children in the vicinity of Barangay</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Kristine Bautista</span></p>
                 </div>
 
                 <!-- I. Sports Development -->
                 <a href="/sport_list" class="committee-card" data-committee="sports" style="text-decoration:none;color:inherit;">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-                    </div>
                     <h3 class="committee-title">Sports Development</h3>
                     <ul class="committee-activities">
                         <li>Supplies and Materials</li>
                         <li>Food and Accommodation</li>
                         <li>Officiating Fees</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Miguel Aquino</span></p>
                 </a>
 
                 <!-- J. Other Programs -->
                 <div class="committee-card" data-committee="other">
-                    <div class="committee-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    </div>
                     <h3 class="committee-title">Other Programs</h3>
                     <ul class="committee-activities">
                         <li>Katipunan ng Kabataan (KK) General Assembly</li>
                         <li>Barangay Day Celebration</li>
                         <li>Youth Week</li>
                     </ul>
+                    <p class="committee-head">SK Head: <span>Patricia Flores</span></p>
                 </div>
 
             </div>
