@@ -1,10 +1,10 @@
 /**
- * Scholarship reports list — editor at /reports/make
+ * Scholarship reports list — editor at /reports/ckeditor
  */
 document.addEventListener('DOMContentLoaded', () => {
     const STORAGE_KEY = 'sk_official_reports';
     const SCHOLARSHIP_SOURCE = 'scholarship';
-    const MAKE_URL = '/reports/make';
+    const MAKE_URL = '/reports/ckeditor';
 
     const openBtn = document.getElementById('safOpenReportBtn');
     const reportsTableBody = document.getElementById('safReportsTableBody');
