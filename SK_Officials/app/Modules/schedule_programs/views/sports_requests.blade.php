@@ -7,6 +7,10 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/schedule_programs/assets/css/scholarship_application_form.css',
+        'app/Modules/schedule_programs/assets/css/sk-report-editor.css',
+        'app/Modules/schedule_programs/assets/css/scholar_application_from.css',
+        'app/Modules/schedule_programs/assets/css/scholar_report.css',
         'app/Modules/schedule_programs/assets/css/sports_requests.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -17,32 +21,35 @@
 @include('layout::sidebar')
 
 <main class="main-content">
-<div class="sports-page-container">
+<div class="sports-page-container schol-page-container">
 
-    <!-- Page Header -->
-    <section class="sports-page-header">
-        <div class="sports-page-header-left">
-            <a href="/sport_list" class="sports-btn-back">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"/>
-                </svg>
-                Back to Sport List
-            </a>
-            <h1 class="sports-page-title">Sports Application Requests</h1>
-            <p class="sports-page-subtitle">Manage sports development programs and review submitted applications from Kabataan members.</p>
-        </div>
-        <div class="sports-header-actions">
-            <button type="button" class="sports-btn sports-btn-outline" id="btnViewCreatedPrograms">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
-                Sport Application History
-            </button>
-            <button type="button" class="sports-btn sports-btn-primary" id="btnCreateProgram">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Create Sports Program
-            </button>
-        </div>
-    </section>
+    @include('schedule_programs::partials.sports-page-top', [
+        'activeTab' => 'requests',
+        'pageTitle' => 'Sports Application Requests',
+        'pageSubtitle' => 'Manage sports development programs and review submitted applications from Kabataan members.',
+    ])
+
+    <div class="schol-page-toolbar">
+        <button type="button" class="sports-btn sports-btn-outline" id="btnViewCreatedPrograms">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+            Sport Application History
+        </button>
+        <button type="button" class="sports-btn sports-btn-primary" id="btnCreateProgram">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create Sports Program
+        </button>
+        <button type="button" class="schol-btn saf-report-btn" id="sportsOpenReportBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Make Report
+        </button>
+    </div>
+
+    <nav class="saf-sub-tab-bar" aria-label="Sports request sections">
+        <button type="button" class="saf-sub-tab active" data-sports-subtab="applications">Applications</button>
+        <button type="button" class="saf-sub-tab" data-sports-subtab="reports">Sports Reports</button>
+    </nav>
+
+    <div id="sportsPanelApplications">
 
     <!-- Stat Cards -->
     <div class="sports-stats-grid">
@@ -125,8 +132,34 @@
         </div>
     </div>
 
+    </div>{{-- #sportsPanelApplications --}}
+
+    <div id="sportsPanelReports" class="saf-panel-hidden">
+        <div class="saf-forms-table-card saf-reports-table">
+            <div class="saf-table-wrap">
+                <table class="saf-forms-table">
+                    <thead>
+                        <tr>
+                            <th>Report Title</th>
+                            <th>Paper Size</th>
+                            <th>Date</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sportsReportsTableBody">
+                        <tr>
+                            <td colspan="4" class="saf-table-empty">No sports reports yet. Click <strong>Make Report</strong> to create one.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 </main>
+
+<div class="sports-toast" id="sportsReportToast" style="display:none;"></div>
 
 <!-- ══════════════════════════════════════════════════════════════
      Create Sports Program Modal
@@ -400,7 +433,8 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
-    'app/Modules/schedule_programs/assets/js/sports_requests.js'
+    'app/Modules/schedule_programs/assets/js/sports_requests.js',
+    'app/Modules/schedule_programs/assets/js/sports_report.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 <script>

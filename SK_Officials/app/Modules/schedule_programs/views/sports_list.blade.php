@@ -7,6 +7,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/schedule_programs/assets/css/scholarship_application_form.css',
         'app/Modules/schedule_programs/assets/css/sports_list.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -18,42 +19,25 @@
 @include('layout::sidebar')
 
 <main class="main-content">
-    <div class="spl-page-container">
+    <div class="spl-page-container schol-page-container">
 
-        <!-- ── Page Header ── -->
-        <section class="spl-page-header">
-            <div class="spl-page-header-left">
-                <a href="/schedule-programs" class="spl-btn-back">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"/>
-                    </svg>
-                    Back to Schedule Programs
-                </a>
-                <h1 class="spl-page-title">Sports List</h1>
-                <p class="spl-page-subtitle">Approved sports program participants under Sports Development</p>
-            </div>
-            <div class="spl-header-actions">
-                <button type="button" id="splExportCsvBtn" class="spl-btn spl-btn-green">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    Export to CSV
-                </button>
-                <a href="/sports-requests" class="spl-btn spl-btn-dark">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-                        <path d="M2 12h20"/>
-                    </svg>
-                    Go to Sports Requests
-                </a>
-            </div>
-        </section>
+        @include('schedule_programs::partials.sports-page-top', [
+            'activeTab' => 'list',
+            'pageTitle' => 'Sports List',
+            'pageSubtitle' => 'Approved sports program participants under Sports Development',
+        ])
+
+        <div class="schol-page-toolbar">
+            <button type="button" id="splExportCsvBtn" class="spl-btn spl-btn-green">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export to CSV
+            </button>
+        </div>
 
         <!-- ── Stat Cards ── -->
         <div class="spl-stats-grid">

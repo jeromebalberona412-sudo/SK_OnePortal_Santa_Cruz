@@ -86,6 +86,7 @@ export default defineConfig({
                 'app/Modules/schedule_programs/assets/css/sk-report-editor.css',
                 'app/Modules/schedule_programs/assets/js/sk-report-editor.js',
                 'app/Modules/schedule_programs/assets/js/scholar_report.js',
+                'app/Modules/schedule_programs/assets/js/sports_report.js',
                 // Sports List module assets
                 'app/Modules/schedule_programs/assets/css/sports_list.css',
                 'app/Modules/schedule_programs/assets/js/sports_list.js',

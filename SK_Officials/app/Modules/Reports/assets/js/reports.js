@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             minutes: 'Meeting Minutes',
             financial: 'Financial Report',
             scholarship: 'Scholarship Program Report',
+            sports: 'Sports Program Report',
             accomplishment: 'Accomplishment Report',
             custom: 'Custom Document',
         };

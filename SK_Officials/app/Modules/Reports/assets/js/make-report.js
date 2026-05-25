@@ -335,6 +335,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (sourceParam === 'scholarship') {
                 const cat = document.getElementById('mrDetailCategory');
                 if (cat) cat.value = 'scholarship';
+            } else if (sourceParam === 'sports') {
+                const cat = document.getElementById('mrDetailCategory');
+                if (cat) cat.value = 'sports';
             }
 
             renderPageStack();
