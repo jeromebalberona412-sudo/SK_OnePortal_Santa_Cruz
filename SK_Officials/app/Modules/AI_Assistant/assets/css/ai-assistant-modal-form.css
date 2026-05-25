@@ -1,4 +1,11 @@
-/* SKai header button */
+/* SKai header button (modal chrome lives in ai-modal.css) */
+.ai-assistant-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
 .ai-assistant-btn {
     background: none;
     border: none;
@@ -7,10 +14,17 @@
     padding: 8px;
     border-radius: 6px;
     position: relative;
-    transition: all 0.3s ease;
-    display: flex;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+}
+
+.ai-assistant-btn svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
 }
 
 .ai-assistant-btn:hover,

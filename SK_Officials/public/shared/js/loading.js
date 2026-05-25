@@ -12,7 +12,38 @@ const MESSAGES = {
     loading:    'Loading',
 };
 
+function suppressHeaderPanelsDuringLoad() {
+    document.documentElement.classList.remove('sk-ai-ready');
+    if (window.SkAiClose?.forceCloseAiModal) {
+        window.SkAiClose.forceCloseAiModal();
+        return;
+    }
+    const aiModal = document.getElementById('aiAssistantModal');
+    const aiBtn = document.getElementById('aiAssistantBtn');
+    if (aiModal) {
+        aiModal.classList.remove('open');
+        aiModal.setAttribute('hidden', '');
+        aiModal.setAttribute('aria-hidden', 'true');
+    }
+    if (aiBtn) aiBtn.setAttribute('aria-expanded', 'false');
+    document.getElementById('notifDropdown')?.classList.remove('open');
+    document.getElementById('userDropdown')?.classList.remove('open');
+}
+
+function restoreHeaderAfterLoad() {
+    if (window.SkAiClose?.markAiReady) {
+        window.SkAiClose.markAiReady();
+    } else {
+        document.documentElement.classList.add('sk-ai-ready');
+        const aiModal = document.getElementById('aiAssistantModal');
+        if (aiModal && !aiModal.classList.contains('open')) {
+            aiModal.removeAttribute('hidden');
+        }
+    }
+}
+
 function showLoading(message = 'Loading') {
+    suppressHeaderPanelsDuringLoad();
     const overlay = document.getElementById('globalLoadingOverlay');
     if (!overlay) return;
     const messageEl = overlay.querySelector('.gl-message');
@@ -28,32 +59,24 @@ function hideLoading() {
     overlay.classList.remove('gl-visible');
     document.body.classList.remove('gl-loading-active');
     document.body.style.overflow = '';
+    restoreHeaderAfterLoad();
 }
 
 // Expose globally
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
 
-// Show loading screen when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        showLoading('Loading');
-    });
-} else {
-    // DOM is already loaded
-    showLoading('Loading');
-}
+// Close SKai immediately if script runs after header markup
+suppressHeaderPanelsDuringLoad();
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ── Hide loading on page fully loaded ──────────────────────────────────
-    // This ensures loading screen disappears once the page is ready
+    suppressHeaderPanelsDuringLoad();
     hideLoading();
 
     // ── Login form ────────────────────────────────────────────────────────
-    // Only show loading if both email and password are filled (validation passed)
     const loginForm = document.querySelector('form[action*="login"]:not([action*="logout"])');
     if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', () => {
             const emailInput    = loginForm.querySelector('input[type="email"], input[name="email"]');
             const passwordInput = loginForm.querySelector('input[type="password"], input[name="password"]');
             const emailFilled    = emailInput    && emailInput.value.trim() !== '';
@@ -69,18 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
     registerForm?.addEventListener('submit', () => showLoading(MESSAGES.register));
 
     // ── Logout form ───────────────────────────────────────────────────────
-    // Intercept the actual form submit (after confirm modal approves it)
     const logoutForm = document.querySelector('form[action*="logout"]');
     if (logoutForm) {
-        // The confirm modal calls logoutForm.submit() — patch it
         const origSubmit = HTMLFormElement.prototype.submit;
         logoutForm.submit = function () {
             showLoading(MESSAGES.logout);
             setTimeout(() => origSubmit.call(this), 80);
         };
-        // Also catch native submit event (direct submit button without modal)
-        logoutForm.addEventListener('submit', (e) => {
-            // Only if not already showing (modal path already handled above)
+        logoutForm.addEventListener('submit', () => {
             const overlay = document.getElementById('globalLoadingOverlay');
             if (!overlay?.classList.contains('gl-visible')) {
                 showLoading(MESSAGES.logout);
@@ -94,16 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!anchor) return;
 
         const href = anchor.getAttribute('href');
-        // Skip: empty, hash-only, javascript:, mailto:
         if (!href || href.startsWith('#') || href.startsWith('javascript') || href.startsWith('mailto')) return;
-        // Skip links that have data-no-loading
         if (anchor.dataset.noLoading !== undefined) return;
-        // Skip on login/register/forgot-password pages — no redirect overlay needed
+
         const currentPath = window.location.pathname;
         if (currentPath === '/login' || currentPath.endsWith('/login') ||
             currentPath === '/register' || currentPath.endsWith('/register') ||
             currentPath.includes('forgot-password') || currentPath.includes('password/reset')) return;
-        // Skip truly external links (different origin)
+
         if (href.startsWith('http') || href.startsWith('//')) {
             try {
                 const url = new URL(href, window.location.href);
@@ -115,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ── Page reload (beforeunload) ────────────────────────────────────────
-    // Show "Loading..." only when the user manually reloads (not on link/form navigation)
     let _navigatingAway = false;
     document.addEventListener('click', () => { _navigatingAway = true; }, true);
     document.addEventListener('submit', () => { _navigatingAway = true; }, true);
@@ -126,8 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ── Hide on back-forward cache restore ───────────────────────────────
     window.addEventListener('pageshow', (e) => {
+        suppressHeaderPanelsDuringLoad();
         if (e.persisted) hideLoading();
+        else restoreHeaderAfterLoad();
     });
 });

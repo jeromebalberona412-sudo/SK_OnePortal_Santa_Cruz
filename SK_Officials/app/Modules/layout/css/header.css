@@ -1059,6 +1059,50 @@
    AI ASSISTANT MODAL/DROPDOWN STYLES
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
+/* Header controls — stable alignment across modules */
+.main-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.main-header .ai-assistant-menu,
+.main-header .notif-menu,
+.main-header .user-menu {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.main-header .notification-btn,
+.main-header .ai-assistant-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    min-width: 38px;
+    min-height: 38px;
+    box-sizing: border-box;
+}
+
+.main-header .notification-btn svg,
+.main-header .ai-assistant-btn svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.main-header .notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* AI Assistant Button */
 .ai-assistant-menu {
     position: relative;
@@ -1072,13 +1116,14 @@
     padding: 8px;
     border-radius: 6px;
     position: relative;
-    transition: all 0.3s ease;
-    display: flex;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
-.ai-assistant-btn:hover {
+.ai-assistant-btn:hover,
+.ai-assistant-btn[aria-expanded="true"] {
     background-color: rgba(245, 197, 24, 0.15);
     color: #f5c518;
 }

@@ -399,8 +399,16 @@ function closeAIAssistant() {
         window.closeAIAssistant();
         return;
     }
+    if (window.SkAiClose?.forceCloseAiModal) {
+        window.SkAiClose.forceCloseAiModal();
+        return;
+    }
     const aiModal = document.getElementById('aiAssistantModal');
     const aiBtn = document.getElementById('aiAssistantBtn');
-    if (aiModal) aiModal.classList.remove('open');
+    if (aiModal) {
+        aiModal.classList.remove('open');
+        aiModal.setAttribute('hidden', '');
+        aiModal.setAttribute('aria-hidden', 'true');
+    }
     if (aiBtn) aiBtn.setAttribute('aria-expanded', 'false');
 }

@@ -360,13 +360,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     window.closeAIAssistant = function () {
-        if (aiModal) aiModal.classList.remove('open');
+        if (aiModal) {
+            aiModal.classList.remove('open');
+            aiModal.setAttribute('hidden', '');
+            aiModal.setAttribute('aria-hidden', 'true');
+        }
         if (aiBtn) aiBtn.setAttribute('aria-expanded', 'false');
         if (recentMenu) recentMenu.closeMenu();
+        toggleRecentsSidebar(false);
         try {
             sessionStorage.setItem('skaiModalClosed', '1');
         } catch (_) { /* ignore */ }
     };
+
+    function openAIAssistant() {
+        if (!aiModal) return;
+        try { sessionStorage.removeItem('skaiModalClosed'); } catch (_) { /* ignore */ }
+        aiModal.removeAttribute('hidden');
+        aiModal.setAttribute('aria-hidden', 'false');
+        aiModal.classList.add('open');
+        if (aiBtn) aiBtn.setAttribute('aria-expanded', 'true');
+        updateRecentList();
+        const chat = getActiveChat();
+        if (chat && chat.messages.length) renderChatMessages();
+        else startNewChat();
+    }
 
     aiBtn.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -376,13 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (aiModal.classList.contains('open')) {
             window.closeAIAssistant();
         } else {
-            try { sessionStorage.removeItem('skaiModalClosed'); } catch (_) { /* ignore */ }
-            aiModal.classList.add('open');
-            aiBtn.setAttribute('aria-expanded', 'true');
-            updateRecentList();
-            const chat = getActiveChat();
-            if (chat && chat.messages.length) renderChatMessages();
-            else startNewChat();
+            openAIAssistant();
         }
     });
 
@@ -463,4 +475,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     window.closeAIAssistant();
+
+    if (window.SkAiClose?.markAiReady) {
+        window.SkAiClose.markAiReady();
+    } else {
+        document.documentElement.classList.add('sk-ai-ready');
+        aiModal.removeAttribute('hidden');
+    }
 });

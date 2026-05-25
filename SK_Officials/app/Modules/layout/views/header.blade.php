@@ -27,8 +27,41 @@
         <div class="header-right">
 
             <div class="ai-assistant-menu" id="aiAssistantMenu">
+                <style id="skAiCriticalCss">
+                    /* Prevent SKai modal FOUC before module CSS/JS load */
+                    .ai-assistant-menu { position: relative; display: flex; align-items: center; flex-shrink: 0; }
+                    .ai-assistant-modal:not(.open),
+                    html:not(.sk-ai-ready) .ai-assistant-modal {
+                        display: none !important;
+                        visibility: hidden !important;
+                        opacity: 0 !important;
+                        pointer-events: none !important;
+                        position: absolute !important;
+                        width: 0 !important;
+                        height: 0 !important;
+                        max-height: 0 !important;
+                        overflow: hidden !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                    }
+                </style>
                 @include('AI_Assistant::ai-assistant-modal-form')
                 @include('AI_Assistant::ai')
+                <script>
+                    (function () {
+                        var m = document.getElementById('aiAssistantModal');
+                        var b = document.getElementById('aiAssistantBtn');
+                        if (m) {
+                            m.classList.remove('open');
+                            m.setAttribute('hidden', '');
+                            m.setAttribute('aria-hidden', 'true');
+                        }
+                        if (b) b.setAttribute('aria-expanded', 'false');
+                        document.documentElement.classList.remove('sk-ai-ready');
+                    })();
+                </script>
                 @include('AI_Assistant::components.recent-context-menu')
                 @include('AI_Assistant::components.toast-container')
                 @include('AI_Assistant::partials.modal-assets')

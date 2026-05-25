@@ -5,7 +5,7 @@
 @endphp
 
 <div class="ai-assistant-modal" id="aiAssistantModal" role="dialog" aria-label="SKai"
-     data-user-first-name="{{ $modalUserFirstName }}">
+     data-user-first-name="{{ $modalUserFirstName }}" hidden aria-hidden="true">
 
     <div class="ai-modal-layout" id="aiModalLayout">
 
