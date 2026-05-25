@@ -1,106 +1,119 @@
 /**
- * CKEditor decoupled ribbon — mount toolbar + overlay menu dropdowns on the page.
+ * CKEditor decoupled ribbon — mount toolbar + fast menu dropdown positioning.
  */
 
 let mountedEditor = null;
-let panelPortalObserver = null;
-let panelRepositionHandler = null;
+let ribbonObserver = null;
+let repositionHandler = null;
+let repositionQueued = false;
 
-function ensurePanelPortal() {
-    let portal = document.getElementById('mrCkPanelPortal');
-    if (!portal) {
-        portal = document.createElement('div');
-        portal.id = 'mrCkPanelPortal';
-        portal.className = 'mr-ck-panel-portal';
-        portal.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(portal);
-    }
-    return portal;
+function isMenuOpen(menuRoot) {
+    if (!menuRoot) return false;
+    if (menuRoot.classList.contains('ck-on')) return true;
+    const btn = menuRoot.querySelector('.ck-menu-bar__menu__button');
+    return btn?.getAttribute('aria-expanded') === 'true';
 }
 
-function isPanelVisible(panel) {
-    if (!panel || !panel.isConnected) return false;
-    const style = window.getComputedStyle(panel);
-    return style.display !== 'none' && style.visibility !== 'hidden' && panel.offsetParent !== null;
+function clearPanelPosition(panel) {
+    panel.classList.remove('mr-ck-panel--open');
+    panel.style.removeProperty('position');
+    panel.style.removeProperty('left');
+    panel.style.removeProperty('top');
+    panel.style.removeProperty('z-index');
+    panel.style.removeProperty('max-height');
+    panel.style.removeProperty('overflow-y');
+    panel.style.removeProperty('min-width');
 }
 
-function findMenuAnchor(panel) {
-    const menuId = panel.getAttribute('aria-labelledby')
-        || panel.getAttribute('id')?.replace('panel-', '');
-    if (menuId) {
-        const byId = document.getElementById(menuId);
-        if (byId) return byId;
+function positionOpenPanel(menuRoot) {
+    const panel = menuRoot.querySelector(':scope > .ck-menu-bar__menu__panel');
+    const btn = menuRoot.querySelector('.ck-menu-bar__menu__button');
+    if (!panel || !btn || !isMenuOpen(menuRoot)) {
+        if (panel) clearPanelPosition(panel);
+        return;
     }
 
-    const menuRoot = panel.closest('.ck-menu-bar__menu');
-    if (menuRoot) {
-        return menuRoot.querySelector('.ck-menu-bar__menu__button, .ck-button');
-    }
+    const rect = btn.getBoundingClientRect();
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - 280));
 
-    const openBtn = document.querySelector('.ck-menu-bar__menu__button[aria-expanded="true"]');
-    return openBtn || null;
-}
-
-function positionFloatingPanel(panel, anchor) {
-    if (!anchor) return;
-    const rect = anchor.getBoundingClientRect();
+    panel.classList.add('mr-ck-panel--open');
     panel.style.setProperty('position', 'fixed', 'important');
-    panel.style.setProperty('left', `${Math.max(8, rect.left)}px`, 'important');
+    panel.style.setProperty('left', `${left}px`, 'important');
     panel.style.setProperty('top', `${rect.bottom + 2}px`, 'important');
     panel.style.setProperty('z-index', '10050', 'important');
-    panel.style.setProperty('max-height', 'none', 'important');
-    panel.style.setProperty('overflow', 'visible', 'important');
-    panel.style.setProperty('overflow-y', 'visible', 'important');
+    panel.style.setProperty('max-height', 'min(70vh, 480px)', 'important');
+    panel.style.setProperty('overflow-y', 'auto', 'important');
+    panel.style.setProperty('min-width', `${Math.max(rect.width, 180)}px`, 'important');
 }
 
-function portalVisiblePanels() {
-    const portal = ensurePanelPortal();
-    const selectors = [
-        '.ck-menu-bar__menu__panel',
-        '.ck-dropdown-menu__nested-menu__panel',
-        '.ck.ck-balloon-panel.ck-dropdown-menu__nested-menu__panel',
-    ];
+function repositionOpenPanels() {
+    const mount = document.getElementById('mrRibbonToolbar');
+    if (!mount) return;
 
-    document.querySelectorAll(selectors.join(',')).forEach(panel => {
-        if (!isPanelVisible(panel)) return;
-
-        const anchor = findMenuAnchor(panel);
-        if (!anchor) return;
-
-        if (panel.parentElement !== portal) {
-            portal.appendChild(panel);
+    mount.querySelectorAll('.ck-menu-bar__menu').forEach(menu => {
+        if (isMenuOpen(menu)) {
+            positionOpenPanel(menu);
+        } else {
+            const panel = menu.querySelector(':scope > .ck-menu-bar__menu__panel');
+            if (panel) clearPanelPosition(panel);
         }
-
-        panel.classList.add('mr-ck-panel--floating');
-        positionFloatingPanel(panel, anchor);
     });
 }
 
-export function initCkPanelPortal() {
-    if (panelPortalObserver) return;
-
-    ensurePanelPortal();
-
-    panelPortalObserver = new MutationObserver(() => {
-        requestAnimationFrame(portalVisiblePanels);
+function scheduleReposition() {
+    if (repositionQueued) return;
+    repositionQueued = true;
+    requestAnimationFrame(() => {
+        repositionQueued = false;
+        repositionOpenPanels();
     });
+}
 
-    panelPortalObserver.observe(document.body, {
-        subtree: true,
-        childList: true,
-        attributes: true,
-        attributeFilter: ['class', 'style', 'aria-expanded', 'hidden'],
+function bindRibbonMenuEvents(mount) {
+    if (mount.dataset.mrRibbonBound === '1') return;
+    mount.dataset.mrRibbonBound = '1';
+
+    mount.addEventListener('click', (e) => {
+        if (e.target.closest('.ck-menu-bar__menu__button')) {
+            scheduleReposition();
+        }
+    }, false);
+
+    mount.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') scheduleReposition();
     });
+}
 
-    panelRepositionHandler = () => requestAnimationFrame(portalVisiblePanels);
-    window.addEventListener('resize', panelRepositionHandler);
-    window.addEventListener('scroll', panelRepositionHandler, true);
-    document.getElementById('mrWorkspace')?.addEventListener('scroll', panelRepositionHandler);
+function initRibbonPositioning() {
+    const mount = document.getElementById('mrRibbonToolbar');
+    if (!mount) return;
+
+    bindRibbonMenuEvents(mount);
+
+    if (!ribbonObserver) {
+        ribbonObserver = new MutationObserver(scheduleReposition);
+        ribbonObserver.observe(mount, {
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'aria-expanded'],
+        });
+
+        repositionHandler = () => scheduleReposition();
+        window.addEventListener('resize', repositionHandler, { passive: true });
+        window.addEventListener('scroll', repositionHandler, { passive: true, capture: true });
+        document.getElementById('mrWorkspace')?.addEventListener('scroll', repositionHandler, { passive: true });
+    }
+
+    scheduleReposition();
 }
 
 export function clearRibbon() {
     const mount = document.getElementById('mrRibbonToolbar');
-    if (mount) mount.innerHTML = '';
+    if (mount) {
+        mount.querySelectorAll('.mr-ck-panel--open').forEach(clearPanelPosition);
+        mount.innerHTML = '';
+        delete mount.dataset.mrRibbonBound;
+    }
     mountedEditor = null;
 }
 
@@ -112,26 +125,47 @@ export function attachEditorToRibbon(editor) {
     clearRibbon();
     mountedEditor = editor;
 
-    const menuBar = editor.ui?.view?.menuBarView?.element;
-    let toolbar = editor.ui?.view?.toolbar?.element;
+    const ui = editor.ui?.view;
+    const menuBar = ui?.menuBarView?.element;
+    let toolbar = ui?.toolbar?.element;
 
-    if (!toolbar && editor.ui?.view?.element) {
-        const top = editor.ui.view.element.querySelector('.ck-editor__top');
-        if (top) toolbar = top;
+    if (!toolbar && ui?.element) {
+        toolbar = ui.element.querySelector('.ck-toolbar, .ck-editor__top');
     }
 
-    if (menuBar) mount.appendChild(menuBar);
-    if (toolbar) mount.appendChild(toolbar);
+    if (menuBar) {
+        menuBar.classList.add('mr-ribbon-menu-bar');
+        mount.appendChild(menuBar);
+    }
+    if (toolbar) {
+        toolbar.classList.add('mr-ribbon-main-toolbar');
+        mount.appendChild(toolbar);
+    }
 
-    if (dock) dock.hidden = false;
+    if (dock) {
+        dock.hidden = false;
+        dock.removeAttribute('aria-hidden');
+    }
 
-    initCkPanelPortal();
-    requestAnimationFrame(portalVisiblePanels);
+    initRibbonPositioning();
+
+    requestAnimationFrame(() => {
+        const editable = editor.editing?.view?.getDomRoot?.()
+            || document.querySelector('.mr-paper-sheet.is-active .ck-editor__editable');
+        if (editable && !editor.isReadOnly) {
+            editable.setAttribute('contenteditable', 'true');
+            editable.removeAttribute('aria-disabled');
+        }
+    });
 }
 
 export function setRibbonVisible(visible) {
     const dock = document.getElementById('mrRibbonDock');
-    if (dock) dock.hidden = !visible;
+    if (dock) {
+        dock.hidden = !visible;
+        if (!visible) dock.setAttribute('aria-hidden', 'true');
+        else dock.removeAttribute('aria-hidden');
+    }
 }
 
 export function syncRibbonFullscreenState() {
@@ -144,11 +178,14 @@ export function initRibbon() {
     const main = document.querySelector('.mr-main');
     if (!main) return;
 
-    initCkPanelPortal();
-
     const observer = new MutationObserver(() => syncRibbonFullscreenState());
     observer.observe(main, { attributes: true, attributeFilter: ['class'] });
     syncRibbonFullscreenState();
+}
+
+/** @deprecated kept for make-report.js import compatibility */
+export function initCkPanelPortal() {
+    initRibbonPositioning();
 }
 
 export function getMountedRibbonEditor() {

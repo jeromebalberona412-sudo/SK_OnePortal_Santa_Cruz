@@ -367,6 +367,23 @@ window.addEventListener('resize', function () {
     }
 });
 
+function updateNotificationBadge(count) {
+    const notifBadge = document.getElementById('notifBadge');
+    const notifCountPill = document.getElementById('notifCountPill');
+    const unread = typeof count === 'number'
+        ? count
+        : (document.querySelectorAll('#notifList .notif-unread').length || 0);
+
+    if (notifBadge) {
+        notifBadge.textContent = unread;
+        notifBadge.style.display = unread > 0 ? 'flex' : 'none';
+    }
+    if (notifCountPill) {
+        notifCountPill.textContent = unread;
+        notifCountPill.style.display = unread > 0 ? 'inline' : 'none';
+    }
+}
+
 // ── Exports ──────────────────────────────────────────────────────────────────
 window.HeaderFunctions = {
     toggleSidebar:          responsiveToggleSidebar,

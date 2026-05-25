@@ -10,12 +10,22 @@ export function buildMakeReportEditorConfig({
     exportFileBase = 'sk-report',
     paperFormat = 'A4',
     mode = 'local',
+    minimal = false,
 }) {
     const CK = window.CKEDITOR;
     const PREMIUM = window.CKEDITOR_PREMIUM_FEATURES;
 
     if (!CK || !PREMIUM) {
         throw new Error('CKEditor 5 scripts are not loaded.');
+    }
+
+    if (minimal) {
+        return buildMinimalEditorConfig({
+            licenseKey,
+            initialData,
+            exportFileBase,
+            paperFormat,
+        });
     }
 
     const {
@@ -65,6 +75,7 @@ export function buildMakeReportEditorConfig({
         ListProperties,
         MediaEmbed,
         Mention,
+        MenuBar,
         PageBreak,
         PasteFromOffice,
         PictureEditing,
@@ -92,6 +103,7 @@ export function buildMakeReportEditorConfig({
         TextTransformation,
         TodoList,
         Underline,
+        Undo,
         WordCount,
         BalloonToolbar,
         Essentials,
@@ -132,14 +144,13 @@ export function buildMakeReportEditorConfig({
     const toolbarItems = [
         'undo', 'redo', '|',
         ...(useCollaboration ? ['trackChanges', 'comment', '|'] : []),
-        'insertMergeField', 'previewMergeFields', '|',
         'importWord', 'exportWord', 'exportPdf', 'showBlocks', 'formatPainter', 'caseChange',
         'findAndReplace', 'textPartLanguage', 'fullscreen', '|',
         'heading', '|',
         'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
         'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'code', 'removeFormat', '|',
         'specialCharacters', 'horizontalLine', 'pageBreak', 'link', 'insertFootnote', 'bookmark',
-        'insertImage', 'insertImageViaUrl', 'ckbox', 'mediaEmbed', 'insertTable', 'insertTableLayout',
+        'insertImage', 'insertImageViaUrl', 'ckbox', 'mediaEmbed', 'insertTable',
         'tableOfContents', 'insertTemplate', 'highlight', 'blockQuote', 'codeBlock', 'htmlEmbed', '|',
         'alignment', 'lineHeight', '|',
         'bulletedList', 'numberedList', 'multiLevelList', 'todoList', 'outdent', 'indent',
@@ -161,13 +172,21 @@ export function buildMakeReportEditorConfig({
         SpecialCharactersEssentials, SpecialCharactersLatin, SpecialCharactersMathematical,
         SpecialCharactersText, Strikethrough, Subscript, Superscript, Table, TableCaption,
         TableCellProperties, TableColumnResize, TableLayout, TableOfContents, TableProperties,
-        TableToolbar, Template, TextPartLanguage, TextTransformation, TodoList, Underline, WordCount,
+        TableToolbar, Template, TextPartLanguage, TextTransformation, TodoList, Underline, Undo, WordCount,
     ];
+
+    if (MenuBar) {
+        plugins.unshift(MenuBar);
+    }
+
+    /* CKBox requires CloudServices even in local (non-collaboration) mode */
+    if (CloudServices && cloudTokenUrl && !plugins.includes(CloudServices)) {
+        plugins.push(CloudServices);
+    }
 
     if (useCollaboration) {
         plugins.push(
             Autosave,
-            CloudServices,
             Comments,
             PresenceList,
             RealTimeCollaborativeComments,
@@ -186,7 +205,7 @@ export function buildMakeReportEditorConfig({
             items: toolbarItems,
             shouldNotGroupWhenFull: false,
         },
-        plugins,
+        plugins: plugins.filter(Boolean),
         balloonToolbar: useCollaboration
             ? ['comment', '|', 'bold', 'italic', '|', 'link', 'insertImage', '|', 'bulletedList', 'numberedList']
             : ['bold', 'italic', '|', 'link', 'insertImage', '|', 'bulletedList', 'numberedList'],
@@ -284,11 +303,14 @@ export function buildMakeReportEditorConfig({
         template: { definitions: [] },
     };
 
-    if (useCollaboration) {
+    if (cloudTokenUrl) {
         config.cloudServices = {
             tokenUrl: cloudTokenUrl,
-            webSocketUrl: cloudWebSocketUrl,
+            ...(useCollaboration && cloudWebSocketUrl ? { webSocketUrl: cloudWebSocketUrl } : {}),
         };
+    }
+
+    if (useCollaboration) {
         config.collaboration = { channelId: documentId };
         config.comments = {
             editorConfig: {
@@ -305,6 +327,61 @@ export function buildMakeReportEditorConfig({
     return config;
 }
 
+function buildMinimalEditorConfig({ licenseKey, initialData = '', exportFileBase = 'sk-report', paperFormat = 'A4' }) {
+    const CK = window.CKEDITOR;
+    const {
+        Alignment,
+        Autoformat,
+        Bold,
+        Essentials,
+        Heading,
+        Indent,
+        Italic,
+        Link,
+        List,
+        MenuBar,
+        Paragraph,
+        Strikethrough,
+        Underline,
+        Undo,
+    } = CK;
+
+    const plugins = [
+        Essentials, Paragraph, Heading, Bold, Italic, Underline, Strikethrough,
+        Link, List, Indent, Alignment, Autoformat, Undo,
+    ];
+    if (MenuBar) plugins.unshift(MenuBar);
+
+    const cdnVersion = window.MR_CKEDITOR_CONFIG?.cdnVersion || '47.6.1';
+
+    return {
+        licenseKey,
+        initialData,
+        plugins: plugins.filter(Boolean),
+        menuBar: { isVisible: true },
+        toolbar: {
+            items: [
+                'undo', 'redo', '|',
+                'heading', '|',
+                'bold', 'italic', 'underline', 'strikethrough', '|',
+                'bulletedList', 'numberedList', '|',
+                'alignment', 'outdent', 'indent', '|',
+                'link',
+            ],
+            shouldNotGroupWhenFull: false,
+        },
+        exportPdf: {
+            stylesheets: [`https://cdn.ckeditor.com/ckeditor5/${cdnVersion}/ckeditor5.css`],
+            fileName: `${exportFileBase}.pdf`,
+            converterOptions: { format: paperFormat, page_orientation: 'portrait' },
+        },
+        exportWord: {
+            stylesheets: [`https://cdn.ckeditor.com/ckeditor5/${cdnVersion}/ckeditor5.css`],
+            fileName: `${exportFileBase}.docx`,
+        },
+    };
+}
+
 function canUseCollaboration(options) {
     return Boolean(
         options.licenseKey
@@ -314,31 +391,66 @@ function canUseCollaboration(options) {
     );
 }
 
-export async function createMakeReportEditor(element, options) {
+function getEditorClass() {
     const CK = window.CKEDITOR;
-    const EditorClass = CK.DecoupledEditor || CK.ClassicEditor;
-    const tryModes = canUseCollaboration(options)
-        ? ['collaboration', 'local']
-        : ['local'];
+    return CK.DecoupledEditor || CK.ClassicEditor;
+}
+
+/** CKEditor marks a source element on create(); replace it before retrying. */
+export function replaceEditorMount(element) {
+    const parent = element?.parentNode;
+    if (!parent) return element;
+
+    const fresh = document.createElement('div');
+    fresh.id = element.id || 'mrEditor';
+    if (element.className) fresh.className = element.className;
+    parent.replaceChild(fresh, element);
+    return fresh;
+}
+
+export async function createMakeReportEditor(element, options) {
+    const EditorClass = getEditorClass();
+    if (!EditorClass) {
+        throw new Error('CKEditor editor class is not available.');
+    }
+
+    const attempts = [
+        { mode: 'local', minimal: false },
+        ...(canUseCollaboration(options) ? [{ mode: 'collaboration', minimal: false }] : []),
+        { mode: 'local', minimal: true },
+    ];
 
     let lastError = null;
+    let target = element;
 
-    for (const mode of tryModes) {
+    for (const attempt of attempts) {
+        let editor = null;
         try {
-            const config = buildMakeReportEditorConfig({ ...options, mode });
-            const editor = await EditorClass.create(element, config);
-            await editor.isReady;
+            const config = buildMakeReportEditorConfig({ ...options, ...attempt });
+            editor = await EditorClass.create(target, config);
+
+            if (editor.isReady && typeof editor.isReady.then === 'function') {
+                await editor.isReady;
+            }
 
             const wordCountEl = document.querySelector('#mr-editor-word-count');
             if (wordCountEl) {
                 wordCountEl.innerHTML = '';
             }
 
-            editor._mrMode = mode;
+            editor._mrMode = attempt.minimal ? 'minimal' : attempt.mode;
+            editor._mrIsDecoupled = EditorClass === window.CKEDITOR.DecoupledEditor;
+
             return editor;
         } catch (err) {
             lastError = err;
-            console.warn(`[Make Report] CKEditor mode "${mode}" failed:`, err);
+            console.warn(`[Make Report] CKEditor init (${attempt.mode}${attempt.minimal ? ', minimal' : ''}) failed:`, err);
+            if (editor) {
+                try {
+                    await editor.destroy();
+                } catch (_) { /* ignore */ }
+            }
+            target = replaceEditorMount(target);
         }
     }
 

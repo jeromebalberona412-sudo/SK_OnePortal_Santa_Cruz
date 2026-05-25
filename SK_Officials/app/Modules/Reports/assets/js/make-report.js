@@ -1,7 +1,7 @@
 /**
  * Make a Report — CKEditor 5 Premium + multi-page + localStorage
  */
-import { createMakeReportEditor } from './make-report-ckeditor-config.js';
+import { createMakeReportEditor, replaceEditorMount } from './make-report-ckeditor-config.js';
 import { attachEditorToRibbon, clearRibbon, initRibbon } from './make-report-ribbon.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let autosaveTimer = null;
     let tablePage = 1;
     let editorReady = false;
+    let mountInProgress = null;
+    const MAX_EDITOR_INIT_ATTEMPTS = 2;
 
     let documentPages = [{ html: '', header: '', footer: '' }];
     let activeDocPage = 0;
@@ -176,70 +178,144 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         ckEditor = null;
         editorReady = false;
+        const stale = document.getElementById('mrEditor');
+        if (stale) replaceEditorMount(stale);
     }
 
-    async function mountEditor(initialData = '') {
-        if (!document.getElementById('mrEditor')) {
-            renderPageStack();
-        }
-
-        const el = document.getElementById('mrEditor');
-        if (!el) return;
-
-        await destroyEditor();
-        channelId = currentId || channelId;
-
-        const pageHtml = normalizeEditorHtml(initialData);
-
-        try {
-            ckEditor = await createMakeReportEditor(el, {
-                documentId: getPageChannelId(activeDocPage),
-                licenseKey: window.MR_CKEDITOR_CONFIG.licenseKey,
-                cloudTokenUrl: window.MR_CKEDITOR_CONFIG.cloudTokenUrl,
-                cloudWebSocketUrl: window.MR_CKEDITOR_CONFIG.cloudWebSocketUrl,
-                initialData: pageHtml,
-                exportFileBase: getExportFileBase(),
-                paperFormat: getPaperFormat(),
-            });
-
-            attachEditorToRibbon(ckEditor);
-
-            ckEditor.model.document.on('change:data', () => {
-                triggerAutosave();
-                scheduleAutoPagination();
-                updatePageIndicator();
-            });
-
-            editorReady = true;
-            renderDocPageTabs();
-            updatePageIndicator();
-        } catch (err) {
-            console.error('[Make Report] CKEditor init failed:', err);
-            toast('Editor could not load. Using offline mode — refresh or check your connection.');
-        }
+    function ckScriptsReady() {
+        const CK = window.CKEDITOR;
+        return Boolean(
+            CK
+            && window.CKEDITOR_PREMIUM_FEATURES
+            && (CK.DecoupledEditor || CK.ClassicEditor)
+        );
     }
 
-    function waitForCkScripts() {
+    function waitForCkScripts(maxMs = 45000) {
         return new Promise((resolve, reject) => {
-            let attempts = 0;
+            if (ckScriptsReady()) {
+                resolve();
+                return;
+            }
+
+            const started = Date.now();
             const tick = () => {
-                if (window.CKEDITOR && window.CKEDITOR_PREMIUM_FEATURES) {
+                if (ckScriptsReady()) {
                     resolve();
                     return;
                 }
-                attempts += 1;
-                if (attempts > 80) {
-                    reject(new Error('CKEditor CDN timeout'));
+                if (Date.now() - started >= maxMs) {
+                    reject(new Error('CKEditor scripts did not load in time.'));
                     return;
                 }
-                setTimeout(tick, 100);
+                setTimeout(tick, 150);
             };
             tick();
         });
     }
 
-    waitForCkScripts()
-        .then(async () => {
+    function focusEditor() {
+        if (!ckEditor || !editorReady) return;
+        try {
+            ckEditor.editing.view.focus();
+        } catch (_) {
+            const editable = document.querySelector('.mr-paper-sheet.is-active .ck-editor__editable');
+            editable?.focus();
+        }
+    }
+
+    async function mountEditor(initialData = '') {
+        if (mountInProgress) {
+            await mountInProgress;
+            return;
+        }
+
+        mountInProgress = (async () => {
+            if (!document.getElementById('mrEditor')) {
+                renderPageStack();
+            }
+
+            let el = document.getElementById('mrEditor');
+            if (!el) return;
+
+            await destroyEditor();
+            el = document.getElementById('mrEditor') || el;
+            channelId = currentId || channelId;
+
+            const pageHtml = normalizeEditorHtml(initialData);
+            let lastErr = null;
+
+            for (let attempt = 1; attempt <= MAX_EDITOR_INIT_ATTEMPTS; attempt += 1) {
+                try {
+                    if (!ckScriptsReady()) {
+                        await waitForCkScripts(20000);
+                    }
+
+                    if (attempt > 1) {
+                        el = replaceEditorMount(el);
+                    }
+
+                    ckEditor = await createMakeReportEditor(el, {
+                        documentId: getPageChannelId(activeDocPage),
+                        licenseKey: window.MR_CKEDITOR_CONFIG.licenseKey,
+                        cloudTokenUrl: window.MR_CKEDITOR_CONFIG.cloudTokenUrl,
+                        cloudWebSocketUrl: window.MR_CKEDITOR_CONFIG.cloudWebSocketUrl,
+                        initialData: pageHtml,
+                        exportFileBase: getExportFileBase(),
+                        paperFormat: getPaperFormat(),
+                    });
+
+                    attachEditorToRibbon(ckEditor);
+
+                    ckEditor.model.document.on('change:data', () => {
+                        triggerAutosave();
+                        scheduleAutoPagination();
+                        updatePageIndicator();
+                    });
+
+                    editorReady = true;
+                    renderDocPageTabs();
+                    updatePageIndicator();
+
+                    requestAnimationFrame(focusEditor);
+                    return;
+                } catch (err) {
+                    lastErr = err;
+                    console.warn(`[Make Report] Editor init attempt ${attempt}/${MAX_EDITOR_INIT_ATTEMPTS}:`, err);
+                    ckEditor = null;
+                    editorReady = false;
+                    if (attempt < MAX_EDITOR_INIT_ATTEMPTS) {
+                        await new Promise(r => setTimeout(r, 400 * attempt));
+                    }
+                }
+            }
+
+            console.error('[Make Report] CKEditor init failed:', lastErr);
+            toast('Editor could not start. Refresh the page or try again in a moment.');
+        })();
+
+        try {
+            await mountInProgress;
+        } finally {
+            mountInProgress = null;
+        }
+    }
+
+    let editorBootstrapped = false;
+
+    async function bootstrapEditor() {
+        if (editorBootstrapped) return;
+        editorBootstrapped = true;
+
+        const statusEl = document.getElementById('mrAutosaveStatus');
+        const prevStatus = statusEl?.innerHTML;
+        if (statusEl) {
+            statusEl.innerHTML = '<span class="mr-autosave-dot"></span> Loading editor…';
+        }
+
+        try {
+            await waitForCkScripts();
+
             if (editId) {
                 const r = reports.find(x => x.id === editId);
                 if (r) {
@@ -263,9 +339,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderPageStack();
             await mountEditor(documentPages[activeDocPage]?.html || '');
-            if (editId) toast('Report loaded.');
-        })
-        .catch(() => toast('CKEditor scripts failed to load.'));
+            if (editId && editorReady) toast('Report loaded.');
+        } catch (err) {
+            console.error('[Make Report] Bootstrap failed:', err);
+            toast('CKEditor could not load. Check your connection and refresh the page.');
+        } finally {
+            if (statusEl && prevStatus) {
+                statusEl.innerHTML = prevStatus;
+            }
+        }
+    }
+
+    bootstrapEditor();
+
+    document.getElementById('mrPaperStack')?.addEventListener('click', (e) => {
+        const sheet = e.target.closest('.mr-paper-sheet.is-active');
+        if (!sheet) return;
+        if (e.target.closest('.mr-ribbon-dock, .ck-toolbar, .ck-menu-bar, #mrCkPanelPortal')) return;
+        focusEditor();
+    });
 
     function plainTextLength(html) {
         return (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().length;

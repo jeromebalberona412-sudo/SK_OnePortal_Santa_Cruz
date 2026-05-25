@@ -1,16 +1,17 @@
-/* CKEditor decoupled ribbon — sticky toolbar + floating menu overlays */
+/* CKEditor decoupled ribbon — sticky toolbar + menu dropdowns */
 
 .mr-ribbon-dock {
     flex-shrink: 0;
     background: #fff;
     border-bottom: 1px solid #e5e7eb;
     overflow: visible !important;
+    position: relative;
+    z-index: 210;
 }
 
 .mr-ribbon-inner {
     max-width: 100%;
     overflow: visible !important;
-    -webkit-overflow-scrolling: touch;
 }
 
 .mr-ribbon-toolbar {
@@ -38,47 +39,39 @@
 
 .mr-ribbon-toolbar .ck.ck-menu-bar {
     border-bottom: 1px solid #e5e7eb !important;
-    overflow: visible !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.mr-ribbon-toolbar .ck.ck-menu-bar .ck-menu-bar__menu_top-level {
+    flex-shrink: 0;
 }
 
 .mr-ribbon-toolbar .ck.ck-toolbar {
     flex-wrap: wrap;
     overflow-x: auto;
     overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
 }
 
-.mr-sticky-chrome {
-    overflow: visible !important;
+/* Closed menus — hidden instantly, no portal lag */
+.mr-ribbon-toolbar .ck-menu-bar__menu:not(.ck-on) > .ck-menu-bar__menu__panel {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
-/* Floating menu panels (ported to body) — overlap page, no side scrollbar on ribbon */
-.mr-ck-panel-portal {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 10040;
-}
-
-.mr-ck-panel-portal > * {
-    pointer-events: auto;
-}
-
-.mr-ck-panel--floating,
-.mr-ck-panel-portal .ck-menu-bar__menu__panel,
-.mr-ck-panel-portal .ck-dropdown-menu__nested-menu__panel,
-.mr-ck-panel-portal .ck.ck-balloon-panel {
-    z-index: 10050 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    overflow-y: visible !important;
+/* Open menu panel — positioned by JS (fixed), always on top of document */
+.mr-ribbon-toolbar .ck-menu-bar__menu__panel.mr-ck-panel--open,
+.mr-ribbon-toolbar .ck-menu-bar__menu.ck-on > .ck-menu-bar__menu__panel {
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18) !important;
-}
-
-body.mr-body .ck-menu-bar__menu__panel:not(.mr-ck-panel--floating),
-body.mr-body .ck-dropdown-menu__nested-menu__panel {
-    z-index: 10050 !important;
-    max-height: none !important;
-    overflow: visible !important;
+    background: #fff !important;
 }
 
 .mr-ckeditor-body .ck.ck-editor__top,
@@ -99,10 +92,21 @@ body.mr-body .ck-dropdown-menu__nested-menu__panel {
     border-color: #2d3a4d !important;
 }
 
-@media (max-width: 640px) {
-    .mr-ribbon-toolbar .ck.ck-toolbar {
-        max-height: 100px;
+.mr-dark .mr-ribbon-toolbar .ck-menu-bar__menu__panel.mr-ck-panel--open {
+    background: #1a2332 !important;
+}
+
+@media (max-width: 900px) {
+    .mr-ribbon-toolbar .ck.ck-menu-bar {
         overflow-x: auto;
-        overflow-y: visible !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .mr-ribbon-toolbar .ck.ck-menu-bar__menu__button .ck-button__label {
+        font-size: 12px;
+    }
+    .mr-ribbon-toolbar .ck.ck-toolbar {
+        overflow-x: auto;
     }
 }

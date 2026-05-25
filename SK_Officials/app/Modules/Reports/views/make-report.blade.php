@@ -140,9 +140,9 @@
 <script>
     window.MR_CKEDITOR_CONFIG = JSON.parse(document.getElementById('mr-ckeditor-config-json').textContent);
 </script>
-<script src="https://cdn.ckeditor.com/ckeditor5/{{ $ckVersion }}/ckeditor5.umd.js" crossorigin></script>
-<script src="https://cdn.ckeditor.com/ckeditor5-premium-features/{{ $ckVersion }}/ckeditor5-premium-features.umd.js" crossorigin></script>
-<script src="https://cdn.ckbox.io/ckbox/{{ $ckboxVersion }}/ckbox.js" crossorigin></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/{{ $ckVersion }}/ckeditor5.umd.js" crossorigin defer></script>
+<script src="https://cdn.ckeditor.com/ckeditor5-premium-features/{{ $ckVersion }}/ckeditor5-premium-features.umd.js" crossorigin defer></script>
+<script src="https://cdn.ckbox.io/ckbox/{{ $ckboxVersion }}/ckbox.js" crossorigin defer></script>
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',

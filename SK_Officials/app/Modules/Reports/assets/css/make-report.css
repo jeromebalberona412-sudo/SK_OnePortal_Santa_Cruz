@@ -30,9 +30,36 @@
 
 .mr-body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f1f5; }
 
-/* Hide global profile on Make a Report (editor-only page) */
-body.mr-body .main-header .user-menu {
-    display: none !important;
+/* Header on Make a Report — keep logout/profile dropdown visible */
+body.mr-body .main-header {
+    z-index: 300;
+}
+
+body.mr-body .main-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+body.mr-body .main-header .user-menu,
+body.mr-body .main-header .notif-menu,
+body.mr-body .main-header .ai-assistant-menu {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+body.mr-body .user-dropdown {
+    z-index: 10100;
+}
+
+body.mr-body .notif-dropdown {
+    z-index: 10100;
+}
+
+body.mr-body .logout-modal {
+    z-index: 10200;
 }
 
 .mr-app {
@@ -62,7 +89,23 @@ body.mr-body .main-header .user-menu {
     .mr-app {
         margin-left: 0 !important;
         width: 100% !important;
-        padding: 12px;
+        padding: 8px 10px 12px;
+        margin-top: 60px;
+        height: calc(100vh - 60px);
+        min-height: calc(100vh - 60px);
+    }
+
+    body.mr-body .main-header .header-right {
+        gap: 4px;
+    }
+
+    body.mr-body .user-menu-btn {
+        padding: 6px 8px;
+    }
+
+    body.mr-body .user-dropdown {
+        right: 0;
+        min-width: 220px;
     }
 }
 
@@ -402,6 +445,19 @@ body.mr-body .main-header .user-menu {
     font-family: Calibri, var(--ck-content-font-family), sans-serif !important;
     font-size: 11pt !important;
     line-height: 1.5 !important;
+    pointer-events: auto !important;
+    cursor: text;
+}
+
+.mr-paper-sheet.is-active .mr-ckeditor-body,
+.mr-paper-sheet.is-active .mr-ckeditor-root,
+.mr-paper-sheet.is-active .ck.ck-editor,
+.mr-paper-sheet.is-active .ck-editor__main {
+    pointer-events: auto;
+}
+
+.mr-paper-sheet.is-active .ck-editor__editable.ck-read-only {
+    pointer-events: auto !important;
 }
 
 .mr-page-indicator.is-near-limit { color: #d97706; }
@@ -606,6 +662,13 @@ body.mr-body .main-header .user-menu {
 .mr-skeleton { height: 48px; background: linear-gradient(90deg, #f3f4f6, #e5e7eb, #f3f4f6); border-radius: 8px; margin-bottom: 8px; }
 
 @media (max-width: 900px) {
+    .mr-header-actions {
+        gap: 4px;
+    }
+    .mr-header-actions .mr-btn-sm {
+        padding: 4px 6px;
+        font-size: 10px;
+    }
     .mr-doc-controls label { flex: 1 1 45%; min-width: 140px; }
     .mr-paper-sheet,
     .mr-page-separator { max-width: calc(100% - 8px) !important; width: 100% !important; }
@@ -621,9 +684,26 @@ body.mr-body .main-header .user-menu {
 }
 
 @media (max-width: 640px) {
+    .mr-app {
+        padding: 6px 8px 10px;
+    }
     .mr-header-row { flex-direction: column; align-items: stretch; }
-    .mr-header-actions { width: 100%; }
-    .mr-header-actions .mr-btn { flex: 1 1 calc(50% - 4px); min-width: 0; font-size: 10px; padding: 4px 6px; }
+    .mr-header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4px;
+    }
+    .mr-header-actions .mr-btn {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+        font-size: 10px;
+        padding: 4px 6px;
+    }
+    .mr-header-actions .mr-btn-primary {
+        grid-column: 1 / -1;
+    }
     .mr-doc-controls { flex-direction: column; align-items: stretch; }
     .mr-page-nav { margin-left: 0; width: 100%; justify-content: center; }
     .mr-page-tabs { max-width: none; width: 100%; justify-content: center; }
