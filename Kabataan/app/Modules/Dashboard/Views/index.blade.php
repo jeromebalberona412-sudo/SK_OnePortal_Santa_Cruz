@@ -12,8 +12,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     @vite([
+        'app/Modules/Layout/assets/css/kabataan-header.css',
+        'app/Modules/Layout/assets/js/kabataan-header.js',
         'app/Modules/Dashboard/assets/css/dashboard.css',
-        'app/Modules/Programs/assets/css/scholarship_application.css',
         'app/Modules/Dashboard/assets/js/dashboard.js',
         'app/Modules/Programs/assets/js/programs.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
@@ -26,81 +27,7 @@
 </head>
 <body class="youth-dashboard">
     @include('dashboard::loading')
-    <!-- Top Navigation Bar -->
-    <nav class="top-navbar">
-        <div class="navbar-container">
-            <div class="navbar-left">
-                <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="navbar-logo">
-                <span class="navbar-title">Kabataan<small>SK OnePortal Santa Cruz</small></span>
-            </div>
-            
-            <div class="navbar-center">
-                <div class="search-bar">
-                    <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                    </svg>
-                    <input type="text" placeholder="Search posts, programs, announcements..." class="search-input">
-                </div>
-            </div>
-            
-            <div class="navbar-right">
-                <button class="nav-icon-btn programs-drawer-btn" id="programsDrawerBtn" title="Programs" style="display:none;">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
-                        <path d="M3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                    </svg>
-                </button>
-
-                <button class="nav-icon-btn" title="Home">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                    </svg>
-                </button>
-                
-                @include('dashboard::notification')
-                
-                @include('dashboard::chatbot')
-                
-                <div class="user-menu">
-                    <button class="user-avatar-btn">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=667eea&color=fff" alt="User Avatar">
-                    </button>
-                    <div class="user-dropdown">
-                        <div class="dropdown-header">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=667eea&color=fff" alt="User Avatar">
-                            <div>
-                                <p class="user-name">{{ $user->name ?? 'Youth User' }}</p>
-                                <p class="user-email">{{ $user->email ?? 'youth@skportal.com' }}</p>
-                            </div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('profile') }}" class="dropdown-item">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                            </svg>
-                            My Profile
-                        </a>
-                        <a href="{{ route('settings') }}" class="dropdown-item">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
-                            </svg>
-                            Settings
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="dropdown-item logout-btn">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
-                                </svg>
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    @include('layout::kabataan-header', ['user' => $user ?? auth()->user(), 'showSearch' => true])
 
     <!-- Main Content -->
     <main class="dashboard-main">
@@ -487,7 +414,7 @@
 
                     <!-- Action Button -->
                     <div class="program-action">
-                        <button class="apply-now-button" id="applyNowBtn" onclick="showProgramSuccessModal(); closeEducationModal();" disabled>
+                        <button class="apply-now-button" id="applyNowBtn" onclick="goToScholarshipApplication()" disabled>
                             <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
                                 <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
@@ -591,7 +518,6 @@
     </div>
 
     <!-- Scholarship Application Form Modal (New PDF-style) -->
-    @include('programs::scholarship_application')
     @include('dashboard::remaining_modals')
 
 
@@ -1114,64 +1040,24 @@
         }
     };
 
-    // ── Scholarship Modal Functions ──
-    window.openScholarshipModal = function() {
-        console.log('Opening scholarship modal');
-        const modal = document.getElementById('scholarshipApplicationModal');
-        if (modal) {
-            closeEducationModal();
-            modal.classList.add('active');
-            console.log('Scholarship modal opened');
-        } else {
-            console.error('Scholarship modal not found');
-        }
+    // ── Program application redirects (frontend only) ──
+    window.goToScholarshipApplication = function() {
+        const checkbox = document.getElementById('agreeTerms');
+        if (!checkbox?.checked) return;
+        closeEducationModal();
+        window.location.href = @json(route('scholarship.apply'));
     };
 
-    window.closeScholarshipModal = function() {
-        const modal = document.getElementById('scholarshipApplicationModal');
-        if (modal) {
-            modal.classList.remove('active');
-        }
+    window.goToSportsApplication = function() {
+        const checkbox = document.getElementById('agreeTermsSports');
+        if (!checkbox?.checked) return;
+        if (typeof closeSportsModal === 'function') closeSportsModal();
+        window.location.href = @json(route('sports.apply'));
     };
 
-    // Close modals on overlay click
     const educationModal = document.getElementById('educationModal');
     if (educationModal) {
         educationModal.querySelector('.modal-overlay')?.addEventListener('click', closeEducationModal);
-    }
-
-    const scholarshipModal = document.getElementById('scholarshipApplicationModal');
-    if (scholarshipModal) {
-        const closeBtn = document.getElementById('scholarshipModalClose');
-        const cancelBtn = document.getElementById('scholarshipModalCancel');
-        const overlay = scholarshipModal.querySelector('.schol-modal-overlay');
-        
-        if (closeBtn) closeBtn.addEventListener('click', closeScholarshipModal);
-        if (cancelBtn) cancelBtn.addEventListener('click', closeScholarshipModal);
-        if (overlay) {
-            overlay.addEventListener('click', function(e) {
-                if (e.target === overlay) closeScholarshipModal();
-            });
-        }
-
-        // Submit button
-        const submitBtn = document.getElementById('scholarshipModalSubmit');
-        if (submitBtn) {
-            submitBtn.addEventListener('click', function() {
-                const toast = document.getElementById('scholarshipToast');
-                const toastMsg = document.getElementById('scholarshipToastMsg');
-                if (toast && toastMsg) {
-                    toastMsg.textContent = 'Application submitted successfully!';
-                    toast.classList.add('schol-toast-show');
-                    setTimeout(() => {
-                        toast.classList.remove('schol-toast-show');
-                        closeScholarshipModal();
-                    }, 2000);
-                }
-            });
-        }
-    } else {
-        console.warn('Scholarship modal element not found in DOM');
     }
     </script>
 

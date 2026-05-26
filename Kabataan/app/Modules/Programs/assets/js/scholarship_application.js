@@ -1,219 +1,169 @@
 /**
- * Scholarship Application Form JavaScript
- * Form handling, age calculation, picture upload, e-signature, and validation
+ * Scholarship Application — section navigation, profile photo, form submit (frontend only)
  */
-
 (function () {
     'use strict';
 
-    const modal = document.getElementById('scholarshipApplicationModal');
-    const form = document.getElementById('scholarshipForm');
-    const closeBtn = document.getElementById('scholarshipModalClose');
-    const cancelBtn = document.getElementById('scholarshipModalCancel');
-    const submitBtn = document.getElementById('scholarshipModalSubmit');
-    const toast = document.getElementById('scholarshipToast');
-    const toastMsg = document.getElementById('scholarshipToastMsg');
+    const SECTION_ORDER = ['personal', 'educational', 'background', 'additional', 'requirements'];
 
-    // ── Modal Controls ──
-    function closeModal() {
-        modal.classList.remove('active');
+    const navItems = document.querySelectorAll('.sk-side__link');
+    const panels = document.querySelectorAll('.sch-app-panel');
+    const form = document.getElementById('scholarshipApplicationForm');
+    const birthdateInput = document.getElementById('birthdate');
+    const ageInput = document.getElementById('age');
+
+    function goToSection(sectionId) {
+        if (!SECTION_ORDER.includes(sectionId)) return;
+
+        navItems.forEach(function (item) {
+            item.classList.toggle('is-active', item.dataset.section === sectionId);
+        });
+
+        panels.forEach(function (panel) {
+            panel.classList.toggle('is-active', panel.dataset.panel === sectionId);
+        });
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    closeBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', function (e) {
-        if (e.target === modal) closeModal();
+    navItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+            goToSection(item.dataset.section);
+        });
     });
 
-    // ── Age Calculation ──
-    const dobInput = document.getElementById('scholDOB');
-    const ageInput = document.getElementById('scholAge');
-    if (dobInput && ageInput) {
-        dobInput.addEventListener('change', function () {
-            const bday = new Date(this.value);
+    document.querySelectorAll('[data-next]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            goToSection(btn.dataset.next);
+        });
+    });
+
+    document.querySelectorAll('[data-prev]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            goToSection(btn.dataset.prev);
+        });
+    });
+
+    if (birthdateInput && ageInput) {
+        function updateAge() {
+            const bday = new Date(birthdateInput.value);
+            if (Number.isNaN(bday.getTime())) {
+                ageInput.value = '';
+                return;
+            }
             const today = new Date();
             let age = today.getFullYear() - bday.getFullYear();
             const m = today.getMonth() - bday.getMonth();
             if (m < 0 || (m === 0 && today.getDate() < bday.getDate())) age--;
             ageInput.value = age >= 0 ? age : '';
+        }
+        birthdateInput.addEventListener('change', updateAge);
+        updateAge();
+    }
+
+    const editPhotoBtn = document.getElementById('schEditPhotoBtn');
+    const photoInput = document.getElementById('schPhotoInput');
+    const profileImg = document.getElementById('schProfileImg');
+
+    if (editPhotoBtn && photoInput && profileImg) {
+        editPhotoBtn.addEventListener('click', function () {
+            photoInput.click();
+        });
+        photoInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                profileImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         });
     }
 
-    // ── Picture Upload ──
-    const pictureBox = document.getElementById('pictureBox');
-    const pictureUpload = document.getElementById('pictureUpload');
-    const picturePreview = document.getElementById('picturePreview');
-    const pictureText = document.getElementById('pictureText');
+    if (!form) return;
 
-    if (pictureBox && pictureUpload) {
-        pictureBox.addEventListener('click', () => pictureUpload.click());
-        pictureUpload.addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    picturePreview.src = event.target.result;
-                    picturePreview.style.display = 'block';
-                    pictureText.style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
+    const submitBtn = document.getElementById('scholSubmitBtn');
+    const successModal = document.getElementById('scholSuccessModal');
+    let isSubmitting = false;
 
-    // ── Set Today's Date ──
-    const dateInput = document.getElementById('scholApplicationDate');
-    if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
-    }
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (isSubmitting) return;
 
-    // ── Others Checkbox Toggle ──
-    const othersCheck = document.getElementById('scholOthersCheck');
-    const othersInput = document.getElementById('scholOthersInput');
-    if (othersCheck && othersInput) {
-        othersCheck.addEventListener('change', function () {
-            othersInput.disabled = !this.checked;
-            if (!this.checked) othersInput.value = '';
-        });
-    }
-
-    // ── E-Signature Canvas ──
-    const canvas = document.getElementById('scholSignaturePad');
-    const clearBtn = document.getElementById('scholClearSignature');
-    const signatureData = document.getElementById('scholSignatureData');
-
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        let isDrawing = false;
-        let lastX = 0, lastY = 0;
-
-        // Set canvas size
-        function resizeCanvas() {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#111827';
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        // Drawing functions
-        function startDrawing(e) {
-            isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            lastX = (e.clientX || e.touches[0].clientX) - rect.left;
-            lastY = (e.clientY || e.touches[0].clientY) - rect.top;
-        }
-
-        function draw(e) {
-            if (!isDrawing) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            lastX = x;
-            lastY = y;
-        }
-
-        function stopDrawing() {
-            isDrawing = false;
-        }
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', stopDrawing);
-
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function () {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                signatureData.value = '';
-            });
-        }
-    }
-
-    // ── Form Validation ──
-    function validateForm() {
-        const requiredFields = form.querySelectorAll('[required]');
-        let isValid = true;
-
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.style.borderBottomColor = '#ef4444';
-                isValid = false;
-            } else {
-                field.style.borderBottomColor = '#374151';
-            }
-        });
-
-        // Check if signature exists
-        if (canvas) {
-            const emptyCanvas = document.createElement('canvas');
-            emptyCanvas.width = canvas.width;
-            emptyCanvas.height = canvas.height;
-            if (canvas.toDataURL() === emptyCanvas.toDataURL()) {
-                showToast('Please provide your signature', 'error');
-                return false;
-            }
-        }
-
-        return isValid;
-    }
-
-    // ── Form Submission ──
-    submitBtn.addEventListener('click', function () {
-        if (!validateForm()) {
-            showToast('Please fill in all required fields', 'error');
+        const agreement = document.getElementById('formAgreement');
+        if (!agreement?.checked) {
+            alert('Please certify that all information provided is true and correct.');
+            goToSection('requirements');
+            agreement?.focus();
             return;
         }
 
-        // Capture signature
-        if (canvas && signatureData) {
-            signatureData.value = canvas.toDataURL('image/png');
+        const email = document.getElementById('email');
+        if (email?.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+            alert('Please enter a valid email address.');
+            goToSection('personal');
+            email.focus();
+            return;
         }
 
-        // Collect form data
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData);
+        const essay = document.getElementById('essay');
+        if (essay?.value && essay.value.trim().length < 50) {
+            alert('Your essay must be at least 50 characters.');
+            goToSection('additional');
+            essay.focus();
+            return;
+        }
 
-        console.log('Form Data:', data);
-        showToast('Application submitted successfully!', 'success');
-        
-        // Reset form after 1.5s
-        setTimeout(() => {
-            form.reset();
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+        isSubmitting = true;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            const label = submitBtn.querySelector('.sch-app-btn-label');
+            const spinner = submitBtn.querySelector('.sch-app-btn-spinner');
+            if (label) label.textContent = 'Submitting...';
+            if (spinner) spinner.hidden = false;
+        }
+
+        setTimeout(function () {
+            isSubmitting = false;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                const label = submitBtn.querySelector('.sch-app-btn-label');
+                const spinner = submitBtn.querySelector('.sch-app-btn-spinner');
+                if (label) label.textContent = 'Submit Application';
+                if (spinner) spinner.hidden = true;
             }
-            if (picturePreview) {
-                picturePreview.style.display = 'none';
-                pictureText.style.display = 'block';
+            if (successModal) {
+                successModal.hidden = false;
+                document.body.style.overflow = 'hidden';
             }
-            closeModal();
-        }, 1500);
+        }, 1600);
     });
 
-    // ── Toast Notification ──
-    function showToast(message, type = 'success') {
-        toastMsg.textContent = message;
-        toast.className = 'schol-toast schol-toast-show';
-        if (type === 'error') toast.classList.add('schol-toast-error');
-        
-        setTimeout(() => {
-            toast.classList.remove('schol-toast-show', 'schol-toast-error');
-        }, 3000);
+    const sideNav = document.getElementById('skSideNav');
+    const sideCollapse = document.getElementById('skSideCollapse');
+    const sideMobileToggle = document.getElementById('skSideMobileToggle');
+
+    if (sideCollapse && sideNav) {
+        sideCollapse.addEventListener('click', function () {
+            sideNav.classList.toggle('is-collapsed');
+            const collapsed = sideNav.classList.contains('is-collapsed');
+            sideCollapse.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        });
     }
 
-    window.showToast = showToast;
+    if (sideMobileToggle && sideNav) {
+        sideMobileToggle.addEventListener('click', function () {
+            sideNav.classList.add('is-mobile-open');
+        });
+        sideNav.addEventListener('click', function (e) {
+            if (e.target === sideNav) sideNav.classList.remove('is-mobile-open');
+        });
+        navItems.forEach(function (item) {
+            item.addEventListener('click', function () {
+                if (window.innerWidth <= 900) sideNav.classList.remove('is-mobile-open');
+            });
+        });
+    }
+
+    window.scholarshipApp = { goToSection: goToSection };
 })();

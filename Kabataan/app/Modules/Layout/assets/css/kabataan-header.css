@@ -1,0 +1,313 @@
+/* Reusable Kabataan header — dashboard, scholarship, sports */
+:root {
+    --kab-nav-h: 68px;
+    --kab-brand-dark: #011e3c;
+    --kab-brand-mid: #0450a8;
+    --kab-brand-light: #1a6fd4;
+    --kab-text: #0f172a;
+    --kab-muted: #64748b;
+    --kab-border: #e2e8f0;
+    --kab-surface: #ffffff;
+    --kab-radius: 14px;
+    --kab-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.kabataan-header {
+    background: linear-gradient(135deg, var(--kab-brand-dark) 0%, var(--kab-brand-mid) 60%, var(--kab-brand-light) 100%);
+    box-shadow: 0 2px 16px rgba(2, 42, 84, 0.35);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--kab-nav-h);
+    z-index: 300;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kabataan-header__container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.kabataan-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.kabataan-header__logo {
+    width: 38px;
+    height: 38px;
+    object-fit: cover;
+    border-radius: 50%;
+    background: white;
+    padding: 3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.kabataan-header__title {
+    font-size: 17px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.kabataan-header__title small {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+.kabataan-header__page-badge {
+    display: none;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    white-space: nowrap;
+}
+
+.kabataan-header__search {
+    flex: 1;
+    max-width: 520px;
+    position: relative;
+    min-width: 0;
+}
+
+.kabataan-header__search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--kab-brand-mid);
+    pointer-events: none;
+}
+
+.kabataan-header__search-input {
+    width: 100%;
+    padding: 9px 14px 9px 42px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 24px;
+    font-size: 14px;
+    font-family: inherit;
+    background: rgba(255, 255, 255, 0.95);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.kabataan-header__search-input:focus {
+    outline: none;
+    border-color: white;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.kabataan-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.kabataan-header__icon-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    text-decoration: none;
+    color: white;
+}
+
+.kabataan-header__icon-btn svg {
+    width: 19px;
+    height: 19px;
+}
+
+.kabataan-header__icon-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.kabataan-header__user {
+    position: relative;
+}
+
+.kabataan-header__avatar-btn {
+    width: 38px;
+    height: 38px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    cursor: pointer;
+    background: none;
+    padding: 0;
+    overflow: hidden;
+}
+
+.kabataan-header__avatar-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.kabataan-header__dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: white;
+    border-radius: var(--kab-radius);
+    box-shadow: var(--kab-shadow);
+    min-width: 240px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+    border: 1px solid var(--kab-border);
+    z-index: 400;
+}
+
+.kabataan-header__user.is-open .kabataan-header__dropdown,
+.kabataan-header__user:hover .kabataan-header__dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.kabataan-header__dropdown-head {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.kabataan-header__dropdown-head img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+
+.kabataan-header__dropdown-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    color: var(--kab-muted);
+    text-decoration: none;
+    font-size: 14px;
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.kabataan-header__dropdown-link svg {
+    width: 17px;
+    height: 17px;
+}
+
+.kabataan-header__dropdown-link:hover {
+    background: #f8fafc;
+    color: var(--kab-brand-mid);
+}
+
+.kabataan-header .user-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--kab-text);
+    margin-bottom: 2px;
+}
+
+.kabataan-header .user-email {
+    font-size: 12px;
+    color: var(--kab-muted);
+}
+
+.kabataan-header .dropdown-divider {
+    height: 1px;
+    background: var(--kab-border);
+    margin: 0 8px;
+}
+
+.kabataan-header .logout-btn {
+    color: #ef4444;
+}
+
+.kabataan-header .logout-btn:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.kabataan-header__menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.kabataan-header__menu-toggle span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: #fff;
+    border-radius: 2px;
+}
+
+/* Page shell offset below fixed header */
+.kabataan-app-page {
+    padding-top: var(--kab-nav-h);
+    min-height: 100vh;
+}
+
+/* Legacy aliases for dashboard compatibility */
+.top-navbar { display: none; }
+
+@media (max-width: 900px) {
+    .kabataan-header__page-badge {
+        display: inline-block;
+    }
+
+    .kabataan-header__search {
+        display: none;
+    }
+
+    .kabataan-header__menu-toggle {
+        display: flex;
+    }
+}
+
+@media (max-width: 640px) {
+    .kabataan-header__title small {
+        display: none;
+    }
+
+    .kabataan-header__container {
+        padding: 0 12px;
+        gap: 10px;
+    }
+}

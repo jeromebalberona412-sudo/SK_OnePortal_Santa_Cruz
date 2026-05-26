@@ -18,6 +18,10 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/css/youth-email-verification.css',
                 'app/Modules/Authentication/assets/js/youth-email-verification.js',
 
+                // Layout (shared header)
+                'app/Modules/Layout/assets/css/kabataan-header.css',
+                'app/Modules/Layout/assets/js/kabataan-header.js',
+
                 // Dashboard
                 'app/Modules/Dashboard/assets/css/dashboard.css',
                 'app/Modules/Dashboard/assets/js/dashboard.js',
@@ -28,7 +32,11 @@ export default defineConfig({
 
                 // Programs
                 'app/Modules/Programs/assets/css/scholarship_application.css',
+                'app/Modules/Programs/assets/css/scholarship_requirements.css',
                 'app/Modules/Programs/assets/js/scholarship_application.js',
+                'app/Modules/Programs/assets/js/scholarship_requirements.js',
+                'app/Modules/Programs/assets/css/sports-registration.css',
+                'app/Modules/Programs/assets/js/sports-registration.js',
                 'app/Modules/Programs/assets/js/programs.js',
 
                 // Profile

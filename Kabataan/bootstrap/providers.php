@@ -8,4 +8,5 @@ return [
     App\Modules\Homepage\Providers\HomepageServiceProvider::class,
     App\Modules\KKProfiling\Providers\KKProfilingServiceProvider::class,
     App\Modules\Programs\Providers\ProgramServiceProvider::class,
+    App\Modules\Layout\Providers\LayoutServiceProvider::class,
 ];
