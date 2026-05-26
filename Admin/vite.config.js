@@ -38,6 +38,7 @@ export default defineConfig({
 
                 // Authentication Module
                 'app/Modules/Authentication/assets/css/login.css',
+                'app/Modules/Authentication/assets/css/forgot-password.css',
                 'app/Modules/Authentication/assets/js/login.js',
                 'app/Modules/Authentication/assets/js/forgot-password.js',
 

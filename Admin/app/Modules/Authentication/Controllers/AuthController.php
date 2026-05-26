@@ -121,7 +121,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Send password reset link / OTP code — redirects to OTP page
+     * Send password reset link — redirects back with success status
      */
     public function sendResetLink(Request $request)
     {
@@ -131,87 +131,32 @@ class AuthController extends Controller
             'email.exists' => 'We cannot find a user with that email address.',
         ]);
 
-        // Store email in session for OTP step
-        $request->session()->put('fp.email', $request->email);
-        $request->session()->forget('fp.otp_verified');
+        // Send the actual Laravel password reset link email
+        \Illuminate\Support\Facades\Password::sendResetLink(
+            $request->only('email')
+        );
 
-        // Redirect to OTP page
-        return redirect()->route('password.otp');
+        // Redirect back to the same page with a success status
+        return back()
+            ->with('status', 'reset-link-sent')
+            ->with('fp_email', $request->email);
     }
 
     /**
-     * Show the OTP verification page (/forgot-password/otp)
+     * Show the OTP verification page — removed (no longer used)
      */
-    public function showOtp(Request $request)
-    {
-        // Must have an email in session to reach this page
-        if (!$request->session()->has('fp.email')) {
-            return redirect()->route('password.request');
-        }
-
-        return view('authentication::forgot-password-otp', [
-            'email' => $request->session()->get('fp.email'),
-        ]);
-    }
 
     /**
-     * Verify the 6-digit OTP (demo: 123456) — redirects to set-new-password
+     * Verify the 6-digit OTP — removed (no longer used)
      */
-    public function verifyOtp(Request $request)
-    {
-        if (!$request->session()->has('fp.email')) {
-            return redirect()->route('password.request');
-        }
-
-        $request->validate([
-            'code' => 'required|string|size:6',
-        ]);
-
-        // Demo: accept 123456
-        if ($request->code !== '123456') {
-            return back()->withErrors(['code' => 'Incorrect code. Please try again.']);
-        }
-
-        $request->session()->put('fp.otp_verified', true);
-
-        return redirect()->route('password.set-new-password');
-    }
 
     /**
-     * Show the set new password page (/forgot-password/set-new-password)
+     * Show the set new password page — removed (no longer used)
      */
-    public function showSetNewPassword(Request $request)
-    {
-        // Must have verified OTP to reach this page
-        if (!$request->session()->get('fp.otp_verified')) {
-            return redirect()->route('password.request');
-        }
-
-        return view('authentication::forgot-password-set');
-    }
 
     /**
-     * Set the new password after OTP verification
+     * Set the new password after OTP verification — removed (no longer used)
      */
-    public function setNewPassword(Request $request)
-    {
-        if (!$request->session()->get('fp.otp_verified')) {
-            return redirect()->route('password.request');
-        }
-
-        $request->validate([
-            'password'              => 'required|string|min:8',
-            'password_confirmation' => 'required|same:password',
-        ]);
-
-        // TODO: actually update the user's password
-        // $email = $request->session()->get('fp.email');
-        // User::where('email', $email)->update(['password' => Hash::make($request->password)]);
-
-        $request->session()->forget(['fp.email', 'fp.otp_verified']);
-
-        return redirect()->route('login')->with('status', 'Your password has been reset successfully. Please log in.');
-    }
 
     /**
      * Show the password reset form
