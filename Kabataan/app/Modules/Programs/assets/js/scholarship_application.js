@@ -32,18 +32,6 @@
         });
     });
 
-    document.querySelectorAll('[data-next]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            goToSection(btn.dataset.next);
-        });
-    });
-
-    document.querySelectorAll('[data-prev]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            goToSection(btn.dataset.prev);
-        });
-    });
-
     if (birthdateInput && ageInput) {
         function updateAge() {
             const bday = new Date(birthdateInput.value);
@@ -61,24 +49,22 @@
         updateAge();
     }
 
-    const editPhotoBtn = document.getElementById('schEditPhotoBtn');
-    const photoInput = document.getElementById('schPhotoInput');
-    const profileImg = document.getElementById('schProfileImg');
-
-    if (editPhotoBtn && photoInput && profileImg) {
-        editPhotoBtn.addEventListener('click', function () {
-            photoInput.click();
+    document.querySelectorAll('[data-save-step]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const currentStep = btn.dataset.saveStep;
+            const data = {};
+            form.querySelectorAll('input, select, textarea').forEach(function (field) {
+                if (!field.name) return;
+                if (field.type === 'checkbox') {
+                    data[field.name] = field.checked;
+                } else {
+                    data[field.name] = field.value;
+                }
+            });
+            localStorage.setItem('scholarship-form-draft', JSON.stringify(data));
+            alert('Step saved: ' + currentStep);
         });
-        photoInput.addEventListener('change', function () {
-            const file = this.files[0];
-            if (!file || !file.type.startsWith('image/')) return;
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                profileImg.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    }
+    });
 
     if (!form) return;
 
@@ -138,32 +124,6 @@
             }
         }, 1600);
     });
-
-    const sideNav = document.getElementById('skSideNav');
-    const sideCollapse = document.getElementById('skSideCollapse');
-    const sideMobileToggle = document.getElementById('skSideMobileToggle');
-
-    if (sideCollapse && sideNav) {
-        sideCollapse.addEventListener('click', function () {
-            sideNav.classList.toggle('is-collapsed');
-            const collapsed = sideNav.classList.contains('is-collapsed');
-            sideCollapse.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-        });
-    }
-
-    if (sideMobileToggle && sideNav) {
-        sideMobileToggle.addEventListener('click', function () {
-            sideNav.classList.add('is-mobile-open');
-        });
-        sideNav.addEventListener('click', function (e) {
-            if (e.target === sideNav) sideNav.classList.remove('is-mobile-open');
-        });
-        navItems.forEach(function (item) {
-            item.addEventListener('click', function () {
-                if (window.innerWidth <= 900) sideNav.classList.remove('is-mobile-open');
-            });
-        });
-    }
 
     window.scholarshipApp = { goToSection: goToSection };
 })();

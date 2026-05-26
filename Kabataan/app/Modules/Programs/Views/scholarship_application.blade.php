@@ -42,6 +42,6 @@
     </div>
 
     @include('programs::scholarship.partials.attachment_modal')
-    @include('programs::scholarship.partials.footer')
+    @include('layout::footer')
 </body>
 </html>

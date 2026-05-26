@@ -73,9 +73,8 @@
                 <textarea id="essay" name="essay" rows="5" required minlength="50" placeholder="Share your story and reason for applying (minimum 50 characters)..."></textarea>
             </div>
         </div>
-        <div class="sch-app-panel-actions sch-app-panel-actions-split">
-            <button type="button" class="sch-app-btn-back" data-prev="background">← Previous</button>
-            <button type="button" class="sch-app-btn-next" data-next="requirements">Next: Requirements →</button>
+        <div class="sch-app-panel-actions">
+            <button type="button" class="sch-app-btn-save" data-save-step="additional">Save</button>
         </div>
     </div>
 </section>

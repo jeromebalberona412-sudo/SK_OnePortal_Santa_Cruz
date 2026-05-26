@@ -208,4 +208,48 @@
             this.value = '';
         });
     });
+
+    const generateFormBtn = document.getElementById('schGenerateFormBtn');
+    if (generateFormBtn) {
+        generateFormBtn.addEventListener('click', function () {
+            const getValue = function (id, fallback) {
+                const el = document.getElementById(id);
+                return (el?.value || '').trim() || fallback;
+            };
+            const fullName = [
+                getValue('firstName', 'Juan'),
+                getValue('middleName', 'Santos'),
+                getValue('lastName', 'Dela Cruz')
+            ].join(' ');
+
+            const popup = window.open('', '_blank', 'width=900,height=700');
+            if (!popup) return;
+
+            popup.document.write(
+                '<!DOCTYPE html><html><head><title>Scholarship Application Form</title><style>' +
+                'body{font-family:Arial,sans-serif;padding:24px;color:#111} .paper{max-width:800px;margin:0 auto;border:1px solid #ddd;padding:24px}' +
+                '.head{display:flex;align-items:flex-start;gap:16px;margin-bottom:16px}.logo{width:84px;height:84px;object-fit:contain}' +
+                '.title h1{font-size:20px;margin:0 0 6px}.title p{margin:2px 0;color:#555;font-size:13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}' +
+                '.field{border-bottom:1px solid #bbb;padding:6px 0;font-size:13px}.field strong{display:block;font-size:11px;color:#666}.full{grid-column:1/-1}' +
+                '</style></head><body><div class="paper">' +
+                '<div class="head"><img class="logo" src="/images/skoneportal_logo.webp" alt="SK Logo"><div class="title">' +
+                '<h1>SK Scholarship Application Form</h1><p>Sangguniang Kabataan - Santa Cruz, Laguna</p><p>Generated Form</p></div></div>' +
+                '<div class="grid">' +
+                '<div class="field"><strong>Full Name</strong>' + fullName + '</div>' +
+                '<div class="field"><strong>Birthdate</strong>' + getValue('birthdate', '2004-01-15') + '</div>' +
+                '<div class="field"><strong>Age</strong>' + getValue('age', '22') + '</div>' +
+                '<div class="field"><strong>Sex</strong>' + getValue('gender', 'Male') + '</div>' +
+                '<div class="field full"><strong>Address</strong>' + getValue('address', 'Purok 3, Barangay Santa Cruz, Laguna') + '</div>' +
+                '<div class="field"><strong>Contact Number</strong>' + getValue('contactNumber', '09171234567') + '</div>' +
+                '<div class="field"><strong>Email</strong>' + getValue('email', 'juan.delacruz@email.com') + '</div>' +
+                '<div class="field"><strong>Course</strong>' + getValue('course', 'Bachelor of Science in Information Technology') + '</div>' +
+                '<div class="field"><strong>Year Level</strong>' + getValue('yearLevel', '2ND YEAR') + '</div>' +
+                '<div class="field"><strong>School</strong>' + getValue('schoolName', 'Laguna State Polytechnic University') + '</div>' +
+                '<div class="field"><strong>Family Annual Income</strong>PHP ' + getValue('familyIncome', '120000') + '</div>' +
+                '<div class="field full"><strong>Reason for Applying</strong>' + getValue('essay', 'I am applying for this scholarship to continue my studies and help my family while pursuing my academic goals.') + '</div>' +
+                '</div></div></body></html>'
+            );
+            popup.document.close();
+        });
+    }
 })();

@@ -56,9 +56,8 @@
             </div>
         </div>
 
-        <div class="sch-app-panel-actions sch-app-panel-actions-split">
-            <button type="button" class="sch-app-btn-back" data-prev="personal">← Previous</button>
-            <button type="button" class="sch-app-btn-next" data-next="background">Next: Background Information →</button>
+        <div class="sch-app-panel-actions">
+            <button type="button" class="sch-app-btn-save" data-save-step="educational">Save</button>
         </div>
     </div>
 </section>

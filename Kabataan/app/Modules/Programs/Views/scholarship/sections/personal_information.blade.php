@@ -61,7 +61,7 @@
             </div>
         </div>
         <div class="sch-app-panel-actions">
-            <button type="button" class="sch-app-btn-next" data-next="educational">Next: Educational Background →</button>
+            <button type="button" class="sch-app-btn-save" data-save-step="personal">Save</button>
         </div>
     </div>
 </section>

@@ -43,9 +43,8 @@
                 <input type="number" id="familyIncome" name="familyIncome" required min="0" placeholder="Amount in PHP">
             </div>
         </div>
-        <div class="sch-app-panel-actions sch-app-panel-actions-split">
-            <button type="button" class="sch-app-btn-back" data-prev="educational">← Previous</button>
-            <button type="button" class="sch-app-btn-next" data-next="additional">Next: Additional Information →</button>
+        <div class="sch-app-panel-actions">
+            <button type="button" class="sch-app-btn-save" data-save-step="background">Save</button>
         </div>
     </div>
 </section>

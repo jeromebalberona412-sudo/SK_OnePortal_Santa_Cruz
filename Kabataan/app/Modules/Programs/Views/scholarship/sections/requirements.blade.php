@@ -128,7 +128,7 @@
         </label>
 
         <div class="sch-app-panel-actions sch-app-panel-actions-split">
-            <button type="button" class="sch-app-btn-back" data-prev="additional">← Previous</button>
+            <button type="button" class="sch-app-btn-generate" id="schGenerateFormBtn">Generate Application Form</button>
             <button type="submit" class="sch-app-btn-submit" id="scholSubmitBtn">
                 <span class="sch-app-btn-label">Submit Application</span>
                 <span class="sch-app-btn-spinner" hidden></span>
