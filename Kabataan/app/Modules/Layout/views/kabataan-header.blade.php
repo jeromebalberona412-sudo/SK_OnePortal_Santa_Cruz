@@ -80,3 +80,5 @@
         </div>
     </div>
 </nav>
+
+@include('layout::kabataan-logout-modal')

@@ -2,6 +2,36 @@
  * Programs Module — category modals and application redirects (frontend only)
  */
 
+const PRESURVEY_SLUGS = {
+    'anti-drugs': 'anti-drugs',
+    agriculture: 'agriculture',
+    disaster: 'disaster-preparedness',
+    gad: 'gad',
+    gender: 'gad',
+    health: 'health',
+    others: 'others',
+};
+
+const PRESURVEY_CHECKBOXES = {
+    'anti-drugs': 'agreeTermsAntiDrugs',
+    agriculture: 'agreeTermsAgriculture',
+    disaster: 'agreeTermsDisaster',
+    gad: 'agreeTermsGender',
+    gender: 'agreeTermsGender',
+    health: 'agreeTermsHealth',
+    others: 'agreeTermsOthers',
+};
+
+const PRESURVEY_CLOSE_FN = {
+    'anti-drugs': 'closeAntiDrugsModal',
+    agriculture: 'closeAgricultureModal',
+    disaster: 'closeDisasterModal',
+    gad: 'closeGenderModal',
+    gender: 'closeGenderModal',
+    health: 'closeHealthModal',
+    others: 'closeOthersModal',
+};
+
 window.programsModule = {
     async fetchCategories() {
         return [];
@@ -25,6 +55,20 @@ window.programsModule = {
             if (typeof openSportsModal === 'function') openSportsModal();
             return;
         }
+        const openers = {
+            'anti-drugs': 'openAntiDrugsModal',
+            agriculture: 'openAgricultureModal',
+            disaster: 'openDisasterModal',
+            gad: 'openGenderModal',
+            gender: 'openGenderModal',
+            health: 'openHealthModal',
+            others: 'openOthersModal',
+        };
+        const fnName = openers[categoryId];
+        if (fnName && typeof window[fnName] === 'function') {
+            window[fnName]();
+            return;
+        }
         this.showNoProgramModal(categoryId);
     },
 
@@ -46,4 +90,55 @@ window.programsModule = {
         }
         window.location.href = '/scholarship/apply';
     },
+};
+
+/**
+ * Redirect to reusable pre-survey after terms agreement.
+ * @param {string} programKey - key in PRESURVEY_SLUGS (e.g. 'anti-drugs', 'agriculture')
+ */
+window.goToPreSurvey = function (programKey) {
+    const slug = PRESURVEY_SLUGS[programKey];
+    const checkboxId = PRESURVEY_CHECKBOXES[programKey];
+    if (!slug || !checkboxId) return;
+
+    const checkbox = document.getElementById(checkboxId);
+    if (!checkbox?.checked) return;
+
+    const closeFnName = PRESURVEY_CLOSE_FN[programKey];
+    if (closeFnName && typeof window[closeFnName] === 'function') {
+        window[closeFnName]();
+    }
+
+    if (typeof showLoading === 'function') {
+        showLoading('Redirecting to Pre-Survey…');
+    }
+
+    const url = `/presurvey/${slug}`;
+    setTimeout(() => {
+        window.location.href = url;
+    }, 650);
+};
+
+window.goToScholarshipApplication = function () {
+    const checkbox = document.getElementById('agreeTerms');
+    if (!checkbox?.checked) return;
+    if (typeof closeEducationModal === 'function') closeEducationModal();
+    if (typeof showLoading === 'function') showLoading('Redirecting to Scholarship Application…');
+    setTimeout(() => {
+        window.location.href = typeof window.scholarshipApplyUrl !== 'undefined'
+            ? window.scholarshipApplyUrl
+            : '/scholarship/apply';
+    }, 650);
+};
+
+window.goToSportsApplication = function () {
+    const checkbox = document.getElementById('agreeTermsSports');
+    if (!checkbox?.checked) return;
+    if (typeof closeSportsModal === 'function') closeSportsModal();
+    if (typeof showLoading === 'function') showLoading('Redirecting to Sports Registration…');
+    setTimeout(() => {
+        window.location.href = typeof window.sportsApplyUrl !== 'undefined'
+            ? window.sportsApplyUrl
+            : '/sports/apply';
+    }, 650);
 };

@@ -77,7 +77,7 @@
                     </div>
                 </div>
                 <div class="program-action">
-                    <button class="apply-now-button" id="applyNowBtnAgriculture" onclick="showProgramSuccessModal(); closeAgricultureModal();" disabled>
+                    <button class="apply-now-button" id="applyNowBtnAgriculture" onclick="goToPreSurvey('agriculture')" disabled>
                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
                         Apply Now
                     </button>
@@ -168,7 +168,7 @@
                     </div>
                 </div>
                 <div class="program-action">
-                    <button class="apply-now-button" id="applyNowBtnDisaster" onclick="showProgramSuccessModal(); closeDisasterModal();" disabled>
+                    <button class="apply-now-button" id="applyNowBtnDisaster" onclick="goToPreSurvey('disaster')" disabled>
                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
                         Apply Now
                     </button>
@@ -350,7 +350,7 @@
                     </div>
                 </div>
                 <div class="program-action">
-                    <button class="apply-now-button" id="applyNowBtnGender" onclick="showProgramSuccessModal(); closeGenderModal();" disabled>
+                    <button class="apply-now-button" id="applyNowBtnGender" onclick="goToPreSurvey('gad')" disabled>
                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
                         Apply Now
                     </button>
@@ -441,7 +441,7 @@
                     </div>
                 </div>
                 <div class="program-action">
-                    <button class="apply-now-button" id="applyNowBtnHealth" onclick="showProgramSuccessModal(); closeHealthModal();" disabled>
+                    <button class="apply-now-button" id="applyNowBtnHealth" onclick="goToPreSurvey('health')" disabled>
                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
                         Apply Now
                     </button>
@@ -532,7 +532,7 @@
                     </div>
                 </div>
                 <div class="program-action">
-                    <button class="apply-now-button" id="applyNowBtnOthers" onclick="showProgramSuccessModal(); closeOthersModal();" disabled>
+                    <button class="apply-now-button" id="applyNowBtnOthers" onclick="goToPreSurvey('others')" disabled>
                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
                         Apply Now
                     </button>
@@ -542,185 +542,3 @@
         </div>
     </div>
 </div>
-
-<script>
-// Agriculture Modal Functions
-function toggleTermsAgriculture() {
-    const content = document.getElementById('termsContentAgriculture');
-    const toggle = document.getElementById('termsToggleAgriculture');
-    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
-    
-    if (isExpanded) {
-        content.style.maxHeight = '0';
-        toggle.classList.remove('active');
-    } else {
-        content.style.maxHeight = content.scrollHeight + 'px';
-        toggle.classList.add('active');
-    }
-}
-
-function toggleApplyButtonAgriculture() {
-    const checkbox = document.getElementById('agreeTermsAgriculture');
-    const button = document.getElementById('applyNowBtnAgriculture');
-    button.disabled = !checkbox.checked;
-}
-
-function closeAgricultureModal() {
-    const modal = document.getElementById('agricultureModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    // Reset checkbox and button
-    document.getElementById('agreeTermsAgriculture').checked = false;
-    document.getElementById('applyNowBtnAgriculture').disabled = true;
-}
-
-// Disaster Modal Functions
-function toggleTermsDisaster() {
-    const content = document.getElementById('termsContentDisaster');
-    const toggle = document.getElementById('termsToggleDisaster');
-    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
-    
-    if (isExpanded) {
-        content.style.maxHeight = '0';
-        toggle.classList.remove('active');
-    } else {
-        content.style.maxHeight = content.scrollHeight + 'px';
-        toggle.classList.add('active');
-    }
-}
-
-function toggleApplyButtonDisaster() {
-    const checkbox = document.getElementById('agreeTermsDisaster');
-    const button = document.getElementById('applyNowBtnDisaster');
-    button.disabled = !checkbox.checked;
-}
-
-function closeDisasterModal() {
-    const modal = document.getElementById('disasterModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    // Reset checkbox and button
-    document.getElementById('agreeTermsDisaster').checked = false;
-    document.getElementById('applyNowBtnDisaster').disabled = true;
-}
-
-// Sports Modal Functions
-function toggleTermsSports() {
-    const content = document.getElementById('termsContentSports');
-    const toggle = document.getElementById('termsToggleSports');
-    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
-    
-    if (isExpanded) {
-        content.style.maxHeight = '0';
-        toggle.classList.remove('active');
-    } else {
-        content.style.maxHeight = content.scrollHeight + 'px';
-        toggle.classList.add('active');
-    }
-}
-
-function toggleApplyButtonSports() {
-    const checkbox = document.getElementById('agreeTermsSports');
-    const button = document.getElementById('applyNowBtnSports');
-    button.disabled = !checkbox.checked;
-}
-
-function closeSportsModal() {
-    const modal = document.getElementById('sportsModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    // Reset checkbox and button
-    document.getElementById('agreeTermsSports').checked = false;
-    document.getElementById('applyNowBtnSports').disabled = true;
-}
-
-// Gender Modal Functions
-function toggleTermsGender() {
-    const content = document.getElementById('termsContentGender');
-    const toggle = document.getElementById('termsToggleGender');
-    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
-    
-    if (isExpanded) {
-        content.style.maxHeight = '0';
-        toggle.classList.remove('active');
-    } else {
-        content.style.maxHeight = content.scrollHeight + 'px';
-        toggle.classList.add('active');
-    }
-}
-
-function toggleApplyButtonGender() {
-    const checkbox = document.getElementById('agreeTermsGender');
-    const button = document.getElementById('applyNowBtnGender');
-    button.disabled = !checkbox.checked;
-}
-
-function closeGenderModal() {
-    const modal = document.getElementById('genderModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    // Reset checkbox and button
-    document.getElementById('agreeTermsGender').checked = false;
-    document.getElementById('applyNowBtnGender').disabled = true;
-}
-
-// Health Modal Functions
-function toggleTermsHealth() {
-    const content = document.getElementById('termsContentHealth');
-    const toggle = document.getElementById('termsToggleHealth');
-    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
-    
-    if (isExpanded) {
-        content.style.maxHeight = '0';
-        toggle.classList.remove('active');
-    } else {
-        content.style.maxHeight = content.scrollHeight + 'px';
-        toggle.classList.add('active');
-    }
-}
-
-function toggleApplyButtonHealth() {
-    const checkbox = document.getElementById('agreeTermsHealth');
-    const button = document.getElementById('applyNowBtnHealth');
-    button.disabled = !checkbox.checked;
-}
-
-function closeHealthModal() {
-    const modal = document.getElementById('healthModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    // Reset checkbox and button
-    document.getElementById('agreeTermsHealth').checked = false;
-    document.getElementById('applyNowBtnHealth').disabled = true;
-}
-
-// Others Modal Functions
-function toggleTermsOthers() {
-    const content = document.getElementById('termsContentOthers');
-    const toggle = document.getElementById('termsToggleOthers');
-    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
-    
-    if (isExpanded) {
-        content.style.maxHeight = '0';
-        toggle.classList.remove('active');
-    } else {
-        content.style.maxHeight = content.scrollHeight + 'px';
-        toggle.classList.add('active');
-    }
-}
-
-function toggleApplyButtonOthers() {
-    const checkbox = document.getElementById('agreeTermsOthers');
-    const button = document.getElementById('applyNowBtnOthers');
-    button.disabled = !checkbox.checked;
-}
-
-function closeOthersModal() {
-    const modal = document.getElementById('othersModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    // Reset checkbox and button
-    document.getElementById('agreeTermsOthers').checked = false;
-    document.getElementById('applyNowBtnOthers').disabled = true;
-}
-</script>

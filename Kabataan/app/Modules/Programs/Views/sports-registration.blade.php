@@ -11,6 +11,7 @@
     @vite([
         'app/Modules/Layout/assets/css/kabataan-header.css',
         'app/Modules/Layout/assets/js/kabataan-header.js',
+        'app/Modules/Layout/assets/css/kabataan-footer.css',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
@@ -23,7 +24,7 @@
 </head>
 <body class="sr-body kabataan-app-page">
     @include('dashboard::loading')
-    @include('layout::kabataan-header', ['showSearch' => false, 'pageBadge' => 'Sports Registration'])
+    @include('layout::kabataan-header', ['showSearch' => true])
 
     <main class="sr-main">
         @include('programs::sports.partials.header-banner')
@@ -282,5 +283,6 @@
 
     @include('programs::sports.partials.terms-modal')
     @include('programs::sports.partials.success-modal')
+    @include('layout::kabataan-footer')
 </body>
 </html>

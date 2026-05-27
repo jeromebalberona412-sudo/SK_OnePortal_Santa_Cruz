@@ -580,6 +580,35 @@ html {
     transform: none;
 }
 
+.youth-homepage-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--youth-blue);
+    background: #fff;
+    border: 2px solid rgba(4, 80, 168, 0.25);
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: background var(--transition-base), border-color var(--transition-base);
+}
+
+.youth-homepage-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.youth-homepage-btn:hover {
+    background: #f0f7ff;
+    border-color: var(--youth-blue);
+}
+
 .btn-icon {
     width: 20px;
     height: 20px;

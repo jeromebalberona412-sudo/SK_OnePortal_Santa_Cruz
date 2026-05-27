@@ -506,7 +506,7 @@
                         </div>
                     </div>
                     <div class="program-action">
-                        <button class="apply-now-button" id="applyNowBtnAntiDrugs" onclick="showProgramSuccessModal()" disabled>
+                        <button class="apply-now-button" id="applyNowBtnAntiDrugs" onclick="goToPreSurvey('anti-drugs')" disabled>
                             <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
                             Apply Now
                         </button>
@@ -523,34 +523,6 @@
 
     <!-- Programs Drawer Backdrop -->
     <div class="programs-drawer-backdrop" id="programsDrawerBackdrop"></div>
-
-    <!-- Logout Confirm Modal -->
-    <div id="logoutConfirmModal" class="program-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-container" style="max-width:420px;">
-            <div class="modal-header">
-                <h2>Confirm Logout</h2>
-                <button class="modal-close" onclick="closeLogoutModal()">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body" style="text-align:center; padding: 32px 24px;">
-                <div style="width:64px;height:64px;background:#fff3e0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                    <svg viewBox="0 0 20 20" fill="currentColor" style="width:32px;height:32px;color:#f97316;">
-                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <h3 style="font-size:18px;color:#333;margin-bottom:8px;">Are you sure you want to logout?</h3>
-                <p style="color:#999;font-size:14px;margin-bottom:28px;">You will be redirected to the login page.</p>
-                <div style="display:flex;gap:12px;justify-content:center;">
-                    <button class="btn-secondary" onclick="closeLogoutModal()" style="min-width:100px;">Cancel</button>
-                    <button class="btn-primary" id="confirmLogoutBtn" style="min-width:100px;background:linear-gradient(135deg,#f44336,#d32f2f);box-shadow:0 4px 12px rgba(244,67,54,0.3);">Logout</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Program Registration Success Modal -->
     <div id="programSuccessModal" class="program-modal">
@@ -573,34 +545,6 @@
     </div>
 
     <script>
-    // ── Logout Modal ──────────────────────────────────────────────────────────
-    (function () {
-        const logoutBtn = document.querySelector('.logout-btn');
-        const logoutForm = logoutBtn?.closest('form');
-        const modal = document.getElementById('logoutConfirmModal');
-        const confirmBtn = document.getElementById('confirmLogoutBtn');
-
-        if (logoutBtn && logoutForm) {
-            logoutBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                modal.classList.add('active');
-            });
-        }
-
-        if (confirmBtn && logoutForm) {
-            confirmBtn.addEventListener('click', function () {
-                logoutForm.submit();
-            });
-        }
-
-        // Close on overlay click
-        modal?.querySelector('.modal-overlay')?.addEventListener('click', closeLogoutModal);
-    })();
-
-    function closeLogoutModal() {
-        document.getElementById('logoutConfirmModal')?.classList.remove('active');
-    }
-
     // ── Program Success Modal ─────────────────────────────────────────────────
     function showProgramSuccessModal() {
         const modal = document.getElementById('programSuccessModal');
@@ -1040,20 +984,9 @@
         }
     };
 
-    // ── Program application redirects (frontend only) ──
-    window.goToScholarshipApplication = function() {
-        const checkbox = document.getElementById('agreeTerms');
-        if (!checkbox?.checked) return;
-        closeEducationModal();
-        window.location.href = @json(route('scholarship.apply'));
-    };
-
-    window.goToSportsApplication = function() {
-        const checkbox = document.getElementById('agreeTermsSports');
-        if (!checkbox?.checked) return;
-        if (typeof closeSportsModal === 'function') closeSportsModal();
-        window.location.href = @json(route('sports.apply'));
-    };
+    // ── Program application redirects (frontend only — see programs.js) ──
+    window.scholarshipApplyUrl = @json(route('scholarship.apply'));
+    window.sportsApplyUrl = @json(route('sports.apply'));
 
     const educationModal = document.getElementById('educationModal');
     if (educationModal) {

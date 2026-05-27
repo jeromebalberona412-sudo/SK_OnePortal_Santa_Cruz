@@ -11,6 +11,7 @@
     @vite([
         'app/Modules/Layout/assets/css/kabataan-header.css',
         'app/Modules/Layout/assets/js/kabataan-header.js',
+        'app/Modules/Layout/assets/css/kabataan-footer.css',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
@@ -42,6 +43,6 @@
     </div>
 
     @include('programs::scholarship.partials.attachment_modal')
-    @include('layout::footer')
+    @include('layout::kabataan-footer')
 </body>
 </html>
