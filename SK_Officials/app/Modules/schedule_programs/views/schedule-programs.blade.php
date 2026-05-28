@@ -29,55 +29,6 @@
             </div>
         </section>
 
-        <!-- ── Stat Cards ── -->
-        <div class="module-stats-grid">
-            <div class="stat-card stat-card-blue">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="spStatUpcoming">0</span>
-                    <div class="stat-card-icon stat-icon-blue">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Upcoming</span>
-            </div>
-            <div class="stat-card stat-card-orange">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="spStatOngoing">0</span>
-                    <div class="stat-card-icon stat-icon-orange">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Ongoing</span>
-            </div>
-            <div class="stat-card stat-card-green">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="spStatCompleted">0</span>
-                    <div class="stat-card-icon stat-icon-green">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Completed</span>
-            </div>
-            <div class="stat-card stat-card-red">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="spStatCancelled">0</span>
-                    <div class="stat-card-icon stat-icon-red">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Cancelled</span>
-            </div>
-            <div class="stat-card stat-card-purple">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="spStatRescheduled">0</span>
-                    <div class="stat-card-icon stat-icon-purple">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Rescheduled</span>
-            </div>
-        </div>
-
         <!-- ── SK Programs Section ── -->
         <section class="committees-section">
             <div class="section-heading-row">
@@ -99,7 +50,7 @@
                 </a>
 
                 <!-- B. Environmental Protection -->
-                <div class="committee-card" data-committee="environment">
+                <a href="{{ route('environmental.schedule') }}" class="committee-card" data-committee="environment" style="text-decoration:none;color:inherit;">
                     <h3 class="committee-title">Environmental Protection</h3>
                     <ul class="committee-activities">
                         <li>Clean-Up Drive</li>
@@ -107,70 +58,69 @@
                         <li>Tree Planting</li>
                     </ul>
                     <p class="committee-head">SK Head: <span>Juan dela Cruz</span></p>
-                </div>
+                </a>
 
                 <!-- C. Disaster Risk Reduction and Resiliency -->
-                <div class="committee-card" data-committee="disaster">
+                <a href="{{ route('disaster.schedule') }}" class="committee-card" data-committee="disaster" style="text-decoration:none;color:inherit;">
                     <h3 class="committee-title">Disaster Risk Reduction and Resiliency</h3>
                     <ul class="committee-activities">
                         <li>Training on Disaster Preparedness for Youth Volunteer Groups</li>
                         <li>Distribution of Relief Goods for KK Members</li>
                     </ul>
                     <p class="committee-head">SK Head: <span>Carlo Reyes</span></p>
-                </div>
+                </a>
 
                 <!-- D. Youth Employment and Livelihood -->
-                <div class="committee-card" data-committee="livelihood">
+                <a href="{{ route('livelihood.schedule') }}" class="committee-card" data-committee="livelihood" style="text-decoration:none;color:inherit;">
                     <h3 class="committee-title">Youth Employment and Livelihood</h3>
                     <ul class="committee-activities">
                         <li>Livelihood Training</li>
                         <li>Food and Other Supplies</li>
                     </ul>
                     <p class="committee-head">SK Head: <span>Ana Villanueva</span></p>
-                </div>
+                </a>
 
                 <!-- E. Health -->
-                <div class="committee-card" data-committee="health">
-                    <h3 class="committee-title">Health</h3>
+                <a href="{{ route('medicines.schedule') }}" class="committee-card" data-committee="health" style="text-decoration:none;color:inherit;">
+                    <h3 class="committee-title">Medicines</h3>
                     <ul class="committee-activities">
                         <li>Medicines / Medical Equipment</li>
-                        <li>Campaigning Materials for Anti-Drugs (Leaflets, Posters, Tarpaulins)</li>
                     </ul>
                     <p class="committee-head">SK Head: <span>Jose Mendoza</span></p>
-                </div>
+                </a>
 
                 <!-- F. Anti-Drug and Peace and Order -->
-                <div class="committee-card" data-committee="anti-drug">
+                <a href="{{ route('antidrug.schedule') }}" class="committee-card" data-committee="anti-drug" style="text-decoration:none;color:inherit;">
                     <h3 class="committee-title">Anti-Drug and Peace and Order</h3>
                     <ul class="committee-activities">
                         <li>Orientation for Anti-Drug and Physical Abuse</li>
                         <li>Foods and Accommodations</li>
                     </ul>
                     <p class="committee-head">SK Head: <span>Ramon Garcia</span></p>
-                </div>
+                </a>
 
                 <!-- G. Gender Sensitivity -->
-                <div class="committee-card" data-committee="gender">
+                <a href="{{ route('gender.schedule') }}" class="committee-card" data-committee="gender" style="text-decoration:none;color:inherit;">
                     <h3 class="committee-title">Gender Sensitivity</h3>
                     <ul class="committee-activities">
                         <li>Orientation on GAD and VAWC</li>
                         <li>Foods and Accommodations</li>
                     </ul>
                     <p class="committee-head">SK Head: <span>Liza Torres</span></p>
-                </div>
+                </a>
 
                 <!-- H. Feeding Program for KK Members -->
-                <div class="committee-card" data-committee="feeding">
+                <a href="{{ route('feeding.schedule') }}" class="committee-card" data-committee="feeding" style="text-decoration:none;color:inherit;">
                     <h3 class="committee-title">Feeding Program for KK Members</h3>
                     <ul class="committee-activities">
                         <li>Improve health and physique of children</li>
                         <li>Youth and Children in the vicinity of Barangay</li>
                     </ul>
                     <p class="committee-head">SK Head: <span>Kristine Bautista</span></p>
-                </div>
+                </a>
 
                 <!-- I. Sports Development -->
-                <a href="/sport_list" class="committee-card" data-committee="sports" style="text-decoration:none;color:inherit;">
+                <a href="{{ route('sports-application-form') }}" class="committee-card" data-committee="sports" style="text-decoration:none;color:inherit;">
                     <h3 class="committee-title">Sports Development</h3>
                     <ul class="committee-activities">
                         <li>Supplies and Materials</li>
@@ -181,7 +131,7 @@
                 </a>
 
                 <!-- J. Other Programs -->
-                <div class="committee-card" data-committee="other">
+                <a href="{{ route('others.schedule') }}" class="committee-card" data-committee="other" style="text-decoration:none;color:inherit;">
                     <h3 class="committee-title">Other Programs</h3>
                     <ul class="committee-activities">
                         <li>Katipunan ng Kabataan (KK) General Assembly</li>
@@ -189,7 +139,7 @@
                         <li>Youth Week</li>
                     </ul>
                     <p class="committee-head">SK Head: <span>Patricia Flores</span></p>
-                </div>
+                </a>
 
             </div>
         </section>

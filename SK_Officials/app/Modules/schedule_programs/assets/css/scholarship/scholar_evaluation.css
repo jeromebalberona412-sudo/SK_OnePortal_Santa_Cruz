@@ -1,0 +1,341 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCHOLARSHIP EVALUATION STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Summary Cards Grid ── */
+.eval-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.eval-stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid #e5e7eb;
+}
+
+.eval-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.eval-stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.eval-stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.eval-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.eval-stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.eval-stat-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    display: block;
+}
+
+/* ── Card Color Variants ── */
+.eval-stat-blue .eval-stat-value {
+    color: #213F99;
+}
+
+.eval-icon-blue {
+    background: linear-gradient(135deg, #213F99 0%, #1a2f7a 100%);
+    color: #fff;
+}
+
+.eval-stat-orange .eval-stat-value {
+    color: #f97316;
+}
+
+.eval-icon-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #fff;
+}
+
+.eval-stat-green .eval-stat-value {
+    color: #22c55e;
+}
+
+.eval-icon-green {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #fff;
+}
+
+.eval-stat-purple .eval-stat-value {
+    color: #a855f7;
+}
+
+.eval-icon-purple {
+    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+    color: #fff;
+}
+
+/* ── Action Bar ── */
+.eval-action-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.eval-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.eval-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.eval-btn-primary {
+    background: linear-gradient(135deg, #213F99 0%, #1a2f7a 100%);
+    color: #fff;
+}
+
+.eval-btn-primary:hover {
+    background: linear-gradient(135deg, #1a2f7a 0%, #213F99 100%);
+}
+
+.eval-btn-green {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #fff;
+}
+
+.eval-btn-green:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+}
+
+.eval-btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.eval-btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+/* ── Table Header ── */
+.eval-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.eval-table-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.eval-filter-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.eval-filter-select,
+.eval-search-input {
+    padding: 8px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.eval-filter-select:focus,
+.eval-search-input:focus {
+    border-color: #213F99;
+    box-shadow: 0 0 0 3px rgba(33, 63, 153, 0.1);
+}
+
+.eval-search-input {
+    min-width: 200px;
+}
+
+/* ── Form Styles ── */
+.eval-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.eval-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.eval-form-full {
+    grid-column: 1 / -1;
+}
+
+.eval-form-field label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.eval-input,
+.eval-textarea {
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.eval-input:focus,
+.eval-textarea:focus {
+    border-color: #213F99;
+    box-shadow: 0 0 0 3px rgba(33, 63, 153, 0.1);
+}
+
+.eval-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.eval-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* ── Status Badges ── */
+.eval-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.eval-status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.eval-status-progress {
+    background: #ddd6fe;
+    color: #5b21b6;
+}
+
+.eval-status-completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* ── Responsive Design ── */
+@media (max-width: 768px) {
+    .eval-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .eval-stat-card {
+        padding: 16px;
+    }
+
+    .eval-stat-value {
+        font-size: 24px;
+    }
+
+    .eval-stat-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .eval-stat-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .eval-action-bar {
+        flex-direction: column;
+    }
+
+    .eval-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .eval-table-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .eval-filter-group {
+        flex-direction: column;
+    }
+
+    .eval-search-input {
+        width: 100%;
+    }
+
+    .eval-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .eval-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .eval-form-actions .eval-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .eval-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
