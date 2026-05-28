@@ -9,7 +9,7 @@
 
 /* ── PAGE ── */
 .kkp-main {
-    padding-top: calc(var(--nav-h) + 16px);
+    padding-top: calc(var(--nav-h) + 36px);
     padding-bottom: 48px;
     min-height: 100vh;
     background: #e8ecf0;
@@ -20,22 +20,32 @@
     margin: 0 auto;
     padding: 0 16px;
     overflow-x: hidden;
+    padding-top: 20px;
 }
 
 /* ── BACK LINK ── */
 .kkp-back-link {
+    position: fixed;
+    top: 1.25rem;
+    left: 1.25rem;
+    z-index: 100;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--brand);
+    color: #ffffff;
     text-decoration: none;
-    margin-bottom: 14px;
-    transition: color 0.15s;
+    margin-bottom: 0;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(2, 42, 84, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(8px);
+    transition: background 0.15s, color 0.15s;
 }
 .kkp-back-link svg { width: 14px; height: 14px; }
-.kkp-back-link:hover { color: #003070; }
+.kkp-back-link:hover { color: #fff; background: rgba(4, 80, 168, 0.92); }
 
 /* ── ALERT ── */
 .kkp-alert {
@@ -179,6 +189,7 @@
 
 .kkp-input-err {
     border-bottom-color: #dc2626 !important;
+    transition: border-bottom-color 0.2s ease;
 }
 
 /* ── SECTION HEADING ── */
@@ -245,6 +256,26 @@
     text-align: center;
     margin-top: 1px;
     white-space: nowrap;
+}
+
+.kkp-required {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.kkp-optional {
+    color: #64748b;
+    font-size: 9px;
+    margin-left: 4px;
+}
+
+.kkp-custom-suffix-wrap {
+    display: none;
+    margin-top: 4px;
+}
+
+.kkp-custom-suffix-wrap.show {
+    display: block;
 }
 
 /* ── NAME ROW: 4 columns ── */
@@ -422,6 +453,7 @@
     flex-direction: column;
     gap: 1px;
     flex: 1;
+    align-items: flex-start;
 }
 
 .kkp-demo-options-2col {
@@ -440,9 +472,13 @@
     cursor: pointer;
     line-height: 1.4;
     padding: 1px 0;
+    text-align: left;
 }
 
-.kkp-chk-indent { padding-left: 14px; }
+.kkp-chk-indent {
+    margin-left: 14px;
+    padding-left: 0;
+}
 
 /* ── SQUARE CHECKBOX — paper form style ── */
 .kkp-sq-chk {
@@ -561,6 +597,8 @@
 .kkp-sig-section {
     margin-top: 16px;
     padding-top: 10px;
+    display: flex;
+    justify-content: flex-start;
 }
 
 .kkp-sig-container {
@@ -569,7 +607,7 @@
     flex-direction: column;
     align-items: center;
     width: min(280px, 100%);
-    margin: 0 auto;
+    margin: 0;
 }
 
 /* Signature image overlay — floats above printed name */

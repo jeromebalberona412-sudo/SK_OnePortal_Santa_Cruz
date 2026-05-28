@@ -26,7 +26,7 @@
                 <svg viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M12.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L8.414 9H17a1 1 0 110 2H8.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
                 </svg>
-                Back to Homepage
+                Back
             </a>
 
             {{-- Success Alert --}}
@@ -34,21 +34,6 @@
                 <div class="kkp-alert kkp-alert-success">
                     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                     {{ session('success') }}
-                </div>
-            @endif
-
-            {{-- Error Alert --}}
-            @if ($errors->any())
-                <div class="kkp-alert kkp-alert-error" style="background:#fef2f2;border-color:#fca5a5;color:#991b1b;">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-                    <div>
-                        <strong>Validation Errors:</strong>
-                        <ul style="margin:0.5rem 0 0 1.5rem;">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
                 </div>
             @endif
 
@@ -189,6 +174,10 @@
                             <div class="kkp-form-header-fields">
                                 <input type="hidden" name="respondent_number" value="{{ $respondentNumber ?? '' }}">
                                 <div class="kkp-hdr-field">
+                                    <span class="kkp-hdr-label">Respondent #:</span>
+                                    <input type="text" class="kkp-hdr-input" value="" readonly disabled>
+                                </div>
+                                <div class="kkp-hdr-field">
                                     <span class="kkp-hdr-label">Date:</span>
                                     <input type="text" class="kkp-hdr-input" value="{{ date('m/d/Y') }}" readonly>
                                 </div>
@@ -210,27 +199,37 @@
                     <div class="kkp-section-heading">I. PROFILE</div>
 
                     {{-- ── NAME OF RESPONDENT ── --}}
-                    <div class="kkp-row-label">Name of Respondent:</div>
+                    <div class="kkp-row-label">Name of Respondent <span class="kkp-required">*</span></div>
                     <div class="kkp-name-row">
                         <div class="kkp-name-col">
                             <input type="text" name="last_name" id="kkpLastName" class="kkp-uline" placeholder=" " required maxlength="100" autocomplete="off">
-                            <label class="kkp-col-label">Last Name</label>
+                            <label class="kkp-col-label">Last Name <span class="kkp-required">*</span></label>
                         </div>
                         <div class="kkp-name-col">
                             <input type="text" name="first_name" id="kkpFirstName" class="kkp-uline" placeholder=" " required maxlength="100" autocomplete="off">
-                            <label class="kkp-col-label">First Name</label>
+                            <label class="kkp-col-label">First Name <span class="kkp-required">*</span></label>
                         </div>
                         <div class="kkp-name-col">
                             <input type="text" name="middle_name" id="kkpMiddleName" class="kkp-uline" placeholder=" " maxlength="100" autocomplete="off">
                             <label class="kkp-col-label">Middle Name</label>
                         </div>
                         <div class="kkp-name-col kkp-name-col-sm">
-                            <select name="suffix" id="kkpSuffix" class="kkp-uline kkp-uline-select">
-                                <option value="">None</option>
-                                <option>Jr.</option><option>Sr.</option>
-                                <option>II</option><option>III</option><option>IV</option><option>V</option>
+                            <select name="suffix" id="kkpSuffix" class="kkp-uline kkp-uline-select" required>
+                                <option value="None" selected>None</option>
+                                <option value="Jr.">Jr.</option>
+                                <option value="Sr.">Sr.</option>
+                                <option value="I">I</option>
+                                <option value="II">II</option>
+                                <option value="III">III</option>
+                                <option value="IV">IV</option>
+                                <option value="V">V</option>
+                                <option value="Others">Others</option>
                             </select>
-                            <label class="kkp-col-label">Suffix</label>
+                            <label class="kkp-col-label">Suffix <span class="kkp-required">*</span></label>
+                            <div class="kkp-custom-suffix-wrap" id="kkpCustomSuffixWrap">
+                                <input type="text" name="custom_suffix" id="kkpCustomSuffix" class="kkp-uline" placeholder="Please specify suffix" maxlength="30" autocomplete="off">
+                                <label class="kkp-col-label">Please specify suffix <span class="kkp-required">*</span></label>
+                            </div>
                         </div>
                     </div>
 
@@ -255,7 +254,7 @@
                         </div>
                         <div class="kkp-loc-col">
                             <input type="text" name="purok_zone" class="kkp-uline" placeholder=" " required maxlength="100">
-                            <label class="kkp-col-label">Purok/Zone</label>
+                            <label class="kkp-col-label">Purok/Zone <span class="kkp-required">*</span></label>
                         </div>
                     </div>
 
@@ -263,7 +262,7 @@
                     <div class="kkp-personal-row">
                         <div class="kkp-personal-left">
                             <div class="kkp-sex-block">
-                                <div class="kkp-sex-label-box">Sex Assigned by Birth:</div>
+                                <div class="kkp-sex-label-box">Sex Assigned by Birth: <span class="kkp-required">*</span></div>
                                 <div class="kkp-sex-options">
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="sexChk" value="Male" onchange="kkpSingleCheck(this,'kkpSex')"> Male</label>
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="sexChk" value="Female" onchange="kkpSingleCheck(this,'kkpSex')"> Female</label>
@@ -274,12 +273,11 @@
                         <div class="kkp-personal-center">
                             <div class="kkp-age-dob-row">
                                 <div class="kkp-inline-pair">
-                                    <label class="kkp-inline-label">Age: *</label>
+                                    <label class="kkp-inline-label">Age: <span class="kkp-required">*</span></label>
                                     <input type="number" name="age" id="kkpAge" min="15" max="30" class="kkp-uline kkp-uline-short" placeholder=" " required>
-                                    <span class="kkp-age-note">15 to 30 only</span>
                                 </div>
                                 <div class="kkp-inline-pair">
-                                    <label class="kkp-inline-label">Birthday:</label>
+                                    <label class="kkp-inline-label">Birthday: <span class="kkp-required">*</span></label>
                                     <input type="date" name="birthday" id="kkpBirthday" class="kkp-uline kkp-uline-med" required>
                                     <span class="kkp-hint">(mm/dd/yyyy)</span>
                                 </div>
@@ -287,25 +285,25 @@
                         </div>
                         <div class="kkp-personal-right">
                             <div class="kkp-inline-pair">
-                                <label class="kkp-inline-label">E-mail address:</label>
+                                <label class="kkp-inline-label">E-mail address: <span class="kkp-required">*</span></label>
                                 <input type="email" name="email" class="kkp-uline kkp-uline-med" placeholder=" " maxlength="150" required>
                             </div>
                             <div class="kkp-inline-pair">
-                                <label class="kkp-inline-label">Contact #:</label>
-                                <input type="text" name="contact_number" class="kkp-uline kkp-uline-med" placeholder=" " maxlength="15" required>
+                                <label class="kkp-inline-label">Contact #: <span class="kkp-required">*</span></label>
+                                <input type="tel" name="contact_number" id="kkpContactNumber" class="kkp-uline kkp-uline-med" placeholder="09XXXXXXXXX" inputmode="numeric" pattern="09[0-9]{9}" maxlength="11" required>
                             </div>
                         </div>
                     </div>
 
                     {{-- ── II. DEMOGRAPHIC CHARACTERISTICS ── --}}
-                    <div class="kkp-section-heading" style="margin-top:10px;">II. DEMOGRAPHIC CHARACTERISTICS</div>
-                    <p class="kkp-demo-instruction">Please put a Check mark (✓) next to the word or Phrase that matches your response.</p>
+                    <div class="kkp-section-heading" style="margin-top:10px;">II. DEMOGRAPHIC CHARACTERISTICS <span class="kkp-required">*</span></div>
+                    <p class="kkp-demo-instruction">Please put a Check mark (✓) next to the word or Phrase that matches your response. <span class="kkp-required">*</span></p>
 
                     <div class="kkp-demo-grid">
                         {{-- LEFT COLUMN --}}
                         <div class="kkp-demo-col">
                             <div class="kkp-demo-block">
-                                <div class="kkp-demo-block-label">Civil Status</div>
+                                <div class="kkp-demo-block-label">Civil Status <span class="kkp-required">*</span></div>
                                 <div class="kkp-demo-block-options">
                                     <div class="kkp-demo-options-2col">
                                         <div>
@@ -325,7 +323,7 @@
                                 </div>
                             </div>
                             <div class="kkp-demo-block">
-                                <div class="kkp-demo-block-label">Youth Age Group</div>
+                                <div class="kkp-demo-block-label">Youth Age Group <span class="kkp-required">*</span></div>
                                 <div class="kkp-demo-block-options">
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="youth_age_groupChk" value="Child Youth (15-17 yrs old)" onchange="kkpSingleCheck(this,'kkpYouthAgeGroup')"> Child Youth (15-17 yrs old)</label>
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="youth_age_groupChk" value="Core Youth (18-24 yrs old)" onchange="kkpSingleCheck(this,'kkpYouthAgeGroup')"> Core Youth (18-24 yrs old)</label>
@@ -334,7 +332,7 @@
                                 </div>
                             </div>
                             <div class="kkp-demo-block">
-                                <div class="kkp-demo-block-label">Educational Background</div>
+                                <div class="kkp-demo-block-label">Educational Background <span class="kkp-required">*</span></div>
                                 <div class="kkp-demo-block-options">
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="educationChk" value="Elementary Level" onchange="kkpSingleCheck(this,'kkpEducation')"> Elementary Level</label>
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="educationChk" value="Elementary Grad" onchange="kkpSingleCheck(this,'kkpEducation')"> Elementary Grad</label>
@@ -354,7 +352,7 @@
                         {{-- RIGHT COLUMN --}}
                         <div class="kkp-demo-col">
                             <div class="kkp-demo-block">
-                                <div class="kkp-demo-block-label">Youth Classification</div>
+                                <div class="kkp-demo-block-label">Youth Classification <span class="kkp-required">*</span></div>
                                 <div class="kkp-demo-block-options">
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="youth_classificationChk" value="In School Youth" onchange="kkpSingleCheck(this,'kkpYouthClass')"> In school Youth</label>
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="youth_classificationChk" value="Out of School Youth" onchange="kkpSingleCheck(this,'kkpYouthClass')"> Out of School Youth</label>
@@ -367,7 +365,7 @@
                                 </div>
                             </div>
                             <div class="kkp-demo-block">
-                                <div class="kkp-demo-block-label">Work Status</div>
+                                <div class="kkp-demo-block-label">Work Status <span class="kkp-required">*</span></div>
                                 <div class="kkp-demo-block-options">
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="work_statusChk" value="Employed" onchange="kkpSingleCheck(this,'kkpWorkStatus')"> Employed</label>
                                     <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="work_statusChk" value="Unemployed" onchange="kkpSingleCheck(this,'kkpWorkStatus')"> Unemployed</label>
@@ -380,19 +378,19 @@
                             <div class="kkp-voter-section">
                                 <div class="kkp-voter-row">
                                     <div class="kkp-voter-cell">
-                                        <div class="kkp-voter-cell-label">Registered SK Voter?</div>
+                                        <div class="kkp-voter-cell-label">Registered SK Voter? <span class="kkp-required">*</span></div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="sk_voterChk" value="Yes" onchange="kkpSingleCheck(this,'kkpSkVoter')"> Yes</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="sk_voterChk" value="No" onchange="kkpSingleCheck(this,'kkpSkVoter')"> No</label>
                                         <input type="hidden" id="kkpSkVoter" name="sk_voter">
                                     </div>
                                     <div class="kkp-voter-cell">
-                                        <div class="kkp-voter-cell-label">Did you vote last SK?</div>
+                                        <div class="kkp-voter-cell-label">Did you vote last SK? <span class="kkp-required">*</span></div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="sk_votedChk" value="Yes" onchange="kkpSingleCheck(this,'kkpSkVoted')"> Yes</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="sk_votedChk" value="No" onchange="kkpSingleCheck(this,'kkpSkVoted')"> No</label>
                                         <input type="hidden" id="kkpSkVoted" name="sk_voted">
                                     </div>
                                     <div class="kkp-voter-cell">
-                                        <div class="kkp-voter-cell-label">If Yes, How many times?</div>
+                                        <div class="kkp-voter-cell-label">If Yes, How many times? <span class="kkp-required">*</span></div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="vote_frequencyChk" value="1-2 Times" onchange="kkpSingleCheck(this,'kkpVoteFreq')"> 1-2 Times</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="vote_frequencyChk" value="3-4 Times" onchange="kkpSingleCheck(this,'kkpVoteFreq')"> 3-4 Times</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="vote_frequencyChk" value="5 and above" onchange="kkpSingleCheck(this,'kkpVoteFreq')"> 5 and above</label>
@@ -401,26 +399,26 @@
                                 </div>
                                 <div class="kkp-voter-row">
                                     <div class="kkp-voter-cell">
-                                        <div class="kkp-voter-cell-label">Registered National Voter?</div>
+                                        <div class="kkp-voter-cell-label">Registered National Voter? <span class="kkp-required">*</span></div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="national_voterChk" value="Yes" onchange="kkpSingleCheck(this,'kkpNationalVoter')"> Yes</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="national_voterChk" value="No" onchange="kkpSingleCheck(this,'kkpNationalVoter')"> No</label>
                                         <input type="hidden" id="kkpNationalVoter" name="national_voter">
                                     </div>
                                     <div class="kkp-voter-cell">
-                                        <div class="kkp-voter-cell-label">Have you attended a KK Assembly?</div>
+                                        <div class="kkp-voter-cell-label">Have you attended a KK Assembly? <span class="kkp-required">*</span></div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_assemblyChk" value="Yes" onchange="kkpSingleCheck(this,'kkpKkAssembly'); kkpHandleAssembly(this)"> Yes</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_assemblyChk" value="No" onchange="kkpSingleCheck(this,'kkpKkAssembly'); kkpHandleAssembly(this)"> No</label>
                                         <input type="hidden" id="kkpKkAssembly" name="kk_assembly">
                                     </div>
                                     <div class="kkp-voter-cell" id="kkpAssemblyYesCell">
-                                        <div class="kkp-voter-cell-label">If Yes, How many times?</div>
+                                        <div class="kkp-voter-cell-label">If Yes, How many times? <span class="kkp-required">*</span></div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_timesChk" value="1-2 Times" onchange="kkpSingleCheck(this,'kkpKkTimes')"> 1-2 Times</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_timesChk" value="3-4 Times" onchange="kkpSingleCheck(this,'kkpKkTimes')"> 3-4 Times</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_timesChk" value="5 and above" onchange="kkpSingleCheck(this,'kkpKkTimes')"> 5 and above</label>
                                         <input type="hidden" id="kkpKkTimes" name="kk_times">
                                     </div>
                                     <div class="kkp-voter-cell" id="kkpAssemblyNoCell">
-                                        <div class="kkp-voter-cell-label">If No, Why?</div>
+                                        <div class="kkp-voter-cell-label">If No, Why? <span class="kkp-required">*</span></div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="There was no KK Assembly" onchange="kkpSingleCheck(this,'kkpKkReason')"> There was no KK Assembly</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="Not Interested to Attend" onchange="kkpSingleCheck(this,'kkpKkReason')"> Not Interested to Attend</label>
                                         <input type="hidden" id="kkpKkReason" name="kk_reason">
@@ -433,11 +431,11 @@
                     {{-- ── FOOTER: FB + Group Chat ── --}}
                     <div class="kkp-footer-row">
                         <div class="kkp-footer-fb">
-                            <label class="kkp-inline-label">FB Account:</label>
+                            <label class="kkp-inline-label">FB Account: <span class="kkp-required">*</span></label>
                             <input type="text" name="facebook" class="kkp-uline kkp-uline-fb" placeholder=" " maxlength="150" required>
                         </div>
                         <div class="kkp-footer-chat">
-                            <span class="kkp-inline-label">Willing to join the group chat?</span>
+                            <span class="kkp-inline-label">Willing to join the group chat? <span class="kkp-required">*</span></span>
                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="group_chatChk" value="Yes" onchange="kkpSingleCheck(this,'kkpGroupChat')"> Yes</label>
                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="group_chatChk" value="No" onchange="kkpSingleCheck(this,'kkpGroupChat')"> No</label>
                             <input type="hidden" id="kkpGroupChat" name="group_chat">
@@ -457,7 +455,7 @@
                                 <input type="text" id="kkpSignatureName" name="signature_name"
                                        placeholder="" readonly class="kkp-sig-name-input">
                             </div>
-                            <div class="kkp-sig-label-bottom">Name and Signature of Participant</div>
+                            <div class="kkp-sig-label-bottom">Name and Signature of Participant <span class="kkp-required">*</span></div>
                             <button type="button" class="kkp-sig-trigger-btn" id="kkpSignatureTrigger"
                                     title="Sign here">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"

@@ -8,7 +8,6 @@
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .youth-login-page {
             min-height: 100vh;
@@ -278,8 +277,6 @@
         Back to Homepage
     </a>
 
-    @include('dashboard::loading')
-    
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -340,9 +337,6 @@
         </div>
     </main>
 
-    <!-- Load loading script AFTER the overlay HTML is rendered -->
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
-
     <script>
         const searchInput  = document.getElementById('barangaySearch');
         const barangayGrid = document.getElementById('barangayGrid');
@@ -398,7 +392,6 @@
         });
 
         function selectBarangayAndGo(slug) {
-            if (window.showLoading) window.showLoading('Redirecting...');
             setTimeout(() => {
                 window.location.href = `/kkprofiling/${slug}`;
             }, 300);

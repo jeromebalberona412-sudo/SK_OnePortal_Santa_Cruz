@@ -6,6 +6,14 @@
 (function () {
     'use strict';
 
+    const VALID_ROMAN_SUFFIXES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+    function isValidSuffixText(value) {
+        if (!value) return false;
+        if (value.length > 4) return false;
+        return VALID_ROMAN_SUFFIXES.includes(value.toUpperCase()) || /^[A-Za-z.]+$/.test(value);
+    }
+
     // ── Navigation Drawer ──
     const navHamburger = document.getElementById('navHamburger');
     const navDrawer    = document.getElementById('navDrawer');
@@ -28,24 +36,47 @@
     if (navLoginBtn)       navLoginBtn.addEventListener('click', () => window.location.href = '/youth/login');
     if (navDrawerLoginBtn) navDrawerLoginBtn.addEventListener('click', () => window.location.href = '/youth/login');
 
-    // ── Age auto-fill from birthday ──
+    // ── Age auto-fill + birthday range (15-30, no future dates) ──
     const form          = document.getElementById('kkProfilingForm');
     const birthdayInput = form && form.querySelector('input[name="birthday"]');
     const ageInput      = form && form.querySelector('input[name="age"]');
     if (birthdayInput && ageInput) {
+        const today = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const toDateInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+        const maxBirthday = new Date(today.getFullYear() - 15, today.getMonth(), today.getDate());
+        const minBirthday = new Date(today.getFullYear() - 30, today.getMonth(), today.getDate());
+        birthdayInput.max = toDateInput(maxBirthday);
+        birthdayInput.min = toDateInput(minBirthday);
+
         birthdayInput.addEventListener('change', function () {
             const bday  = new Date(this.value);
-            const today = new Date();
             let age = today.getFullYear() - bday.getFullYear();
             const m = today.getMonth() - bday.getMonth();
             if (m < 0 || (m === 0 && today.getDate() < bday.getDate())) age--;
             if (age >= 15 && age <= 30) {
                 ageInput.value = age;
             } else {
-                alert('Age must be between 15 and 30 years old for KK profiling.');
                 this.value = '';
                 ageInput.value = '';
             }
+        });
+    }
+
+    // ── Contact number formatter: 09 + 9 digits only (11 chars total) ──
+    const contactInput = document.getElementById('kkpContactNumber');
+    if (contactInput) {
+        if (!contactInput.value) contactInput.value = '09';
+        contactInput.addEventListener('focus', function () {
+            if (!this.value) this.value = '09';
+        });
+        contactInput.addEventListener('input', function () {
+            let value = (this.value || '').replace(/\D/g, '');
+            if (!value.startsWith('09')) {
+                value = value.startsWith('9') ? `0${value}` : `09${value.replace(/^0+/, '')}`;
+            }
+            this.value = value.slice(0, 11);
         });
     }
 
@@ -55,7 +86,12 @@
         const last   = (document.getElementById('kkpLastName')   || {}).value   || '';
         const first  = (document.getElementById('kkpFirstName')  || {}).value   || '';
         const middle = (document.getElementById('kkpMiddleName') || {}).value   || '';
-        const suffix = (document.getElementById('kkpSuffix')     || {}).value   || '';
+        const suffixSelect = document.getElementById('kkpSuffix');
+        const customSuffix = document.getElementById('kkpCustomSuffix');
+        const rawSuffix = (suffixSelect || {}).value || '';
+        const suffix = rawSuffix === 'Others'
+            ? ((customSuffix || {}).value || '')
+            : (rawSuffix === 'None' ? '' : rawSuffix);
         const sigNameInput = document.getElementById('kkpSignatureName');
         const triggerBtn   = document.getElementById('kkpSignatureTrigger');
         const sigInput     = document.getElementById('kkpSignatureData');
@@ -80,7 +116,39 @@
         if (el) el.addEventListener('input', updateSignatureName);
         if (el && el.tagName === 'SELECT') el.addEventListener('change', updateSignatureName);
     });
+    const customSuffixInput = document.getElementById('kkpCustomSuffix');
+    if (customSuffixInput) customSuffixInput.addEventListener('input', updateSignatureName);
     updateSignatureName();
+
+    // ── Suffix dropdown dynamic behavior ──
+    const suffixSelect = document.getElementById('kkpSuffix');
+    const customSuffixWrap = document.getElementById('kkpCustomSuffixWrap');
+    if (suffixSelect && customSuffixWrap && customSuffixInput) {
+        const toggleCustomSuffix = function () {
+            const isOthers = suffixSelect.value === 'Others';
+            customSuffixWrap.classList.toggle('show', isOthers);
+            customSuffixInput.required = isOthers;
+            if (!isOthers) {
+                customSuffixInput.value = '';
+                customSuffixInput.classList.remove('kkp-input-err');
+                const err = customSuffixWrap.querySelector('.kkp-field-error');
+                if (err) err.remove();
+            }
+            updateSignatureName();
+        };
+
+        customSuffixInput.addEventListener('input', function () {
+            let value = (this.value || '').replace(/[^A-Za-z.\s]/g, '');
+            value = value.replace(/\s{2,}/g, ' ').trimStart();
+            this.value = value;
+        });
+        customSuffixInput.addEventListener('blur', function () {
+            this.value = (this.value || '').trim();
+        });
+
+        suffixSelect.addEventListener('change', toggleCustomSuffix);
+        toggleCustomSuffix();
+    }
 
     // ── Name input restrictions (letters only, no leading spaces) ──
     ['kkpLastName', 'kkpFirstName', 'kkpMiddleName'].forEach(function (id) {
@@ -196,6 +264,32 @@ window.handleFormSubmit = function(event) {
         fieldError(purok, 'Cannot be spaces only.');
     }
 
+    // ── 3b. Suffix ──
+    const suffix = document.getElementById('kkpSuffix');
+    const customSuffix = document.getElementById('kkpCustomSuffix');
+    if (!suffix || !suffix.value) {
+        errors.push('Suffix is required.');
+        fieldError(suffix, 'Please select a suffix.');
+    } else if (suffix.value === 'Others') {
+        const raw = (customSuffix && customSuffix.value ? customSuffix.value : '').trim();
+        if (!raw) {
+            errors.push('Custom suffix is required.');
+            fieldError(customSuffix, 'Please specify your suffix.');
+        } else if (!/^[A-Za-z.\s]+$/.test(raw) || !/[A-Za-z]/.test(raw)) {
+            errors.push('Only text and valid Roman numeral suffixes are allowed.');
+            fieldError(customSuffix, 'Only text and valid Roman numeral suffixes are allowed.');
+        } else if ((raw.replace(/\s/g, '').length > 4) && !/^[A-Za-z\s.]{1,30}$/.test(raw)) {
+            errors.push('Suffix is invalid.');
+            fieldError(customSuffix, 'Only text and valid Roman numeral suffixes are allowed.');
+        } else if (/^[IVX]+$/i.test(raw.replace(/\s/g, '')) && raw.replace(/\s/g, '').length > 4) {
+            errors.push('Suffix must not exceed 4 characters.');
+            fieldError(customSuffix, 'Suffix must not exceed 4 characters.');
+        }
+    } else if (suffix.value !== 'None' && !isValidSuffixText(suffix.value)) {
+        errors.push('Only text and valid Roman numeral suffixes are allowed.');
+        fieldError(suffix, 'Only text and valid Roman numeral suffixes are allowed.');
+    }
+
     // ── 4. Sex ──
     if (!hiddenVal('kkpSex')) {
         errors.push('Sex Assigned by Birth is required.');
@@ -223,6 +317,19 @@ window.handleFormSubmit = function(event) {
     if (!birthday || !birthday.value.trim()) {
         errors.push('Birthday is required.');
         fieldError(birthday, 'Birthday is required.');
+    } else {
+        const bday = new Date(birthday.value + 'T00:00:00');
+        const now = new Date();
+        let derivedAge = now.getFullYear() - bday.getFullYear();
+        const monthDiff = now.getMonth() - bday.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < bday.getDate())) derivedAge--;
+        if (bday > now) {
+            errors.push('Birthday cannot be in the future.');
+            fieldError(birthday, 'Birthday cannot be in the future.');
+        } else if (derivedAge < 15 || derivedAge > 30) {
+            errors.push('Birthday must match age 15 to 30 only.');
+            fieldError(birthday, 'Age from birthday must be 15 to 30.');
+        }
     }
 
     // ── 7. Email ──
@@ -240,9 +347,9 @@ window.handleFormSubmit = function(event) {
     if (!contact || !contact.value.trim()) {
         errors.push('Contact # is required.');
         fieldError(contact, 'Contact # is required.');
-    } else if (hasAnySpace(contact.value)) {
-        errors.push('Contact # must not contain spaces.');
-        fieldError(contact, 'No spaces allowed.');
+    } else if (!/^09\d{9}$/.test(contact.value.trim())) {
+        errors.push('Contact # must be 11 digits and start with 09.');
+        fieldError(contact, 'Use 11 digits only. Format: 09XXXXXXXXX.');
     }
 
     // ── 9. Civil Status ──

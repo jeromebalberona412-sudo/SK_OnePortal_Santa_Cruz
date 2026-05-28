@@ -149,13 +149,14 @@ class KKProfilingController extends Controller
             'last_name'             => ['required', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
             'first_name'            => ['required', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
             'middle_name'           => ['nullable', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]*$/'],
-            'suffix'                => 'nullable|string|max:10',
+            'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
+            'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:30', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
             'purok_zone'            => ['required', 'string', 'max:100', 'regex:/^(?!\s).+/'],
             'sex'                   => 'required|in:Male,Female',
             'age'                   => 'required|integer|min:15|max:30',
-            'birthday'              => 'required|date',
+            'birthday'              => 'required|date|before_or_equal:today',
             'email'                 => ['required', 'email', 'max:150', 'regex:/^[^\s]+@gmail\.com$/i'],
-            'contact_number'        => ['required', 'string', 'max:15', 'regex:/^\S+$/'],
+            'contact_number'        => ['required', 'string', 'regex:/^09\d{9}$/'],
             'civil_status'          => 'required|string',
             'youth_classification'  => 'required|string',
             'youth_age_group'       => 'required|string',
@@ -172,6 +173,39 @@ class KKProfilingController extends Controller
             'group_chat'            => 'required|string',
             'signature'             => 'required|string',
         ]);
+
+        if (($validated['suffix'] ?? null) === 'Others') {
+            $customSuffix = trim((string) ($validated['custom_suffix'] ?? ''));
+            $compact = strtoupper(str_replace(' ', '', $customSuffix));
+            $validRoman = in_array($compact, ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'], true);
+            $validText = (bool) preg_match('/^[A-Za-z.]+$/', str_replace(' ', '', $customSuffix));
+
+            if (!$validRoman && !$validText) {
+                return back()->withInput()->withErrors([
+                    'custom_suffix' => 'Only text and valid Roman numeral suffixes are allowed.',
+                ]);
+            }
+
+            if ($validRoman && (strlen($compact) < 1 || strlen($compact) > 4)) {
+                return back()->withInput()->withErrors([
+                    'custom_suffix' => 'Suffix must not exceed 4 characters.',
+                ]);
+            }
+        }
+
+        // Server-side age consistency from birthday (15-30 only)
+        try {
+            $derivedAge = \Carbon\Carbon::parse($validated['birthday'])->age;
+            if ($derivedAge < 15 || $derivedAge > 30 || (int) $validated['age'] !== (int) $derivedAge) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['birthday' => 'Birthday and age must match and be within 15 to 30 years old.']);
+            }
+        } catch (\Throwable $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['birthday' => 'Invalid birthday value.']);
+        }
 
         // Capture all other fields without validation
         $validated['respondent_number'] = 'KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 6));
@@ -466,20 +500,13 @@ class KKProfilingController extends Controller
             return $user;
         });
 
-        // Evaluate against previous kabataan records
+        // Keep account pending manual review by SK officials
         $evaluator = new RegistrationEvaluationService();
-        $autoApproved = $evaluator->evaluate($registration);
-
-        if ($autoApproved) {
-            // Update user to ACTIVE immediately
-            $user->update(['status' => 'ACTIVE']);
-        }
+        $evaluator->evaluate($registration);
 
         session()->forget('kabataan_registration_id');
 
-        $message = $autoApproved
-            ? 'Registration completed! Your account has been automatically approved. You can now log in.'
-            : 'Registration completed! Your submission is pending review by SK officials.';
+        $message = 'Registration completed! Please wait for verification/approval by SK officials before logging in.';
 
         return redirect()->route('login')->with('success', $message);
     }

@@ -313,6 +313,7 @@
             padding: 26px 30px;
             text-align: center;
             animation: popIn .25s ease-out;
+            max-width: 420px;
         }
         @keyframes popIn { from {transform: scale(.95); opacity:.5} to {transform:scale(1); opacity:1} }
 
@@ -466,7 +467,7 @@
                         <div class="error" id="confirm-error" style="display:none;"></div>
                     </div>
 
-                    <button type="submit" class="youth-submit-btn" id="submitBtn">Complete Registration</button>
+                    <button type="submit" class="youth-submit-btn" id="submitBtn">Submit for Verification</button>
                 </form>
             </div>
         </div>
@@ -474,7 +475,7 @@
     <div class="success-pop" id="successPop">
         <div class="success-pop-card">
             <h3>Password Set Successfully</h3>
-            <p>Completing your registration...</p>
+            <p>Your account has been submitted. Please wait for SK officials verification before login.</p>
         </div>
     </div>
 
@@ -569,7 +570,7 @@
                 if (successPop) successPop.style.display = 'flex';
                 submitBtn.disabled = true;
                 if (window.showLoading) {
-                    window.showLoading('Creating your account...');
+                    window.showLoading('Submitting for SK verification...');
                 }
                 setTimeout(() => form.submit(), 900);
                 e.preventDefault();
