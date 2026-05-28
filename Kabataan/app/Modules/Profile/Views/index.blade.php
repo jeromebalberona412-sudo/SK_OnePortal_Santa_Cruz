@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -10,6 +11,7 @@
     <title>My Profile - SK OnePortal</title>
     @vite([
         'app/Modules/Profile/assets/css/profile.css',
+        'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/Profile/assets/js/profile.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
@@ -222,7 +224,6 @@
                     </div>
                     <div class="profile-header-info">
                         <h1 class="profile-name">{{ $user->first_name }} {{ $user->middle_initial ? $user->middle_initial . '.' : '' }} {{ $user->last_name }} {{ $user->suffix ?? '' }}</h1>
-                        <p class="profile-username">Add a Username</p>
                         <p class="profile-location">
                             <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
@@ -230,12 +231,6 @@
                             {{ $user->barangay }}, Santa Cruz, Laguna
                         </p>
                     </div>
-                    <button class="edit-profile-btn" id="editProfileBtn" onclick="openEditModal()">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                        </svg>
-                        Edit Profile
-                    </button>
                 </div>
             </div>
 
@@ -253,42 +248,16 @@
                             </h2>
                         </div>
                         <div class="card-body">
-                            <div class="info-row">
-                                <div class="info-item">
-                                    <label>Full Name</label>
-                                    <p>{{ $user->first_name }} {{ $user->middle_initial ? $user->middle_initial . '.' : '' }} {{ $user->last_name }} {{ $user->suffix ?? '' }}</p>
+                            @if($kabataanRegistration)
+                                <div class="kkp-preview-toolbar">
+                                    <button type="button" class="btn-primary kkp-preview-btn" onclick="openKkPreviewModal()">View Personal Information</button>
                                 </div>
-                                <div class="info-item">
-                                    <label>Username</label>
-                                    <p>Add a Username</p>
+                            @else
+                                <div class="empty-state">
+                                    <h3>No KK Profiling Record</h3>
+                                    <p>Wala pang completed KK Profiling form para sa account na ito.</p>
                                 </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-item">
-                                    <label>Birthdate</label>
-                                    <p>{{ \Carbon\Carbon::parse($user->birthdate)->format('F d, Y') }}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Age</label>
-                                    <p>{{ $user->age }} years old</p>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-item">
-                                    <label>Email Address</label>
-                                    <p>{{ $user->email }}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Contact Number</label>
-                                    <p>{{ $user->contact_number ?? 'Not provided' }}</p>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-item full-width">
-                                    <label>Complete Address</label>
-                                    <p>{{ $user->barangay }}, {{ $user->municipality }}, {{ $user->province }}</p>
-                                </div>
-                            </div>
+                            @endif
                         </div>
                     </div>
 
@@ -493,6 +462,24 @@
             </div>
         </div>
     </main>
+
+    <div class="modal-overlay" id="kkPreviewModal" style="display: none;">
+        <div class="modal-container" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h2>Personal Information</h2>
+                <button class="modal-close" onclick="closeKkPreviewModal()">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if($kabataanRegistration)
+                    @include('profile::partials.kk-profiling-preview', ['kabataanRegistration' => $kabataanRegistration, 'user' => $user])
+                @endif
+            </div>
+        </div>
+    </div>
 
     <!-- Edit Profile Modal -->
     <div class="modal-overlay" id="editProfileModal" style="display: none;">
@@ -1612,6 +1599,22 @@
     });
 
     window.addEventListener('unload', function () {});
+
+    function openKkPreviewModal() {
+        const modal = document.getElementById('kkPreviewModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeKkPreviewModal() {
+        const modal = document.getElementById('kkPreviewModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
     </script>
 </body>
 </html>

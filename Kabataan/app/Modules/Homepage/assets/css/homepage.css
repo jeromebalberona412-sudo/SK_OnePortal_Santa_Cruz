@@ -1000,7 +1000,8 @@ body.homepage-body.kabataan-homepage::after {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-left: auto;
+    flex: 1;
+    min-width: 0;
 }
 
 .kabataan-nav-link {
@@ -1024,6 +1025,7 @@ body.homepage-body.kabataan-homepage::after {
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+    margin-left: auto;
 }
 
 .kabataan-nav-secondary,
@@ -1051,6 +1053,12 @@ body.homepage-body.kabataan-homepage::after {
 .kabataan-nav-secondary {
     color: #0450a8;
     background: rgba(4, 80, 168, 0.08);
+}
+
+.kabataan-nav-secondary:hover {
+    color: #fff;
+    background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
+    box-shadow: 0 14px 30px rgba(4, 80, 168, 0.24);
 }
 
 .kabataan-nav-primary {
@@ -1090,8 +1098,8 @@ body.homepage-body.kabataan-homepage::after {
 .kabataan-drawer {
     position: fixed;
     inset: 72px 16px auto;
-    z-index: 290;
-    display: none;
+    z-index: 320;
+    display: flex;
     flex-direction: column;
     gap: 6px;
     padding: 16px;
@@ -1100,10 +1108,18 @@ body.homepage-body.kabataan-homepage::after {
     border: 1px solid rgba(148, 163, 184, 0.16);
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
     backdrop-filter: blur(16px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease;
 }
 
 .kabataan-drawer.open {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
 .kabataan-drawer-link {
@@ -1874,6 +1890,7 @@ body.homepage-body.kabataan-homepage::after {
 
     .kabataan-nav-toggle {
         display: inline-flex;
+        margin-left: 0;
     }
 
     .kabataan-hero {
@@ -1935,6 +1952,21 @@ body.homepage-body.kabataan-homepage::after {
 }
 
 @media (max-width: 560px) {
+    .kabataan-nav-inner {
+        min-height: 66px;
+        gap: 10px;
+    }
+
+    .kabataan-brand-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+    .kabataan-brand-copy small {
+        display: none;
+    }
+
     .kabataan-hero h1 {
         font-size: clamp(2.3rem, 12vw, 3.2rem);
     }
@@ -1956,6 +1988,11 @@ body.homepage-body.kabataan-homepage::after {
     .kabataan-tab {
         padding: 9px 13px;
         font-size: 0.9rem;
+    }
+
+    .kabataan-drawer {
+        inset: 68px 10px auto;
+        padding: 12px;
     }
 }
 

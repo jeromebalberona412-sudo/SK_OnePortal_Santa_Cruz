@@ -10,7 +10,7 @@
                     <span class="kabataan-eyebrow">Pre-auth public homepage</span>
                     <h1>Your Voice. Your Programs. Your Barangay.</h1>
                     <p class="kabataan-hero-text">
-                        Connect with your community through transparent programs and cross-barangay discovery.
+                        Connect with your community through transparent programs and cross-barangay discovery for youth ages 15-30.
                     </p>
 
                     <div class="kabataan-hero-actions">
@@ -213,16 +213,16 @@
 
                 <div class="kabataan-faq-grid">
                     <details class="kabataan-faq-card" open>
-                        <summary>Is Kabataan open to everyone?</summary>
-                        <p>Yes. The homepage is public and designed for youth in Santa Cruz to browse programs before logging in.</p>
+                        <summary>What programs can I join in SK OnePortal?</summary>
+                        <p>You can join scholarship support, sports development, health awareness, and youth livelihood activities posted by your barangay SK.</p>
                     </details>
                     <details class="kabataan-faq-card">
-                        <summary>Can I see barangay programs without an account?</summary>
-                        <p>You can browse announcements and featured programs publicly. Registration unlocks saved follows and participation features.</p>
+                        <summary>How do I know if a program is open for applications?</summary>
+                        <p>Each listing shows the current status and available slots. When the status is Active, you can submit your application right away.</p>
                     </details>
                     <details class="kabataan-faq-card">
-                        <summary>How do I join a program?</summary>
-                        <p>Register or log in, then use the portal to view the full details and submit your participation request.</p>
+                        <summary>Do I need to be 15-30 years old to register?</summary>
+                        <p>Yes. The platform is intended for Katipunan ng Kabataan members within the official age range of 15 to 30 years old.</p>
                     </details>
                 </div>
             </div>

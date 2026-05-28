@@ -1,4 +1,4 @@
-@php
+﻿@php
     $ckVersion = config('ckeditor.cdn_version', '47.6.1');
     $ckboxVersion = config('ckeditor.ckbox_version', '2.9.2');
     $mrCkeditorConfig = [
@@ -11,6 +11,7 @@
 <!DOCTYPE html>
 <html lang="en" id="mrHtml">
 <head>
+    @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Make a Report - SK Officials Portal</title>

@@ -180,7 +180,7 @@
                     <article class="spotlight-cta-card">
                         <h4>Join This Program</h4>
                         <p>Secure your slot and receive updates for schedules, reminders, and announcements.</p>
-                        <a href="{{ route('register') }}" class="programs-btn programs-btn-primary">Register Now</a>
+                        <a href="{{ route('register') }}" class="programs-btn programs-btn-primary">Sign Up Now</a>
                     </article>
 
                     <article class="spotlight-metric-card">

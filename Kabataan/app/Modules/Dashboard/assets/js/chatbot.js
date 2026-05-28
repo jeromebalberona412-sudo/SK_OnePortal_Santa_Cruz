@@ -46,7 +46,7 @@ const CP_REPLIES = [
     },
     {
         keys: ['register', 'rehistro', 'sign up', 'signup', 'account'],
-        reply: 'Para mag-register sa SK OnePortal, pumunta sa login page at i-click ang "Register". Kailangan mo ng valid email address at personal information.'
+        reply: 'Para gumawa ng account sa SK OnePortal, pumunta sa login page at i-click ang "Sign Up". Kailangan mo ng valid email address at personal information.'
     },
     {
         keys: ['profile', 'account', 'impormasyon', 'information', 'edit'],

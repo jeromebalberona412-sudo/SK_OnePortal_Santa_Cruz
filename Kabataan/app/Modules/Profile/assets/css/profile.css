@@ -1186,6 +1186,76 @@ body.youth-profile {
     }
 }
 
+/* KK Profiling form preview in profile */
+.kkp-preview-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.kkp-preview-btn {
+    min-width: 130px;
+}
+
+.kkp-profile-preview {
+    background: #fff;
+    border: 2px solid #1f2937;
+    padding: 12px;
+    overflow-x: auto;
+}
+
+.kkp-profile-preview input[readonly] {
+    background: #fff !important;
+    color: #111827 !important;
+}
+
+.kkp-profile-preview .kkp-sq-chk[disabled] {
+    opacity: 1;
+    accent-color: #111827;
+}
+
+.kkp-preview-free-text {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #111827;
+}
+
+@media print {
+    .top-navbar,
+    .profile-header-card,
+    .profile-right-column,
+    .kkp-preview-toolbar,
+    .edit-profile-btn,
+    .card-header svg {
+        display: none !important;
+    }
+
+    .profile-main {
+        padding: 0 !important;
+    }
+
+    .profile-content-grid {
+        display: block !important;
+    }
+
+    .profile-left-column,
+    .info-card,
+    .card-body {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    .card-header {
+        border: none !important;
+        padding: 0 0 10px 0 !important;
+    }
+}
+
 /* Schedule Modal Styles */
 .schedule-list {
     display: flex;

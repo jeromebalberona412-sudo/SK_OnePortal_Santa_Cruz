@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -50,10 +51,18 @@
                     <p class="card-subtitle">Enter the email address associated with your account and we will send you a link to reset your password.</p>
                 </div>
 
+                @if (session('status'))
+                    <div class="youth-alert youth-alert-success" id="resetStatusAlert">
+                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Successfully sent email reset link. Please check your inbox.</span>
+                    </div>
+                @endif
 
 
                 <!-- Forgot Password Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}" novalidate>
+                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm" novalidate>
                     @csrf
 
                     <!-- Email Field -->
@@ -79,7 +88,7 @@
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" class="youth-submit-btn">
+                    <button type="submit" class="youth-submit-btn" id="sendResetLinkBtn">
                         <span>Send Reset Link</span>
                     </button>
                 </form>
@@ -97,10 +106,76 @@
 
     <script>
         (function () {
-            var btn = document.querySelector('.youth-submit-btn');
-            if (btn) {
-                btn.addEventListener('click', function () {
-                    if (window.showLoading) window.showLoading('Sending reset link...');
+            var form = document.getElementById('forgotPasswordForm');
+            var btn = document.getElementById('sendResetLinkBtn');
+            var btnText = btn ? btn.querySelector('span') : null;
+            var emailInput = document.getElementById('email');
+            var cooldownKey = 'kabataan_forgot_password_cooldown_until';
+            var cooldownSeconds = 60;
+            var timerInterval = null;
+
+            function setButtonState(disabled, text) {
+                if (!btn || !btnText) return;
+                btn.disabled = disabled;
+                btnText.textContent = text;
+            }
+
+            function clearCooldown() {
+                localStorage.removeItem(cooldownKey);
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                setButtonState(false, 'Send Reset Link');
+            }
+
+            function applyCooldown(untilTimestamp) {
+                if (!untilTimestamp) return;
+
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+
+                timerInterval = setInterval(function () {
+                    var remainingMs = untilTimestamp - Date.now();
+                    var remainingSeconds = Math.ceil(remainingMs / 1000);
+
+                    if (remainingSeconds <= 0) {
+                        clearCooldown();
+                        return;
+                    }
+
+                    setButtonState(true, 'Send Reset Link (' + remainingSeconds + 's)');
+                }, 250);
+            }
+
+            var storedUntil = Number(localStorage.getItem(cooldownKey) || 0);
+            if (storedUntil > Date.now()) {
+                applyCooldown(storedUntil);
+            } else if (storedUntil) {
+                clearCooldown();
+            }
+
+            if (form && btn) {
+                form.addEventListener('submit', function (event) {
+                    var currentUntil = Number(localStorage.getItem(cooldownKey) || 0);
+                    if (currentUntil > Date.now()) {
+                        event.preventDefault();
+                        applyCooldown(currentUntil);
+                        return;
+                    }
+
+                    if (!emailInput || !emailInput.value.trim()) {
+                        return;
+                    }
+
+                    var nextUntil = Date.now() + (cooldownSeconds * 1000);
+                    localStorage.setItem(cooldownKey, String(nextUntil));
+                    applyCooldown(nextUntil);
+
+                    if (window.showLoading) {
+                        window.showLoading('Sending reset link...');
+                    }
                 });
             }
         })();

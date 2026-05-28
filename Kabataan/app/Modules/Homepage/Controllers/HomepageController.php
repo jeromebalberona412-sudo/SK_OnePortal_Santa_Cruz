@@ -132,7 +132,7 @@ class HomepageController extends Controller
                     'id' => 1,
                     'category' => 'account',
                     'question' => 'Who can join SK OnePortal Kabataan?',
-                    'answer' => "Youth aged 13-30 residing in Santa Cruz, Laguna can join SK OnePortal Kabataan. You'll need a valid email address and contact number to register. Residents from any of the 26 barangays are welcome to participate.",
+                    'answer' => "Youth aged 15-30 residing in Santa Cruz, Laguna can join SK OnePortal Kabataan. You'll need a valid email address and contact number to register. Residents from any of the 26 barangays are welcome to participate.",
                 ],
                 [
                     'id' => 2,

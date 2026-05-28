@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Check Your Email - KK Profiling</title>
@@ -151,6 +152,45 @@
             letter-spacing: 0.01em;
         }
 
+        .mail-icon-wrap {
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background: #e0ecff;
+            color: #0450a8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mail-icon-wrap svg { width: 34px; height: 34px; }
+
+        .resend-wrap {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .resend-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 600;
+            background: #0450a8;
+            color: #fff;
+            cursor: pointer;
+        }
+        .resend-btn:disabled {
+            background: #93c5fd;
+            cursor: not-allowed;
+        }
+        .resend-timer {
+            font-size: 13px;
+            color: #334155;
+            font-weight: 600;
+        }
+
         .email-display {
             background: #f3f4f6;
             padding: 1rem;
@@ -272,6 +312,12 @@
         <div class="youth-login-section">
             <div class="youth-login-card">
                 <div class="card-header">
+                    <div class="mail-icon-wrap" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                            <path d="M3 7l9 6 9-6"></path>
+                        </svg>
+                    </div>
                     <h2 class="card-title">Check Your Email ✉️</h2>
                     <p class="card-subtitle">Verify your email to continue</p>
                 </div>
@@ -283,6 +329,10 @@
                 
                 <p class="message-text">Please check your email and click the verification link to continue with your registration.</p>
                 <p class="expiry-text">The link will expire in 24 hours.</p>
+                <div class="resend-wrap">
+                    <button type="button" class="resend-btn" id="resendBtn" disabled>Resend Email Verification</button>
+                    <span class="resend-timer" id="resendTimer">(1:00)</span>
+                </div>
                 
                 <center>
                     <a href="{{ route('kkprofiling.signup') }}" class="back-btn" onclick="handleBackClick(event)">Back to Signup</a>
@@ -295,6 +345,31 @@
     <script src="{{ url('/shared/js/loading.js') }}"></script>
 
     <script>
+        (function() {
+            const resendBtn = document.getElementById('resendBtn');
+            const resendTimer = document.getElementById('resendTimer');
+            if (!resendBtn || !resendTimer) return;
+
+            let seconds = 60;
+            const timer = setInterval(() => {
+                seconds--;
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                resendTimer.textContent = `(${m}:${s < 10 ? '0' : ''}${s})`;
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    resendBtn.disabled = false;
+                    resendTimer.textContent = '';
+                }
+            }, 1000);
+
+            resendBtn.addEventListener('click', function() {
+                if (this.disabled) return;
+                this.disabled = true;
+                this.textContent = 'Resent!';
+            });
+        })();
+
         function handleBackClick(e) {
             e.preventDefault();
             if (window.showLoading) {

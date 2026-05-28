@@ -1,0 +1,235 @@
+@php
+    $kkData = $kabataanRegistration->form_data ?? [];
+    $read = function ($key, $fallback = 'N/A') use ($kkData) {
+        $value = $kkData[$key] ?? null;
+        if (is_array($value)) {
+            $value = implode(', ', array_filter($value));
+        }
+        return filled($value) ? $value : $fallback;
+    };
+    $isChecked = function ($key, $expected) use ($kkData) {
+        $value = $kkData[$key] ?? null;
+        if (is_array($value)) {
+            return in_array($expected, $value, true);
+        }
+        return (string) $value === (string) $expected;
+    };
+@endphp
+
+<div class="kkp-profile-preview" id="kkProfilingPreview">
+    <div class="kkp-form-header">
+        <div class="kkp-form-title-col">
+            <div class="kkp-form-main-title">KK Survey Questionnaire</div>
+            <div class="kkp-form-header-fields">
+                <input type="hidden" name="respondent_number" value="{{ $read('respondent_number', '') }}">
+                <div class="kkp-hdr-field">
+                    <span class="kkp-hdr-label">Date:</span>
+                    <input type="text" class="kkp-hdr-input" value="{{ optional($kabataanRegistration?->submitted_at)->format('m/d/Y') ?? date('m/d/Y') }}" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="kkp-form-logo">
+            <img src="/images/skoneportal_logo.webp" alt="SK OnePortal Logo">
+        </div>
+    </div>
+
+    <div class="kkp-notice-box">
+        <p class="kkp-notice-title">TO THE RESPONDENT:</p>
+        <p class="kkp-notice-body">We are currently conducting a study that focuses on assessing the demographic information of the Katipunan ng Kabataan. Please read the questions carefully and answer them accurately.</p>
+        <p class="kkp-notice-confidential">REST ASSURED THAT ALL INFORMATION GATHERED FROM THIS STUDY WILL BE TREATED WITH UTMOST CONFIDENTIALITY.</p>
+    </div>
+
+    <div class="kkp-section-heading">I. PROFILE</div>
+
+    <div class="kkp-row-label">Name of Respondent:</div>
+    <div class="kkp-name-row">
+        <div class="kkp-name-col">
+            <input type="text" class="kkp-uline" value="{{ $read('last_name', $kabataanRegistration->last_name ?? '') }}" readonly>
+            <label class="kkp-col-label">Last Name</label>
+        </div>
+        <div class="kkp-name-col">
+            <input type="text" class="kkp-uline" value="{{ $read('first_name', $kabataanRegistration->first_name ?? '') }}" readonly>
+            <label class="kkp-col-label">First Name</label>
+        </div>
+        <div class="kkp-name-col">
+            <input type="text" class="kkp-uline" value="{{ $read('middle_name', $kabataanRegistration->middle_name ?? '') }}" readonly>
+            <label class="kkp-col-label">Middle Name</label>
+        </div>
+        <div class="kkp-name-col kkp-name-col-sm">
+            <input type="text" class="kkp-uline" value="{{ $read('suffix', $kabataanRegistration->suffix ?? '') }}" readonly>
+            <label class="kkp-col-label">Suffix</label>
+        </div>
+    </div>
+
+    <div class="kkp-row-label">Location:</div>
+    <div class="kkp-loc-row">
+        <div class="kkp-loc-col">
+            <input type="text" class="kkp-uline kkp-readonly" value="Region IV-A (CALABARZON)" readonly>
+            <label class="kkp-col-label">Region</label>
+        </div>
+        <div class="kkp-loc-col">
+            <input type="text" class="kkp-uline kkp-readonly" value="{{ $user->province ?? 'Laguna' }}" readonly>
+            <label class="kkp-col-label">Province</label>
+        </div>
+        <div class="kkp-loc-col">
+            <input type="text" class="kkp-uline kkp-readonly" value="{{ $user->municipality ?? 'Santa Cruz' }}" readonly>
+            <label class="kkp-col-label">City/Municipality</label>
+        </div>
+        <div class="kkp-loc-col">
+            <input type="text" class="kkp-uline kkp-readonly" value="{{ $user->barangay ?? 'N/A' }}" readonly>
+            <label class="kkp-col-label">Barangay</label>
+        </div>
+        <div class="kkp-loc-col">
+            <input type="text" class="kkp-uline" value="{{ $read('purok_zone') }}" readonly>
+            <label class="kkp-col-label">Purok/Zone</label>
+        </div>
+    </div>
+
+    <div class="kkp-personal-row">
+        <div class="kkp-personal-left">
+            <div class="kkp-sex-block">
+                <div class="kkp-sex-label-box">Sex Assigned by Birth:</div>
+                <div class="kkp-sex-options">
+                    <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sex', 'Male') ? 'checked' : '' }} disabled> Male</label>
+                    <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sex', 'Female') ? 'checked' : '' }} disabled> Female</label>
+                </div>
+            </div>
+        </div>
+        <div class="kkp-personal-center">
+            <div class="kkp-age-dob-row">
+                <div class="kkp-inline-pair">
+                    <label class="kkp-inline-label">Age:</label>
+                    <input type="text" class="kkp-uline kkp-uline-short" value="{{ $read('age') }}" readonly>
+                </div>
+                <div class="kkp-inline-pair">
+                    <label class="kkp-inline-label">Birthday:</label>
+                    <input type="text" class="kkp-uline kkp-uline-med" value="{{ $read('birthday') }}" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="kkp-personal-right">
+            <div class="kkp-inline-pair">
+                <label class="kkp-inline-label">E-mail address:</label>
+                <input type="text" class="kkp-uline kkp-uline-med" value="{{ $read('email', $kabataanRegistration->email ?? '') }}" readonly>
+            </div>
+            <div class="kkp-inline-pair">
+                <label class="kkp-inline-label">Contact #:</label>
+                <input type="text" class="kkp-uline kkp-uline-med" value="{{ $read('contact_number', $kabataanRegistration->contact_number ?? '') }}" readonly>
+            </div>
+        </div>
+    </div>
+
+    <div class="kkp-section-heading" style="margin-top:10px;">II. DEMOGRAPHIC CHARACTERISTICS</div>
+
+    <div class="kkp-demo-grid">
+        <div class="kkp-demo-col">
+            <div class="kkp-demo-block">
+                <div class="kkp-demo-block-label">Civil Status</div>
+                <div class="kkp-demo-block-options">
+                    @foreach (['Single', 'Married', 'Widowed', 'Divorced', 'Separated', 'Annulled', 'Unknown', 'Live-in'] as $item)
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('civil_status', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
+                    @endforeach
+                </div>
+            </div>
+            <div class="kkp-demo-block">
+                <div class="kkp-demo-block-label">Youth Age Group</div>
+                <div class="kkp-demo-block-options">
+                    @foreach (['Child Youth (15-17 yrs old)', 'Core Youth (18-24 yrs old)', 'Young Adult (15-30 yrs old)'] as $item)
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('youth_age_group', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
+                    @endforeach
+                </div>
+            </div>
+            <div class="kkp-demo-block">
+                <div class="kkp-demo-block-label">Educational Background</div>
+                <div class="kkp-demo-block-options">
+                    @foreach (['Elementary Level', 'Elementary Grad', 'High School Level', 'High School Grad', 'Vocational Grad', 'College Level', 'College Grad', 'Masters Level', 'Masters Grad', 'Doctorate Level', 'Doctorate Graduate'] as $item)
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('education', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <div class="kkp-demo-col">
+            <div class="kkp-demo-block">
+                <div class="kkp-demo-block-label">Youth Classification</div>
+                <div class="kkp-demo-block-options">
+                    @foreach (['In School Youth', 'Out of School Youth', 'Working Youth', 'Youth w/ Specific Needs', 'Person w/ Disability', 'Children in Conflict w/ Law', 'Indigenous People'] as $item)
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('youth_classification', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
+                    @endforeach
+                </div>
+            </div>
+            <div class="kkp-demo-block">
+                <div class="kkp-demo-block-label">Work Status</div>
+                <div class="kkp-demo-block-options">
+                    @foreach (['Employed', 'Unemployed', 'Self-Employed', 'Currently looking for a Job', 'Not Interested Looking for a Job'] as $item)
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('work_status', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
+                    @endforeach
+                </div>
+            </div>
+            <div class="kkp-voter-section">
+                <div class="kkp-voter-row">
+                    <div class="kkp-voter-cell">
+                        <div class="kkp-voter-cell-label">Registered SK Voter?</div>
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voter', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voter', 'No') ? 'checked' : '' }} disabled> No</label>
+                    </div>
+                    <div class="kkp-voter-cell">
+                        <div class="kkp-voter-cell-label">Did you vote last SK?</div>
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voted', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voted', 'No') ? 'checked' : '' }} disabled> No</label>
+                    </div>
+                    <div class="kkp-voter-cell">
+                        <div class="kkp-voter-cell-label">If Yes, How many times?</div>
+                        @foreach (['1-2 Times', '3-4 Times', '5 and above'] as $item)
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('vote_frequency', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="kkp-voter-row">
+                    <div class="kkp-voter-cell">
+                        <div class="kkp-voter-cell-label">Registered National Voter?</div>
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('national_voter', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('national_voter', 'No') ? 'checked' : '' }} disabled> No</label>
+                    </div>
+                    <div class="kkp-voter-cell">
+                        <div class="kkp-voter-cell-label">Have you attended a KK Assembly?</div>
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_assembly', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_assembly', 'No') ? 'checked' : '' }} disabled> No</label>
+                    </div>
+                    <div class="kkp-voter-cell">
+                        <div class="kkp-voter-cell-label">If Yes/No details</div>
+                        <p class="kkp-preview-free-text">KK Times: {{ $read('kk_times', '-') }}</p>
+                        <p class="kkp-preview-free-text">Reason: {{ $read('kk_reason', '-') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kkp-footer-row">
+        <div class="kkp-footer-fb">
+            <label class="kkp-inline-label">FB Account:</label>
+            <input type="text" class="kkp-uline kkp-uline-fb" value="{{ $read('facebook', '-') }}" readonly>
+        </div>
+        <div class="kkp-footer-chat">
+            <span class="kkp-inline-label">Willing to join the group chat?</span>
+            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('group_chat', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('group_chat', 'No') ? 'checked' : '' }} disabled> No</label>
+        </div>
+    </div>
+
+    <div class="kkp-thankyou">Thank you for your participation!</div>
+
+    <div class="kkp-sig-section">
+        <div class="kkp-sig-container">
+            @if(filled($kkData['signature'] ?? null))
+                <div class="kkp-sig-overlay" style="display:block;">
+                    <img src="{{ $kkData['signature'] }}" class="kkp-sig-overlay-img" alt="Signature">
+                </div>
+            @endif
+            <div class="kkp-sig-name-wrapper">
+                <input type="text" class="kkp-sig-name-input" value="{{ $read('signature_name', trim(($kabataanRegistration->first_name ?? '') . ' ' . ($kabataanRegistration->last_name ?? ''))) }}" readonly>
+            </div>
+            <div class="kkp-sig-label-bottom">Name and Signature of Participant</div>
+        </div>
+    </div>
+</div>

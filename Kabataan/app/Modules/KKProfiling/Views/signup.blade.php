@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - KK Profiling - SK OnePortal</title>
@@ -237,9 +238,46 @@
             .card-header { margin-bottom: 2rem; }
             .card-title { font-size: 2rem; }
         }
+
+        .kk-signup-back-link {
+            position: fixed;
+            top: 1.25rem;
+            left: 1.25rem;
+            z-index: 100;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            text-decoration: none;
+            padding: 0.5rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(8px);
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .kk-signup-back-link svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .kk-signup-back-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 <body class="youth-login-page">
+    <a href="{{ route('homepage') }}" class="kk-signup-back-link" aria-label="Back to homepage">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M12.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L8.414 9H17a1 1 0 110 2H8.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+        </svg>
+        Back to Homepage
+    </a>
+
     @include('dashboard::loading')
     
     <!-- Animated Background -->

@@ -15,51 +15,35 @@
     {{-- ── CONTACT SECTION ── --}}
     <section class="contact-section">
         <div class="contact-section-inner">
-            <h2 style="margin-bottom: 10px;">Contact Information</h2>
-            <p class="contact-section-lead">Reach out to us through multiple channels. We aim to respond to all inquiries within 24 hours.</p>
+            <h2 style="margin-bottom: 10px;">Contact Inquiry</h2>
+            <p class="contact-section-lead">Send us your questions, concerns, or suggestions. We are happy to assist you.</p>
 
             <div class="contact-grid">
-                {{-- Contact Form --}}
-                <form class="contact-form" id="contactForm">
-                    @csrf
-                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Send us a Message</h3>
-                    
+                <form class="contact-form">
                     <div class="form-group">
-                        <label class="form-label">Full Name *</label>
-                        <input type="text" class="form-input" name="name" placeholder="Your full name" required>
+                        <label for="full_name" class="form-label">Full Name</label>
+                        <input id="full_name" type="text" class="form-input" placeholder="Enter your full name">
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">Email Address *</label>
-                        <input type="email" class="form-input" name="email" placeholder="your.email@example.com" required>
+                        <label for="email" class="form-label">Email Address</label>
+                        <input id="email" type="email" class="form-input" placeholder="Enter your email address">
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">Contact Number</label>
-                        <input type="tel" class="form-input" name="phone" placeholder="+63 (XXX) XXX-XXXX">
+                        <label for="subject" class="form-label">Subject</label>
+                        <input id="subject" type="text" class="form-input" placeholder="Enter subject">
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">Subject *</label>
-                        <select class="form-input" name="subject" required>
-                            <option value="">Select a subject</option>
-                            <option value="general">General Inquiry</option>
-                            <option value="program">Program Question</option>
-                            <option value="technical">Technical Support</option>
-                            <option value="registration">Registration Help</option>
-                            <option value="other">Other</option>
-                        </select>
+                        <label for="message" class="form-label">Message</label>
+                        <textarea id="message" class="form-textarea" placeholder="Type your message here"></textarea>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Message *</label>
-                        <textarea class="form-textarea" name="message" placeholder="Tell us how we can help..." required></textarea>
-                    </div>
-
-                    <button type="submit" class="form-btn">Send Message</button>
+                    <button type="button" class="form-btn">Send Inquiry</button>
                 </form>
+            </div>
 
-                {{-- Contact Info Cards --}}
+            <h2 style="margin: 48px 0 10px;">Contact Information</h2>
+            <p class="contact-section-lead">Reach out to us through multiple channels. We aim to respond to all inquiries within 24 hours.</p>
+
+            <div class="contact-grid contact-grid-single">
                 <div class="contact-info-cards">
                     <div class="contact-info-card">
                         <div class="contact-info-icon">
@@ -146,50 +130,5 @@
         </div>
     </section>
 
-    {{-- ── CTA ── --}}
-    <section class="about-cta">
-        <div class="about-cta-inner">
-            <h2>Have a specific question?</h2>
-            <p>Check out our FAQs or contact your barangay SK office for immediate assistance.</p>
-            <div class="about-hero-actions">
-                <a href="{{ route('faqs') }}" class="btn-hero-primary">View FAQs</a>
-                <a href="{{ route('about') }}" class="btn-hero-ghost">About SK</a>
-            </div>
-        </div>
-    </section>
 </div>
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('contactForm');
-        
-        if (form) {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                // Collect form data
-                const formData = new FormData(form);
-                
-                try {
-                    // In a real implementation, send to backend
-                    console.log('Form submitted:', {
-                        name: formData.get('name'),
-                        email: formData.get('email'),
-                        phone: formData.get('phone'),
-                        subject: formData.get('subject'),
-                        message: formData.get('message')
-                    });
-                    
-                    alert('Thank you for your message! We\'ll get back to you shortly.');
-                    form.reset();
-                } catch (error) {
-                    console.error('Error submitting form:', error);
-                    alert('There was an error sending your message. Please try again.');
-                }
-            });
-        }
-    });
-</script>
-@endpush
 @endsection

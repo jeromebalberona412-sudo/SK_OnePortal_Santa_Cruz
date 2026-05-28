@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -286,6 +287,35 @@
             letter-spacing: 0.02em;
         }
 
+        .pw-rules {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            font-size: 12px;
+        }
+        .pw-rule { color: #64748b; margin: 2px 0; }
+        .pw-rule.ok { color: #16a34a; font-weight: 600; }
+
+        .success-pop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+        .success-pop-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 26px 30px;
+            text-align: center;
+            animation: popIn .25s ease-out;
+        }
+        @keyframes popIn { from {transform: scale(.95); opacity:.5} to {transform:scale(1); opacity:1} }
+
         .youth-submit-btn:hover {
             box-shadow: 0 12px 32px rgba(68, 165, 62, 0.35);
         }
@@ -408,6 +438,12 @@
                             </button>
                         </div>
                         <div class="hint">Minimum 8 characters</div>
+                        <div class="pw-rules" id="pwRules">
+                            <div class="pw-rule" data-rule="len">- At least 8 characters</div>
+                            <div class="pw-rule" data-rule="upper">- At least 1 uppercase letter</div>
+                            <div class="pw-rule" data-rule="num">- At least 1 number</div>
+                            <div class="pw-rule" data-rule="special">- At least 1 special character</div>
+                        </div>
                         <div class="error" id="password-error" style="display:none;"></div>
                     </div>
 
@@ -435,6 +471,12 @@
             </div>
         </div>
     </main>
+    <div class="success-pop" id="successPop">
+        <div class="success-pop-card">
+            <h3>Password Set Successfully</h3>
+            <p>Completing your registration...</p>
+        </div>
+    </div>
 
     <!-- Load loading script AFTER the overlay HTML is rendered -->
     <script src="{{ url('/shared/js/loading.js') }}"></script>
@@ -452,6 +494,26 @@
             const pwError = document.getElementById('password-error');
             const confirmError = document.getElementById('confirm-error');
             const submitBtn = document.getElementById('submitBtn');
+            const rulesWrap = document.getElementById('pwRules');
+            const successPop = document.getElementById('successPop');
+
+            function updateRuleStatus() {
+                const value = pwInput.value || '';
+                const checks = {
+                    len: value.length >= 8,
+                    upper: /[A-Z]/.test(value),
+                    num: /[0-9]/.test(value),
+                    special: /[^A-Za-z0-9]/.test(value),
+                };
+                if (!rulesWrap) return checks;
+                Object.entries(checks).forEach(([key, passed]) => {
+                    const el = rulesWrap.querySelector(`[data-rule="${key}"]`);
+                    if (!el) return;
+                    el.classList.toggle('ok', passed);
+                });
+                return checks;
+            }
+            pwInput.addEventListener('input', updateRuleStatus);
 
             function clearError(input, errorEl) {
                 input.classList.remove('error');
@@ -479,12 +541,13 @@
 
                 // Validate password
                 const pw = pwInput.value.trim();
+                const checks = updateRuleStatus();
                 if (!pw) {
                     isValid = false;
                     showError(pwInput, pwError, 'Password is required');
-                } else if (pw.length < 8) {
+                } else if (!(checks.len && checks.upper && checks.num && checks.special)) {
                     isValid = false;
-                    showError(pwInput, pwError, 'Password must be at least 8 characters');
+                    showError(pwInput, pwError, 'Password must satisfy all requirements.');
                 }
 
                 // Validate confirmation
@@ -502,11 +565,14 @@
                     return;
                 }
 
-                // Show loading on successful validation
+                // Show loading on successful validation + success animation
+                if (successPop) successPop.style.display = 'flex';
                 submitBtn.disabled = true;
                 if (window.showLoading) {
                     window.showLoading('Creating your account...');
                 }
+                setTimeout(() => form.submit(), 900);
+                e.preventDefault();
             });
         });
     </script>

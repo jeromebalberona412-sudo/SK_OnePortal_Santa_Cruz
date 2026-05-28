@@ -231,43 +231,110 @@ async function loadFeedPosts(reset = true) {
     try {
         // Mock data - replace with actual API call
         const mockPosts = [
+            // PROGRAMS
             {
                 id: 1,
                 type: 'program',
                 author: 'SK Education Committee',
                 avatar: 'https://ui-avatars.com/api/?name=SK+Education&background=2196F3&color=fff',
                 time: '2 days ago',
-                title: 'Scholarship Assistance Program',
-                description: 'Financial assistance for deserving students pursuing higher education. Covers tuition fees and other educational expenses.',
+                title: 'Scholarship Assistance Program (SY 2026)',
+                description: 'Financial assistance for deserving youth to support tuition and essential academic needs for the school year 2026.',
                 program_details: {
                     committee_handled_by: 'Education Committee',
                     status: 'active',
                     participant_quantity: 50,
                     starting_date: '2026-03-01',
                     end_date: '2026-03-31',
-                    venue: 'Barangay Hall, Santa Cruz',
-                    full_description: 'The Scholarship Assistance Program aims to provide financial support to deserving youth from Santa Cruz who wish to pursue higher education. This program covers tuition fees, books, and other educational expenses. Applicants must be residents of Santa Cruz, maintain good academic standing, and demonstrate financial need.',
+                    venue: 'Santa Cruz Barangay Hall',
+                    full_description: 'The Scholarship Assistance Program provides financial support to qualified youth residents of Santa Cruz. The grant aims to cover tuition fees and other required academic expenses. Applicants must submit complete requirements within the schedule and meet academic and community service expectations for continued eligibility.',
                     terms_and_conditions: [
                         'Applicant must be a bonafide resident of Barangay Santa Cruz',
+                        'Must submit complete requirements before the deadline',
                         'Must maintain a general weighted average of at least 85% or equivalent',
-                        'Must submit all required documents before the deadline',
-                        'Scholarship is renewable each semester subject to compliance with requirements',
+                        'Recipients may be renewed each semester subject to compliance',
                         'Recipients must render 40 hours of community service per semester',
-                        'False information will result in automatic disqualification',
-                        'Scholarship grant is non-transferable',
+                        'False information will result in disqualification',
+                        'Scholarship grant is non-transferable'
                     ],
                     requirements: [
-                        'Certificate of Registration (COR) - Certified True Copy',
-                        'Photo copy of Valid ID (Front and Back)',
-                        'Certificate of Enrollment',
+                        'Certificate of Enrollment (for the current school year)',
+                        'Certified True Copy of school records or COR (if applicable)',
                         'Barangay Certificate of Indigency',
-                        'Recent 2x2 ID Picture',
-                        'Essay (500 words minimum)',
+                        'Valid ID (front and back)',
+                        'Recent 2x2 ID picture',
+                        'Essay explaining financial need and academic goals (500 words minimum)'
                     ],
                     deadline: '2026-03-31',
                     slots: 50,
                     slots_remaining: 42,
                 }
+            },
+            {
+                id: 2,
+                type: 'program',
+                author: 'SK Skills Training Committee',
+                avatar: 'https://ui-avatars.com/api/?name=SK+Skills&background=0450a8&color=fff',
+                time: '5 days ago',
+                title: 'Community Skills Training: Basic Computer Literacy',
+                description: 'A short course to help youth learn computer fundamentals, typing, and safe online practices.',
+                program_details: {
+                    committee_handled_by: 'Skills Training Committee',
+                    status: 'active',
+                    participant_quantity: 30,
+                    starting_date: '2026-04-10',
+                    end_date: '2026-05-10',
+                    venue: 'Barangay Multi-Purpose Hall',
+                    full_description: 'This training program is designed to improve digital literacy among youth. Participants will learn basic computer operations, effective typing practice, and practical guidance on online safety and responsible technology use.',
+                    terms_and_conditions: [
+                        'Participants must attend scheduled sessions on time',
+                        'Must comply with classroom guidelines and respectful behavior',
+                        'Completion of all required activities is necessary for certification',
+                        'Participants must submit any required forms before the first session'
+                    ],
+                    requirements: [
+                        'Participant registration form',
+                        'Valid ID or school ID',
+                        'Barangay endorsement letter (if requested)',
+                        'Any available notebook or stationery for practice'
+                    ],
+                    deadline: '2026-04-08',
+                    slots: 30,
+                    slots_remaining: 18,
+                }
+            },
+
+            // ANNOUNCEMENTS
+            {
+                id: 3,
+                type: 'announcement',
+                author: 'SK Youth Advisory Board',
+                avatar: 'https://ui-avatars.com/api/?name=SK+Advisory&background=15803d&color=fff',
+                time: '1 day ago',
+                title: 'Youth Advisory: Meeting Schedule Update',
+                description: 'The next SK youth advisory meeting will be held next Friday. Please arrive 15 minutes early for registration and agenda review.',
+            },
+
+            // EVENTS
+            {
+                id: 4,
+                type: 'event',
+                author: 'SK Community Affairs Committee',
+                avatar: 'https://ui-avatars.com/api/?name=SK+Community&background=ff7a00&color=fff',
+                time: '3 days ago',
+                title: 'Career Readiness Session',
+                description: 'A youth-focused career orientation covering practical job readiness, interview basics, and CV preparation. Open to ages 15 to 30.',
+            },
+
+            // ACTIVITIES
+            {
+                id: 5,
+                type: 'activity',
+                author: 'SK Barangay Volunteers',
+                avatar: 'https://ui-avatars.com/api/?name=SK+Volunteers&background=6a1b9a&color=fff',
+                time: '6 days ago',
+                title: 'Monthly Community Clean-Up Drive',
+                description: 'Help keep Santa Cruz clean and safe. Participants are encouraged to bring gloves and water. Coordination will be provided at the barangay hall.'
             }
         ];
 
@@ -370,13 +437,13 @@ function createProgramPostHTML(post) {
                 <div class="details-content" style="display: none;">
                     <!-- Full Description -->
                     <div class="detail-block">
-                        <h4>📋 Full Description</h4>
+                        <h4>Full Description</h4>
                         <p>${details.full_description}</p>
                     </div>
 
                     <!-- Requirements -->
                     <div class="detail-block">
-                        <h4>📄 Requirements</h4>
+                        <h4>Requirements</h4>
                         <ul class="requirements-list">
                             ${details.requirements.map(req => `<li>${req}</li>`).join('')}
                         </ul>
@@ -384,7 +451,7 @@ function createProgramPostHTML(post) {
 
                     <!-- Terms and Conditions -->
                     <div class="detail-block">
-                        <h4>⚖️ Terms & Conditions</h4>
+                        <h4>Terms & Conditions</h4>
                         <ul class="terms-list">
                             ${details.terms_and_conditions.map(term => `<li>${term}</li>`).join('')}
                         </ul>
@@ -401,13 +468,16 @@ function createProgramPostHTML(post) {
 }
 
 function createRegularPostHTML(post) {
+    const typeLabel = post.type
+        ? post.type.charAt(0).toUpperCase() + post.type.slice(1)
+        : '';
     return `
         <div class="post-header">
             <img src="${post.avatar}" alt="${post.author}" class="post-avatar">
             <div class="post-info">
                 <p class="post-author">${post.author}</p>
                 <div class="post-meta">
-                    <span class="post-type ${post.type}">${post.type}</span>
+                    <span class="post-type ${post.type}">${typeLabel}</span>
                     <span class="post-time">${post.time}</span>
                 </div>
             </div>

@@ -68,41 +68,7 @@ class DashboardController extends Controller
             'councilors' => ['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]'],
         ];
 
-        $posts = [
-            [
-                'id' => 1, 'type' => 'Event', 'type_class' => 'event',
-                'author'    => "SK Barangay {$name}",
-                'posted_at' => '2 hours ago',
-                'title'     => "Career Readiness Session — {$name}",
-                'text'      => 'A career orientation and CV workshop for youth preparing for college and employment pathways.',
-                'date'      => 'March 30, 2026',
-                'time'      => '1:00 PM – 4:00 PM',
-                'venue'     => "{$name} Barangay Hall",
-                'audience'  => 'Ages 16 to 24',
-            ],
-            [
-                'id' => 2, 'type' => 'Announcement', 'type_class' => 'announcement',
-                'author'    => "SK Barangay {$name}",
-                'posted_at' => '1 day ago',
-                'title'     => '📢 SK Monthly Meeting — Schedule Update',
-                'text'      => 'Our monthly meeting has been moved to next Friday. Please mark your calendars and ensure attendance.',
-                'date'      => 'April 4, 2026',
-                'time'      => '3:00 PM',
-                'venue'     => "{$name} Multipurpose Hall",
-                'audience'  => 'All SK Members',
-            ],
-            [
-                'id' => 3, 'type' => 'Activity', 'type_class' => 'activity',
-                'author'    => "SK Barangay {$name}",
-                'posted_at' => '3 days ago',
-                'title'     => 'Community Clean-Up Drive 🌱',
-                'text'      => "Join us for our monthly community clean-up drive. Let's keep our barangay clean and green!",
-                'date'      => 'April 6, 2026',
-                'time'      => '6:30 AM – 10:00 AM',
-                'venue'     => "{$name} Riverside Area",
-                'audience'  => 'Ages 13 and above',
-            ],
-        ];
+        $posts = [];
 
         return view('dashboard::barangay', [
             'user'     => $user,

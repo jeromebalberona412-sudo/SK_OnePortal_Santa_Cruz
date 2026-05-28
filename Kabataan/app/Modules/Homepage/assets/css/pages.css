@@ -1259,6 +1259,10 @@ body.program-modal-open {
     align-items: start;
 }
 
+.contact-grid.contact-grid-single {
+    grid-template-columns: 1fr;
+}
+
 /* FORM */
 .contact-form {
     display: flex;

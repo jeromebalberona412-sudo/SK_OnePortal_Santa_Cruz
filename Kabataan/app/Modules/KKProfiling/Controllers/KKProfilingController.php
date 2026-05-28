@@ -131,6 +131,7 @@ class KKProfilingController extends Controller
         return view('kkprofiling::kkprofiling', [
             'barangay' => $displayName,
             'slug'     => $slug,
+            'respondentNumber' => 'KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 6)),
         ]);
     }
 
@@ -145,20 +146,35 @@ class KKProfilingController extends Controller
         ]);
 
         $validated = $request->validate([
-            'last_name'             => 'required|string|max:100',
-            'first_name'            => 'required|string|max:100',
-            'middle_name'           => 'nullable|string|max:100',
+            'last_name'             => ['required', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
+            'first_name'            => ['required', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
+            'middle_name'           => ['nullable', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]*$/'],
             'suffix'                => 'nullable|string|max:10',
-            'purok_zone'            => 'required|string|max:100',
+            'purok_zone'            => ['required', 'string', 'max:100', 'regex:/^(?!\s).+/'],
             'sex'                   => 'required|in:Male,Female',
             'age'                   => 'required|integer|min:15|max:30',
             'birthday'              => 'required|date',
-            'email'                 => 'required|email|max:150',
-            'contact_number'        => 'nullable|string|max:15',
+            'email'                 => ['required', 'email', 'max:150', 'regex:/^[^\s]+@gmail\.com$/i'],
+            'contact_number'        => ['required', 'string', 'max:15', 'regex:/^\S+$/'],
+            'civil_status'          => 'required|string',
+            'youth_classification'  => 'required|string',
+            'youth_age_group'       => 'required|string',
+            'work_status'           => 'required|string',
+            'education'             => 'required|string',
+            'sk_voter'              => 'required|string',
+            'national_voter'        => 'required|string',
+            'sk_voted'              => 'required|string',
+            'vote_frequency'        => 'required|string',
+            'kk_assembly'           => 'required|string',
+            'kk_times'              => 'required|string',
+            'kk_reason'             => 'required|string',
+            'facebook'              => ['required', 'string', 'max:150', 'regex:/^\S*[^0-9]\S*$/'],
+            'group_chat'            => 'required|string',
             'signature'             => 'required|string',
         ]);
 
         // Capture all other fields without validation
+        $validated['respondent_number'] = 'KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 6));
         $validated['civil_status'] = $request->input('civil_status', []);
         $validated['youth_classification'] = $request->input('youth_classification', []);
         $validated['youth_age_group'] = $request->input('youth_age_group', []);

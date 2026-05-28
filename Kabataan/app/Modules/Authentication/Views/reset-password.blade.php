@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -88,8 +89,13 @@
                                 </svg>
                             </button>
                         </div>
-                        <p class="field-hint" style="font-size: 0.875rem; color: #64748b; margin-top: 0.5rem;">Must contain: 8+ characters, 1 uppercase letter, 1 number</p>
-                        <div class="password-strength" id="password_strength" style="margin-top: 0.75rem;"></div>
+                        <ul class="password-rules" id="passwordRules" aria-live="polite">
+                            <li id="rule-length">At least 8 characters</li>
+                            <li id="rule-lowercase">At least one lowercase letter</li>
+                            <li id="rule-uppercase">At least one uppercase letter</li>
+                            <li id="rule-number">At least one number</li>
+                            <li id="rule-special">At least one special character</li>
+                        </ul>
                     </div>
 
                     <!-- Confirm Password Field -->
@@ -219,66 +225,46 @@
                 }, 5000);
             }
 
-            // Password strength validation
+            // Password rules validation
             function validatePasswordStrength(password) {
+                const hasLowerCase = /[a-z]/.test(password);
                 const hasUpperCase = /[A-Z]/.test(password);
                 const hasNumber = /[0-9]/.test(password);
+                const hasSpecial = /[^A-Za-z0-9]/.test(password);
                 const hasMinLength = password.length >= 8;
                 
                 return {
-                    isValid: hasUpperCase && hasNumber && hasMinLength,
+                    isValid: hasUpperCase && hasNumber && hasMinLength && hasLowerCase && hasSpecial,
+                    hasLowerCase,
                     hasUpperCase,
                     hasNumber,
+                    hasSpecial,
                     hasMinLength
                 };
             }
 
-            // Calculate password strength for meter
-            function calculatePasswordStrength(password) {
-                let score = 0;
-                const hasMinLength = password.length >= 8;
-                const hasUpperCase = /[A-Z]/.test(password);
-                const hasNumber = /\d/.test(password);
-                
-                if (hasMinLength) score++;
-                if (password.length >= 12) score++;
-                if (/[a-z]/.test(password) && hasUpperCase) score++;
-                if (hasNumber) score++;
-                if (/[^a-zA-Z\d]/.test(password)) score++;
-                
-                // Check required criteria
-                const meetsRequirements = hasMinLength && hasUpperCase && hasNumber;
-                
-                if (!meetsRequirements) {
-                    return { level: 'weak', text: 'Must have 8+ chars, 1 uppercase, 1 number' };
-                } else if (score <= 3) {
-                    return { level: 'medium', text: 'Medium strength' };
-                } else {
-                    return { level: 'strong', text: 'Strong password' };
-                }
-            }
-
-            // Password strength meter
+            // Password rules live checklist
             const passwordInput = document.getElementById('password');
-            const passwordStrength = document.getElementById('password_strength');
+            const passwordRules = document.getElementById('passwordRules');
             
-            if (passwordInput && passwordStrength) {
+            if (passwordInput && passwordRules) {
                 passwordInput.addEventListener('input', function() {
                     const password = this.value;
-                    const strength = calculatePasswordStrength(password);
-                    
-                    if (password.length > 0) {
-                        passwordStrength.classList.add('active');
-                        passwordStrength.innerHTML = `
-                            <div class="strength-bar">
-                                <div class="strength-fill ${strength.level}"></div>
-                            </div>
-                            <span class="strength-text ${strength.level}">${strength.text}</span>
-                        `;
-                    } else {
-                        passwordStrength.classList.remove('active');
-                        passwordStrength.innerHTML = '';
-                    }
+                    const state = validatePasswordStrength(password);
+                    const rules = [
+                        { id: 'rule-length', ok: state.hasMinLength },
+                        { id: 'rule-lowercase', ok: state.hasLowerCase },
+                        { id: 'rule-uppercase', ok: state.hasUpperCase },
+                        { id: 'rule-number', ok: state.hasNumber },
+                        { id: 'rule-special', ok: state.hasSpecial }
+                    ];
+
+                    passwordRules.classList.toggle('active', password.length > 0);
+                    rules.forEach(rule => {
+                        const node = document.getElementById(rule.id);
+                        if (!node) return;
+                        node.classList.toggle('ok', rule.ok);
+                    });
                 });
             }
 
@@ -298,7 +284,6 @@
                 const strength = validatePasswordStrength(password);
                 
                 if (!strength.isValid) {
-                    // Don't show loading, password meter will indicate the issue
                     return;
                 }
                 
@@ -360,65 +345,46 @@
             z-index: 9999;
         }
         
-        /* Password Strength Meter Styles */
-        .password-strength {
+        .password-rules {
+            list-style: none;
+            margin: 0.75rem 0 0;
+            padding: 0.6rem 0.7rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
             opacity: 0;
             max-height: 0;
             overflow: hidden;
             transition: all 0.3s ease;
         }
-        
-        .password-strength.active {
+
+        .password-rules.active {
             opacity: 1;
-            max-height: 60px;
+            max-height: 220px;
         }
-        
-        .strength-bar {
-            width: 100%;
-            height: 6px;
-            background: #e2e8f0;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-        
-        .strength-fill {
-            height: 100%;
-            transition: all 0.4s ease;
-            border-radius: 3px;
-        }
-        
-        .strength-fill.weak {
-            width: 33%;
-            background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
-        }
-        
-        .strength-fill.medium {
-            width: 66%;
-            background: linear-gradient(90deg, #fdc020 0%, #fbbf24 100%);
-        }
-        
-        .strength-fill.strong {
-            width: 100%;
-            background: linear-gradient(90deg, #44a53e 0%, #5cb854 100%);
-        }
-        
-        .strength-text {
+
+        .password-rules li {
             font-size: 0.875rem;
-            font-weight: 600;
-            display: block;
+            color: #64748b;
+            padding: 2px 0 2px 20px;
+            position: relative;
         }
-        
-        .strength-text.weak {
-            color: #ef4444;
+
+        .password-rules li::before {
+            content: '•';
+            position: absolute;
+            left: 6px;
+            color: #94a3b8;
         }
-        
-        .strength-text.medium {
-            color: #fdc020;
+
+        .password-rules li.ok {
+            color: #16a34a;
         }
-        
-        .strength-text.strong {
-            color: #44a53e;
+
+        .password-rules li.ok::before {
+            content: '✓';
+            color: #16a34a;
+            font-weight: 700;
         }
 
         /* Spinner animation */

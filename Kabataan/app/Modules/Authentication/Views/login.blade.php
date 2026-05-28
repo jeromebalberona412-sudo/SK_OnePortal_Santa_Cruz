@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -160,16 +161,18 @@
                         <span>Login</span>
                     </button>
 
-                    <a href="{{ route('homepage') }}" class="youth-homepage-btn" id="homepageBtn">
-                        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                        </svg>
-                        Homepage
-                    </a>
                 </form>
 
                 <!-- Registration Link -->
-                <div class="youth-register-section" style="display:none;"></div>
+                <div class="youth-register-section">
+                    <p class="register-text">
+                        Don't have an account?
+                        <a href="{{ route('register') }}" class="register-link">Sign Up here</a>
+                    </p>
+                    <a href="{{ route('homepage') }}" class="register-link register-home-link" id="homepageBtn">
+                        Back to Homepage
+                    </a>
+                </div>
             </div>
         </div>
     </main>

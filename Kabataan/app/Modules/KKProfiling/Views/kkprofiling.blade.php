@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -21,6 +22,12 @@
 
     <main class="kkp-main">
         <div class="kkp-page-wrap">
+            <a href="{{ route('kkprofiling.signup') }}" class="kkp-back-link" aria-label="Back to homepage">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L8.414 9H17a1 1 0 110 2H8.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                Back to Homepage
+            </a>
 
             {{-- Success Alert --}}
             @if (session('success'))
@@ -180,10 +187,7 @@
                         <div class="kkp-form-title-col">
                             <div class="kkp-form-main-title">KK Survey Questionnaire</div>
                             <div class="kkp-form-header-fields">
-                                <div class="kkp-hdr-field">
-                                    <span class="kkp-hdr-label">Respondent #:</span>
-                                    <input type="text" name="respondent_number" class="kkp-hdr-input" placeholder=""  >
-                                </div>
+                                <input type="hidden" name="respondent_number" value="{{ $respondentNumber ?? '' }}">
                                 <div class="kkp-hdr-field">
                                     <span class="kkp-hdr-label">Date:</span>
                                     <input type="text" class="kkp-hdr-input" value="{{ date('m/d/Y') }}" readonly>
@@ -209,15 +213,15 @@
                     <div class="kkp-row-label">Name of Respondent:</div>
                     <div class="kkp-name-row">
                         <div class="kkp-name-col">
-                            <input type="text" name="last_name" id="kkpLastName" class="kkp-uline" placeholder=" " required maxlength="100">
+                            <input type="text" name="last_name" id="kkpLastName" class="kkp-uline" placeholder=" " required maxlength="100" autocomplete="off">
                             <label class="kkp-col-label">Last Name</label>
                         </div>
                         <div class="kkp-name-col">
-                            <input type="text" name="first_name" id="kkpFirstName" class="kkp-uline" placeholder=" " required maxlength="100">
+                            <input type="text" name="first_name" id="kkpFirstName" class="kkp-uline" placeholder=" " required maxlength="100" autocomplete="off">
                             <label class="kkp-col-label">First Name</label>
                         </div>
                         <div class="kkp-name-col">
-                            <input type="text" name="middle_name" id="kkpMiddleName" class="kkp-uline" placeholder=" " maxlength="100">
+                            <input type="text" name="middle_name" id="kkpMiddleName" class="kkp-uline" placeholder=" " maxlength="100" autocomplete="off">
                             <label class="kkp-col-label">Middle Name</label>
                         </div>
                         <div class="kkp-name-col kkp-name-col-sm">
@@ -272,22 +276,23 @@
                                 <div class="kkp-inline-pair">
                                     <label class="kkp-inline-label">Age: *</label>
                                     <input type="number" name="age" id="kkpAge" min="15" max="30" class="kkp-uline kkp-uline-short" placeholder=" " required>
+                                    <span class="kkp-age-note">15 to 30 only</span>
                                 </div>
                                 <div class="kkp-inline-pair">
                                     <label class="kkp-inline-label">Birthday:</label>
                                     <input type="date" name="birthday" id="kkpBirthday" class="kkp-uline kkp-uline-med" required>
-                                    <span class="kkp-hint">(dd/mm/yy)</span>
+                                    <span class="kkp-hint">(mm/dd/yyyy)</span>
                                 </div>
                             </div>
                         </div>
                         <div class="kkp-personal-right">
                             <div class="kkp-inline-pair">
                                 <label class="kkp-inline-label">E-mail address:</label>
-                                <input type="email" name="email" class="kkp-uline kkp-uline-med" placeholder=" " maxlength="150">
+                                <input type="email" name="email" class="kkp-uline kkp-uline-med" placeholder=" " maxlength="150" required>
                             </div>
                             <div class="kkp-inline-pair">
                                 <label class="kkp-inline-label">Contact #:</label>
-                                <input type="text" name="contact_number" class="kkp-uline kkp-uline-med" placeholder=" " maxlength="15">
+                                <input type="text" name="contact_number" class="kkp-uline kkp-uline-med" placeholder=" " maxlength="15" required>
                             </div>
                         </div>
                     </div>
@@ -407,14 +412,14 @@
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_assemblyChk" value="No" onchange="kkpSingleCheck(this,'kkpKkAssembly'); kkpHandleAssembly(this)"> No</label>
                                         <input type="hidden" id="kkpKkAssembly" name="kk_assembly">
                                     </div>
-                                    <div class="kkp-voter-cell" id="kkpAssemblyYesCell" style="display:none;">
+                                    <div class="kkp-voter-cell" id="kkpAssemblyYesCell">
                                         <div class="kkp-voter-cell-label">If Yes, How many times?</div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_timesChk" value="1-2 Times" onchange="kkpSingleCheck(this,'kkpKkTimes')"> 1-2 Times</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_timesChk" value="3-4 Times" onchange="kkpSingleCheck(this,'kkpKkTimes')"> 3-4 Times</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_timesChk" value="5 and above" onchange="kkpSingleCheck(this,'kkpKkTimes')"> 5 and above</label>
                                         <input type="hidden" id="kkpKkTimes" name="kk_times">
                                     </div>
-                                    <div class="kkp-voter-cell" id="kkpAssemblyNoCell" style="display:none;">
+                                    <div class="kkp-voter-cell" id="kkpAssemblyNoCell">
                                         <div class="kkp-voter-cell-label">If No, Why?</div>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="There was no KK Assembly" onchange="kkpSingleCheck(this,'kkpKkReason')"> There was no KK Assembly</label>
                                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="Not Interested to Attend" onchange="kkpSingleCheck(this,'kkpKkReason')"> Not Interested to Attend</label>
@@ -429,7 +434,7 @@
                     <div class="kkp-footer-row">
                         <div class="kkp-footer-fb">
                             <label class="kkp-inline-label">FB Account:</label>
-                            <input type="text" name="facebook" class="kkp-uline kkp-uline-fb" placeholder=" " maxlength="150">
+                            <input type="text" name="facebook" class="kkp-uline kkp-uline-fb" placeholder=" " maxlength="150" required>
                         </div>
                         <div class="kkp-footer-chat">
                             <span class="kkp-inline-label">Willing to join the group chat?</span>
@@ -454,7 +459,7 @@
                             </div>
                             <div class="kkp-sig-label-bottom">Name and Signature of Participant</div>
                             <button type="button" class="kkp-sig-trigger-btn" id="kkpSignatureTrigger"
-                                    title="Sign here" style="display:none;">
+                                    title="Sign here">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -462,15 +467,18 @@
                                 </svg>
                                 Sign
                             </button>
+                            <button type="button" class="kkp-sig-clear-saved-btn" id="kkpSignatureClearSaved" style="display:none;">
+                                Clear Signature
+                            </button>
                             <input type="hidden" id="kkpSignatureData" name="signature">
                         </div>
                     </div>
 
                     {{-- ── SUBMIT ── --}}
                     <div class="kkp-submit-wrapper">
-                        <button type="submit" class="kkp-submit-btn">
+                        <button type="submit" class="kkp-submit-btn" id="kkpSubmitBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/></svg>
-                            Submit KK Profiling
+                            <span id="kkpSubmitText">Submit KK Profiling</span>
                         </button>
                     </div>
 

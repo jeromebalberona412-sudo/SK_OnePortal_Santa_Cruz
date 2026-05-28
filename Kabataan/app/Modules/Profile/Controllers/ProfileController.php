@@ -48,6 +48,11 @@ class ProfileController extends Controller
         
         // Get authenticated user
         $user = Auth::user();
+
+        // Get latest KK Profiling registration linked to this user
+        $kabataanRegistration = KabataanRegistration::where('user_id', $user->id)
+            ->latest('id')
+            ->first();
         
         // Get user's program participation (sample data)
         $programs = collect([
@@ -94,6 +99,7 @@ class ProfileController extends Controller
         // Pass data to view
         return view('profile::index', [
             'user' => $user,
+            'kabataanRegistration' => $kabataanRegistration,
             'programs' => $programs,
             'totalPrograms' => $totalPrograms,
             'approvedPrograms' => $approvedPrograms,

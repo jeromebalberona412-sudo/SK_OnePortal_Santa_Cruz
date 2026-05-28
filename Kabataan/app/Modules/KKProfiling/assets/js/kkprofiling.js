@@ -66,10 +66,12 @@
         const fullName = parts.join(' ');
         sigNameInput.value = fullName;
 
-        // Show Sign button if name is filled and no signature yet
+        // Enable Sign button only when name is filled and no signature yet
         if (triggerBtn) {
-            const hasSig = sigInput && sigInput.value;
-            triggerBtn.style.display = (fullName.trim().length > 0 && !hasSig) ? 'inline-flex' : 'none';
+            const hasSig = !!(sigInput && sigInput.value);
+            const canSign = fullName.trim().length > 0 && !hasSig;
+            triggerBtn.disabled = !canSign;
+            triggerBtn.setAttribute('aria-disabled', canSign ? 'false' : 'true');
         }
     }
 
@@ -77,6 +79,19 @@
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', updateSignatureName);
         if (el && el.tagName === 'SELECT') el.addEventListener('change', updateSignatureName);
+    });
+    updateSignatureName();
+
+    // ── Name input restrictions (letters only, no leading spaces) ──
+    ['kkpLastName', 'kkpFirstName', 'kkpMiddleName'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', function () {
+            this.value = this.value
+                .replace(/^\s+/, '')
+                .replace(/[^A-Za-z.\-\s]/g, '')
+                .replace(/\s{2,}/g, ' ');
+        });
     });
 
     // ── Single-check helper (like SK Officials kkfSingleCheck) ──
@@ -96,27 +111,14 @@
         const noCell  = document.getElementById('kkpAssemblyNoCell');
         if (!yesCell || !noCell) return;
 
-        if (!checkbox.checked) {
-            // unchecked — hide both
-            yesCell.style.display = 'none';
-            noCell.style.display  = 'none';
-            return;
-        }
+        if (!checkbox.checked) return;
 
         if (checkbox.value === 'Yes') {
             yesCell.style.display = '';
-            noCell.style.display  = 'none';
-            // clear No reason
-            document.querySelectorAll('input[name="kk_reasonChk"]').forEach(cb => cb.checked = false);
-            const r = document.getElementById('kkpKkReason');
-            if (r) r.value = '';
+            noCell.style.display  = '';
         } else {
             noCell.style.display  = '';
-            yesCell.style.display = 'none';
-            // clear Yes times
-            document.querySelectorAll('input[name="kk_timesChk"]').forEach(cb => cb.checked = false);
-            const t = document.getElementById('kkpKkTimes');
-            if (t) t.value = '';
+            yesCell.style.display = '';
         }
     };
 
@@ -160,11 +162,18 @@ window.handleFormSubmit = function(event) {
         return el ? el.value.trim() : '';
     }
 
+    function hasAnySpace(v) {
+        return /\s/.test(v || '');
+    }
+
     // ── 1. Last Name ──
     const lastName = document.querySelector('input[name="last_name"]');
     if (!lastName || !lastName.value.trim()) {
         errors.push('Last Name is required.');
         fieldError(lastName, 'Last Name is required.');
+    } else if (!/^[A-Za-z.\-\s]+$/.test(lastName.value) || /^\s/.test(lastName.value)) {
+        errors.push('Last Name must contain letters only and no leading spaces.');
+        fieldError(lastName, 'Letters only, no leading spaces.');
     }
 
     // ── 2. First Name ──
@@ -172,6 +181,9 @@ window.handleFormSubmit = function(event) {
     if (!firstName || !firstName.value.trim()) {
         errors.push('First Name is required.');
         fieldError(firstName, 'First Name is required.');
+    } else if (!/^[A-Za-z.\-\s]+$/.test(firstName.value) || /^\s/.test(firstName.value)) {
+        errors.push('First Name must contain letters only and no leading spaces.');
+        fieldError(firstName, 'Letters only, no leading spaces.');
     }
 
     // ── 3. Purok/Zone ──
@@ -179,6 +191,9 @@ window.handleFormSubmit = function(event) {
     if (!purok || !purok.value.trim()) {
         errors.push('Purok/Zone is required.');
         fieldError(purok, 'Purok/Zone is required.');
+    } else if (/^\s+$/.test(purok.value)) {
+        errors.push('Purok/Zone cannot be spaces only.');
+        fieldError(purok, 'Cannot be spaces only.');
     }
 
     // ── 4. Sex ──
@@ -198,6 +213,9 @@ window.handleFormSubmit = function(event) {
     if (!age || !age.value.trim()) {
         errors.push('Age is required.');
         fieldError(age, 'Age is required.');
+    } else if (+age.value < 15 || +age.value > 30) {
+        errors.push('Age must be 15 to 30 only.');
+        fieldError(age, 'Age must be 15 to 30 only.');
     }
 
     // ── 6. Birthday ──
@@ -212,6 +230,9 @@ window.handleFormSubmit = function(event) {
     if (!email || !email.value.trim()) {
         errors.push('E-mail address is required.');
         fieldError(email, 'E-mail address is required.');
+    } else if (hasAnySpace(email.value) || !/^[A-Za-z0-9._%+-]+@gmail\.com$/i.test(email.value)) {
+        errors.push('Email must be a valid @gmail.com address and must not contain spaces.');
+        fieldError(email, 'Use valid @gmail.com only, no spaces.');
     }
 
     // ── 8. Contact # ──
@@ -219,6 +240,9 @@ window.handleFormSubmit = function(event) {
     if (!contact || !contact.value.trim()) {
         errors.push('Contact # is required.');
         fieldError(contact, 'Contact # is required.');
+    } else if (hasAnySpace(contact.value)) {
+        errors.push('Contact # must not contain spaces.');
+        fieldError(contact, 'No spaces allowed.');
     }
 
     // ── 9. Civil Status ──
@@ -305,6 +329,18 @@ window.handleFormSubmit = function(event) {
         }
     }
 
+    // 15b. Vote frequency required
+    if (!hiddenVal('kkpVoteFreq')) {
+        errors.push('Vote frequency is required.');
+        const el = document.getElementById('kkpVoteFreq');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select vote frequency.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
     // ── 16. Registered National Voter ──
     if (!hiddenVal('kkpNationalVoter')) {
         errors.push('Registered National Voter is required.');
@@ -329,11 +365,25 @@ window.handleFormSubmit = function(event) {
         }
     }
 
+    if (!hiddenVal('kkpKkTimes')) {
+        errors.push('KK Assembly attendance count is required.');
+        const el = document.getElementById('kkpKkTimes');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select number of times attended.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    }
+
     // ── 18. FB Account ──
     const facebook = document.querySelector('input[name="facebook"]');
     if (!facebook || !facebook.value.trim()) {
         errors.push('FB Account is required.');
         fieldError(facebook, 'FB Account is required.');
+    } else if (hasAnySpace(facebook.value) || /[0-9]/.test(facebook.value)) {
+        errors.push('FB Account must not contain spaces or numbers.');
+        fieldError(facebook, 'No spaces and no numbers.');
     }
 
     // ── 19. Willing to join group chat ──
@@ -373,9 +423,15 @@ window.handleFormSubmit = function(event) {
         return false;
     }
 
-    // ── All valid — submit the form to backend ──
-    // Remove the fake email verification card display
-    // Let the form submit naturally to the controller
+    // ── All valid — show submit loading then submit ──
+    const submitBtn = document.getElementById('kkpSubmitBtn');
+    const submitText = document.getElementById('kkpSubmitText');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('is-submitting');
+    }
+    if (submitText) submitText.textContent = 'Submitting KK Profiling...';
+
     return true; // Allow form submission
 };
 
@@ -501,7 +557,7 @@ window.handleFormSubmit = function(event) {
             if (submitBtn)  submitBtn.disabled = true;
             if (btnIcon)    btnIcon.style.display    = 'none';
             if (btnSpinner) btnSpinner.style.display = 'block';
-            if (btnText)    btnText.textContent      = 'Registering...';
+            if (btnText)    btnText.textContent      = 'Signing up...';
 
             // Simulate async registration (replace with real AJAX in production)
             setTimeout(function () {
@@ -553,6 +609,7 @@ window.handleFormSubmit = function(event) {
     const sigInput    = document.getElementById('kkpSignatureData');
     const sigPreview  = document.getElementById('kkpSignaturePreview');
     const sigOverlay  = document.getElementById('kkpSignatureOverlay');
+    const clearSavedBtn = document.getElementById('kkpSignatureClearSaved');
 
     if (!canvas || !overlay) return;
 
@@ -564,38 +621,59 @@ window.handleFormSubmit = function(event) {
     // (name is auto-filled from name fields — handled in main IIFE above)
     // triggerBtn visibility is managed by updateSignatureName()
 
-    function setupCanvas() {
-        const rect    = canvas.getBoundingClientRect();
-        canvas.width  = rect.width  || 500;
-        canvas.height = rect.height || 260;
+    function setupCanvas(preserveDrawing) {
+        const rect = canvas.getBoundingClientRect();
+        const cssW = rect.width  || 500;
+        const cssH = rect.height || 260;
+        const dpr  = window.devicePixelRatio || 1;
+
+        const snapshot = preserveDrawing ? canvas.toDataURL('image/png') : null;
+
+        canvas.width  = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+        canvas.style.width  = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.strokeStyle = '#000';
         ctx.lineWidth   = 2;
         ctx.lineCap     = 'round';
         ctx.lineJoin    = 'round';
+
+        if (snapshot && snapshot !== 'data:,') {
+            const img = new Image();
+            img.onload = function () {
+                ctx.drawImage(img, 0, 0, cssW, cssH);
+            };
+            img.src = snapshot;
+        }
     }
 
     function openPad() {
         overlay.style.display = 'flex';
-        setupCanvas();
+        setupCanvas(false);
         // Restore existing signature if any
         if (sigInput && sigInput.value) {
             const img = new Image();
             img.onload = function () {
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const rect = canvas.getBoundingClientRect();
+                ctx.drawImage(img, 0, 0, rect.width || 500, rect.height || 260);
                 hasSignature = true;
                 hidePlaceholder();
             };
             img.src = sigInput.value;
+        } else {
+            clearCanvas();
         }
     }
 
     function closePad() {
         overlay.style.display = 'none';
-        clearCanvas();
     }
 
     function clearCanvas() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const rect = canvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width || 500, rect.height || 260);
         hasSignature = false;
         showPlaceholder();
     }
@@ -612,7 +690,6 @@ window.handleFormSubmit = function(event) {
 
     function startDraw(e) {
         isDrawing    = true;
-        hasSignature = true;
         const p = getPos(e);
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
@@ -625,12 +702,24 @@ window.handleFormSubmit = function(event) {
         const p = getPos(e);
         ctx.lineTo(p.x, p.y);
         ctx.stroke();
+        hasSignature = true;
     }
 
     function stopDraw() { isDrawing = false; }
 
+    function canvasHasInk() {
+        const w = canvas.width;
+        const h = canvas.height;
+        if (!w || !h) return false;
+        const data = ctx.getImageData(0, 0, w, h).data;
+        for (let i = 3; i < data.length; i += 4) {
+            if (data[i] !== 0) return true;
+        }
+        return false;
+    }
+
     function saveSig() {
-        if (!hasSignature) {
+        if (!hasSignature || !canvasHasInk()) {
             alert('Please provide a signature before saving.');
             return;
         }
@@ -651,8 +740,12 @@ window.handleFormSubmit = function(event) {
             sigOverlay.style.display = 'flex';
         }
 
-        // Hide the Sign button (signature is done)
-        if (triggerBtn) triggerBtn.style.display = 'none';
+        // Lock Sign button; show clear button for re-signing
+        if (triggerBtn) {
+            triggerBtn.disabled = true;
+            triggerBtn.setAttribute('aria-disabled', 'true');
+        }
+        if (clearSavedBtn) clearSavedBtn.style.display = 'inline-flex';
 
         // Close confirmation modal
         const confirmOverlay = document.getElementById('kkpSigConfirmOverlay');
@@ -661,11 +754,42 @@ window.handleFormSubmit = function(event) {
         closePad();
     }
 
+    function clearSavedSignature() {
+        if (sigInput) sigInput.value = '';
+        if (sigOverlay) sigOverlay.style.display = 'none';
+        if (sigPreview) sigPreview.removeAttribute('src');
+        if (clearSavedBtn) clearSavedBtn.style.display = 'none';
+        if (triggerBtn) {
+            triggerBtn.disabled = false;
+            triggerBtn.setAttribute('aria-disabled', 'false');
+        }
+        hasSignature = false;
+        showPlaceholder();
+        clearCanvas();
+    }
+
     // Button events
-    if (triggerBtn) triggerBtn.addEventListener('click', openPad);
+    if (triggerBtn) {
+        triggerBtn.addEventListener('click', function () {
+            if (triggerBtn.disabled) return;
+            openPad();
+        });
+    }
     if (closeBtn)   closeBtn.addEventListener('click', closePad);
     if (clearBtn)   clearBtn.addEventListener('click', clearCanvas);
     if (saveBtn)    saveBtn.addEventListener('click', saveSig);
+    if (clearSavedBtn) clearSavedBtn.addEventListener('click', clearSavedSignature);
+
+    // Initial state (in case of server-side repopulation)
+    if (sigInput && sigInput.value && sigPreview && sigOverlay) {
+        sigPreview.src = sigInput.value;
+        sigOverlay.style.display = 'flex';
+        if (triggerBtn) {
+            triggerBtn.disabled = true;
+            triggerBtn.setAttribute('aria-disabled', 'true');
+        }
+        if (clearSavedBtn) clearSavedBtn.style.display = 'inline-flex';
+    }
 
     // Confirmation modal buttons
     const confirmOverlay  = document.getElementById('kkpSigConfirmOverlay');
@@ -707,6 +831,6 @@ window.handleFormSubmit = function(event) {
 
     // Resize
     window.addEventListener('resize', function () {
-        if (overlay.style.display !== 'none') setupCanvas();
+        if (overlay.style.display !== 'none') setupCanvas(true);
     });
 })();

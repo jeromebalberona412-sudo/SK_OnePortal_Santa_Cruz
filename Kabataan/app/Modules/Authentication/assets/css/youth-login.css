@@ -644,6 +644,11 @@ html {
     text-decoration: underline;
 }
 
+.register-home-link {
+    display: inline-block;
+    margin-top: 12px;
+}
+
 /* ============================================
    Footer
    ============================================ */

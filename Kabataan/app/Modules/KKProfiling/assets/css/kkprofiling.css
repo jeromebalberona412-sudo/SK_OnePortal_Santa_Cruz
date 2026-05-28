@@ -19,6 +19,7 @@
     max-width: 860px;
     margin: 0 auto;
     padding: 0 16px;
+    overflow-x: hidden;
 }
 
 /* ── BACK LINK ── */
@@ -56,6 +57,8 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 12px;
     color: #111;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 /* ── FORM HEADER ── */
@@ -238,7 +241,7 @@
 .kkp-col-label {
     display: block;
     font-size: 9.5px;
-    color: #555;
+    color: #1f2937;
     text-align: center;
     margin-top: 1px;
     white-space: nowrap;
@@ -252,7 +255,7 @@
     margin-bottom: 4px;
 }
 
-.kkp-name-col { display: flex; flex-direction: column; }
+.kkp-name-col { display: flex; flex-direction: column; min-width: 0; }
 
 /* ── LOCATION ROW: 5 columns ── */
 .kkp-loc-row {
@@ -262,7 +265,7 @@
     margin-bottom: 4px;
 }
 
-.kkp-loc-col { display: flex; flex-direction: column; }
+.kkp-loc-col { display: flex; flex-direction: column; min-width: 0; }
 
 /* ── PERSONAL INFO ROW ── */
 .kkp-personal-row {
@@ -273,6 +276,7 @@
     padding: 5px 8px;
     margin: 4px 0;
     align-items: center;
+    min-width: 0;
 }
 
 .kkp-personal-left,
@@ -359,6 +363,12 @@
     font-style: italic;
 }
 
+.kkp-age-note {
+    font-size: 10px;
+    color: #dc2626;
+    font-weight: 700;
+}
+
 /* ── INSTRUCTION ── */
 .kkp-demo-instruction {
     font-size: 10px;
@@ -379,6 +389,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 /* ── DEMO BLOCK: label sidebar + options ── */
@@ -483,6 +494,7 @@
     display: flex;
     flex-direction: column;
     gap: 1px;
+    min-width: 0;
 }
 .kkp-voter-cell:last-child { border-right: none; }
 
@@ -556,7 +568,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 280px;
+    width: min(280px, 100%);
+    margin: 0 auto;
 }
 
 /* Signature image overlay — floats above printed name */
@@ -627,6 +640,29 @@
 }
 .kkp-sig-trigger-btn:hover { background: #15803d; transform: translateY(-1px); }
 .kkp-sig-trigger-btn svg { width: 13px; height: 13px; }
+.kkp-sig-trigger-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.85;
+}
+.kkp-sig-trigger-btn:disabled:hover { background: #9ca3af; transform: none; }
+
+.kkp-sig-clear-saved-btn {
+    margin-top: 6px;
+    padding: 4px 10px;
+    background: transparent;
+    color: #b91c1c;
+    border: 1px solid rgba(185, 28, 28, 0.35);
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.kkp-sig-clear-saved-btn:hover {
+    background: rgba(185, 28, 28, 0.06);
+    border-color: rgba(185, 28, 28, 0.55);
+}
 
 /* ── SUBMIT BUTTON ── */
 .kkp-submit-wrapper {
@@ -654,6 +690,10 @@
 }
 .kkp-submit-btn svg { width: 18px; height: 18px; }
 .kkp-submit-btn:hover { background: #003070; transform: translateY(-1px); }
+.kkp-submit-btn.is-submitting {
+    opacity: 0.8;
+    cursor: wait;
+}
 
 /* ══════════════════════════════════════════
    SIGNATURE PAD MODAL
