@@ -229,38 +229,24 @@
         </section>
 
         <section class="kabataan-section kabataan-contact" id="contact">
-            <div class="kabataan-shell kabataan-contact-grid">
-                <div class="kabataan-contact-copy">
+            <div class="kabataan-shell">
+                <div class="kabataan-section-heading" style="margin-bottom: 28px;">
                     <span class="kabataan-eyebrow">Get in touch</span>
                     <h2>Contact Kabataan</h2>
-                    <p>Need help with access, barangay updates, or youth program details? Reach the Santa Cruz team through the contact channels below.</p>
-                    <div class="kabataan-hero-actions">
-                        <a href="{{ route('login') }}" class="kabataan-button kabataan-button-primary">Login</a>
-                        <a href="{{ route('register') }}" class="kabataan-button kabataan-button-secondary">Sign Up</a>
-                    </div>
+                    <p>Send us your questions, concerns, or suggestions. We are happy to assist you.</p>
                 </div>
 
-                <div class="kabataan-contact-grid-cards">
-                    <article class="kabataan-contact-card">
-                        <span class="kabataan-contact-icon">📍</span>
-                        <h3>Address</h3>
-                        <p>Municipal Hall, Santa Cruz, Laguna, Philippines</p>
-                    </article>
-                    <article class="kabataan-contact-card">
-                        <span class="kabataan-contact-icon">📞</span>
-                        <h3>Phone</h3>
-                        <p>+63 (049) 000-0000</p>
-                    </article>
-                    <article class="kabataan-contact-card">
-                        <span class="kabataan-contact-icon">✉️</span>
-                        <h3>Email</h3>
-                        <p>sk@santacruz.gov.ph</p>
-                    </article>
-                    <article class="kabataan-contact-card">
-                        <span class="kabataan-contact-icon">🕒</span>
-                        <h3>Office Hours</h3>
-                        <p>Mon–Fri: 8:00 AM – 5:00 PM</p>
-                    </article>
+                <div class="contact-grid kabataan-contact-split">
+                    <div class="kabataan-contact-form-col">
+                        <h3 class="kabataan-contact-col-title">Contact Inquiry</h3>
+                        @include('homepage::partials.contact-inquiry-form')
+                    </div>
+
+                    <div class="kabataan-contact-info-col">
+                        <h3 class="kabataan-contact-col-title">Contact Information</h3>
+                        <p class="contact-section-lead kabataan-contact-info-lead">Reach out to us through multiple channels. We aim to respond to all inquiries within 24 hours.</p>
+                        @include('homepage::partials.contact-info-panel')
+                    </div>
                 </div>
             </div>
         </section>

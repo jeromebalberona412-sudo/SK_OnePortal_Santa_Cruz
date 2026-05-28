@@ -62,6 +62,7 @@ class AuthController extends Controller
 
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+        $request->session()->flash('show_kk_profiling_update', true);
 
         return redirect()->intended(route('dashboard'));
     }

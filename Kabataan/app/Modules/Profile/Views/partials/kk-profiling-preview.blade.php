@@ -22,6 +22,17 @@
             <div class="kkp-form-main-title">KK Survey Questionnaire</div>
             <div class="kkp-form-header-fields">
                 <input type="hidden" name="respondent_number" value="{{ $read('respondent_number', '') }}">
+                @php
+                    $respondentDisplay = '01';
+                    $rn = $read('respondent_number', '');
+                    if (filled($rn) && $rn !== 'N/A' && preg_match('/(\d+)$/', (string) $rn, $m)) {
+                        $respondentDisplay = str_pad(((int) $m[1]) % 100 ?: 1, 2, '0', STR_PAD_LEFT);
+                    }
+                @endphp
+                <div class="kkp-hdr-field">
+                    <span class="kkp-hdr-label">Respondent #:</span>
+                    <input type="text" class="kkp-hdr-input kkp-hdr-input-readonly" value="{{ $respondentDisplay }}" readonly tabindex="-1" aria-readonly="true">
+                </div>
                 <div class="kkp-hdr-field">
                     <span class="kkp-hdr-label">Date:</span>
                     <input type="text" class="kkp-hdr-input" value="{{ optional($kabataanRegistration?->submitted_at)->format('m/d/Y') ?? date('m/d/Y') }}" readonly>
@@ -222,7 +233,7 @@
     <div class="kkp-sig-section">
         <div class="kkp-sig-container">
             @if(filled($kkData['signature'] ?? null))
-                <div class="kkp-sig-overlay" style="display:block;">
+                <div class="kkp-sig-overlay kkp-sig-overlay--visible">
                     <img src="{{ $kkData['signature'] }}" class="kkp-sig-overlay-img" alt="Signature">
                 </div>
             @endif

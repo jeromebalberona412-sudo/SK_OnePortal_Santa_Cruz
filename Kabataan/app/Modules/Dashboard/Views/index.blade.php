@@ -22,6 +22,10 @@
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
         'app/Modules/Dashboard/assets/js/notif.js',
+        'app/Modules/KKProfiling/assets/css/kkprofiling.css',
+        'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
+        'app/Modules/KKProfiling/assets/js/kkprofiling.js',
+        'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
         'app/Modules/Shared/assets/css/loading.css',
         'app/Modules/Shared/assets/js/loading.js',
     ])
@@ -1022,7 +1026,15 @@
         const data   = await apiFeed(`/api/feed?${params}`).catch(e => { console.error('Feed error:', e); return null; });
         if (!data) return;
         feedLastPage = data.last_page;
-        (data.data ?? []).forEach(p => {
+        const items = data.data ?? [];
+        if (reset && items.length === 0) {
+            document.getElementById('feed-posts').innerHTML =
+                '<div class="post-card" style="text-align:center;color:#64748b;padding:32px;">No posts yet. Announcements, events, and activities from your barangay will appear here.</div>';
+            const btn = document.getElementById('load-more-btn');
+            if (btn) btn.style.display = 'none';
+            return;
+        }
+        items.forEach(p => {
             const el = document.createElement('article');
             el.className = 'post-card';
             el.dataset.postId = p.id;
@@ -1134,6 +1146,13 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => loadFeed(true));
+    </script>
+
+    @if(!empty($kkUpdateBarangay))
+        @include('kkprofiling::kk-profiling-update')
+    @endif
+    <script>
+        window.__SHOW_KK_UPDATE_MODAL = @json($showKkUpdateModal ?? false);
     </script>
 </body>
 </html>

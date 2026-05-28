@@ -1263,6 +1263,42 @@ body.program-modal-open {
     grid-template-columns: 1fr;
 }
 
+.kabataan-contact-split {
+    align-items: start;
+}
+
+.kabataan-contact-form-col,
+.kabataan-contact-info-col {
+    min-width: 0;
+}
+
+.kabataan-contact-col-title {
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    font-weight: 800;
+    color: #1a1d25;
+    margin: 0 0 12px;
+}
+
+.kabataan-contact-info-lead {
+    margin-bottom: 20px;
+}
+
+.kabataan-contact-info-col .contact-section-lead {
+    margin-bottom: 20px;
+}
+
+.kabataan-contact-info-col h2 {
+    margin-bottom: 10px;
+}
+
+.kabataan-contact-form-col h2 {
+    margin-bottom: 10px;
+}
+
+.kabataan-contact-form-col .contact-section-lead {
+    margin-bottom: 24px;
+}
+
 /* FORM */
 .contact-form {
     display: flex;

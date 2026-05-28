@@ -37,7 +37,7 @@
     if (navDrawerLoginBtn) navDrawerLoginBtn.addEventListener('click', () => window.location.href = '/youth/login');
 
     // ── Age auto-fill + birthday range (15-30, no future dates) ──
-    const form          = document.getElementById('kkProfilingForm');
+    const form          = document.getElementById('kkProfilingForm') || document.getElementById('kkProfilingUpdateForm');
     const birthdayInput = form && form.querySelector('input[name="birthday"]');
     const ageInput      = form && form.querySelector('input[name="age"]');
     if (birthdayInput && ageInput) {

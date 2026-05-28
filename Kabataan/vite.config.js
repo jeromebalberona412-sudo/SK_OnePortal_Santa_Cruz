@@ -29,7 +29,7 @@ export default defineConfig({
                 'app/Modules/Dashboard/assets/css/chatbot.css',
                 'app/Modules/Dashboard/assets/js/chatbot.js',
                 'app/Modules/Dashboard/assets/css/notif.css',
-                'app/Modules/Dashboard/assets/js/notif.js',
+                'app/Modules/Dashboard/assets/js/notif.js', 
 
                 // Programs
                 'app/Modules/Programs/assets/css/scholarship_application.css',
@@ -57,6 +57,8 @@ export default defineConfig({
                 // KK Profiling
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling.js',
+                'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
+                'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
 
                 // Shared
                 'app/Modules/Shared/assets/css/loading.css',

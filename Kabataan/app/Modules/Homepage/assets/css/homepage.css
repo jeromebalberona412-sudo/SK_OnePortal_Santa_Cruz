@@ -1799,6 +1799,21 @@ body.homepage-body.kabataan-homepage::after {
     align-items: start;
 }
 
+.kabataan-contact .contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+}
+
+.kabataan-contact .contact-form {
+    margin-top: 0;
+}
+
+.kabataan-contact .contact-info-cards {
+    gap: 14px;
+}
+
 .kabataan-contact-copy h2 {
     margin: 14px 0 10px;
     font-family: 'Poppins', 'Inter', sans-serif;
@@ -1866,7 +1881,8 @@ body.homepage-body.kabataan-homepage::after {
 
 @media (max-width: 1100px) {
     .kabataan-hero-grid,
-    .kabataan-contact-grid {
+    .kabataan-contact-grid,
+    .kabataan-contact .contact-grid {
         grid-template-columns: 1fr;
     }
 

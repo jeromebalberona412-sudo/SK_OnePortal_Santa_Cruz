@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\KabataanVerifyEmail;
 use App\Services\RegistrationEvaluationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -128,11 +129,141 @@ class KKProfilingController extends Controller
         }
         // ──────────────────────────────────────────────────────────────────
 
+        $respondentNumber = 'KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 6));
+
         return view('kkprofiling::kkprofiling', [
-            'barangay' => $displayName,
-            'slug'     => $slug,
-            'respondentNumber' => 'KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 6)),
+            'barangay'           => $displayName,
+            'slug'               => $slug,
+            'respondentNumber'   => $respondentNumber,
+            'respondentDisplay'  => self::formatRespondentDisplay($respondentNumber),
         ]);
+    }
+
+    /**
+     * Format respondent number for read-only display (e.g. 01).
+     */
+    public static function formatRespondentDisplay(?string $respondentNumber): string
+    {
+        if (!$respondentNumber) {
+            return '01';
+        }
+
+        if (preg_match('/(\d+)$/', $respondentNumber, $matches)) {
+            $n = ((int) $matches[1]) % 100;
+
+            return str_pad($n ?: 1, 2, '0', STR_PAD_LEFT);
+        }
+
+        return str_pad((abs(crc32($respondentNumber)) % 99) + 1, 2, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Yearly KK Profiling update for authenticated youth.
+     */
+    public function updateForUser(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $registration = KabataanRegistration::where('user_id', $user->id)->latest()->first();
+        if (!$registration) {
+            return redirect()->route('dashboard')
+                ->withErrors(['kk_profiling' => 'No KK Profiling record found for your account.']);
+        }
+
+        $validated = $request->validate([
+            'last_name'             => ['required', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
+            'first_name'            => ['required', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
+            'middle_name'           => ['nullable', 'string', 'max:100', 'regex:/^(?!\s)[A-Za-z.\-\s]*$/'],
+            'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
+            'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:30', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
+            'purok_zone'            => ['required', 'string', 'max:100', 'regex:/^(?!\s).+/'],
+            'sex'                   => 'required|in:Male,Female',
+            'age'                   => 'required|integer|min:15|max:30',
+            'birthday'              => 'required|date|before_or_equal:today',
+            'email'                 => ['required', 'email', 'max:150', 'regex:/^[^\s]+@gmail\.com$/i'],
+            'contact_number'        => ['required', 'string', 'regex:/^09\d{9}$/'],
+            'civil_status'          => 'required|string',
+            'youth_classification'  => 'required|string',
+            'youth_age_group'       => 'required|string',
+            'work_status'           => 'required|string',
+            'education'             => 'required|string',
+            'sk_voter'              => 'required|string',
+            'national_voter'        => 'required|string',
+            'sk_voted'              => 'required|string',
+            'vote_frequency'        => 'required|string',
+            'kk_assembly'           => 'required|string',
+            'kk_times'              => 'required|string',
+            'kk_reason'             => 'required|string',
+            'facebook'              => ['required', 'string', 'max:150', 'regex:/^\S*[^0-9]\S*$/'],
+            'group_chat'            => 'required|string',
+            'signature'             => 'required|string',
+        ]);
+
+        if (($validated['suffix'] ?? null) === 'Others') {
+            $customSuffix = trim((string) ($validated['custom_suffix'] ?? ''));
+            $compact = strtoupper(str_replace(' ', '', $customSuffix));
+            $validRoman = in_array($compact, ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'], true);
+            $validText = (bool) preg_match('/^[A-Za-z.]+$/', str_replace(' ', '', $customSuffix));
+
+            if (!$validRoman && !$validText) {
+                return back()->withInput()->withErrors([
+                    'custom_suffix' => 'Only text and valid Roman numeral suffixes are allowed.',
+                ]);
+            }
+        }
+
+        try {
+            $derivedAge = \Carbon\Carbon::parse($validated['birthday'])->age;
+            if ($derivedAge < 15 || $derivedAge > 30 || (int) $validated['age'] !== (int) $derivedAge) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['birthday' => 'Birthday and age must match and be within 15 to 30 years old.']);
+            }
+        } catch (\Throwable $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['birthday' => 'Invalid birthday value.']);
+        }
+
+        $existingForm = $registration->form_data ?? [];
+        $respondentNumber = $existingForm['respondent_number']
+            ?? $request->input('respondent_number')
+            ?? ('KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5((string) $registration->id), 0, 6)));
+
+        $validated['respondent_number'] = $respondentNumber;
+        $validated['profile_updated_year'] = (int) date('Y');
+        $validated['profile_updated_at'] = now()->toIso8601String();
+        $validated['civil_status'] = $request->input('civil_status', []);
+        $validated['youth_classification'] = $request->input('youth_classification', []);
+        $validated['youth_age_group'] = $request->input('youth_age_group', []);
+        $validated['work_status'] = $request->input('work_status', []);
+        $validated['education'] = $request->input('education', []);
+        $validated['sk_voter'] = $request->input('sk_voter');
+        $validated['national_voter'] = $request->input('national_voter');
+        $validated['sk_voted'] = $request->input('sk_voted');
+        $validated['vote_frequency'] = $request->input('vote_frequency');
+        $validated['kk_assembly'] = $request->input('kk_assembly');
+        $validated['kk_reason'] = $request->input('kk_reason', []);
+        $validated['facebook'] = $request->input('facebook');
+        $validated['group_chat'] = $request->input('group_chat');
+        $validated['signature_name'] = $request->input('signature_name');
+
+        $registration->update([
+            'last_name'      => $validated['last_name'],
+            'first_name'     => $validated['first_name'],
+            'middle_name'    => $validated['middle_name'] ?? null,
+            'suffix'         => $validated['suffix'] ?? null,
+            'email'          => $validated['email'],
+            'contact_number' => $validated['contact_number'] ?? null,
+            'form_data'      => array_merge($existingForm, $validated),
+            'submitted_at'   => now(),
+        ]);
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Your KK Profiling information has been updated successfully.');
     }
 
     /**

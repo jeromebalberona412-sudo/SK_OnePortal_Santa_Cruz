@@ -3,6 +3,8 @@
 namespace App\Modules\Dashboard\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\KabataanRegistration;
+use App\Modules\KKProfiling\Controllers\KKProfilingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,8 +18,22 @@ class DashboardController extends Controller
 
         $user = Auth::user();
 
+        $registration = KabataanRegistration::with('barangay')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        $formData = $registration?->form_data ?? [];
+        $respondentNumber = $formData['respondent_number'] ?? null;
+
+        $barangayName = $registration?->barangay?->name ?? 'Santa Cruz';
+
         return view('dashboard::index', [
-            'user' => $user
+            'user'                => $user,
+            'showKkUpdateModal'   => (bool) ($registration && session()->pull('show_kk_profiling_update', false)),
+            'kkUpdateBarangay'    => $registration ? $barangayName : null,
+            'kkRespondentNumber'  => $respondentNumber ?? '',
+            'kkRespondentDisplay' => KKProfilingController::formatRespondentDisplay($respondentNumber),
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma'        => 'no-cache',

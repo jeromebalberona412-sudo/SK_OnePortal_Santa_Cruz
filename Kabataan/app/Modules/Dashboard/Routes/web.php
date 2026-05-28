@@ -8,4 +8,8 @@ use App\Modules\Dashboard\Controllers\AnnouncementFeedController;
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/barangay/{slug}', [DashboardController::class, 'barangay'])->name('barangay');
+
+    Route::get('/api/feed', [AnnouncementFeedController::class, 'feed']);
+    Route::post('/api/feed/{id}/react', [AnnouncementFeedController::class, 'react']);
+    Route::post('/api/feed/{id}/comment', [AnnouncementFeedController::class, 'comment']);
 });

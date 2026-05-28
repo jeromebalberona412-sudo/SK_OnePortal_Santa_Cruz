@@ -16,3 +16,7 @@ Route::post('/kkprofiling/{barangay}', [KKProfilingController::class, 'submit'])
 // Set Password
 Route::get('/kkprofiling/{barangay}/set-password', [KKProfilingController::class, 'showSetPassword'])->name('kkprofiling.set-password');
 Route::post('/kkprofiling/{barangay}/set-password', [KKProfilingController::class, 'storePassword'])->name('kkprofiling.store-password');
+
+Route::middleware(['auth'])->group(function () {
+    Route::put('/kkprofiling/update', [KKProfilingController::class, 'updateForUser'])->name('kkprofiling.update');
+});
