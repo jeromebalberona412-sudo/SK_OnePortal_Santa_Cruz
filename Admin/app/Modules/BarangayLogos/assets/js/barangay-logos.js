@@ -249,6 +249,20 @@
     /* ══════════════════════════════════════════════════════════
        API: UPLOAD
     ══════════════════════════════════════════════════════════ */
+    function setUploadOverlay(visible, title) {
+        var overlay = document.getElementById('blUploadOverlay');
+        var titleEl = document.getElementById('blUploadOverlayTitle');
+        if (!overlay) return;
+        if (titleEl && title) titleEl.textContent = title;
+        if (visible) {
+            overlay.removeAttribute('hidden');
+            overlay.classList.add('is-visible');
+        } else {
+            overlay.classList.remove('is-visible');
+            overlay.setAttribute('hidden', '');
+        }
+    }
+
     function doUploadLogo(index, file, previewDataUrl) {
         var card = document.getElementById('card-' + index);
         if (!card) return;
@@ -263,6 +277,7 @@
         var wasAlreadyUploaded = card.classList.contains('has-logo');
         applyLogoToCard(index, previewDataUrl, null);
         setCardLoading(index, true);
+        setUploadOverlay(true, wasAlreadyUploaded ? 'Updating Logo' : 'Uploading Logo');
 
         var formData = new FormData();
         formData.append('barangay_id', barangayId);
@@ -280,6 +295,7 @@
         })
         .then(function (result) {
             setCardLoading(index, false);
+            setUploadOverlay(false);
             if (!result.ok) {
                 revertCard(index);
                 blToast(result.data.message || 'Upload failed.', 'error');
@@ -292,6 +308,7 @@
         })
         .catch(function () {
             setCardLoading(index, false);
+            setUploadOverlay(false);
             revertCard(index);
             blToast('Upload failed. Please try again.', 'error');
         });
@@ -311,6 +328,7 @@
         }
 
         setCardLoading(index, true);
+        setUploadOverlay(true, 'Removing Logo');
 
         fetch('/barangay-logos/' + logoId, {
             method: 'DELETE',
@@ -326,6 +344,7 @@
         })
         .then(function (result) {
             setCardLoading(index, false);
+            setUploadOverlay(false);
             if (!result.ok) {
                 blToast(result.data.message || 'Delete failed.', 'error');
                 return;
@@ -335,6 +354,7 @@
         })
         .catch(function () {
             setCardLoading(index, false);
+            setUploadOverlay(false);
             blToast('Delete failed. Please try again.', 'error');
         });
     }

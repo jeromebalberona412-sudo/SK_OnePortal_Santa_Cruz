@@ -14,23 +14,59 @@ class OfficialProfile extends Model
 {
     use HasFactory;
 
-    public const POSITION_CHAIRMAN = 'Chairman';
-    public const POSITION_COUNCILOR = 'Councilor';
-    public const POSITION_KAGAWAD = 'Kagawad';
-    public const POSITION_TREASURER = 'Treasurer';
-    public const POSITION_SECRETARY = 'Secretary';
-    public const POSITION_AUDITOR = 'Auditor';
-    public const POSITION_PIO = 'PIO';
-
-    public const POSITIONS = [
-        self::POSITION_CHAIRMAN,
-        self::POSITION_COUNCILOR,
-        self::POSITION_KAGAWAD,
-        self::POSITION_TREASURER,
-        self::POSITION_SECRETARY,
-        self::POSITION_AUDITOR,
-        self::POSITION_PIO,
+    public const FEDERATION_POSITIONS = [
+        'President',
+        'Vice President',
+        'Secretary',
+        'Treasurer',
+        'PIO',
+        'Sergeant at Arms',
     ];
+
+    public const OFFICIAL_POSITIONS = [
+        'Chairperson',
+        'Secretary',
+        'Treasurer',
+        'Kagawad',
+    ];
+
+    /** @deprecated Use federationPositionOptions() or officialPositionOptions() */
+    public const POSITIONS = [
+        ...self::FEDERATION_POSITIONS,
+        ...self::OFFICIAL_POSITIONS,
+        'Chairman',
+        'Councilor',
+        'Auditor',
+    ];
+
+    public static function federationPositionOptions(): array
+    {
+        return [
+            'President' => 'President',
+            'Vice President' => 'Vice President',
+            'Secretary' => 'Secretary',
+            'Treasurer' => 'Treasurer',
+            'PIO' => 'PIO',
+            'Sergeant at Arms' => 'Sergeant at Arms',
+        ];
+    }
+
+    public static function officialPositionOptions(): array
+    {
+        return [
+            'Chairperson' => 'SK Chairperson',
+            'Secretary' => 'SK Secretary',
+            'Treasurer' => 'SK Treasurer',
+            'Kagawad' => 'SK Kagawad',
+        ];
+    }
+
+    public static function positionsForRole(string $role): array
+    {
+        return $role === \App\Modules\Shared\Models\User::ROLE_SK_FED
+            ? self::FEDERATION_POSITIONS
+            : array_merge(self::OFFICIAL_POSITIONS, ['Chairman', 'Councilor', 'Auditor', 'PIO']);
+    }
 
     protected $fillable = [
         'tenant_id',

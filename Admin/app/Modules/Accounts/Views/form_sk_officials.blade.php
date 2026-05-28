@@ -115,13 +115,9 @@
                                 <label class="form-label-light required">Position</label>
                                 <select name="position" id="official_position" class="form-input-light" required>
                                     <option value="" disabled selected>Select Position</option>
-                                    <option value="Chairman">SK Chairman</option>
-                                    <option value="Councilor">SK Councilor</option>
-                                    <option value="Kagawad">SK Kagawad</option>
-                                    <option value="Treasurer">SK Treasurer</option>
-                                    <option value="Secretary">SK Secretary</option>
-                                    <option value="Auditor">SK Auditor</option>
-                                    <option value="PIO">SK PIO</option>
+                                    @foreach(\App\Modules\Accounts\Models\OfficialProfile::officialPositionOptions() as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
                                 </select>
                                 <span class="form-error-light"></span>
                             </div>
@@ -179,7 +175,7 @@
                                 <line x1="8" y1="2" x2="8" y2="6"/>
                                 <line x1="3" y1="10" x2="21" y2="10"/>
                             </svg>
-                            Term & Committee
+                            Term
                         </h4>
                         <div class="form-grid">
                             <div class="form-group-light">
@@ -190,11 +186,6 @@
                             <div class="form-group-light">
                                 <label class="form-label-light required">Term End Date</label>
                                 <input type="date" name="term_end" id="official_term_end" class="form-input-light" required>
-                                <span class="form-error-light"></span>
-                            </div>
-                            <div class="form-group-light">
-                                <label class="form-label-light">Committee</label>
-                                <input type="text" name="committee" id="official_committee" class="form-input-light" placeholder="Committee (optional)">
                                 <span class="form-error-light"></span>
                             </div>
                         </div>
@@ -235,7 +226,7 @@
                     <p class="expected-cols-list">
                         First Name, Middle Name, Last Name, Suffix, Sex, Birthdate, Age, Contact Number,
                         Position, Status, Region, Province, Municipality, Barangay,
-                        Term Start Date, Term End Date, Committee, Email Address
+                        Term Start Date, Term End Date, Email Address
                     </p>
                 </details>
 
@@ -370,16 +361,12 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
-                                <label for="edit_sk_officials_position" class="form-label-modern required">SK Role</label>
+                                <label for="edit_sk_officials_position" class="form-label-modern required">Position</label>
                                 <select id="edit_sk_officials_position" name="position" class="form-input-modern" required>
-                                    <option value="">Select SK Role</option>
-                                    <option value="Chairman">SK Chairman</option>
-                                    <option value="Councilor">SK Councilor</option>
-                                    <option value="Kagawad">SK Kagawad</option>
-                                    <option value="Treasurer">SK Treasurer</option>
-                                    <option value="Secretary">SK Secretary</option>
-                                    <option value="Auditor">SK Auditor</option>
-                                    <option value="PIO">SK PIO</option>
+                                    <option value="">Select Position</option>
+                                    @foreach(\App\Modules\Accounts\Models\OfficialProfile::officialPositionOptions() as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
                                 </select>
                                 <span class="form-error"></span>
                             </div>

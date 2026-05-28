@@ -25,7 +25,9 @@ class ProfileController extends Controller
         $status = Password::sendResetLink($request->only('email'));
 
         if ($status === Password::RESET_LINK_SENT) {
-            return back()->with('status', __($status));
+            return back()
+                ->with('status', 'reset-link-sent')
+                ->with('fp_email', $request->email);
         }
 
         return back()->withErrors(['email' => __($status)]);

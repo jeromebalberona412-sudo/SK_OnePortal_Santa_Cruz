@@ -105,7 +105,9 @@
                             <label class="form-label-light required">Position</label>
                             <select id="position" name="position" class="form-input-light" required>
                                 <option value="" disabled selected>Select Position</option>
-                                <option value="Chairman">SK Chairman</option>
+                                @foreach(\App\Modules\Accounts\Models\OfficialProfile::federationPositionOptions() as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
                             </select>
                             <span class="form-error-light"></span>
                         </div>
@@ -353,7 +355,9 @@
                                 <label for="edit_position" class="form-label-modern required">Position (SK Role)</label>
                                 <select id="edit_position" name="position" class="form-input-modern" required>
                                     <option value="">Select Position</option>
-                                    <option value="Chairman">SK Chairman</option>
+                                    @foreach(\App\Modules\Accounts\Models\OfficialProfile::federationPositionOptions() as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
                                 </select>
                                 <span class="form-error"></span>
                             </div>

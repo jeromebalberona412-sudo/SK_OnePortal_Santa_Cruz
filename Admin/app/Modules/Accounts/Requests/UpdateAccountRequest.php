@@ -47,7 +47,10 @@ class UpdateAccountRequest extends FormRequest
                 User::STATUS_SUSPENDED,
             ])],
             'barangay_id' => ['required', 'integer', 'exists:barangays,id'],
-            'position' => ['required', Rule::in(OfficialProfile::POSITIONS)],
+            'position' => [
+                'required',
+                Rule::in(OfficialProfile::positionsForRole((string) ($this->route('user')?->role ?? ''))),
+            ],
             'term_start' => ['required', 'date'],
             'term_end' => ['required', 'date', 'after:term_start'],
             'term_status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'EXPIRED', 'REPLACED'])],

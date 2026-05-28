@@ -52,7 +52,7 @@ class StoreAccountRequest extends FormRequest
                 User::STATUS_SUSPENDED,
             ]), 'not_in:'],
             'barangay_id' => ['required', 'integer', 'exists:barangays,id', 'not_in:'],
-            'position' => ['required', Rule::in(OfficialProfile::POSITIONS), 'not_in:'],
+            'position' => ['required', Rule::in(OfficialProfile::positionsForRole((string) $this->input('role'))), 'not_in:'],
             'term_start' => ['required', 'date'],
             'term_end' => ['required', 'date', 'after:term_start'],
             'term_status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'EXPIRED', 'REPLACED'])],

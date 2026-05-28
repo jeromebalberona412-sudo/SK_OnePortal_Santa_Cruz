@@ -11,6 +11,18 @@
 @include('layout::header')
 @include('layout::sidebar')
 
+<div id="blUploadOverlay" class="bl-upload-overlay" aria-hidden="true" hidden>
+    <div class="bl-upload-overlay-inner">
+        <div class="bl-upload-spinner">
+            <div class="bl-upload-spinner-ring"></div>
+            <div class="bl-upload-spinner-ring bl-upload-spinner-ring--2"></div>
+            <div class="bl-upload-spinner-dot"></div>
+        </div>
+        <p class="bl-upload-overlay-title" id="blUploadOverlayTitle">Uploading Logo</p>
+        <p class="bl-upload-overlay-sub">Please wait...</p>
+    </div>
+</div>
+
 <div class="main-content-modern barangay-logos-page" id="mainContent">
     <div class="barangay-logos-container">
 
