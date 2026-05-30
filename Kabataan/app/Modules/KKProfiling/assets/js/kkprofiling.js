@@ -599,18 +599,6 @@ window.handleFormSubmit = function (event) {
             });
         })
         .then(({ response, data }) => {
-            // Hide loading overlay
-            if (window.hideLoading) {
-                window.hideLoading();
-            }
-
-            // Reset button state
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('is-submitting');
-            }
-            if (submitText) submitText.textContent = 'Submit KK Profiling';
-
             // Handle successful response
             if (response.ok) {
                 console.log('Submission successful');

@@ -888,8 +888,29 @@
     pointer-events: none;
 }
 
-.kkp-submit-btn.is-submitting svg {
+.kkp-submit-btn.is-submitting .kkp-submit-icon {
     display: none;
+}
+
+.kkp-submit-btn .kkp-spinner {
+    display: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: kkp-spin 0.8s linear infinite;
+    margin-right: 8px;
+}
+
+.kkp-submit-btn.is-submitting .kkp-spinner {
+    display: block;
+}
+
+@keyframes kkp-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ══════════════════════════════════════════
