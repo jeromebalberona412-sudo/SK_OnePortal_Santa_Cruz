@@ -223,7 +223,7 @@
 })();
 
 /* ═══════════════════════════════════════════════════════════════
-   FORM SUBMISSION HANDLER - Validate then Show Email Verification
+   FORM SUBMISSION HANDLER - Validate then Submit Form
 ═══════════════════════════════════════════════════════════════ */
 window.handleFormSubmit = function (event) {
     // ── Clear previous errors ──
@@ -536,7 +536,8 @@ window.handleFormSubmit = function (event) {
         return false;
     }
 
-    // ── All valid — show submit loading then submit via AJAX ──
+    // ── All valid — submit via AJAX for proper error handling ──
+    console.log('Form validation passed. Submitting to backend...');
     const submitBtn = document.getElementById('kkpSubmitBtn');
     const submitText = document.getElementById('kkpSubmitText');
     const form = document.getElementById('kkProfilingForm');
@@ -555,31 +556,113 @@ window.handleFormSubmit = function (event) {
     // Prevent default form submission and use AJAX
     event.preventDefault();
 
+    // Prepare form data
     const formData = new FormData(form);
-    const submitUrl = form.action;
+    console.log('Form data prepared:', Object.fromEntries(formData));
 
-    fetch(submitUrl, {
+    // Submit via fetch API
+    fetch(form.action, {
         method: 'POST',
         body: formData,
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json',
         },
+        credentials: 'same-origin'
     })
-        .then(response => response.json())
-        .then(data => {
+        .then(response => {
+            console.log('Response received:', response.status, response.statusText);
+
+            // Check if response is a redirect (302)
+            if (response.redirected) {
+                console.log('Redirect detected to:', response.url);
+                window.location.href = response.url;
+                return;
+            }
+
+            // Try to parse as JSON
+            return response.json().then(data => {
+                console.log('Response data:', data);
+                return { response, data };
+            }).catch(() => {
+                // If not JSON, check for HTML response (redirect)
+                return response.text().then(text => {
+                    console.log('Response text (first 200 chars):', text.substring(0, 200));
+                    // If it's HTML, the backend likely redirected - follow it
+                    if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                        // The response is a full HTML page, likely a redirect
+                        // Force a page reload to the current URL to follow the redirect
+                        window.location.reload();
+                    }
+                    return { response, data: null };
+                });
+            });
+        })
+        .then(({ response, data }) => {
             // Hide loading overlay
             if (window.hideLoading) {
                 window.hideLoading();
             }
 
-            // On success, redirect to email verification
-            if (data.redirect) {
-                window.location.href = data.redirect;
+            // Reset button state
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('is-submitting');
+            }
+            if (submitText) submitText.textContent = 'Submit KK Profiling';
+
+            // Handle successful response
+            if (response.ok) {
+                console.log('Submission successful');
+                // If backend returned a redirect URL in data
+                if (data && data.redirect) {
+                    console.log('Redirecting to:', data.redirect);
+                    // Append email as URL parameter if provided
+                    if (data.email) {
+                        const redirectUrl = new URL(data.redirect, window.location.origin);
+                        redirectUrl.searchParams.set('email', data.email);
+                        window.location.href = redirectUrl.toString();
+                    } else {
+                        window.location.href = data.redirect;
+                    }
+                } else if (data && data.message) {
+                    // Show success message
+                    alert(data.message);
+                    // Redirect to check-email page with email
+                    const email = data.email || document.querySelector('input[name="email"]')?.value;
+                    const checkEmailUrl = new URL('/kkprofiling/check-email', window.location.origin);
+                    if (email) {
+                        checkEmailUrl.searchParams.set('email', email);
+                    }
+                    window.location.href = checkEmailUrl.toString();
+                } else {
+                    // Default redirect to check-email page
+                    console.log('Redirecting to check-email page');
+                    const email = document.querySelector('input[name="email"]')?.value;
+                    const checkEmailUrl = new URL('/kkprofiling/check-email', window.location.origin);
+                    if (email) {
+                        checkEmailUrl.searchParams.set('email', email);
+                    }
+                    window.location.href = checkEmailUrl.toString();
+                }
             } else {
-                // Fallback: show email verification card on the same page
-                const email = document.querySelector('input[name="email"]').value;
-                showEmailVerification(email);
+                // Handle error response
+                console.error('Submission failed with status:', response.status);
+                let errorMessage = 'Registration failed. Please try again.';
+
+                if (data && data.errors) {
+                    // Display validation errors
+                    console.error('Validation errors:', data.errors);
+                    errorMessage = Object.values(data.errors).flat().join('\n');
+                } else if (data && data.message) {
+                    errorMessage = data.message;
+                } else if (response.status === 422) {
+                    errorMessage = 'Validation failed. Please check your inputs.';
+                } else if (response.status === 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                }
+
+                alert(errorMessage);
             }
         })
         .catch(error => {
@@ -590,7 +673,7 @@ window.handleFormSubmit = function (event) {
                 window.hideLoading();
             }
 
-            // Reset button state on error
+            // Reset button state
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('is-submitting');
@@ -598,10 +681,11 @@ window.handleFormSubmit = function (event) {
             if (submitText) submitText.textContent = 'Submit KK Profiling';
 
             // Show error message
-            alert('An error occurred while submitting the form. Please try again.');
+            alert('Registration failed. Please check your connection and try again.');
         });
 
-    return false; // Prevent default form submission
+    // Return false to prevent default form submission
+    return false;
 };
 
 // ── Show email verification card ──

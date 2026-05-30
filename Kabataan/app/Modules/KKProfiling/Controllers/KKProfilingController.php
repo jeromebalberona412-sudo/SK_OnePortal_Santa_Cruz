@@ -193,7 +193,6 @@ class KKProfilingController extends Controller
             'sk_voter'              => 'required|string',
             'national_voter'        => 'required|string',
             'sk_voted'              => 'required|string',
-            'vote_frequency'        => 'required|string',
             'kk_assembly'           => 'required|string',
             'kk_times'              => 'required|string',
             'kk_reason'             => 'required|string',
@@ -244,7 +243,6 @@ class KKProfilingController extends Controller
         $validated['sk_voter'] = $request->input('sk_voter');
         $validated['national_voter'] = $request->input('national_voter');
         $validated['sk_voted'] = $request->input('sk_voted');
-        $validated['vote_frequency'] = $request->input('vote_frequency');
         $validated['kk_assembly'] = $request->input('kk_assembly');
         $validated['kk_reason'] = $request->input('kk_reason', []);
         $validated['facebook'] = $request->input('facebook');
@@ -296,7 +294,6 @@ class KKProfilingController extends Controller
             'sk_voter'              => 'required|string',
             'national_voter'        => 'required|string',
             'sk_voted'              => 'required|string',
-            'vote_frequency'        => 'required|string',
             'kk_assembly'           => 'required|string',
             'kk_times'              => 'required|string',
             'kk_reason'             => 'required|string',
@@ -348,7 +345,6 @@ class KKProfilingController extends Controller
         $validated['sk_voter'] = $request->input('sk_voter');
         $validated['national_voter'] = $request->input('national_voter');
         $validated['sk_voted'] = $request->input('sk_voted');
-        $validated['vote_frequency'] = $request->input('vote_frequency');
         $validated['kk_assembly'] = $request->input('kk_assembly');
         $validated['kk_reason'] = $request->input('kk_reason', []);
         $validated['facebook'] = $request->input('facebook');
@@ -420,6 +416,17 @@ class KKProfilingController extends Controller
             ]);
         }
 
+        // Check if request is AJAX (from JavaScript fetch)
+        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration successful! Please check your email for verification.',
+                'redirect' => route('kkprofiling.check-email'),
+                'email' => $registration->email,
+            ]);
+        }
+
+        // Fallback to normal redirect for non-AJAX requests
         return redirect()
             ->route('kkprofiling.check-email')
             ->with('email', $registration->email);
@@ -428,9 +435,10 @@ class KKProfilingController extends Controller
     /**
      * Show check email page after registration
      */
-    public function showCheckEmail()
+    public function showCheckEmail(Request $request)
     {
-        $email = session('email');
+        // Try to get email from URL parameter first, then from session
+        $email = $request->query('email') ?? session('email');
         
         if (!$email) {
             return redirect()->route('kkprofiling.signup');
