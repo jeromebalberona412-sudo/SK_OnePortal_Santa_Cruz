@@ -333,9 +333,13 @@
                     <button type="button" class="resend-btn" id="resendBtn" disabled>Resend Email Verification</button>
                     <span class="resend-timer" id="resendTimer">(1:00)</span>
                 </div>
-                
+
                 <center>
-                    <a href="{{ route('kkprofiling.signup') }}" class="back-btn" onclick="handleBackClick(event)">Back to Signup</a>
+                    @if($barangay)
+                        <a href="{{ route('kkprofiling.show', ['barangay' => $barangay]) }}" class="back-btn" onclick="handleBackClick(event)">Back to KK Profiling</a>
+                    @else
+                        <a href="{{ route('kkprofiling.signup') }}" class="back-btn" onclick="handleBackClick(event)">Back to KK Profiling</a>
+                    @endif
                 </center>
             </div>
         </div>
@@ -350,23 +354,44 @@
             const resendTimer = document.getElementById('resendTimer');
             if (!resendBtn || !resendTimer) return;
 
-            let seconds = 60;
-            const timer = setInterval(() => {
-                seconds--;
-                const m = Math.floor(seconds / 60);
-                const s = seconds % 60;
-                resendTimer.textContent = `(${m}:${s < 10 ? '0' : ''}${s})`;
-                if (seconds <= 0) {
-                    clearInterval(timer);
-                    resendBtn.disabled = false;
-                    resendTimer.textContent = '';
-                }
-            }, 1000);
+            let timerInterval = null;
+
+            function startResendTimer() {
+                let seconds = 60;
+                resendBtn.disabled = true;
+                resendBtn.textContent = 'Resend Email Verification';
+                resendTimer.style.display = 'inline';
+                resendTimer.textContent = '(1:00)';
+
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    seconds--;
+                    const m = Math.floor(seconds / 60);
+                    const s = seconds % 60;
+                    resendTimer.textContent = `(${m}:${s < 10 ? '0' : ''}${s})`;
+                    if (seconds <= 0) {
+                        clearInterval(timerInterval);
+                        resendBtn.disabled = false;
+                        resendTimer.textContent = '';
+                    }
+                }, 1000);
+            }
+
+            // Start the timer on page load
+            startResendTimer();
 
             resendBtn.addEventListener('click', function() {
                 if (this.disabled) return;
+
+                // Show temporary success message
+                const originalText = this.textContent;
+                this.textContent = 'Email sent!';
                 this.disabled = true;
-                this.textContent = 'Resent!';
+
+                // Restart the timer after 2 seconds
+                setTimeout(() => {
+                    startResendTimer();
+                }, 2000);
             });
         })();
 

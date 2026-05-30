@@ -423,13 +423,15 @@ class KKProfilingController extends Controller
                 'message' => 'Registration successful! Please check your email for verification.',
                 'redirect' => route('kkprofiling.check-email'),
                 'email' => $registration->email,
+                'barangay' => $barangay,
             ]);
         }
 
         // Fallback to normal redirect for non-AJAX requests
         return redirect()
             ->route('kkprofiling.check-email')
-            ->with('email', $registration->email);
+            ->with('email', $registration->email)
+            ->with('barangay', $barangay);
     }
 
     /**
@@ -439,12 +441,16 @@ class KKProfilingController extends Controller
     {
         // Try to get email from URL parameter first, then from session
         $email = $request->query('email') ?? session('email');
-        
+        $barangay = $request->query('barangay') ?? session('barangay');
+
         if (!$email) {
             return redirect()->route('kkprofiling.signup');
         }
 
-        return view('kkprofiling::check_email', ['email' => $email]);
+        return view('kkprofiling::check_email', [
+            'email' => $email,
+            'barangay' => $barangay,
+        ]);
     }
 
     private function normalizeSlug(string $barangay): string
