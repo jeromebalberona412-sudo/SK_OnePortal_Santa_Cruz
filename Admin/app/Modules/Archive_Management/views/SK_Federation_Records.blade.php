@@ -47,7 +47,7 @@
                         <th>Full Name<div class="arfed-col-hint">FN, MN, LN, Suffix</div></th>
                         <th>Position</th>
                         <th>Term Served</th>
-                        <th>Deleted Term</th>
+                        <th>Status</th>
                         <th class="arfed-col-actions">Actions</th>
                     </tr>
                 </thead>

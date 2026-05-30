@@ -14,7 +14,7 @@
 
     <div class="dsf-page-header">
         <div class="dsf-header-left">
-            <h1 class="dsf-page-title">Deleted SK Federation</h1>
+            <h1 class="dsf-page-title">Archived SK Federation Records</h1>
             <p class="dsf-page-subtitle">Records removed from the SK Federation list.</p>
         </div>
         <div class="dsf-header-right">
@@ -25,6 +25,9 @@
                 <option value="2025">2025</option>
                 <option value="2026">2026</option>
             </select>
+            <select id="dsfFilterTerm" class="dsf-term-filter">
+                <option value="">All Terms</option>
+            </select>
             <input type="text" id="dsfSearch" class="dsf-search-input" placeholder="Search by name or barangay…">
         </div>
     </div>
@@ -34,19 +37,16 @@
 
     <!-- Filter Tabs + Dropdowns -->
     <div class="dsf-filter-bar">
-        <div class="dsf-filter-dropdowns">
-            <select id="dsfFilterBarangay" class="dsf-filter-select">
-                <option value="">All Barangays</option>
-            </select>
-            <select id="dsfFilterTerm" class="dsf-filter-select">
-                <option value="">All Terms</option>
-            </select>
-        </div>
         <div class="dsf-filter-tabs">
             <button class="dsf-tab active" data-filter="all">All Deleted</button>
             <button class="dsf-tab" data-filter="today">Deleted Today</button>
             <button class="dsf-tab" data-filter="week">This Week</button>
             <button class="dsf-tab" data-filter="month">This Month</button>
+        </div>
+        <div class="dsf-filter-dropdowns">
+            <select id="dsfFilterBarangay" class="dsf-filter-select">
+                <option value="">All Barangays</option>
+            </select>
         </div>
     </div>
 
@@ -60,7 +60,7 @@
                         <th>Position</th>
                         <th>Barangay</th>
                         <th>Municipality</th>
-                        <th>Term</th>
+                        <th>Status</th>
                         <th>Date Deleted</th>
                         <th>Time Deleted</th>
                         <th class="dsf-col-actions">Actions</th>

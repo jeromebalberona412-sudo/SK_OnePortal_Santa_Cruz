@@ -164,35 +164,35 @@ function applyAroffFilters() {
             const termStartStr = r.termStart || '';
             const yearMatch = termStartStr.match(/\d{4}/);
             const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
-            
+
             if (!recordYear || recordYear !== parseInt(aroffYearFilter, 10)) {
                 return false;
             }
         }
-        
+
         // Term filter - check if record year falls within term range
         if (aroffTermFilter !== 'all') {
             const termStartStr = r.termStart || '';
             const yearMatch = termStartStr.match(/\d{4}/);
             const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
-            
+
             if (!recordYear) return false;
-            
+
             const [termStart, termEnd] = aroffTermFilter.split('-').map(y => parseInt(y, 10));
             if (recordYear < termStart || recordYear > termEnd) {
                 return false;
             }
         }
-        
+
         // Search filter
         if (aroffSearchQ) {
             const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
-            const matches = fullName.includes(aroffSearchQ) || 
-                          (r.position || '').toLowerCase().includes(aroffSearchQ) || 
-                          (r.barangay || '').toLowerCase().includes(aroffSearchQ);
+            const matches = fullName.includes(aroffSearchQ) ||
+                (r.position || '').toLowerCase().includes(aroffSearchQ) ||
+                (r.barangay || '').toLowerCase().includes(aroffSearchQ);
             if (!matches) return false;
         }
-        
+
         return true;
     });
     aroffCurrentPage = 1;
@@ -204,7 +204,7 @@ function renderAroffStats() {
     const row = document.getElementById('aroffStatsRow');
     if (!row) return;
 
-    const total     = aroffRecords.length;
+    const total = aroffRecords.length;
     const positions = [...new Set(aroffRecords.map(r => r.position))].length;
     const barangays = [...new Set(aroffRecords.map(r => r.barangay))].length;
 
@@ -241,12 +241,12 @@ function renderAroffStats() {
 // ── Render Table ──────────────────────────────────────────────────────────────
 function renderAroffTable() {
     const tbody = document.getElementById('aroffTableBody');
-    const info  = document.getElementById('aroffPaginationInfo');
+    const info = document.getElementById('aroffPaginationInfo');
     if (!tbody) return;
 
     const start = (aroffCurrentPage - 1) * aroffPerPage;
-    const end   = start + aroffPerPage;
-    const page  = aroffFiltered.slice(start, end);
+    const end = start + aroffPerPage;
+    const page = aroffFiltered.slice(start, end);
 
     if (aroffFiltered.length === 0) {
         tbody.innerHTML = `<tr class="aroff-empty-row"><td colspan="5">No archived SK Officials records found.</td></tr>`;
@@ -283,9 +283,9 @@ function renderAroffTable() {
 
 function renderAroffPagination(total) {
     const pages = Math.ceil(total / aroffPerPage);
-    const nums  = document.getElementById('aroffPageNumbers');
-    const prev  = document.getElementById('aroffPrevBtn');
-    const next  = document.getElementById('aroffNextBtn');
+    const nums = document.getElementById('aroffPageNumbers');
+    const prev = document.getElementById('aroffPrevBtn');
+    const next = document.getElementById('aroffNextBtn');
 
     if (nums) {
         nums.innerHTML = Array.from({ length: pages }, (_, i) => `
@@ -304,21 +304,21 @@ function bindAroffSearch() {
     const input = document.getElementById('aroffSearch');
     const yearSelect = document.getElementById('aroffYearFilter');
     const termSelect = document.getElementById('aroffTermFilter');
-    
+
     if (input) {
         input.addEventListener('input', function () {
             aroffSearchQ = this.value.toLowerCase();
             applyAroffFilters();
         });
     }
-    
+
     if (yearSelect) {
         yearSelect.addEventListener('change', function () {
             aroffYearFilter = this.value;
             applyAroffFilters();
         });
     }
-    
+
     if (termSelect) {
         termSelect.addEventListener('change', function () {
             aroffTermFilter = this.value;
@@ -424,19 +424,19 @@ function openAroffViewModal(id) {
 }
 
 function bindAroffViewModal() {
-    const modal     = document.getElementById('aroffViewModal');
-    const box       = document.getElementById('aroffViewModalBox');
-    const closeBtn  = document.getElementById('aroffViewClose');
+    const modal = document.getElementById('aroffViewModal');
+    const box = document.getElementById('aroffViewModalBox');
+    const closeBtn = document.getElementById('aroffViewClose');
     const toggleBtn = document.getElementById('aroffViewToggle');
 
     const close = () => {
         if (modal) { modal.style.display = 'none'; modal.classList.remove('aroff-maximized'); }
-        if (box)   box.classList.remove('aroff-maximized');
+        if (box) box.classList.remove('aroff-maximized');
         if (toggleBtn) toggleBtn.textContent = '□';
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
-    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {
         toggleBtn.addEventListener('click', function (e) {

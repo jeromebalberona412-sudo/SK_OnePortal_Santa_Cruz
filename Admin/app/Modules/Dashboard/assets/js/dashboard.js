@@ -345,7 +345,7 @@ function initUserDistributionPieChart() {
         data: {
             labels: ['SK Federation', 'SK Officials', 'Kabataan'],
             datasets: [{
-                data: [1, 260, 40000],
+                data: [0, 0, 0],
                 backgroundColor: [
                     '#ef4444',
                     '#eab308',
@@ -373,7 +373,7 @@ function initUserDistributionPieChart() {
                     titleColor: '#e8f1ff',
                     bodyColor: '#d8e6ff',
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const label = context.label || '';
                             const value = context.parsed || 0;
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -387,7 +387,7 @@ function initUserDistributionPieChart() {
     });
 }
 
-window.updatePieChartData = function(showFederation, showOfficials, showKabataan) {
+window.updatePieChartData = function (showFederation, showOfficials, showKabataan) {
     if (!userDistributionPieChart) {
         return;
     }
@@ -398,19 +398,19 @@ window.updatePieChartData = function(showFederation, showOfficials, showKabataan
 
     if (showFederation) {
         labels.push('SK Federation');
-        data.push(1);
+        data.push(0);
         colors.push('#ef4444');
     }
 
     if (showOfficials) {
         labels.push('SK Officials');
-        data.push(260);
+        data.push(0);
         colors.push('#eab308');
     }
 
     if (showKabataan) {
         labels.push('Kabataan');
-        data.push(40000);
+        data.push(0);
         colors.push('#22c55e');
     }
 

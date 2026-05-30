@@ -164,35 +164,35 @@ function applyArfedFilters() {
             const termStartStr = r.termStart || '';
             const yearMatch = termStartStr.match(/\d{4}/);
             const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
-            
+
             if (!recordYear || recordYear !== parseInt(arfedYearFilter, 10)) {
                 return false;
             }
         }
-        
+
         // Term filter - check if record year falls within term range
         if (arfedTermFilter !== 'all') {
             const termStartStr = r.termStart || '';
             const yearMatch = termStartStr.match(/\d{4}/);
             const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
-            
+
             if (!recordYear) return false;
-            
+
             const [termStart, termEnd] = arfedTermFilter.split('-').map(y => parseInt(y, 10));
             if (recordYear < termStart || recordYear > termEnd) {
                 return false;
             }
         }
-        
+
         // Search filter
         if (arfedSearchQ) {
             const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
-            const matches = fullName.includes(arfedSearchQ) || 
-                          (r.position || '').toLowerCase().includes(arfedSearchQ) || 
-                          (r.barangay || '').toLowerCase().includes(arfedSearchQ);
+            const matches = fullName.includes(arfedSearchQ) ||
+                (r.position || '').toLowerCase().includes(arfedSearchQ) ||
+                (r.barangay || '').toLowerCase().includes(arfedSearchQ);
             if (!matches) return false;
         }
-        
+
         return true;
     });
     arfedCurrentPage = 1;
@@ -204,9 +204,9 @@ function renderArfedStats() {
     const row = document.getElementById('arfedStatsRow');
     if (!row) return;
 
-    const total     = arfedRecords.length;
+    const total = arfedRecords.length;
     const positions = [...new Set(arfedRecords.map(r => r.position))].length;
-    const terms     = [...new Set(arfedRecords.map(r => r.termStart + '–' + r.termEnd))].length;
+    const terms = [...new Set(arfedRecords.map(r => r.termStart + '–' + r.termEnd))].length;
 
     row.innerHTML = `
         <div class="arfed-stat-card arfed-stat-card-blue">
@@ -241,12 +241,12 @@ function renderArfedStats() {
 // ── Render Table ──────────────────────────────────────────────────────────────
 function renderArfedTable() {
     const tbody = document.getElementById('arfedTableBody');
-    const info  = document.getElementById('arfedPaginationInfo');
+    const info = document.getElementById('arfedPaginationInfo');
     if (!tbody) return;
 
     const start = (arfedCurrentPage - 1) * arfedPerPage;
-    const end   = start + arfedPerPage;
-    const page  = arfedFiltered.slice(start, end);
+    const end = start + arfedPerPage;
+    const page = arfedFiltered.slice(start, end);
 
     if (arfedFiltered.length === 0) {
         tbody.innerHTML = `<tr class="arfed-empty-row"><td colspan="5">No archived SK Federation records found.</td></tr>`;
@@ -283,9 +283,9 @@ function renderArfedTable() {
 
 function renderArfedPagination(total) {
     const pages = Math.ceil(total / arfedPerPage);
-    const nums  = document.getElementById('arfedPageNumbers');
-    const prev  = document.getElementById('arfedPrevBtn');
-    const next  = document.getElementById('arfedNextBtn');
+    const nums = document.getElementById('arfedPageNumbers');
+    const prev = document.getElementById('arfedPrevBtn');
+    const next = document.getElementById('arfedNextBtn');
 
     if (nums) {
         nums.innerHTML = Array.from({ length: pages }, (_, i) => `
@@ -304,21 +304,21 @@ function bindArfedSearch() {
     const input = document.getElementById('arfedSearch');
     const yearSelect = document.getElementById('arfedYearFilter');
     const termSelect = document.getElementById('arfedTermFilter');
-    
+
     if (input) {
         input.addEventListener('input', function () {
             arfedSearchQ = this.value.toLowerCase();
             applyArfedFilters();
         });
     }
-    
+
     if (yearSelect) {
         yearSelect.addEventListener('change', function () {
             arfedYearFilter = this.value;
             applyArfedFilters();
         });
     }
-    
+
     if (termSelect) {
         termSelect.addEventListener('change', function () {
             arfedTermFilter = this.value;
@@ -424,19 +424,19 @@ function openArfedViewModal(id) {
 }
 
 function bindArfedViewModal() {
-    const modal     = document.getElementById('arfedViewModal');
-    const box       = document.getElementById('arfedViewModalBox');
-    const closeBtn  = document.getElementById('arfedViewClose');
+    const modal = document.getElementById('arfedViewModal');
+    const box = document.getElementById('arfedViewModalBox');
+    const closeBtn = document.getElementById('arfedViewClose');
     const toggleBtn = document.getElementById('arfedViewToggle');
 
     const close = () => {
         if (modal) { modal.style.display = 'none'; modal.classList.remove('arfed-maximized'); }
-        if (box)   box.classList.remove('arfed-maximized');
+        if (box) box.classList.remove('arfed-maximized');
         if (toggleBtn) toggleBtn.textContent = '□';
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
-    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {
         toggleBtn.addEventListener('click', function (e) {

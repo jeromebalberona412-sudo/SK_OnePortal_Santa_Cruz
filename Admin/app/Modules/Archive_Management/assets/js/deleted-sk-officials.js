@@ -141,7 +141,7 @@ function dsoIsThisMonth(ts) {
 
 function dsoApplyFilter(records, filter) {
     if (filter === 'today') return records.filter(r => dsoIsToday(r._deletedTs));
-    if (filter === 'week')  return records.filter(r => dsoIsThisWeek(r._deletedTs));
+    if (filter === 'week') return records.filter(r => dsoIsThisWeek(r._deletedTs));
     if (filter === 'month') return records.filter(r => dsoIsThisMonth(r._deletedTs));
     return records;
 }
@@ -256,17 +256,17 @@ function bindDsoDropdowns() {
 
 function dsoApplyAllFilters() {
     let result = dsoApplyFilter(dsoRecords, dsoActiveFilter);
-    
+
     // Year filter
     if (dsoYearFilter !== 'all') {
         result = result.filter(r => r._deletedTs.getFullYear() === parseInt(dsoYearFilter, 10));
     }
-    
+
     // Barangay, Position, and Term filters
     if (dsoActiveBarangay) result = result.filter(r => r.barangay === dsoActiveBarangay);
     if (dsoActivePosition) result = result.filter(r => r.position === dsoActivePosition);
     if (dsoActiveTerm) result = result.filter(r => r.term === dsoActiveTerm);
-    
+
     // Search filter
     const q = (document.getElementById('dsoSearch')?.value || '').toLowerCase();
     if (q) result = result.filter(r =>
@@ -299,12 +299,12 @@ function bindDsoFilterTabs() {
 // ── Render Table ──────────────────────────────────────────────────────────────
 function renderDsoTable() {
     const tbody = document.getElementById('dsoTableBody');
-    const info  = document.getElementById('dsoPaginationInfo');
+    const info = document.getElementById('dsoPaginationInfo');
     if (!tbody) return;
 
     const start = (dsoCurrentPage - 1) * dsoPerPage;
-    const end   = start + dsoPerPage;
-    const page  = dsoFiltered.slice(start, end);
+    const end = start + dsoPerPage;
+    const page = dsoFiltered.slice(start, end);
 
     if (dsoFiltered.length === 0) {
         tbody.innerHTML = `<tr class="dso-empty-row"><td colspan="7">No deleted SK Officials records found.</td></tr>`;
@@ -347,9 +347,9 @@ function renderDsoTable() {
 
 function renderDsoPagination(total) {
     const pages = Math.ceil(total / dsoPerPage);
-    const nums  = document.getElementById('dsoPageNumbers');
-    const prev  = document.getElementById('dsoPrevBtn');
-    const next  = document.getElementById('dsoNextBtn');
+    const nums = document.getElementById('dsoPageNumbers');
+    const prev = document.getElementById('dsoPrevBtn');
+    const next = document.getElementById('dsoNextBtn');
 
     if (nums) {
         nums.innerHTML = Array.from({ length: pages }, (_, i) => `
@@ -367,14 +367,14 @@ function renderDsoPagination(total) {
 function bindDsoSearch() {
     const input = document.getElementById('dsoSearch');
     const yearSelect = document.getElementById('dsoYearFilter');
-    
+
     if (input) {
         input.addEventListener('input', function () {
             dsoCurrentPage = 1;
             dsoApplyAllFilters();
         });
     }
-    
+
     if (yearSelect) {
         yearSelect.addEventListener('change', function () {
             dsoYearFilter = this.value;
@@ -496,8 +496,8 @@ function openDsoViewModal(id) {
 }
 
 function bindDsoViewModal() {
-    const modal    = document.getElementById('dsoViewModal');
-    const box      = document.getElementById('dsoViewModalBox');
+    const modal = document.getElementById('dsoViewModal');
+    const box = document.getElementById('dsoViewModalBox');
     const closeBtn = document.getElementById('dsoViewClose');
     const toggleBtn = document.getElementById('dsoViewToggle');
 
@@ -508,7 +508,7 @@ function bindDsoViewModal() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
-    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {
         toggleBtn.addEventListener('click', function (e) {
@@ -539,12 +539,12 @@ function closeDsoRestoreModal() {
 }
 
 function bindDsoRestoreModal() {
-    const cancelBtn  = document.getElementById('dsoRestoreCancelBtn');
+    const cancelBtn = document.getElementById('dsoRestoreCancelBtn');
     const confirmBtn = document.getElementById('dsoRestoreConfirmBtn');
-    const modal      = document.getElementById('dsoRestoreModal');
+    const modal = document.getElementById('dsoRestoreModal');
 
-    if (cancelBtn)  cancelBtn.addEventListener('click', closeDsoRestoreModal);
-    if (modal)      modal.addEventListener('click', e => { if (e.target === modal) closeDsoRestoreModal(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', closeDsoRestoreModal);
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeDsoRestoreModal(); });
 
     if (confirmBtn) {
         confirmBtn.addEventListener('click', function () {
@@ -577,23 +577,23 @@ function showDsoToast(message) {
     toast.setAttribute('aria-live', 'polite');
 
     Object.assign(toast.style, {
-        position:      'fixed',
-        top:           '72px',
-        left:          '50%',
-        transform:     'translateX(-50%) translateY(-18px)',
-        zIndex:        '99999',
-        padding:       '11px 28px',
-        borderRadius:  '8px',
-        fontSize:      '0.875rem',
-        fontWeight:    '600',
-        fontFamily:    'inherit',
-        color:         '#fff',
-        background:    '#16a34a',
-        boxShadow:     '0 4px 18px rgba(0,0,0,.18)',
-        opacity:       '0',
-        whiteSpace:    'nowrap',
+        position: 'fixed',
+        top: '72px',
+        left: '50%',
+        transform: 'translateX(-50%) translateY(-18px)',
+        zIndex: '99999',
+        padding: '11px 28px',
+        borderRadius: '8px',
+        fontSize: '0.875rem',
+        fontWeight: '600',
+        fontFamily: 'inherit',
+        color: '#fff',
+        background: '#16a34a',
+        boxShadow: '0 4px 18px rgba(0,0,0,.18)',
+        opacity: '0',
+        whiteSpace: 'nowrap',
         pointerEvents: 'none',
-        transition:    'opacity 0.22s ease, transform 0.22s ease',
+        transition: 'opacity 0.22s ease, transform 0.22s ease',
     });
 
     toast.textContent = message;
@@ -601,13 +601,13 @@ function showDsoToast(message) {
 
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            toast.style.opacity   = '1';
+            toast.style.opacity = '1';
             toast.style.transform = 'translateX(-50%) translateY(0)';
         });
     });
 
     toast._timer = setTimeout(() => {
-        toast.style.opacity   = '0';
+        toast.style.opacity = '0';
         toast.style.transform = 'translateX(-50%) translateY(-10px)';
         setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
     }, 3000);

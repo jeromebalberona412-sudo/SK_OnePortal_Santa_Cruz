@@ -25,6 +25,9 @@
                 <option value="2025">2025</option>
                 <option value="2026">2026</option>
             </select>
+            <select id="dsoFilterTerm" class="dso-term-filter">
+                <option value="">All Terms</option>
+            </select>
             <input type="text" id="dsoSearch" class="dso-search-input" placeholder="Search by name or barangay…">
         </div>
     </div>
@@ -34,22 +37,19 @@
 
     <!-- Filter Tabs + Dropdowns -->
     <div class="dso-filter-bar">
-        <div class="dso-filter-dropdowns">
-            <select id="dsoFilterBarangay" class="dso-filter-select">
-                <option value="">All Barangays</option>
-            </select>
-            <select id="dsoFilterPosition" class="dso-filter-select">
-                <option value="">All Positions</option>
-            </select>
-            <select id="dsoFilterTerm" class="dso-filter-select">
-                <option value="">All Terms</option>
-            </select>
-        </div>
         <div class="dso-filter-tabs">
             <button class="dso-tab active" data-filter="all">All Deleted</button>
             <button class="dso-tab" data-filter="today">Deleted Today</button>
             <button class="dso-tab" data-filter="week">This Week</button>
             <button class="dso-tab" data-filter="month">This Month</button>
+        </div>
+        <div class="dso-filter-dropdowns">
+            <select id="dsoFilterPosition" class="dso-filter-select">
+                <option value="">All Positions</option>
+            </select>
+            <select id="dsoFilterBarangay" class="dso-filter-select">
+                <option value="">All Barangays</option>
+            </select>
         </div>
     </div>
 

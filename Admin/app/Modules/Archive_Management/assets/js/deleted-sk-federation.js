@@ -65,7 +65,7 @@ function dsfIsThisMonth(ts) {
 
 function dsfApplyFilter(records, filter) {
     if (filter === 'today') return records.filter(r => dsfIsToday(r._deletedTs));
-    if (filter === 'week')  return records.filter(r => dsfIsThisWeek(r._deletedTs));
+    if (filter === 'week') return records.filter(r => dsfIsThisWeek(r._deletedTs));
     if (filter === 'month') return records.filter(r => dsfIsThisMonth(r._deletedTs));
     return records;
 }
@@ -163,16 +163,16 @@ function bindDsfDropdowns() {
 
 function dsfApplyAllFilters() {
     let result = dsfApplyFilter(dsfRecords, dsfActiveFilter);
-    
+
     // Year filter
     if (dsfYearFilter !== 'all') {
         result = result.filter(r => r._deletedTs.getFullYear() === parseInt(dsfYearFilter, 10));
     }
-    
+
     // Barangay and Term filters
     if (dsfActiveBarangay) result = result.filter(r => r.barangay === dsfActiveBarangay);
     if (dsfActiveTerm) result = result.filter(r => r.term === dsfActiveTerm);
-    
+
     // Search filter
     const q = (document.getElementById('dsfSearch')?.value || '').toLowerCase();
     if (q) result = result.filter(r =>
@@ -205,12 +205,12 @@ function bindDsfFilterTabs() {
 // ── Render Table ──────────────────────────────────────────────────────────────
 function renderDsfTable() {
     const tbody = document.getElementById('dsfTableBody');
-    const info  = document.getElementById('dsfPaginationInfo');
+    const info = document.getElementById('dsfPaginationInfo');
     if (!tbody) return;
 
     const start = (dsfCurrentPage - 1) * dsfPerPage;
-    const end   = start + dsfPerPage;
-    const page  = dsfFiltered.slice(start, end);
+    const end = start + dsfPerPage;
+    const page = dsfFiltered.slice(start, end);
 
     if (dsfFiltered.length === 0) {
         tbody.innerHTML = `<tr class="dsf-empty-row"><td colspan="7">No deleted SK Federation records found.</td></tr>`;
@@ -221,13 +221,16 @@ function renderDsfTable() {
 
     tbody.innerHTML = page.map(r => {
         const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const statusBadge = r.termStatus === 'ACTIVE'
+            ? '<span class="dsf-status-badge dsf-status-active">Active</span>'
+            : '<span class="dsf-status-badge dsf-status-inactive">Inactive</span>';
         return `
         <tr>
             <td class="dsf-name-cell">${fullName}</td>
             <td>${r.position || '—'}</td>
             <td>${r.barangay || '—'}</td>
             <td>${r.municipality || '—'}</td>
-            <td>${r.term || '—'}</td>
+            <td>${statusBadge}</td>
             <td><span class="dsf-deleted-badge">${r.deletedDate}</span></td>
             <td><span class="dsf-time-badge">${r.deletedTime}</span></td>
             <td>
@@ -253,9 +256,9 @@ function renderDsfTable() {
 
 function renderDsfPagination(total) {
     const pages = Math.ceil(total / dsfPerPage);
-    const nums  = document.getElementById('dsfPageNumbers');
-    const prev  = document.getElementById('dsfPrevBtn');
-    const next  = document.getElementById('dsfNextBtn');
+    const nums = document.getElementById('dsfPageNumbers');
+    const prev = document.getElementById('dsfPrevBtn');
+    const next = document.getElementById('dsfNextBtn');
 
     if (nums) {
         nums.innerHTML = Array.from({ length: pages }, (_, i) => `
@@ -273,14 +276,14 @@ function renderDsfPagination(total) {
 function bindDsfSearch() {
     const input = document.getElementById('dsfSearch');
     const yearSelect = document.getElementById('dsfYearFilter');
-    
+
     if (input) {
         input.addEventListener('input', function () {
             dsfCurrentPage = 1;
             dsfApplyAllFilters();
         });
     }
-    
+
     if (yearSelect) {
         yearSelect.addEventListener('change', function () {
             dsfYearFilter = this.value;
@@ -402,8 +405,8 @@ function openDsfViewModal(id) {
 }
 
 function bindDsfViewModal() {
-    const modal    = document.getElementById('dsfViewModal');
-    const box      = document.getElementById('dsfViewModalBox');
+    const modal = document.getElementById('dsfViewModal');
+    const box = document.getElementById('dsfViewModalBox');
     const closeBtn = document.getElementById('dsfViewClose');
     const toggleBtn = document.getElementById('dsfViewToggle');
 
@@ -414,7 +417,7 @@ function bindDsfViewModal() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
-    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {
         toggleBtn.addEventListener('click', function (e) {
@@ -445,12 +448,12 @@ function closeDsfRestoreModal() {
 }
 
 function bindDsfRestoreModal() {
-    const cancelBtn  = document.getElementById('dsfRestoreCancelBtn');
+    const cancelBtn = document.getElementById('dsfRestoreCancelBtn');
     const confirmBtn = document.getElementById('dsfRestoreConfirmBtn');
-    const modal      = document.getElementById('dsfRestoreModal');
+    const modal = document.getElementById('dsfRestoreModal');
 
-    if (cancelBtn)  cancelBtn.addEventListener('click', closeDsfRestoreModal);
-    if (modal)      modal.addEventListener('click', e => { if (e.target === modal) closeDsfRestoreModal(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', closeDsfRestoreModal);
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeDsfRestoreModal(); });
 
     if (confirmBtn) {
         confirmBtn.addEventListener('click', function () {
@@ -483,23 +486,23 @@ function showDsfToast(message) {
     toast.setAttribute('aria-live', 'polite');
 
     Object.assign(toast.style, {
-        position:      'fixed',
-        top:           '72px',
-        left:          '50%',
-        transform:     'translateX(-50%) translateY(-18px)',
-        zIndex:        '99999',
-        padding:       '11px 28px',
-        borderRadius:  '8px',
-        fontSize:      '0.875rem',
-        fontWeight:    '600',
-        fontFamily:    'inherit',
-        color:         '#fff',
-        background:    '#16a34a',
-        boxShadow:     '0 4px 18px rgba(0,0,0,.18)',
-        opacity:       '0',
-        whiteSpace:    'nowrap',
+        position: 'fixed',
+        top: '72px',
+        left: '50%',
+        transform: 'translateX(-50%) translateY(-18px)',
+        zIndex: '99999',
+        padding: '11px 28px',
+        borderRadius: '8px',
+        fontSize: '0.875rem',
+        fontWeight: '600',
+        fontFamily: 'inherit',
+        color: '#fff',
+        background: '#16a34a',
+        boxShadow: '0 4px 18px rgba(0,0,0,.18)',
+        opacity: '0',
+        whiteSpace: 'nowrap',
         pointerEvents: 'none',
-        transition:    'opacity 0.22s ease, transform 0.22s ease',
+        transition: 'opacity 0.22s ease, transform 0.22s ease',
     });
 
     toast.textContent = message;
@@ -507,13 +510,13 @@ function showDsfToast(message) {
 
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            toast.style.opacity   = '1';
+            toast.style.opacity = '1';
             toast.style.transform = 'translateX(-50%) translateY(0)';
         });
     });
 
     toast._timer = setTimeout(() => {
-        toast.style.opacity   = '0';
+        toast.style.opacity = '0';
         toast.style.transform = 'translateX(-50%) translateY(-10px)';
         setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
     }, 3000);
