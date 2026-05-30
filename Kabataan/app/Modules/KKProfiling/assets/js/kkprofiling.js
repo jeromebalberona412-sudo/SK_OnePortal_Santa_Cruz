@@ -16,7 +16,7 @@
 
     // ── Navigation Drawer ──
     const navHamburger = document.getElementById('navHamburger');
-    const navDrawer    = document.getElementById('navDrawer');
+    const navDrawer = document.getElementById('navDrawer');
     if (navHamburger && navDrawer) {
         navHamburger.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -31,15 +31,15 @@
     }
 
     // ── Login buttons ──
-    const navLoginBtn       = document.getElementById('navLoginBtn');
+    const navLoginBtn = document.getElementById('navLoginBtn');
     const navDrawerLoginBtn = document.getElementById('navDrawerLoginBtn');
-    if (navLoginBtn)       navLoginBtn.addEventListener('click', () => window.location.href = '/youth/login');
+    if (navLoginBtn) navLoginBtn.addEventListener('click', () => window.location.href = '/youth/login');
     if (navDrawerLoginBtn) navDrawerLoginBtn.addEventListener('click', () => window.location.href = '/youth/login');
 
     // ── Age auto-fill + birthday range (15-30, no future dates) ──
-    const form          = document.getElementById('kkProfilingForm') || document.getElementById('kkProfilingUpdateForm');
+    const form = document.getElementById('kkProfilingForm') || document.getElementById('kkProfilingUpdateForm');
     const birthdayInput = form && form.querySelector('input[name="birthday"]');
-    const ageInput      = form && form.querySelector('input[name="age"]');
+    const ageInput = form && form.querySelector('input[name="age"]');
     if (birthdayInput && ageInput) {
         const today = new Date();
         const pad = (n) => String(n).padStart(2, '0');
@@ -51,7 +51,7 @@
         birthdayInput.min = toDateInput(minBirthday);
 
         birthdayInput.addEventListener('change', function () {
-            const bday  = new Date(this.value);
+            const bday = new Date(this.value);
             let age = today.getFullYear() - bday.getFullYear();
             const m = today.getMonth() - bday.getMonth();
             if (m < 0 || (m === 0 && today.getDate() < bday.getDate())) age--;
@@ -60,6 +60,24 @@
             } else {
                 this.value = '';
                 ageInput.value = '';
+            }
+        });
+
+        // Restrict age input to only allow 15-30
+        ageInput.addEventListener('input', function () {
+            let value = this.value.replace(/\D/g, '');
+            if (value) {
+                const num = parseInt(value, 10);
+                if (num < 15) value = '15';
+                if (num > 30) value = '30';
+            }
+            this.value = value;
+        });
+
+        ageInput.addEventListener('blur', function () {
+            let value = parseInt(this.value, 10);
+            if (value < 15 || value > 30 || isNaN(value)) {
+                this.value = '';
             }
         });
     }
@@ -83,9 +101,9 @@
     // ── Auto-fill signature name from name fields ──
     // When any name field changes, update the signature name input automatically
     function updateSignatureName() {
-        const last   = (document.getElementById('kkpLastName')   || {}).value   || '';
-        const first  = (document.getElementById('kkpFirstName')  || {}).value   || '';
-        const middle = (document.getElementById('kkpMiddleName') || {}).value   || '';
+        const last = (document.getElementById('kkpLastName') || {}).value || '';
+        const first = (document.getElementById('kkpFirstName') || {}).value || '';
+        const middle = (document.getElementById('kkpMiddleName') || {}).value || '';
         const suffixSelect = document.getElementById('kkpSuffix');
         const customSuffix = document.getElementById('kkpCustomSuffix');
         const rawSuffix = (suffixSelect || {}).value || '';
@@ -93,8 +111,8 @@
             ? ((customSuffix || {}).value || '')
             : (rawSuffix === 'None' ? '' : rawSuffix);
         const sigNameInput = document.getElementById('kkpSignatureName');
-        const triggerBtn   = document.getElementById('kkpSignatureTrigger');
-        const sigInput     = document.getElementById('kkpSignatureData');
+        const triggerBtn = document.getElementById('kkpSignatureTrigger');
+        const sigInput = document.getElementById('kkpSignatureData');
 
         if (!sigNameInput) return;
 
@@ -176,16 +194,16 @@
     // ── KK Assembly conditional show/hide ──
     window.kkpHandleAssembly = function (checkbox) {
         const yesCell = document.getElementById('kkpAssemblyYesCell');
-        const noCell  = document.getElementById('kkpAssemblyNoCell');
+        const noCell = document.getElementById('kkpAssemblyNoCell');
         if (!yesCell || !noCell) return;
 
         if (!checkbox.checked) return;
 
         if (checkbox.value === 'Yes') {
             yesCell.style.display = '';
-            noCell.style.display  = '';
+            noCell.style.display = '';
         } else {
-            noCell.style.display  = '';
+            noCell.style.display = '';
             yesCell.style.display = '';
         }
     };
@@ -195,7 +213,7 @@
     if (successAlert) {
         setTimeout(function () {
             successAlert.style.transition = 'opacity 0.5s, transform 0.5s';
-            successAlert.style.opacity   = '0';
+            successAlert.style.opacity = '0';
             successAlert.style.transform = 'translateY(-10px)';
             setTimeout(() => successAlert.remove(), 500);
         }, 5000);
@@ -207,7 +225,7 @@
 /* ═══════════════════════════════════════════════════════════════
    FORM SUBMISSION HANDLER - Validate then Show Email Verification
 ═══════════════════════════════════════════════════════════════ */
-window.handleFormSubmit = function(event) {
+window.handleFormSubmit = function (event) {
     // ── Clear previous errors ──
     document.querySelectorAll('.kkp-field-error').forEach(el => el.remove());
     document.querySelectorAll('.kkp-input-err').forEach(el => el.classList.remove('kkp-input-err'));
@@ -436,18 +454,6 @@ window.handleFormSubmit = function(event) {
         }
     }
 
-    // 15b. Vote frequency required
-    if (!hiddenVal('kkpVoteFreq')) {
-        errors.push('Vote frequency is required.');
-        const el = document.getElementById('kkpVoteFreq');
-        if (el) {
-            const err = document.createElement('span');
-            err.className = 'kkp-field-error';
-            err.textContent = 'Please select vote frequency.';
-            el.parentNode.insertBefore(err, el.nextSibling);
-        }
-    }
-
     // ── 16. Registered National Voter ──
     if (!hiddenVal('kkpNationalVoter')) {
         errors.push('Registered National Voter is required.');
@@ -530,48 +536,131 @@ window.handleFormSubmit = function(event) {
         return false;
     }
 
-    // ── All valid — show submit loading then submit ──
+    // ── All valid — show submit loading then submit via AJAX ──
     const submitBtn = document.getElementById('kkpSubmitBtn');
     const submitText = document.getElementById('kkpSubmitText');
+    const form = document.getElementById('kkProfilingForm');
+
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.classList.add('is-submitting');
     }
-    if (submitText) submitText.textContent = 'Submitting KK Profiling...';
+    if (submitText) submitText.textContent = 'Submitting...';
 
-    return true; // Allow form submission
+    // Show page-level loading overlay
+    if (window.showLoading) {
+        window.showLoading('Submitting...');
+    }
+
+    // Prevent default form submission and use AJAX
+    event.preventDefault();
+
+    const formData = new FormData(form);
+    const submitUrl = form.action;
+
+    fetch(submitUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        },
+    })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading overlay
+            if (window.hideLoading) {
+                window.hideLoading();
+            }
+
+            // On success, redirect to email verification
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                // Fallback: show email verification card on the same page
+                const email = document.querySelector('input[name="email"]').value;
+                showEmailVerification(email);
+            }
+        })
+        .catch(error => {
+            console.error('Submission error:', error);
+
+            // Hide loading overlay
+            if (window.hideLoading) {
+                window.hideLoading();
+            }
+
+            // Reset button state on error
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('is-submitting');
+            }
+            if (submitText) submitText.textContent = 'Submit KK Profiling';
+
+            // Show error message
+            alert('An error occurred while submitting the form. Please try again.');
+        });
+
+    return false; // Prevent default form submission
 };
+
+// ── Show email verification card ──
+function showEmailVerification(email) {
+    const formCard = document.getElementById('kkpFormCard');
+    const emailVerifyCard = document.getElementById('emailVerifyCard');
+    const displayEmail = document.getElementById('displayEmail');
+
+    if (formCard) formCard.style.display = 'none';
+    if (emailVerifyCard) emailVerifyCard.style.display = 'block';
+    if (displayEmail) displayEmail.textContent = email;
+
+    // Start the resend timer
+    if (window.startResendTimer) {
+        window.startResendTimer();
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 /* ═══════════════════════════════════════════════════════════════
    EMAIL VERIFICATION HANDLERS
 ═══════════════════════════════════════════════════════════════ */
-(function() {
+(function () {
     // Back to form button
-    const backToFormBtn  = document.getElementById('backToFormBtn');
+    const backToFormBtn = document.getElementById('backToFormBtn');
     const backToFormBtn2 = document.getElementById('backToFormBtn2');
 
     function showForm() {
-        const formCard        = document.getElementById('kkpFormCard');
+        const formCard = document.getElementById('kkpFormCard');
         const emailVerifyCard = document.getElementById('emailVerifyCard');
         const setPasswordCard = document.getElementById('setPasswordCard');
-        const regSuccessCard  = document.getElementById('regSuccessCard');
+        const regSuccessCard = document.getElementById('regSuccessCard');
 
-        if (formCard)        formCard.style.display        = 'block';
+        if (formCard) formCard.style.display = 'block';
         if (emailVerifyCard) emailVerifyCard.style.display = 'none';
         if (setPasswordCard) setPasswordCard.style.display = 'none';
-        if (regSuccessCard)  regSuccessCard.style.display  = 'none';
+        if (regSuccessCard) regSuccessCard.style.display = 'none';
+
+        // Reset submit button state
+        const submitBtn = document.getElementById('kkpSubmitBtn');
+        const submitText = document.getElementById('kkpSubmitText');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('is-submitting');
+        }
+        if (submitText) submitText.textContent = 'Submit KK Profiling';
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    if (backToFormBtn)  backToFormBtn.addEventListener('click', showForm);
+    if (backToFormBtn) backToFormBtn.addEventListener('click', showForm);
     if (backToFormBtn2) backToFormBtn2.addEventListener('click', showForm);
 
     // ── Resend email with 1-minute countdown ──
     let resendInterval = null;
 
     window.startResendTimer = function () {
-        const btn   = document.getElementById('resendEmailBtn');
+        const btn = document.getElementById('resendEmailBtn');
         const timer = document.getElementById('resendTimer');
         if (!btn || !timer) return;
 
@@ -611,27 +700,27 @@ window.handleFormSubmit = function(event) {
 /* ═══════════════════════════════════════════════════════════════
    SET PASSWORD HANDLERS
 ═══════════════════════════════════════════════════════════════ */
-(function() {
+(function () {
     // Password toggle
     function setupPasswordToggle(toggleBtnId, inputId) {
         const toggleBtn = document.getElementById(toggleBtnId);
-        const input     = document.getElementById(inputId);
+        const input = document.getElementById(inputId);
         if (!toggleBtn || !input) return;
 
-        const eyeIcon    = toggleBtn.querySelector('.eye-icon');
+        const eyeIcon = toggleBtn.querySelector('.eye-icon');
         const eyeOffIcon = toggleBtn.querySelector('.eye-off-icon');
 
         toggleBtn.addEventListener('click', function () {
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
             if (eyeIcon && eyeOffIcon) {
-                eyeIcon.style.display    = isPassword ? 'none'  : 'block';
+                eyeIcon.style.display = isPassword ? 'none' : 'block';
                 eyeOffIcon.style.display = isPassword ? 'block' : 'none';
             }
         });
     }
 
-    setupPasswordToggle('togglePassword',        'password');
+    setupPasswordToggle('togglePassword', 'password');
     setupPasswordToggle('togglePasswordConfirm', 'password_confirmation');
 
     // Form submission with loading animation
@@ -640,7 +729,7 @@ window.handleFormSubmit = function(event) {
         setPasswordForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const password        = document.getElementById('password');
+            const password = document.getElementById('password');
             const passwordConfirm = document.getElementById('password_confirmation');
             if (!password || !passwordConfirm) return;
 
@@ -656,30 +745,30 @@ window.handleFormSubmit = function(event) {
             }
 
             // Show loading state
-            const submitBtn  = document.getElementById('setpwSubmitBtn');
-            const btnIcon    = submitBtn && submitBtn.querySelector('.setpw-btn-icon');
+            const submitBtn = document.getElementById('setpwSubmitBtn');
+            const btnIcon = submitBtn && submitBtn.querySelector('.setpw-btn-icon');
             const btnSpinner = submitBtn && submitBtn.querySelector('.setpw-btn-spinner');
-            const btnText    = submitBtn && submitBtn.querySelector('.setpw-btn-text');
+            const btnText = submitBtn && submitBtn.querySelector('.setpw-btn-text');
 
-            if (submitBtn)  submitBtn.disabled = true;
-            if (btnIcon)    btnIcon.style.display    = 'none';
+            if (submitBtn) submitBtn.disabled = true;
+            if (btnIcon) btnIcon.style.display = 'none';
             if (btnSpinner) btnSpinner.style.display = 'block';
-            if (btnText)    btnText.textContent      = 'Signing up...';
+            if (btnText) btnText.textContent = 'Signing up...';
 
             // Simulate async registration (replace with real AJAX in production)
             setTimeout(function () {
                 // Hide set password card, show success card
                 const setPasswordCard = document.getElementById('setPasswordCard');
-                const regSuccessCard  = document.getElementById('regSuccessCard');
+                const regSuccessCard = document.getElementById('regSuccessCard');
 
                 if (setPasswordCard) setPasswordCard.style.display = 'none';
-                if (regSuccessCard)  regSuccessCard.style.display  = 'block';
+                if (regSuccessCard) regSuccessCard.style.display = 'block';
 
                 // Reset button state
-                if (submitBtn)  submitBtn.disabled = false;
-                if (btnIcon)    btnIcon.style.display    = 'block';
+                if (submitBtn) submitBtn.disabled = false;
+                if (btnIcon) btnIcon.style.display = 'block';
                 if (btnSpinner) btnSpinner.style.display = 'none';
-                if (btnText)    btnText.textContent      = 'Complete Registration';
+                if (btnText) btnText.textContent = 'Complete Registration';
 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 2000);
@@ -706,22 +795,22 @@ window.handleFormSubmit = function(event) {
    Signature image overlaid on top of printed name
 ═══════════════════════════════════════════════════════════════ */
 (function initKKPSignaturePad() {
-    const overlay     = document.getElementById('kkpSignaturePadOverlay');
-    const triggerBtn  = document.getElementById('kkpSignatureTrigger');
-    const closeBtn    = document.getElementById('kkpSignaturePadClose');
-    const clearBtn    = document.getElementById('kkpSignaturePadClear');
-    const saveBtn     = document.getElementById('kkpSignaturePadSave');
-    const canvas      = document.getElementById('kkpSignaturePadCanvas');
+    const overlay = document.getElementById('kkpSignaturePadOverlay');
+    const triggerBtn = document.getElementById('kkpSignatureTrigger');
+    const closeBtn = document.getElementById('kkpSignaturePadClose');
+    const clearBtn = document.getElementById('kkpSignaturePadClear');
+    const saveBtn = document.getElementById('kkpSignaturePadSave');
+    const canvas = document.getElementById('kkpSignaturePadCanvas');
     const placeholder = document.getElementById('kkpSignatureCanvasPlaceholder');
-    const sigInput    = document.getElementById('kkpSignatureData');
-    const sigPreview  = document.getElementById('kkpSignaturePreview');
-    const sigOverlay  = document.getElementById('kkpSignatureOverlay');
+    const sigInput = document.getElementById('kkpSignatureData');
+    const sigPreview = document.getElementById('kkpSignaturePreview');
+    const sigOverlay = document.getElementById('kkpSignatureOverlay');
     const clearSavedBtn = document.getElementById('kkpSignatureClearSaved');
 
     if (!canvas || !overlay) return;
 
     const ctx = canvas.getContext('2d');
-    let isDrawing    = false;
+    let isDrawing = false;
     let hasSignature = false;
 
     // Show Sign button only after name is auto-filled and no signature yet
@@ -730,22 +819,22 @@ window.handleFormSubmit = function(event) {
 
     function setupCanvas(preserveDrawing) {
         const rect = canvas.getBoundingClientRect();
-        const cssW = rect.width  || 500;
+        const cssW = rect.width || 500;
         const cssH = rect.height || 260;
-        const dpr  = window.devicePixelRatio || 1;
+        const dpr = window.devicePixelRatio || 1;
 
         const snapshot = preserveDrawing ? canvas.toDataURL('image/png') : null;
 
-        canvas.width  = Math.floor(cssW * dpr);
+        canvas.width = Math.floor(cssW * dpr);
         canvas.height = Math.floor(cssH * dpr);
-        canvas.style.width  = cssW + 'px';
+        canvas.style.width = cssW + 'px';
         canvas.style.height = cssH + 'px';
 
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.strokeStyle = '#000';
-        ctx.lineWidth   = 2;
-        ctx.lineCap     = 'round';
-        ctx.lineJoin    = 'round';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
         if (snapshot && snapshot !== 'data:,') {
             const img = new Image();
@@ -790,13 +879,13 @@ window.handleFormSubmit = function(event) {
 
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
-        const cx   = e.touches ? e.touches[0].clientX : e.clientX;
-        const cy   = e.touches ? e.touches[0].clientY : e.clientY;
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
         return { x: cx - rect.left, y: cy - rect.top };
     }
 
     function startDraw(e) {
-        isDrawing    = true;
+        isDrawing = true;
         const p = getPos(e);
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
@@ -882,9 +971,128 @@ window.handleFormSubmit = function(event) {
             openPad();
         });
     }
-    if (closeBtn)   closeBtn.addEventListener('click', closePad);
-    if (clearBtn)   clearBtn.addEventListener('click', clearCanvas);
-    if (saveBtn)    saveBtn.addEventListener('click', saveSig);
+
+    // Validation function for required fields before signature
+    function validateRequiredFields() {
+        const errors = [];
+
+        // Check required name fields
+        const lastName = document.querySelector('input[name="last_name"]');
+        const firstName = document.querySelector('input[name="first_name"]');
+        const suffix = document.getElementById('kkpSuffix');
+        const customSuffix = document.getElementById('kkpCustomSuffix');
+
+        if (!lastName || !lastName.value.trim()) {
+            errors.push('- Last Name is required');
+        }
+        if (!firstName || !firstName.value.trim()) {
+            errors.push('- First Name is required');
+        }
+        if (!suffix || !suffix.value) {
+            errors.push('- Suffix is required');
+        } else if (suffix.value === 'Others') {
+            const raw = (customSuffix && customSuffix.value ? customSuffix.value : '').trim();
+            if (!raw) {
+                errors.push('- Custom suffix is required');
+            }
+        }
+
+        // Check other required fields
+        const purok = document.querySelector('input[name="purok_zone"]');
+        if (!purok || !purok.value.trim()) {
+            errors.push('- Purok/Zone is required');
+        }
+
+        const sex = document.getElementById('kkpSex');
+        if (!sex || !sex.value.trim()) {
+            errors.push('- Sex Assigned by Birth is required');
+        }
+
+        const age = document.querySelector('input[name="age"]');
+        if (!age || !age.value.trim()) {
+            errors.push('- Age is required');
+        }
+
+        const birthday = document.querySelector('input[name="birthday"]');
+        if (!birthday || !birthday.value.trim()) {
+            errors.push('- Birthday is required');
+        }
+
+        const email = document.querySelector('input[name="email"]');
+        if (!email || !email.value.trim()) {
+            errors.push('- Email is required');
+        }
+
+        const contact = document.querySelector('input[name="contact_number"]');
+        if (!contact || !contact.value.trim()) {
+            errors.push('- Contact # is required');
+        }
+
+        const civilStatus = document.getElementById('kkpCivilStatus');
+        if (!civilStatus || !civilStatus.value.trim()) {
+            errors.push('- Civil Status is required');
+        }
+
+        const youthAgeGroup = document.getElementById('kkpYouthAgeGroup');
+        if (!youthAgeGroup || !youthAgeGroup.value.trim()) {
+            errors.push('- Youth Age Group is required');
+        }
+
+        const education = document.getElementById('kkpEducation');
+        if (!education || !education.value.trim()) {
+            errors.push('- Educational Background is required');
+        }
+
+        const youthClass = document.getElementById('kkpYouthClass');
+        if (!youthClass || !youthClass.value.trim()) {
+            errors.push('- Youth Classification is required');
+        }
+
+        const workStatus = document.getElementById('kkpWorkStatus');
+        if (!workStatus || !workStatus.value.trim()) {
+            errors.push('- Work Status is required');
+        }
+
+        const skVoter = document.getElementById('kkpSkVoter');
+        if (!skVoter || !skVoter.value.trim()) {
+            errors.push('- Registered SK Voter is required');
+        }
+
+        const skVoted = document.getElementById('kkpSkVoted');
+        if (!skVoted || !skVoted.value.trim()) {
+            errors.push('- Did you vote last SK is required');
+        }
+
+        const nationalVoter = document.getElementById('kkpNationalVoter');
+        if (!nationalVoter || !nationalVoter.value.trim()) {
+            errors.push('- Registered National Voter is required');
+        }
+
+        const kkAssembly = document.getElementById('kkpKkAssembly');
+        if (!kkAssembly || !kkAssembly.value.trim()) {
+            errors.push('- KK Assembly attendance is required');
+        }
+
+        const kkTimes = document.getElementById('kkpKkTimes');
+        if (!kkTimes || !kkTimes.value.trim()) {
+            errors.push('- KK Assembly attendance count is required');
+        }
+
+        const facebook = document.querySelector('input[name="facebook"]');
+        if (!facebook || !facebook.value.trim()) {
+            errors.push('- FB Account is required');
+        }
+
+        const groupChat = document.getElementById('kkpGroupChat');
+        if (!groupChat || !groupChat.value.trim()) {
+            errors.push('- Willing to join group chat is required');
+        }
+
+        return errors;
+    }
+    if (closeBtn) closeBtn.addEventListener('click', closePad);
+    if (clearBtn) clearBtn.addEventListener('click', clearCanvas);
+    if (saveBtn) saveBtn.addEventListener('click', saveSig);
     if (clearSavedBtn) clearSavedBtn.addEventListener('click', clearSavedSignature);
 
     // Initial state (in case of server-side repopulation)
@@ -899,9 +1107,9 @@ window.handleFormSubmit = function(event) {
     }
 
     // Confirmation modal buttons
-    const confirmOverlay  = document.getElementById('kkpSigConfirmOverlay');
+    const confirmOverlay = document.getElementById('kkpSigConfirmOverlay');
     const confirmCancelBtn = document.getElementById('kkpSigConfirmCancel');
-    const confirmSaveBtn   = document.getElementById('kkpSigConfirmSave');
+    const confirmSaveBtn = document.getElementById('kkpSigConfirmSave');
 
     if (confirmCancelBtn) {
         confirmCancelBtn.addEventListener('click', function () {
@@ -926,15 +1134,15 @@ window.handleFormSubmit = function(event) {
     }
 
     // Mouse events
-    canvas.addEventListener('mousedown',  startDraw);
-    canvas.addEventListener('mousemove',  draw);
-    canvas.addEventListener('mouseup',    stopDraw);
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
     canvas.addEventListener('mouseleave', stopDraw);
 
     // Touch events
     canvas.addEventListener('touchstart', function (e) { e.preventDefault(); startDraw(e); }, { passive: false });
-    canvas.addEventListener('touchmove',  function (e) { e.preventDefault(); draw(e); },      { passive: false });
-    canvas.addEventListener('touchend',   function (e) { e.preventDefault(); stopDraw(); },   { passive: false });
+    canvas.addEventListener('touchmove', function (e) { e.preventDefault(); draw(e); }, { passive: false });
+    canvas.addEventListener('touchend', function (e) { e.preventDefault(); stopDraw(); }, { passive: false });
 
     // Resize
     window.addEventListener('resize', function () {

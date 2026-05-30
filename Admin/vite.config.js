@@ -54,10 +54,6 @@ export default defineConfig({
                 'app/Modules/Manage_Kabataan/assets/css/manage_kabataan.css',
                 'app/Modules/Manage_Kabataan/assets/js/manage_kabataan.js',
 
-                // Manage Location Module
-                'app/Modules/Manage_Location/assets/css/manage_location.css',
-                'app/Modules/Manage_Location/assets/js/manage_location.js',
-
                 // ── Archive Management Module (unified) ──────────────────────
                 // Deleted SK Federation & Officials (Consolidated)
                 'app/Modules/Archive_Management/assets/css/deleted-sk-federation.css',
@@ -70,22 +66,6 @@ export default defineConfig({
                 'app/Modules/Archive_Management/assets/js/SK_federation.js',
                 'app/Modules/Archive_Management/assets/css/SK_officials.css',
                 'app/Modules/Archive_Management/assets/js/SK_officials.js',
-
-                // SK Officials Archive — Deleted Kabataan
-                'app/Modules/Archive_Management/assets/css/deleted-kabataan.css',
-                'app/Modules/Archive_Management/assets/js/deleted-kabataan.js',
-
-                // Deleted Barangay (Archive)
-                'app/Modules/Archive_Management/assets/css/deleted-barangay.css',
-                'app/Modules/Archive_Management/assets/js/deleted-barangay.js',
-
-                // SK Officials Archive — Rejected KK Profiling
-                'app/Modules/Archive_Management/assets/css/rejected-kk-profiling.css',
-                'app/Modules/Archive_Management/assets/js/rejected-kk-profiling.js',
-
-                // SK Officials Archive — Rejected Scholarships
-                'app/Modules/Archive_Management/assets/css/rejected-scholarships.css',
-                'app/Modules/Archive_Management/assets/js/rejected-scholarships.js',
             ],
             refresh: true,
         }),

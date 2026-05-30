@@ -18,16 +18,10 @@
 		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials', 'route' => null],
 		['label' => 'Current Active Accounts', 'metricKey' => 'currentActiveAccounts', 'tone' => 'indigo', 'icon' => 'activity', 'route' => null],
 		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => null],
-		['label' => 'Total Barangay', 'metricKey' => 'totalBarangay', 'tone' => 'emerald', 'icon' => 'location', 'route' => 'manage-location.index'],
 		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-federation'],
 		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-officials'],
-		['label' => 'Archived Data', 'metricKey' => 'archivedData', 'tone' => 'red', 'icon' => 'archive', 'route' => 'archive.dashboard'],
 		['label' => 'SK Federation Records', 'metricKey' => 'skFederationRecords', 'tone' => 'red', 'icon' => 'federation', 'route' => 'archived.sk-federation-records'],
 		['label' => 'SK Officials Records', 'metricKey' => 'skOfficialsRecords', 'tone' => 'red', 'icon' => 'officials', 'route' => 'archived.sk-officials-records'],
-		['label' => 'SK Officials Archive', 'metricKey' => 'skOfficialsArchive', 'tone' => 'red', 'icon' => 'archive', 'route' => 'archive.dashboard'],
-		['label' => 'Deleted Kabataan', 'metricKey' => 'deletedKabataan', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archive.deleted-kabataan'],
-		['label' => 'Rejected KK Profiling', 'metricKey' => 'rejectedKkProfiling', 'tone' => 'red', 'icon' => 'reject', 'route' => 'archive.rejected-kk-profiling'],
-		['label' => 'Rejected Scholarships', 'metricKey' => 'rejectedScholarships', 'tone' => 'red', 'icon' => 'reject', 'route' => 'archive.rejected-scholarships'],
 	];
 @endphp
 
@@ -109,13 +103,6 @@
 				</svg>
 				Kabataan SK
 			</a>
-			<a href="{{ route('manage-location.index') }}" class="qa-btn qa-green">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-					<circle cx="12" cy="10" r="3"></circle>
-				</svg>
-				Manage Location
-			</a>
 			<a href="{{ route('barangay-logos.index') }}" class="qa-btn qa-purple">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 					<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -156,36 +143,6 @@
 					<path d="M9 6V4h6v2"></path>
 				</svg>
 				Deleted SK Officials
-			</a>
-			<a href="{{ route('archive.dashboard') }}" class="qa-btn qa-red">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<polyline points="21 8 21 21 3 21 3 8"></polyline>
-					<rect x="1" y="3" width="22" height="5"></rect>
-				</svg>
-				Deleted Barangay
-			</a>
-			<a href="{{ route('archive.deleted-kabataan') }}" class="qa-btn qa-red">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<polyline points="3 6 5 6 21 6"></polyline>
-					<path d="M19 6l-1 14H6L5 6"></path>
-					<path d="M10 11v6"></path><path d="M14 11v6"></path>
-				</svg>
-				Deleted Kabataan
-			</a>
-			<a href="{{ route('archive.rejected-kk-profiling') }}" class="qa-btn qa-red">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<circle cx="12" cy="12" r="10"></circle>
-					<line x1="15" y1="9" x2="9" y2="15"></line>
-					<line x1="9" y1="9" x2="15" y2="15"></line>
-				</svg>
-				Rejected KK Profiling
-			</a>
-			<a href="{{ route('archive.rejected-scholarships') }}" class="qa-btn qa-red">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-					<path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-				</svg>
-				Rejected Scholarships
 			</a>
 		</div>
 	</div>
