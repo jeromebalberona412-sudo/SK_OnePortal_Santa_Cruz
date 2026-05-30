@@ -306,16 +306,34 @@
             align-items: center;
             justify-content: center;
             z-index: 3000;
+            padding: 1rem;
         }
         .success-pop-card {
             background: #fff;
             border-radius: 16px;
-            padding: 26px 30px;
+            padding: 2.5rem 2rem;
             text-align: center;
             animation: popIn .25s ease-out;
             max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .success-pop-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0450a8;
+            margin-bottom: 0.5rem;
         }
         @keyframes popIn { from {transform: scale(.95); opacity:.5} to {transform:scale(1); opacity:1} }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes dash {
+            0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+            50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+            100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+        }
 
         .youth-submit-btn:hover {
             box-shadow: 0 12px 32px rgba(68, 165, 62, 0.35);
@@ -370,6 +388,14 @@
             .youth-login-card { padding: 2.5rem 2rem; border-radius: 24px; }
             .card-header { margin-bottom: 2rem; }
             .card-title { font-size: 2rem; }
+
+            .success-pop-card {
+                padding: 2rem 1.5rem;
+                max-width: 100%;
+            }
+            .success-pop-card h3 {
+                font-size: 1.25rem;
+            }
         }
     </style>
 </head>
@@ -474,8 +500,16 @@
     </main>
     <div class="success-pop" id="successPop">
         <div class="success-pop-card">
+            <div style="font-size: 48px; margin-bottom: 1rem;">✅</div>
             <h3>Password Set Successfully</h3>
-            <p>Your account has been submitted. Please wait for SK officials verification before login.</p>
+            <p style="color: #64748b; line-height: 1.6; margin-top: 1rem;">
+                Your KK Profiling registration has been completed successfully.<br><br>
+                Your account is now pending review and verification by SK Officials.<br><br>
+                You will receive updates regarding your application status through your registered email address.
+            </p>
+            <button type="button" onclick="window.location.href='/login'" style="margin-top: 1.5rem; padding: 0.75rem 2rem; background: linear-gradient(135deg, #44a53e 0%, #5cb854 100%); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem;">
+                Proceed to Login
+            </button>
         </div>
     </div>
 
@@ -534,6 +568,7 @@
 
             // Only validate on submit
             form.addEventListener('submit', function(e) {
+                e.preventDefault();
                 let isValid = true;
 
                 // Clear all errors
@@ -562,18 +597,120 @@
                 }
 
                 if (!isValid) {
-                    e.preventDefault();
                     return;
                 }
 
-                // Show loading on successful validation + success animation
-                if (successPop) successPop.style.display = 'flex';
+                // Frontend validation passed - show loading state and submit via AJAX
                 submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <svg class="spinner" viewBox="0 0 50 50" style="width: 20px; height: 20px; animation: spin 1s linear infinite;">
+                        <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" style="stroke-dasharray: 80; stroke-dashoffset: 0; animation: dash 1.5s ease-in-out infinite;"></circle>
+                    </svg>
+                    <span>Setting Password...</span>
+                `;
+                submitBtn.style.opacity = '0.7';
+
+                // Show page-level loading overlay
                 if (window.showLoading) {
-                    window.showLoading('Submitting for SK verification...');
+                    window.showLoading('Setting Password...');
                 }
-                setTimeout(() => form.submit(), 900);
-                e.preventDefault();
+
+                // Prepare form data
+                const formData = new FormData(form);
+
+                // Submit via fetch API
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    console.log('Response received:', response.status, response.statusText);
+
+                    // Check if response is a redirect (302)
+                    if (response.redirected) {
+                        console.log('Redirect detected to:', response.url);
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    // Try to parse as JSON
+                    return response.json().then(data => {
+                        console.log('Response data:', data);
+                        return { response, data };
+                    }).catch(() => {
+                        // If not JSON, check for HTML response (redirect)
+                        return response.text().then(text => {
+                            console.log('Response text (first 200 chars):', text.substring(0, 200));
+                            // If it's HTML, the backend likely redirected - follow it
+                            if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                                // The response is a full HTML page, likely a redirect
+                                // Force a page reload to the current URL to follow the redirect
+                                window.location.reload();
+                            }
+                            return { response, data: null };
+                        });
+                    });
+                })
+                .then(({ response, data }) => {
+                    // Hide loading overlay
+                    if (window.hideLoading) {
+                        window.hideLoading();
+                    }
+
+                    // Handle successful response
+                    if (response.ok) {
+                        console.log('Password set successfully');
+                        // Show success modal
+                        if (successPop) {
+                            successPop.style.display = 'flex';
+                        }
+                    } else {
+                        // Handle error response
+                        console.error('Password set failed with status:', response.status);
+                        let errorMessage = 'Unable to set password. Please try again.';
+
+                        if (data && data.errors) {
+                            // Display validation errors
+                            console.error('Validation errors:', data.errors);
+                            errorMessage = Object.values(data.errors).flat().join('\n');
+                        } else if (data && data.message) {
+                            errorMessage = data.message;
+                        } else if (response.status === 422) {
+                            errorMessage = 'Please correct the highlighted errors and try again.';
+                        } else if (response.status === 500) {
+                            errorMessage = 'Server error. Please try again later.';
+                        }
+
+                        // Show error message
+                        alert(errorMessage);
+
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Submit for Verification';
+                        submitBtn.style.opacity = '1';
+                    }
+                })
+                .catch(error => {
+                    console.error('Submission error:', error);
+
+                    // Hide loading overlay
+                    if (window.hideLoading) {
+                        window.hideLoading();
+                    }
+
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Submit for Verification';
+                    submitBtn.style.opacity = '1';
+
+                    // Show error message
+                    alert('Unable to set password. Please check your connection and try again.');
+                });
             });
         });
     </script>

@@ -22,7 +22,7 @@
 
     <main class="kkp-main">
         <div class="kkp-page-wrap">
-            <a href="{{ route('kkprofiling.signup') }}" class="kkp-back-link" aria-label="Back to homepage">
+            <a href="{{ route('kkprofiling', ['barangay' => $slug]) }}" class="kkp-back-link" aria-label="Back to KK Profiling form">
                 <svg viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M12.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L8.414 9H17a1 1 0 110 2H8.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
                 </svg>
@@ -63,10 +63,10 @@
                     </div>
                 </div>
                 <div class="verify-actions">
-                    <button type="button" class="verify-btn verify-btn-secondary" id="backToFormBtn">
+                    <a href="{{ route('kkprofiling', ['barangay' => $slug]) }}" class="verify-btn verify-btn-secondary">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
                         Back to KK Profiling
-                    </button>
+                    </a>
                 </div>
             </div>
 

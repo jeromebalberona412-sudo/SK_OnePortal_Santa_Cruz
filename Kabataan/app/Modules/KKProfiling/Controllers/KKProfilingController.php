@@ -647,6 +647,14 @@ class KKProfilingController extends Controller
 
         $message = 'Registration completed! Please wait for verification/approval by SK officials before logging in.';
 
+        // Check if request is AJAX (from JavaScript fetch)
+        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+            ]);
+        }
+
         return redirect()->route('login')->with('success', $message);
     }
 }
