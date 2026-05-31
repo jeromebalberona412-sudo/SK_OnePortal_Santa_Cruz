@@ -1,4 +1,4 @@
-<section class="gov-card panel barangay-distribution-panel">
+<section class="gov-card panel barangay-distribution-panel" id="barangayDistributionPanel">
     <header class="panel__header">
         <div>
             <h2 class="gov-card__title">Barangay Distribution</h2>

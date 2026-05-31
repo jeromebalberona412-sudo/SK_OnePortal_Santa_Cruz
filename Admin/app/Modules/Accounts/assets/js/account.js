@@ -8,9 +8,28 @@
 function toggleModal(modalId, show) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
+
+    // Store current scroll position before opening modal
+    const scrollY = window.scrollY;
+
     modal.style.display = show ? 'flex' : 'none';
-    document.body.style.overflow = show ? 'hidden' : '';
-    document.documentElement.style.overflow = show ? 'hidden' : '';
+
+    // Restore scroll position after opening modal to prevent auto-scroll
+    if (show) {
+        window.scrollTo(0, scrollY);
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+    } else {
+        // Restore body scroll when modal is closed
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('position');
+        document.body.style.removeProperty('top');
+        document.body.style.removeProperty('width');
+        window.scrollTo(0, scrollY);
+    }
 }
 
 // ── Top toast notification ─────────────────────────────────────
