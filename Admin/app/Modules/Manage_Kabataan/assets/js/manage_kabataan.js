@@ -7,27 +7,27 @@
     'use strict';
 
     /* ── State ─────────────────────────────────────────────────── */
-    let allRows      = [];
+    let allRows = [];
     let filteredRows = [];
-    let currentPage  = 1;
-    const PAGE_SIZE  = 15;
+    let currentPage = 1;
+    const PAGE_SIZE = 15;
 
     /* ── DOM refs ──────────────────────────────────────────────── */
-    const tableBody       = document.getElementById('mkTableBody');
-    const searchInput     = document.getElementById('mkSearch');
-    const filterBarangay  = document.getElementById('mkFilterBarangay');
-    const filterGender    = document.getElementById('mkFilterGender');
-    const filterVoter     = document.getElementById('mkFilterVoter');
-    const filterAccount   = document.getElementById('mkFilterAccount');
-    const filterVerif     = document.getElementById('mkFilterVerification');
-    const ageMin          = document.getElementById('mkAgeMin');
-    const ageMax          = document.getElementById('mkAgeMax');
-    const resetBtn        = document.getElementById('mkResetFilters');
-    const paginationInfo  = document.getElementById('mkPaginationInfo');
-    const prevBtn         = document.getElementById('mkPrevBtn');
-    const nextBtn         = document.getElementById('mkNextBtn');
-    const pageNumbers     = document.getElementById('mkPageNumbers');
-    const statsRow        = document.getElementById('mkStatsRow');
+    const tableBody = document.getElementById('mkTableBody');
+    const searchInput = document.getElementById('mkSearch');
+    const filterBarangay = document.getElementById('mkFilterBarangay');
+    const filterGender = document.getElementById('mkFilterGender');
+    const filterVoter = document.getElementById('mkFilterVoter');
+    const filterAccount = document.getElementById('mkFilterAccount');
+    const filterVerif = document.getElementById('mkFilterVerification');
+    const ageMin = document.getElementById('mkAgeMin');
+    const ageMax = document.getElementById('mkAgeMax');
+    const resetBtn = document.getElementById('mkResetFilters');
+    const paginationInfo = document.getElementById('mkPaginationInfo');
+    const prevBtn = document.getElementById('mkPrevBtn');
+    const nextBtn = document.getElementById('mkNextBtn');
+    const pageNumbers = document.getElementById('mkPageNumbers');
+    const statsRow = document.getElementById('mkStatsRow');
 
     /* ── Bootstrap ─────────────────────────────────────────────── */
     function init() {
@@ -47,18 +47,18 @@
     function buildStats() {
         if (!statsRow) return;
 
-        const total    = allRows.length;
-        const active   = allRows.filter(r => r.dataset.accountStatus === 'Active').length;
+        const total = allRows.length;
+        const active = allRows.filter(r => r.dataset.accountStatus === 'Active').length;
         const inactive = allRows.filter(r => r.dataset.accountStatus === 'Inactive').length;
         const verified = allRows.filter(r => r.dataset.verificationStatus === 'Verified').length;
-        const male     = allRows.filter(r => r.dataset.gender === 'Male').length;
+        const male = allRows.filter(r => r.dataset.gender === 'Male').length;
 
         const cards = [
-            { label: 'Total Kabataan', value: total,    colorClass: 'mk-stat-card-blue',   iconClass: 'mk-stat-icon-blue',   icon: usersIcon() },
-            { label: 'Active',         value: active,   colorClass: 'mk-stat-card-green',  iconClass: 'mk-stat-icon-green',  icon: checkIcon() },
-            { label: 'Inactive',       value: inactive, colorClass: 'mk-stat-card-red',    iconClass: 'mk-stat-icon-red',    icon: xIcon() },
-            { label: 'Verified',       value: verified, colorClass: 'mk-stat-card-indigo', iconClass: 'mk-stat-icon-indigo', icon: shieldIcon() },
-            { label: 'Male',           value: male,     colorClass: 'mk-stat-card-yellow', iconClass: 'mk-stat-icon-yellow', icon: personIcon() },
+            { label: 'Total Kabataan', value: total, colorClass: 'mk-stat-card-blue', iconClass: 'mk-stat-icon-blue', icon: usersIcon() },
+            { label: 'Active', value: active, colorClass: 'mk-stat-card-green', iconClass: 'mk-stat-icon-green', icon: checkIcon() },
+            { label: 'Inactive', value: inactive, colorClass: 'mk-stat-card-red', iconClass: 'mk-stat-icon-red', icon: xIcon() },
+            { label: 'Verified', value: verified, colorClass: 'mk-stat-card-indigo', iconClass: 'mk-stat-icon-indigo', icon: shieldIcon() },
+            { label: 'Male', value: male, colorClass: 'mk-stat-card-yellow', iconClass: 'mk-stat-icon-yellow', icon: personIcon() },
         ];
 
         statsRow.innerHTML = cards.map(c => `
@@ -74,14 +74,14 @@
 
     /* ── Filter logic ──────────────────────────────────────────── */
     function applyFilters() {
-        const search  = (searchInput?.value  || '').toLowerCase().trim();
-        const bgy     = filterBarangay?.value || '';
-        const gender  = filterGender?.value   || '';
-        const voter   = filterVoter?.value    || '';
-        const account = filterAccount?.value  || '';
-        const verif   = filterVerif?.value    || '';
-        const minAge  = ageMin?.value ? parseInt(ageMin.value, 10) : null;
-        const maxAge  = ageMax?.value ? parseInt(ageMax.value, 10) : null;
+        const search = (searchInput?.value || '').toLowerCase().trim();
+        const bgy = filterBarangay?.value || '';
+        const gender = filterGender?.value || '';
+        const voter = filterVoter?.value || '';
+        const account = filterAccount?.value || '';
+        const verif = filterVerif?.value || '';
+        const minAge = ageMin?.value ? parseInt(ageMin.value, 10) : null;
+        const maxAge = ageMax?.value ? parseInt(ageMax.value, 10) : null;
 
         filteredRows = allRows.filter(row => {
             const d = row.dataset;
@@ -94,11 +94,11 @@
                 if (!haystack.includes(search)) return false;
             }
 
-            if (bgy     && d.barangayId !== bgy)         return false;
-            if (gender  && d.gender     !== gender)       return false;
-            if (voter   && d.nationalVoter !== voter)     return false;
-            if (account && d.accountStatus !== account)   return false;
-            if (verif   && d.verificationStatus !== verif) return false;
+            if (bgy && d.barangayId !== bgy) return false;
+            if (gender && d.gender !== gender) return false;
+            if (voter && d.nationalVoter !== voter) return false;
+            if (account && d.accountStatus !== account) return false;
+            if (verif && d.verificationStatus !== verif) return false;
 
             if (minAge !== null && parseInt(d.age, 10) < minAge) return false;
             if (maxAge !== null && parseInt(d.age, 10) > maxAge) return false;
@@ -112,12 +112,12 @@
 
     /* ── Render current page ───────────────────────────────────── */
     function renderPage() {
-        const total      = filteredRows.length;
+        const total = filteredRows.length;
         const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-        currentPage      = Math.min(currentPage, totalPages);
+        currentPage = Math.min(currentPage, totalPages);
 
         const start = (currentPage - 1) * PAGE_SIZE;
-        const end   = Math.min(start + PAGE_SIZE, total);
+        const end = Math.min(start + PAGE_SIZE, total);
 
         // Hide all rows, show only current page slice
         allRows.forEach(r => { r.style.display = 'none'; });
@@ -202,14 +202,14 @@
         ageMax?.addEventListener('input', applyFilters);
 
         resetBtn?.addEventListener('click', () => {
-            if (searchInput)    searchInput.value    = '';
+            if (searchInput) searchInput.value = '';
             if (filterBarangay) filterBarangay.value = '';
-            if (filterGender)   filterGender.value   = '';
-            if (filterVoter)    filterVoter.value    = '';
-            if (filterAccount)  filterAccount.value  = '';
-            if (filterVerif)    filterVerif.value    = '';
-            if (ageMin)         ageMin.value         = '';
-            if (ageMax)         ageMax.value         = '';
+            if (filterGender) filterGender.value = '';
+            if (filterVoter) filterVoter.value = '';
+            if (filterAccount) filterAccount.value = '';
+            if (filterVerif) filterVerif.value = '';
+            if (ageMin) ageMin.value = '';
+            if (ageMax) ageMax.value = '';
             applyFilters();
         });
 
@@ -224,11 +224,11 @@
     function bindModalEvents() {
         // View modal
         tableBody.addEventListener('click', e => {
-            const viewBtn    = e.target.closest('.mk-btn-view');
-            const editBtn    = e.target.closest('.mk-btn-edit');
+            const viewBtn = e.target.closest('.mk-btn-view');
+            const editBtn = e.target.closest('.mk-btn-edit');
             const recoverBtn = e.target.closest('.mk-btn-recover');
-            if (viewBtn)    openViewModal(viewBtn.dataset.id);
-            if (editBtn)    openEditModal(editBtn.dataset.id);
+            if (viewBtn) openViewModal(viewBtn.dataset.id);
+            if (editBtn) openEditModal(editBtn.dataset.id);
             if (recoverBtn) openRecoverModal(recoverBtn.dataset.id);
         });
 
@@ -284,44 +284,37 @@
 
         const fullName = [d.firstName, d.middleName ? d.middleName[0] + '.' : '', d.lastName, d.suffix]
             .filter(Boolean).join(' ');
-        const initials = [(d.firstName || '')[0], (d.lastName || '')[0]].filter(Boolean).join('').toUpperCase();
 
         document.getElementById('mkViewBody').innerHTML = `
-            <div class="mk-view-name-banner">
-                <div class="mk-view-avatar">${initials || '?'}</div>
-                <div>
-                    <div class="mk-view-full-name">${esc(fullName) || 'N/A'}</div>
-                    <div class="mk-view-kk-number">KK No: ${esc(d.kkNumber) || '—'}</div>
-                </div>
-            </div>
-
             ${viewSection('Personal Information', [
-                ['First Name',    d.firstName],
-                ['Middle Name',   d.middleName],
-                ['Last Name',     d.lastName],
-                ['Suffix',        d.suffix],
-                ['Age',           d.age],
-                ['Gender',        d.gender],
-                ['Birthday',      d.birthday],
-                ['Civil Status',  d.civilStatus],
-            ])}
+            ['Full Name', fullName],
+            ['First Name', d.firstName],
+            ['Middle Name', d.middleName],
+            ['Last Name', d.lastName],
+            ['Suffix', d.suffix],
+            ['Age', d.age],
+            ['Gender', d.gender],
+            ['Birthday', d.birthday],
+            ['Civil Status', d.civilStatus],
+        ])}
             ${viewSection('Contact & Location', [
-                ['Contact Number', d.contact],
-                ['Email',          d.email],
-                ['Barangay',       d.barangay],
-                ['Purok / Zone',   d.purok],
-            ])}
+            ['Contact Number', d.contact],
+            ['Email', d.email],
+            ['Barangay', d.barangay],
+            ['Purok / Zone', d.purok],
+        ])}
             ${viewSection('KK Information', [
-                ['Youth Classification',    d.youthClassification],
-                ['Educational Background',  d.educationalBackground],
-                ['Work Status',             d.workStatus],
-                ['SK Voter',                d.skVoter],
-                ['National Voter',          d.nationalVoter],
-            ])}
+            ['KK Number', d.kkNumber],
+            ['Youth Classification', d.youthClassification],
+            ['Educational Background', d.educationalBackground],
+            ['Work Status', d.workStatus],
+            ['SK Voter', d.skVoter],
+            ['National Voter', d.nationalVoter],
+        ])}
             ${viewSection('Account Status', [
-                ['Account Status',      d.accountStatus],
-                ['Verification Status', d.verificationStatus],
-            ])}
+            ['Account Status', d.accountStatus],
+            ['Verification Status', d.verificationStatus],
+        ])}
         `;
 
         document.getElementById('mkViewModal').style.display = 'flex';
@@ -358,27 +351,27 @@
 
         const f = name => document.getElementById(name);
 
-        f('mkEditId').value                    = d.id;
-        f('mkEditFirstName').value             = d.firstName        || '';
-        f('mkEditMiddleName').value            = d.middleName       || '';
-        f('mkEditLastName').value              = d.lastName         || '';
-        f('mkEditSuffix').value                = d.suffix           || '';
-        f('mkEditBirthday').value              = d.birthday         || '';
-        f('mkEditAge').value                   = d.age              || '';
-        f('mkEditGender').value                = d.gender           || '';
-        f('mkEditCivilStatus').value           = d.civilStatus      || '';
-        f('mkEditContact').value               = d.contact          || '';
-        f('mkEditEmail').value                 = d.email            || '';
-        f('mkEditBarangay').value              = d.barangayId       || '';
-        f('mkEditPurok').value                 = d.purok            || '';
-        f('mkEditKkNumber').value              = d.kkNumber         || '';
-        f('mkEditYouthClassification').value   = d.youthClassification  || '';
+        f('mkEditId').value = d.id;
+        f('mkEditFirstName').value = d.firstName || '';
+        f('mkEditMiddleName').value = d.middleName || '';
+        f('mkEditLastName').value = d.lastName || '';
+        f('mkEditSuffix').value = d.suffix || '';
+        f('mkEditBirthday').value = d.birthday || '';
+        f('mkEditAge').value = d.age || '';
+        f('mkEditGender').value = d.gender || '';
+        f('mkEditCivilStatus').value = d.civilStatus || '';
+        f('mkEditContact').value = d.contact || '';
+        f('mkEditEmail').value = d.email || '';
+        f('mkEditBarangay').value = d.barangayId || '';
+        f('mkEditPurok').value = d.purok || '';
+        f('mkEditKkNumber').value = d.kkNumber || '';
+        f('mkEditYouthClassification').value = d.youthClassification || '';
         f('mkEditEducationalBackground').value = d.educationalBackground || '';
-        f('mkEditWorkStatus').value            = d.workStatus       || '';
-        f('mkEditSkVoter').value               = d.skVoter          || '';
-        f('mkEditNationalVoter').value         = d.nationalVoter    || '';
-        f('mkEditAccountStatus').value         = d.accountStatus    || '';
-        f('mkEditVerificationStatus').value    = d.verificationStatus || '';
+        f('mkEditWorkStatus').value = d.workStatus || '';
+        f('mkEditSkVoter').value = d.skVoter || '';
+        f('mkEditNationalVoter').value = d.nationalVoter || '';
+        f('mkEditAccountStatus').value = d.accountStatus || '';
+        f('mkEditVerificationStatus').value = d.verificationStatus || '';
 
         clearErrors();
         document.getElementById('mkEditModal').style.display = 'flex';
@@ -403,10 +396,10 @@
         document.getElementById('mkRecoverId').value = d.id;
 
         // Populate read-only info
-        document.getElementById('rInfoFullName').textContent    = fullName || '—';
-        document.getElementById('rInfoKkNumber').textContent    = d.kkNumber || '—';
-        document.getElementById('rInfoEmail').textContent       = d.email || '—';
-        document.getElementById('rInfoBarangay').textContent    = d.barangay || '—';
+        document.getElementById('rInfoFullName').textContent = fullName || '—';
+        document.getElementById('rInfoKkNumber').textContent = d.kkNumber || '—';
+        document.getElementById('rInfoEmail').textContent = d.email || '—';
+        document.getElementById('rInfoBarangay').textContent = d.barangay || '—';
 
         // Verification badge
         const verifEl = document.getElementById('rInfoVerification');
@@ -427,8 +420,8 @@
                     : '<span class="mk-badge mk-badge-gray">—</span>';
 
         // Reset form fields
-        document.getElementById('rNewEmail').value          = '';
-        document.getElementById('rConfirmEmail').value      = '';
+        document.getElementById('rNewEmail').value = '';
+        document.getElementById('rConfirmEmail').value = '';
 
         clearRecoverErrors();
 
@@ -443,7 +436,7 @@
     }
 
     function clearRecoverErrors() {
-        ['errRNewEmail','errRConfirmEmail'].forEach(id => {
+        ['errRNewEmail', 'errRConfirmEmail'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.textContent = '';
         });
@@ -461,9 +454,9 @@
         document.getElementById('mkRecoverForm')?.addEventListener('submit', e => {
             e.preventDefault();
             if (!validateRecoverForm()) return;
-            const btn     = document.getElementById('mkRecoverSaveBtn');
+            const btn = document.getElementById('mkRecoverSaveBtn');
             const spinner = document.getElementById('mkRecoverSaveSpinner');
-            const text    = document.getElementById('mkRecoverSaveText');
+            const text = document.getElementById('mkRecoverSaveText');
             btn.disabled = true;
             spinner.style.display = '';
             text.textContent = 'Submitting…';
@@ -481,7 +474,7 @@
         clearRecoverErrors();
         let valid = true;
 
-        const newEmail     = document.getElementById('rNewEmail').value.trim();
+        const newEmail = document.getElementById('rNewEmail').value.trim();
         const confirmEmail = document.getElementById('rConfirmEmail').value.trim();
 
         if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
@@ -500,15 +493,15 @@
         e.preventDefault();
         clearErrors();
 
-        const id      = document.getElementById('mkEditId').value;
-        const form    = document.getElementById('mkEditForm');
+        const id = document.getElementById('mkEditId').value;
+        const form = document.getElementById('mkEditForm');
         const saveBtn = document.getElementById('mkEditSaveBtn');
         const spinner = document.getElementById('mkEditSaveBtnSpinner');
         const btnText = document.getElementById('mkEditSaveBtnText');
 
         const data = Object.fromEntries(new FormData(form).entries());
 
-        saveBtn.disabled    = true;
+        saveBtn.disabled = true;
         spinner.style.display = '';
         btnText.textContent = 'Saving…';
 
@@ -542,7 +535,7 @@
         } catch (err) {
             showToast(err.message || 'An error occurred.', 'error');
         } finally {
-            saveBtn.disabled    = false;
+            saveBtn.disabled = false;
             spinner.style.display = 'none';
             btnText.textContent = 'Save Changes';
         }
@@ -550,38 +543,38 @@
 
     function updateRowData(row, data, serverData) {
         const d = row.dataset;
-        d.firstName            = data.first_name            || '';
-        d.lastName             = data.last_name             || '';
-        d.middleName           = data.middle_name           || '';
-        d.suffix               = data.suffix                || '';
-        d.kkNumber             = data.kk_number             || '';
-        d.age                  = data.age                   || '';
-        d.gender               = data.gender                || '';
-        d.birthday             = data.birthday              || '';
-        d.barangayId           = data.barangay_id           || '';
-        d.purok                = data.purok_zone            || '';
-        d.contact              = data.contact_number        || '';
-        d.email                = data.email                 || '';
-        d.youthClassification  = data.youth_classification  || '';
-        d.educationalBackground= data.educational_background|| '';
-        d.workStatus           = data.work_status           || '';
-        d.civilStatus          = data.civil_status          || '';
-        d.skVoter              = data.sk_voter              || '';
-        d.nationalVoter        = data.national_voter        || '';
-        d.accountStatus        = data.account_status        || '';
-        d.verificationStatus   = data.verification_status   || '';
+        d.firstName = data.first_name || '';
+        d.lastName = data.last_name || '';
+        d.middleName = data.middle_name || '';
+        d.suffix = data.suffix || '';
+        d.kkNumber = data.kk_number || '';
+        d.age = data.age || '';
+        d.gender = data.gender || '';
+        d.birthday = data.birthday || '';
+        d.barangayId = data.barangay_id || '';
+        d.purok = data.purok_zone || '';
+        d.contact = data.contact_number || '';
+        d.email = data.email || '';
+        d.youthClassification = data.youth_classification || '';
+        d.educationalBackground = data.educational_background || '';
+        d.workStatus = data.work_status || '';
+        d.civilStatus = data.civil_status || '';
+        d.skVoter = data.sk_voter || '';
+        d.nationalVoter = data.national_voter || '';
+        d.accountStatus = data.account_status || '';
+        d.verificationStatus = data.verification_status || '';
 
         // Update visible cells
         const cells = row.querySelectorAll('td');
         const fullName = [data.first_name, data.middle_name ? data.middle_name[0] + '.' : '', data.last_name, data.suffix]
             .filter(Boolean).join(' ');
 
-        if (cells[0])  cells[0].textContent  = fullName || 'N/A';
-        if (cells[1])  cells[1].textContent  = data.kk_number || '—';
-        if (cells[2])  cells[2].textContent  = data.age || '—';
-        if (cells[3])  cells[3].textContent  = data.gender || '—';
-        if (cells[6])  cells[6].textContent  = data.email || '—';
-        if (cells[7])  cells[7].textContent  = data.youth_classification || '—';
+        if (cells[0]) cells[0].textContent = fullName || 'N/A';
+        if (cells[1]) cells[1].textContent = data.kk_number || '—';
+        if (cells[2]) cells[2].textContent = data.age || '—';
+        if (cells[3]) cells[3].textContent = data.gender || '—';
+        if (cells[6]) cells[6].textContent = data.email || '—';
+        if (cells[7]) cells[7].textContent = data.youth_classification || '—';
 
         // Rebuild stats
         buildStats();
@@ -590,18 +583,18 @@
     /* ── Validation error display ──────────────────────────────── */
     function displayErrors(errors) {
         const map = {
-            first_name:           'errFirstName',
-            last_name:            'errLastName',
-            birthday:             'errBirthday',
-            age:                  'errAge',
-            gender:               'errGender',
-            contact_number:       'errContact',
-            email:                'errEmail',
-            barangay_id:          'errBarangay',
-            kk_number:            'errKkNumber',
+            first_name: 'errFirstName',
+            last_name: 'errLastName',
+            birthday: 'errBirthday',
+            age: 'errAge',
+            gender: 'errGender',
+            contact_number: 'errContact',
+            email: 'errEmail',
+            barangay_id: 'errBarangay',
+            kk_number: 'errKkNumber',
             youth_classification: 'errYouthClassification',
-            account_status:       'errAccountStatus',
-            verification_status:  'errVerificationStatus',
+            account_status: 'errAccountStatus',
+            verification_status: 'errVerificationStatus',
         };
         Object.entries(errors).forEach(([field, msgs]) => {
             const el = document.getElementById(map[field]);
@@ -625,7 +618,7 @@
         if (!toast || !msgEl) return;
 
         msgEl.textContent = msg;
-        toast.className   = `mk-toast mk-toast-${type} mk-toast-show`;
+        toast.className = `mk-toast mk-toast-${type} mk-toast-show`;
 
         clearTimeout(toast._timer);
         toast._timer = setTimeout(() => {
@@ -645,13 +638,13 @@
 
     function toCamel(str) {
         return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase())
-                  .replace(/^./, c => c.toUpperCase());
+            .replace(/^./, c => c.toUpperCase());
     }
 
     /* ── SVG icons ─────────────────────────────────────────────── */
-    function usersIcon()  { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'; }
-    function checkIcon()  { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'; }
-    function xIcon()      { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'; }
+    function usersIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'; }
+    function checkIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'; }
+    function xIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'; }
     function shieldIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'; }
     function personIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>'; }
 

@@ -764,35 +764,61 @@ document.addEventListener('DOMContentLoaded', function () {
         const d = btn.dataset;
         const isOfficials = getCurrentAccountType() === 'sk_officials';
         const fullName = [d.firstName, d.middleName, d.lastName, d.suffix].filter(v => v && v.trim()).join(' ');
-        document.getElementById('viewFullName').textContent = fullName || '-';
-        document.getElementById('viewEmail').textContent = d.email || '-';
-        document.getElementById('viewDateOfBirth').textContent = d.dateOfBirth ? formatDate(d.dateOfBirth) : '-';
-        document.getElementById('viewAge').textContent = d.age || '-';
-        document.getElementById('viewContactNumber').textContent = d.contactNumber || '-';
-        document.getElementById('viewEmailVerification').textContent = d.emailVerifiedAt || 'Not Verified';
-        document.getElementById('viewBarangay').textContent = d.barangayName || '-';
-        document.getElementById('viewMunicipality').textContent = d.municipality || '-';
-        const provC = document.getElementById('viewProvinceContainer');
-        const regC = document.getElementById('viewRegionContainer');
+
+        // Build sections dynamically like Kabataan
+        let sectionsHtml = '';
+
+        // Personal Information
+        sectionsHtml += viewSection('Personal Information', [
+            ['Full Name', fullName],
+            ['Email Address', d.email],
+            ['Date of Birth', d.dateOfBirth ? formatDate(d.dateOfBirth) : ''],
+            ['Age', d.age],
+            ['Contact Number', d.contactNumber],
+            ['Email Verification', d.emailVerifiedAt || 'Not Verified'],
+        ]);
+
+        // Location Information
+        const locationFields = [
+            ['Barangay', d.barangayName],
+            ['Municipality', d.municipality],
+        ];
         if (!isOfficials) {
-            if (provC) provC.style.display = 'flex';
-            if (regC) regC.style.display = 'flex';
-            document.getElementById('viewProvince').textContent = d.province || '-';
-            document.getElementById('viewRegion').textContent = d.region || '-';
-        } else {
-            if (provC) provC.style.display = 'none';
-            if (regC) regC.style.display = 'none';
+            locationFields.push(['Province', d.province]);
+            locationFields.push(['Region', d.region]);
         }
-        document.getElementById('viewPosition').textContent = d.position || '-';
-        document.getElementById('viewTermStart').textContent = d.termStart ? formatDate(d.termStart) : '-';
-        document.getElementById('viewTermEnd').textContent = d.termEnd ? formatDate(d.termEnd) : '-';
-        const accStatus = document.getElementById('viewAccountStatus');
-        const termStatus = document.getElementById('viewTermStatus');
-        accStatus.textContent = d.status || '-';
-        accStatus.className = `status-badge ${d.status ? d.status.toLowerCase() : ''}`;
-        termStatus.textContent = d.termStatus || 'ACTIVE';
-        termStatus.className = `status-badge ${d.termStatus ? d.termStatus.toLowerCase() : 'active'}`;
+        sectionsHtml += viewSection('Location Information', locationFields);
+
+        // Term Information
+        sectionsHtml += viewSection('Term Information', [
+            ['Position', d.position],
+            ['Term Start', d.termStart ? formatDate(d.termStart) : ''],
+            ['Term End', d.termEnd ? formatDate(d.termEnd) : ''],
+            ['Account Status', d.status],
+            ['Term Status', d.termStatus || 'ACTIVE'],
+        ]);
+
+        document.getElementById('viewAccountBody').innerHTML = sectionsHtml;
         openViewModal();
+    }
+
+    // Helper function to create view sections (like Kabataan)
+    function viewSection(title, fields) {
+        const rows = fields.map(([label, value]) => `
+            <div class="detail-item">
+                <label>${label}</label>
+                <span>${value || '-'}</span>
+            </div>
+        `).join('');
+
+        return `
+            <div class="detail-section">
+                <h4 class="section-title">${title}</h4>
+                <div class="detail-grid">
+                    ${rows}
+                </div>
+            </div>
+        `;
     }
 
     // static view bindings handled by delegated listener above
