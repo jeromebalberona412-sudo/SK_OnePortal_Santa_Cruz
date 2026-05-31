@@ -23,65 +23,69 @@
     </div>
 </div>
 
-<div class="main-content-modern barangay-logos-page" id="mainContent">
+<div class="main-content-modern barangay-logos-page container-fluid" id="mainContent">
     <div class="barangay-logos-container">
 
         {{-- ── Page Header ── --}}
-        <div class="bl-page-header">
-            <div>
+        <div class="bl-page-header row">
+            <div class="col-md-6">
                 <h1 class="bl-page-title">SK Barangay Logos</h1>
                 <p class="bl-page-subtitle">Manage logo images for each barangay in Santa Cruz</p>
             </div>
 
-            <div class="bl-header-controls">
-                {{-- Search bar --}}
-                <div class="bl-search-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-search-icon">
-                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                        <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <input
-                        type="text"
-                        id="blSearchInput"
-                        class="bl-search-input"
-                        placeholder="Search barangay..."
-                        autocomplete="off"
-                        aria-label="Search barangay"
-                    />
-                    <button type="button" class="bl-search-clear" id="blSearchClear" aria-label="Clear search" style="display:none;">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <div class="bl-header-controls col-md-6">
+                <div class="row align-items-center">
+                    {{-- Search bar --}}
+                    <div class="bl-search-wrap col-md-5">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-search-icon">
+                            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
-                    </button>
-                </div>
+                        <input
+                            type="text"
+                            id="blSearchInput"
+                            class="bl-search-input form-control"
+                            placeholder="Search barangay..."
+                            autocomplete="off"
+                            aria-label="Search barangay"
+                        />
+                        <button type="button" class="bl-search-clear" id="blSearchClear" aria-label="Clear search" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                                <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
 
-                {{-- Counter pill --}}
-                <div class="bl-counter-pill">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-counter-icon">
-                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                        <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.8"/>
-                        <polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="1.8"/>
-                    </svg>
-                    <span id="uploadedCount">{{ $logos->count() }}</span>
-                    <span class="bl-counter-sep">/</span>
-                    <span>26</span>
-                    <span class="bl-counter-label">Uploaded</span>
-                </div>
+                    {{-- Counter pill --}}
+                    <div class="bl-counter-pill col-md-3">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-counter-icon">
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.8"/>
+                            <polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                        <span id="uploadedCount">{{ $logos->count() }}</span>
+                        <span class="bl-counter-sep">/</span>
+                        <span>26</span>
+                        <span class="bl-counter-label">Uploaded</span>
+                    </div>
 
-                {{-- Hide / Show toggle --}}
-                <button type="button" class="bl-toggle-btn" id="toggleLogosBtn">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" id="toggleIcon">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <span id="toggleBtnText">Hide Logos</span>
-                </button>
+                    {{-- Hide / Show toggle --}}
+                    <div class="col-md-4">
+                        <button type="button" class="bl-toggle-btn w-100" id="toggleLogosBtn">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" id="toggleIcon">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span id="toggleBtnText">Hide Logos</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
         {{-- ── Grid ── --}}
-        <div class="bl-grid" id="barangayGrid">
+        <div class="bl-grid row" id="barangayGrid">
 
             @php
                 $barangayList = $barangays->isNotEmpty() ? $barangays : collect([

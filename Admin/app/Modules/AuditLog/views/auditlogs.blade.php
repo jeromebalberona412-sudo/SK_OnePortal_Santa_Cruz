@@ -12,18 +12,18 @@
 <!-- Include Sidebar -->
 @include('layout::sidebar')
 
-<div class="main-content-modern auditlog-page" id="mainContent">
+<div class="main-content-modern auditlog-page container-fluid" id="mainContent">
     <div class="auditlog-container auditlog-shell auditlog-prototype">
         <!-- Page Header with Search and Filters -->
-        <div class="page-header-modern-with-button">
-            <div class="page-header-left">
+        <div class="page-header-modern-with-button row">
+            <div class="page-header-left col-md-6">
                 <h1 class="page-title-modern">Audit Logs</h1>
                 <p class="page-subtitle-modern">Monitor and track system activities</p>
             </div>
-            <div class="page-header-right">
-                <form method="GET" action="{{ route('auditlogs.index') }}" class="search-add-container audit-filter-row">
-                    <div class="filter-dropdown-container">
-                        <select id="eventFilter" class="filter-control" name="event">
+            <div class="page-header-right col-md-6">
+                <form method="GET" action="{{ route('auditlogs.index') }}" class="search-add-container audit-filter-row row align-items-center">
+                    <div class="filter-dropdown-container col-md-3">
+                        <select id="eventFilter" class="filter-control form-select" name="event">
                             <option value="">All Events</option>
                             @foreach($events as $eventOption)
                                 <option value="{{ $eventOption }}" {{ ($filters['event'] ?? '') === $eventOption ? 'selected' : '' }}>
@@ -32,8 +32,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="filter-dropdown-container">
-                        <select id="outcomeFilter" class="filter-control" name="outcome">
+                    <div class="filter-dropdown-container col-md-3">
+                        <select id="outcomeFilter" class="filter-control form-select" name="outcome">
                             <option value="">All Outcomes</option>
                             @foreach(($outcomes ?? collect()) as $outcomeOption)
                                 <option value="{{ $outcomeOption }}" {{ ($filters['outcome'] ?? '') === $outcomeOption ? 'selected' : '' }}>
@@ -42,22 +42,22 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="date-inline-group">
+                    <div class="date-inline-group col-md-2">
                         <label for="dateFrom" class="date-inline-label">From</label>
-                        <input type="date" id="dateFrom" name="date_from" class="filter-control date-control" value="{{ $filters['date_from'] ?? '' }}">
+                        <input type="date" id="dateFrom" name="date_from" class="filter-control date-control form-control" value="{{ $filters['date_from'] ?? '' }}">
                     </div>
-                    <div class="date-inline-group">
+                    <div class="date-inline-group col-md-2">
                         <label for="dateTo" class="date-inline-label">To</label>
-                        <input type="date" id="dateTo" name="date_to" class="filter-control date-control" value="{{ $filters['date_to'] ?? '' }}">
+                        <input type="date" id="dateTo" name="date_to" class="filter-control date-control form-control" value="{{ $filters['date_to'] ?? '' }}">
                     </div>
-                    <div class="search-inline-container">
+                    <div class="search-inline-container col-md-2">
                         <button type="submit" class="search-btn" id="searchBtn" aria-label="Search">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.35-4.35"></path>
                             </svg>
                         </button>
-                        <input type="text" id="searchInput" name="search" class="filter-control search-control" value="{{ $filters['search'] ?? '' }}" placeholder="Search…">
+                        <input type="text" id="searchInput" name="search" class="filter-control search-control form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Search…">
                     </div>
                 </form>
             </div>

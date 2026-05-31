@@ -10,25 +10,33 @@
 @include('layout::header')
 @include('layout::sidebar')
 
-<div id="mainContent" class="main-content-modern deleted-sk-fed-page">
+<div id="mainContent" class="main-content-modern deleted-sk-fed-page container-fluid">
 
-    <div class="dsf-page-header">
-        <div class="dsf-header-left">
+    <div class="dsf-page-header row">
+        <div class="dsf-header-left col-md-6">
             <h1 class="dsf-page-title">Archived SK Federation Records</h1>
             <p class="dsf-page-subtitle">Records removed from the SK Federation list.</p>
         </div>
-        <div class="dsf-header-right">
-            <select id="dsfYearFilter" class="dsf-year-filter">
-                <option value="all">All Years</option>
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-            </select>
-            <select id="dsfFilterTerm" class="dsf-term-filter">
-                <option value="">All Terms</option>
-            </select>
-            <input type="text" id="dsfSearch" class="dsf-search-input" placeholder="Search by name or barangay…">
+        <div class="dsf-header-right col-md-6">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <select id="dsfYearFilter" class="dsf-year-filter form-select">
+                        <option value="all">All Years</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="dsfFilterTerm" class="dsf-term-filter form-select">
+                        <option value="">All Terms</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="dsfSearch" class="dsf-search-input form-control" placeholder="Search by name or barangay…">
+                </div>
+            </div>
         </div>
     </div>
 

@@ -23,26 +23,26 @@
 
 <!-- Include Sidebar -->
 @include('layout::sidebar')
-<div class="main-content-modern accounts-page" id="mainContent">
+<div class="main-content-modern accounts-page container-fluid" id="mainContent">
     <div class="manage-account-container">
         <!-- Page Header with Search and Add Account Button -->
-        <div class="page-header-modern-with-button">
-            <div class="page-header-left">
+        <div class="page-header-modern-with-button row">
+            <div class="page-header-left col-md-6">
                 <h1 class="page-title-modern" id="pageTitle">{{ $pageTitle }}</h1>
                 <p class="page-subtitle-modern" id="pageSubtitle">{{ $pageSubtitle }}</p>
             </div>
-            <div class="page-header-right">
-                <form method="GET" action="{{ $isOfficials ? route('accounts.officials.index') : route('accounts.federation.index') }}" class="search-add-container">
-                    <div class="filter-dropdown-container">
-                        <select id="barangayFilter" class="filter-dropdown" name="barangay_id">
+            <div class="page-header-right col-md-6">
+                <form method="GET" action="{{ $isOfficials ? route('accounts.officials.index') : route('accounts.federation.index') }}" class="search-add-container row align-items-center">
+                    <div class="filter-dropdown-container col-md-4 col-lg-3">
+                        <select id="barangayFilter" class="filter-dropdown form-select" name="barangay_id">
                             <option value="">All Barangays</option>
                             @foreach($barangays as $barangay)
                                 <option value="{{ $barangay->id }}" {{ request('barangay_id') == $barangay->id ? 'selected' : '' }}>{{ $barangay->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="search-container">
-                        <input type="text" id="searchInput" name="search" class="search-input" value="{{ request('search') }}" placeholder="Search accounts...">
+                    <div class="search-container col-md-5 col-lg-6">
+                        <input type="text" id="searchInput" name="search" class="search-input form-control" value="{{ request('search') }}" placeholder="Search accounts...">
                         <button type="submit" class="search-btn" id="searchBtn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -50,12 +50,14 @@
                             </svg>
                         </button>
                     </div>
-                    <button type="button" class="btn-primary-modern btn-green" id="addAccountBtn" onclick="openAddAccountModal()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 4v16m8-8H4"/>
-                        </svg>
-                        <span id="addButtonText">{{ $addLabel }}</span>
-                    </button>
+                    <div class="col-md-3 col-lg-3">
+                        <button type="button" class="btn-primary-modern btn-green w-100" id="addAccountBtn" onclick="openAddAccountModal()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 4v16m8-8H4"/>
+                            </svg>
+                            <span id="addButtonText">{{ $addLabel }}</span>
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

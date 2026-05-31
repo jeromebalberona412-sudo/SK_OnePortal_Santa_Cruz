@@ -10,25 +10,33 @@
 @include('layout::header')
 @include('layout::sidebar')
 
-<div id="mainContent" class="main-content-modern deleted-sk-off-page">
+<div id="mainContent" class="main-content-modern deleted-sk-off-page container-fluid">
 
-    <div class="dso-page-header">
-        <div class="dso-header-left">
+    <div class="dso-page-header row">
+        <div class="dso-header-left col-md-6">
             <h1 class="dso-page-title">Deleted SK Officials</h1>
             <p class="dso-page-subtitle">Records removed from the SK Officials list.</p>
         </div>
-        <div class="dso-header-right">
-            <select id="dsoYearFilter" class="dso-year-filter">
-                <option value="all">All Years</option>
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-            </select>
-            <select id="dsoFilterTerm" class="dso-term-filter">
-                <option value="">All Terms</option>
-            </select>
-            <input type="text" id="dsoSearch" class="dso-search-input" placeholder="Search by name or barangay…">
+        <div class="dso-header-right col-md-6">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <select id="dsoYearFilter" class="dso-year-filter form-select">
+                        <option value="all">All Years</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="dsoFilterTerm" class="dso-term-filter form-select">
+                        <option value="">All Terms</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="dsoSearch" class="dso-search-input form-control" placeholder="Search by name or barangay…">
+                </div>
+            </div>
         </div>
     </div>
 

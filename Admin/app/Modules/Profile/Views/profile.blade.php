@@ -10,7 +10,7 @@
 @include('layout::header')
 @include('layout::sidebar')
 
-<div id="mainContent" class="profile-page">
+<div id="mainContent" class="profile-page container-fluid">
     @php
         $userName  = $user->name  ?? 'Admin';
         $userEmail = $user->email ?? '';
@@ -32,15 +32,19 @@
     <div class="profile-shell">
 
         {{-- ── Hero ─────────────────────────────────────────── --}}
-        <header class="profile-hero">
-            <div class="profile-avatar-frame" aria-hidden="true">
-                <img src="{{ asset('Images/image.png') }}" alt="Profile" class="profile-avatar-img">
+        <header class="profile-hero row">
+            <div class="col-md-3 col-lg-2">
+                <div class="profile-avatar-frame" aria-hidden="true">
+                    <img src="{{ asset('Images/image.png') }}" alt="Profile" class="profile-avatar-img">
+                </div>
             </div>
-            <div class="profile-hero__identity">
-                <p class="profile-eyebrow">System User</p>
-                <h1 class="profile-title">{{ $userName }}</h1>
-                <p class="profile-subtitle">{{ $userEmail }}</p>
-                <span class="profile-role-badge">{{ $userRole }}</span>
+            <div class="col-md-9 col-lg-10">
+                <div class="profile-hero__identity">
+                    <p class="profile-eyebrow">System User</p>
+                    <h1 class="profile-title">{{ $userName }}</h1>
+                    <p class="profile-subtitle">{{ $userEmail }}</p>
+                    <span class="profile-role-badge">{{ $userRole }}</span>
+                </div>
             </div>
         </header>
 
@@ -56,16 +60,16 @@
                 {{-- Basic Info --}}
                 <div id="basic-tab" class="tab-pane active profile-pane">
                     <h3>Basic Information</h3>
-                    <div class="form-grid">
-                        <div class="field-group">
+                    <div class="form-grid row">
+                        <div class="field-group col-md-6 col-lg-4">
                             <label>Full Name</label>
                             <input type="text" value="{{ $userName }}" readonly>
                         </div>
-                        <div class="field-group">
+                        <div class="field-group col-md-6 col-lg-4">
                             <label>Email Address</label>
                             <input type="email" value="{{ $userEmail }}" readonly>
                         </div>
-                        <div class="field-group">
+                        <div class="field-group col-md-6 col-lg-4">
                             <label>Role</label>
                             <input type="text" value="{{ $userRole }}" readonly>
                         </div>
@@ -73,12 +77,12 @@
 
                     <div class="profile-sysinfo-divider"></div>
                     <h3>System Information</h3>
-                    <div class="form-grid">
-                        <div class="field-group">
+                    <div class="form-grid row">
+                        <div class="field-group col-md-6">
                             <label>Last Login</label>
                             <input type="text" value="{{ $lastLogin }}" readonly>
                         </div>
-                        <div class="field-group">
+                        <div class="field-group col-md-6">
                             <label>Account Created</label>
                             <input type="text" value="{{ $createdAt }}" readonly>
                         </div>
@@ -89,20 +93,24 @@
                 <div id="security-tab" class="tab-pane profile-pane" hidden>
                     <h3>Security</h3>
 
-                    <div class="security-option-row">
-                        <div class="security-option-info">
+                    <div class="security-option-row row align-items-center">
+                        <div class="security-option-info col-md-8">
                             <p class="security-option-title">Change Password</p>
                             <p class="security-option-desc">Update your account password via email verification.</p>
                         </div>
-                        <a href="{{ route('profile.change-password') }}" class="btn btn-primary security-action-btn">Change Password</a>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{{ route('profile.change-password') }}" class="btn btn-primary security-action-btn">Change Password</a>
+                        </div>
                     </div>
 
-                    <div class="security-option-row" style="margin-top:0.75rem;">
-                        <div class="security-option-info">
+                    <div class="security-option-row row align-items-center" style="margin-top:0.75rem;">
+                        <div class="security-option-info col-md-8">
                             <p class="security-option-title">Change Email</p>
                             <p class="security-option-desc">Update your account email with verification.</p>
                         </div>
-                        <a href="{{ route('profile.change-email') }}" class="btn btn-primary security-action-btn">Change Email</a>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{{ route('profile.change-email') }}" class="btn btn-primary security-action-btn">Change Email</a>
+                        </div>
                     </div>
                 </div>
 
@@ -110,7 +118,7 @@
         </section>
 
     </div>{{-- /.profile-shell --}}
-</div>{{-- /#mainContent --}}
+</div>{{-- /#mainContent -->
 
 <script>
 function switchTab(tabName, e) {

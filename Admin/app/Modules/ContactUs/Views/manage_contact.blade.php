@@ -10,16 +10,16 @@
 @include('layout::header')
 @include('layout::sidebar')
 
-<div class="main-content-modern contact-page" id="mainContent">
+<div class="main-content-modern contact-page container-fluid" id="mainContent">
     <div class="manage-contact-container">
 
         {{-- Page Header --}}
-        <div class="page-header-modern-with-button">
-            <div class="page-header-left">
+        <div class="page-header-modern-with-button row">
+            <div class="page-header-left col-md-6">
                 <h1 class="page-title-modern">Manage Contact</h1>
                 <p class="page-subtitle-modern">Manage contact details displayed on the homepage</p>
             </div>
-            <div class="page-header-right">
+            <div class="page-header-right col-md-6 text-md-end">
                 <button type="button" class="btn-primary-modern btn-green" id="btnAddContact">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M12 4v16m8-8H4"/>
