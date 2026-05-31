@@ -2,24 +2,48 @@
    Stat Card Component CSS
    ============================================================ */
 
-.stats-2row-grid {
+/* ── Stats Grid Layout ─────────────────────────────────────── */
+.stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 10px;
-    margin-bottom: 18px;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
     width: 100%;
+}
+
+/* Desktop: 4 columns with minmax(280px, 1fr) */
+.stats-grid--top,
+.stats-grid--bottom {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Tablet: 2 columns */
+@media (max-width: 992px) {
+
+    .stats-grid--top,
+    .stats-grid--bottom {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}
+
+/* Mobile: 1 column */
+@media (max-width: 576px) {
+
+    .stats-grid--top,
+    .stats-grid--bottom {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ── Base card ───────────────────────────────────────────── */
 .stat-card {
     background: #ffffff;
     border-radius: 12px;
-    padding: 14px 14px 12px;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: stretch;
-    min-height: 110px;
+    min-height: 160px;
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
     border: 1.5px solid #e5e7eb;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -60,12 +84,13 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
 }
 
-/* ── Value (number) ───────────────────────────────────────── */
+/* ── Value (number) - Largest text ───────────────────────── */
 .stat-card-value {
-    font-size: 22px;
+    font-size: 2.5rem;
     font-weight: 900;
     color: #111827;
     line-height: 1.1;
@@ -80,9 +105,9 @@
 
 /* ── Icon ────────────────────────────────────────────────── */
 .stat-card-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -90,8 +115,8 @@
 }
 
 .stat-card-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
 }
 
 .stat-icon-azure,
@@ -138,60 +163,141 @@
     stroke: #10b981;
 }
 
-/* ── Label ───────────────────────────────────────────────── */
+/* ── Label - Medium text ─────────────────────────────────── */
 .stat-card-label {
-    font-size: 10px;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: #6b7280;
     line-height: 1.3;
     text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-clamp: 2;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
     width: 100%;
-    margin-top: 8px;
+    margin-bottom: 0.75rem;
 }
 
-/* ── Meta (status + delta) ───────────────────────────────── */
+/* ── Meta (status + delta) - Small text ───────────────────── */
 .stat-card-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    font-size: 10px;
-    color: #9ca3af;
-    letter-spacing: 0.02em;
-    margin-top: 4px;
+    margin-top: auto;
 }
 
 .stat-card-status {
+    font-size: 0.75rem;
     color: #6b7280;
     font-weight: 600;
 }
 
 .stat-card-delta {
+    font-size: 0.75rem;
     color: #1565c0;
     font-weight: 700;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-    .stats-2row-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 8px;
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .stat-card {
+        padding: 1.25rem;
+        min-height: 150px;
     }
 
-    .stat-card {
-        padding: 11px 12px;
-        min-height: 96px;
+    .stat-card-value {
+        font-size: 2.25rem;
     }
 
     .stat-card-icon {
-        width: 34px;
-        height: 34px;
+        width: 44px;
+        height: 44px;
+    }
+
+    .stat-card-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .stat-card-label {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .stat-card {
+        padding: 1.125rem;
+        min-height: 140px;
+    }
+
+    .stat-card-value {
+        font-size: 2rem;
+    }
+
+    .stat-card-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .stat-card-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .stat-card-label {
+        font-size: 0.8125rem;
+    }
+
+    .stat-card-status,
+    .stat-card-delta {
+        font-size: 0.6875rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        padding: 1rem;
+        min-height: 130px;
+    }
+
+    .stat-card-value {
+        font-size: 1.75rem;
+    }
+
+    .stat-card-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .stat-card-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .stat-card-label {
+        font-size: 0.75rem;
+    }
+
+    .stat-card-status,
+    .stat-card-delta {
+        font-size: 0.625rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .stat-card {
+        padding: 0.875rem;
+        min-height: 120px;
+    }
+
+    .stat-card-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-card-icon {
+        width: 32px;
+        height: 32px;
     }
 
     .stat-card-icon svg {
@@ -199,27 +305,29 @@
         height: 16px;
     }
 
-    .stat-card-value {
-        font-size: 20px;
+    .stat-card-label {
+        font-size: 0.6875rem;
+    }
+
+    .stat-card-status,
+    .stat-card-delta {
+        font-size: 0.5625rem;
     }
 }
 
-@media (max-width: 768px) {
-    .stats-2row-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 8px;
+@media (max-width: 480px) {
+    .stat-card {
+        padding: 0.75rem;
+        min-height: 110px;
     }
 
-    .stat-card {
-        padding: 10px 10px 8px;
-        min-height: 90px;
-        border-radius: 9px;
+    .stat-card-value {
+        font-size: 1.375rem;
     }
 
     .stat-card-icon {
         width: 28px;
         height: 28px;
-        border-radius: 7px;
     }
 
     .stat-card-icon svg {
@@ -227,49 +335,12 @@
         height: 14px;
     }
 
-    .stat-card-value {
-        font-size: 18px;
-        line-height: 1.1;
-    }
-
     .stat-card-label {
-        font-size: 9px;
-        line-height: 1.2;
-        margin-top: 6px;
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-2row-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 6px;
+        font-size: 0.625rem;
     }
 
-    .stat-card {
-        padding: 8px 8px 6px;
-        min-height: 80px;
-        border-radius: 8px;
-    }
-
-    .stat-card-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
-    }
-
-    .stat-card-icon svg {
-        width: 12px;
-        height: 12px;
-    }
-
-    .stat-card-value {
-        font-size: 16px;
-        font-weight: 800;
-    }
-
-    .stat-card-label {
-        font-size: 8px;
-        line-height: 1.1;
-        margin-top: 5px;
+    .stat-card-status,
+    .stat-card-delta {
+        font-size: 0.5rem;
     }
 }

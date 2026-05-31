@@ -12,11 +12,14 @@
 @include('layout::sidebar')
 
 @php
-	$statCards = [
+	$topRowCards = [
 		['label' => 'Total Users', 'metricKey' => 'totalUsers', 'tone' => 'azure', 'icon' => 'users', 'route' => null],
 		['label' => 'Federation Accounts Count', 'metricKey' => 'federationAccounts', 'tone' => 'teal', 'icon' => 'federation', 'route' => 'accounts.federation.index'],
 		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials', 'route' => 'accounts.officials.index'],
 		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => 'manage-kabataan.index'],
+	];
+
+	$bottomRowCards = [
 		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-federation'],
 		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-officials'],
 		['label' => 'SK Federation Records', 'metricKey' => 'skFederationRecords', 'tone' => 'red', 'icon' => 'federation', 'route' => 'archived.sk-federation-records'],
@@ -67,10 +70,19 @@
 		</div>
 	</div>
 
-	<!-- ══ Stat Cards — 2-row grid ═══════════════════════════ -->
-	<section class="stats-2row-grid row">
-		@foreach ($statCards as $card)
-			<div class="col-md-6 col-lg-4 col-xl-3">
+	<!-- ══ Stat Cards — Top Row ═══════════════════════════ -->
+	<section class="stats-grid stats-grid--top row">
+		@foreach ($topRowCards as $card)
+			<div class="col-12 col-sm-6 col-lg-3">
+				@include('dashboard::components.statcard', $card)
+			</div>
+		@endforeach
+	</section>
+
+	<!-- ══ Stat Cards — Bottom Row ═══════════════════════════ -->
+	<section class="stats-grid stats-grid--bottom row">
+		@foreach ($bottomRowCards as $card)
+			<div class="col-12 col-sm-6 col-lg-3">
 				@include('dashboard::components.statcard', $card)
 			</div>
 		@endforeach
