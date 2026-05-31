@@ -13,7 +13,9 @@
             <div class="modal-controls">
                 <button type="button" class="modal-win-btn modal-win-btn-maximize" id="addOfficialsResizeBtn"
                         onclick="toggleAddOfficialsSize()" title="Maximize">
-                    <span id="addOfficialsResizeIcon" class="modal-win-icon">&#9633;</span>
+                    <svg id="addOfficialsResizeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
                 </button>
                 <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeAddSkOfficialsModal()" title="Close">
                     &times;
@@ -268,7 +270,9 @@
             <div class="modal-controls">
                 <button type="button" class="modal-win-btn modal-win-btn-maximize" id="editOfficialsResizeBtn"
                         onclick="toggleEditOfficialsSize()" title="Maximize">
-                    <span id="editOfficialsResizeIcon" class="modal-win-icon">&#9633;</span>
+                    <svg id="editOfficialsResizeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
                 </button>
                 <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeEditSkOfficialsModal()" title="Close">
                     &times;

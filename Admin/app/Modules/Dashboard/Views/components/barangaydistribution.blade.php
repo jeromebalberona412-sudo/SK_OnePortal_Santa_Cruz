@@ -5,7 +5,7 @@
             <p class="gov-card__subtitle">Federation and official account spread across Santa Cruz barangays</p>
         </div>
 
-        <button type="button" class="panel-action-btn">Export</button>
+        <button type="button" class="panel-action-btn" onclick="exportBarangayDistribution()">Export</button>
     </header>
 
     <div class="table-scroll">

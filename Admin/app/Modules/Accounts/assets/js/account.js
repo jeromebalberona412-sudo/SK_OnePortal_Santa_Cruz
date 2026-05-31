@@ -20,10 +20,10 @@ function showAccountToast(msg, type) {
     const idMap = { success: 'accountToast', edit: 'accountToastEdit', delete: 'accountToastDelete' };
     const msgMap = { success: 'accountToastMsg', edit: 'accountToastEditMsg', delete: 'accountToastDeleteMsg' };
     const toastId = idMap[type] || 'accountToast';
-    const msgId   = msgMap[type] || 'accountToastMsg';
+    const msgId = msgMap[type] || 'accountToastMsg';
 
     // Hide all toasts first
-    ['accountToast','accountToastEdit','accountToastDelete'].forEach(id => {
+    ['accountToast', 'accountToastEdit', 'accountToastDelete'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('show');
     });
@@ -133,22 +133,22 @@ function _validateField(input) {
 // ── Add SK Officials modal ────────────────────────────────────
 let addOfficialsIsMaximized = false;
 const ICON_MAXIMIZE = '\u25A1';   // □  empty square  (maximize)
-const ICON_RESTORE  = '\u29C9';   // ⧉  overlapping squares (restore down)
+const ICON_RESTORE = '\u29C9';   // ⧉  overlapping squares (restore down)
 
 window.toggleAddOfficialsSize = function () {
     const overlay = document.getElementById('addSkOfficialsModal');
     const content = document.getElementById('addSkOfficialsModalContent');
-    const icon    = document.getElementById('addOfficialsResizeIcon');
-    const btn     = document.getElementById('addOfficialsResizeBtn');
+    const icon = document.getElementById('addOfficialsResizeIcon');
+    const btn = document.getElementById('addOfficialsResizeBtn');
     if (!overlay || !content || !icon) return;
     addOfficialsIsMaximized = !addOfficialsIsMaximized;
     if (addOfficialsIsMaximized) {
         content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
         overlay.style.padding = '0';
-        btn.title = 'Restore Down'; icon.textContent = ICON_RESTORE;
+        btn.title = 'Restore Down'; icon.innerHTML = '<path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M3 21l7-7"></path>';
     } else {
         content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize'; icon.textContent = ICON_MAXIMIZE;
+        btn.title = 'Maximize'; icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
     }
 };
 
@@ -159,35 +159,35 @@ window.closeAddSkOfficialsModal = function () {
     const content = document.getElementById('addSkOfficialsModalContent');
     if (content) content.style.cssText = '';
     const icon = document.getElementById('addOfficialsResizeIcon');
-    const btn  = document.getElementById('addOfficialsResizeBtn');
+    const btn = document.getElementById('addOfficialsResizeBtn');
     if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn)  btn.title = 'Maximize';
+    if (btn) btn.title = 'Maximize';
     const form = document.getElementById('addSkOfficialsForm');
     if (form) {
         form.reset();
-        form.querySelectorAll('.is-invalid,.is-valid').forEach(el => el.classList.remove('is-invalid','is-valid'));
+        form.querySelectorAll('.is-invalid,.is-valid').forEach(el => el.classList.remove('is-invalid', 'is-valid'));
         form.querySelectorAll('.validation-error').forEach(el => el.remove());
     }
     switchAddOfficialTab('manual');
     toggleModal('addSkOfficialsModal', false);
 };
 
-window.showSkOfficialsSuccessModal  = function () { showAccountToast('SK Officials account successfully created!', 'success'); };
-window.closeSkOfficialsSuccessModal = function () {};
+window.showSkOfficialsSuccessModal = function () { showAccountToast('SK Officials account successfully created!', 'success'); };
+window.closeSkOfficialsSuccessModal = function () { };
 
 window.switchAddOfficialTab = function (tab) {
     const manual = document.getElementById('addOfficialManualPane');
-    const batch  = document.getElementById('addOfficialBatchPane');
+    const batch = document.getElementById('addOfficialBatchPane');
     const tM = document.getElementById('tabManual');
     const tB = document.getElementById('tabBatch');
     if (tab === 'manual') {
         if (manual) manual.style.display = '';
-        if (batch)  batch.style.display  = 'none';
+        if (batch) batch.style.display = 'none';
         if (tM) tM.classList.add('active');
         if (tB) tB.classList.remove('active');
     } else {
         if (manual) manual.style.display = 'none';
-        if (batch)  batch.style.display  = '';
+        if (batch) batch.style.display = '';
         if (tM) tM.classList.remove('active');
         if (tB) tB.classList.add('active');
     }
@@ -205,44 +205,44 @@ window.closeEditSkOfficialsModal = function () {
     if (overlay) overlay.style.padding = '';
     if (content) content.style.cssText = '';
     const icon = document.getElementById('editOfficialsResizeIcon');
-    const btn  = document.getElementById('editOfficialsResizeBtn');
+    const btn = document.getElementById('editOfficialsResizeBtn');
     if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn)  btn.title = 'Maximize';
+    if (btn) btn.title = 'Maximize';
     const form = document.getElementById('editSkOfficialsForm');
     if (form) {
         form.reset();
-        form.querySelectorAll('.is-invalid,.is-valid').forEach(f => f.classList.remove('is-invalid','is-valid'));
+        form.querySelectorAll('.is-invalid,.is-valid').forEach(f => f.classList.remove('is-invalid', 'is-valid'));
         form.querySelectorAll('.validation-error').forEach(e => e.remove());
     }
     toggleModal('editSkOfficialsModal', false);
 };
 
-window.showEditSkOfficialsSuccessModal  = function () {
+window.showEditSkOfficialsSuccessModal = function () {
     toggleModal('editSkOfficialsModal', false);
     showAccountToast('SK Officials account updated successfully!', 'edit');
 };
-window.closeEditSkOfficialsSuccessModal = function () {};
+window.closeEditSkOfficialsSuccessModal = function () { };
 
 window.toggleEditOfficialsSize = function () {
     const overlay = document.getElementById('editSkOfficialsModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon    = document.getElementById('editOfficialsResizeIcon');
-    const btn     = document.getElementById('editOfficialsResizeBtn');
+    const icon = document.getElementById('editOfficialsResizeIcon');
+    const btn = document.getElementById('editOfficialsResizeBtn');
     if (!overlay || !content || !icon) return;
     editOfficialsIsMaximized = !editOfficialsIsMaximized;
     if (editOfficialsIsMaximized) {
         content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
         overlay.style.padding = '0';
-        btn.title = 'Restore Down'; icon.textContent = ICON_RESTORE;
+        btn.title = 'Restore Down'; icon.innerHTML = '<path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M3 21l7-7"></path>';
     } else {
         content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize'; icon.textContent = ICON_MAXIMIZE;
+        btn.title = 'Maximize'; icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
     }
 };
 // Keep legacy aliases so any remaining references don't break
 window.toggleFullscreenEditSkOfficialsModal = window.toggleEditOfficialsSize;
-window.toggleRestoreEditSkOfficialsModal    = window.toggleEditOfficialsSize;
-window.restoreEditSkOfficialsModal          = window.toggleEditOfficialsSize;
+window.toggleRestoreEditSkOfficialsModal = window.toggleEditOfficialsSize;
+window.restoreEditSkOfficialsModal = window.toggleEditOfficialsSize;
 
 // ── Add SK Federation modal ───────────────────────────────────
 let addFedIsMaximized = false;
@@ -250,19 +250,19 @@ let addFedIsMaximized = false;
 window.toggleAddFedSize = function () {
     const overlay = document.getElementById('addAccountModal');
     const content = document.getElementById('addSkFedModalContent');
-    const icon    = document.getElementById('addFedResizeIcon');
-    const btn     = document.getElementById('addFedResizeBtn');
+    const icon = document.getElementById('addFedResizeIcon');
+    const btn = document.getElementById('addFedResizeBtn');
     if (!overlay || !content || !icon) return;
     addFedIsMaximized = !addFedIsMaximized;
     if (addFedIsMaximized) {
         content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
         overlay.style.padding = '0';
         btn.title = 'Restore Down';
-        icon.textContent = ICON_RESTORE;
+        icon.innerHTML = '<path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M3 21l7-7"></path>';
     } else {
         content.style.cssText = ''; overlay.style.padding = '';
         btn.title = 'Maximize';
-        icon.textContent = ICON_MAXIMIZE;
+        icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
     }
 };
 
@@ -276,21 +276,21 @@ window.closeAddAccountModal = function () {
     const content = document.getElementById('addSkFedModalContent');
     if (content) content.style.cssText = '';
     const icon = document.getElementById('addFedResizeIcon');
-    const btn  = document.getElementById('addFedResizeBtn');
+    const btn = document.getElementById('addFedResizeBtn');
     if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn)  btn.title = 'Maximize';
+    if (btn) btn.title = 'Maximize';
     const form = document.getElementById('addSkFedForm');
     if (form) {
         form.reset();
-        form.querySelectorAll('.is-invalid,.is-valid').forEach(f => f.classList.remove('is-invalid','is-valid'));
+        form.querySelectorAll('.is-invalid,.is-valid').forEach(f => f.classList.remove('is-invalid', 'is-valid'));
         form.querySelectorAll('.validation-error').forEach(e => e.remove());
     }
     const ids = _getModalIds(getCurrentAccountType());
     toggleModal(ids.addModalId, false);
 };
 
-window.showAddSuccessModal  = function () { showAccountToast('Account successfully created!', 'success'); };
-window.closeAddSuccessModal = function () {};
+window.showAddSuccessModal = function () { showAccountToast('Account successfully created!', 'success'); };
+window.closeAddSuccessModal = function () { };
 
 // ── Edit SK Federation modal ──────────────────────────────────
 let editFedIsMaximized = false;
@@ -304,49 +304,49 @@ window.closeEditModal = function () {
     if (overlay) overlay.style.padding = '';
     if (content) content.style.cssText = '';
     const icon = document.getElementById('editFedResizeIcon');
-    const btn  = document.getElementById('editFedResizeBtn');
+    const btn = document.getElementById('editFedResizeBtn');
     if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn)  btn.title = 'Maximize';
+    if (btn) btn.title = 'Maximize';
     const form = document.getElementById('editAccountForm');
     if (form) {
         form.reset();
-        form.querySelectorAll('.is-invalid,.is-valid').forEach(f => f.classList.remove('is-invalid','is-valid'));
+        form.querySelectorAll('.is-invalid,.is-valid').forEach(f => f.classList.remove('is-invalid', 'is-valid'));
         form.querySelectorAll('.validation-error').forEach(e => e.remove());
     }
     toggleModal('editAccountModal', false);
 };
 
-window.showEditSuccessModal  = function () {
+window.showEditSuccessModal = function () {
     toggleModal('editAccountModal', false);
     showAccountToast('Account updated successfully!', 'edit');
 };
-window.closeEditSuccessModal = function () {};
+window.closeEditSuccessModal = function () { };
 
 window.toggleEditFedSize = function () {
     const overlay = document.getElementById('editAccountModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon    = document.getElementById('editFedResizeIcon');
-    const btn     = document.getElementById('editFedResizeBtn');
+    const icon = document.getElementById('editFedResizeIcon');
+    const btn = document.getElementById('editFedResizeBtn');
     if (!overlay || !content || !icon) return;
     editFedIsMaximized = !editFedIsMaximized;
     if (editFedIsMaximized) {
         content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
         overlay.style.padding = '0';
-        btn.title = 'Restore Down'; icon.textContent = ICON_RESTORE;
+        btn.title = 'Restore Down'; icon.innerHTML = '<path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M3 21l7-7"></path>';
     } else {
         content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize'; icon.textContent = ICON_MAXIMIZE;
+        btn.title = 'Maximize'; icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
     }
 };
 // Keep legacy aliases so any remaining references don't break
 window.toggleFullscreenEditAccountModal = window.toggleEditFedSize;
-window.toggleRestoreEditAccountModal    = window.toggleEditFedSize;
-window.restoreEditAccountModal          = window.toggleEditFedSize;
+window.toggleRestoreEditAccountModal = window.toggleEditFedSize;
+window.restoreEditAccountModal = window.toggleEditFedSize;
 
 // ── View modal ────────────────────────────────────────────────
 let viewIsMaximized = false;
 
-window.openViewModal  = function () {
+window.openViewModal = function () {
     toggleModal('viewAccountModal', true);
 };
 window.closeViewModal = function () {
@@ -356,16 +356,16 @@ window.closeViewModal = function () {
     if (overlay) overlay.style.padding = '';
     if (content) content.style.cssText = '';
     const icon = document.getElementById('viewResizeIcon');
-    const btn  = document.getElementById('viewToggleBtn');
+    const btn = document.getElementById('viewToggleBtn');
     if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn)  btn.title = 'Maximize';
+    if (btn) btn.title = 'Maximize';
     toggleModal('viewAccountModal', false);
 };
 window.toggleFullscreenViewModal = function () {
     const overlay = document.getElementById('viewAccountModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon    = document.getElementById('viewResizeIcon');
-    const btn     = document.getElementById('viewToggleBtn');
+    const icon = document.getElementById('viewResizeIcon');
+    const btn = document.getElementById('viewToggleBtn');
     if (!overlay || !content || !icon) return;
     viewIsMaximized = !viewIsMaximized;
     if (viewIsMaximized) {
@@ -416,11 +416,11 @@ document.addEventListener('DOMContentLoaded', function () {
     let allAccounts = [];
     let filteredAccounts = [];
 
-    const prevBtn          = document.getElementById('prevBtn');
-    const nextBtn          = document.getElementById('nextBtn');
-    const paginationNums   = document.getElementById('paginationNumbers');
-    const paginationInfo   = document.getElementById('paginationInfo');
-    const tableBody        = document.querySelector('.accounts-table tbody');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const paginationNums = document.getElementById('paginationNumbers');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const tableBody = document.querySelector('.accounts-table tbody');
 
     function initPagination() {
         const rows = Array.from(tableBody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function updatePagination() {
         const total = Math.ceil(filteredAccounts.length / recordsPerPage);
         const start = (currentPage - 1) * recordsPerPage;
-        const end   = Math.min(start + recordsPerPage, filteredAccounts.length);
+        const end = Math.min(start + recordsPerPage, filteredAccounts.length);
         allAccounts.forEach(a => { a.element.style.display = 'none'; });
         for (let i = start; i < end; i++) { if (filteredAccounts[i]) filteredAccounts[i].element.style.display = ''; }
         if (paginationInfo) paginationInfo.innerHTML = `Showing <strong>${filteredAccounts.length > 0 ? start + 1 : 0}-${end}</strong> of <strong>${filteredAccounts.length}</strong> accounts`;
@@ -507,41 +507,41 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify(payload)
             })
-            .then(async r => {
-                const ct = r.headers.get('content-type') || '';
-                const data = ct.includes('application/json') ? await r.json() : {};
-                return { ok: r.ok, data };
-            })
-            .then(({ ok, data }) => {
-                hideLoadingOverlay();
-                if (!ok || !data.success) {
-                    if (data.errors) {
-                        let handledError = false;
-                        Object.keys(data.errors).forEach(f => {
-                            const input = officialsForm.querySelector(`[name="${f}"]`);
-                            if (input) {
-                                _showErr(input, data.errors[f][0]);
-                                handledError = true;
+                .then(async r => {
+                    const ct = r.headers.get('content-type') || '';
+                    const data = ct.includes('application/json') ? await r.json() : {};
+                    return { ok: r.ok, data };
+                })
+                .then(({ ok, data }) => {
+                    hideLoadingOverlay();
+                    if (!ok || !data.success) {
+                        if (data.errors) {
+                            let handledError = false;
+                            Object.keys(data.errors).forEach(f => {
+                                const input = officialsForm.querySelector(`[name="${f}"]`);
+                                if (input) {
+                                    _showErr(input, data.errors[f][0]);
+                                    handledError = true;
+                                }
+                            });
+                            if (!handledError) {
+                                const firstError = Object.values(data.errors).flat()[0] || 'Failed to create account. Please try again.';
+                                alert(firstError);
                             }
-                        });
-                        if (!handledError) {
-                            const firstError = Object.values(data.errors).flat()[0] || 'Failed to create account. Please try again.';
-                            alert(firstError);
+                        } else {
+                            alert('Failed to create account. Please try again.');
                         }
-                    } else {
-                        alert('Failed to create account. Please try again.');
+                        return;
                     }
-                    return;
-                }
-                closeAddSkOfficialsModal();
-                showSkOfficialsSuccessModal();
-                setTimeout(() => window.location.reload(), 1000);
-            })
-            .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
+                    closeAddSkOfficialsModal();
+                    showSkOfficialsSuccessModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                })
+                .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
         });
 
         // Text-only name fields
-        ['official_first_name','official_last_name','official_middle_name'].forEach(id => {
+        ['official_first_name', 'official_last_name', 'official_middle_name'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
             el.addEventListener('input', () => { el.value = el.value.replace(/[^a-zA-Z\s\-']/g, ''); if (el.classList.contains('is-invalid')) _validateField(el); });
@@ -558,78 +558,78 @@ document.addEventListener('DOMContentLoaded', function () {
     if (fedForm) {
         fedForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            
+
             // Validate all required fields first
             let valid = true;
-            fedForm.querySelectorAll('[required]').forEach(el => { 
-                if (!_validateField(el)) valid = false; 
+            fedForm.querySelectorAll('[required]').forEach(el => {
+                if (!_validateField(el)) valid = false;
             });
-            
-            if (!valid) { 
-                const first = fedForm.querySelector('.is-invalid'); 
-                if (first) first.focus(); 
-                return; 
+
+            if (!valid) {
+                const first = fedForm.querySelector('.is-invalid');
+                if (first) first.focus();
+                return;
             }
-            
+
             clearAllErrors(fedForm);
             fedForm.querySelectorAll('.validation-error').forEach(err => err.remove());
-            
+
             const formData = new FormData(fedForm);
             const payload = {};
             for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
             payload.term_status = payload.term_status || (payload.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
-            
+
             showLoadingOverlay();
             fetch('/accounts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), 'Accept': 'application/json' },
                 body: JSON.stringify(payload)
             })
-            .then(async r => { const ct = r.headers.get('content-type') || ''; const data = ct.includes('application/json') ? await r.json() : {}; return { ok: r.ok, data }; })
-            .then(({ ok, data }) => {
-                hideLoadingOverlay();
-                if (!ok || !data.success) {
-                    if (data.errors) {
-                        let handledError = false;
-                        Object.keys(data.errors).forEach(f => {
-                            const input = fedForm.querySelector(`[name="${f}"]`);
-                            if (input) {
-                                _showErr(input, data.errors[f][0]);
-                                handledError = true;
+                .then(async r => { const ct = r.headers.get('content-type') || ''; const data = ct.includes('application/json') ? await r.json() : {}; return { ok: r.ok, data }; })
+                .then(({ ok, data }) => {
+                    hideLoadingOverlay();
+                    if (!ok || !data.success) {
+                        if (data.errors) {
+                            let handledError = false;
+                            Object.keys(data.errors).forEach(f => {
+                                const input = fedForm.querySelector(`[name="${f}"]`);
+                                if (input) {
+                                    _showErr(input, data.errors[f][0]);
+                                    handledError = true;
+                                }
+                            });
+                            if (!handledError) {
+                                const firstError = Object.values(data.errors).flat()[0] || 'Failed to create account. Please try again.';
+                                alert(firstError);
                             }
-                        });
-                        if (!handledError) {
-                            const firstError = Object.values(data.errors).flat()[0] || 'Failed to create account. Please try again.';
-                            alert(firstError);
+                        } else {
+                            alert('Failed to create account. Please try again.');
                         }
-                    } else {
-                        alert('Failed to create account. Please try again.');
+                        return;
                     }
-                    return;
-                }
-                closeAddAccountModal();
-                showAddSuccessModal();
-                // Reload page to show new account
-                setTimeout(() => window.location.reload(), 1000);
-            })
-            .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
+                    closeAddAccountModal();
+                    showAddSuccessModal();
+                    // Reload page to show new account
+                    setTimeout(() => window.location.reload(), 1000);
+                })
+                .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
         });
 
         // Text-only / numbers-only for fed add form
-        ['first_name','last_name','middle_name'].forEach(id => {
+        ['first_name', 'last_name', 'middle_name'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
-            el.addEventListener('input', () => { 
-                el.value = el.value.replace(/[^a-zA-Z\s\-']/g, ''); 
+            el.addEventListener('input', () => {
+                el.value = el.value.replace(/[^a-zA-Z\s\-']/g, '');
                 if (el.classList.contains('is-invalid')) _validateField(el);
             });
         });
         const cFed = document.getElementById('contact_number');
-        if (cFed) cFed.addEventListener('input', () => { 
-            cFed.value = cFed.value.replace(/\D/g, ''); 
+        if (cFed) cFed.addEventListener('input', () => {
+            cFed.value = cFed.value.replace(/\D/g, '');
             if (cFed.classList.contains('is-invalid')) _validateField(cFed);
         });
-        
+
         // Blur validation for all required fields
         fedForm.querySelectorAll('[required]').forEach(el => el.addEventListener('blur', () => _validateField(el)));
     }
@@ -660,47 +660,47 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify(payload)
             })
-            .then(async r => {
-                const ct = r.headers.get('content-type') || '';
-                const data = ct.includes('application/json') ? await r.json() : {};
-                return { ok: r.ok, data };
-            })
-            .then(({ ok, data }) => {
-                hideLoadingOverlay();
-                if (!ok || !data.success) {
-                    if (data.errors) {
-                        let handledError = false;
-                        Object.keys(data.errors).forEach(f => {
-                            const input = form.querySelector(`[name="${f}"]`);
-                            if (input) {
-                                _showErr(input, data.errors[f][0]);
-                                handledError = true;
+                .then(async r => {
+                    const ct = r.headers.get('content-type') || '';
+                    const data = ct.includes('application/json') ? await r.json() : {};
+                    return { ok: r.ok, data };
+                })
+                .then(({ ok, data }) => {
+                    hideLoadingOverlay();
+                    if (!ok || !data.success) {
+                        if (data.errors) {
+                            let handledError = false;
+                            Object.keys(data.errors).forEach(f => {
+                                const input = form.querySelector(`[name="${f}"]`);
+                                if (input) {
+                                    _showErr(input, data.errors[f][0]);
+                                    handledError = true;
+                                }
+                            });
+                            if (!handledError) {
+                                const firstError = Object.values(data.errors).flat()[0] || 'Failed to update account. Please try again.';
+                                alert(firstError);
                             }
-                        });
-                        if (!handledError) {
-                            const firstError = Object.values(data.errors).flat()[0] || 'Failed to update account. Please try again.';
-                            alert(firstError);
-                        }
-                    } else alert('Failed to update account. Please try again.');
-                    return;
-                }
-                _closeEditByType();
-                _showEditSuccessByType();
-            })
-            .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
+                        } else alert('Failed to update account. Please try again.');
+                        return;
+                    }
+                    _closeEditByType();
+                    _showEditSuccessByType();
+                })
+                .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
         });
     }
 
-    const fedEditForm      = document.getElementById('editAccountForm');
+    const fedEditForm = document.getElementById('editAccountForm');
     const officialsEditForm = document.getElementById('editSkOfficialsForm');
     attachEditSubmit(fedEditForm);
     attachEditSubmit(officialsEditForm);
 
     // DOB → age auto-fill
-    attachDobAgeAutoFill(fedForm,          'date_of_birth', 'age');
-    attachDobAgeAutoFill(fedEditForm,      'date_of_birth', 'age');
-    attachDobAgeAutoFill(officialsForm,    'date_of_birth', 'age');
-    attachDobAgeAutoFill(officialsEditForm,'date_of_birth', 'age');
+    attachDobAgeAutoFill(fedForm, 'date_of_birth', 'age');
+    attachDobAgeAutoFill(fedEditForm, 'date_of_birth', 'age');
+    attachDobAgeAutoFill(officialsForm, 'date_of_birth', 'age');
+    attachDobAgeAutoFill(officialsEditForm, 'date_of_birth', 'age');
 
     // Edit SK Officials — age auto-calc from DOB
     const editOfficialsDob = document.getElementById('edit_sk_officials_date_of_birth');
@@ -713,7 +713,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function populateEditForm(form, data) {
         if (!form) return;
         form.dataset.accountId = data.accountId || '';
-        ['first_name','last_name','middle_name','suffix','date_of_birth','age','contact_number','email','position','barangay_id','status','term_start','term_end','term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
+        ['first_name', 'last_name', 'middle_name', 'suffix', 'date_of_birth', 'age', 'contact_number', 'email', 'position', 'barangay_id', 'status', 'term_start', 'term_end', 'term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
         clearAllErrors(form);
     }
 
@@ -731,11 +731,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Delegated click handlers (covers server-rendered + JS-injected rows) ──
     if (tableBody) {
         tableBody.addEventListener('click', function (e) {
-            const viewBtn   = e.target.closest('.btn-view-account');
-            const editBtn   = e.target.closest('.btn-edit-account');
+            const viewBtn = e.target.closest('.btn-view-account');
+            const editBtn = e.target.closest('.btn-edit-account');
             const deleteBtn = e.target.closest('.btn-delete-account');
-            if (viewBtn)   openViewWithData(viewBtn);
-            if (editBtn)   openEditWithData(editBtn);
+            if (viewBtn) openViewWithData(viewBtn);
+            if (editBtn) openEditWithData(editBtn);
             if (deleteBtn) openDeleteModal(deleteBtn);
         });
     }
@@ -745,34 +745,34 @@ document.addEventListener('DOMContentLoaded', function () {
         const d = btn.dataset;
         const isOfficials = getCurrentAccountType() === 'sk_officials';
         const fullName = [d.firstName, d.middleName, d.lastName, d.suffix].filter(v => v && v.trim()).join(' ');
-        document.getElementById('viewFullName').textContent         = fullName || '-';
-        document.getElementById('viewEmail').textContent            = d.email || '-';
-        document.getElementById('viewDateOfBirth').textContent      = d.dateOfBirth ? formatDate(d.dateOfBirth) : '-';
-        document.getElementById('viewAge').textContent              = d.age || '-';
-        document.getElementById('viewContactNumber').textContent    = d.contactNumber || '-';
+        document.getElementById('viewFullName').textContent = fullName || '-';
+        document.getElementById('viewEmail').textContent = d.email || '-';
+        document.getElementById('viewDateOfBirth').textContent = d.dateOfBirth ? formatDate(d.dateOfBirth) : '-';
+        document.getElementById('viewAge').textContent = d.age || '-';
+        document.getElementById('viewContactNumber').textContent = d.contactNumber || '-';
         document.getElementById('viewEmailVerification').textContent = d.emailVerifiedAt || 'Not Verified';
-        document.getElementById('viewBarangay').textContent         = d.barangayName || '-';
-        document.getElementById('viewMunicipality').textContent     = d.municipality || '-';
+        document.getElementById('viewBarangay').textContent = d.barangayName || '-';
+        document.getElementById('viewMunicipality').textContent = d.municipality || '-';
         const provC = document.getElementById('viewProvinceContainer');
-        const regC  = document.getElementById('viewRegionContainer');
+        const regC = document.getElementById('viewRegionContainer');
         if (!isOfficials) {
             if (provC) provC.style.display = 'flex';
-            if (regC)  regC.style.display  = 'flex';
+            if (regC) regC.style.display = 'flex';
             document.getElementById('viewProvince').textContent = d.province || '-';
-            document.getElementById('viewRegion').textContent   = d.region   || '-';
+            document.getElementById('viewRegion').textContent = d.region || '-';
         } else {
             if (provC) provC.style.display = 'none';
-            if (regC)  regC.style.display  = 'none';
+            if (regC) regC.style.display = 'none';
         }
-        document.getElementById('viewPosition').textContent  = d.position  || '-';
+        document.getElementById('viewPosition').textContent = d.position || '-';
         document.getElementById('viewTermStart').textContent = d.termStart ? formatDate(d.termStart) : '-';
-        document.getElementById('viewTermEnd').textContent   = d.termEnd   ? formatDate(d.termEnd)   : '-';
-        const accStatus  = document.getElementById('viewAccountStatus');
+        document.getElementById('viewTermEnd').textContent = d.termEnd ? formatDate(d.termEnd) : '-';
+        const accStatus = document.getElementById('viewAccountStatus');
         const termStatus = document.getElementById('viewTermStatus');
-        accStatus.textContent  = d.status     || '-';
-        accStatus.className    = `status-badge ${d.status ? d.status.toLowerCase() : ''}`;
+        accStatus.textContent = d.status || '-';
+        accStatus.className = `status-badge ${d.status ? d.status.toLowerCase() : ''}`;
         termStatus.textContent = d.termStatus || 'ACTIVE';
-        termStatus.className   = `status-badge ${d.termStatus ? d.termStatus.toLowerCase() : 'active'}`;
+        termStatus.className = `status-badge ${d.termStatus ? d.termStatus.toLowerCase() : 'active'}`;
         openViewModal();
     }
 
@@ -858,10 +858,10 @@ document.addEventListener('DOMContentLoaded', function () {
         'Term Start Date', 'Term End Date', 'Committee', 'Email Address'
     ];
 
-    const fileInput  = document.getElementById('officialBatchFile');
-    const dropzone   = document.getElementById('officialDropzone');
-    const fileLabel  = document.getElementById('officialFileName');
-    const preview    = document.getElementById('officialBatchPreview');
+    const fileInput = document.getElementById('officialBatchFile');
+    const dropzone = document.getElementById('officialDropzone');
+    const fileLabel = document.getElementById('officialFileName');
+    const preview = document.getElementById('officialBatchPreview');
     const confirmBtn = document.getElementById('officialBatchConfirmBtn');
 
     // Stores the parsed batch rows so Confirm Import can use them
@@ -877,8 +877,8 @@ document.addEventListener('DOMContentLoaded', function () {
         reader.onload = function (e) {
             try {
                 var data = new Uint8Array(e.target.result);
-                var wb   = XLSX.read(data, { type: 'array', raw: false });
-                var ws   = wb.Sheets[wb.SheetNames[0]];
+                var wb = XLSX.read(data, { type: 'array', raw: false });
+                var ws = wb.Sheets[wb.SheetNames[0]];
 
                 var allRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
@@ -890,19 +890,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (dataRows.length === 0) {
                     _batchParsedHeaders = [];
-                    _batchParsedRows    = [];
+                    _batchParsedRows = [];
                     renderBatchPreview([], []);
                     return;
                 }
 
                 _batchParsedHeaders = dataRows[0].map(function (h) { return String(h).trim(); });
-                _batchParsedRows    = dataRows.slice(1);
+                _batchParsedRows = dataRows.slice(1);
 
                 renderBatchPreview(_batchParsedHeaders, _batchParsedRows);
             } catch (err) {
                 console.error('Batch upload read error:', err);
                 _batchParsedHeaders = [];
-                _batchParsedRows    = [];
+                _batchParsedRows = [];
                 renderBatchPreview([], []);
             }
         };
@@ -928,13 +928,13 @@ document.addEventListener('DOMContentLoaded', function () {
             return '<th>' + h + '</th>';
         }).join('');
 
-        var displayRows  = rows;
-        var isSample     = false;
+        var displayRows = rows;
+        var isSample = false;
 
         // If no data rows, inject one sample row so the table is never empty
         if (rows.length === 0) {
             displayRows = [SAMPLE_ROW];
-            isSample    = true;
+            isSample = true;
         }
 
         var tbodyRows = displayRows.map(function (row) {
@@ -962,9 +962,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Reset batch pane to initial state
     window.resetBatchUpload = function () {
-        if (fileInput)  { fileInput.value = ''; }
-        if (fileLabel)  { fileLabel.textContent = 'Supported: .xlsx, .xls'; }
-        if (preview)    { preview.innerHTML = ''; preview.style.display = 'none'; }
+        if (fileInput) { fileInput.value = ''; }
+        if (fileLabel) { fileLabel.textContent = 'Supported: .xlsx, .xls'; }
+        if (preview) { preview.innerHTML = ''; preview.style.display = 'none'; }
         switchAddOfficialTab('manual');
     };
 
@@ -976,7 +976,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Use parsed rows from the uploaded file; fall back to SAMPLE_ROW if none
             var rowsToInsert = _batchParsedRows.length > 0 ? _batchParsedRows : [SAMPLE_ROW];
-            var hdrs         = _batchParsedHeaders.length > 0 ? _batchParsedHeaders : BATCH_LABELS;
+            var hdrs = _batchParsedHeaders.length > 0 ? _batchParsedHeaders : BATCH_LABELS;
 
             // Build a header→index map (case-insensitive)
             var hdrMap = {};
@@ -992,21 +992,21 @@ document.addEventListener('DOMContentLoaded', function () {
             if (emptyRow) emptyRow.closest('tr').remove();
 
             rowsToInsert.forEach(function (row) {
-                var firstName  = col(row, 'first name')   || col(row, 'first_name')  || (row[0]  ? String(row[0]).trim()  : '');
-                var middleName = col(row, 'middle name')  || col(row, 'middle_name') || (row[1]  ? String(row[1]).trim()  : '');
-                var lastName   = col(row, 'last name')    || col(row, 'last_name')   || (row[2]  ? String(row[2]).trim()  : '');
-                var suffix     = col(row, 'suffix')                                  || (row[3]  ? String(row[3]).trim()  : '');
-                var sex        = col(row, 'sex')                                     || (row[4]  ? String(row[4]).trim()  : '');
-                var birthdate  = col(row, 'birthdate')                               || (row[5]  ? String(row[5]).trim()  : '');
-                var age        = col(row, 'age')                                     || (row[6]  ? String(row[6]).trim()  : '');
-                var contact    = col(row, 'contact number') || col(row, 'contact_number') || (row[7] ? String(row[7]).trim() : '');
-                var position   = col(row, 'position')                                || (row[8]  ? String(row[8]).trim()  : '');
-                var status     = col(row, 'status')                                  || (row[9]  ? String(row[9]).trim()  : 'Active');
-                var barangay   = col(row, 'barangay')                                || (row[13] ? String(row[13]).trim() : '');
-                var termStart  = col(row, 'term start date') || col(row, 'term_start') || (row[14] ? String(row[14]).trim() : '');
-                var termEnd    = col(row, 'term end date')   || col(row, 'term_end')   || (row[15] ? String(row[15]).trim() : '');
-                var committee  = col(row, 'committee')                               || (row[16] ? String(row[16]).trim() : '');
-                var email      = col(row, 'email address')  || col(row, 'email')      || (row[17] ? String(row[17]).trim() : '');
+                var firstName = col(row, 'first name') || col(row, 'first_name') || (row[0] ? String(row[0]).trim() : '');
+                var middleName = col(row, 'middle name') || col(row, 'middle_name') || (row[1] ? String(row[1]).trim() : '');
+                var lastName = col(row, 'last name') || col(row, 'last_name') || (row[2] ? String(row[2]).trim() : '');
+                var suffix = col(row, 'suffix') || (row[3] ? String(row[3]).trim() : '');
+                var sex = col(row, 'sex') || (row[4] ? String(row[4]).trim() : '');
+                var birthdate = col(row, 'birthdate') || (row[5] ? String(row[5]).trim() : '');
+                var age = col(row, 'age') || (row[6] ? String(row[6]).trim() : '');
+                var contact = col(row, 'contact number') || col(row, 'contact_number') || (row[7] ? String(row[7]).trim() : '');
+                var position = col(row, 'position') || (row[8] ? String(row[8]).trim() : '');
+                var status = col(row, 'status') || (row[9] ? String(row[9]).trim() : 'Active');
+                var barangay = col(row, 'barangay') || (row[13] ? String(row[13]).trim() : '');
+                var termStart = col(row, 'term start date') || col(row, 'term_start') || (row[14] ? String(row[14]).trim() : '');
+                var termEnd = col(row, 'term end date') || col(row, 'term_end') || (row[15] ? String(row[15]).trim() : '');
+                var committee = col(row, 'committee') || (row[16] ? String(row[16]).trim() : '');
+                var email = col(row, 'email address') || col(row, 'email') || (row[17] ? String(row[17]).trim() : '');
 
                 // Build display name
                 var nameParts = [firstName, middleName ? middleName.charAt(0) + '.' : '', lastName, suffix].filter(Boolean);
@@ -1024,40 +1024,40 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<td>' + (termEnd || '—') + '</td>' +
                     '<td><span class="status-badge ' + statusClass + '">' + status + '</span></td>' +
                     '<td><div class="action-buttons-container">' +
-                        '<button type="button" class="btn-view-modern btn-view-account"' +
-                            ' data-first-name="' + firstName + '"' +
-                            ' data-middle-name="' + middleName + '"' +
-                            ' data-last-name="' + lastName + '"' +
-                            ' data-suffix="' + suffix + '"' +
-                            ' data-date-of-birth="' + birthdate + '"' +
-                            ' data-age="' + age + '"' +
-                            ' data-contact-number="' + contact + '"' +
-                            ' data-email="' + email + '"' +
-                            ' data-position="' + position + '"' +
-                            ' data-barangay-name="' + barangay + '"' +
-                            ' data-status="' + status + '"' +
-                            ' data-term-status="ACTIVE"' +
-                            ' data-term-start="' + termStart + '"' +
-                            ' data-term-end="' + termEnd + '"' +
-                            ' data-email-verified-at="">View</button>' +
-                        '<button type="button" class="btn-edit-modern btn-edit-account"' +
-                            ' data-account-id=""' +
-                            ' data-first-name="' + firstName + '"' +
-                            ' data-middle-name="' + middleName + '"' +
-                            ' data-last-name="' + lastName + '"' +
-                            ' data-suffix="' + suffix + '"' +
-                            ' data-date-of-birth="' + birthdate + '"' +
-                            ' data-age="' + age + '"' +
-                            ' data-contact-number="' + contact + '"' +
-                            ' data-email="' + email + '"' +
-                            ' data-position="' + position + '"' +
-                            ' data-status="' + status + '"' +
-                            ' data-term-status="ACTIVE"' +
-                            ' data-term-start="' + termStart + '"' +
-                            ' data-term-end="' + termEnd + '">Edit</button>' +
-                        '<button type="button" class="btn-delete-modern btn-delete-account"' +
-                            ' data-account-id=""' +
-                            ' data-display-name="' + displayName + '">Delete</button>' +
+                    '<button type="button" class="btn-view-modern btn-view-account"' +
+                    ' data-first-name="' + firstName + '"' +
+                    ' data-middle-name="' + middleName + '"' +
+                    ' data-last-name="' + lastName + '"' +
+                    ' data-suffix="' + suffix + '"' +
+                    ' data-date-of-birth="' + birthdate + '"' +
+                    ' data-age="' + age + '"' +
+                    ' data-contact-number="' + contact + '"' +
+                    ' data-email="' + email + '"' +
+                    ' data-position="' + position + '"' +
+                    ' data-barangay-name="' + barangay + '"' +
+                    ' data-status="' + status + '"' +
+                    ' data-term-status="ACTIVE"' +
+                    ' data-term-start="' + termStart + '"' +
+                    ' data-term-end="' + termEnd + '"' +
+                    ' data-email-verified-at="">View</button>' +
+                    '<button type="button" class="btn-edit-modern btn-edit-account"' +
+                    ' data-account-id=""' +
+                    ' data-first-name="' + firstName + '"' +
+                    ' data-middle-name="' + middleName + '"' +
+                    ' data-last-name="' + lastName + '"' +
+                    ' data-suffix="' + suffix + '"' +
+                    ' data-date-of-birth="' + birthdate + '"' +
+                    ' data-age="' + age + '"' +
+                    ' data-contact-number="' + contact + '"' +
+                    ' data-email="' + email + '"' +
+                    ' data-position="' + position + '"' +
+                    ' data-status="' + status + '"' +
+                    ' data-term-status="ACTIVE"' +
+                    ' data-term-start="' + termStart + '"' +
+                    ' data-term-end="' + termEnd + '">Edit</button>' +
+                    '<button type="button" class="btn-delete-modern btn-delete-account"' +
+                    ' data-account-id=""' +
+                    ' data-display-name="' + displayName + '">Delete</button>' +
                     '</div></td>';
 
                 tbody.appendChild(tr);

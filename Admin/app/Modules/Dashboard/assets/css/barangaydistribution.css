@@ -1,0 +1,103 @@
+/* ============================================================
+   Barangay Distribution Component CSS
+   ============================================================ */
+
+.barangay-distribution-panel {
+    min-height: 360px;
+    box-sizing: border-box;
+}
+
+.table-scroll {
+    max-height: 340px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.table-compact {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+    box-sizing: border-box;
+}
+
+.table-compact th,
+.table-compact td {
+    padding: 0.5rem 0.55rem;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: left;
+    white-space: normal;
+    word-break: break-word;
+    font-variant-numeric: tabular-nums;
+}
+
+.table-compact thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #ffffff;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.65rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.pill {
+    display: inline-block;
+    padding: 0.12rem 0.46rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    font-size: 0.61rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.pill--healthy {
+    color: #16a34a;
+    border-color: rgba(22, 163, 74, 0.4);
+    background: rgba(22, 163, 74, 0.1);
+}
+
+.pill--critical {
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.4);
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.gap-flag {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.gap-flag--healthy {
+    color: #16a34a;
+}
+
+.gap-flag--critical {
+    color: #dc2626;
+}
+
+/* Dark mode */
+:root.dark .table-scroll {
+    background: #ffffff;
+    border-color: #e5e7eb;
+}
+
+:root.dark .table-compact thead th {
+    background: #ffffff;
+    color: #6b7280;
+    border-bottom-color: #e2e8f0;
+}
+
+:root.dark .table-compact td {
+    border-bottom-color: #f1f5f9;
+    color: #374151;
+}

@@ -5,7 +5,7 @@
             <p class="gov-card__subtitle">Latest account and security actions captured from the control plane</p>
         </div>
 
-        <button type="button" class="panel-action-btn">View Full Audit Log</button>
+        <a href="{{ route('auditlogs.index') }}" class="panel-action-btn">View Full Audit Log</a>
     </header>
 
     <div class="audit-table-wrap">

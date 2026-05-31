@@ -14,10 +14,9 @@
 @php
 	$statCards = [
 		['label' => 'Total Users', 'metricKey' => 'totalUsers', 'tone' => 'azure', 'icon' => 'users', 'route' => null],
-		['label' => 'Federation Accounts Count', 'metricKey' => 'federationAccounts', 'tone' => 'teal', 'icon' => 'federation', 'route' => null],
-		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials', 'route' => null],
-		['label' => 'Current Active Accounts', 'metricKey' => 'currentActiveAccounts', 'tone' => 'indigo', 'icon' => 'activity', 'route' => null],
-		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => null],
+		['label' => 'Federation Accounts Count', 'metricKey' => 'federationAccounts', 'tone' => 'teal', 'icon' => 'federation', 'route' => 'accounts.federation.index'],
+		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials', 'route' => 'accounts.officials.index'],
+		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => 'manage-kabataan.index'],
 		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-federation'],
 		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-officials'],
 		['label' => 'SK Federation Records', 'metricKey' => 'skFederationRecords', 'tone' => 'red', 'icon' => 'federation', 'route' => 'archived.sk-federation-records'],
@@ -32,22 +31,39 @@
 			<h1 class="dash-page-title">Dashboard</h1>
 			<p class="dash-page-welcome">Welcome back Admin</p>
 		</div>
-		<div class="dash-year-filter">
-			<label for="yearSelect" class="dash-year-label">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-					<line x1="3" y1="10" x2="21" y2="10"></line>
-					<line x1="8" y1="2" x2="8" y2="6"></line>
-					<line x1="16" y1="2" x2="16" y2="6"></line>
-				</svg>
-				Year
-			</label>
-			<select id="yearSelect" class="dash-year-select">
-				<option value="2023">2023</option>
-				<option value="2024">2024</option>
-				<option value="2025">2025</option>
-				<option value="2026" selected>2026</option>
-			</select>
+		<div class="dash-header-filters">
+			<div class="dash-year-filter">
+				<label for="yearSelect" class="dash-year-label">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+						<line x1="3" y1="10" x2="21" y2="10"></line>
+						<line x1="8" y1="2" x2="8" y2="6"></line>
+						<line x1="16" y1="2" x2="16" y2="6"></line>
+					</svg>
+					Year
+				</label>
+				<select id="yearSelect" class="dash-year-select">
+					<option value="2023">2023</option>
+					<option value="2024">2024</option>
+					<option value="2025">2025</option>
+					<option value="2026" selected>2026</option>
+				</select>
+			</div>
+			<div class="dash-term-filter">
+				<label for="termSelect" class="dash-term-label">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="2" y="7" width="20" height="14" rx="2"></rect>
+						<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+					</svg>
+					Term
+				</label>
+				<select id="termSelect" class="dash-term-select">
+					<option value="all">All Terms</option>
+					<option value="2023-2026">2023 - 2026</option>
+					<option value="2024-2027">2024 - 2027</option>
+					<option value="2025-2028">2025 - 2028</option>
+				</select>
+			</div>
 		</div>
 	</div>
 

@@ -1,0 +1,139 @@
+/* ============================================================
+   Trend Chart Component CSS
+   ============================================================ */
+
+.trend-chart-panel {
+    min-height: 360px;
+    box-sizing: border-box;
+}
+
+.panel {
+    min-height: 360px;
+    box-sizing: border-box;
+}
+
+.panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-bottom: 0.7rem;
+}
+
+.panel__header > * {
+    min-width: 0;
+}
+
+.panel-action-btn {
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 8px;
+    color: #475569;
+    font-family: inherit;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding: 0.4rem 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.panel-action-btn:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.graph-legend {
+    display: inline-flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.graph-legend__item {
+    border-radius: 999px;
+    padding: 0.14rem 0.5rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    font-weight: 700;
+}
+
+.graph-legend__item--federation {
+    color: #1565c0;
+    border-color: rgba(21, 101, 192, 0.4);
+    background: rgba(21, 101, 192, 0.08);
+}
+
+.graph-legend__item--official {
+    color: #7c3aed;
+    border-color: rgba(124, 58, 237, 0.4);
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.graph-legend__item--kabataan {
+    color: #0891b2;
+    border-color: rgba(8, 145, 178, 0.4);
+    background: rgba(8, 145, 178, 0.08);
+}
+
+.chart-shell {
+    height: 280px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.chart-shell--users {
+    height: 300px;
+}
+
+.chart-shell canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100%;
+}
+
+/* Dark mode */
+:root.dark .panel-action-btn {
+    background: #334155;
+    border-color: #475569;
+    color: #94a3b8;
+}
+
+:root.dark .panel-action-btn:hover {
+    background: #3f4f63;
+    border-color: #64748b;
+    color: #e2e8f0;
+}
+
+:root.dark .graph-legend__item--federation {
+    color: #60a5fa;
+    border-color: rgba(96, 165, 250, 0.4);
+    background: rgba(96, 165, 250, 0.1);
+}
+
+:root.dark .graph-legend__item--official {
+    color: #a78bfa;
+    border-color: rgba(167, 139, 250, 0.4);
+    background: rgba(167, 139, 250, 0.1);
+}
+
+:root.dark .graph-legend__item--kabataan {
+    color: #22d3ee;
+    border-color: rgba(34, 211, 238, 0.4);
+    background: rgba(34, 211, 238, 0.1);
+}
+
+@media (max-width: 780px) {
+    .panel {
+        min-height: auto;
+    }
+
+    .chart-shell,
+    .chart-shell--users {
+        height: 244px;
+    }
+}
