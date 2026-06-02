@@ -30,7 +30,7 @@ function formatTime(timeStr) {
 
 function formatDate(dateStr) {
     if (!dateStr) return '—';
-    const d = new Date(dateStr);
+    const d = new Date(`${dateStr}T00:00:00`);
     return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
@@ -85,6 +85,87 @@ function initializeScheduleKKProfiling() {
     const deleteModal      = document.getElementById('skkpDeleteModal');
     const deleteCancelBtn  = document.getElementById('skkpDeleteCancelBtn');
     const deleteConfirmBtn = document.getElementById('skkpDeleteConfirmBtn');
+    const dateStartInput = document.getElementById('skkpFormDateStart');
+    const dateExpiryInput = document.getElementById('skkpFormDateExpiry');
+    const dateStartError = document.getElementById('skkpDateStartError');
+    const dateExpiryError = document.getElementById('skkpDateExpiryError');
+    const MAX_RANGE_DAYS = 366;
+
+    function localDateString(date = new Date()) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function parseYmdToLocalDate(ymd) {
+        if (!ymd) return null;
+        const [y, m, d] = ymd.split('-').map(Number);
+        if (!y || !m || !d) return null;
+        return new Date(y, m - 1, d, 0, 0, 0, 0);
+    }
+
+    function dayDiffInclusive(startYmd, endYmd) {
+        const start = parseYmdToLocalDate(startYmd);
+        const end = parseYmdToLocalDate(endYmd);
+        if (!start || !end) return 0;
+        const ms = end.getTime() - start.getTime();
+        return Math.floor(ms / 86400000);
+    }
+
+    function showFieldError(el, message) {
+        if (!el) return;
+        el.textContent = message || '';
+        el.style.display = message ? 'block' : 'none';
+    }
+
+    function validateDateWindow() {
+        const today = localDateString();
+        const dateStart = dateStartInput?.value || '';
+        const dateExpiry = dateExpiryInput?.value || '';
+        let valid = true;
+
+        showFieldError(dateStartError, '');
+        showFieldError(dateExpiryError, '');
+
+        if (dateStart && dateStart < today) {
+            showFieldError(dateStartError, 'Past dates are not allowed.');
+            valid = false;
+        }
+
+        if (dateExpiry && dateExpiry < today) {
+            showFieldError(dateExpiryError, 'Past dates are not allowed.');
+            valid = false;
+        }
+
+        if (dateStart && dateExpiry && dateExpiry < dateStart) {
+            showFieldError(dateExpiryError, 'Date Expiry must be on or after Date Start.');
+            valid = false;
+        }
+
+        if (dateStart && dateExpiry && dayDiffInclusive(dateStart, dateExpiry) > MAX_RANGE_DAYS) {
+            showFieldError(dateExpiryError, 'Date range cannot exceed one year.');
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    function refreshDateBounds() {
+        const today = localDateString();
+        if (dateStartInput) dateStartInput.min = today;
+        if (dateExpiryInput) {
+            const startVal = dateStartInput?.value || '';
+            dateExpiryInput.min = startVal || today;
+            if (startVal) {
+                const maxDate = parseYmdToLocalDate(startVal);
+                maxDate.setFullYear(maxDate.getFullYear() + 1);
+                dateExpiryInput.max = localDateString(maxDate);
+            } else {
+                dateExpiryInput.removeAttribute('max');
+            }
+        }
+    }
 
     // ── API ─────────────────────────────────────────────────────────────────
     async function loadData() {
@@ -280,6 +361,9 @@ function initializeScheduleKKProfiling() {
     function clearForm() {
         ['skkpFormDateStart', 'skkpFormDateExpiry', 'skkpFormLink'].forEach(id => setFormField(id, ''));
         setFormField('skkpFormStatus', 'Upcoming');
+        showFieldError(dateStartError, '');
+        showFieldError(dateExpiryError, '');
+        refreshDateBounds();
     }
 
     // ── Status hint ─────────────────────────────────────────────────────────
@@ -334,8 +418,7 @@ function initializeScheduleKKProfiling() {
                 showToast('Please fill in all required fields.', 'error');
                 return;
             }
-            if (dateExpiry < dateStart) {
-                showToast('Date Expiry must be on or after Date Start.', 'error');
+            if (!validateDateWindow()) {
                 return;
             }
             if (link && !isValidUrl(link)) {
@@ -386,11 +469,29 @@ function initializeScheduleKKProfiling() {
             editIdInput.value = sched.id;
             formTitle.textContent = 'Edit Schedule';
             formSaveBtn.textContent = 'Update Schedule';
-            setFormField('skkpFormDateStart',  sched.dateStart);
-            setFormField('skkpFormDateExpiry', sched.dateExpiry);
+            const today = localDateString();
+            let startVal = sched.dateStart || '';
+            let expiryVal = sched.dateExpiry || '';
+
+            // When editing old records, keep the form usable by snapping past start dates to today.
+            if (startVal && startVal < today) {
+                startVal = today;
+            }
+            if (expiryVal && startVal && expiryVal < startVal) {
+                expiryVal = startVal;
+            }
+            if (expiryVal && expiryVal < today) {
+                expiryVal = startVal || today;
+            }
+
+            setFormField('skkpFormDateStart', startVal);
+            setFormField('skkpFormDateExpiry', expiryVal);
             setFormField('skkpFormLink',       sched.link);
             setFormField('skkpFormStatus',     sched.status);
             updateStatusHint(sched.status);
+            showFieldError(dateStartError, '');
+            showFieldError(dateExpiryError, '');
+            refreshDateBounds();
             openModal(formModal);
         } else if (action === 'delete') {
             openModal(deleteModal);
@@ -449,6 +550,17 @@ function initializeScheduleKKProfiling() {
 
     // ── Utility ─────────────────────────────────────────────────────────────
     function isValidUrl(str) { try { new URL(str); return true; } catch { return false; } }
+
+    if (dateStartInput) {
+        dateStartInput.addEventListener('input', () => {
+            refreshDateBounds();
+            validateDateWindow();
+        });
+    }
+    if (dateExpiryInput) {
+        dateExpiryInput.addEventListener('input', validateDateWindow);
+    }
+    refreshDateBounds();
 
     // ── Boot ────────────────────────────────────────────────────────────────
     loadData();

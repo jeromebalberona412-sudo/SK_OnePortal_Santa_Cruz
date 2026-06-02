@@ -765,40 +765,56 @@ document.addEventListener('DOMContentLoaded', function () {
         const isOfficials = getCurrentAccountType() === 'sk_officials';
         const fullName = [d.firstName, d.middleName, d.lastName, d.suffix].filter(v => v && v.trim()).join(' ');
 
-        // Build sections dynamically like Kabataan
-        let sectionsHtml = '';
+        const leftSections = [];
+        const rightSections = [];
 
-        // Personal Information
-        sectionsHtml += viewSection('Personal Information', [
+        leftSections.push(viewSection('Personal Information', [
             ['Full Name', fullName],
             ['Email Address', d.email],
             ['Date of Birth', d.dateOfBirth ? formatDate(d.dateOfBirth) : ''],
             ['Age', d.age],
             ['Contact Number', d.contactNumber],
             ['Email Verification', d.emailVerifiedAt || 'Not Verified'],
-        ]);
+        ]));
 
-        // Location Information
-        const locationFields = [
+        leftSections.push(viewSection('Account Information', [
+            ['Position', d.position],
             ['Barangay', d.barangayName],
             ['Municipality', d.municipality],
-        ];
-        if (!isOfficials) {
-            locationFields.push(['Province', d.province]);
-            locationFields.push(['Region', d.region]);
-        }
-        sectionsHtml += viewSection('Location Information', locationFields);
+            ['Province', isOfficials ? '-' : (d.province || '-')],
+            ['Region', isOfficials ? '-' : (d.region || '-')],
+        ]));
 
-        // Term Information
-        sectionsHtml += viewSection('Term Information', [
-            ['Position', d.position],
+        leftSections.push(viewSection('Contact Information', [
+            ['Email Address', d.email],
+            ['Contact Number', d.contactNumber],
+            ['Email Verification', d.emailVerifiedAt || 'Not Verified'],
+        ]));
+
+        rightSections.push(viewSection('Additional Details', [
+            ['Date of Birth', d.dateOfBirth ? formatDate(d.dateOfBirth) : ''],
+            ['Age', d.age],
+            ['Municipality', d.municipality],
+        ]));
+
+        rightSections.push(viewSection('Status Information', [
             ['Term Start', d.termStart ? formatDate(d.termStart) : ''],
             ['Term End', d.termEnd ? formatDate(d.termEnd) : ''],
             ['Account Status', d.status],
             ['Term Status', d.termStatus || 'ACTIVE'],
-        ]);
+        ]));
 
-        document.getElementById('viewAccountBody').innerHTML = sectionsHtml;
+        rightSections.push(viewSection('Registration Details', [
+            ['Account ID', d.accountId || '-'],
+            ['Email Verification', d.emailVerifiedAt || 'Not Verified'],
+        ]));
+
+        document.getElementById('viewAccountBody').innerHTML = `
+            <div class="view-details-grid">
+                <div class="detail-column">${leftSections.join('')}</div>
+                <div class="detail-column">${rightSections.join('')}</div>
+            </div>
+        `;
         openViewModal();
     }
 

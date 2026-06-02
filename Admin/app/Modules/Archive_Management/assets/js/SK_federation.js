@@ -427,6 +427,7 @@ function bindArfedViewModal() {
     const modal = document.getElementById('arfedViewModal');
     const box = document.getElementById('arfedViewModalBox');
     const closeBtn = document.getElementById('arfedViewClose');
+    const closeFooterBtn = document.getElementById('arfedViewCloseFooter');
     const toggleBtn = document.getElementById('arfedViewToggle');
 
     const close = () => {
@@ -436,6 +437,7 @@ function bindArfedViewModal() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
+    if (closeFooterBtn) closeFooterBtn.addEventListener('click', close);
     if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {

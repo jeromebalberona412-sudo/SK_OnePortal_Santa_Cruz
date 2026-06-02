@@ -8,7 +8,6 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
-                'app/Modules/Reports/assets/js/reports.js',
                 'app/Modules/Barangay_ABYIP/Assets/js/barangay_abyip.js',
                 'app/Modules/Barangay_ABYIP/Assets/css/barangay_abyip.css'
             ],

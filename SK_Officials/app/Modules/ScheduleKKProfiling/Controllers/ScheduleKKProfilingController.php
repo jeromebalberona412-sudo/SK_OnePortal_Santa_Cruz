@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\KKProfilingSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class ScheduleKKProfilingController extends Controller
 {
+    private const MAX_RANGE_DAYS = 366;
     public function index()
     {
         return view('ScheduleKKProfiling::schedule-kkprofiling');
@@ -48,6 +51,8 @@ class ScheduleKKProfilingController extends Controller
             'status'      => 'required|in:Upcoming,Ongoing,Completed,Cancelled,Rescheduled',
         ]);
 
+        $this->validateScheduleDateWindow($validated['date_start'], $validated['date_expiry']);
+
         $schedule = KKProfilingSchedule::create([
             'tenant_id'   => $user->tenant_id,
             'barangay_id' => $user->barangay_id,
@@ -76,6 +81,8 @@ class ScheduleKKProfilingController extends Controller
             'status'      => 'required|in:Upcoming,Ongoing,Completed,Cancelled,Rescheduled',
         ]);
 
+        $this->validateScheduleDateWindow($validated['date_start'], $validated['date_expiry']);
+
         $schedule->update($validated);
 
         return response()->json($schedule);
@@ -99,5 +106,31 @@ class ScheduleKKProfilingController extends Controller
             'Upcoming' => 0, 'Ongoing' => 0, 'Completed' => 0,
             'Cancelled' => 0, 'Rescheduled' => 0,
         ];
+    }
+
+    private function validateScheduleDateWindow(string $dateStart, string $dateExpiry): void
+    {
+        $tz = config('app.timezone', 'Asia/Manila');
+        $today = Carbon::now($tz)->startOfDay();
+        $start = Carbon::parse($dateStart, $tz)->startOfDay();
+        $expiry = Carbon::parse($dateExpiry, $tz)->startOfDay();
+
+        if ($start->lt($today)) {
+            throw ValidationException::withMessages([
+                'date_start' => 'Past dates are not allowed.',
+            ]);
+        }
+
+        if ($expiry->lt($today)) {
+            throw ValidationException::withMessages([
+                'date_expiry' => 'Past dates are not allowed.',
+            ]);
+        }
+
+        if ($start->diffInDays($expiry) > self::MAX_RANGE_DAYS) {
+            throw ValidationException::withMessages([
+                'date_expiry' => 'Date range cannot exceed one year.',
+            ]);
+        }
     }
 }

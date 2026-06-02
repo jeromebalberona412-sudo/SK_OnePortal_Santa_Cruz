@@ -41,12 +41,6 @@ export default defineConfig({
                 // Budget & Finance module assets
                 'app/Modules/BudgetFinance/assets/css/budget-finance.css',
                 'app/Modules/BudgetFinance/assets/js/budget-finance.js',
-                // Reports module assets
-                'app/Modules/Reports/assets/css/reports.css',
-                'app/Modules/Reports/assets/js/reports.js',
-                'app/Modules/Reports/assets/css/make-report.css',
-                'app/Modules/Reports/assets/css/make-report-ribbon.css',
-                'app/Modules/Reports/assets/js/make-report.js',
                 // Kabataan module assets
                 'app/Modules/Kabataan/assets/css/kabataan.css',
                 'app/Modules/Kabataan/assets/js/kabataan.js',

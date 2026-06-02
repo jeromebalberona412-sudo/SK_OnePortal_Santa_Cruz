@@ -427,6 +427,7 @@ function bindAroffViewModal() {
     const modal = document.getElementById('aroffViewModal');
     const box = document.getElementById('aroffViewModalBox');
     const closeBtn = document.getElementById('aroffViewClose');
+    const closeFooterBtn = document.getElementById('aroffViewCloseFooter');
     const toggleBtn = document.getElementById('aroffViewToggle');
 
     const close = () => {
@@ -436,6 +437,7 @@ function bindAroffViewModal() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
+    if (closeFooterBtn) closeFooterBtn.addEventListener('click', close);
     if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {

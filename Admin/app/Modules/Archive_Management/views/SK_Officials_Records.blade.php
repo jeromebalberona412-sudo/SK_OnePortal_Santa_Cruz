@@ -18,28 +18,20 @@
             <p class="aroff-page-subtitle">Completed term records — read-only historical archive.</p>
         </div>
         <div class="aroff-header-right col-md-6">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <select id="aroffYearFilter" class="aroff-year-filter form-select">
-                        <option value="all">All Years</option>
-                        <option value="2023">2023</option>
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <select id="aroffTermFilter" class="aroff-term-filter form-select">
-                        <option value="all">All Terms</option>
-                        <option value="2023-2026">2023 - 2026</option>
-                        <option value="2024-2027">2024 - 2027</option>
-                        <option value="2025-2028">2025 - 2028</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <input type="text" id="aroffSearch" class="aroff-search-input form-control" placeholder="Search by name or position…">
-                </div>
-            </div>
+            <select id="aroffYearFilter" class="aroff-year-filter form-select">
+                <option value="all">All Years</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
+            <select id="aroffTermFilter" class="aroff-term-filter form-select">
+                <option value="all">All Terms</option>
+                <option value="2023-2026">2023 - 2026</option>
+                <option value="2024-2027">2024 - 2027</option>
+                <option value="2025-2028">2025 - 2028</option>
+            </select>
+            <input type="text" id="aroffSearch" class="aroff-search-input form-control" placeholder="Search by name or position…">
         </div>
     </div>
 
@@ -85,6 +77,9 @@
             </div>
         </div>
         <div class="aroff-view-body" id="aroffViewBody"></div>
+        <div class="aroff-modal-footer">
+            <button type="button" class="aroff-page-btn" id="aroffViewCloseFooter" aria-label="Close">&times;</button>
+        </div>
     </div>
 </div>
 

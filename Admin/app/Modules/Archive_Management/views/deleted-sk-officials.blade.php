@@ -18,25 +18,17 @@
             <p class="dso-page-subtitle">Records removed from the SK Officials list.</p>
         </div>
         <div class="dso-header-right col-md-6">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <select id="dsoYearFilter" class="dso-year-filter form-select">
-                        <option value="all">All Years</option>
-                        <option value="2023">2023</option>
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <select id="dsoFilterTerm" class="dso-term-filter form-select">
-                        <option value="">All Terms</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <input type="text" id="dsoSearch" class="dso-search-input form-control" placeholder="Search by name or barangay…">
-                </div>
-            </div>
+            <select id="dsoYearFilter" class="dso-year-filter form-select">
+                <option value="all">All Years</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
+            <select id="dsoFilterTerm" class="dso-term-filter form-select">
+                <option value="">All Terms</option>
+            </select>
+            <input type="text" id="dsoSearch" class="dso-search-input form-control" placeholder="Search by name or barangay…">
         </div>
     </div>
 
@@ -120,6 +112,9 @@
             </div>
         </div>
         <div class="dso-view-body" id="dsoViewBody"></div>
+        <div class="dso-modal-footer">
+            <button type="button" class="dso-btn-cancel" id="dsoViewCloseFooter" aria-label="Close">&times;</button>
+        </div>
     </div>
 </div>
 

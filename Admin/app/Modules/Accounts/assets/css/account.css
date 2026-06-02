@@ -1365,6 +1365,7 @@ select.form-input-light option {
 
 .view-details-grid {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.9rem;
 }
 
@@ -1373,6 +1374,12 @@ select.form-input-light option {
     border-radius: 11px;
     background: #f0f6ff;
     padding: 0.9rem;
+}
+
+.detail-column {
+    display: grid;
+    gap: 0.9rem;
+    align-content: start;
 }
 
 .detail-section .section-title {
@@ -1545,6 +1552,10 @@ select.form-input-light option {
     }
 
     .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .view-details-grid {
         grid-template-columns: 1fr;
     }
 

@@ -1,10 +1,9 @@
 /**
- * Sports reports — editor at /reports/ckeditor
+ * Sports reports module (disabled - reports removed).
  */
 document.addEventListener('DOMContentLoaded', () => {
     const STORAGE_KEY = 'sk_official_reports';
     const SPORTS_SOURCE = 'sports';
-    const MAKE_URL = '/reports/ckeditor';
 
     const openBtn = document.getElementById('sportsOpenReportBtn');
     const reportsTableBody = document.getElementById('sportsReportsTableBody');
@@ -53,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (openBtn) {
         openBtn.addEventListener('click', () => {
-            window.location.href = `${MAKE_URL}?source=sports`;
+            showToast('Reports module has been removed.', true);
         });
     }
 
@@ -61,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!reportsTableBody) return;
         const reports = getSportsReports();
         if (!reports.length) {
-            reportsTableBody.innerHTML = `<tr><td colspan="4" class="saf-table-empty">No sports reports yet. Click <strong>Make Report</strong> to create one.</td></tr>`;
+            reportsTableBody.innerHTML = `<tr><td colspan="4" class="saf-table-empty">No data available.</td></tr>`;
             return;
         }
 
@@ -72,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="saf-date-cell">${escapeHtml(r.createdAt || '—')}</td>
                 <td class="col-actions">
                     <div class="prog-tbl-actions">
-                        <a href="${MAKE_URL}?id=${encodeURIComponent(r.id)}&source=sports" class="prog-btn prog-btn-edit">Edit</a>
+                        <button type="button" class="prog-btn prog-btn-edit" disabled aria-disabled="true" title="Reports removed">Edit</button>
                         <button type="button" class="prog-btn prog-btn-delete" data-rpt-delete="${r.id}">Delete</button>
                     </div>
                 </td>

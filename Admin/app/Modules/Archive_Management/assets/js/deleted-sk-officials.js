@@ -499,6 +499,7 @@ function bindDsoViewModal() {
     const modal = document.getElementById('dsoViewModal');
     const box = document.getElementById('dsoViewModalBox');
     const closeBtn = document.getElementById('dsoViewClose');
+    const closeFooterBtn = document.getElementById('dsoViewCloseFooter');
     const toggleBtn = document.getElementById('dsoViewToggle');
 
     const close = () => {
@@ -508,6 +509,7 @@ function bindDsoViewModal() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
+    if (closeFooterBtn) closeFooterBtn.addEventListener('click', close);
     if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {

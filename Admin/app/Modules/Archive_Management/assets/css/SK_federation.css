@@ -478,6 +478,14 @@
     gap: 14px;
 }
 
+.arfed-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 16px 16px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
 /* Maximized */
 .arfed-modal-backdrop.arfed-maximized {
     align-items: stretch;
@@ -554,12 +562,17 @@
     color: #9ca3af;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    display: block;
+    line-height: 1.2;
 }
 
 .arfed-view-value {
     font-size: 13px;
     font-weight: 500;
     color: #111827;
+    display: block;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
     word-break: break-word;
 }
 

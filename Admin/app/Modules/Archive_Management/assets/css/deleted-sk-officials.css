@@ -721,12 +721,17 @@
     color: #9ca3af;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    display: block;
+    line-height: 1.2;
 }
 
 .dso-view-value {
     font-size: 13px;
     font-weight: 500;
     color: #111827;
+    display: block;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
     word-break: break-word;
 }
 

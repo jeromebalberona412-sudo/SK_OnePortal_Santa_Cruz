@@ -71,20 +71,16 @@
 	</div>
 
 	<!-- ══ Stat Cards — Top Row ═══════════════════════════ -->
-	<section class="stats-grid stats-grid--top row">
+	<section class="stats-grid stats-grid--top" aria-label="Top statistics">
 		@foreach ($topRowCards as $card)
-			<div class="col-12 col-sm-6 col-lg-3">
-				@include('dashboard::components.statcard', $card)
-			</div>
+			@include('dashboard::components.statcard', $card)
 		@endforeach
 	</section>
 
 	<!-- ══ Stat Cards — Bottom Row ═══════════════════════════ -->
-	<section class="stats-grid stats-grid--bottom row">
+	<section class="stats-grid stats-grid--bottom" aria-label="Archive statistics">
 		@foreach ($bottomRowCards as $card)
-			<div class="col-12 col-sm-6 col-lg-3">
-				@include('dashboard::components.statcard', $card)
-			</div>
+			@include('dashboard::components.statcard', $card)
 		@endforeach
 	</section>
 
@@ -95,18 +91,15 @@
 				<h2 class="dash-section-title">Quick Actions</h2>
 			</div>
 		</div>
-		<div class="quick-actions-scroll row">
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('profile') }}" class="qa-btn qa-blue">
+		<div class="quick-actions-grid" aria-label="Quick actions">
+			<a href="{{ route('profile') }}" class="qa-btn qa-blue">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<circle cx="12" cy="7" r="4"></circle>
 						<path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
 					</svg>
 					My Profile
-				</a>
-			</div>
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('accounts.federation.index') }}" class="qa-btn qa-green">
+			</a>
+			<a href="{{ route('accounts.federation.index') }}" class="qa-btn qa-green">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<rect x="3" y="4" width="7" height="7" rx="1.4" />
 						<rect x="14" y="4" width="7" height="7" rx="1.4" />
@@ -115,10 +108,8 @@
 						<path d="M12 11v3" />
 					</svg>
 					SK Federation
-				</a>
-			</div>
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('accounts.officials.index') }}" class="qa-btn qa-green">
+			</a>
+			<a href="{{ route('accounts.officials.index') }}" class="qa-btn qa-green">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M12 4l8 4v2H4V8l8-4z" />
 						<path d="M5 10v7" />
@@ -128,10 +119,8 @@
 						<path d="M3 19h18" />
 					</svg>
 					SK Officials
-				</a>
-			</div>
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('manage-kabataan.index') }}" class="qa-btn qa-purple">
+			</a>
+			<a href="{{ route('manage-kabataan.index') }}" class="qa-btn qa-purple">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
 						<circle cx="9" cy="7" r="4"></circle>
@@ -139,28 +128,22 @@
 						<line x1="22" y1="11" x2="16" y2="11"></line>
 					</svg>
 					Kabataan SK
-				</a>
-			</div>
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('barangay-logos.index') }}" class="qa-btn qa-purple">
+			</a>
+			<a href="{{ route('barangay-logos.index') }}" class="qa-btn qa-purple">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
 						<circle cx="8.5" cy="8.5" r="1.5"></circle>
 						<polyline points="21 15 16 10 5 21"></polyline>
 					</svg>
 					Barangay Logos
-				</a>
-			</div>
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('contact.manage') }}" class="qa-btn qa-yellow">
+			</a>
+			<a href="{{ route('contact.manage') }}" class="qa-btn qa-yellow">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
 					</svg>
 					Manage Contacts
-				</a>
-			</div>
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('auditlogs.index') }}" class="qa-btn qa-yellow">
+			</a>
+			<a href="{{ route('auditlogs.index') }}" class="qa-btn qa-yellow">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
 						<polyline points="14,2 14,8 20,8"></polyline>
@@ -168,10 +151,8 @@
 						<line x1="16" y1="17" x2="8" y2="17"></line>
 					</svg>
 					Audit Log
-				</a>
-			</div>
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('archived.deleted-sk-federation') }}" class="qa-btn qa-red">
+			</a>
+			<a href="{{ route('archived.deleted-sk-federation') }}" class="qa-btn qa-red">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<polyline points="3 6 5 6 21 6"></polyline>
 						<path d="M19 6l-1 14H6L5 6"></path>
@@ -179,10 +160,8 @@
 						<path d="M9 6V4h6v2"></path>
 					</svg>
 					Deleted SK Federation
-				</a>
-			</div>
-			<div class="col-6 col-md-4 col-lg-3">
-				<a href="{{ route('archived.deleted-sk-officials') }}" class="qa-btn qa-red">
+			</a>
+			<a href="{{ route('archived.deleted-sk-officials') }}" class="qa-btn qa-red">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<polyline points="3 6 5 6 21 6"></polyline>
 						<path d="M19 6l-1 14H6L5 6"></path>
@@ -190,27 +169,18 @@
 						<path d="M9 6V4h6v2"></path>
 					</svg>
 					Deleted SK Officials
-				</a>
-			</div>
+			</a>
 		</div>
 	</div>
 
-	<section class="dashboard-row dashboard-row--analytics row">
-		<div class="col-md-6">
-			@include('dashboard::components.piechart')
-		</div>
-		<div class="col-md-6">
-			@include('dashboard::components.platformhealth')
-		</div>
+	<section class="dash-panels-grid" aria-label="Analytics panels">
+		@include('dashboard::components.piechart')
+		@include('dashboard::components.platformhealth')
 	</section>
 
-	<section class="dashboard-row dashboard-row--operations row">
-		<div class="col-md-6">
-			@include('dashboard::components.audittable')
-		</div>
-		<div class="col-md-6">
-			@include('dashboard::components.barangaydistribution')
-		</div>
+	<section class="dash-panels-grid" aria-label="Operations panels">
+		@include('dashboard::components.audittable')
+		@include('dashboard::components.barangaydistribution')
 	</section>
 </div>
 @endsection

@@ -17,6 +17,9 @@
         <div class="modal-body" id="viewAccountBody">
             <!-- Content populated dynamically via JavaScript -->
         </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary-modern" onclick="closeViewModal()" aria-label="Close">&times;</button>
+        </div>
     </div>
 </div>
 

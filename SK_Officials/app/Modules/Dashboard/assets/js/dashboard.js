@@ -6,127 +6,35 @@
 
 import Chart from 'chart.js/auto';
 
-/* ══════════════════════════════════════════════════════════
-   PER-YEAR DATA STORE
-   2023 = first real year; 2024–2026 = progressively more data
-   Years with no data will show zeros / empty charts.
-══════════════════════════════════════════════════════════ */
+function createEmptyYearData() {
+    return {
+        stats: {
+            kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0,
+            kkTotal: 0, activePrograms: 0, deletedKabataan: 0, deletedAbyip: 0, rejectedItems: 0, rejectedKK: 0,
+            budget: '₱0.00', expenses: '₱0.00', remaining: '₱0.00'
+        },
+        purokLabels: [],
+        purokCounts: [],
+        monthlyApproved: Array(12).fill(0),
+        monthlyRejected: Array(12).fill(0),
+        abyipStatus: { labels: [], values: [] },
+        genderDist: { labels: ['Male', 'Female'], values: [0, 0] },
+        budgetPrograms: { labels: ['Education', 'Sports', 'Health', 'Environment', 'Livelihood', 'Others'], values: [0, 0, 0, 0, 0, 0] },
+        activity: [],
+        announcements: [],
+        events: [],
+    };
+}
+
 const YEAR_DATA = {
-    2023: {
-        stats: { kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0, budget: '₱0.00' },
-        purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
-        purokCounts:  [22, 18, 15, 20, 14, 19, 17, 16, 21, 16],
-        monthlyApproved: [4,6,5,8,7,10,9,11,10,12,8,7],
-        monthlyRejected: [1,2,1,2,1,3,2,3,1,2,2,1],
-        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[18,6,4,6] },
-        genderDist: { labels:['Male','Female'], values:[82, 76] },
-        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[140000,80000,70000,40000,50000,40000] },
-        activity: [
-            { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'Jan 5, 2023' },
-            { type:'approve', text:'KK Profiling request approved',   who:'Juan Dela Cruz',  time:'Feb 12, 2023' },
-            { type:'reject',  text:'KK Profiling request rejected',   who:'Pedro Reyes',     time:'Mar 3, 2023' },
-        ],
-        announcements: [
-            { title:'SK Orientation — Jan 10, 2023',   date:'Jan 8, 2023' },
-            { title:'ABYIP Kick-off Meeting',           date:'Feb 1, 2023' },
-        ],
-        events: [
-            { day:'10', mon:'Jan', title:'SK Orientation',         time:'9:00 AM' },
-            { day:'01', mon:'Feb', title:'ABYIP Kick-off',         time:'8:00 AM' },
-        ],
-    },
-    2024: {
-        stats: { kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0, budget: '₱0.00' },
-        purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
-        purokCounts:  [30, 25, 22, 28, 20, 27, 24, 23, 29, 19],
-        monthlyApproved: [8,10,9,13,11,16,14,18,15,20,17,12],
-        monthlyRejected: [2,3,2,3,2,4,3,5,2,4,3,2],
-        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[30,9,6,13] },
-        genderDist: { labels:['Male','Female'], values:[118, 109] },
-        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[220000,120000,100000,65000,80000,60000] },
-        activity: [
-            { type:'approve', text:'KK Profiling request approved',  who:'Ana Lim',         time:'Jan 15, 2024' },
-            { type:'add',     text:'New ABYIP member added',          who:'Liza Mendoza',    time:'Mar 20, 2024' },
-            { type:'delete',  text:'Kabataan record deleted',         who:'Carlo Bautista',  time:'Jun 8, 2024' },
-            { type:'restore', text:'Deleted record restored',         who:'Mark Villanueva', time:'Aug 14, 2024' },
-        ],
-        announcements: [
-            { title:'Youth Congress 2024',              date:'Mar 5, 2024' },
-            { title:'KK Profiling Drive — Q2',          date:'Apr 10, 2024' },
-            { title:'Sports Festival Registration',     date:'Jul 1, 2024' },
-        ],
-        events: [
-            { day:'05', mon:'Mar', title:'Youth Congress 2024',    time:'9:00 AM' },
-            { day:'10', mon:'Apr', title:'KK Profiling Drive',     time:'8:00 AM' },
-            { day:'01', mon:'Jul', title:'Sports Festival',        time:'7:00 AM' },
-        ],
-    },
-    2025: {
-        stats: { kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0, budget: '₱0.00' },
-        purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
-        purokCounts:  [36, 30, 27, 34, 25, 32, 29, 28, 35, 24],
-        monthlyApproved: [10,13,12,17,14,21,18,24,20,27,23,19],
-        monthlyRejected: [2,4,3,4,3,5,4,6,3,5,4,3],
-        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[40,10,7,17] },
-        genderDist: { labels:['Male','Female'], values:[152, 136] },
-        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[280000,155000,130000,80000,100000,75000] },
-        activity: [
-            { type:'approve', text:'Program budget approved',         who:'SK Treasurer',    time:'Feb 3, 2025' },
-            { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'Apr 11, 2025' },
-            { type:'reject',  text:'KK Profiling request rejected',   who:'Pedro Reyes',     time:'Jul 22, 2025' },
-            { type:'approve', text:'KK Profiling request approved',   who:'Juan Dela Cruz',  time:'Oct 5, 2025' },
-            { type:'delete',  text:'ABYIP record deleted',            who:'Ana Lim',         time:'Nov 30, 2025' },
-        ],
-        announcements: [
-            { title:'SK General Assembly — Feb 2025',  date:'Jan 28, 2025' },
-            { title:'ABYIP Budget Review Meeting',      date:'Mar 15, 2025' },
-            { title:'KK Profiling Deadline Extended',   date:'Jun 10, 2025' },
-        ],
-        events: [
-            { day:'10', mon:'Feb', title:'SK General Assembly',    time:'9:00 AM' },
-            { day:'15', mon:'Mar', title:'ABYIP Budget Review',    time:'2:00 PM' },
-            { day:'10', mon:'Jun', title:'KK Profiling Drive',     time:'8:00 AM' },
-        ],
-    },
-    2026: {
-        stats: { kabataan: 0, abyip: 0, pending: 0, approved: 0, rejected: 0, programs: 0, budget: '₱0.00' },
-        purokLabels:  ['Bayside','Villa Gracia','Imelda','Lupang Pangako','Damayan','Marcelo','Bigayan Villa Rosa','Bigayan San Luis','Phase 3','Maligaya'],
-        purokCounts:  [42, 35, 31, 38, 28, 36, 33, 32, 40, 27],
-        monthlyApproved: [12,18,15,22,19,28,24,31,27,35,30,38],
-        monthlyRejected: [3, 5, 4, 6, 3, 7, 5, 8, 4, 6, 5, 4],
-        abyipStatus: { labels:['Active','Inactive','Pending','Completed'], values:[52,14,9,25] },
-        genderDist: { labels:['Male','Female'], values:[178, 164] },
-        budgetPrograms: { labels:['Education','Sports','Health','Environment','Livelihood','Others'], values:[340000,190000,160000,100000,130000,90000] },
-        activity: [
-            { type:'approve', text:'KK Profiling request approved',  who:'Juan Dela Cruz',  time:'2 min ago' },
-            { type:'add',     text:'New Kabataan record added',       who:'Maria Santos',    time:'15 min ago' },
-            { type:'reject',  text:'KK Profiling request rejected',   who:'Pedro Reyes',     time:'1 hr ago' },
-            { type:'delete',  text:'Kabataan record deleted',         who:'Ana Lim',         time:'2 hrs ago' },
-            { type:'restore', text:'Deleted record restored',         who:'Carlo Bautista',  time:'3 hrs ago' },
-            { type:'approve', text:'Program budget approved',         who:'SK Treasurer',    time:'5 hrs ago' },
-            { type:'delete',  text:'ABYIP record deleted',            who:'Mark Villanueva', time:'Yesterday' },
-        ],
-        announcements: [
-            { title:'SK General Assembly — May 5, 2026',    date:'Apr 22, 2026' },
-            { title:'ABYIP Budget Review Meeting',           date:'Apr 20, 2026' },
-            { title:'KK Profiling Deadline Extended',        date:'Apr 18, 2026' },
-            { title:'Youth Sports Festival Registration',    date:'Apr 15, 2026' },
-        ],
-        events: [
-            { day:'05', mon:'May', title:'SK General Assembly',       time:'9:00 AM' },
-            { day:'10', mon:'May', title:'Youth Leadership Summit',   time:'8:00 AM' },
-            { day:'15', mon:'May', title:'ABYIP Budget Review',       time:'2:00 PM' },
-            { day:'20', mon:'May', title:'Community Outreach Day',    time:'7:00 AM' },
-        ],
-    },
+    2023: createEmptyYearData(),
+    2024: createEmptyYearData(),
+    2025: createEmptyYearData(),
+    2026: createEmptyYearData(),
 };
 
 /* Pending requests are always current — not year-filtered */
-const PENDING_REQUESTS = [
-    { id:1, name:'Jose Rizal',       purok:'Purok 3', date:'Apr 20, 2026' },
-    { id:2, name:'Andres Bonifacio', purok:'Purok 1', date:'Apr 21, 2026' },
-    { id:3, name:'Emilio Aguinaldo', purok:'Purok 5', date:'Apr 22, 2026' },
-];
+const PENDING_REQUESTS = [];
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -297,7 +205,7 @@ function renderPendingRequests() {
     const container = document.getElementById('pendingRequestsList');
     if (!container) return;
     if (!PENDING_REQUESTS.length) {
-        container.innerHTML = '<p style="font-size:13px;color:#9ca3af;text-align:center;padding:20px 0;">No pending requests.</p>';
+        container.innerHTML = '<p style="font-size:13px;color:#9ca3af;text-align:center;padding:20px 0;">No data available.</p>';
         return;
     }
     container.innerHTML = PENDING_REQUESTS.map(function (r) {
@@ -642,15 +550,7 @@ function renderReminder() {
     const stored = localStorage.getItem(key);
 
     /* Sample notes shown when no real note is saved */
-    const SAMPLE_NOTES = [
-        'SK Meeting at 3:00 PM',
-        'Submit ABYIP documents',
-        'KK Profiling deadline today',
-    ];
-
-    const noteText = (stored && stored.trim())
-        ? stored.trim()
-        : SAMPLE_NOTES.join('  •  ');
+    const noteText = (stored && stored.trim()) ? stored.trim() : 'No data available.';
 
     const banner = document.getElementById('calendarReminderBanner');
     const textEl = document.getElementById('reminderText');
@@ -662,21 +562,16 @@ function renderReminder() {
 
 /* ── Account Status ──────────────────────────────────────────── */
 const COMMITTEES = [
-    { name:'Juan Dela Cruz',        head:'SK Chairperson',      status:'Active' },
-    { name:'Maria Santos',          head:'SK Kagawad',          status:'Active' },
-    { name:'Pedro Reyes',           head:'SK Kagawad',          status:'Active' },
-    { name:'Ana Lim',               head:'SK Kagawad',          status:'Offline' },
-    { name:'Liza Mendoza',          head:'SK Kagawad',          status:'Active' },
-    { name:'Carlo Bautista',        head:'SK Kagawad',          status:'Active' },
-    { name:'Rosa Garcia',           head:'SK Kagawad',          status:'Active' },
-    { name:'Miguel Torres',         head:'SK Kagawad',          status:'Offline' },
-    { name:'Sofia Ramos',           head:'SK Secretary',        status:'Active' },
-    { name:'Diego Fernandez',       head:'SK Treasurer',        status:'Active' },
 ];
 
 function renderCommittees() {
     const container = document.getElementById('committeesList');
     if (!container) return;
+    if (!COMMITTEES.length) {
+        container.innerHTML = '<div class="col-12"><p class="dash-empty-msg mb-0 text-center py-2">No data available.</p></div>';
+        updateStatusCounters(0, 0);
+        return;
+    }
     
     // Sort: Active first, then Offline at the end
     const sortedCommittees = [...COMMITTEES].sort((a, b) => {

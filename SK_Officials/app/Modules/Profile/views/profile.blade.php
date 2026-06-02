@@ -168,7 +168,7 @@
                         <div class="profile-field-row">
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-envelope"></i> Email</label>
-                                <p>kianpaula4@gmail.com</p>
+                                <p>example@gmail.com</p>
                             </div>
                         </div>
                     </div>

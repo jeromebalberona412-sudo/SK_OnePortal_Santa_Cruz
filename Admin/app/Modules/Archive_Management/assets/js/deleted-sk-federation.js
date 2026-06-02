@@ -408,6 +408,7 @@ function bindDsfViewModal() {
     const modal = document.getElementById('dsfViewModal');
     const box = document.getElementById('dsfViewModalBox');
     const closeBtn = document.getElementById('dsfViewClose');
+    const closeFooterBtn = document.getElementById('dsfViewCloseFooter');
     const toggleBtn = document.getElementById('dsfViewToggle');
 
     const close = () => {
@@ -417,6 +418,7 @@ function bindDsfViewModal() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
+    if (closeFooterBtn) closeFooterBtn.addEventListener('click', close);
     if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {

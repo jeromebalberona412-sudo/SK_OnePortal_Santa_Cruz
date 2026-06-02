@@ -10,7 +10,7 @@
 .table-scroll {
     max-height: 340px;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     background: #ffffff;

@@ -5,31 +5,20 @@
 /* ── Stats Grid Layout ─────────────────────────────────────── */
 .stats-grid {
     display: grid;
-    gap: 1.25rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
     margin-bottom: 1.5rem;
     width: 100%;
 }
 
-/* Desktop: 4 columns with minmax(280px, 1fr) */
-.stats-grid--top,
-.stats-grid--bottom {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-/* Tablet: 2 columns */
 @media (max-width: 992px) {
-
-    .stats-grid--top,
-    .stats-grid--bottom {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-/* Mobile: 1 column */
-@media (max-width: 576px) {
-
-    .stats-grid--top,
-    .stats-grid--bottom {
+@media (max-width: 768px) {
+    .stats-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -90,12 +79,13 @@
 
 /* ── Value (number) - Largest text ───────────────────────── */
 .stat-card-value {
-    font-size: 2.5rem;
+    font-size: clamp(1.4rem, 1.2vw + 1rem, 2.25rem);
     font-weight: 900;
     color: #111827;
     line-height: 1.1;
     white-space: normal;
     overflow: visible;
+    overflow-wrap: anywhere;
     word-break: break-word;
     flex: 1;
     min-width: 0;
