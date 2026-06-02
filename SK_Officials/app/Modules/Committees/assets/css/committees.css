@@ -245,7 +245,7 @@ body {
 .committees-table th:nth-child(5),
 .committees-table td:nth-child(5) {
     width: 23%;
-    text-align: left;
+    text-align: center;
     min-width: 200px;
 }
 
@@ -272,7 +272,7 @@ body {
 }
 
 .committee-description {
-    text-align: left;
+    text-align: center;
     font-size: 12px;
     line-height: 1.5;
     overflow: hidden;
@@ -296,6 +296,8 @@ body {
 
 .committee-description-value {
     color: #6b7280;
+    display: block;
+    text-align: center;
 }
 
 .committee-status {

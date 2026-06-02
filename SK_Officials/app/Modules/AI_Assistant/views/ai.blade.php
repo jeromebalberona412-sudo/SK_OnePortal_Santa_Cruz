@@ -83,7 +83,6 @@
                     <h2 class="ai-modal-greeting">How can I help, {{ $modalUserFirstName }}?</h2>
                     <div class="ai-welcome-composer">
                         <div class="ai-composer-box">
-                            @include('AI_Assistant::components.attach-picker', ['pickerId' => 'aiModalAttachWelcome'])
                             <div class="ai-composer-input-wrap">
                                 <textarea class="ai-composer-input ai-input-field" id="aiInputFieldWelcome" placeholder="Ask anything" rows="1" maxlength="500"></textarea>
                                 <span class="ai-char-count" id="aiCharCountWelcome">0/500</span>
@@ -95,12 +94,6 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="ai-attach-preview" id="aiAttachPreviewWelcome" hidden></div>
-                    </div>
-                    <div class="ai-quick-chips" id="aiQuickChips">
-                        <button type="button" class="ai-quick-chip" data-prompt="Help me create an SK Resolution">Create Resolution</button>
-                        <button type="button" class="ai-quick-chip" data-prompt="Generate a project proposal for youth programs">Write or edit</button>
-                        <button type="button" class="ai-quick-chip" data-prompt="What SK guidelines should I know?">Look something up</button>
                     </div>
                 </div>
 
@@ -109,7 +102,6 @@
                     <div class="ai-chat-area" id="aiChatArea"></div>
                     <div class="ai-input-area">
                         <div class="ai-composer-box ai-composer-box--chat">
-                            @include('AI_Assistant::components.attach-picker', ['pickerId' => 'aiModalAttachChat'])
                             <div class="ai-composer-input-wrap">
                                 <textarea class="ai-composer-input ai-input-field" id="aiInputField" placeholder="Ask anything..." rows="1" maxlength="500"></textarea>
                                 <span class="ai-char-count" id="aiCharCountChat">0/500</span>
@@ -121,7 +113,6 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="ai-attach-preview" id="aiAttachPreviewChat" hidden></div>
                     </div>
                 </div>
 
