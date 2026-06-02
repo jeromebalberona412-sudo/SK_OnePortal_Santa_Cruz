@@ -6,19 +6,19 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     /* ── Form elements ─────────────────────────────────── */
-    const form           = document.getElementById('forgotPasswordForm');
-    const emailInput     = document.getElementById('email');
-    const emailError     = document.getElementById('email-error');
-    const submitBtn      = document.getElementById('submitBtn');
-    const fpBtnText      = document.getElementById('fpBtnText');
+    const form = document.getElementById('forgotPasswordForm');
+    const emailInput = document.getElementById('email');
+    const emailError = document.getElementById('email-error');
+    const submitBtn = document.getElementById('submitBtn');
+    const fpBtnText = document.getElementById('fpBtnText');
     const cooldownNotice = document.getElementById('fpCooldownNotice');
-    const cooldownCount  = document.getElementById('fpCooldownCount');
+    const cooldownCount = document.getElementById('fpCooldownCount');
 
     if (!form) return;
 
     /* ── Cooldown constants ──────────────────────────────── */
     const COOLDOWN_DURATION = 60; // seconds
-    const COOLDOWN_KEY      = 'fp_cooldown_until';
+    const COOLDOWN_KEY = 'fp_cooldown_until';
 
     /* ── Helpers ─────────────────────────────────────────── */
     function setInputError(input, errorEl, msg) {
@@ -156,6 +156,24 @@ document.addEventListener('DOMContentLoaded', function () {
         if (this.href && !this.id) {
             e.preventDefault();
             setTimeout(() => { window.location.href = this.href; }, 300);
+        }
+    });
+
+    /* ── Form submit loading ────────────────────────────── */
+    form.addEventListener('submit', function (e) {
+        LoadingScreen.show('Sending Reset Link', 'Please wait...');
+    });
+
+    /* ── All links loading screen ───────────────────────── */
+    document.querySelectorAll('a').forEach(link => {
+        if (link.href && !link.target) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                LoadingScreen.show('Redirecting', 'Please wait...');
+                setTimeout(() => {
+                    window.location.href = this.href;
+                }, 300);
+            });
         }
     });
 

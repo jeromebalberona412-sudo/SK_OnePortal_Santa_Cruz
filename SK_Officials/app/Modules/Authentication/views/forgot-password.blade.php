@@ -129,22 +129,5 @@
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Authentication/assets/js/loader.js'])
-    <script>
-        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
-            LoadingScreen.show('Sending Reset Link', 'Please wait...');
-        });
-
-        document.querySelectorAll('a').forEach(link => {
-            if (link.href && !link.target) {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    LoadingScreen.show('Redirecting', 'Please wait...');
-                    setTimeout(() => {
-                        window.location.href = this.href;
-                    }, 300);
-                });
-            }
-        });
-    </script>
 </body>
 </html>

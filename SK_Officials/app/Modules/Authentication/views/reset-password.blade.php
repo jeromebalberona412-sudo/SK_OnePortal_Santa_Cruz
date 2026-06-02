@@ -11,7 +11,8 @@
     <title>Reset Password - SK Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
-        'app/Modules/Authentication/assets/js/login.js',
+        'app/Modules/Authentication/assets/css/reset-password.css',
+        'app/Modules/Authentication/assets/js/reset-password.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -108,7 +109,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 6px;">Minimum 12 characters with letters, numbers, and symbols.</div>
+                        <div class="password-hint">Minimum 12 characters with letters, numbers, and symbols.</div>
                         @error('password')
                             <div class="sk-field-error d-block">{{ $message }}</div>
                         @enderror
@@ -159,8 +160,8 @@
                 </form>
 
                 <!-- Back to Login Link -->
-                <div style="text-align: center; margin-top: 20px;">
-                    <a href="{{ route('login', [], false) }}" style="color: #213F99; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 4px;">
+                <div class="back-to-login">
+                    <a href="{{ route('login', [], false) }}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                         </svg>
@@ -170,109 +171,6 @@
             </div>
         </div>
     </main>
-
-    <script>
-        function toggleNewPassword() {
-            const input = document.getElementById('new-password');
-            const eyeOpen = document.getElementById('newEyeOpen');
-            const eyeClosed = document.getElementById('newEyeClosed');
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.style.display = 'none';
-                eyeClosed.style.display = 'block';
-            } else {
-                input.type = 'password';
-                eyeOpen.style.display = 'block';
-                eyeClosed.style.display = 'none';
-            }
-        }
-
-        function toggleConfirmPassword() {
-            const input = document.getElementById('confirm-password');
-            const eyeOpen = document.getElementById('confirmEyeOpen');
-            const eyeClosed = document.getElementById('confirmEyeClosed');
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.style.display = 'none';
-                eyeClosed.style.display = 'block';
-            } else {
-                input.type = 'password';
-                eyeOpen.style.display = 'block';
-                eyeClosed.style.display = 'none';
-            }
-        }
-
-        const resetPasswordForm = document.getElementById('reset-password-form');
-        const newPasswordInput = document.getElementById('new-password');
-        const confirmPasswordInput = document.getElementById('confirm-password');
-        const newPasswordError = document.getElementById('new-password-error');
-        const confirmPasswordError = document.getElementById('confirm-password-error');
-
-        function clearError(input, errorElement) {
-            input.classList.remove('is-invalid');
-            errorElement.hidden = true;
-            errorElement.textContent = '';
-        }
-
-        function showError(input, errorElement, message) {
-            input.classList.add('is-invalid');
-            errorElement.textContent = message;
-            errorElement.hidden = false;
-        }
-
-        newPasswordInput.addEventListener('input', function() {
-            clearError(this, newPasswordError);
-        });
-
-        confirmPasswordInput.addEventListener('input', function() {
-            clearError(this, confirmPasswordError);
-        });
-
-        resetPasswordForm.addEventListener('submit', function(e) {
-            const minLength = Number.parseInt(resetPasswordForm.dataset.passwordMinLength || '12', 10);
-            const maxLength = Number.parseInt(resetPasswordForm.dataset.passwordMaxLength || '64', 10);
-            const hasLetters = /[A-Za-z]/.test(newPasswordInput.value);
-            const hasNumbers = /\d/.test(newPasswordInput.value);
-            const hasSymbols = /[^A-Za-z0-9]/.test(newPasswordInput.value);
-            
-            let isValid = true;
-
-            clearError(newPasswordInput, newPasswordError);
-            clearError(confirmPasswordInput, confirmPasswordError);
-
-            if (newPasswordInput.value.length < minLength) {
-                e.preventDefault();
-                showError(newPasswordInput, newPasswordError, `Password must be at least ${minLength} characters.`);
-                isValid = false;
-            } else if (newPasswordInput.value.length > maxLength) {
-                e.preventDefault();
-                showError(newPasswordInput, newPasswordError, `Password must not exceed ${maxLength} characters.`);
-                isValid = false;
-            } else if (!(hasLetters && hasNumbers && hasSymbols)) {
-                e.preventDefault();
-                showError(newPasswordInput, newPasswordError, 'Password must include letters, numbers, and symbols.');
-                isValid = false;
-            }
-
-            if (confirmPasswordInput.value !== newPasswordInput.value) {
-                e.preventDefault();
-                showError(confirmPasswordInput, confirmPasswordError, 'Passwords do not match.');
-                isValid = false;
-            }
-
-            if (isValid) {
-                LoadingScreen.show('Resetting Password', 'Please wait...');
-            }
-        });
-
-        document.querySelector('a[href*="login"]').addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Redirecting', 'Taking you to login...');
-            setTimeout(() => {
-                window.location.href = this.href;
-            }, 300);
-        });
-    </script>
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Authentication/assets/js/loader.js'])
