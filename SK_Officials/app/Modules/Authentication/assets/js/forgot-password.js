@@ -1,11 +1,8 @@
 /**
  * SK Officials — Forgot Password Page JS
- * Sends reset link request and keeps password reset in the email-token flow.
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-
-    /* ── Form elements ─────────────────────────────────── */
     const form = document.getElementById('forgotPasswordForm');
     const emailInput = document.getElementById('email');
     const emailError = document.getElementById('email-error');
@@ -16,11 +13,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!form) return;
 
-    /* ── Cooldown constants ──────────────────────────────── */
-    const COOLDOWN_DURATION = 60; // seconds
+    const COOLDOWN_DURATION = 60;
     const COOLDOWN_KEY = 'fp_cooldown_until';
+    let cooldownInterval = null;
 
-    /* ── Helpers ─────────────────────────────────────────── */
     function setInputError(input, errorEl, msg) {
         input.classList.add('is-invalid');
         errorEl.textContent = msg;
@@ -33,23 +29,12 @@ document.addEventListener('DOMContentLoaded', function () {
         errorEl.hidden = true;
     }
 
-    /* ── Cooldown timer ──────────────────────────────────── */
-    let cooldownInterval = null;
-
-    /**
-     * Persist the cooldown end-time and start ticking.
-     * Only called when the success alert is visible on the page.
-     */
     function startCooldown() {
         const until = Date.now() + COOLDOWN_DURATION * 1000;
-        localStorage.setItem(COOLDOWN_KEY, until);
+        localStorage.setItem(COOLDOWN_KEY, String(until));
         runCooldownTick(until);
     }
 
-    /**
-     * Drive the countdown UI from a given end-timestamp.
-     * Button stays disabled; countdown shown in the notice element below it.
-     */
     function runCooldownTick(until) {
         clearInterval(cooldownInterval);
 
@@ -59,14 +44,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (remaining <= 0) {
                 clearInterval(cooldownInterval);
                 localStorage.removeItem(COOLDOWN_KEY);
-                // Re-enable button, hide notice
                 submitBtn.disabled = false;
                 fpBtnText.textContent = 'Send Reset Link';
                 if (cooldownNotice) cooldownNotice.hidden = true;
                 return;
             }
 
-            // Keep button disabled; update notice — leave button label unchanged
             submitBtn.disabled = true;
             fpBtnText.textContent = 'Send Reset Link';
             if (cooldownNotice) {
@@ -75,47 +58,31 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        tick(); // immediate first tick — no 1-second blank
+        tick();
         cooldownInterval = setInterval(tick, 1000);
     }
 
-    /**
-     * On page load: if a stored cooldown is still active, resume it.
-     * Returns true if a live cooldown was found, false otherwise.
-     */
     function resumeCooldownIfActive() {
         const stored = localStorage.getItem(COOLDOWN_KEY);
         if (!stored) return false;
 
         const until = parseInt(stored, 10);
-        if (Date.now() < until) {
-            runCooldownTick(until);
-            return true;
+        if (Number.isNaN(until) || Date.now() >= until) {
+            localStorage.removeItem(COOLDOWN_KEY);
+            return false;
         }
 
-        localStorage.removeItem(COOLDOWN_KEY);
-        return false;
+        runCooldownTick(until);
+        return true;
     }
 
-    /* ── Only activate cooldown when the success message is visible ── */
     const successAlert = document.querySelector('.sk-alert-success');
+    const resumed = resumeCooldownIfActive();
 
-    // Always ensure notice is hidden on load unless we're about to show it
-    if (cooldownNotice) cooldownNotice.hidden = true;
-
-    if (successAlert) {
-        // Page reloaded after a successful POST — resume existing or start fresh
-        if (!resumeCooldownIfActive()) {
-            startCooldown();
-        }
-    } else {
-        // No success message — clear any stale cooldown key so it never leaks
-        localStorage.removeItem(COOLDOWN_KEY);
+    if (successAlert && !resumed) {
+        startCooldown();
     }
 
-    /* ── Email form ──────────────────────────────── */
-
-    // Mark server-side errors so they survive the first input clear
     document.querySelectorAll('.sk-field-error').forEach(function (el) {
         if (!el.hidden) el.setAttribute('data-server-error', 'true');
     });
@@ -144,37 +111,16 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Disable only the button (not inputs — disabling inputs strips CSRF → 419)
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return;
+        }
+
         submitBtn.disabled = true;
         fpBtnText.textContent = 'Sending...';
 
-        // Server will reload and show success message — cooldown starts then.
+        const until = Date.now() + COOLDOWN_DURATION * 1000;
+        localStorage.setItem(COOLDOWN_KEY, String(until));
+        runCooldownTick(until);
     });
-
-    /* ── Back to login link (smooth) ────────────────────── */
-    document.querySelector('.register-link')?.addEventListener('click', function (e) {
-        if (this.href && !this.id) {
-            e.preventDefault();
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        }
-    });
-
-    /* ── Form submit loading ────────────────────────────── */
-    form.addEventListener('submit', function (e) {
-        LoadingScreen.show('Sending Reset Link', 'Please wait...');
-    });
-
-    /* ── All links loading screen ───────────────────────── */
-    document.querySelectorAll('a').forEach(link => {
-        if (link.href && !link.target) {
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
-                LoadingScreen.show('Redirecting', 'Please wait...');
-                setTimeout(() => {
-                    window.location.href = this.href;
-                }, 300);
-            });
-        }
-    });
-
 });

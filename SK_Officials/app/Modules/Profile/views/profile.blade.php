@@ -55,7 +55,7 @@
                 <!-- Profile Picture Header -->
                 <div class="profile-pic-header">
                     <div class="profile-pic-avatar">
-                        <i class="fa-solid fa-user-tie"></i>
+                        <img src="{{ asset('images/logo.png') }}" alt="SK Officials" class="profile-pic-logo">
                         <span class="profile-pic-badge active">Active</span>
                     </div>
                     <div class="profile-pic-info">

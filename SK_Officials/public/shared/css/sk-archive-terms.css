@@ -75,3 +75,160 @@
         min-width: 0;
     }
 }
+
+/* Wider modal for profile-style grid (normal state only) */
+.restore-modal-box.view-modal-box:not(.view-modal-maximized),
+.view-modal-box:not(.view-modal-maximized) {
+    max-width: min(920px, 96vw);
+}
+
+/* Full-screen maximize — fixes content stuck on the left */
+.restore-modal-backdrop.view-modal-maximized {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    padding: 0 !important;
+}
+
+.restore-modal-backdrop.view-modal-maximized .restore-modal-box.view-modal-maximized,
+.restore-modal-box.view-modal-maximized {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    flex: 1 1 auto;
+    align-self: stretch;
+}
+
+.restore-modal-box.view-modal-maximized .view-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Record view modal — profile-style layout (Deleted / Rejected modules) */
+.view-modal-body .record-view-profile-layout {
+    padding: 4px 0 8px;
+}
+
+.view-modal-body .profile-field-group {
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.view-modal-body .profile-field-group:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.view-modal-body .profile-field-group-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.view-modal-body .profile-field-group-label--bold {
+    font-size: 13px;
+    font-weight: 800;
+    color: #111827;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.view-modal-body .profile-field-group-label--bold i {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.view-modal-body .profile-field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+}
+
+.view-modal-body .profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.view-modal-body .profile-field label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.view-modal-body .profile-field label i {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.view-modal-body .profile-field p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.view-modal-body .record-view-meta--danger {
+    background: #fff5f5;
+    border: 1.5px solid #fecaca;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-top: 4px;
+}
+
+.view-modal-body .record-view-meta--danger .profile-field p {
+    color: #dc2626;
+    background: #fff;
+    border-color: #fecaca;
+}
+
+.view-modal-body .record-view-fullname {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin: 0 0 14px;
+}
+
+@media (max-width: 768px) {
+    .view-modal-body .profile-field-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .view-modal-body .profile-field-row {
+        grid-template-columns: 1fr;
+    }
+}

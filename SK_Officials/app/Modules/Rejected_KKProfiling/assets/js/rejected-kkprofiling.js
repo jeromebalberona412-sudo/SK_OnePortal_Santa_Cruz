@@ -153,6 +153,7 @@ function initRejectedKK() {
     bindFilterTabs();
     bindRestoreModal();
     bindViewModal();
+    bindRkkKkFormModal();
 }
 
 function renderStats() {
@@ -295,51 +296,250 @@ function bindSearch() {
     });
 }
 
+function normalizeEducation(ed) {
+    const map = {
+        'High School Graduate': 'High School Grad',
+        'Elementary Graduate': 'Elementary Grad',
+        'College Graduate': 'College Grad',
+    };
+    return map[ed] || ed;
+}
+
+function enrichRejectedKKFormData(r) {
+    const age = parseInt(r.age, 10) || 18;
+    let youthAgeGroup = 'Core Youth (18-24 yrs old)';
+    if (age <= 17) youthAgeGroup = 'Child Youth (15-17 yrs old)';
+    else if (age >= 25) youthAgeGroup = 'Young Adult (15-30 yrs old)';
+
+    const youthClass = (r.youthClassification || '').replace(/In School/i, 'In school');
+
+    const samples = {
+        'rkk-001': {
+            date: 'Apr 18, 2026',
+            birthday: '04/15/2004',
+            emailAddress: 'benito.aquino@email.com',
+            contactNumber: '09187654321',
+            civilStatus: 'Single',
+            facebookAccount: 'benito.cruz.aquino',
+        },
+        'rkk-002': {
+            date: 'Apr 05, 2026',
+            birthday: '06/12/2006',
+            emailAddress: 'carla.bautista@email.com',
+            contactNumber: '09181234567',
+            civilStatus: 'Single',
+            facebookAccount: 'carla.reyes.bautista',
+            workStatus: 'Currently looking for a Job',
+        },
+        'rkk-003': {
+            date: 'Apr 12, 2026',
+            birthday: '03/22/2001',
+            emailAddress: 'dante.flores@email.com',
+            contactNumber: '09291234567',
+            civilStatus: 'Single',
+            facebookAccount: 'dante.flores',
+        },
+        'rkk-004': {
+            date: 'Nov 01, 2024',
+            birthday: '08/30/2004',
+            emailAddress: 'elena.castro@email.com',
+            contactNumber: '09351234567',
+            civilStatus: 'Single',
+            facebookAccount: 'elena.g.castro',
+            workStatus: 'Currently looking for a Job',
+        },
+    };
+
+    const extra = samples[r.id] || {};
+    return {
+        respondentNumber: r.respondentNumber,
+        date: r.rejectedDate || '—',
+        firstName: r.firstName,
+        middleName: r.middleName || '',
+        lastName: r.lastName,
+        suffix: r.suffix || 'None',
+        region: 'Region IV-A (CALABARZON)',
+        province: 'Laguna',
+        city: 'Santa Cruz',
+        barangay: r.barangay,
+        purokZone: r.purokZone,
+        sex: r.sex,
+        age: r.age,
+        emailAddress: `${(r.firstName || 'user').toLowerCase()}.${(r.lastName || 'youth').toLowerCase()}@email.com`,
+        contactNumber: '09171234567',
+        civilStatus: 'Single',
+        youthAgeGroup,
+        youthClassification: youthClass,
+        workStatus: r.workStatus,
+        educationalBackground: normalizeEducation(r.educationalBackground),
+        registeredSKVoter: r.registeredSKVoter,
+        registeredNationalVoter: r.registeredSKVoter === 'Yes' ? 'Yes' : 'No',
+        votingHistory: 'No',
+        votingFrequency: '',
+        attendedKKAssembly: 'No',
+        votingReason: 'There was no KK Assembly Meeting',
+        facebookAccount: `${r.firstName} ${r.lastName}`,
+        willingToJoinGroupChat: 'Yes',
+        signature: [r.firstName, r.middleName, r.lastName, r.suffix].filter(Boolean).join(' '),
+        ...extra,
+    };
+}
+
+function populateRkkKkQuestionnaire(r) {
+    const d = enrichRejectedKKFormData(r);
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val ?? '—';
+    };
+    const setCheck = (id, checked) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const text = el.textContent.replace(/^[☐☑]\s*/, '');
+        el.textContent = (checked ? '☑ ' : '☐ ') + text;
+        el.style.fontWeight = checked ? '700' : '400';
+        el.style.color = checked ? '#1a1a1a' : '#6b7280';
+    };
+
+    setVal('rkkKkViewRespondentNumber', d.respondentNumber);
+    setVal('rkkKkViewDate', d.date);
+    setVal('rkkKkViewLastName', d.lastName);
+    setVal('rkkKkViewFirstName', d.firstName);
+    setVal('rkkKkViewMiddleName', d.middleName || '—');
+    setVal('rkkKkViewSuffix', d.suffix || 'None');
+    setVal('rkkKkViewRegion', d.region);
+    setVal('rkkKkViewProvince', d.province);
+    setVal('rkkKkViewCity', d.city);
+    setVal('rkkKkViewBarangay', d.barangay);
+    setVal('rkkKkViewPurokZone', d.purokZone);
+    setVal('rkkKkViewSexAssignedAtBirth', d.sex);
+    setVal('rkkKkViewAge', d.age);
+    setVal('rkkKkViewBirthday', d.birthday);
+    setVal('rkkKkViewEmailAddress', d.emailAddress);
+    setVal('rkkKkViewContactNumber', d.contactNumber);
+    setVal('rkkKkViewFacebookAccount', d.facebookAccount);
+
+    const csMap = { rkkKkViewCS_Single:'Single', rkkKkViewCS_Married:'Married', rkkKkViewCS_Widowed:'Widowed', rkkKkViewCS_Divorced:'Divorced', rkkKkViewCS_Separated:'Separated', rkkKkViewCS_Annulled:'Annulled', rkkKkViewCS_Unknown:'Unknown', rkkKkViewCS_Livein:'Live-in' };
+    Object.entries(csMap).forEach(([id, val]) => setCheck(id, d.civilStatus === val));
+    const yagMap = { rkkKkViewYAG_Child:'Child Youth (15-17 yrs old)', rkkKkViewYAG_Core:'Core Youth (18-24 yrs old)', rkkKkViewYAG_Young:'Young Adult (15-30 yrs old)' };
+    Object.entries(yagMap).forEach(([id, val]) => setCheck(id, d.youthAgeGroup === val));
+    const ebMap = { rkkKkViewEB_ElemLevel:'Elementary Level', rkkKkViewEB_ElemGrad:'Elementary Grad', rkkKkViewEB_HSLevel:'High School Level', rkkKkViewEB_HSGrad:'High School Grad', rkkKkViewEB_VocGrad:'Vocational Grad', rkkKkViewEB_ColLevel:'College Level', rkkKkViewEB_ColGrad:'College Grad', rkkKkViewEB_MasLevel:'Masters Level', rkkKkViewEB_MasGrad:'Masters Grad', rkkKkViewEB_DocLevel:'Doctorate Level', rkkKkViewEB_DocGrad:'Doctorate Graduate' };
+    Object.entries(ebMap).forEach(([id, val]) => setCheck(id, d.educationalBackground === val));
+    const ycMap = { rkkKkViewYC_ISY:'In school Youth', rkkKkViewYC_OSY:'Out of School Youth', rkkKkViewYC_Working:'Working Youth', rkkKkViewYC_PWD:'Person w/ Disability', rkkKkViewYC_CICL:'Children in Conflict w/ Law', rkkKkViewYC_IP:'Indigenous People' };
+    Object.entries(ycMap).forEach(([id, val]) => setCheck(id, d.youthClassification === val));
+    const wsMap = { rkkKkViewWS_Employed:'Employed', rkkKkViewWS_Unemployed:'Unemployed', rkkKkViewWS_SelfEmployed:'Self-Employed', rkkKkViewWS_Looking:'Currently looking for a Job', rkkKkViewWS_NotInterested:'Not Interested Looking for a Job' };
+    Object.entries(wsMap).forEach(([id, val]) => setCheck(id, d.workStatus === val));
+
+    setCheck('rkkKkViewSKV_Yes', d.registeredSKVoter === 'Yes');
+    setCheck('rkkKkViewSKV_No', d.registeredSKVoter === 'No');
+    setCheck('rkkKkViewNV_Yes', d.registeredNationalVoter === 'Yes');
+    setCheck('rkkKkViewNV_No', d.registeredNationalVoter === 'No');
+    setCheck('rkkKkViewVH_Yes', d.votingHistory === 'Yes');
+    setCheck('rkkKkViewVH_No', d.votingHistory === 'No');
+    setCheck('rkkKkViewVF_12', d.votingFrequency === '1-2 Times');
+    setCheck('rkkKkViewVF_34', d.votingFrequency === '3-4 Times');
+    setCheck('rkkKkViewVF_5', d.votingFrequency === '5 and above');
+    setCheck('rkkKkViewKK_Yes', d.attendedKKAssembly === 'Yes');
+    setCheck('rkkKkViewKK_No', d.attendedKKAssembly === 'No');
+    setCheck('rkkKkViewVR_NoKK', d.votingReason === 'There was no KK Assembly Meeting');
+    setCheck('rkkKkViewVR_NotInt', d.votingReason === 'Not interested to Attend');
+    setCheck('rkkKkViewGC_Yes', d.willingToJoinGroupChat === 'Yes');
+    setCheck('rkkKkViewGC_No', d.willingToJoinGroupChat === 'No');
+
+    const sigEl = document.getElementById('rkkKkViewSignature');
+    const sigOverlay = document.getElementById('rkkKkViewSignatureOverlay');
+    if (sigEl) {
+        sigEl.textContent = d.signature || '—';
+        if (sigOverlay) sigOverlay.style.display = d.signature ? 'none' : '';
+    }
+}
+
+function openRkkKkFormModal(record) {
+    populateRkkKkQuestionnaire(record);
+    const modal = document.getElementById('rkkKkFormModal');
+    const box = document.getElementById('rkkKkFormModalBox');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('view-modal-maximized');
+    }
+    if (box) box.classList.remove('view-modal-maximized');
+    const toggle = document.getElementById('rkkKkFormToggle');
+    if (toggle) toggle.textContent = '□';
+}
+
+function bindRkkKkFormModal() {
+    const modal = document.getElementById('rkkKkFormModal');
+    const box = document.getElementById('rkkKkFormModalBox');
+    const closeBtn = document.getElementById('rkkKkFormClose');
+    const toggleBtn = document.getElementById('rkkKkFormToggle');
+
+    const close = () => {
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('modal-maximized', 'view-modal-maximized');
+        }
+        if (box) box.classList.remove('modal-maximized', 'view-modal-maximized');
+        if (toggleBtn) toggleBtn.textContent = '□';
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+    if (toggleBtn && box && modal) {
+        toggleBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const isMax = !modal.classList.contains('modal-maximized');
+            modal.classList.toggle('modal-maximized', isMax);
+            box.classList.toggle('modal-maximized', isMax);
+            toggleBtn.textContent = isMax ? '⧉' : '□';
+        });
+    }
+}
+
 function openViewModal(id) {
     const r = rejectedKKRecords.find(x => x.id === id);
     if (!r) return;
     const body = document.getElementById('rkkViewModalBody');
-    if (body) {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
-        body.innerHTML = `
-            <div class="view-modal-grid">
-                <div class="view-modal-column">
-                    <div class="view-section-card">
-                        <h3 class="view-section-title">Personal Information</h3>
-                        <div class="view-fullname">${fullName}</div>
-                        <div class="view-field-group">
-                            <div class="view-field"><span class="view-field-label">Age</span><span class="view-field-value">${r.age || '—'}</span></div>
-                            <div class="view-field"><span class="view-field-label">Sex</span><span class="view-field-value">${r.sex || '—'}</span></div>
-                        </div>
-                        <div class="view-field"><span class="view-field-label">Purok / Zone</span><span class="view-field-value">${r.purokZone || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Barangay</span><span class="view-field-value">${r.barangay || '—'}</span></div>
-                    </div>
-                </div>
-                <div class="view-modal-column">
-                    <div class="view-section-card">
-                        <h3 class="view-section-title">Classification & Status</h3>
-                        <div class="view-field"><span class="view-field-label">Youth Classification</span><span class="view-badge view-badge-blue">${r.youthClassification || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Work Status</span><span class="view-badge view-badge-green">${r.workStatus || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Education</span><span class="view-field-value">${r.educationalBackground || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Registered SK Voter</span><span class="view-field-value">${r.registeredSKVoter || '—'}</span></div>
-                    </div>
-                </div>
+    const L = window.SkRecordViewLayout;
+    if (!body || !L) return;
+
+    const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+    const F = L.profileField;
+    const R = L.profileRow;
+    const S = L.profileSection;
+
+    body.innerHTML = `
+        <div class="record-view-profile-layout">
+            ${S('Personal Information', 'fa-solid fa-user', `
+                <p class="record-view-fullname">${L.escHtml(fullName)}</p>
+                ${R(
+                    F('Age', r.age) +
+                    F('Sex', r.sex, 'fa-solid fa-venus-mars') +
+                    F('Purok / Zone', r.purokZone) +
+                    F('Barangay', r.barangay, 'fa-solid fa-location-dot')
+                )}
+            `)}
+            ${S('Classification & Status', 'fa-solid fa-id-card', R(
+                F('Youth Classification', r.youthClassification) +
+                F('Work Status', r.workStatus) +
+                F('Education', r.educationalBackground, 'fa-solid fa-graduation-cap') +
+                F('Registered SK Voter', r.registeredSKVoter)
+            ))}
+            ${L.profileMetaSection('Rejection Details', 'fa-solid fa-circle-xmark', `
+                ${R(F('Reason', r.rejectionReason))}
+                ${R(
+                    F('Rejected Date', r.rejectedDate, 'fa-solid fa-calendar-day') +
+                    F('Rejected Time', r.rejectedTime, 'fa-solid fa-clock')
+                )}
+            `)}
+            <div class="record-view-modal-actions">
+                <button type="button" class="btn-view-kk-questionnaire" id="rkkViewKkFormBtn">
+                    <i class="fa-solid fa-file-lines"></i> View KK Profiling Form
+                </button>
             </div>
-            <div class="view-rejection-section">
-                <h3 class="view-section-title view-section-title-danger">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="view-section-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    Rejection Details
-                </h3>
-                <div class="view-rejection-reason">
-                    <span class="view-field-label">Reason</span>
-                    <p class="view-rejection-text">${r.rejectionReason || '—'}</p>
-                </div>
-                <div class="view-field-group-inline">
-                    <div class="view-field"><span class="view-field-label">Rejected Date</span><span class="view-field-value-danger">${r.rejectedDate}</span></div>
-                    <div class="view-field"><span class="view-field-label">Rejected Time</span><span class="view-field-value-danger">${r.rejectedTime}</span></div>
-                </div>
-            </div>`;
-    }
+        </div>`;
+
+    document.getElementById('rkkViewKkFormBtn')?.addEventListener('click', () => openRkkKkFormModal(r));
+
     const modal = document.getElementById('rkkViewModal');
     if (modal) modal.style.display = 'flex';
 }

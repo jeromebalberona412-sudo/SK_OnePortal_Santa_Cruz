@@ -280,41 +280,40 @@ function openViewModal(id) {
     const r = deletedKabataanRecords.find(x => x.id === id);
     if (!r) return;
     const body = document.getElementById('dkViewModalBody');
-    if (body) {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
-        body.innerHTML = `
-            <div class="view-modal-grid">
-                <div class="view-modal-column">
-                    <div class="view-section-card">
-                        <h3 class="view-section-title">Personal Information</h3>
-                        <div class="view-fullname">${fullName}</div>
-                        <div class="view-field-group">
-                            <div class="view-field"><span class="view-field-label">Age</span><span class="view-field-value">${r.age || '—'}</span></div>
-                            <div class="view-field"><span class="view-field-label">Sex</span><span class="view-field-value">${r.sex || '—'}</span></div>
-                        </div>
-                        <div class="view-field"><span class="view-field-label">Civil Status</span><span class="view-field-value">${r.civilStatus || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Purok / Zone</span><span class="view-field-value">${r.purokZone || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Barangay</span><span class="view-field-value">${r.barangay || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Contact Number</span><span class="view-field-value">${r.contactNumber || '—'}</span></div>
-                    </div>
-                </div>
-                <div class="view-modal-column">
-                    <div class="view-section-card">
-                        <h3 class="view-section-title">Classification & Status</h3>
-                        <div class="view-field"><span class="view-field-label">Youth Classification</span><span class="view-badge view-badge-blue">${r.youthClassification || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Work Status</span><span class="view-badge view-badge-green">${r.workStatus || '—'}</span></div>
-                        <div class="view-field"><span class="view-field-label">Education</span><span class="view-field-value">${r.educationalBackground || '—'}</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="view-deletion-section">
-                <h3 class="view-section-title view-section-title-danger">Deletion Information</h3>
-                <div class="view-field-group-inline">
-                    <div class="view-field"><span class="view-field-label">Deleted Date</span><span class="view-field-value-danger">${r.deletedDate}</span></div>
-                    <div class="view-field"><span class="view-field-label">Deleted Time</span><span class="view-field-value-danger">${r.deletedTime}</span></div>
-                </div>
-            </div>`;
-    }
+    const L = window.SkRecordViewLayout;
+    if (!body || !L) return;
+
+    const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+    const F = L.profileField;
+    const R = L.profileRow;
+    const S = L.profileSection;
+
+    body.innerHTML = `
+        <div class="record-view-profile-layout">
+            ${S('Personal Information', 'fa-solid fa-user', `
+                <p class="record-view-fullname">${L.escHtml(fullName)}</p>
+                ${R(
+                    F('Age', r.age) +
+                    F('Sex', r.sex, 'fa-solid fa-venus-mars') +
+                    F('Civil Status', r.civilStatus) +
+                    F('Contact Number', r.contactNumber, 'fa-solid fa-mobile-screen')
+                )}
+                ${R(
+                    F('Purok / Zone', r.purokZone) +
+                    F('Barangay', r.barangay, 'fa-solid fa-location-dot')
+                )}
+            `)}
+            ${S('Classification & Status', 'fa-solid fa-id-card', R(
+                F('Youth Classification', r.youthClassification) +
+                F('Work Status', r.workStatus) +
+                F('Education', r.educationalBackground, 'fa-solid fa-graduation-cap')
+            ))}
+            ${L.profileMetaSection('Deletion Information', 'fa-solid fa-trash-can', R(
+                F('Deleted Date', r.deletedDate, 'fa-solid fa-calendar-day') +
+                F('Deleted Time', r.deletedTime, 'fa-solid fa-clock')
+            ))}
+        </div>`;
+
     const modal = document.getElementById('dkViewModal');
     if (modal) modal.style.display = 'flex';
 }

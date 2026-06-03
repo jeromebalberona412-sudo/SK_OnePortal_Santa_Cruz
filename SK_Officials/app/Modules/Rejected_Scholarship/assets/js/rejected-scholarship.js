@@ -249,109 +249,76 @@ function bindSearch() {
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────
+function rsFormatPurpose(r) {
+    const list = r.purpose_list || [];
+    if (!list.length) return r.purpose || '—';
+    return list.map(p => {
+        if (String(p).toLowerCase() === 'others' && r.purpose_others) {
+            return `Others (${r.purpose_others})`;
+        }
+        return p;
+    }).join(', ');
+}
+
+function rsFormatRejectionReason(r) {
+    if (Array.isArray(r.rejection_reasons) && r.rejection_reasons.length) {
+        return r.rejection_reasons.join(', ');
+    }
+    return r.rejection_reason || r.review_notes || '—';
+}
+
 function openViewModal(id) {
     const all = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
     const r   = all.find(x => x.id === id);
     if (!r) return;
 
     const body = document.getElementById('rsViewModalBody');
-    if (!body) return;
+    const L = window.SkRecordViewLayout;
+    if (!body || !L) return;
 
-    const allPurposes = ['Tuition Fees', 'Books/Equipments', 'Living Expenses', 'Others'];
-    const purposeList = r.purpose_list || [];
-
-    const purposeHTML = allPurposes.map(p => {
-        const checked = purposeList.some(v => v.toLowerCase().replace(/\s/g, '') === p.toLowerCase().replace(/\s/g, ''));
-        const extra   = (p === 'Others' && r.purpose_others) ? ` (${r.purpose_others})` : '';
-        return `<div class="rs-pdf-check-item">
-            <span class="rs-pdf-checkbox ${checked ? 'rs-pdf-checked' : ''}"></span>
-            ${p}${extra}
-        </div>`;
-    }).join('');
-
-    const f = (val, w) => `<span class="rs-pdf-inline-filled" style="min-width:${w || 80}px;">${val || '—'}</span>`;
+    const fullName = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name : ''}`.replace(/^,\s*/, '');
+    const rejectedDate = r.rejected_at || r.submitted_at;
+    const rejectedTime = r.rejected_time || r.submitted_time;
+    const F = L.profileField;
+    const R = L.profileRow;
+    const S = L.profileSection;
 
     body.innerHTML = `
-        <div class="rs-rejected-banner">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            This application was rejected on ${r.submitted_at || '—'}.
-        </div>
-
-        <div class="rs-pdf-form">
-
-            <div class="rs-pdf-header">
-                <img src="/images/barangay_logo.png" alt="Barangay Calios" class="rs-pdf-logo-img">
-                <h2 class="rs-pdf-title">SCHOLARSHIP APPLICATION FORM</h2>
-                <div class="rs-pdf-picture-box"><span>Picture<br>Here</span></div>
-            </div>
-
-            <div class="rs-pdf-section">
-                <p class="rs-pdf-inline-title">APPLICANT'S PERSONAL INFORMATION:</p>
-                <div class="rs-pdf-inline-row">
-                    <span class="rs-pdf-inline-label">Last Name:</span>${f(r.last_name, 110)}
-                    <span class="rs-pdf-inline-label">First Name:</span>${f(r.first_name, 110)}
-                    <span class="rs-pdf-inline-label">Middle Name:</span>${f(r.middle_name, 100)}
-                </div>
-                <div class="rs-pdf-inline-row">
-                    <span class="rs-pdf-inline-label">Date of Birth:</span>${f(r.date_of_birth, 90)}
-                    <span class="rs-pdf-inline-label">Gender:</span>${f(r.gender, 70)}
-                    <span class="rs-pdf-inline-label">Age:</span>${f(r.age, 40)}
-                    <span class="rs-pdf-inline-label">Contact No:</span>${f(r.contact_no, 110)}
-                </div>
-                <div class="rs-pdf-inline-row">
-                    <span class="rs-pdf-inline-label">Complete Address:</span>
-                    <span class="rs-pdf-inline-filled" style="flex:1;">${r.address || '—'}</span>
-                </div>
-                <div class="rs-pdf-inline-row">
-                    <span class="rs-pdf-inline-label">Email Address:</span>
-                    <span class="rs-pdf-inline-filled" style="min-width:200px;">${r.email || '—'}</span>
-                </div>
-            </div>
-
-            <div class="rs-pdf-section">
-                <p class="rs-pdf-inline-title">ACADEMIC INFORMATION:</p>
-                <div class="rs-pdf-inline-row">
-                    <span class="rs-pdf-inline-label">Name of School:</span>
-                    <span class="rs-pdf-inline-filled" style="flex:1;">${r.school_name || '—'}</span>
-                </div>
-                <div class="rs-pdf-inline-row">
-                    <span class="rs-pdf-inline-label">School Address:</span>
-                    <span class="rs-pdf-inline-filled" style="flex:1;">${r.school_address || '—'}</span>
-                </div>
-                <div class="rs-pdf-inline-row">
-                    <span class="rs-pdf-inline-label">Year/Grade Level:</span>${f(r.year_level, 110)}
-                    <span class="rs-pdf-inline-label" style="margin-left:14px;">Program/Strand:</span>${f(r.program_strand, 110)}
-                </div>
-            </div>
-
-            <div class="rs-pdf-section rs-pdf-bottom-section">
-                <div class="rs-pdf-bottom-left">
-                    <p class="rs-pdf-inline-title">SCHOLARSHIP INFORMATION:</p>
-                    <p class="rs-pdf-purpose-label">Purpose of Scholarship:</p>
-                    <div class="rs-pdf-check-list">${purposeHTML}</div>
-                </div>
-                <div class="rs-pdf-bottom-right">
-                    <p class="rs-pdf-inline-title">SUBMITTED REQUIREMENTS:</p>
-                    <div class="rs-pdf-check-list" style="margin-top:8px;">
-                        <div class="rs-pdf-check-item">
-                            <span class="rs-pdf-checkbox ${r.cor_certified ? 'rs-pdf-checked' : ''}"></span>
-                            COR – CERTIFIED TRUE COPY
-                        </div>
-                        <div class="rs-pdf-check-item">
-                            <span class="rs-pdf-checkbox ${r.photo_id ? 'rs-pdf-checked' : ''}"></span>
-                            PHOTO COPY OF ID (FRONT AND BACK)
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rs-pdf-sig-section">
-                <div class="rs-pdf-sig-line"></div>
-                <p class="rs-pdf-sig-label">${r.first_name || ''} ${r.middle_name ? r.middle_name + ' ' : ''}${r.last_name || ''}</p>
-            </div>
-
-        </div>
-    `;
+        <div class="record-view-profile-layout">
+            ${S('Personal Information', 'fa-solid fa-user', `
+                <p class="record-view-fullname">${L.escHtml(fullName)}</p>
+                ${R(
+                    F('Date of Birth', r.date_of_birth, 'fa-solid fa-calendar-day') +
+                    F('Gender', r.gender, 'fa-solid fa-venus-mars') +
+                    F('Age', r.age) +
+                    F('Contact Number', r.contact_no, 'fa-solid fa-mobile-screen')
+                )}
+                ${R(
+                    F('Complete Address', r.address, 'fa-solid fa-location-dot') +
+                    F('Email Address', r.email, 'fa-solid fa-envelope')
+                )}
+            `)}
+            ${S('Academic Information', 'fa-solid fa-graduation-cap', `
+                ${R(F('Name of School', r.school_name))}
+                ${R(F('School Address', r.school_address))}
+                ${R(
+                    F('Year / Grade Level', r.year_level) +
+                    F('Program / Strand', r.program_strand)
+                )}
+            `)}
+            ${S('Scholarship Information', 'fa-solid fa-file-lines', R(
+                F('Purpose of Scholarship', rsFormatPurpose(r)) +
+                F('COR – Certified True Copy', r.cor_certified ? 'Submitted' : 'Not submitted') +
+                F('Photo Copy of ID', r.photo_id ? 'Submitted' : 'Not submitted')
+            ))}
+            ${L.profileMetaSection('Rejection Details', 'fa-solid fa-circle-xmark', `
+                ${R(F('Reason', rsFormatRejectionReason(r)))}
+                ${R(
+                    F('Rejected Date', rejectedDate, 'fa-solid fa-calendar-day') +
+                    F('Rejected Time', rejectedTime, 'fa-solid fa-clock')
+                )}
+            `)}
+        </div>`;
 
     const modal = document.getElementById('rsViewModal');
     if (modal) modal.style.display = 'flex';

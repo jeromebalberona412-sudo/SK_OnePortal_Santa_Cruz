@@ -420,18 +420,26 @@ body {
     min-height: 0;
 }
 
-/* Maximized state */
+/* Maximized state — full viewport */
 .restore-modal-backdrop.view-modal-maximized {
     align-items: stretch;
-    justify-content: stretch;
+    justify-content: flex-start;
+    padding: 0;
 }
 
 .restore-modal-box.view-modal-maximized {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    max-height: none;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    margin: 0;
     border-radius: 0;
+}
+
+.restore-modal-box.view-modal-maximized .view-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 /* ── PDF form inside view modal ── */

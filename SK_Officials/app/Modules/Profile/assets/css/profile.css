@@ -1302,6 +1302,15 @@ body {
     color: #f4c20d;
 }
 
+.profile-pic-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 10px;
+    border-radius: 50%;
+    background: #fff;
+}
+
 .profile-pic-badge {
     position: absolute;
     bottom: 2px;

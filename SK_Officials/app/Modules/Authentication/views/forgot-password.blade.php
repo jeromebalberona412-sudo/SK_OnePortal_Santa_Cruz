@@ -10,6 +10,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Forgot Password - SK Officials</title>
     @vite([
+        'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/forgot-password.css',
         'app/Modules/Authentication/assets/js/forgot-password.js',
     ])
@@ -119,7 +120,7 @@
                     <div class="youth-register-section">
                         <p class="register-text">
                             Remember your password?
-                            <a href="{{ route('login') }}" class="register-link">Back to Login</a>
+                            <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Login</a>
                         </p>
                     </div>
                 </div>

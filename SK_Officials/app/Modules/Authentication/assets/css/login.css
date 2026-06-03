@@ -261,6 +261,27 @@ html {
     }
 }
 
+/* Single centered brand logo (forgot / reset password) */
+.sk-brand-logo-single {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 3rem;
+    height: 240px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sk-brand-logo-single .logo-glow-wrapper {
+    margin-bottom: 0;
+    position: relative;
+}
+
+.sk-brand-logo-single .logo-glow-wrapper::before {
+    width: 280px;
+    height: 280px;
+}
+
 /* Collaborative Logo Layout - Overlapping/Connected Style */
 .collab-logo-wrapper {
     display: flex;
@@ -676,6 +697,12 @@ html {
     width: 22px;
     height: 22px;
     transition: all var(--transition-base);
+    display: flex;
+    flex-shrink: 0;
+}
+
+.eye-icon.eye-closed {
+    display: none;
 }
 
 /* Form Options */

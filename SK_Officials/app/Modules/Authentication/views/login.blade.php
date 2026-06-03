@@ -259,15 +259,12 @@
                     return false;
                 }
 
-                LoadingScreen.show('Signing In', 'Please wait...');
-            });
-
-            document.getElementById('forgotBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                LoadingScreen.show('Redirecting', 'Taking you to password recovery...');
-                setTimeout(() => {
-                    window.location.href = '{{ route("password.request", [], false) }}';
-                }, 300);
+                const submitBtn = document.getElementById('loginBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    const label = submitBtn.querySelector('span');
+                    if (label) label.textContent = 'Signing In...';
+                }
             });
         })();
     </script>

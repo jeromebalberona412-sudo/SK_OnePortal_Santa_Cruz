@@ -69,6 +69,32 @@
         return { getSelected: () => select.value };
     }
 
+    function escHtml(value) {
+        if (value == null || value === '') return '—';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function profileField(label, value, iconClass) {
+        const icon = iconClass ? `<i class="${iconClass}"></i> ` : '';
+        return `<div class="profile-field"><label>${icon}${escHtml(label)}</label><p>${escHtml(value)}</p></div>`;
+    }
+
+    function profileRow(fieldsHtml) {
+        return `<div class="profile-field-row">${fieldsHtml}</div>`;
+    }
+
+    function profileSection(title, iconClass, innerHtml) {
+        return `<div class="profile-field-group"><div class="profile-field-group-label profile-field-group-label--bold"><i class="${iconClass}"></i> ${escHtml(title)}</div>${innerHtml}</div>`;
+    }
+
+    function profileMetaSection(title, iconClass, innerHtml) {
+        return `<div class="profile-field-group record-view-meta--danger"><div class="profile-field-group-label profile-field-group-label--bold"><i class="${iconClass}"></i> ${escHtml(title)}</div>${innerHtml}</div>`;
+    }
+
     global.SkArchive = {
         TERMS,
         ACTIVE_TERM_ID,
@@ -81,5 +107,13 @@
         canRestoreRecord,
         filterByArchiveTerm,
         mountShowArchiveFilter,
+    };
+
+    global.SkRecordViewLayout = {
+        escHtml,
+        profileField,
+        profileRow,
+        profileSection,
+        profileMetaSection,
     };
 })(typeof window !== 'undefined' ? window : globalThis);

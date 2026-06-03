@@ -66,26 +66,22 @@ function hideLoading() {
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
 
+/** @deprecated Auth pages use button-only loading; kept so legacy calls do not throw */
+window.LoadingScreen = {
+    show(message) {
+        showLoading(message || 'Loading');
+    },
+    hide() {
+        hideLoading();
+    },
+};
+
 // Close SKai immediately if script runs after header markup
 suppressHeaderPanelsDuringLoad();
 
 document.addEventListener('DOMContentLoaded', () => {
     suppressHeaderPanelsDuringLoad();
     hideLoading();
-
-    // ── Login form ────────────────────────────────────────────────────────
-    const loginForm = document.querySelector('form[action*="login"]:not([action*="logout"])');
-    if (loginForm) {
-        loginForm.addEventListener('submit', () => {
-            const emailInput    = loginForm.querySelector('input[type="email"], input[name="email"]');
-            const passwordInput = loginForm.querySelector('input[type="password"], input[name="password"]');
-            const emailFilled    = emailInput    && emailInput.value.trim() !== '';
-            const passwordFilled = passwordInput && passwordInput.value !== '';
-            if (emailFilled && passwordFilled) {
-                showLoading(MESSAGES.login);
-            }
-        });
-    }
 
     // ── Register form ─────────────────────────────────────────────────────
     const registerForm = document.querySelector('form[action*="register"]');
@@ -119,7 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentPath = window.location.pathname;
         if (currentPath === '/login' || currentPath.endsWith('/login') ||
             currentPath === '/register' || currentPath.endsWith('/register') ||
-            currentPath.includes('forgot-password') || currentPath.includes('password/reset')) return;
+            currentPath.includes('forgot-password') ||
+            currentPath.includes('password/reset') ||
+            currentPath.includes('reset-password')) return;
 
         if (href.startsWith('http') || href.startsWith('//')) {
             try {

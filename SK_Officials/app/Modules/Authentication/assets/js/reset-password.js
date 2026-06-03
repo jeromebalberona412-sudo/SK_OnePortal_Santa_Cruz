@@ -1,33 +1,21 @@
-// Toggle new password visibility
-function toggleNewPassword() {
-    const input = document.getElementById('new-password');
-    const eyeOpen = document.getElementById('newEyeOpen');
-    const eyeClosed = document.getElementById('newEyeClosed');
-    if (input.type === 'password') {
-        input.type = 'text';
-        eyeOpen.style.display = 'none';
-        eyeClosed.style.display = 'block';
-    } else {
-        input.type = 'password';
-        eyeOpen.style.display = 'block';
-        eyeClosed.style.display = 'none';
-    }
+function togglePasswordField(inputId, openId, closedId) {
+    const input = document.getElementById(inputId);
+    const eyeOpen = document.getElementById(openId);
+    const eyeClosed = document.getElementById(closedId);
+    if (!input || !eyeOpen || !eyeClosed) return;
+
+    const showPlain = input.type === 'password';
+    input.type = showPlain ? 'text' : 'password';
+    eyeOpen.style.display = showPlain ? 'none' : 'flex';
+    eyeClosed.style.display = showPlain ? 'flex' : 'none';
 }
 
-// Toggle confirm password visibility
+function toggleNewPassword() {
+    togglePasswordField('new-password', 'newEyeOpen', 'newEyeClosed');
+}
+
 function toggleConfirmPassword() {
-    const input = document.getElementById('confirm-password');
-    const eyeOpen = document.getElementById('confirmEyeOpen');
-    const eyeClosed = document.getElementById('confirmEyeClosed');
-    if (input.type === 'password') {
-        input.type = 'text';
-        eyeOpen.style.display = 'none';
-        eyeClosed.style.display = 'block';
-    } else {
-        input.type = 'password';
-        eyeOpen.style.display = 'block';
-        eyeClosed.style.display = 'none';
-    }
+    togglePasswordField('confirm-password', 'confirmEyeOpen', 'confirmEyeClosed');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -36,6 +24,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmPasswordInput = document.getElementById('confirm-password');
     const newPasswordError = document.getElementById('new-password-error');
     const confirmPasswordError = document.getElementById('confirm-password-error');
+    const resetBtn = document.getElementById('resetBtn');
+    const resetBtnLabel = resetBtn?.querySelector('span');
 
     if (!resetPasswordForm) return;
 
@@ -51,21 +41,21 @@ document.addEventListener('DOMContentLoaded', function () {
         errorElement.hidden = false;
     }
 
-    newPasswordInput.addEventListener('input', function() {
+    newPasswordInput.addEventListener('input', function () {
         clearError(this, newPasswordError);
     });
 
-    confirmPasswordInput.addEventListener('input', function() {
+    confirmPasswordInput.addEventListener('input', function () {
         clearError(this, confirmPasswordError);
     });
 
-    resetPasswordForm.addEventListener('submit', function(e) {
+    resetPasswordForm.addEventListener('submit', function (e) {
         const minLength = Number.parseInt(resetPasswordForm.dataset.passwordMinLength || '12', 10);
         const maxLength = Number.parseInt(resetPasswordForm.dataset.passwordMaxLength || '64', 10);
         const hasLetters = /[A-Za-z]/.test(newPasswordInput.value);
         const hasNumbers = /\d/.test(newPasswordInput.value);
         const hasSymbols = /[^A-Za-z0-9]/.test(newPasswordInput.value);
-        
+
         let isValid = true;
 
         clearError(newPasswordInput, newPasswordError);
@@ -91,16 +81,9 @@ document.addEventListener('DOMContentLoaded', function () {
             isValid = false;
         }
 
-        if (isValid) {
-            LoadingScreen.show('Resetting Password', 'Please wait...');
+        if (isValid && resetBtn && resetBtnLabel) {
+            resetBtn.disabled = true;
+            resetBtnLabel.textContent = 'Resetting...';
         }
-    });
-
-    document.querySelector('a[href*="login"]')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        LoadingScreen.show('Redirecting', 'Taking you to login...');
-        setTimeout(() => {
-            window.location.href = this.href;
-        }, 300);
     });
 });
