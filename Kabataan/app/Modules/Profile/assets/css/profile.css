@@ -1912,3 +1912,80 @@ body.youth-profile {
     }
 }
 
+/* Account Settings Section */
+.account-setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    gap: 16px;
+}
+
+.account-setting-item:first-child {
+    padding-top: 0;
+}
+
+.account-setting-item:last-child {
+    padding-bottom: 0;
+}
+
+.setting-info {
+    flex: 1;
+}
+
+.setting-info h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 6px 0;
+}
+
+.setting-info p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.setting-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 16px 0;
+}
+
+.btn-setting-action {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(4, 80, 168, 0.25);
+    white-space: nowrap;
+}
+
+.btn-setting-action:hover {
+    background: linear-gradient(135deg, #033d7a 0%, #0450a8 100%);
+    box-shadow: 0 6px 16px rgba(4, 80, 168, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-setting-action:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .account-setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .btn-setting-action {
+        width: 100%;
+        text-align: center;
+    }
+}
+

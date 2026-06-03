@@ -1,19 +1,58 @@
 (()=>{
     const sendBtn=document.getElementById('sendCodeBtn'),sendTimerText=document.getElementById('sendTimerText'),sendCountdown=document.getElementById('sendCountdown'),SEND_DELAY=60;
+    const TIMER_STORAGE_KEY='takeover_timer_start';
     let remaining=SEND_DELAY;
-    function updateTimer(){
-        const m=Math.floor(remaining/60),s=remaining%60;
-        sendCountdown.textContent=`${m}:${String(s).padStart(2,'0')}`;
-        if(remaining<=0){
-            sendBtn.disabled=!1;
-            sendTimerText.textContent='';
-            sendTimerText.classList.remove('active');
+    let timerInterval=null;
+    
+    function initTimer(){
+        const storedStartTime=localStorage.getItem(TIMER_STORAGE_KEY);
+        if(storedStartTime){
+            const startTime=parseInt(storedStartTime);
+            const currentTime=Date.now();
+            const elapsedSeconds=Math.floor((currentTime-startTime)/1000);
+            remaining=SEND_DELAY-elapsedSeconds;
+            if(remaining<=0){
+                remaining=0;
+                timerExpired();
+            }else{
+                startTimer(remaining);
+            }
         }else{
-            remaining--;
-            setTimeout(updateTimer,1000);
+            startTimer(remaining);
         }
     }
-    updateTimer();
+    
+    function startTimer(seconds){
+        remaining=seconds;
+        if(seconds===SEND_DELAY){
+            localStorage.setItem(TIMER_STORAGE_KEY,Date.now().toString());
+        }
+        updateTimerDisplay();
+        if(timerInterval)clearInterval(timerInterval);
+        timerInterval=setInterval(function(){
+            remaining--;
+            if(remaining<=0){
+                clearInterval(timerInterval);
+                timerExpired();
+            }else{
+                updateTimerDisplay();
+            }
+        },1000);
+    }
+    
+    function updateTimerDisplay(){
+        const m=Math.floor(remaining/60),s=remaining%60;
+        sendCountdown.textContent=`${m}:${String(s).padStart(2,'0')}`;
+    }
+    
+    function timerExpired(){
+        sendBtn.disabled=!1;
+        sendTimerText.textContent='';
+        sendTimerText.classList.remove('active');
+        localStorage.removeItem(TIMER_STORAGE_KEY);
+    }
+    
+    initTimer();
     document.getElementById('sendCodeForm').addEventListener('submit',()=>{sendBtn.classList.add('loading');sendBtn.disabled=!0});
     const boxes=Array.from(document.querySelectorAll('.otp-box')),hiddenCode=document.getElementById('otp_code');
     boxes.forEach((box,idx)=>{

@@ -45,9 +45,11 @@ export default defineConfig({
                 // Profile
                 'app/Modules/Profile/assets/css/profile.css',
                 'app/Modules/Profile/assets/js/profile.js',
-                'app/Modules/Profile/assets/css/settings.css',
                 'app/Modules/Profile/assets/css/change-email.css',
                 'app/Modules/Profile/assets/js/change-email.js',
+                'app/Modules/Profile/assets/js/change-email-verify.js',
+                'app/Modules/Profile/assets/css/change-password.css',
+                'app/Modules/Profile/assets/js/change-password.js',
 
                 // Homepage
                 'app/Modules/Homepage/assets/css/homepage.css',

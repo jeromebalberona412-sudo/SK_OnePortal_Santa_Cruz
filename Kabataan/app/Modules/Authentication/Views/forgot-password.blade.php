@@ -169,14 +169,18 @@
                         return;
                     }
 
-                    var nextUntil = Date.now() + (cooldownSeconds * 1000);
-                    localStorage.setItem(cooldownKey, String(nextUntil));
-                    applyCooldown(nextUntil);
-
                     if (window.showLoading) {
                         window.showLoading('Sending reset link...');
                     }
                 });
+            }
+
+            // Check for success alert and start timer only after successful submission
+            var successAlert = document.getElementById('resetStatusAlert');
+            if (successAlert && successAlert.style.display !== 'none') {
+                var nextUntil = Date.now() + (cooldownSeconds * 1000);
+                localStorage.setItem(cooldownKey, String(nextUntil));
+                applyCooldown(nextUntil);
             }
         })();
     </script>

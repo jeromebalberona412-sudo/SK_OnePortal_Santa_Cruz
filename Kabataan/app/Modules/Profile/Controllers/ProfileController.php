@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
-    public function settings()
+    public function showChangePassword(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please login first.');
@@ -17,7 +17,7 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
-        return view('profile::settings', ['user' => $user])->withHeaders([
+        return view('profile::change-password', ['user' => $user])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma'        => 'no-cache',
             'Expires'       => 'Sat, 01 Jan 2000 00:00:00 GMT',
@@ -36,7 +36,7 @@ class ProfileController extends Controller
         ]);
 
         // Prototype: just return success
-        return redirect()->route('settings')->with('success', 'Password changed successfully!');
+        return redirect()->route('profile')->with('success', 'Password changed successfully!');
     }
 
     public function changeEmail(Request $request)
@@ -66,8 +66,26 @@ class ProfileController extends Controller
             'password' => 'required',
         ]);
 
-        // Prototype: just return success
-        return redirect()->route('settings')->with('success', 'Email change request sent successfully!');
+        // Store pending email in session
+        session(['pending_email' => $request->new_email]);
+
+        // Redirect to verify page
+        return redirect()->route('change-email.verify')->with('success', 'Email change request sent successfully!');
+    }
+
+    public function changeEmailVerify(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Please login first.');
+        }
+
+        $user = Auth::user();
+
+        return view('profile::change-email-verify', ['user' => $user])->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma'        => 'no-cache',
+            'Expires'       => 'Sat, 01 Jan 2000 00:00:00 GMT',
+        ]);
     }
 
     public function index(Request $request)
@@ -128,7 +146,7 @@ class ProfileController extends Controller
         $completedPrograms = $programs->where('status', 'completed')->count();
         
         // Pass data to view
-        return view('profile::index', [
+        return view('profile::profile', [
             'user' => $user,
             'kabataanRegistration' => $kabataanRegistration,
             'programs' => $programs,
