@@ -51,7 +51,7 @@ body.youth-settings {
     border-radius: 50%;
     background: white;
     padding: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-title {
@@ -84,21 +84,23 @@ body.youth-settings {
 .search-input {
     width: 100%;
     padding: 10px 14px 10px 44px;
-    border: 2px solid rgba(255,255,255,0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 24px;
     font-size: 15px;
     transition: all 0.3s ease;
-    background: rgba(255,255,255,0.95);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .search-input:focus {
     outline: none;
     border-color: white;
     background: white;
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.2);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
-.search-input::placeholder { color: #999; }
+.search-input::placeholder {
+    color: #999;
+}
 
 .navbar-right {
     display: flex;
@@ -111,7 +113,7 @@ body.youth-settings {
     width: 40px;
     height: 40px;
     border: none;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     cursor: pointer;
     display: flex;
@@ -126,10 +128,14 @@ body.youth-settings {
     color: white;
 }
 
-.nav-icon-btn:hover { background: rgba(255,255,255,0.3); }
+.nav-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
 
 /* User Menu */
-.user-menu { position: relative; }
+.user-menu {
+    position: relative;
+}
 
 .user-avatar-btn {
     width: 40px;
@@ -154,7 +160,7 @@ body.youth-settings {
     right: 0;
     background: white;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     min-width: 240px;
     opacity: 0;
     visibility: hidden;
@@ -182,10 +188,23 @@ body.youth-settings {
     border-radius: 50%;
 }
 
-.user-name { font-weight: 600; font-size: 15px; color: #333; margin-bottom: 2px; }
-.user-email { font-size: 13px; color: #999; }
+.user-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #333;
+    margin-bottom: 2px;
+}
 
-.dropdown-divider { height: 1px; background: #e0e0e0; margin: 0 8px; }
+.user-email {
+    font-size: 13px;
+    color: #999;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 0 8px;
+}
 
 .dropdown-item {
     display: flex;
@@ -203,10 +222,24 @@ body.youth-settings {
     cursor: pointer;
 }
 
-.dropdown-item svg { width: 18px; height: 18px; }
-.dropdown-item:hover { background: #f5f7fa; color: #667eea; }
-.logout-btn { color: #f44336; }
-.logout-btn:hover { background: #ffebee; color: #d32f2f; }
+.dropdown-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+.dropdown-item:hover {
+    background: #f5f7fa;
+    color: #667eea;
+}
+
+.logout-btn {
+    color: #f44336;
+}
+
+.logout-btn:hover {
+    background: #ffebee;
+    color: #d32f2f;
+}
 
 /* ── Settings Layout ── */
 .settings-main {
@@ -228,7 +261,7 @@ body.youth-settings {
 .settings-sidebar {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     position: sticky;
     top: 88px;
@@ -296,13 +329,15 @@ body.youth-settings {
     font-weight: 600;
 }
 
-.settings-nav-item.active svg { color: #0450a8; }
+.settings-nav-item.active svg {
+    color: #0450a8;
+}
 
 /* ── Settings Content ── */
 .settings-content {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
 }
 
@@ -386,7 +421,7 @@ body.youth-settings {
     outline: none;
     border-color: #0450a8;
     background: white;
-    box-shadow: 0 0 0 3px rgba(4,80,168,0.08);
+    box-shadow: 0 0 0 3px rgba(4, 80, 168, 0.08);
 }
 
 .toggle-password {
@@ -404,8 +439,14 @@ body.youth-settings {
     transition: color 0.2s;
 }
 
-.toggle-password:hover { color: #0450a8; }
-.toggle-password svg { width: 18px; height: 18px; }
+.toggle-password:hover {
+    color: #0450a8;
+}
+
+.toggle-password svg {
+    width: 18px;
+    height: 18px;
+}
 
 .form-hint {
     font-size: 13px;
@@ -460,13 +501,13 @@ body.youth-settings {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(4,80,168,0.3);
+    box-shadow: 0 4px 12px rgba(4, 80, 168, 0.3);
     font-family: inherit;
 }
 
 .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(4,80,168,0.4);
+    box-shadow: 0 6px 18px rgba(4, 80, 168, 0.4);
 }
 
 .btn-primary:disabled {
@@ -488,7 +529,10 @@ body.youth-settings {
     font-family: inherit;
 }
 
-.btn-secondary:hover { background: #e2e8f0; color: #334155; }
+.btn-secondary:hover {
+    background: #e2e8f0;
+    color: #334155;
+}
 
 /* Alert messages */
 .alert {
@@ -502,7 +546,11 @@ body.youth-settings {
     margin-bottom: 24px;
 }
 
-.alert svg { width: 18px; height: 18px; flex-shrink: 0; }
+.alert svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
 
 .alert-success {
     background: #f0fdf4;
@@ -555,15 +603,27 @@ body.youth-settings {
 }
 
 @media (max-width: 480px) {
-    .navbar-title { display: none; }
+    .navbar-title {
+        display: none;
+    }
 
-    .settings-content-header-text h2 { font-size: 17px; }
+    .settings-content-header-text h2 {
+        font-size: 17px;
+    }
 
-    .password-form { max-width: 100%; }
+    .password-form {
+        max-width: 100%;
+    }
 
-    .form-actions { flex-direction: column; align-items: stretch; }
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .form-actions .btn-primary,
-    .form-actions .btn-secondary { text-align: center; }
+    .form-actions .btn-secondary {
+        text-align: center;
+    }
 }
 
 /* ── Per-field validation errors ── */
@@ -599,4 +659,57 @@ body.youth-settings {
     display: none !important;
     visibility: hidden;
     pointer-events: none;
+}
+
+/* ── Change Email Section ── */
+.change-email-section {
+    margin-top: 32px;
+    padding-top: 24px;
+}
+
+.change-email-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin-bottom: 20px;
+}
+
+.change-email-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+
+.change-email-section p {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 16px;
+}
+
+.btn-change-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.btn-change-email svg {
+    width: 18px;
+    height: 18px;
+}
+
+.btn-change-email:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
 }

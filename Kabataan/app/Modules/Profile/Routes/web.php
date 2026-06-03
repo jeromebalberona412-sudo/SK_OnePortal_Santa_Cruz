@@ -9,4 +9,6 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/settings', [ProfileController::class, 'settings'])->name('settings');
     Route::post('/change-password', [ProfileController::class, 'changePassword'])->name('change-password');
     Route::post('/upload-profile-picture', [ProfileController::class, 'uploadProfilePicture'])->name('profile.upload-picture');
+    Route::get('/change-email', [ProfileController::class, 'changeEmail'])->name('change-email');
+    Route::post('/change-email', [ProfileController::class, 'postChangeEmail'])->name('change-email.post');
 });

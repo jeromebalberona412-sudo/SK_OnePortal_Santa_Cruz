@@ -39,6 +39,37 @@ class ProfileController extends Controller
         return redirect()->route('settings')->with('success', 'Password changed successfully!');
     }
 
+    public function changeEmail(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Please login first.');
+        }
+
+        $user = Auth::user();
+
+        return view('profile::change-email', ['user' => $user])->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma'        => 'no-cache',
+            'Expires'       => 'Sat, 01 Jan 2000 00:00:00 GMT',
+        ]);
+    }
+
+    public function postChangeEmail(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Please login first.');
+        }
+
+        $request->validate([
+            'current_email' => 'required|email',
+            'new_email' => 'required|email|confirmed',
+            'password' => 'required',
+        ]);
+
+        // Prototype: just return success
+        return redirect()->route('settings')->with('success', 'Email change request sent successfully!');
+    }
+
     public function index(Request $request)
     {
         // Check for authentication

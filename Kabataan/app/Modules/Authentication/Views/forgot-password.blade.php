@@ -62,7 +62,7 @@
 
 
                 <!-- Forgot Password Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm" novalidate>
+                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm">
                     @csrf
 
                     <!-- Email Field -->
@@ -82,7 +82,7 @@
                             value="{{ old('email') }}"
                             required
                             autofocus
-                            placeholder="example@gmail.com"
+                            placeholder="Enter example@gmail.com"
                         >
                         <span class="inline-error" id="emailError" style="display: none; color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;"></span>
                     </div>

@@ -29,7 +29,7 @@ export default defineConfig({
                 'app/Modules/Dashboard/assets/css/chatbot.css',
                 'app/Modules/Dashboard/assets/js/chatbot.js',
                 'app/Modules/Dashboard/assets/css/notif.css',
-                'app/Modules/Dashboard/assets/js/notif.js', 
+                'app/Modules/Dashboard/assets/js/notif.js',
 
                 // Programs
                 'app/Modules/Programs/assets/css/scholarship_application.css',
@@ -46,6 +46,8 @@ export default defineConfig({
                 'app/Modules/Profile/assets/css/profile.css',
                 'app/Modules/Profile/assets/js/profile.js',
                 'app/Modules/Profile/assets/css/settings.css',
+                'app/Modules/Profile/assets/css/change-email.css',
+                'app/Modules/Profile/assets/js/change-email.js',
 
                 // Homepage
                 'app/Modules/Homepage/assets/css/homepage.css',

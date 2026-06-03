@@ -80,11 +80,8 @@
 
 
                 <!-- Login Form -->
-                <form class="youth-login-form" id="loginForm" method="POST" action="{{ route('login') }}" novalidate>
+                <form class="youth-login-form" id="loginForm" method="POST" action="{{ route('login') }}">
                     @csrf
-                    @if (session('login_error'))
-                        <input type="hidden" id="serverError" value="{{ session('login_error') }}">
-                    @endif
 
                     <!-- Email Field -->
                     <div class="youth-form-group">
@@ -101,9 +98,10 @@
                             name="email"
                             class="youth-input"
                             value="{{ old('email') }}"
+                            required
                             autofocus
                             autocomplete="email"
-                            placeholder="Enter your email"
+                            placeholder="Enter example@gmail.com"
                         >
                         <div class="youth-field-error" id="email-error" hidden style="display: none !important;"></div>
                     </div>
@@ -122,6 +120,7 @@
                                 id="password"
                                 name="password"
                                 class="youth-input password-input"
+                                required
                                 autocomplete="current-password"
                                 placeholder="Enter your password"
                             >
@@ -219,54 +218,10 @@
                 errorElement.style.display = 'none';
             }
 
-            // Check for server-side validation errors and display as inline
-            function handleServerErrors() {
-                const serverErrorInput = document.getElementById('serverError');
-                
-                if (serverErrorInput) {
-                    const message = serverErrorInput.value;
-                    // Show error on email field for all login errors
-                    showError(emailInput, emailError, message);
-                }
-            }
 
-            // Handle server errors on page load
-            handleServerErrors();
-
-            // Prevent browser's default validation messages
-            emailInput.addEventListener('invalid', (e) => {
-                e.preventDefault();
-            });
-
-            passwordInput.addEventListener('invalid', (e) => {
-                e.preventDefault();
-            });
 
             // Only validate on submit, not on blur/input
             form.addEventListener('submit', (e) => {
-                let isValid = true;
-
-                // Clear all errors first
-                clearError(emailInput, emailError);
-                clearError(passwordInput, passwordError);
-
-                // Validate email
-                if (!emailInput.value.trim()) {
-                    isValid = false;
-                } else if (!validateEmail(emailInput.value)) {
-                    isValid = false;
-                }
-
-                // Validate password
-                if (!passwordInput.value.trim()) {
-                    isValid = false;
-                }
-
-                if (!isValid) {
-                    e.preventDefault();
-                    return false;
-                }
-
                 // Show loading screen on successful validation
                 if (typeof showLoading !== 'undefined') {
                     showLoading('Signing In');

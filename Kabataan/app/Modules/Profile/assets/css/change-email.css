@@ -1,0 +1,241 @@
+/* ============================================================
+   Kabataan — Change Email Page
+   ============================================================ */
+
+/* ── Sent state ──────────────────────────────────────────── */
+.ce-sent-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.ce-sent-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #f0fdf4;
+    border: 2px solid #22c55e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+}
+
+.ce-sent-icon svg {
+    width: 26px;
+    height: 26px;
+    fill: #22c55e;
+}
+
+.ce-sent-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.ce-sent-sub {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+/* ── Info box ────────────────────────────────────────────── */
+.ce-info-box {
+    width: 100%;
+    background: #fffbeb;
+    border: 1.5px solid #fbbf24;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.55;
+    margin-bottom: 18px;
+}
+
+/* ── Status table ────────────────────────────────────────── */
+.ce-status-table {
+    width: 100%;
+    border-radius: 12px;
+    border: 1.5px solid #e5e7eb;
+    overflow: hidden;
+    margin-bottom: 18px;
+}
+
+.ce-status-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    gap: 10px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.ce-status-row:last-child { border-bottom: none; }
+
+.ce-status-row:nth-child(even) { background: #f9fafb; }
+
+.ce-status-key {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-width: 110px;
+    flex-shrink: 0;
+}
+
+.ce-status-val {
+    font-size: 13px;
+    color: #111827;
+    font-weight: 500;
+    word-break: break-all;
+}
+
+.ce-badge-awaiting {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ce-badge-awaiting::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #f59e0b;
+    flex-shrink: 0;
+}
+
+/* ── Resend timer ────────────────────────────────────────── */
+.ce-resend-timer {
+    font-size: 12px;
+    color: #9ca3af;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* ── Action buttons ──────────────────────────────────────── */
+.ce-actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.ce-btn-resend {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+}
+
+.ce-btn-resend:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    transform: translateY(-2px);
+}
+
+.ce-btn-resend:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ce-btn-cancel {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1.5px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ce-btn-cancel:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+/* ── Back to Profile — no divider, plain link ────────────── */
+.ce-back-section {
+    margin-top: 1.25rem;
+    padding-top: 0;
+    border-top: none !important;
+    text-align: center;
+}
+
+/* ── Password toggle for change email ─────────────────────── */
+.cp-pw-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+}
+
+.cp-pw-toggle svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+}
+
+.cp-pw-toggle:hover { color: #374151; }
+
+/* ── No-scroll override for change-email page ───────────── */
+html,
+body {
+    overflow: visible !important;
+    height: auto !important;
+}
+
+.youth-login-page {
+    height: auto !important;
+    overflow-y: auto !important;
+}
+
+.youth-login-container {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+}
+
+.youth-login-section {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    align-items: flex-start;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
