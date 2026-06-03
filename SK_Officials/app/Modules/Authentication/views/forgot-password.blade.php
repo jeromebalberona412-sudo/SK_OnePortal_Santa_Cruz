@@ -99,7 +99,7 @@
                                     class="sk-input"
                                     value="{{ old('email') }}"
                                     autofocus
-                                    placeholder="Enter your email address"
+                                    placeholder="Enter example@gmail.com"
                                     maxlength="100"
                                     autocomplete="email"
                                 >

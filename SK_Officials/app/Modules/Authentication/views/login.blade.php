@@ -116,7 +116,7 @@
                             value="{{ old('email') }}"
                             autofocus
                             autocomplete="email"
-                            placeholder="Enter your email"
+                            placeholder="Enter example@gmail.com"
                             maxlength="150"
                         >
                         <div class="sk-field-error" id="email-error" hidden></div>
