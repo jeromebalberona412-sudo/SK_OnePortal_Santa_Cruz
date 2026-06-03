@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rejected KK Profiling - SK Officials Portal</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
@@ -140,6 +142,24 @@
         </div>
         <div class="modal-body kk-qs-body" id="rkkKkFormBody">
             <div class="kk-qs-scroll-wrapper">
+            <!-- Rejection Details Section -->
+            <div class="kk-rejection-details-section">
+                <div class="kk-rejection-details-title">Rejection Details</div>
+                <div class="kk-rejection-details-grid">
+                    <div class="kk-rejection-detail-item">
+                        <span class="kk-rejection-detail-label">Rejection Reason:</span>
+                        <span class="kk-rejection-detail-value" id="rkkRejectionReason"></span>
+                    </div>
+                    <div class="kk-rejection-detail-item">
+                        <span class="kk-rejection-detail-label">Rejected Date:</span>
+                        <span class="kk-rejection-detail-value" id="rkkRejectedDate"></span>
+                    </div>
+                    <div class="kk-rejection-detail-item">
+                        <span class="kk-rejection-detail-label">Rejected Time:</span>
+                        <span class="kk-rejection-detail-value" id="rkkRejectedTime"></span>
+                    </div>
+                </div>
+            </div>
             <div class="kk-qs-general-row">
                 <div class="kk-qs-general-field"><span class="kk-qs-field-label">Respondent #:</span><span class="kk-qs-field-value" id="rkkKkViewRespondentNumber"></span></div>
                 <div class="kk-qs-general-field"><span class="kk-qs-field-label">Date:</span><span class="kk-qs-field-value" id="rkkKkViewDate"></span></div>
@@ -240,12 +260,12 @@
                         </div>
                     </div>
                     <div class="kk-qs-voter-grid">
-                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">Registered SK Voter?</div><span class="kk-qs-check-item" id="rkkKkViewSKV_Yes">☐ Yes</span><span class="kk-qs-check-item" id="rkkKkViewSKV_No">☐ No</span></div>
-                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">Did you vote last SK elections?</div><span class="kk-qs-check-item" id="rkkKkViewVH_Yes">☐ Yes</span><span class="kk-qs-check-item" id="rkkKkViewVH_No">☐ No</span></div>
-                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">If Yes, How many times?</div><span class="kk-qs-check-item" id="rkkKkViewVF_12">☐ 1-2 Times</span><span class="kk-qs-check-item" id="rkkKkViewVF_34">☐ 3-4 Times</span><span class="kk-qs-check-item" id="rkkKkViewVF_5">☐ 5 and above</span></div>
-                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">Registered National Voter?</div><span class="kk-qs-check-item" id="rkkKkViewNV_Yes">☐ Yes</span><span class="kk-qs-check-item" id="rkkKkViewNV_No">☐ No</span></div>
-                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">Have you already attended a KK Assembly?</div><span class="kk-qs-check-item" id="rkkKkViewKK_Yes">☐ Yes</span><span class="kk-qs-check-item" id="rkkKkViewKK_No">☐ No</span></div>
-                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">If No, Why?</div><span class="kk-qs-check-item" id="rkkKkViewVR_NoKK">☐ There was no KK Assembly Meeting</span><span class="kk-qs-check-item" id="rkkKkViewVR_NotInt">☐ Not interested to Attend</span></div>
+                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">Registered SK Voter?</div><div class="kk-qs-voter-options"><span class="kk-qs-check-item" id="rkkKkViewSKV_Yes">☐ Yes</span><span class="kk-qs-check-item" id="rkkKkViewSKV_No">☐ No</span></div></div>
+                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">Did you vote last SK elections?</div><div class="kk-qs-voter-options"><span class="kk-qs-check-item" id="rkkKkViewVH_Yes">☐ Yes</span><span class="kk-qs-check-item" id="rkkKkViewVH_No">☐ No</span></div></div>
+                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">If Yes, How many times?</div><div class="kk-qs-voter-options"><span class="kk-qs-check-item" id="rkkKkViewVF_12">☐ 1-2 Times</span><span class="kk-qs-check-item" id="rkkKkViewVF_34">☐ 3-4 Times</span><span class="kk-qs-check-item" id="rkkKkViewVF_5">☐ 5 and above</span></div></div>
+                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">Registered National Voter?</div><div class="kk-qs-voter-options"><span class="kk-qs-check-item" id="rkkKkViewNV_Yes">☐ Yes</span><span class="kk-qs-check-item" id="rkkKkViewNV_No">☐ No</span></div></div>
+                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">Have you already attended a KK Assembly?</div><div class="kk-qs-voter-options"><span class="kk-qs-check-item" id="rkkKkViewKK_Yes">☐ Yes</span><span class="kk-qs-check-item" id="rkkKkViewKK_No">☐ No</span></div></div>
+                        <div class="kk-qs-voter-block"><div class="kk-qs-voter-label">If No, Why?</div><div class="kk-qs-voter-options"><span class="kk-qs-check-item" id="rkkKkViewVR_NoKK">☐ There was no KK Assembly Meeting</span><span class="kk-qs-check-item" id="rkkKkViewVR_NotInt">☐ Not interested to Attend</span></div></div>
                     </div>
                 </div>
             </div>
@@ -259,7 +279,7 @@
                         <div class="kk-qs-sig-overlay" id="rkkKkViewSignatureOverlay">
                             <svg class="kk-qs-sig-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none" stroke="#1a1a1a" stroke-width="2"><path d="M10,40 Q20,20 30,35 T50,30 Q60,25 70,40"/><path d="M75,25 L85,45 M80,35 L95,35"/><path d="M100,25 Q110,40 120,25 Q130,10 140,25"/><path d="M145,30 Q155,20 165,30 L175,45"/></svg>
                         </div>
-                        <span class="kk-qs-field-value kk-qs-underline" id="rkkKkViewSignature"></span>
+                        <span class="kk-qs-field-value kk-qs-underline" id="rkkKkViewSignature">Benito Cruz Aquino Jr.</span>
                     </div>
                     <span class="kk-qs-col-label">Name and Signature of Participant</span>
                 </div>

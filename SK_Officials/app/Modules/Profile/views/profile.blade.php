@@ -54,10 +54,6 @@
 
                 <!-- Profile Picture Header -->
                 <div class="profile-pic-header">
-                    <div class="profile-pic-avatar">
-                        <img src="{{ asset('images/logo.png') }}" alt="SK Officials" class="profile-pic-logo">
-                        <span class="profile-pic-badge active">Active</span>
-                    </div>
                     <div class="profile-pic-info">
                         <h3 class="profile-pic-name">Jerome Sanico Balberona</h3>
                         <p class="profile-pic-role">SK Chairman</p>

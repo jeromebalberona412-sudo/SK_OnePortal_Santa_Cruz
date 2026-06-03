@@ -124,7 +124,7 @@ function rkkIsThisMonth(ts) {
 
 function rkkApplyFilter(records, filter) {
     if (filter === 'today') return records.filter(r => rkkIsToday(r._rejectedTs));
-    if (filter === 'week')  return records.filter(r => rkkIsThisWeek(r._rejectedTs));
+    if (filter === 'week') return records.filter(r => rkkIsThisWeek(r._rejectedTs));
     if (filter === 'month') return records.filter(r => rkkIsThisMonth(r._rejectedTs));
     return records;
 }
@@ -211,12 +211,12 @@ function bindFilterTabs() {
 
 function renderTable() {
     const tbody = document.getElementById('rejectedKKTableBody');
-    const info  = document.getElementById('rejectedKKPaginationInfo');
+    const info = document.getElementById('rejectedKKPaginationInfo');
     if (!tbody) return;
 
     const start = (rkkCurrentPage - 1) * rkkPerPage;
-    const end   = start + rkkPerPage;
-    const page  = rkkFiltered.slice(start, end);
+    const end = start + rkkPerPage;
+    const page = rkkFiltered.slice(start, end);
 
     if (rkkFiltered.length === 0) {
         tbody.innerHTML = `<tr class="empty-state-row"><td colspan="9">No rejected KK Profiling records found.</td></tr>`;
@@ -264,9 +264,9 @@ function renderTable() {
 
 function renderPagination(total) {
     const pages = Math.ceil(total / rkkPerPage);
-    const nums  = document.getElementById('rejectedKKPageNumbers');
-    const prev  = document.getElementById('rejectedKKPrevBtn');
-    const next  = document.getElementById('rejectedKKNextBtn');
+    const nums = document.getElementById('rejectedKKPageNumbers');
+    const prev = document.getElementById('rejectedKKPrevBtn');
+    const next = document.getElementById('rejectedKKNextBtn');
 
     if (nums) {
         nums.innerHTML = Array.from({ length: pages }, (_, i) => `
@@ -400,6 +400,11 @@ function populateRkkKkQuestionnaire(r) {
         el.style.color = checked ? '#1a1a1a' : '#6b7280';
     };
 
+    // Populate rejection details
+    setVal('rkkRejectionReason', r.rejectionReason);
+    setVal('rkkRejectedDate', r.rejectedDate);
+    setVal('rkkRejectedTime', r.rejectedTime);
+
     setVal('rkkKkViewRespondentNumber', d.respondentNumber);
     setVal('rkkKkViewDate', d.date);
     setVal('rkkKkViewLastName', d.lastName);
@@ -418,15 +423,15 @@ function populateRkkKkQuestionnaire(r) {
     setVal('rkkKkViewContactNumber', d.contactNumber);
     setVal('rkkKkViewFacebookAccount', d.facebookAccount);
 
-    const csMap = { rkkKkViewCS_Single:'Single', rkkKkViewCS_Married:'Married', rkkKkViewCS_Widowed:'Widowed', rkkKkViewCS_Divorced:'Divorced', rkkKkViewCS_Separated:'Separated', rkkKkViewCS_Annulled:'Annulled', rkkKkViewCS_Unknown:'Unknown', rkkKkViewCS_Livein:'Live-in' };
+    const csMap = { rkkKkViewCS_Single: 'Single', rkkKkViewCS_Married: 'Married', rkkKkViewCS_Widowed: 'Widowed', rkkKkViewCS_Divorced: 'Divorced', rkkKkViewCS_Separated: 'Separated', rkkKkViewCS_Annulled: 'Annulled', rkkKkViewCS_Unknown: 'Unknown', rkkKkViewCS_Livein: 'Live-in' };
     Object.entries(csMap).forEach(([id, val]) => setCheck(id, d.civilStatus === val));
-    const yagMap = { rkkKkViewYAG_Child:'Child Youth (15-17 yrs old)', rkkKkViewYAG_Core:'Core Youth (18-24 yrs old)', rkkKkViewYAG_Young:'Young Adult (15-30 yrs old)' };
+    const yagMap = { rkkKkViewYAG_Child: 'Child Youth (15-17 yrs old)', rkkKkViewYAG_Core: 'Core Youth (18-24 yrs old)', rkkKkViewYAG_Young: 'Young Adult (15-30 yrs old)' };
     Object.entries(yagMap).forEach(([id, val]) => setCheck(id, d.youthAgeGroup === val));
-    const ebMap = { rkkKkViewEB_ElemLevel:'Elementary Level', rkkKkViewEB_ElemGrad:'Elementary Grad', rkkKkViewEB_HSLevel:'High School Level', rkkKkViewEB_HSGrad:'High School Grad', rkkKkViewEB_VocGrad:'Vocational Grad', rkkKkViewEB_ColLevel:'College Level', rkkKkViewEB_ColGrad:'College Grad', rkkKkViewEB_MasLevel:'Masters Level', rkkKkViewEB_MasGrad:'Masters Grad', rkkKkViewEB_DocLevel:'Doctorate Level', rkkKkViewEB_DocGrad:'Doctorate Graduate' };
+    const ebMap = { rkkKkViewEB_ElemLevel: 'Elementary Level', rkkKkViewEB_ElemGrad: 'Elementary Grad', rkkKkViewEB_HSLevel: 'High School Level', rkkKkViewEB_HSGrad: 'High School Grad', rkkKkViewEB_VocGrad: 'Vocational Grad', rkkKkViewEB_ColLevel: 'College Level', rkkKkViewEB_ColGrad: 'College Grad', rkkKkViewEB_MasLevel: 'Masters Level', rkkKkViewEB_MasGrad: 'Masters Grad', rkkKkViewEB_DocLevel: 'Doctorate Level', rkkKkViewEB_DocGrad: 'Doctorate Graduate' };
     Object.entries(ebMap).forEach(([id, val]) => setCheck(id, d.educationalBackground === val));
-    const ycMap = { rkkKkViewYC_ISY:'In school Youth', rkkKkViewYC_OSY:'Out of School Youth', rkkKkViewYC_Working:'Working Youth', rkkKkViewYC_PWD:'Person w/ Disability', rkkKkViewYC_CICL:'Children in Conflict w/ Law', rkkKkViewYC_IP:'Indigenous People' };
+    const ycMap = { rkkKkViewYC_ISY: 'In school Youth', rkkKkViewYC_OSY: 'Out of School Youth', rkkKkViewYC_Working: 'Working Youth', rkkKkViewYC_PWD: 'Person w/ Disability', rkkKkViewYC_CICL: 'Children in Conflict w/ Law', rkkKkViewYC_IP: 'Indigenous People' };
     Object.entries(ycMap).forEach(([id, val]) => setCheck(id, d.youthClassification === val));
-    const wsMap = { rkkKkViewWS_Employed:'Employed', rkkKkViewWS_Unemployed:'Unemployed', rkkKkViewWS_SelfEmployed:'Self-Employed', rkkKkViewWS_Looking:'Currently looking for a Job', rkkKkViewWS_NotInterested:'Not Interested Looking for a Job' };
+    const wsMap = { rkkKkViewWS_Employed: 'Employed', rkkKkViewWS_Unemployed: 'Unemployed', rkkKkViewWS_SelfEmployed: 'Self-Employed', rkkKkViewWS_Looking: 'Currently looking for a Job', rkkKkViewWS_NotInterested: 'Not Interested Looking for a Job' };
     Object.entries(wsMap).forEach(([id, val]) => setCheck(id, d.workStatus === val));
 
     setCheck('rkkKkViewSKV_Yes', d.registeredSKVoter === 'Yes');
@@ -498,55 +503,13 @@ function bindRkkKkFormModal() {
 function openViewModal(id) {
     const r = rejectedKKRecords.find(x => x.id === id);
     if (!r) return;
-    const body = document.getElementById('rkkViewModalBody');
-    const L = window.SkRecordViewLayout;
-    if (!body || !L) return;
-
-    const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
-    const F = L.profileField;
-    const R = L.profileRow;
-    const S = L.profileSection;
-
-    body.innerHTML = `
-        <div class="record-view-profile-layout">
-            ${S('Personal Information', 'fa-solid fa-user', `
-                <p class="record-view-fullname">${L.escHtml(fullName)}</p>
-                ${R(
-                    F('Age', r.age) +
-                    F('Sex', r.sex, 'fa-solid fa-venus-mars') +
-                    F('Purok / Zone', r.purokZone) +
-                    F('Barangay', r.barangay, 'fa-solid fa-location-dot')
-                )}
-            `)}
-            ${S('Classification & Status', 'fa-solid fa-id-card', R(
-                F('Youth Classification', r.youthClassification) +
-                F('Work Status', r.workStatus) +
-                F('Education', r.educationalBackground, 'fa-solid fa-graduation-cap') +
-                F('Registered SK Voter', r.registeredSKVoter)
-            ))}
-            ${L.profileMetaSection('Rejection Details', 'fa-solid fa-circle-xmark', `
-                ${R(F('Reason', r.rejectionReason))}
-                ${R(
-                    F('Rejected Date', r.rejectedDate, 'fa-solid fa-calendar-day') +
-                    F('Rejected Time', r.rejectedTime, 'fa-solid fa-clock')
-                )}
-            `)}
-            <div class="record-view-modal-actions">
-                <button type="button" class="btn-view-kk-questionnaire" id="rkkViewKkFormBtn">
-                    <i class="fa-solid fa-file-lines"></i> View KK Profiling Form
-                </button>
-            </div>
-        </div>`;
-
-    document.getElementById('rkkViewKkFormBtn')?.addEventListener('click', () => openRkkKkFormModal(r));
-
-    const modal = document.getElementById('rkkViewModal');
-    if (modal) modal.style.display = 'flex';
+    // Directly open the KK profiling form modal instead of the summary modal
+    openRkkKkFormModal(r);
 }
 
 function bindViewModal() {
-    const modal    = document.getElementById('rkkViewModal');
-    const box      = document.getElementById('rkkViewModalBox');
+    const modal = document.getElementById('rkkViewModal');
+    const box = document.getElementById('rkkViewModalBox');
     const closeBtn = document.getElementById('rkkViewModalClose');
     const toggleBtn = document.getElementById('rkkViewModalToggle');
 
@@ -557,7 +520,7 @@ function bindViewModal() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
-    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {
         toggleBtn.addEventListener('click', function (e) {
@@ -591,12 +554,12 @@ function closeRestoreModal() {
 }
 
 function bindRestoreModal() {
-    const cancelBtn  = document.getElementById('rkkRestoreCancelBtn');
+    const cancelBtn = document.getElementById('rkkRestoreCancelBtn');
     const confirmBtn = document.getElementById('rkkRestoreConfirmBtn');
-    const modal      = document.getElementById('rkkRestoreModal');
+    const modal = document.getElementById('rkkRestoreModal');
 
-    if (cancelBtn)  cancelBtn.addEventListener('click', closeRestoreModal);
-    if (modal)      modal.addEventListener('click', e => { if (e.target === modal) closeRestoreModal(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', closeRestoreModal);
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeRestoreModal(); });
 
     if (confirmBtn) {
         confirmBtn.addEventListener('click', function () {
@@ -617,7 +580,7 @@ function bindRestoreModal() {
 
 function showRestoreBanner(bannerId, textId, message) {
     const banner = document.getElementById(bannerId);
-    const text   = document.getElementById(textId);
+    const text = document.getElementById(textId);
     if (!banner || !text) return;
     text.textContent = message;
     banner.style.display = 'flex';
