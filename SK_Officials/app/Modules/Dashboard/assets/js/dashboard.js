@@ -19,7 +19,7 @@ function createEmptyYearData() {
         monthlyRejected: Array(12).fill(0),
         abyipStatus: { labels: [], values: [] },
         genderDist: { labels: ['Male', 'Female'], values: [0, 0] },
-        budgetPrograms: { labels: ['Education', 'Sports', 'Health', 'Environment', 'Livelihood', 'Others'], values: [0, 0, 0, 0, 0, 0] },
+        budgetPrograms: { labels: ['Education', 'Sports', 'Health', 'Environment', 'Livelihood', 'Youth Development', 'Community Service', 'Others'], values: [0, 0, 0, 0, 0, 0, 0, 0] },
         activity: [],
         announcements: [],
         events: [],
@@ -36,13 +36,13 @@ const YEAR_DATA = {
 /* Pending requests are always current — not year-filtered */
 const PENDING_REQUESTS = [];
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /* Active chart instances — destroyed and rebuilt on year change */
-let chartBar    = null;
-let chartLine   = null;
-let chartPie    = null;
-let chartDonut  = null;
+let chartBar = null;
+let chartLine = null;
+let chartPie = null;
+let chartDonut = null;
 
 /* Currently selected year */
 let selectedYear = 2026;
@@ -50,14 +50,14 @@ let selectedYear = 2026;
 /* ── Chart.js global defaults ────────────────────────────── */
 function applyChartDefaults() {
     Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-    Chart.defaults.font.size   = 12;
-    Chart.defaults.color       = '#6b7280';
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#6b7280';
     Chart.defaults.plugins.legend.display = false;
     Chart.defaults.plugins.tooltip.backgroundColor = '#1f2937';
-    Chart.defaults.plugins.tooltip.titleColor       = '#f9fafb';
-    Chart.defaults.plugins.tooltip.bodyColor        = '#d1d5db';
-    Chart.defaults.plugins.tooltip.padding          = 10;
-    Chart.defaults.plugins.tooltip.cornerRadius     = 8;
+    Chart.defaults.plugins.tooltip.titleColor = '#f9fafb';
+    Chart.defaults.plugins.tooltip.bodyColor = '#d1d5db';
+    Chart.defaults.plugins.tooltip.padding = 10;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
 }
 
 /* ── Boot ────────────────────────────────────────────────── */
@@ -99,21 +99,21 @@ function renderAll(year) {
 /* ── Stat cards ──────────────────────────────────────────── */
 function renderStats(d) {
     animateCount('statKabataan', d.stats.kabataan);
-    animateCount('statKkTotal',  d.stats.kkTotal  || 0);
-    animateCount('statPending',  d.stats.pending);
+    animateCount('statKkTotal', d.stats.kkTotal || 0);
+    animateCount('statPending', d.stats.pending);
     animateCount('statApproved', d.stats.approved);
     animateCount('statRejected', d.stats.rejected);
     animateCount('statPrograms', d.stats.programs);
     animateCount('statActivePrograms', d.stats.activePrograms || 0);
     animateCount('statDeletedKabataan', d.stats.deletedKabataan || 0);
-    animateCount('statDeletedAbyip',    d.stats.deletedAbyip    || 0);
-    animateCount('statRejectedItems',   d.stats.rejectedItems   || 0);
-    animateCount('statRejectedKK',      d.stats.rejectedKK      || 0);
-    const budgetEl    = document.getElementById('statBudget');
-    const expensesEl  = document.getElementById('statExpenses');
+    animateCount('statDeletedAbyip', d.stats.deletedAbyip || 0);
+    animateCount('statRejectedItems', d.stats.rejectedItems || 0);
+    animateCount('statRejectedKK', d.stats.rejectedKK || 0);
+    const budgetEl = document.getElementById('statBudget');
+    const expensesEl = document.getElementById('statExpenses');
     const remainingEl = document.getElementById('statRemaining');
-    if (budgetEl)    budgetEl.textContent    = d.stats.budget    || '₱0.00';
-    if (expensesEl)  expensesEl.textContent  = d.stats.expenses  || '₱0.00';
+    if (budgetEl) budgetEl.textContent = d.stats.budget || '₱0.00';
+    if (expensesEl) expensesEl.textContent = d.stats.expenses || '₱0.00';
     if (remainingEl) remainingEl.textContent = d.stats.remaining || '₱0.00';
 }
 
@@ -121,7 +121,7 @@ function animateCount(id, target) {
     const el = document.getElementById(id);
     if (!el) return;
     let current = 0;
-    const step  = Math.ceil(target / 40);
+    const step = Math.ceil(target / 40);
     const timer = setInterval(function () {
         current = Math.min(current + step, target);
         el.textContent = current.toLocaleString();
@@ -132,10 +132,10 @@ function animateCount(id, target) {
 /* ── Activity timeline ───────────────────────────────────── */
 const ICONS = {
     approve: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-    reject:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
-    delete:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path></svg>`,
+    reject: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+    delete: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path></svg>`,
     restore: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-4.95"></path></svg>`,
-    add:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`,
+    add: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`,
 };
 
 function renderActivity(d) {
@@ -148,10 +148,10 @@ function renderActivity(d) {
     list.innerHTML = d.activity.map(function (item) {
         // Find the official in COMMITTEES to get their position
         const official = COMMITTEES.find(c => c.name === item.who);
-        
+
         // Get position from COMMITTEES, or use default if not found
         const position = official ? official.head : 'SK Official';
-        
+
         return `<div class="activity-item activity-item-no-icon">
             <div class="activity-body">
                 <strong>${esc(item.text)}</strong>
@@ -237,7 +237,7 @@ function handleApprove(id) {
     d.stats.approved++;
     d.stats.pending = Math.max(0, d.stats.pending - 1);
     setText('statApproved', d.stats.approved.toLocaleString());
-    setText('statPending',  d.stats.pending.toLocaleString());
+    setText('statPending', d.stats.pending.toLocaleString());
 }
 
 function handleReject(id) {
@@ -248,7 +248,7 @@ function handleReject(id) {
     d.stats.rejected++;
     d.stats.pending = Math.max(0, d.stats.pending - 1);
     setText('statRejected', d.stats.rejected.toLocaleString());
-    setText('statPending',  d.stats.pending.toLocaleString());
+    setText('statPending', d.stats.pending.toLocaleString());
 }
 
 /* ── Bar Chart ───────────────────────────────────────────── */
@@ -369,12 +369,12 @@ function renderLineChart(d) {
     /* Wire up checkbox filters */
     const cbApproved = document.getElementById('filterApproved');
     const cbRejected = document.getElementById('filterRejected');
-    const cbPending  = document.getElementById('filterPending');
+    const cbPending = document.getElementById('filterPending');
 
     function applyFilter() {
         if (cbApproved) chartLine.data.datasets[0].hidden = !cbApproved.checked;
         if (cbRejected) chartLine.data.datasets[1].hidden = !cbRejected.checked;
-        if (cbPending)  chartLine.data.datasets[2].hidden = !cbPending.checked;
+        if (cbPending) chartLine.data.datasets[2].hidden = !cbPending.checked;
         chartLine.update();
     }
 
@@ -468,8 +468,8 @@ function renderDonutChart(d) {
     const ctx = document.getElementById('chartBudgetDonut');
     if (!ctx) return;
     if (chartDonut) { chartDonut.destroy(); chartDonut = null; }
-    const colors = ['#3b82f6','#22c55e','#ef4444','#14b8a6','#f97316','#a855f7'];
-    const total  = d.budgetPrograms.values.reduce(function (a, b) { return a + b; }, 0);
+    const colors = ['#3b82f6', '#22c55e', '#ef4444', '#14b8a6', '#f97316', '#a855f7', '#ec4899', '#6366f1'];
+    const total = d.budgetPrograms.values.reduce(function (a, b) { return a + b; }, 0);
 
     /* Inline label plugin for donut — draws % on each segment */
     const donutLabelsPlugin = {
@@ -546,7 +546,7 @@ function renderReminder() {
        Key format: calNote_YYYY_M_D  e.g. calNote_2026_4_22
        Falls back to sample notes so the banner is always visible as a demo. */
     const today = new Date();
-    const key   = 'calNote_' + today.getFullYear() + '_' + (today.getMonth() + 1) + '_' + today.getDate();
+    const key = 'calNote_' + today.getFullYear() + '_' + (today.getMonth() + 1) + '_' + today.getDate();
     const stored = localStorage.getItem(key);
 
     /* Sample notes shown when no real note is saved */
@@ -572,24 +572,24 @@ function renderCommittees() {
         updateStatusCounters(0, 0);
         return;
     }
-    
+
     // Sort: Active first, then Offline at the end
     const sortedCommittees = [...COMMITTEES].sort((a, b) => {
         if (a.status === 'Active' && b.status === 'Offline') return -1;
         if (a.status === 'Offline' && b.status === 'Active') return 1;
         return 0;
     });
-    
+
     // Calculate active and offline counts
     const activeCount = COMMITTEES.filter(c => c.status === 'Active').length;
     const offlineCount = COMMITTEES.filter(c => c.status === 'Offline').length;
-    
+
     container.innerHTML = sortedCommittees.map(function (c, index) {
         // Determine badge class based on status
         const badgeClass = c.status === 'Active' ? 'committee-card-badge-active' : 'committee-card-badge-offline';
-        
+
         // Show remove button only for Offline status
-        const removeButton = c.status === 'Offline' 
+        const removeButton = c.status === 'Offline'
             ? `<button class="committee-remove-btn" data-index="${index}" data-name="${esc(c.name)}" title="Remove Profile">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -600,7 +600,7 @@ function renderCommittees() {
                 </svg>
             </button>`
             : '';
-        
+
         return `<div class="col-12 col-sm-6 col-lg-4">
             <div class="committee-card committee-card-text-only">
                 <div class="committee-card-body">
@@ -614,17 +614,17 @@ function renderCommittees() {
             </div>
         </div>`;
     }).join('');
-    
+
     // Add event listeners for remove buttons
-    container.querySelectorAll('.committee-remove-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+    container.querySelectorAll('.committee-remove-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
             const name = btn.getAttribute('data-name');
             if (confirm(`Are you sure you want to remove ${name}'s profile?`)) {
                 removeOfficialProfile(name);
             }
         });
     });
-    
+
     // Update status counters if they exist
     updateStatusCounters(activeCount, offlineCount);
 }
@@ -643,12 +643,12 @@ function removeOfficialProfile(name) {
 
 function updateStatusCounters(activeCount, offlineCount) {
     const totalCount = COMMITTEES.length;
-    
+
     // Update any status counter elements on the page
     const activeCountEl = document.getElementById('activeOfficialsCount');
     const offlineCountEl = document.getElementById('offlineOfficialsCount');
     const totalCountEl = document.getElementById('totalOfficialsCount');
-    
+
     if (activeCountEl) activeCountEl.textContent = activeCount;
     if (offlineCountEl) offlineCountEl.textContent = offlineCount;
     if (totalCountEl) totalCountEl.textContent = totalCount;
@@ -657,10 +657,10 @@ function updateStatusCounters(activeCount, offlineCount) {
 /* ── Modal system ────────────────────────────────────────── */
 function initModals() {
     const map = {
-        qaAddKabataan:     'modalAddKabataan',
+        qaAddKabataan: 'modalAddKabataan',
         qaApproveRequests: 'modalApproveRequests',
-        qaCreateProgram:   'modalCreateProgram',
-        qaAddAbyip:        'modalAddAbyip',
+        qaCreateProgram: 'modalCreateProgram',
+        qaAddAbyip: 'modalAddAbyip',
     };
 
     Object.keys(map).forEach(function (btnId) {
@@ -700,8 +700,8 @@ function closeModal(id) {
 /* ── Utilities ───────────────────────────────────────────── */
 function esc(str) {
     return String(str)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function setText(id, val) {

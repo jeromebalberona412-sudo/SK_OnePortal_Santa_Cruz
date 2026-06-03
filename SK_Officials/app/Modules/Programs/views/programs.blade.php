@@ -68,7 +68,7 @@
                 <div class="stat-card-top">
                     <span class="stat-card-value" id="progStatBudget">₱0</span>
                     <div class="stat-card-icon stat-icon-yellow">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/><path d="M6 5h12"/><path d="M6 19h12"/></svg>
                     </div>
                 </div>
                 <span class="stat-card-label">Total Budget</span>
