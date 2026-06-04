@@ -92,15 +92,13 @@
             <table class="schol-table">
                 <thead>
                     <tr>
-                        <th>FULL NAME<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
-                        <th>School</th>
-                        <th>Year / Level</th>
-                        <th>Purpose</th>
-                        <th>Requirements</th>
-                        <th>Status</th>
-                        <th>Date Submitted</th>
-                        <th>Time Submitted</th>
-                        <th class="col-actions">Actions</th>
+                        <th>NAME<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">Last, First, Middle</div></th>
+                        <th>SPORTS TYPE<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">Basketball, Volleyball, etc.</div></th>
+                        <th>AGE</th>
+                        <th>REQUIREMENTS<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">Submitted Documents</div></th>
+                        <th>DATE SUBMITTED</th>
+                        <th>STATUS</th>
+                        <th class="col-actions">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody id="scholTableBody"></tbody>
@@ -112,19 +110,16 @@
 </main>
 
 <!-- ══════════════════════════════════════════════════════════════
-     View Application Modal — PDF layout, no Close button
+     View Application Modal — Simple Participant Details
      ══════════════════════════════════════════════════════════════ -->
 <div class="schol-modal-overlay" id="scholViewModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-xl" id="scholViewBox">
+    <div class="schol-modal-box schol-modal-lg" id="scholViewBox">
         <div class="schol-modal-header">
-            <h3>Application Details — PDF View</h3>
-            <div style="display:flex;align-items:center;gap:2px;">
-                <button type="button" class="schol-modal-close" id="scholViewMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
-                <button type="button" class="schol-modal-close" id="scholViewClose" title="Close">&times;</button>
-            </div>
+            <h3>Participant Details</h3>
+            <button type="button" class="schol-modal-close" id="scholViewClose" title="Close">&times;</button>
         </div>
-        <div class="schol-modal-body" id="scholViewBody" style="background:#f0f1f5;"></div>
-        <!-- Footer: Approve + Reject only, no Close -->
+        <div class="schol-modal-body" id="scholViewBody" style="background:#f9fafb;padding:32px;"></div>
+        <!-- Footer: Approve + Reject only -->
         <div class="schol-modal-footer">
             <button type="button" class="schol-btn schol-btn-approve" id="scholApproveBtn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
