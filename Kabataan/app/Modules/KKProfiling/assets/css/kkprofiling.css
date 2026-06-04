@@ -632,6 +632,12 @@
     gap: 6px;
 }
 
+@media (max-width: 768px) {
+    .kkp-voter-questions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ── FOOTER ROW: FB + Group Chat ── */
 .kkp-footer-row {
     display: flex;

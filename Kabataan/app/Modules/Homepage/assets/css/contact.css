@@ -1,0 +1,26 @@
+/* Contact section heading (above footer) */
+.kabataan-contact-intro {
+    padding: 72px 0 48px;
+    background: #f5f7fa;
+    text-align: center;
+    scroll-margin-top: 88px;
+}
+
+.kabataan-contact-intro h2 {
+    margin: 0;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 800;
+    color: #13253b;
+    letter-spacing: -0.03em;
+}
+
+.kabataan-contact-intro-line {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .kabataan-contact-intro {
+        padding: 56px 0 36px;
+    }
+}

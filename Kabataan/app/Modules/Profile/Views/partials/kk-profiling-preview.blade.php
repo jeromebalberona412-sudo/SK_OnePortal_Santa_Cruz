@@ -176,40 +176,52 @@
                     @endforeach
                 </div>
             </div>
-            <div class="kkp-voter-section">
-                <div class="kkp-voter-row">
-                    <div class="kkp-voter-cell">
-                        <div class="kkp-voter-cell-label">Registered SK Voter?</div>
-                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voter', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
-                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voter', 'No') ? 'checked' : '' }} disabled> No</label>
+            <div class="kkp-voter-questions-grid">
+                <div class="kkp-voter-questions-col">
+                    <div class="kkp-demo-block">
+                        <div class="kkp-demo-block-label">Registered SK Voter?</div>
+                        <div class="kkp-demo-block-options">
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voter', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voter', 'No') ? 'checked' : '' }} disabled> No</label>
+                        </div>
                     </div>
-                    <div class="kkp-voter-cell">
-                        <div class="kkp-voter-cell-label">Did you vote last SK?</div>
-                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voted', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
-                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voted', 'No') ? 'checked' : '' }} disabled> No</label>
+                    <div class="kkp-demo-block">
+                        <div class="kkp-demo-block-label">Registered National Voter?</div>
+                        <div class="kkp-demo-block-options">
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('national_voter', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('national_voter', 'No') ? 'checked' : '' }} disabled> No</label>
+                        </div>
                     </div>
-                    <div class="kkp-voter-cell">
-                        <div class="kkp-voter-cell-label">If Yes, How many times?</div>
-                        @foreach (['1-2 Times', '3-4 Times', '5 and above'] as $item)
-                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('vote_frequency', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
-                        @endforeach
+                    <div class="kkp-demo-block">
+                        <div class="kkp-demo-block-label">Have you attended a KK Assembly?</div>
+                        <div class="kkp-demo-block-options">
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_assembly', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_assembly', 'No') ? 'checked' : '' }} disabled> No</label>
+                        </div>
                     </div>
                 </div>
-                <div class="kkp-voter-row">
-                    <div class="kkp-voter-cell">
-                        <div class="kkp-voter-cell-label">Registered National Voter?</div>
-                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('national_voter', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
-                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('national_voter', 'No') ? 'checked' : '' }} disabled> No</label>
+                <div class="kkp-voter-questions-col">
+                    <div class="kkp-demo-block">
+                        <div class="kkp-demo-block-label">Did you vote last SK?</div>
+                        <div class="kkp-demo-block-options">
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voted', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('sk_voted', 'No') ? 'checked' : '' }} disabled> No</label>
+                        </div>
                     </div>
-                    <div class="kkp-voter-cell">
-                        <div class="kkp-voter-cell-label">Have you attended a KK Assembly?</div>
-                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_assembly', 'Yes') ? 'checked' : '' }} disabled> Yes</label>
-                        <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_assembly', 'No') ? 'checked' : '' }} disabled> No</label>
+                    <div class="kkp-demo-block">
+                        <div class="kkp-demo-block-label">If Yes, How many times?</div>
+                        <div class="kkp-demo-block-options">
+                            @foreach (['1-2 Times', '3-4 Times', '5 and above'] as $item)
+                                <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('vote_frequency', $item) || $isChecked('kk_times', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
+                            @endforeach
+                        </div>
                     </div>
-                    <div class="kkp-voter-cell">
-                        <div class="kkp-voter-cell-label">If Yes/No details</div>
-                        <p class="kkp-preview-free-text">KK Times: {{ $read('kk_times', '-') }}</p>
-                        <p class="kkp-preview-free-text">Reason: {{ $read('kk_reason', '-') }}</p>
+                    <div class="kkp-demo-block">
+                        <div class="kkp-demo-block-label">If Yes/No details</div>
+                        <div class="kkp-demo-block-options">
+                            <p class="kkp-preview-free-text">KK Times: {{ $read('kk_times', '-') }}</p>
+                            <p class="kkp-preview-free-text">Reason: {{ $read('kk_reason', '-') }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -230,7 +242,7 @@
 
     <div class="kkp-thankyou">Thank you for your participation!</div>
 
-    <div class="kkp-sig-section">
+    <div class="kkp-sig-section kkp-sig-section-left">
         <div class="kkp-sig-container">
             @if(filled($kkData['signature'] ?? null))
                 <div class="kkp-sig-overlay kkp-sig-overlay--visible">

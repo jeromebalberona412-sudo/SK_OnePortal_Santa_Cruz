@@ -1011,7 +1011,7 @@ body.homepage-body.kabataan-homepage::after {
     font-size: 0.95rem;
     padding: 10px 14px;
     border-radius: 999px;
-    transition: color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+    transition: color 0.18s ease, background-color 0.18s ease;
 }
 
 .kabataan-nav-link:hover,
@@ -1047,7 +1047,7 @@ body.homepage-body.kabataan-homepage::after {
     border-radius: 999px;
     font-weight: 700;
     font-size: 0.8rem;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+    transition: box-shadow 0.18s ease, background-color 0.18s ease, color 0.18s ease;
 }
 
 .kabataan-nav-secondary {
@@ -1058,20 +1058,20 @@ body.homepage-body.kabataan-homepage::after {
 .kabataan-nav-secondary:hover {
     color: #fff;
     background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
-    box-shadow: 0 14px 30px rgba(4, 80, 168, 0.24);
+    box-shadow: 0 8px 20px rgba(4, 80, 168, 0.2);
 }
 
 .kabataan-nav-primary {
     color: #fff;
     background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
-    box-shadow: 0 14px 30px rgba(4, 80, 168, 0.24);
+    box-shadow: 0 8px 20px rgba(4, 80, 168, 0.2);
 }
 
 .kabataan-nav-secondary:hover,
 .kabataan-nav-primary:hover,
 .kabataan-button:hover,
 .kabataan-text-link:hover {
-    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(4, 80, 168, 0.22);
 }
 
 .kabataan-nav-toggle {

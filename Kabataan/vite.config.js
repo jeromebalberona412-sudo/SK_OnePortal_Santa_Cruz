@@ -20,7 +20,9 @@ export default defineConfig({
 
                 // Layout (shared header & footer)
                 'app/Modules/Layout/assets/css/kabataan-header.css',
+                'app/Modules/Layout/assets/css/kabataan-logout.css',
                 'app/Modules/Layout/assets/js/kabataan-header.js',
+                'app/Modules/Layout/assets/js/kabataan-logout.js',
                 'app/Modules/Layout/assets/css/kabataan-footer.css',
 
                 // Dashboard
@@ -52,11 +54,16 @@ export default defineConfig({
                 'app/Modules/Profile/assets/js/change-password.js',
 
                 // Homepage
+                'app/Modules/Homepage/assets/css/homepage-bootstrap.css',
                 'app/Modules/Homepage/assets/css/homepage.css',
-                'app/Modules/Homepage/assets/js/homepage.js',
                 'app/Modules/Homepage/assets/css/about.css',
                 'app/Modules/Homepage/assets/css/pages.css',
                 'app/Modules/Homepage/assets/css/faqs.css',
+                'app/Modules/Homepage/assets/css/contact.css',
+                'app/Modules/Homepage/assets/css/homepage-interactions.css',
+                'app/Modules/Homepage/assets/css/homepage-responsive.css',
+                'app/Modules/Homepage/assets/js/homepage.js',
+                'app/Modules/Homepage/assets/js/faqs.js',
 
                 // KK Profiling
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',

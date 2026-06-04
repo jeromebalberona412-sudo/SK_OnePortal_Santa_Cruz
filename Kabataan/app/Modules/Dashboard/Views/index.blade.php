@@ -14,7 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     @vite([
         'app/Modules/Layout/assets/css/kabataan-header.css',
+        'app/Modules/Layout/assets/css/kabataan-logout.css',
         'app/Modules/Layout/assets/js/kabataan-header.js',
+        'app/Modules/Layout/assets/js/kabataan-logout.js',
         'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Dashboard/assets/js/dashboard.js',
         'app/Modules/Programs/assets/js/programs.js',

@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.style.scrollBehavior = 'smooth';
 
-    const navToggle = document.getElementById('kabataanNavToggle') || document.getElementById('navHamburger');
-    const drawer = document.getElementById('kabataanDrawer') || document.getElementById('navDrawer');
+    const navToggle = document.getElementById('kabataanNavToggle');
+    const drawer = document.getElementById('kabataanDrawer');
     const navLinks = Array.from(document.querySelectorAll('.kabataan-nav-link, .kabataan-drawer-link'));
     const tabs = Array.from(document.querySelectorAll('.kabataan-tab'));
     const cards = Array.from(document.querySelectorAll('.kabataan-barangay-card'));
@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
         query: '',
     };
 
+    const scrollToSection = (sectionId) => {
+        const target = document.getElementById(sectionId);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
     const setDrawerOpen = (open) => {
         if (!navToggle || !drawer) {
             return;
@@ -23,24 +30,26 @@ document.addEventListener('DOMContentLoaded', () => {
         drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
         navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         navToggle.classList.toggle('is-active', open);
-        
-        // Remove focus when menu closes to prevent persistent gray background
+
         if (!open) {
             navToggle.blur();
-            // Force remove focus by setting it to body
             document.activeElement?.blur();
         }
     };
 
-    const setActiveLink = (sectionId) => {
-        navLinks.forEach((link) => {
-            const href = link.getAttribute('href') || '';
-            if (!href.startsWith('#')) {
-                return;
-            }
+    const clearActiveLinks = () => {
+        navLinks.forEach((link) => link.classList.remove('active'));
+    };
 
-            const targetId = href.slice(1);
-            link.classList.toggle('active', targetId === sectionId);
+    const setActiveLink = (sectionId) => {
+        if (!sectionId || sectionId === 'contact') {
+            clearActiveLinks();
+            return;
+        }
+
+        navLinks.forEach((link) => {
+            const linkSection = link.dataset.section || '';
+            link.classList.toggle('active', linkSection === sectionId);
         });
     };
 
@@ -108,33 +117,62 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFilters();
     });
 
-    const sections = ['about', 'programs', 'announcements', 'faq', 'contact']
+    const trackedSections = ['hero', 'about', 'faq']
         .map((id) => document.getElementById(id))
         .filter(Boolean);
 
-    if ('IntersectionObserver' in window && sections.length > 0) {
-        const observer = new IntersectionObserver((entries) => {
-            const visibleEntry = entries
-                .filter((entry) => entry.isIntersecting)
-                .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if ('IntersectionObserver' in window && trackedSections.length > 0) {
+        const visibility = new Map();
 
-            if (visibleEntry?.target.id) {
-                setActiveLink(visibleEntry.target.id);
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                visibility.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0);
+            });
+
+            let activeId = '';
+            let bestRatio = 0;
+
+            visibility.forEach((ratio, id) => {
+                if (ratio > bestRatio) {
+                    bestRatio = ratio;
+                    activeId = id;
+                }
+            });
+
+            if (bestRatio >= 0.2) {
+                setActiveLink(activeId);
+            } else {
+                clearActiveLinks();
             }
         }, {
             root: null,
-            threshold: [0.2, 0.35, 0.5, 0.65],
-            rootMargin: '-18% 0px -58% 0px',
+            threshold: [0, 0.15, 0.3, 0.5, 0.7],
+            rootMargin: '-20% 0px -55% 0px',
         });
 
-        sections.forEach((section) => observer.observe(section));
+        trackedSections.forEach((section) => observer.observe(section));
     }
 
     navLinks.forEach((link) => {
         link.addEventListener('click', () => {
+            const sectionId = link.dataset.section;
+            if (sectionId === 'contact') {
+                clearActiveLinks();
+            } else if (sectionId) {
+                setActiveLink(sectionId);
+            }
+            link.blur();
             setDrawerOpen(false);
         });
     });
+
+    const initialSection = document.body.dataset.scrollTo || 'hero';
+    if (initialSection && initialSection !== 'hero') {
+        requestAnimationFrame(() => scrollToSection(initialSection));
+        setActiveLink(initialSection === 'contact' ? '' : initialSection);
+    } else {
+        setActiveLink('hero');
+    }
 
     applyFilters();
 });

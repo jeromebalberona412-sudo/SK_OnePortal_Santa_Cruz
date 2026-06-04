@@ -7,30 +7,30 @@
     <meta name="theme-color" content="#0450a8">
     <meta name="description" content="SK OnePortal Kabataan - Youth Community Platform for Santa Cruz, Laguna">
     <title>@yield('title', 'SK OnePortal Kabataan')</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 
     @vite([
+        'app/Modules/Homepage/assets/css/homepage-bootstrap.css',
         'app/Modules/Homepage/assets/css/homepage.css',
         'app/Modules/Homepage/assets/css/about.css',
         'app/Modules/Homepage/assets/css/pages.css',
         'app/Modules/Homepage/assets/css/faqs.css',
+        'app/Modules/Homepage/assets/css/contact.css',
         'app/Modules/Layout/assets/css/kabataan-footer.css',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
+        'app/Modules/Homepage/assets/css/homepage-interactions.css',
+        'app/Modules/Homepage/assets/css/homepage-responsive.css',
+        'app/Modules/Homepage/assets/js/homepage.js',
+        'app/Modules/Homepage/assets/js/faqs.js',
     ])
 
     @stack('styles')
 </head>
-<body class="homepage-body @if(Route::currentRouteName() === 'about') about-body @endif @if(Route::currentRouteName() === 'faqs') faqs-body @endif">
-    {{-- LOADING OVERLAY --}}
-    @include('dashboard::loading')
-
-    {{-- TOP NAVBAR (shared kabataan markup) --}}
+<body class="homepage-body" data-scroll-to="{{ $scrollTo ?? 'hero' }}">
     <nav class="kabataan-nav" aria-label="Primary navigation">
-        <div class="kabataan-nav-inner">
+        <div class="container kabataan-nav-inner">
             <a href="{{ route('homepage') }}" class="kabataan-brand">
                 <img src="/images/skoneportal_logo.webp" alt="Kabataan logo" class="kabataan-brand-logo">
                 <span class="kabataan-brand-copy">
@@ -40,15 +40,15 @@
             </a>
 
             <div class="kabataan-nav-links" id="kabataanNavLinks">
-                <a href="{{ route('homepage') }}" class="kabataan-nav-link @if(Route::currentRouteName() === 'homepage') active @endif">Home</a>
-                <a href="{{ route('about') }}" class="kabataan-nav-link @if(Route::currentRouteName() === 'about') active @endif">About</a>
-                <a href="{{ route('faqs') }}" class="kabataan-nav-link @if(Route::currentRouteName() === 'faqs') active @endif">FAQs</a>
-                <a href="{{ route('contact') }}" class="kabataan-nav-link @if(Route::currentRouteName() === 'contact') active @endif">Contact</a>
+                <a href="{{ route('homepage') }}" class="kabataan-nav-link" data-section="hero">Home</a>
+                <a href="{{ route('homepage.section', ['section' => 'about']) }}" class="kabataan-nav-link" data-section="about">About</a>
+                <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="kabataan-nav-link" data-section="faq">FAQs</a>
+                <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-nav-link" data-section="contact">Contact</a>
             </div>
 
             <div class="kabataan-nav-actions">
-                <a href="{{ route('login') }}" class="kabataan-nav-secondary">Sign In</a>
-                <a href="{{ route('register') }}" class="kabataan-nav-primary">Sign Up</a>
+                <a href="{{ route('login') }}" class="kabataan-nav-secondary kabataan-nav-auth-btn">Sign In</a>
+                <a href="{{ route('register') }}" class="kabataan-nav-primary kabataan-nav-auth-btn">Sign Up</a>
                 <button type="button" class="kabataan-nav-toggle" id="kabataanNavToggle" aria-label="Open menu" aria-expanded="false">
                     <span></span><span></span><span></span>
                 </button>
@@ -57,14 +57,10 @@
     </nav>
 
     <div class="kabataan-drawer" id="kabataanDrawer" aria-hidden="true">
-        <a href="{{ route('homepage') }}" class="kabataan-drawer-link @if(Route::currentRouteName() === 'homepage') active @endif">Home</a>
-        <a href="{{ route('about') }}" class="kabataan-drawer-link @if(Route::currentRouteName() === 'about') active @endif">About</a>
-        <a href="{{ route('faqs') }}" class="kabataan-drawer-link @if(Route::currentRouteName() === 'faqs') active @endif">FAQs</a>
-        <a href="{{ route('contact') }}" class="kabataan-drawer-link @if(Route::currentRouteName() === 'contact') active @endif">Contact</a>
-        <div class="kabataan-drawer-actions">
-            <a href="{{ route('login') }}" class="kabataan-nav-secondary">Sign In</a>
-            <a href="{{ route('register') }}" class="kabataan-nav-primary">Sign Up</a>
-        </div>
+        <a href="{{ route('homepage') }}" class="kabataan-drawer-link" data-section="hero">Home</a>
+        <a href="{{ route('homepage.section', ['section' => 'about']) }}" class="kabataan-drawer-link" data-section="about">About</a>
+        <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="kabataan-drawer-link" data-section="faq">FAQs</a>
+        <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-drawer-link" data-section="contact">Contact</a>
     </div>
 
     <main class="kabataan-main">
@@ -73,8 +69,6 @@
 
     @include('layout::kabataan-footer')
 
-    {{-- SCRIPTS --}}
-    @vite('app/Modules/Homepage/assets/js/homepage.js')
     @stack('scripts')
 </body>
 </html>

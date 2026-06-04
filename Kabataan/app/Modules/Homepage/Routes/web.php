@@ -3,7 +3,10 @@
 use App\Modules\Homepage\Controllers\HomepageController;
 use Illuminate\Support\Facades\Route;
 
+Route::redirect('/', '/homepage');
+
 Route::get('/homepage', [HomepageController::class, 'index'])->name('homepage');
-Route::get('/about', [HomepageController::class, 'about'])->name('about');
-Route::get('/faqs', [HomepageController::class, 'faqs'])->name('faqs');
-Route::get('/contact', [HomepageController::class, 'contact'])->name('contact');
+
+Route::get('/homepage/{section}', [HomepageController::class, 'index'])
+    ->whereIn('section', ['about', 'faqs', 'contact'])
+    ->name('homepage.section');

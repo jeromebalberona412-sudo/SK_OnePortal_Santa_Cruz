@@ -10,8 +10,6 @@
     const panel = document.getElementById('kkpuModalPanel');
     const closeBtn = document.getElementById('kkpuCloseBtn');
     const fullscreenBtn = document.getElementById('kkpuFullscreenBtn');
-    const expandIcon = fullscreenBtn?.querySelector('.kkpu-icon-expand');
-    const collapseIcon = fullscreenBtn?.querySelector('.kkpu-icon-collapse');
     let isOpen = false;
 
     function openModal() {
@@ -34,9 +32,8 @@
     function setFullscreen(enabled) {
         if (!panel) return;
         panel.classList.toggle('is-fullscreen', enabled);
-        if (expandIcon) expandIcon.style.display = enabled ? 'none' : '';
-        if (collapseIcon) collapseIcon.style.display = enabled ? '' : 'none';
         fullscreenBtn?.setAttribute('aria-label', enabled ? 'Exit fullscreen' : 'Fullscreen');
+        fullscreenBtn?.setAttribute('title', enabled ? 'Exit fullscreen' : 'Fullscreen');
     }
 
     function toggleFullscreen() {

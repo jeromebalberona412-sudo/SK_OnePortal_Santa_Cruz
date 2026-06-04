@@ -8,7 +8,7 @@
                     <svg class="kkpu-icon-expand" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path d="M3 3a1 1 0 011-1h4a1 1 0 110 2H5.414l4.293 4.293a1 1 0 01-1.414-1.414L4 4.586V6a1 1 0 11-2 0V3zm14 0a1 1 0 00-1-1h-4a1 1 0 100 2h2.586l-4.293 4.293a1 1 0 101.414 1.414L16 5.414V8a1 1 0 102 0V3zM3 17a1 1 0 001 1h4a1 1 0 100-2H5.414l4.293-4.293a1 1 0 00-1.414-1.414L4 15.414V14a1 1 0 10-2 0v3zm14 0a1 1 0 01-1 1h-4a1 1 0 110-2h2.586l-4.293-4.293a1 1 0 111.414-1.414L16 14.586V13a1 1 0 112 0v4z"/>
                     </svg>
-                    <svg class="kkpu-icon-collapse" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="display:none;">
+                    <svg class="kkpu-icon-collapse" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path d="M5 5a1 1 0 011-1h2a1 1 0 110 2H7.414L6 7.414V8a1 1 0 11-2 0V5zm10 0a1 1 0 00-1-1h-2a1 1 0 100 2h1.586L14 7.414V8a1 1 0 102 0V5zM5 15a1 1 0 001 1h2a1 1 0 100-2H7.414L6 12.586V12a1 1 0 10-2 0v3zm10 0a1 1 0 01-1 1h-2a1 1 0 110-2h1.586L14 12.586V12a1 1 0 112 0v3z"/>
                     </svg>
                 </button>

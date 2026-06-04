@@ -1244,11 +1244,60 @@ body.youth-profile {
     min-width: 130px;
 }
 
+.youth-profile.kabataan-app-page {
+    padding-top: 72px;
+}
+
+.youth-profile.kabataan-app-page .profile-main {
+    margin-top: 0;
+}
+
 .kkp-profile-preview {
     background: #fff;
     border: 2px solid #1f2937;
     padding: 12px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kkp-profile-preview .kkp-form-paper,
+.kkp-profile-preview .kkp-paper {
+    min-width: 860px;
+}
+
+.kk-preview-modal-container .modal-body {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kk-preview-modal-container.is-fullscreen {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    margin: 0;
+}
+
+.kk-preview-modal-container.is-fullscreen .modal-body {
+    flex: 1;
+    max-height: none;
+}
+
+#kkPreviewFullscreenBtn .kk-preview-icon-expand {
+    display: block;
+}
+
+#kkPreviewFullscreenBtn .kk-preview-icon-collapse {
+    display: none;
+}
+
+#kkPreviewModalPanel.is-fullscreen #kkPreviewFullscreenBtn .kk-preview-icon-expand {
+    display: none;
+}
+
+#kkPreviewModalPanel.is-fullscreen #kkPreviewFullscreenBtn .kk-preview-icon-collapse {
+    display: block;
 }
 
 .kkp-profile-preview input[readonly] {
@@ -1954,6 +2003,11 @@ body.youth-profile {
 }
 
 .btn-setting-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 168px;
+    width: 168px;
     padding: 10px 20px;
     background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
     color: white;
@@ -1961,15 +2015,15 @@ body.youth-profile {
     border-radius: 10px;
     font-size: 14px;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
     box-shadow: 0 4px 12px rgba(4, 80, 168, 0.25);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-setting-action:hover {
     background: linear-gradient(135deg, #033d7a 0%, #0450a8 100%);
     box-shadow: 0 6px 16px rgba(4, 80, 168, 0.35);
-    transform: translateY(-1px);
 }
 
 .btn-setting-action:active {

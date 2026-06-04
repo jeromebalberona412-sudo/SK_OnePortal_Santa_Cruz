@@ -6,8 +6,15 @@ use App\Http\Controllers\Controller;
 
 class HomepageController extends Controller
 {
-    public function index()
+    public function index(?string $section = null)
     {
+        $scrollTo = match ($section) {
+            'about' => 'about',
+            'faqs' => 'faq',
+            'contact' => 'contact',
+            default => 'hero',
+        };
+
         $municipality = [
             'name' => 'Santa Cruz, Laguna',
             'portal' => 'SK OnePortal Kabataan',
@@ -108,12 +115,9 @@ class HomepageController extends Controller
             'highlights'        => $highlights,
             'programCategories' => $programCategories,
             'barangayProfiles'  => $barangayProfiles,
+            'faqs'              => $this->getFaqs(),
+            'scrollTo'          => $scrollTo,
         ]);
-    }
-
-    public function about()
-    {
-        return view('homepage::about');
     }
 
     public function programs()
@@ -121,11 +125,9 @@ class HomepageController extends Controller
         return view('homepage::programs');
     }
 
-    public function faqs()
+    private function getFaqs(): array
     {
-        // Cache FAQs for 1 hour (3600 seconds) or retrieve from database/config
-        // This follows the design specification for performance optimization
-        $faqs = cache()->remember('kabataan_faqs', 3600, function () {
+        return cache()->remember('kabataan_faqs', 3600, function () {
             return [
                 // Account FAQs
                 [
@@ -158,7 +160,7 @@ class HomepageController extends Controller
                     'id' => 5,
                     'category' => 'programs',
                     'question' => 'How do I find programs in my barangay?',
-                    'answer' => 'Visit the Programs page and use the barangay filter. You can also click on your barangay in the About section to see specific SK officials and their programs. Programs are updated regularly, so check back often for new opportunities.',
+                    'answer' => 'After signing in, browse available programs from your dashboard or the programs section. Use barangay and category filters to find activities near you. New listings are posted by your barangay SK as they become available.',
                 ],
                 [
                     'id' => 6,
@@ -184,7 +186,7 @@ class HomepageController extends Controller
                     'id' => 9,
                     'category' => 'technical',
                     'question' => 'I\'m having trouble logging in. What should I do?',
-                    'answer' => 'First, double-check your email and password. If you\'re still having issues, try clearing your browser cache and cookies. If the problem persists, use the "Forgot Password" feature. For additional support, contact us via the Contact page.',
+                    'answer' => 'First, double-check your email and password. If you\'re still having issues, try clearing your browser cache and cookies. If the problem persists, use the "Forgot Password" feature. For additional support, scroll to the Contact section on this page.',
                 ],
                 [
                     'id' => 10,
@@ -226,12 +228,5 @@ class HomepageController extends Controller
                 ],
             ];
         });
-
-        return view('homepage::faqs', compact('faqs'));
-    }
-
-    public function contact()
-    {
-        return view('homepage::contact');
     }
 }

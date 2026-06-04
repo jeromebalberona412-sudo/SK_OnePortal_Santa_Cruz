@@ -10,8 +10,13 @@
     <meta http-equiv="Expires" content="0">
     <title>My Profile - SK OnePortal</title>
     @vite([
+        'app/Modules/Layout/assets/css/kabataan-header.css',
+        'app/Modules/Layout/assets/css/kabataan-logout.css',
+        'app/Modules/Layout/assets/js/kabataan-header.js',
+        'app/Modules/Layout/assets/js/kabataan-logout.js',
         'app/Modules/Profile/assets/css/profile.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
+        'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
         'app/Modules/Profile/assets/js/profile.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
@@ -133,70 +138,9 @@
         });
     </script>
 </head>
-<body class="youth-profile">
+<body class="youth-profile kabataan-app-page">
     @include('dashboard::loading')
-    <!-- Top Navigation Bar -->
-    <nav class="top-navbar">
-        <div class="navbar-container">
-            <div class="navbar-left">
-                <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="navbar-logo">
-                <span class="navbar-title">SK OnePortal</span>
-            </div>
-            
-            <div class="navbar-center">
-                <div class="search-bar">
-                    <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                    </svg>
-                    <input type="text" placeholder="Search posts, programs, announcements..." class="search-input">
-                </div>
-            </div>
-            
-            <div class="navbar-right">
-                <button class="nav-icon-btn" title="Home" onclick="if(window.showLoading) showLoading('Redirecting'); window.location.href='{{ route('dashboard') }}'">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                    </svg>
-                </button>
-                
-                @include('dashboard::notification')
-                
-                @include('dashboard::chatbot')
-                
-                <div class="user-menu">
-                    <button class="user-avatar-btn">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&background=667eea&color=fff" alt="User Avatar">
-                    </button>
-                    <div class="user-dropdown">
-                        <div class="dropdown-header">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&background=667eea&color=fff" alt="User Avatar">
-                            <div>
-                                <p class="user-name">{{ $user->first_name }} {{ $user->last_name }}</p>
-                                <p class="user-email">{{ $user->email }}</p>
-                            </div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('profile') }}" class="dropdown-item">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                            </svg>
-                            My Profile
-                        </a>
-                    <div class="dropdown-divider"></div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="dropdown-item logout-btn">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
-                                </svg>
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    @include('layout::kabataan-header', ['user' => $user, 'showSearch' => true, 'pageBadge' => 'My Profile'])
 
     <!-- Main Content -->
     <main class="profile-main">
@@ -503,7 +447,7 @@
                         <svg class="kk-preview-icon-expand" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M3 3a1 1 0 011-1h4a1 1 0 110 2H5.414l4.293 4.293a1 1 0 01-1.414-1.414L4 4.586V6a1 1 0 11-2 0V3zm14 0a1 1 0 00-1-1h-4a1 1 0 100 2h2.586l-4.293 4.293a1 1 0 101.414 1.414L16 5.414V8a1 1 0 102 0V3zM3 17a1 1 0 001 1h4a1 1 0 100-2H5.414l4.293-4.293a1 1 0 00-1.414-1.414L4 15.414V14a1 1 0 10-2 0v3zm14 0a1 1 0 01-1 1h-4a1 1 0 110-2h2.586l-4.293-4.293a1 1 0 111.414-1.414L16 14.586V13a1 1 0 112 0v4z"/>
                         </svg>
-                        <svg class="kk-preview-icon-collapse" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="display:none;">
+                        <svg class="kk-preview-icon-collapse" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M5 5a1 1 0 011-1h2a1 1 0 110 2H7.414L6 7.414V8a1 1 0 11-2 0V5zm10 0a1 1 0 00-1-1h-2a1 1 0 100 2h1.586L14 7.414V8a1 1 0 102 0V5zM5 15a1 1 0 001 1h2a1 1 0 100-2H7.414L6 12.586V12a1 1 0 10-2 0v3zm10 0a1 1 0 01-1 1h-2a1 1 0 110-2h1.586L14 12.586V12a1 1 0 112 0v3z"/>
                         </svg>
                     </button>
@@ -759,35 +703,6 @@
 
     <script>
     (function () {
-        // ── Logout Modal — deferred until DOM is ready ────────────────
-        function initLogout() {
-            const logoutBtn   = document.querySelector('.logout-btn');
-            const logoutForm  = logoutBtn?.closest('form');
-            const logoutModal = document.getElementById('logoutConfirmModal');
-            const confirmBtn  = document.getElementById('confirmLogoutBtn');
-
-            if (!logoutBtn || !logoutModal) return;
-
-            logoutBtn.addEventListener('click', e => {
-                e.preventDefault();
-                logoutModal.style.display = 'flex';
-            });
-
-            confirmBtn?.addEventListener('click', () => logoutForm?.submit());
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initLogout);
-        } else {
-            initLogout();
-        }
-    })();
-
-    function closeLogoutModal() {
-        document.getElementById('logoutConfirmModal').style.display = 'none';
-    }
-
-    (function () {
         // ── Data from server ──────────────────────────────────────────
         const PROGRAM_DATES = @json($programDateMap);
         const TODAY = new Date();
@@ -1006,24 +921,6 @@
         render();
     })();
     </script>
-    <!-- Logout Confirm Modal -->
-    <div id="logoutConfirmModal" style="display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;">
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);" onclick="closeLogoutModal()"></div>
-        <div style="position:relative;background:white;border-radius:20px;max-width:420px;width:90%;padding:40px 32px;text-align:center;animation:modalSlideIn 0.3s ease;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
-            <div style="width:64px;height:64px;background:#fff3e0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                <svg viewBox="0 0 20 20" fill="currentColor" style="width:32px;height:32px;color:#f97316;">
-                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
-                </svg>
-            </div>
-            <h3 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px;">Are you sure you want to logout?</h3>
-            <p style="color:#94a3b8;font-size:14px;margin-bottom:28px;">You will be redirected to the login page.</p>
-            <div style="display:flex;gap:12px;justify-content:center;">
-                <button onclick="closeLogoutModal()" style="min-width:100px;padding:12px 24px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
-                <button id="confirmLogoutBtn" style="min-width:100px;padding:12px 24px;background:linear-gradient(135deg,#f44336,#d32f2f);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(244,67,54,0.3);font-family:inherit;">Logout</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Program Details Modal -->
     <div id="programDetailsModal" class="program-modal" style="display: none;">
         <div class="modal-overlay"></div>
@@ -1643,11 +1540,14 @@
 
     function setKkPreviewFullscreen(enabled) {
         const panel = document.getElementById('kkPreviewModalPanel');
-        const expand = document.querySelector('#kkPreviewFullscreenBtn .kk-preview-icon-expand');
-        const collapse = document.querySelector('#kkPreviewFullscreenBtn .kk-preview-icon-collapse');
-        if (panel) panel.classList.toggle('is-fullscreen', enabled);
-        if (expand) expand.style.display = enabled ? 'none' : '';
-        if (collapse) collapse.style.display = enabled ? '' : 'none';
+        const btn = document.getElementById('kkPreviewFullscreenBtn');
+        if (panel) {
+            panel.classList.toggle('is-fullscreen', enabled);
+        }
+        if (btn) {
+            btn.setAttribute('aria-label', enabled ? 'Exit fullscreen' : 'Fullscreen');
+            btn.setAttribute('title', enabled ? 'Exit fullscreen' : 'Fullscreen');
+        }
     }
 
     function toggleKkPreviewFullscreen() {

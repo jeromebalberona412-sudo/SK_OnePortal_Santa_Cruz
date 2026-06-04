@@ -8,6 +8,10 @@
     color: #0f172a;
 }
 
+.kabataan-page-section.about-page {
+    scroll-margin-top: 88px;
+}
+
 .about-page .kabataan-main {
     padding-top: 0;
 }
@@ -101,6 +105,18 @@
     font-weight: 800;
 }
 
+.about-eyebrow--light {
+    background: rgba(4, 80, 168, 0.08);
+    border: 1px solid rgba(4, 80, 168, 0.12);
+    color: #0450a8;
+}
+
+.about-eyebrow--cta {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
 .about-hero-actions {
     display: flex;
     flex-wrap: wrap;
@@ -117,11 +133,11 @@
     border-radius: 12px;
     text-decoration: none;
     font-weight: 700;
-    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+    transition: box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
 .about-btn:hover {
-    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(4, 80, 168, 0.18);
 }
 
 .about-btn-primary {
@@ -243,13 +259,21 @@
     max-width: 54ch;
 }
 
-.about-stat-grid,
-.about-feature-grid,
-.about-join-grid,
-.about-impact-grid {
+.about-stat-grid:not(.row),
+.about-feature-grid:not(.row),
+.about-join-grid:not(.row),
+.about-impact-grid:not(.row) {
     display: grid;
     gap: 18px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.about-page .about-stat-grid.row,
+.about-page .about-join-grid.row,
+.about-page .about-feature-grid.row,
+.about-page .about-impact-grid.row {
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .about-stat-card,
@@ -304,16 +328,8 @@
     font-size: 0.98rem;
 }
 
-.about-two-col {
-    display: grid;
-    grid-template-columns: 0.95fr 1.05fr;
-    gap: 28px;
-    align-items: start;
-}
-
 .about-mission-stack {
-    display: grid;
-    gap: 18px;
+    width: 100%;
 }
 
 .about-info-card,
@@ -329,19 +345,6 @@
 
 .about-feature-card {
     min-height: 160px;
-}
-
-.about-feature-card::before,
-.about-join-card::before,
-.about-stat-card::before,
-.about-info-card::before {
-    content: '';
-    display: block;
-    width: 54px;
-    height: 4px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #0450a8, #1a6fd4);
-    margin-bottom: 16px;
 }
 
 .about-join-grid {
@@ -364,21 +367,34 @@
     align-items: stretch;
 }
 
+.about-mission-intro h2,
+.about-governance-intro h2 {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: clamp(1.6rem, 2.5vw, 2.25rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+    margin: 12px 0 14px;
+    font-weight: 800;
+}
+
+.about-mission-stack .about-info-card h3,
+.about-governance-section .about-safety-item {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
 .about-safety-list {
-    display: grid;
-    gap: 14px;
+    margin: 0;
 }
 
 .about-safety-item {
     padding: 18px 20px;
-    border-left: 4px solid #0450a8;
-}
-
-.about-safety-item::before {
-    content: '•';
-    color: #0450a8;
-    font-weight: 800;
-    margin-right: 10px;
+    border-left: none;
+    display: flex;
+    align-items: center;
+    min-height: 100%;
 }
 
 .about-impact-grid {
@@ -424,19 +440,27 @@
     box-shadow: 0 18px 50px rgba(2, 42, 84, 0.24);
 }
 
-.about-cta-card h2 {
+.about-cta-copy h2 {
     font-family: 'Poppins', 'Inter', sans-serif;
-}
-
-.about-cta-card .about-section-heading,
-.about-cta-card .about-section-heading h2,
-.about-cta-card p {
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    line-height: 1.2;
+    font-weight: 800;
     color: #ffffff;
+    margin: 12px 0 14px;
 }
 
-.about-cta-card .about-section-heading {
-    margin-bottom: 0;
-    max-width: 60ch;
+.about-cta-copy p,
+.about-cta-copy a {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.about-cta-copy a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.about-cta-copy a:hover {
+    color: #fff;
 }
 
 .about-cta-card .about-btn-secondary {
@@ -449,12 +473,12 @@
 }
 
 @media (max-width: 1024px) {
-    .about-hero-grid,
-    .about-two-col,
-    .about-cta-card {
+    .about-hero-grid {
         grid-template-columns: 1fr;
-        flex-direction: column;
-        align-items: stretch;
+    }
+
+    .about-cta-card .about-hero-actions {
+        justify-content: flex-start !important;
     }
 
     .about-stat-grid,

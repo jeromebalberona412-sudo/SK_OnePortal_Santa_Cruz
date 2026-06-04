@@ -2,6 +2,4 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('homepage');
-});
+// Homepage is registered by HomepageServiceProvider at /

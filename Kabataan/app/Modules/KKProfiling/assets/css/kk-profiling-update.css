@@ -124,6 +124,28 @@
     max-width: 100%;
 }
 
+.kkpu-modal-body .kkp-form-paper,
+.kkpu-modal-body .kkp-paper,
+.kkpu-modal-body .kkpu-paper {
+    min-width: 860px;
+}
+
+.kkpu-icon-btn .kkpu-icon-expand {
+    display: block;
+}
+
+.kkpu-icon-btn .kkpu-icon-collapse {
+    display: none;
+}
+
+.kkpu-modal.is-fullscreen .kkpu-icon-expand {
+    display: none;
+}
+
+.kkpu-modal.is-fullscreen .kkpu-icon-collapse {
+    display: block;
+}
+
 body.kkpu-modal-open {
     overflow: hidden;
 }

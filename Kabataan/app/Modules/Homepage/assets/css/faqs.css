@@ -8,9 +8,13 @@ body.homepage-body.faqs-body {
 }
 
 .faq-page {
-    min-height: 100vh;
-    padding: 104px 0 72px;
+    min-height: auto;
+    padding: 72px 0;
     color: #0f172a;
+}
+
+.kabataan-page-section.faq-page {
+    scroll-margin-top: 88px;
 }
 
 .faq-page .kabataan-shell {
