@@ -96,7 +96,7 @@ class HomepageController extends Controller
             ['name' => 'Santisima Cruz', 'chairman' => '[SK Chairman]', 'color' => '#FF5722', 'programs' => 2, 'events' => 1, 'members' => ['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
         ];
 
-        return view('homepage::landing', [
+        return view('homepage::homepage', [
             'municipality'      => $municipality,
             'heroStats'         => $heroStats,
             'valueProps'        => $valueProps,

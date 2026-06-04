@@ -19,7 +19,7 @@
     max-width: 860px;
     margin: 0 auto;
     padding: 0 16px;
-    overflow-x: hidden;
+    overflow-x: auto;
     padding-top: 20px;
 }
 
@@ -90,7 +90,40 @@
     font-size: 12px;
     color: #111;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: auto;
+}
+
+/* ── RESPONSIVE CONTAINER ── */
+.kkp-responsive-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+.kkp-responsive-container form {
+    width: 860px;
+    min-width: 860px;
+}
+
+.kkp-responsive-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.kkp-responsive-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.kkp-responsive-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.kkp-responsive-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 /* ── FORM HEADER ── */
@@ -583,66 +616,20 @@
 }
 
 /* ── VOTER SECTION ── */
-.kkp-voter-section {
-    border: 1px solid #bbb;
-    display: flex;
-    flex-direction: column;
-}
+/* Voter section now uses .kkp-demo-block structure - old CSS removed */
 
-.kkp-voter-grid {
+/* ── VOTER QUESTIONS 2-COLUMN GRID ── */
+.kkp-voter-questions-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0;
+    gap: 6px;
+    margin-bottom: 6px;
 }
 
-.kkp-voter-col {
+.kkp-voter-questions-col {
     display: flex;
     flex-direction: column;
-}
-
-.kkp-voter-col-left {
-    border-right: 1px solid #ddd;
-}
-
-.kkp-voter-col-right {
-    border-right: none;
-}
-
-.kkp-voter-item {
-    padding: 4px 5px;
-    border-bottom: 1px solid #ddd;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-}
-
-.kkp-voter-item:last-child {
-    border-bottom: none;
-}
-
-.kkp-voter-item-label {
-    font-size: 9.5px;
-    font-weight: 800;
-    color: #111;
-    margin-bottom: 2px;
-}
-
-.kkp-sig-in-col {
-    padding: 8px 5px;
-    border-bottom: none;
-}
-
-.kkp-voter-cell-label {
-    font-size: 9.5px;
-    font-weight: 800;
-    color: #111;
-    background: #e8e8e8;
-    margin: -4px -5px 3px -5px;
-    padding: 2px 5px;
-    border-bottom: 1px solid #ddd;
-    text-align: center;
-    line-height: 1.3;
+    gap: 6px;
 }
 
 /* ── FOOTER ROW: FB + Group Chat ── */
@@ -1176,63 +1163,7 @@
 }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 700px) {
-    .kkp-paper {
-        padding: 48px 12px 14px;
-    }
-
-    .kkp-demo-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .kkp-personal-row {
-        grid-template-columns: 1fr;
-    }
-
-    .kkp-personal-center {
-        border-left: none;
-        border-right: none;
-        border-top: 1px solid #ddd;
-        border-bottom: 1px solid #ddd;
-        padding: 6px 0;
-    }
-
-    .kkp-name-row {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .kkp-loc-row {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .kkp-voter-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .kkp-voter-col-left {
-        border-right: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .kkp-page-wrap {
-        padding: 0 8px;
-    }
-
-    .kkp-sig-pad-footer {
-        flex-direction: column;
-    }
-
-    .kkp-sig-btn-clear,
-    .kkp-sig-btn-save {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .kkp-sig-canvas {
-        height: 180px;
-    }
-}
+/* Desktop layout preserved - horizontal scrolling enabled via .kkp-responsive-container */
 
 /* ══════════════════════════════════════════
    EMAIL VERIFICATION CARD

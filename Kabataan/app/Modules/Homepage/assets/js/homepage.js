@@ -22,6 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
         drawer.classList.toggle('open', open);
         drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
         navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        navToggle.classList.toggle('is-active', open);
+        
+        // Remove focus when menu closes to prevent persistent gray background
+        if (!open) {
+            navToggle.blur();
+            // Force remove focus by setting it to body
+            document.activeElement?.blur();
+        }
     };
 
     const setActiveLink = (sectionId) => {

@@ -420,17 +420,16 @@
 
                             </div>
 
-                            <div class="kkp-voter-section">
+                            <div class="kkp-voter-questions-grid">
 
-                                <div class="kkp-voter-grid">
+                                {{-- LEFT COLUMN --}}
+                                <div class="kkp-voter-questions-col">
 
-                                    {{-- LEFT COLUMN --}}
+                                    <div class="kkp-demo-block">
 
-                                    <div class="kkp-voter-col kkp-voter-col-left">
+                                        <div class="kkp-demo-block-label">Registered SK Voter? <span class="kkp-required">*</span></div>
 
-                                        <div class="kkp-voter-item">
-
-                                            <div class="kkp-voter-item-label">Registered SK Voter? <span class="kkp-required">*</span></div>
+                                        <div class="kkp-demo-block-options">
 
                                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="sk_voterChk" value="Yes" onchange="kkpSingleCheck(this,'kkpSkVoter')"> Yes</label>
 
@@ -440,9 +439,13 @@
 
                                         </div>
 
-                                        <div class="kkp-voter-item">
+                                    </div>
 
-                                            <div class="kkp-voter-item-label">Registered National Voter? <span class="kkp-required">*</span></div>
+                                    <div class="kkp-demo-block">
+
+                                        <div class="kkp-demo-block-label">Registered National Voter? <span class="kkp-required">*</span></div>
+
+                                        <div class="kkp-demo-block-options">
 
                                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="national_voterChk" value="Yes" onchange="kkpSingleCheck(this,'kkpNationalVoter')"> Yes</label>
 
@@ -452,9 +455,13 @@
 
                                         </div>
 
-                                        <div class="kkp-voter-item">
+                                    </div>
 
-                                            <div class="kkp-voter-item-label">Have you attended a KK Assembly? <span class="kkp-required">*</span></div>
+                                    <div class="kkp-demo-block">
+
+                                        <div class="kkp-demo-block-label">Have you attended a KK Assembly? <span class="kkp-required">*</span></div>
+
+                                        <div class="kkp-demo-block-options">
 
                                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_assemblyChk" value="Yes" onchange="kkpSingleCheck(this,'kkpKkAssembly'); kkpHandleAssembly(this)"> Yes</label>
 
@@ -466,13 +473,16 @@
 
                                     </div>
 
-                                    {{-- RIGHT COLUMN --}}
+                                </div>
 
-                                    <div class="kkp-voter-col kkp-voter-col-right">
+                                {{-- RIGHT COLUMN --}}
+                                <div class="kkp-voter-questions-col">
 
-                                        <div class="kkp-voter-item">
+                                    <div class="kkp-demo-block">
 
-                                            <div class="kkp-voter-item-label">Did you vote last SK? <span class="kkp-required">*</span></div>
+                                        <div class="kkp-demo-block-label">Did you vote last SK? <span class="kkp-required">*</span></div>
+
+                                        <div class="kkp-demo-block-options">
 
                                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="sk_votedChk" value="Yes" onchange="kkpSingleCheck(this,'kkpSkVoted')"> Yes</label>
 
@@ -482,9 +492,13 @@
 
                                         </div>
 
-                                        <div class="kkp-voter-item" id="kkpAssemblyYesCell">
+                                    </div>
 
-                                            <div class="kkp-voter-item-label">If Yes, How many times? <span class="kkp-required">*</span></div>
+                                    <div class="kkp-demo-block" id="kkpAssemblyYesCell">
+
+                                        <div class="kkp-demo-block-label">If Yes, How many times? <span class="kkp-required">*</span></div>
+
+                                        <div class="kkp-demo-block-options">
 
                                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_timesChk" value="1-2 Times" onchange="kkpSingleCheck(this,'kkpKkTimes')"> 1-2 Times</label>
 
@@ -496,9 +510,13 @@
 
                                         </div>
 
-                                        <div class="kkp-voter-item" id="kkpAssemblyNoCell">
+                                    </div>
 
-                                            <div class="kkp-voter-item-label">If No, Why? <span class="kkp-required">*</span></div>
+                                    <div class="kkp-demo-block" id="kkpAssemblyNoCell">
+
+                                        <div class="kkp-demo-block-label">If No, Why? <span class="kkp-required">*</span></div>
+
+                                        <div class="kkp-demo-block-options">
 
                                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="There was no KK Assembly" onchange="kkpSingleCheck(this,'kkpKkReason')"> There was no KK Assembly</label>
 

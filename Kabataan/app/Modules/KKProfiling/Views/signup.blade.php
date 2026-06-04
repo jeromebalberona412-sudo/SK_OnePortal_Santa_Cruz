@@ -248,12 +248,12 @@
             gap: 6px;
             font-size: 13px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.95);
+            color: #ffffff;
             text-decoration: none;
             padding: 0.5rem 0.85rem;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(2, 42, 84, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.35);
             backdrop-filter: blur(8px);
             transition: background 0.15s, color 0.15s;
         }
@@ -265,16 +265,16 @@
 
         .kk-signup-back-link:hover {
             color: #fff;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(2, 42, 84, 0.95);
         }
     </style>
 </head>
 <body class="youth-login-page">
-    <a href="{{ route('homepage') }}" class="kk-signup-back-link" aria-label="Back to homepage">
+    <a href="{{ route('login') }}" class="kk-signup-back-link" aria-label="Back to signin">
         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fill-rule="evenodd" d="M12.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L8.414 9H17a1 1 0 110 2H8.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
         </svg>
-        Back to Homepage
+        Back to Signin
     </a>
 
     <!-- Animated Background -->

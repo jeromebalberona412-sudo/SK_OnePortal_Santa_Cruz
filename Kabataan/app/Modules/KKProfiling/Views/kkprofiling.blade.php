@@ -164,16 +164,18 @@
 
             {{-- Paper Form Card --}}
             <div class="kkp-paper" id="kkpFormCard">
-                <form method="POST" action="{{ route('kkprofiling.submit', ['barangay' => $slug]) }}" id="kkProfilingForm" onsubmit="return handleFormSubmit(event)">
-                    @csrf
+                <div class="kkp-responsive-container">
+                    <form method="POST" action="{{ route('kkprofiling.submit', ['barangay' => $slug]) }}" id="kkProfilingForm" onsubmit="return handleFormSubmit(event)">
+                        @csrf
 
-                    @include('kkprofiling::partials.kk-profiling-form-fields', [
-                        'barangay' => $barangay,
-                        'respondentNumber' => $respondentNumber ?? '',
-                        'respondentDisplay' => $respondentDisplay ?? '01',
-                        'submitLabel' => 'Submit KK Profiling',
-                    ])
-                </form>
+                        @include('kkprofiling::partials.kk-profiling-form-fields', [
+                            'barangay' => $barangay,
+                            'respondentNumber' => $respondentNumber ?? '',
+                            'respondentDisplay' => $respondentDisplay ?? '01',
+                            'submitLabel' => 'Submit KK Profiling',
+                        ])
+                    </form>
+                </div>
             </div>{{-- end kkp-paper --}}
 
         </div>
