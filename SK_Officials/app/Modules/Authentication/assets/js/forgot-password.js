@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const cooldownNotice = document.getElementById('fpCooldownNotice');
     const cooldownCount = document.getElementById('fpCooldownCount');
 
-    if (!form) return;
+    if (!form) {
+        return;
+    }
 
     const COOLDOWN_DURATION = 60;
     const COOLDOWN_KEY = 'fp_cooldown_until';
@@ -46,7 +48,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.removeItem(COOLDOWN_KEY);
                 submitBtn.disabled = false;
                 fpBtnText.textContent = 'Send Reset Link';
-                if (cooldownNotice) cooldownNotice.hidden = true;
+                if (cooldownNotice) {
+                    cooldownNotice.hidden = true;
+                }
                 return;
             }
 
@@ -54,7 +58,9 @@ document.addEventListener('DOMContentLoaded', function () {
             fpBtnText.textContent = 'Send Reset Link';
             if (cooldownNotice) {
                 cooldownNotice.hidden = false;
-                if (cooldownCount) cooldownCount.textContent = remaining;
+                if (cooldownCount) {
+                    cooldownCount.textContent = remaining;
+                }
             }
         }
 
@@ -64,7 +70,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function resumeCooldownIfActive() {
         const stored = localStorage.getItem(COOLDOWN_KEY);
-        if (!stored) return false;
+        if (!stored) {
+            return false;
+        }
 
         const until = parseInt(stored, 10);
         if (Number.isNaN(until) || Date.now() >= until) {
@@ -77,14 +85,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const successAlert = document.querySelector('.sk-alert-success');
-    const resumed = resumeCooldownIfActive();
 
-    if (successAlert && !resumed) {
+    if (successAlert) {
         startCooldown();
+    } else {
+        resumeCooldownIfActive();
     }
 
     document.querySelectorAll('.sk-field-error').forEach(function (el) {
-        if (!el.hidden) el.setAttribute('data-server-error', 'true');
+        if (!el.hidden) {
+            el.setAttribute('data-server-error', 'true');
+        }
     });
 
     emailInput.addEventListener('input', function () {
@@ -118,9 +129,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
         submitBtn.disabled = true;
         fpBtnText.textContent = 'Sending...';
-
-        const until = Date.now() + COOLDOWN_DURATION * 1000;
-        localStorage.setItem(COOLDOWN_KEY, String(until));
-        runCooldownTick(until);
     });
 });

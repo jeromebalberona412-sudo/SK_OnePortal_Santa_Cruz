@@ -288,8 +288,9 @@ class AuthController extends Controller
                 'string',
                 'max:'.(int) config('sk_official_auth.password_reset.password.max_length', 64),
                 'confirmed',
-                PasswordRule::min((int) config('sk_official_auth.password_reset.password.min_length', 12))
+                PasswordRule::min(8)
                     ->letters()
+                    ->mixedCase()
                     ->numbers()
                     ->symbols(),
             ],
