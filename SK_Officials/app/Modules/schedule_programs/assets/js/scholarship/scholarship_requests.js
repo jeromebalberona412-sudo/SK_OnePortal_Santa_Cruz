@@ -173,10 +173,10 @@ function initScholarshipRequests() {
 
     let records = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
     let deleteTargetId = null;
-    let viewTargetId   = null;
+    let viewTargetId = null;
 
-    const tbody         = document.getElementById('scholTableBody');
-    const searchInput   = document.getElementById('scholSearch');
+    const tbody = document.getElementById('scholTableBody');
+    const searchInput = document.getElementById('scholSearch');
     const startDateFilter = document.getElementById('scholStartDate');
     const endDateFilter = document.getElementById('scholEndDate');
     function getTimeFromDropdowns(prefix) {
@@ -239,17 +239,17 @@ function initScholarshipRequests() {
             if (el) el.addEventListener('change', onChange);
         });
     }
-    const viewModal     = document.getElementById('scholViewModal');
-    const viewBody      = document.getElementById('scholViewBody');
-    const viewClose     = document.getElementById('scholViewClose');
+    const viewModal = document.getElementById('scholViewModal');
+    const viewBody = document.getElementById('scholViewBody');
+    const viewClose = document.getElementById('scholViewClose');
     const viewCloseFooter = document.getElementById('scholViewCloseFooter');
-    const approveBtn    = document.getElementById('scholApproveBtn');
-    const rejectBtn     = document.getElementById('scholRejectBtn');
-    const deleteModal   = document.getElementById('scholDeleteModal');
-    const deleteClose   = document.getElementById('scholDeleteClose');
-    const deleteCancel  = document.getElementById('scholDeleteCancel');
+    const approveBtn = document.getElementById('scholApproveBtn');
+    const rejectBtn = document.getElementById('scholRejectBtn');
+    const deleteModal = document.getElementById('scholDeleteModal');
+    const deleteClose = document.getElementById('scholDeleteClose');
+    const deleteCancel = document.getElementById('scholDeleteCancel');
     const deleteConfirm = document.getElementById('scholDeleteConfirm');
-    const makeFormBtn   = document.getElementById('btnMakeForm');
+    const makeFormBtn = document.getElementById('btnMakeForm');
     const makeFormModal = document.getElementById('makeFormModal');
     const makeFormClose = document.getElementById('makeFormClose');
     const makeFormCloseFooter = document.getElementById('makeFormCloseFooter');
@@ -317,9 +317,9 @@ function initScholarshipRequests() {
 
     // Maximize / restore for makeFormModal
     const makeFormMaxBtn = document.getElementById('makeFormMaximize');
-    const makeFormBox    = document.getElementById('makeFormBox');
+    const makeFormBox = document.getElementById('makeFormBox');
     if (makeFormMaxBtn && makeFormBox) {
-        makeFormMaxBtn.addEventListener('click', function(e) {
+        makeFormMaxBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             const isMax = !makeFormBox.classList.contains('schol-modal-maximized');
             makeFormModal.classList.toggle('schol-modal-maximized', isMax);
@@ -347,7 +347,7 @@ function initScholarshipRequests() {
             };
             return statusMap[schedule.status] || statusMap['upcoming'];
         }
-        
+
         // Auto-calculate based on date/time
         const now = new Date();
         const openDateTime = new Date(`${schedule.openDate}T${schedule.openTime}`);
@@ -368,25 +368,25 @@ function initScholarshipRequests() {
         const scheduleInfoText = document.getElementById('scheduleInfoText');
         const scheduleStatusBadge = document.getElementById('scheduleStatusBadge');
         const makeFormBtn = document.getElementById('btnMakeForm');
-        
+
         if (schedule && scheduledAppInfo && scheduleInfoText && scheduleStatusBadge) {
             const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const openTime12 = convert24to12(schedule.openTime);
             const closeTime12 = convert24to12(schedule.closeTime);
-            
+
             const statusInfo = getScheduleStatus(schedule);
-            
+
             scheduleInfoText.innerHTML = `
                 <div style="margin-bottom:6px;"><strong>Opens:</strong> ${fmt(schedule.openDate)} at ${openTime12}</div>
                 <div><strong>Closes:</strong> ${fmt(schedule.closeDate)} at ${closeTime12}</div>
             `;
-            
+
             scheduleStatusBadge.textContent = statusInfo.status;
             scheduleStatusBadge.style.backgroundColor = statusInfo.bgColor;
             scheduleStatusBadge.style.color = statusInfo.textColor;
-            
+
             scheduledAppInfo.style.display = 'block';
-            
+
             // Disable the "Schedule" button when a schedule exists
             if (makeFormBtn) {
                 makeFormBtn.disabled = true;
@@ -440,7 +440,7 @@ function initScholarshipRequests() {
     const activateScheduleClose = document.getElementById('activateScheduleClose');
     const activateScheduleCancel = document.getElementById('activateScheduleCancel');
     const activateScheduleConfirm = document.getElementById('activateScheduleConfirm');
-    
+
     const deleteScheduleModal = document.getElementById('deleteScheduleModal');
     const deleteScheduleClose = document.getElementById('deleteScheduleClose');
     const deleteScheduleCancel = document.getElementById('deleteScheduleCancel');
@@ -458,7 +458,7 @@ function initScholarshipRequests() {
 
     // Maximize / restore for scheduleListModal
     if (scheduleListMaximize && scheduleListBox) {
-        scheduleListMaximize.addEventListener('click', function(e) {
+        scheduleListMaximize.addEventListener('click', function (e) {
             e.stopPropagation();
             const isMax = !scheduleListBox.classList.contains('schol-modal-maximized');
             scheduleListModal.classList.toggle('schol-modal-maximized', isMax);
@@ -471,7 +471,7 @@ function initScholarshipRequests() {
     function openViewScheduleModal(scheduleId) {
         const scheduleList = JSON.parse(localStorage.getItem('scholarship_schedule_list') || '[]');
         const schedule = scheduleList.find(s => s.id === scheduleId);
-        
+
         if (!schedule) return;
 
         const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -587,10 +587,10 @@ function initScholarshipRequests() {
         scheduleListTableBody.addEventListener('click', (e) => {
             const btn = e.target.closest('button[data-action]');
             if (!btn) return;
-            
+
             const action = btn.getAttribute('data-action');
             const id = parseInt(btn.getAttribute('data-id'), 10);
-            
+
             if (action === 'view-schedule') {
                 openViewScheduleModal(id);
             }
@@ -624,11 +624,11 @@ function initScholarshipRequests() {
     const btnSaveSchedule = document.getElementById('btnSaveSchedule');
     if (btnSaveSchedule) {
         btnSaveSchedule.addEventListener('click', () => {
-            const openDate  = document.getElementById('schedOpenDate').value;
-            const openTime  = getTimeFromDropdowns('schedOpenTime');
+            const openDate = document.getElementById('schedOpenDate').value;
+            const openTime = getTimeFromDropdowns('schedOpenTime');
             const closeDate = document.getElementById('schedCloseDate').value;
             const closeTime = getTimeFromDropdowns('schedCloseTime');
-            const status    = document.getElementById('schedStatus').value;
+            const status = document.getElementById('schedStatus').value;
 
             if (!openDate || !closeDate) {
                 showScholToast('Please set both open and close dates.', 'error');
@@ -641,18 +641,18 @@ function initScholarshipRequests() {
                 return;
             }
 
-            const schedule = { 
-                openDate, 
-                openTime, 
-                closeDate, 
-                closeTime, 
+            const schedule = {
+                openDate,
+                openTime,
+                closeDate,
+                closeTime,
                 status,
                 createdAt: new Date().toISOString()
             };
-            
+
             // Store as current active schedule
             localStorage.setItem('scholarship_schedule', JSON.stringify(schedule));
-            
+
             // Also add to schedule history list
             let scheduleList = JSON.parse(localStorage.getItem('scholarship_schedule_list') || '[]');
             schedule.id = Date.now(); // Generate unique ID
@@ -661,7 +661,7 @@ function initScholarshipRequests() {
 
             // Close modal
             makeFormModal.style.display = 'none';
-            
+
             // Display scheduled info
             displayScheduledInfo();
 
@@ -690,22 +690,22 @@ function initScholarshipRequests() {
             const [time, period] = time12.split(' ');
             let [hours, minutes] = time.split(':');
             hours = parseInt(hours, 10);
-            
+
             if (period === 'PM' && hours !== 12) hours += 12;
             if (period === 'AM' && hours === 12) hours = 0;
-            
+
             return `${hours.toString().padStart(2, '0')}:${minutes}`;
         };
 
         // Filter out Approved and Rejected records from the table display
         const filtered = records.filter(r => {
-            const name   = `${r.last_name} ${r.first_name}`.toLowerCase();
+            const name = `${r.last_name} ${r.first_name}`.toLowerCase();
             const school = (r.school_name || '').toLowerCase();
-            const q      = filterSearch.toLowerCase();
-            
+            const q = filterSearch.toLowerCase();
+
             // Search filter
             const matchesSearch = !filterSearch || name.includes(q) || school.includes(q);
-            
+
             // Filter type (all/recent/monthly/yearly)
             let matchesFilterType = true;
             if (filterType !== 'all') {
@@ -713,7 +713,7 @@ function initScholarshipRequests() {
                 if (submittedDate) {
                     const now = new Date();
                     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    
+
                     switch (filterType) {
                         case 'recent': {
                             const sevenDaysAgo = new Date(today);
@@ -722,8 +722,8 @@ function initScholarshipRequests() {
                             break;
                         }
                         case 'monthly': {
-                            matchesFilterType = submittedDate.getMonth() === now.getMonth() && 
-                                               submittedDate.getFullYear() === now.getFullYear();
+                            matchesFilterType = submittedDate.getMonth() === now.getMonth() &&
+                                submittedDate.getFullYear() === now.getFullYear();
                             break;
                         }
                         case 'yearly': {
@@ -733,7 +733,7 @@ function initScholarshipRequests() {
                     }
                 }
             }
-            
+
             // Date range filter
             let matchesDateRange = true;
             if (filterStartDate || filterEndDate) {
@@ -750,7 +750,7 @@ function initScholarshipRequests() {
                     }
                 }
             }
-            
+
             // Time range filter
             let matchesTimeRange = true;
             if (filterStartTime || filterEndTime) {
@@ -760,7 +760,7 @@ function initScholarshipRequests() {
                     if (filterEndTime && submittedTime24 > filterEndTime) matchesTimeRange = false;
                 }
             }
-            
+
             return r.status === 'Pending' && matchesSearch && matchesFilterType && matchesDateRange && matchesTimeRange;
         }).sort((a, b) => parseSubmitted(a) - parseSubmitted(b));
 
@@ -771,8 +771,8 @@ function initScholarshipRequests() {
         } else {
             filtered.forEach((r, i) => {
                 const statusCls = r.status === 'Approved' ? 'schol-pill-approved'
-                                : r.status === 'Rejected' ? 'schol-pill-rejected'
-                                : 'schol-pill-pending';
+                    : r.status === 'Rejected' ? 'schol-pill-rejected'
+                        : 'schol-pill-pending';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="text-align:center;font-weight:600;">${r.last_name}, ${r.first_name}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}</td>
@@ -804,8 +804,8 @@ function initScholarshipRequests() {
     }
 
     function updateStats() {
-        document.getElementById('statTotal').textContent    = records.length;
-        document.getElementById('statPending').textContent  = records.filter(r => r.status === 'Pending').length;
+        document.getElementById('statTotal').textContent = records.length;
+        document.getElementById('statPending').textContent = records.filter(r => r.status === 'Pending').length;
         document.getElementById('statApproved').textContent = records.filter(r => r.status === 'Approved').length;
         document.getElementById('statRejected').textContent = records.filter(r => r.status === 'Rejected').length;
     }
@@ -817,7 +817,7 @@ function initScholarshipRequests() {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
         const action = btn.getAttribute('data-action');
-        const id     = parseInt(btn.getAttribute('data-id'), 10);
+        const id = parseInt(btn.getAttribute('data-id'), 10);
         const record = records.find(r => r.id === id);
         if (!record) return;
 
@@ -826,150 +826,108 @@ function initScholarshipRequests() {
         else if (action === 'delete') { deleteTargetId = id; deleteModal.style.display = 'flex'; }
     });
 
-    // ── View modal — exact PDF inline layout with filled data ──────────────
+    // ── View modal — Simple participant details for sports ──────────────
     function openViewModal(r) {
-        const allPurposes = ['Tuition Fees', 'Books/Equipments', 'Living Expenses', 'Others'];
-        const purposeList = r.purpose_list || [];
-
-        const purposeHTML = allPurposes.map(p => {
-            const checked = purposeList.some(v => v.toLowerCase().replace(/\s/g,'') === p.toLowerCase().replace(/\s/g,''));
-            const extra = (p === 'Others' && r.purpose_others) ? ` (${r.purpose_others})` : '';
-            return `<div class="schol-pdf-check-item">
-                <span class="schol-pdf-checkbox ${checked ? 'schol-pdf-checked' : ''}"></span>
-                ${p}${extra}
-            </div>`;
-        }).join('');
-
         const statusCls = r.status === 'Approved' ? 'schol-pill-approved'
-                        : r.status === 'Rejected' ? 'schol-pill-rejected'
-                        : 'schol-pill-pending';
+            : r.status === 'Rejected' ? 'schol-pill-rejected'
+                : 'schol-pill-pending';
 
-        const f = (val, w) => `<span class="schol-pdf-inline-filled" style="min-width:${w||80}px;">${val||'—'}</span>`;
+        // Format requirements
+        const reqList = [];
+        if (r.cor_certified) reqList.push('COR – Certified True Copy');
+        if (r.photo_id) reqList.push('Photo Copy of ID');
 
         viewBody.innerHTML = `
-            <div class="schol-pdf-form">
-
-                <div class="schol-pdf-header">
-                    <img src="/images/barangay_logo.png" alt="Barangay Calios" class="schol-pdf-logo-img">
-                    <h2 class="schol-pdf-title">SCHOLARSHIP APPLICATION FORM</h2>
-                    <div class="schol-pdf-picture-box"><span>Picture<br>Here</span></div>
-                </div>
-
-                <div class="schol-pdf-section">
-                    <p class="schol-pdf-inline-title">APPLICANT'S PERSONAL INFORMATION:</p>
-                    <div class="schol-pdf-inline-row">
-                        <span class="schol-pdf-inline-label">Last Name:</span>${f(r.last_name,110)}
-                        <span class="schol-pdf-inline-label">First Name:</span>${f(r.first_name,110)}
-                        <span class="schol-pdf-inline-label">Middle Name:</span>${f(r.middle_name,100)}
+            <div style="max-width:800px;margin:0 auto;">
+                <!-- Header Card -->
+                <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius:12px;padding:32px;margin-bottom:24px;box-shadow:0 8px 16px rgba(102,126,234,0.2);color:white;text-align:center;">
+                    <div style="width:100px;height:100px;background:rgba(255,255,255,0.2);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:700;border:3px solid rgba(255,255,255,0.3);">
+                        ${(r.first_name?.[0] || '') + (r.last_name?.[0] || '')}
                     </div>
-                    <div class="schol-pdf-inline-row">
-                        <span class="schol-pdf-inline-label">Date of Birth:</span>${f(r.date_of_birth,90)}
-                        <span class="schol-pdf-inline-label">Gender:</span>${f(r.gender,70)}
-                        <span class="schol-pdf-inline-label">Age:</span>${f(r.age,40)}
-                        <span class="schol-pdf-inline-label">Contact No:</span>${f(r.contact_no,110)}
-                    </div>
-                    <div class="schol-pdf-inline-row">
-                        <span class="schol-pdf-inline-label">Complete Address:</span>
-                        <span class="schol-pdf-inline-filled" style="flex:1;">${r.address||'—'}</span>
-                    </div>
-                    <div class="schol-pdf-inline-row">
-                        <span class="schol-pdf-inline-label">Email Address:</span>
-                        <span class="schol-pdf-inline-filled" style="min-width:220px;">${r.email||'—'}</span>
+                    <h2 style="font-size:28px;font-weight:700;margin:0 0 8px;">${r.first_name || ''} ${r.middle_name ? r.middle_name.charAt(0) + '. ' : ''}${r.last_name || ''}</h2>
+                    <div style="font-size:16px;opacity:0.95;margin-bottom:12px;">${r.sports_type || 'Sports Program'}</div>
+                    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.25);padding:6px 16px;border-radius:999px;font-size:14px;font-weight:600;">
+                        <span class="schol-pill ${statusCls}" style="margin:0;">${r.status}</span>
                     </div>
                 </div>
 
-                <div class="schol-pdf-section">
-                    <p class="schol-pdf-inline-title">ACADEMIC INFORMATION:</p>
-                    <div class="schol-pdf-inline-row">
-                        <span class="schol-pdf-inline-label">Name of School:</span>
-                        <span class="schol-pdf-inline-filled" style="flex:1;">${r.school_name||'—'}</span>
-                    </div>
-                    <div class="schol-pdf-inline-row">
-                        <span class="schol-pdf-inline-label">School Address:</span>
-                        <span class="schol-pdf-inline-filled" style="flex:1;">${r.school_address||'—'}</span>
-                    </div>
-                    <div class="schol-pdf-inline-row">
-                        <span class="schol-pdf-inline-label">Year/Grade Level:</span>${f(r.year_level,120)}
-                        <span class="schol-pdf-inline-label" style="margin-left:16px;">Program/Strand:</span>${f(r.program_strand,120)}
-                    </div>
-                </div>
-
-                <div class="schol-pdf-section schol-pdf-bottom-section">
-                    <div class="schol-pdf-bottom-left">
-                        <p class="schol-pdf-inline-title">SCHOLARSHIP INFORMATION:</p>
-                        <p class="schol-pdf-purpose-label">Purpose of Scholarship:</p>
-                        <div class="schol-pdf-check-list">${purposeHTML}</div>
-                    </div>
-                    <div class="schol-pdf-bottom-right">
-                        <p class="schol-pdf-inline-title">SUBMITTED REQUIREMENTS: <span style="font-weight:400;font-size:10px;">Note: To be filled out by SK officials</span></p>
-                        <div class="schol-pdf-check-list" style="margin-top:8px;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                                    <input type="checkbox" class="view-req-checkbox" data-id="${r.id}" data-field="cor_certified" ${r.cor_certified ? 'checked' : ''} style="cursor:pointer;width:16px;height:16px;accent-color:#000;">
-                                    <span style="font-size:11px;font-weight:600;color:#111827;">COR – CERTIFIED TRUE COPY</span>
-                                </label>
-                            </div>
-                            <div style="margin-left:22px;margin-bottom:12px;">
-                                <a href="data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nCtUMlQyULIGAAMiAWUKZW5kc3RyZWFtCmVuZG9iagozIDAgb2JqCjE4CmVuZG9iagoxIDAgb2JqCjw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgNjEyIDc5Ml0vUmVzb3VyY2VzPDwvRm9udDw8L0YxIDQgMCBSPj4+Pi9Db250ZW50cyAyIDAgUi9QYXJlbnQgNSAwIFI+PgplbmRvYmoKNCAwIG9iago8PC9UeXBlL0ZvbnQvU3VidHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PgplbmRvYmoKNSAwIG9iago8PC9UeXBlL1BhZ2VzL0tpZHNbMSAwIFJdL0NvdW50IDE+PgplbmRvYmoKNiAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgNSAwIFI+PgplbmRvYmoKeHJlZgowIDcKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMTI1IDAwMDAwIG4gCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwNiAwMDAwMCBuIAowMDAwMDAwMjQ0IDAwMDAwIG4gCjAwMDAwMDAzMTMgMDAwMDAgbiAKMDAwMDAwMDM2NiAwMDAwMCBuIAp0cmFpbGVyCjw8L1NpemUgNy9Sb290IDYgMCBSPj4Kc3RhcnR4cmVmCjQxNQolJUVPRgo=" download="COR-Certified-True-Copy.pdf"
-                                   style="display:inline-flex;align-items:center;gap:7px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:6px 12px;text-decoration:none;font-size:11px;font-weight:700;color:#1d4ed8;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                    View PDF — COR
-                                </a>
-                            </div>
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                                    <input type="checkbox" class="view-req-checkbox" data-id="${r.id}" data-field="photo_id" ${r.photo_id ? 'checked' : ''} style="cursor:pointer;width:16px;height:16px;accent-color:#000;">
-                                    <span style="font-size:11px;font-weight:600;color:#111827;">PHOTO COPY OF ID (FRONT AND BACK)</span>
-                                </label>
-                            </div>
-                            <div style="margin-left:22px;margin-top:4px;">
-                                <a href="data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nCtUMlQyULIGAAMiAWUKZW5kc3RyZWFtCmVuZG9iagozIDAgb2JqCjE4CmVuZG9iagoxIDAgb2JqCjw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgNjEyIDc5Ml0vUmVzb3VyY2VzPDwvRm9udDw8L0YxIDQgMCBSPj4+Pi9Db250ZW50cyAyIDAgUi9QYXJlbnQgNSAwIFI+PgplbmRvYmoKNCAwIG9iago8PC9UeXBlL0ZvbnQvU3VidHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PgplbmRvYmoKNSAwIG9iago8PC9UeXBlL1BhZ2VzL0tpZHNbMSAwIFJdL0NvdW50IDE+PgplbmRvYmoKNiAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgNSAwIFI+PgplbmRvYmoKeHJlZgowIDcKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMTI1IDAwMDAwIG4gCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwNiAwMDAwMCBuIAowMDAwMDAwMjQ0IDAwMDAwIG4gCjAwMDAwMDAzMTMgMDAwMDAgbiAKMDAwMDAwMDM2NiAwMDAwMCBuIAp0cmFpbGVyCjw8L1NpemUgNy9Sb290IDYgMCBSPj4Kc3RhcnR4cmVmCjQxNQolJUVPRgo=" download="Photo-ID-Front-Back.pdf"
-                                   style="display:inline-flex;align-items:center;gap:7px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:6px 12px;text-decoration:none;font-size:11px;font-weight:700;color:#1d4ed8;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                                    View PDF — Photo ID
-                                </a>
-                            </div>
+                <!-- Personal Information -->
+                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Personal Information
+                    </h3>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Date of Birth</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.date_of_birth || '—'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Gender</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.gender || '—'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Age</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.age || '—'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Contact Number</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.contact_no || '—'}</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Address</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.address || '—'}</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Email Address</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.email || '—'}</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="schol-pdf-sig-section">
-                    <!-- Signature and Name above the line -->
-                    <div style="text-align:center;padding-top:30px;">
-                        <div style="width:300px;margin:0 auto;">
-                            <div style="min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px;">
-                                <!-- Cursive signature -->
-                                <span style="font-family:'Brush Script MT','Segoe Script','Comic Sans MS',cursive;font-size:24px;color:#1e3a5f;line-height:1;letter-spacing:1px;margin-bottom:4px;transform:rotate(-2deg);">
-                                    ${r.first_name||''} ${r.last_name||''}
-                                </span>
-                                <!-- Printed name below signature -->
-                                <span style="font-size:13px;font-weight:700;color:#111827;letter-spacing:0.3px;">
-                                    ${r.first_name||''} ${r.middle_name ? r.middle_name.charAt(0) + '. ' : ''}${r.last_name||''}
-                                </span>
-                            </div>
-                            <div style="border-bottom:2px solid #374151;width:100%;"></div>
-                            <p style="font-size:10px;color:#6b7280;margin-top:4px;font-weight:500;">Name and Signature of Participant</p>
+                <!-- Sports & Requirements -->
+                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        Sports & Requirements
+                    </h3>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Sports Type</div>
+                            <div style="font-size:16px;font-weight:700;color:#667eea;">${r.sports_type || '—'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Submitted Requirements</div>
+                            ${reqList.length > 0 ? reqList.map(req => `
+                                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span style="font-size:13px;color:#111827;">${req}</span>
+                                </div>
+                            `).join('') : '<span style="font-size:13px;color:#9ca3af;">No requirements submitted</span>'}
                         </div>
                     </div>
                 </div>
 
+                <!-- Submission Details -->
+                <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Submission Details
+                    </h3>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Date Submitted</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.submitted_at || '—'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Time Submitted</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.submitted_time || '—'}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
         viewModal.style.display = 'flex';
-
-        // Add event listener for checkboxes in view modal
-        viewBody.querySelectorAll('.view-req-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                const id = parseInt(checkbox.getAttribute('data-id'), 10);
-                const field = checkbox.getAttribute('data-field');
-                const idx = records.findIndex(rec => rec.id === id);
-                if (idx !== -1) {
-                    records[idx][field] = checkbox.checked;
-                    save();
-                    render(); // Update the table to reflect the change
-                }
-            });
-        });
     }
 
     function closeViewModal() {
@@ -986,9 +944,9 @@ function initScholarshipRequests() {
 
     // Maximize / restore for scholViewModal
     const scholViewMaxBtn = document.getElementById('scholViewMaximize');
-    const scholViewBox    = document.getElementById('scholViewBox');
+    const scholViewBox = document.getElementById('scholViewBox');
     if (scholViewMaxBtn && scholViewBox) {
-        scholViewMaxBtn.addEventListener('click', function(e) {
+        scholViewMaxBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             const isMax = !scholViewBox.classList.contains('schol-modal-maximized');
             viewModal.classList.toggle('schol-modal-maximized', isMax);
@@ -1007,15 +965,8 @@ function initScholarshipRequests() {
             const record = records[idx];
             const name = `${record.first_name} ${record.last_name}`;
 
-            // Check if both COR and Photo ID are checked
-            if (!record.cor_certified || !record.photo_id) {
-                showScholToast('Please check both COR and Photo ID requirements before approving.', 'error');
-                return;
-            }
-
             // Approve the application
             records[idx].status = 'Approved';
-            if (!records[idx].result) records[idx].result = 'Defined';
             if (!records[idx].approved_at) records[idx].approved_at = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
             save();
             render();
@@ -1028,9 +979,6 @@ function initScholarshipRequests() {
             if (!viewTargetId) return;
             const idx = records.findIndex(r => r.id === viewTargetId);
             if (idx !== -1) {
-                // Auto-uncheck both requirements when rejecting
-                records[idx].cor_certified = false;
-                records[idx].photo_id = false;
                 save();
             }
             closeViewModal();

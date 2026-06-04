@@ -44,7 +44,7 @@
                         </svg>
                     </div>
                 </div>
-                <span class="sl-stat-label">Total Scholars</span>
+                <span class="sl-stat-label">Total Participants</span>
             </div>
             <div class="sl-stat-card sl-stat-orange">
                 <div class="sl-stat-top">
@@ -56,7 +56,7 @@
                         </svg>
                     </div>
                 </div>
-                <span class="sl-stat-label">Pending Payout</span>
+                <span class="sl-stat-label">Pending Confirmation</span>
             </div>
             <div class="sl-stat-card sl-stat-green">
                 <div class="sl-stat-top">
@@ -67,7 +67,7 @@
                         </svg>
                     </div>
                 </div>
-                <span class="sl-stat-label">Paid</span>
+                <span class="sl-stat-label">Confirmed</span>
             </div>
             <div class="sl-stat-card sl-stat-red">
                 <div class="sl-stat-top">
@@ -89,10 +89,10 @@
                 <div class="sl-filter-wrapper">
                     <select id="slYearFilter" class="sl-filter-select">
                         <option value="">All Years</option>
-                        <option value="2026">Scholarship 2026</option>
-                        <option value="2025">Scholarship 2025</option>
-                        <option value="2024">Scholarship 2024</option>
-                        <option value="2023">Scholarship 2023</option>
+                        <option value="2026">Sports Program 2026</option>
+                        <option value="2025">Sports Program 2025</option>
+                        <option value="2024">Sports Program 2024</option>
+                        <option value="2023">Sports Program 2023</option>
                     </select>
                 </div>
                 <div class="sl-search-wrapper">
@@ -100,7 +100,7 @@
                         <circle cx="11" cy="11" r="8"/>
                         <path d="m21 21-4.35-4.35"/>
                     </svg>
-                    <input type="text" id="slSearchInput" class="sl-search-input" placeholder="Search scholars...">
+                    <input type="text" id="slSearchInput" class="sl-search-input" placeholder="Search participants...">
                 </div>
             </div>
             <button type="button" id="slExportCsvBtn" class="sl-btn sl-btn-green">
@@ -121,15 +121,18 @@
                     <thead id="slTableHead">
                         <tr>
                             <th>FULL NAME
-                                <div class="sl-col-hint">LN, FN, MN, Suffix</div>
+                                <div class="sl-col-hint">Last, First, Middle</div>
                             </th>
-                            <th>School</th>
-                            <th>Year / Level</th>
-                            <th>Program / Strand</th>
-                            <th>Purpose</th>
-                            <th>Date Approved</th>
-                            <th>Status</th>
-                            <th class="col-actions">Actions</th>
+                            <th>SPORTS TYPE
+                                <div class="sl-col-hint">Basketball, Volleyball, etc.</div>
+                            </th>
+                            <th>AGE</th>
+                            <th>REQUIREMENTS
+                                <div class="sl-col-hint">Submitted Documents</div>
+                            </th>
+                            <th>DATE APPROVED</th>
+                            <th>STATUS</th>
+                            <th class="col-actions">ACTIONS</th>
                         </tr>
                     </thead>
                     <tbody id="slTableBody"></tbody>
@@ -139,7 +142,7 @@
             <!-- ── Pagination ── -->
             <div class="sl-pagination-wrapper">
                 <div class="sl-pagination-info">
-                    Showing <span id="slShowingStart">0</span> to <span id="slShowingEnd">0</span> of <span id="slTotalRecords">0</span> scholars
+                    Showing <span id="slShowingStart">0</span> to <span id="slShowingEnd">0</span> of <span id="slTotalRecords">0</span> participants
                 </div>
                 <div class="sl-pagination-controls">
                     <button type="button" class="sl-page-btn" id="slFirstPage" title="First Page">
@@ -199,14 +202,14 @@
 <div class="sl-modal-overlay" id="slEditModal" style="display:none;">
     <div class="sl-modal-box" style="max-width:500px;">
         <div class="sl-modal-header">
-            <h3>Edit Scholar Status</h3>
+            <h3>Edit Participant Status</h3>
             <button type="button" class="sl-modal-close" id="slEditClose">&times;</button>
         </div>
         <div class="sl-modal-body" style="padding:24px;">
             <input type="hidden" id="editScholarIndex">
             
             <div class="sl-edit-field">
-                <label for="editScholarName" class="sl-edit-label">Scholar Name</label>
+                <label for="editScholarName" class="sl-edit-label">Participant Name</label>
                 <input type="text" id="editScholarName" class="sl-edit-input" readonly style="background:#f3f4f6;cursor:not-allowed;">
             </div>
 
@@ -214,8 +217,8 @@
                 <label for="editStatus" class="sl-edit-label">Status <span style="color:#ef4444;">*</span></label>
                 <select id="editStatus" class="sl-edit-input" required>
                     <option value="">— Select Status —</option>
-                    <option value="Pending Payout">Pending Payout</option>
-                    <option value="Paid">Paid</option>
+                    <option value="Pending Confirmation">Pending Confirmation</option>
+                    <option value="Confirmed">Confirmed</option>
                     <option value="Cancelled">Cancelled</option>
                 </select>
             </div>
