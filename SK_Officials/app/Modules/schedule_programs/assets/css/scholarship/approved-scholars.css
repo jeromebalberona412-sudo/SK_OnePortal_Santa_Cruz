@@ -823,6 +823,82 @@ body {
    SUMMARY CARDS
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.sl-stats-grid.dash-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.sl-dash-stat.stat-card {
+    margin: 0;
+}
+
+.sl-toolbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.sl-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.sl-filter-group-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sl-btn-export {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #22c55e;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.sl-btn-export:hover {
+    background: #16a34a;
+}
+
+@media (max-width: 1024px) {
+    .sl-stats-grid.dash-stats-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .sl-stats-grid.dash-stats-row {
+        grid-template-columns: 1fr;
+    }
+    .sl-toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .sl-btn-export {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 .sl-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);

@@ -148,14 +148,7 @@
         <div class="stat-card stat-card-yellow">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statBudget">₱0.00</span>
-                <div class="stat-card-icon stat-icon-yellow">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 1v22"></path>
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
-                        <path d="M6 5h12"></path>
-                        <path d="M6 19h12"></path>
-                    </svg>
-                </div>
+                <div class="stat-card-icon stat-icon-yellow stat-icon-peso" aria-hidden="true">₱</div>
             </div>
             <span class="stat-card-label">Total Budget Allocation</span>
         </div>
@@ -178,14 +171,7 @@
         <div class="stat-card stat-card-red">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statExpenses">₱0.00</span>
-                <div class="stat-card-icon stat-icon-red">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 1v22"></path>
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path>
-                        <path d="M6 5h12"></path>
-                        <path d="M6 19h12"></path>
-                    </svg>
-                </div>
+                <div class="stat-card-icon stat-icon-red stat-icon-peso" aria-hidden="true">₱</div>
             </div>
             <span class="stat-card-label">Total Expenses Incurred</span>
         </div>
@@ -388,7 +374,7 @@
                 </svg>
                 Rejected KK Profiling
             </a>
-            <a href="{{ route('rejected-scholarship') }}" class="qa-btn qa-red">
+            <a href="{{ route('rejected-scholars') }}" class="qa-btn qa-red">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
                     <path d="M6 12v5c3 3 9 3 12 0v-5"></path>

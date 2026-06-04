@@ -1089,6 +1089,65 @@ select.schol-input {
 .schol-modal-box.schol-modal-maximized .schol-modal-body {
     flex: 1;
     min-height: 0;
+    max-height: none !important;
+}
+
+.schol-input-program-type {
+    font-size: 15px !important;
+    font-weight: 600;
+    color: #111827;
+    background: #f9fafb;
+    line-height: 1.4;
+    padding: 10px 12px !important;
+}
+
+.schol-field-program-type label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.saf-delete-modal .saf-delete-lead {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px;
+}
+
+.saf-delete-modal .saf-delete-detail {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0 0 12px;
+}
+
+.saf-delete-modal .saf-delete-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #b91c1c;
+    margin: 0;
+    padding: 10px 12px;
+    background: #fef2f2;
+    border-radius: 8px;
+    word-break: break-word;
+}
+
+#viewProgramBox.schol-modal-maximized {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+}
+
+#viewProgramModal.schol-modal-overlay-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+}
+
+#viewProgramBox.schol-modal-maximized #viewProgramBody {
+    max-height: none !important;
+    flex: 1;
 }
 
 

@@ -9,6 +9,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/schedule_programs/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Rejected_Scholarship/assets/css/rejected-scholarship.css'
     ])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -22,14 +23,16 @@
 @include('layout::sidebar')
 
 <main class="main-content">
-    <div class="page-container rejected-schol-page">
+    <div class="page-container rejected-schol-page schol-page-container">
 
-        <section class="page-header-section">
-            <div class="page-header-left">
-                <h1 class="page-title">Rejected Scholarship Applications</h1>
-                <p class="page-subtitle">Scholarship applications that were rejected. Restore to move them back to active.</p>
-            </div>
-            <div class="page-header-right">
+        @include('schedule_programs::scholarship.partials.page-top', [
+            'activeTab' => 'rejected',
+            'pageTitle' => 'Rejected Scholars',
+            'pageSubtitle' => 'Scholarship applications that were rejected. Restore to return them to the application queue.',
+        ])
+
+        <section class="page-header-section rs-toolbar-row">
+            <div class="page-header-right rs-search-wrap">
                 <input type="text" id="rejectedScholSearch" class="filter-input" placeholder="Search by name or school…">
             </div>
         </section>

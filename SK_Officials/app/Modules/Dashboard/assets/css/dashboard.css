@@ -205,6 +205,13 @@ html, body {
 
 .stat-card-icon svg { width: 20px; height: 20px; }
 
+.stat-icon-peso {
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
 .stat-icon-blue,
 .stat-icon-indigo  { background: #dbeafe; }
 .stat-icon-blue svg,

@@ -26,15 +26,62 @@ function createEmptyYearData() {
     };
 }
 
+const SAMPLE_YEAR_2026 = {
+    stats: {
+        kabataan: 1247,
+        abyip: 18,
+        pending: 34,
+        approved: 156,
+        rejected: 28,
+        programs: 12,
+        kkTotal: 892,
+        activePrograms: 5,
+        deletedKabataan: 3,
+        deletedAbyip: 1,
+        rejectedItems: 8,
+        rejectedKK: 6,
+        budget: '₱2,450,000.00',
+        expenses: '₱1,120,500.00',
+        remaining: '₱1,329,500.00',
+    },
+    purokLabels: ['Purok 1', 'Purok 2', 'Purok 3', 'Calios', 'San Jose', 'Rizal', 'Mabini', 'Bonifacio'],
+    purokCounts: [168, 142, 128, 195, 156, 134, 118, 106],
+    monthlyApproved: [8, 12, 14, 11, 15, 18, 16, 14, 13, 12, 10, 13],
+    monthlyRejected: [2, 3, 2, 4, 3, 2, 3, 2, 2, 1, 2, 2],
+    abyipStatus: { labels: ['Approved', 'Pending', 'Rejected'], values: [12, 4, 2] },
+    genderDist: { labels: ['Male', 'Female'], values: [612, 635] },
+    budgetPrograms: {
+        labels: ['Education', 'Sports', 'Health', 'Environment', 'Livelihood', 'Youth Development', 'Community Service', 'Others'],
+        values: [520000, 380000, 290000, 210000, 340000, 280000, 195000, 235000],
+    },
+    activity: [
+        { text: 'Approved scholarship application for Maria Reyes', who: 'SK Secretary Ana Cruz', time: '2 hours ago' },
+        { text: 'Published new scholarship program schedule', who: 'SK Chairperson Juan Dela Cruz', time: '5 hours ago' },
+        { text: 'Rejected incomplete KK profiling request', who: 'SK Treasurer Mark Santos', time: 'Yesterday' },
+        { text: 'Restored deleted Kabataan member record', who: 'SK Secretary Ana Cruz', time: '2 days ago' },
+    ],
+    announcements: [
+        { title: 'Scholarship Application Window Open', date: 'Jun 1, 2026' },
+        { title: 'SK Youth Assembly — Barangay Hall', date: 'Jun 15, 2026' },
+    ],
+    events: [
+        { day: '12', mon: 'JUN', title: 'Scholarship Orientation', time: '9:00 AM – 12:00 PM' },
+        { day: '20', mon: 'JUN', title: 'KK Profiling Drive', time: '1:00 PM – 4:00 PM' },
+    ],
+};
+
 const YEAR_DATA = {
     2023: createEmptyYearData(),
     2024: createEmptyYearData(),
     2025: createEmptyYearData(),
-    2026: createEmptyYearData(),
+    2026: SAMPLE_YEAR_2026,
 };
 
 /* Pending requests are always current — not year-filtered */
-const PENDING_REQUESTS = [];
+const PENDING_REQUESTS = [
+    { id: 1, name: 'Carlos Mendoza', purok: 'Purok 2', date: 'Jun 3, 2026' },
+    { id: 2, name: 'Hannah Lim', purok: 'Calios', date: 'Jun 2, 2026' },
+];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -550,7 +597,7 @@ function renderReminder() {
     const stored = localStorage.getItem(key);
 
     /* Sample notes shown when no real note is saved */
-    const noteText = (stored && stored.trim()) ? stored.trim() : 'No data available.';
+    const noteText = (stored && stored.trim()) ? stored.trim() : 'SK Assembly on June 15 — all committee heads required.';
 
     const banner = document.getElementById('calendarReminderBanner');
     const textEl = document.getElementById('reminderText');
@@ -562,6 +609,10 @@ function renderReminder() {
 
 /* ── Account Status ──────────────────────────────────────────── */
 const COMMITTEES = [
+    { name: 'Juan Dela Cruz', head: 'SK Chairperson', status: 'Active' },
+    { name: 'Ana Cruz', head: 'SK Secretary', status: 'Active' },
+    { name: 'Mark Santos', head: 'SK Treasurer', status: 'Active' },
+    { name: 'Rosa Villanueva', head: 'Education Committee Chair', status: 'Offline' },
 ];
 
 function renderCommittees() {

@@ -24,6 +24,30 @@ body {
 @media (max-width: 480px)  { .main-content { padding: 10px; margin-top: 55px; } }
 @media (min-width: 769px)  { .main-content.sidebar-collapsed { margin-left: 80px; } }
 
+.rs-toolbar-row {
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+
+.rs-toolbar-row .rs-search-wrap {
+    width: 100%;
+    max-width: 360px;
+}
+
+.rs-toolbar-row .filter-input {
+    width: 100%;
+}
+
+.rejected-schol-page .schol-page-header {
+    margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+    .rs-toolbar-row .rs-search-wrap {
+        max-width: none;
+    }
+}
+
 /* ── Page header ── */
 .page-header-section {
     display: flex;

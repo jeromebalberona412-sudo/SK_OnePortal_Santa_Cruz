@@ -9,7 +9,7 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/schedule_programs/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/schedule_programs/assets/css/sports/sports_requests.css',
-        'app/Modules/schedule_programs/assets/css/scholarship/scholar_application_from.css',
+        'app/Modules/schedule_programs/assets/css/scholarship/scholarship-schedule.css',
         'app/Modules/schedule_programs/assets/css/scholarship/scholar_report.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -52,19 +52,6 @@
         .toggle-input:checked + .toggle-slider:before {
             transform: translateX(20px);
         }
-        /* Active program row highlight */
-        .saf-forms-table tbody tr.active-program-row {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-weight: 600;
-        }
-        .saf-forms-table tbody tr.active-program-row td {
-            color: white;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-        }
-        .saf-forms-table tbody tr.active-program-row:hover {
-            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
-        }
     </style>
 </head>
 <body>
@@ -101,35 +88,6 @@
             </button>
         </div>
     </section>
-
-    <!-- Active Program Card (shown at top when there's an active program) -->
-    <div id="activeProgramCard" style="display:none;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 4px 12px rgba(102,126,234,0.3);color:white;">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-            <div style="flex:1;min-width:300px;">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <div style="font-size:18px;font-weight:700;">Active Program</div>
-                    <div id="activeProgramStatusBadge" style="display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:rgba(255,255,255,0.25);"></div>
-                </div>
-                <h3 id="activeProgramName" style="font-size:20px;font-weight:700;margin:0 0 8px;"></h3>
-                <div id="activeProgramInfo" style="font-size:14px;opacity:0.95;line-height:1.6;"></div>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button type="button" class="schol-btn" id="btnViewActiveProgram" style="font-size:12px;padding:8px 16px;background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    View Details
-                </button>
-                <button type="button" class="schol-btn" id="btnEditActiveProgram" style="font-size:12px;padding:8px 16px;background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Edit
-                </button>
-                <button type="button" class="schol-btn" id="btnCloseActiveProgram" style="font-size:12px;padding:8px 16px;background:rgba(239,68,68,0.9);color:white;border:none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    Close Program
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Filter Section -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px;">
@@ -568,7 +526,7 @@
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/schedule_programs/assets/js/shared/spfb-form-builder.js',
-    'app/Modules/schedule_programs/assets/js/scholarship/scholar_application_from.js',
+    'app/Modules/schedule_programs/assets/js/scholarship/scholarship-schedule.js',
     'app/Modules/schedule_programs/assets/js/scholarship/scholar_schedule.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
@@ -688,39 +646,6 @@ function setupProgramFilter() {
     }
 }
 
-// Handle disabled state for create button
-document.addEventListener('DOMContentLoaded', () => {
-    const createBtn = document.getElementById('safOpenFormBtn');
-    
-    if (createBtn) {
-        // Check if button should be disabled based on active program
-        const hasActive = createBtn.getAttribute('data-has-active') === 'true';
-        
-        if (hasActive) {
-            createBtn.disabled = true;
-            createBtn.style.opacity = '0.5';
-            createBtn.style.cursor = 'not-allowed';
-            createBtn.title = 'Close the active program first to create a new one';
-        }
-        
-        // Prevent click when disabled
-        createBtn.addEventListener('click', (e) => {
-            if (createBtn.disabled || createBtn.getAttribute('data-has-active') === 'true') {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const toast = document.getElementById('safToast');
-                if (toast) {
-                    toast.textContent = 'Please close the active program first before creating a new one';
-                    toast.style.display = 'flex';
-                    toast.style.background = '#f59e0b';
-                    setTimeout(() => { toast.style.display = 'none'; }, 3000);
-                }
-                return false;
-            }
-        });
-    }
-});
 </script>
 </body>
 </html>

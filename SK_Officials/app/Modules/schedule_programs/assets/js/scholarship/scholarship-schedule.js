@@ -45,7 +45,6 @@ function confirmDeleteProgram() {
     closeDeleteProgramModal();
     const currentFilter = document.getElementById('programFilter')?.value || 'all';
     renderFormsTable(currentFilter);
-    loadActiveProgram();
     showToast('Program deleted.', 'success');
 }
 
@@ -67,11 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const builder = window.SpfbFormBuilder;
     
-    // Load and display active program
-    loadActiveProgram();
-    
-    // Setup active program buttons
-    setupActiveProgramButtons();
 
     function showToast(msg, type) {
         if (!toastEl) return;
@@ -147,10 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function openModal(forEditId) {
         if (modal) {
             modal.style.display = 'flex';
-            modal.classList.add('schol-modal-maximized');
-            if (modalBox) {
-                modalBox.classList.add('schol-modal-maximized');
-            }
+            if (modal) modal.classList.add('schol-modal-maximized');
+            if (modalBox) modalBox.classList.add('schol-modal-maximized');
             if (maximizeBtn) {
                 maximizeBtn.textContent = '⧉';
                 maximizeBtn.title = 'Restore Down';
@@ -212,8 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (modalBox) modalBox.classList.remove('schol-modal-maximized');
         if (maximizeBtn) {
-            maximizeBtn.textContent = '⧉';
-            maximizeBtn.title = 'Restore Down';
+            maximizeBtn.textContent = '□';
+            maximizeBtn.title = 'Maximize';
         }
         resetModalForm();
     }
@@ -304,17 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const activeProgram = getActiveProgram();
-
         tableBody.innerHTML = forms.map(f => {
             const status = resolveProgramStatus(f);
             const statusClass = status === 'open' ? 'schol-pill-approved' : 'schol-pill-rejected';
             const statusText = formatStatusLabel(status);
-            const isActive = activeProgram && activeProgram.id === f.id;
             
             return `
-            <tr class="${isActive ? 'active-program-row' : ''}">
-                <td>${escapeHtml(f.programName)}${isActive ? ' <span class="schol-pill schol-pill-defined" style="font-size:10px;margin-left:4px;">Active</span>' : ''}</td>
+            <tr>
+                <td>${escapeHtml(f.programName)}</td>
                 <td>${escapeHtml(f.programType)}</td>
                 <td>${escapeHtml(f.committee)}</td>
                 <td>${escapeHtml(f.participationQty || 'N/A')}</td>
@@ -581,13 +570,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 forms[index] = payload;
                 saveForms(forms);
                 
-                // Update active program if editing active one
-                const activeProgram = getActiveProgram();
-                if (activeProgram && activeProgram.id === editingProgramId) {
-                    setActiveProgram(payload);
-                    loadActiveProgram();
-                }
-                
                 closeModal();
                 const filterAfterSave = document.getElementById('programFilter')?.value || 'all';
                 renderFormsTable(filterAfterSave);
@@ -616,12 +598,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             forms.unshift(payload);
             saveForms(forms);
-            setActiveProgram(payload);
             closeModal();
-            loadActiveProgram();
             const filterAfterCreate = document.getElementById('programFilter')?.value || 'all';
             renderFormsTable(filterAfterCreate);
-            showToast('Program created and activated successfully!', 'success');
+            showToast('Program saved successfully!', 'success');
         }
     }
 
@@ -640,7 +620,10 @@ document.addEventListener('DOMContentLoaded', () => {
         maximizeBtn.addEventListener('click', e => {
             e.stopPropagation();
             modalBox.classList.toggle('schol-modal-maximized');
-            maximizeBtn.textContent = modalBox.classList.contains('schol-modal-maximized') ? '⧉' : '□';
+            modal.classList.toggle('schol-modal-maximized', modalBox.classList.contains('schol-modal-maximized'));
+            const isMax = modalBox.classList.contains('schol-modal-maximized');
+            maximizeBtn.textContent = isMax ? '⧉' : '□';
+            maximizeBtn.title = isMax ? 'Restore Down' : 'Maximize';
         });
     }
 
@@ -674,59 +657,13 @@ function clearActiveProgram() {
 }
 
 function loadActiveProgram() {
-    const activeProgram = getActiveProgram();
-    const activeProgramCard = document.getElementById('activeProgramCard');
     const createBtn = document.getElementById('safOpenFormBtn');
-    
-    if (!activeProgramCard) return;
-    
-    if (activeProgram) {
-        // Show active program card
-        activeProgramCard.style.display = 'block';
-        
-        // Update card content
-        const nameEl = document.getElementById('activeProgramName');
-        const infoEl = document.getElementById('activeProgramInfo');
-        const statusBadgeEl = document.getElementById('activeProgramStatusBadge');
-        
-        if (nameEl) nameEl.textContent = activeProgram.programName;
-        
-        if (infoEl) {
-            infoEl.innerHTML = `
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-                    <div><strong>Committee:</strong> ${activeProgram.committee}</div>
-                    <div><strong>Type:</strong> ${activeProgram.programType}</div>
-                    <div><strong>Start:</strong> ${activeProgram.startDate} ${activeProgram.startTime}</div>
-                    <div><strong>End:</strong> ${activeProgram.endDate} ${activeProgram.endTime}</div>
-                </div>
-            `;
-        }
-        
-        const status = resolveProgramStatus(activeProgram);
-        if (statusBadgeEl) {
-            statusBadgeEl.textContent = status === 'open' ? 'Open' : 'Closed';
-        }
-        
-        // Disable create button
-        if (createBtn) {
-            createBtn.disabled = true;
-            createBtn.style.opacity = '0.5';
-            createBtn.style.cursor = 'not-allowed';
-            createBtn.setAttribute('data-has-active', 'true');
-            createBtn.title = 'Close the active program first to create a new one';
-        }
-    } else {
-        // Hide active program card
-        activeProgramCard.style.display = 'none';
-        
-        // Enable create button
-        if (createBtn) {
-            createBtn.disabled = false;
-            createBtn.style.opacity = '1';
-            createBtn.style.cursor = 'pointer';
-            createBtn.setAttribute('data-has-active', 'false');
-            createBtn.title = '';
-        }
+    if (createBtn) {
+        createBtn.disabled = false;
+        createBtn.style.opacity = '1';
+        createBtn.style.cursor = 'pointer';
+        createBtn.setAttribute('data-has-active', 'false');
+        createBtn.title = '';
     }
 }
 
@@ -908,8 +845,6 @@ function renderFormsTable(filterValue = 'all') {
 
     const allForms = loadForms();
     const forms = filterFormsByDate(allForms, filterValue);
-    const activeProgram = getActiveProgram();
-
     const countEl = document.getElementById('programCount');
     if (countEl) countEl.textContent = forms.length;
 
@@ -925,11 +860,10 @@ function renderFormsTable(filterValue = 'all') {
         const status = resolveProgramStatus(f);
         const statusClass = status === 'open' ? 'schol-pill-approved' : 'schol-pill-rejected';
         const statusText = formatStatusLabel(status);
-        const isActive = activeProgram && activeProgram.id === f.id;
 
         return `
-        <tr class="${isActive ? 'active-program-row' : ''}">
-            <td>${escapeHtml(f.programName)}${isActive ? ' <span class="schol-pill schol-pill-defined" style="font-size:10px;margin-left:4px;">Active</span>' : ''}</td>
+        <tr>
+            <td>${escapeHtml(f.programName)}</td>
             <td>${escapeHtml(f.programType)}</td>
             <td>${escapeHtml(f.committee)}</td>
             <td>${escapeHtml(f.participationQty || 'N/A')}</td>

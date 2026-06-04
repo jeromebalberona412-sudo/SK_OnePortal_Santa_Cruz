@@ -10,7 +10,8 @@
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/schedule_programs/assets/css/scholarship/scholarship_application_form.css',
-        'app/Modules/schedule_programs/assets/css/scholarship/scholar_list.css'
+        'app/Modules/schedule_programs/assets/css/scholarship/approved-scholars.css',
+        'app/Modules/Dashboard/assets/css/dashboard.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -29,12 +30,12 @@
             'pageSubtitle' => 'Manage approved scholars and track scholarship payment release status.',
         ])
 
-        <!-- ── Summary Cards ── -->
-        <div class="sl-stats-grid">
-            <div class="sl-stat-card sl-stat-blue">
-                <div class="sl-stat-top">
-                    <span class="sl-stat-value" id="slStatTotal">0</span>
-                    <div class="sl-stat-icon sl-icon-blue">
+        <!-- ── Summary Cards (dashboard style) ── -->
+        <div class="sl-stats-grid dash-stats-row">
+            <div class="stat-card stat-card-blue sl-dash-stat">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="slStatTotal">0</span>
+                    <div class="stat-card-icon stat-icon-blue">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
@@ -43,35 +44,35 @@
                         </svg>
                     </div>
                 </div>
-                <span class="sl-stat-label">Total Scholars</span>
+                <span class="stat-card-label">Total Scholars</span>
             </div>
-            <div class="sl-stat-card sl-stat-orange">
-                <div class="sl-stat-top">
-                    <span class="sl-stat-value" id="slStatPending">0</span>
-                    <div class="sl-stat-icon sl-icon-orange">
+            <div class="stat-card stat-card-orange sl-dash-stat">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="slStatPending">0</span>
+                    <div class="stat-card-icon stat-icon-orange">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                         </svg>
                     </div>
                 </div>
-                <span class="sl-stat-label">Pending Release</span>
+                <span class="stat-card-label">Pending Release</span>
             </div>
-            <div class="sl-stat-card sl-stat-green">
-                <div class="sl-stat-top">
-                    <span class="sl-stat-value" id="slStatPaid">0</span>
-                    <div class="sl-stat-icon sl-icon-green">
+            <div class="stat-card stat-card-green sl-dash-stat">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="slStatPaid">0</span>
+                    <div class="stat-card-icon stat-icon-green">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
                     </div>
                 </div>
-                <span class="sl-stat-label">Claimed</span>
+                <span class="stat-card-label">Claimed</span>
             </div>
-            <div class="sl-stat-card sl-stat-red">
-                <div class="sl-stat-top">
-                    <span class="sl-stat-value" id="slStatUnclaimed">0</span>
-                    <div class="sl-stat-icon sl-icon-red">
+            <div class="stat-card stat-card-red sl-dash-stat">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="slStatUnclaimed">0</span>
+                    <div class="stat-card-icon stat-icon-red">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="15" y1="9" x2="9" y2="15"/>
@@ -79,43 +80,45 @@
                         </svg>
                     </div>
                 </div>
-                <span class="sl-stat-label">Unclaimed</span>
+                <span class="stat-card-label">Unclaimed</span>
             </div>
         </div>
 
-        <div class="schol-page-toolbar sl-toolbar-stack">
-            <div class="sl-payment-filter-tabs" role="tablist" aria-label="Payment status filter">
-                <button type="button" class="sl-payment-tab active" data-payment-filter="all">All</button>
-                <button type="button" class="sl-payment-tab" data-payment-filter="Pending Release">Pending Release</button>
-                <button type="button" class="sl-payment-tab" data-payment-filter="Claimed">Claimed</button>
-                <button type="button" class="sl-payment-tab" data-payment-filter="Unclaimed">Unclaimed</button>
-            </div>
-            <div class="sl-filter-group">
-                <div class="sl-filter-wrapper">
-                    <select id="slYearFilter" class="sl-filter-select">
-                        <option value="">All Years</option>
-                        <option value="2026">Scholarship 2026</option>
-                        <option value="2025">Scholarship 2025</option>
-                        <option value="2024">Scholarship 2024</option>
-                        <option value="2023">Scholarship 2023</option>
-                    </select>
+        <div class="sl-toolbar-row">
+            <div class="sl-toolbar-left">
+                <div class="sl-payment-filter-tabs" role="tablist" aria-label="Payment status filter">
+                    <button type="button" class="sl-payment-tab active" data-payment-filter="all">All</button>
+                    <button type="button" class="sl-payment-tab" data-payment-filter="Pending Release">Pending Release</button>
+                    <button type="button" class="sl-payment-tab" data-payment-filter="Claimed">Claimed</button>
+                    <button type="button" class="sl-payment-tab" data-payment-filter="Unclaimed">Unclaimed</button>
                 </div>
-                <div class="sl-search-wrapper">
-                    <svg class="sl-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input type="text" id="slSearchInput" class="sl-search-input" placeholder="Search scholars...">
+                <div class="sl-filter-group sl-filter-group-inline">
+                    <div class="sl-filter-wrapper">
+                        <select id="slYearFilter" class="sl-filter-select">
+                            <option value="">All Years</option>
+                            <option value="2026">Scholarship 2026</option>
+                            <option value="2025">Scholarship 2025</option>
+                            <option value="2024">Scholarship 2024</option>
+                            <option value="2023">Scholarship 2023</option>
+                        </select>
+                    </div>
+                    <div class="sl-search-wrapper">
+                        <svg class="sl-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="slSearchInput" class="sl-search-input" placeholder="Search scholars...">
+                    </div>
                 </div>
             </div>
-            <button type="button" id="slExportCsvBtn" class="sl-btn sl-btn-green">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+            <button type="button" id="slExportCsvBtn" class="sl-btn sl-btn-export">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Export to CSV
+                Export CSV
             </button>
         </div>
 
@@ -236,7 +239,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
-    'app/Modules/schedule_programs/assets/js/scholarship/scholar_list.js'
+    'app/Modules/schedule_programs/assets/js/scholarship/approved-scholars.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>

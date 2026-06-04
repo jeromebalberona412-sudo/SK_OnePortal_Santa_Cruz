@@ -208,7 +208,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
-    'app/Modules/schedule_programs/assets/js/scholarship/scholarship_requests.js'
+    'app/Modules/schedule_programs/assets/js/scholarship/scholarship-applications.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>

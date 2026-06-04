@@ -148,28 +148,36 @@ Route::middleware([
     })->name('sports-application-form');
 
     // ── Scholarship routes (pure front-end, no DB) ──
-    Route::get('/scholarship-application-request', function () {
-        return view('schedule_programs::scholarship.requests');
-    })->name('scholarship.application-request');
+    Route::get('/scholarship-schedule', function () {
+        return view('schedule_programs::scholarship.scholarship-schedule');
+    })->name('scholarship.schedule');
 
-    Route::redirect('/scholarship', '/scholarship-application-request');
+    Route::get('/scholarship-schedule/{id}', function ($id) {
+        return view('schedule_programs::scholarship.scholarship-schedule', ['formId' => $id]);
+    })->name('scholarship.schedule.edit');
 
-    Route::get('/scholar-application-form', function () {
-        return view('schedule_programs::scholarship.schedule');
-    })->name('scholar.application-form');
+    Route::redirect('/scholar-application-form', '/scholarship-schedule');
+    Route::redirect('/scholar-application-form/{id}', '/scholarship-schedule/{id}');
 
-    Route::get('/scholar-application-form/{id}', function ($id) {
-        return view('schedule_programs::scholarship.schedule', ['formId' => $id]);
-    })->name('scholar.application-form.edit');
+    Route::get('/scholarship-applications', function () {
+        return view('schedule_programs::scholarship.scholarship-applications');
+    })->name('scholarship.applications');
 
-    Route::get('/rejected-scholarship', function () {
+    Route::redirect('/scholarship-application-request', '/scholarship-applications');
+    Route::redirect('/scholarship', '/scholarship-applications');
+
+    Route::get('/rejected-scholars', function () {
         return view('Rejected_Scholarship::rejected-scholarship');
-    })->name('rejected-scholarship');
+    })->name('rejected-scholars');
 
-    // ── Scholar List route (pure front-end, no DB) ──
-    Route::get('/scholar-list', function () {
-        return view('schedule_programs::scholarship.list');
-    })->name('scholar.list');
+    Route::redirect('/rejected-scholarship', '/rejected-scholars');
+
+    // ── Approved Scholars (pure front-end, no DB) ──
+    Route::get('/approved-scholars', function () {
+        return view('schedule_programs::scholarship.approved-scholars');
+    })->name('approved-scholars');
+
+    Route::redirect('/scholar-list', '/approved-scholars');
 
     // ── Scholar Evaluation route (pure front-end, no DB) ──
     Route::get('/scholar-evaluation', function () {

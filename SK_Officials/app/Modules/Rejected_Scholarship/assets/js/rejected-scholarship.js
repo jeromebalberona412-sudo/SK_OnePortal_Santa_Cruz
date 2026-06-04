@@ -79,8 +79,58 @@ function initRejectedScholarship() {
 }
 
 // ── Load from localStorage ────────────────────────────────────────────────────
+const RS_SAMPLE_REJECTED = [
+    {
+        id: 9001,
+        last_name: 'Garcia',
+        first_name: 'Paolo',
+        middle_name: 'M.',
+        school_name: 'Laguna State Polytechnic University',
+        status: 'Rejected',
+        submitted_at: 'Mar 12, 2026',
+        rejected_at: 'Mar 15, 2026',
+        rejection_reason: 'Incomplete requirements',
+        skTerm: '2025-2027'
+    },
+    {
+        id: 9002,
+        last_name: 'Mendoza',
+        first_name: 'Hannah',
+        middle_name: 'L.',
+        school_name: 'Santa Cruz National High School',
+        status: 'Rejected',
+        submitted_at: 'Feb 28, 2026',
+        rejected_at: 'Mar 1, 2026',
+        rejection_reason: 'Failed to meet criteria',
+        skTerm: '2025-2027'
+    },
+    {
+        id: 9003,
+        last_name: 'Torres',
+        first_name: 'Kevin',
+        middle_name: 'R.',
+        school_name: 'University of the Philippines Los Baños',
+        status: 'Rejected',
+        submitted_at: 'Jan 20, 2026',
+        rejected_at: 'Jan 22, 2026',
+        rejection_reason: 'Duplicate application',
+        skTerm: '2025-2027'
+    }
+];
+
+function rsSeedSampleRejected(all) {
+    const list = Array.isArray(all) ? [...all] : [];
+    const hasSamples = list.some(r => [9001, 9002, 9003].includes(r.id));
+    if (hasSamples) return list;
+    const missing = RS_SAMPLE_REJECTED.filter(s => !list.some(r => r.id === s.id));
+    if (!missing.length) return list;
+    localStorage.setItem('scholarship_requests', JSON.stringify([...missing, ...list]));
+    return [...missing, ...list];
+}
+
 function loadRecords() {
-    const all = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
+    let all = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
+    all = rsSeedSampleRejected(all);
     rsAllRecords = all.filter(r => r.status === 'Rejected').map(r => ({
         ...r,
         skTerm: r.skTerm || (window.SkArchive
