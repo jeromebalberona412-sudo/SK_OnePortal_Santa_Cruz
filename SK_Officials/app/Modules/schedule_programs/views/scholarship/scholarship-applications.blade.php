@@ -143,36 +143,15 @@
         <div class="schol-modal-body">
             <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:16px;">Please select the reason(s) for rejecting this application:</p>
             
-            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Incomplete Requirements" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Incomplete Requirements</span>
-                </label>
+            <div style="display:flex;flex-direction:column;gap:10px;">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
                     <input type="checkbox" class="reject-reason-checkbox" value="Invalid Documents" style="cursor:pointer;width:16px;height:16px;">
                     <span>Invalid Documents</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Does Not Meet Eligibility Criteria" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Does Not Meet Eligibility Criteria</span>
+                    <input type="checkbox" class="reject-reason-checkbox" value="Incorrect Information Provided" style="cursor:pointer;width:16px;height:16px;">
+                    <span>Incorrect Information Provided</span>
                 </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Duplicate Application" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Duplicate Application</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Late Submission" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Late Submission</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" id="rejectReasonOtherCheckbox" value="Other" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Other</span>
-                </label>
-            </div>
-
-            <div id="rejectReasonOtherField" style="display:none;">
-                <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;display:block;">Please specify:</label>
-                <textarea id="rejectReasonOtherText" class="schol-input" rows="3" placeholder="Enter other reason..." style="width:100%;resize:vertical;"></textarea>
             </div>
         </div>
         <div class="schol-modal-footer">
@@ -208,6 +187,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/schedule_programs/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/schedule_programs/assets/js/scholarship/scholarship-applications.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

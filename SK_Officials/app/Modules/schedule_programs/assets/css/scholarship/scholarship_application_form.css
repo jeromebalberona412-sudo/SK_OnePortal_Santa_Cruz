@@ -504,8 +504,8 @@ select.schol-input {
 }
 .schol-tbl-btn-view   { background: #2c2c3e; color: #fff; }
 .schol-tbl-btn-view:hover { background: #1a1a28; }
-.schol-tbl-btn-edit   { background: #fbbf24; color: #78350f; }
-.schol-tbl-btn-edit:hover { background: #f59e0b; }
+.schol-tbl-btn-edit   { background: #fbbf24; color: #ffffff; }
+.schol-tbl-btn-edit:hover { background: #f59e0b; color: #ffffff; }
 .schol-tbl-btn-delete { background: #ef4444; color: #fff; }
 .schol-tbl-btn-delete:hover { background: #dc2626; }
 
@@ -529,8 +529,8 @@ select.schol-input {
 }
 .prog-btn-view { background: #2c2c3e; color: #fff; }
 .prog-btn-view:hover { background: #1a1a28; }
-.prog-btn-edit { background: #fbbf24; color: #78350f; }
-.prog-btn-edit:hover { background: #f59e0b; }
+.prog-btn-edit { background: #fbbf24; color: #ffffff; }
+.prog-btn-edit:hover { background: #f59e0b; color: #ffffff; }
 .prog-btn-delete { background: #ef4444; color: #fff; }
 .prog-btn-delete:hover { background: #dc2626; }
 .prog-tbl-actions {

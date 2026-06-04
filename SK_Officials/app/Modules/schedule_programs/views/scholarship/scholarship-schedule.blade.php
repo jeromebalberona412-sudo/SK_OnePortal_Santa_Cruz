@@ -526,6 +526,7 @@
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/schedule_programs/assets/js/shared/spfb-form-builder.js',
+    'app/Modules/schedule_programs/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/schedule_programs/assets/js/scholarship/scholarship-schedule.js',
     'app/Modules/schedule_programs/assets/js/scholarship/scholar_schedule.js'
 ])

@@ -130,6 +130,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/schedule_programs/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Rejected_Scholarship/assets/js/rejected-scholarship.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

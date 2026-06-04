@@ -868,3 +868,9 @@ body {
     .stat-card-value { font-size: 16px; }
     .stat-card-label { font-size: 8px; margin-top: 3px; }
 }
+
+.rs-view-program-extra {
+    max-width: 800px;
+    margin: 24px auto 0;
+    padding: 0 4px;
+}

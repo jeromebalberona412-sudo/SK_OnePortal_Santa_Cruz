@@ -49,6 +49,10 @@ function confirmDeleteProgram() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.ScholarshipViewShared) {
+        window.ScholarshipViewShared.seedScholarshipProgramIfNeeded();
+    }
+
     const tableBody = document.getElementById('safFormsTableBody');
     if (!tableBody) return;
 
@@ -451,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${f.customQuestions.map((q, idx) => `
                                     <div style="background:white;border-radius:8px;padding:20px;margin-bottom:16px;border:1px solid #e5e7eb;">
                                         <div style="font-size:14px;color:#202124;font-weight:500;margin-bottom:8px;">
-                                            ${idx + 1}. ${escapeHtml(q.question)}
+                                            ${idx + 1}. ${escapeHtml(q.label || q.question)}
                                             ${q.required ? '<span style="color:#d93025;margin-left:4px;">*</span>' : ''}
                                         </div>
                                         <div style="font-size:12px;color:#5f6368;font-style:italic;margin-bottom:12px;">

@@ -9,7 +9,7 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/schedule_programs/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/schedule_programs/assets/css/sports/sports_requests.css',
-        'app/Modules/schedule_programs/assets/css/scholarship/scholar_application_from.css',
+        'app/Modules/schedule_programs/assets/css/scholarship/scholarship-schedule.css',
         'app/Modules/schedule_programs/assets/css/scholarship/scholar_report.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -568,7 +568,8 @@
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/schedule_programs/assets/js/shared/spfb-form-builder.js',
-    'app/Modules/schedule_programs/assets/js/scholarship/scholar_application_from.js',
+    'app/Modules/schedule_programs/assets/js/scholarship/scholarship-view-shared.js',
+    'app/Modules/schedule_programs/assets/js/scholarship/scholarship-schedule.js',
     'app/Modules/schedule_programs/assets/js/scholarship/scholar_schedule.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

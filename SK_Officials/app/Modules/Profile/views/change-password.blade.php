@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -68,7 +68,7 @@
                 @endif
 
                 <!-- Change Password Form -->
-                <form action="{{ route('password.change.update') }}" method="POST" class="sk-login-form" novalidate>
+                <form action="{{ route('password.change.update') }}" method="POST" class="sk-login-form" id="change-password-form" data-password-max-length="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}" novalidate>
                     @csrf
 
                     <!-- New Password -->
@@ -83,10 +83,10 @@
                                 id="password"
                                 name="password"
                                 class="sk-input password-input @error('password') is-invalid @enderror"
-                                placeholder="Enter new password (min 12 characters)"
+                                placeholder="Enter new password"
                                 autocomplete="new-password"
-                                minlength="12"
-                                maxlength="64"
+                                minlength="8"
+                                maxlength="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}"
                                 required
                             >
                             <button type="button" class="pw-toggle-btn" data-target="password" aria-label="Show password" tabindex="-1">
@@ -101,12 +101,17 @@
                                 </svg>
                             </button>
                         </div>
+                        <ul class="password-rules" id="passwordRules" aria-live="polite" hidden>
+                            <li id="rule-length">At least 8 characters</li>
+                            <li id="rule-lowercase">At least one lowercase letter</li>
+                            <li id="rule-uppercase">At least one uppercase letter</li>
+                            <li id="rule-number">At least one number</li>
+                            <li id="rule-special">At least one special character</li>
+                        </ul>
                         @error('password')
                             <div class="sk-field-error">{{ $message }}</div>
                         @enderror
-                        <div class="cp-strength-label" style="font-size: 0.875rem; margin-top: 0.5rem; color: #6B7280;">
-                            Password must contain: letters, numbers, and symbols
-                        </div>
+                        <div class="sk-field-error" id="password-client-error" hidden></div>
                     </div>
 
                     <!-- Confirm Password -->
@@ -123,8 +128,8 @@
                                 class="sk-input password-input"
                                 placeholder="Re-enter new password"
                                 autocomplete="new-password"
-                                minlength="12"
-                                maxlength="64"
+                                minlength="8"
+                                maxlength="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}"
                                 required
                             >
                             <button type="button" class="pw-toggle-btn" data-target="password_confirmation" aria-label="Show password" tabindex="-1">

@@ -60,6 +60,10 @@ function rsApplyAllFilters() {
 }
 
 function initRejectedScholarship() {
+    if (window.ScholarshipViewShared) {
+        window.ScholarshipViewShared.seedScholarshipProgramIfNeeded();
+    }
+
     if (window.SkArchive) {
         SkArchive.mountShowArchiveFilter((termId) => {
             rsArchiveTerm = termId;
@@ -85,47 +89,114 @@ const RS_SAMPLE_REJECTED = [
         last_name: 'Garcia',
         first_name: 'Paolo',
         middle_name: 'M.',
+        date_of_birth: '2005-06-12',
+        gender: 'Male',
+        age: 20,
+        contact_no: '09181234567',
+        address: '12 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
+        email: 'paolo.garcia@email.com',
         school_name: 'Laguna State Polytechnic University',
+        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
+        year_level: '2nd Year',
+        program_strand: 'Bachelor of Science in Civil Engineering (BSCE)',
+        purpose_list: ['Tuition Fees', 'Books / Equipments'],
+        cor_certified: true,
+        photo_id: false,
         status: 'Rejected',
         submitted_at: 'Mar 12, 2026',
+        submitted_time: '10:20 AM',
         rejected_at: 'Mar 15, 2026',
-        rejection_reason: 'Incomplete requirements',
-        skTerm: '2025-2027'
+        rejected_time: '02:45 PM',
+        rejection_reasons: ['Invalid Documents'],
+        skTerm: '2025-2027',
+        form_answers: [
+            { question: 'Why do you need this scholarship assistance?', answer: 'I need help paying tuition this semester because our family income was reduced.' },
+            { question: 'What is your current GPA or general average?', answer: '1.90' },
+            { question: 'Are you currently employed or receiving other income?', answer: 'No' },
+            { question: 'Purpose of assistance (select all that apply)', answer: 'Tuition Fees, Books / Equipments' },
+            { question: 'How many dependents are in your household?', answer: '3' },
+        ],
     },
     {
         id: 9002,
         last_name: 'Mendoza',
         first_name: 'Hannah',
         middle_name: 'L.',
+        date_of_birth: '2007-02-18',
+        gender: 'Female',
+        age: 18,
+        contact_no: '09291234567',
+        address: '88 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
+        email: 'hannah.mendoza@email.com',
         school_name: 'Santa Cruz National High School',
+        school_address: 'Poblacion, Santa Cruz, Laguna 4009',
+        year_level: 'Grade 12',
+        program_strand: 'Humanities and Social Sciences (HUMSS)',
+        purpose_list: ['Books / Equipments'],
+        cor_certified: false,
+        photo_id: true,
         status: 'Rejected',
         submitted_at: 'Feb 28, 2026',
+        submitted_time: '09:05 AM',
         rejected_at: 'Mar 1, 2026',
-        rejection_reason: 'Failed to meet criteria',
-        skTerm: '2025-2027'
+        rejected_time: '11:30 AM',
+        rejection_reasons: ['Incorrect Information Provided'],
+        skTerm: '2025-2027',
+        form_answers: [
+            { question: 'Why do you need this scholarship assistance?', answer: 'To purchase books and school supplies for senior high school.' },
+            { question: 'What is your current GPA or general average?', answer: '88%' },
+            { question: 'Are you currently employed or receiving other income?', answer: 'No' },
+            { question: 'Purpose of assistance (select all that apply)', answer: 'Books / Equipments' },
+            { question: 'How many dependents are in your household?', answer: '6' },
+        ],
     },
     {
         id: 9003,
         last_name: 'Torres',
         first_name: 'Kevin',
         middle_name: 'R.',
+        date_of_birth: '2004-09-05',
+        gender: 'Male',
+        age: 21,
+        contact_no: '09351234567',
+        address: '5 Bonifacio Rd., Brgy. Calios, Santa Cruz, Laguna',
+        email: 'kevin.torres@email.com',
         school_name: 'University of the Philippines Los Baños',
+        school_address: 'College, Los Baños, Laguna 4031',
+        year_level: '3rd Year',
+        program_strand: 'Bachelor of Science in Agriculture (BS Agriculture)',
+        purpose_list: ['Tuition Fees', 'Living Expenses'],
+        cor_certified: true,
+        photo_id: true,
         status: 'Rejected',
         submitted_at: 'Jan 20, 2026',
+        submitted_time: '03:15 PM',
         rejected_at: 'Jan 22, 2026',
-        rejection_reason: 'Duplicate application',
-        skTerm: '2025-2027'
-    }
+        rejected_time: '09:00 AM',
+        rejection_reasons: ['Invalid Documents'],
+        skTerm: '2025-2027',
+        form_answers: [
+            { question: 'Why do you need this scholarship assistance?', answer: 'Assistance for tuition and living expenses while studying in Los Baños.' },
+            { question: 'What is your current GPA or general average?', answer: '2.10' },
+            { question: 'Are you currently employed or receiving other income?', answer: 'Yes' },
+            { question: 'Purpose of assistance (select all that apply)', answer: 'Tuition Fees, Living Expenses' },
+            { question: 'How many dependents are in your household?', answer: '4' },
+        ],
+    },
 ];
 
 function rsSeedSampleRejected(all) {
-    const list = Array.isArray(all) ? [...all] : [];
-    const hasSamples = list.some(r => [9001, 9002, 9003].includes(r.id));
-    if (hasSamples) return list;
-    const missing = RS_SAMPLE_REJECTED.filter(s => !list.some(r => r.id === s.id));
-    if (!missing.length) return list;
-    localStorage.setItem('scholarship_requests', JSON.stringify([...missing, ...list]));
-    return [...missing, ...list];
+    let list = Array.isArray(all) ? [...all] : [];
+    RS_SAMPLE_REJECTED.forEach((sample) => {
+        const idx = list.findIndex(r => r.id === sample.id);
+        if (idx === -1) {
+            list.unshift({ ...sample });
+        } else {
+            list[idx] = { ...list[idx], ...sample, status: 'Rejected' };
+        }
+    });
+    localStorage.setItem('scholarship_requests', JSON.stringify(list));
+    return list;
 }
 
 function loadRecords() {
@@ -333,6 +404,11 @@ function openViewModal(id) {
     const R = L.profileRow;
     const S = L.profileSection;
 
+    const SV = window.ScholarshipViewShared;
+    const program = SV ? SV.loadScholarshipProgram() : null;
+    const programHtml = SV ? SV.renderProgramInformationSection(program) : '';
+    const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
+
     body.innerHTML = `
         <div class="record-view-profile-layout">
             ${S('Personal Information', 'fa-solid fa-user', `
@@ -368,7 +444,8 @@ function openViewModal(id) {
                     F('Rejected Time', rejectedTime, 'fa-solid fa-clock')
                 )}
             `)}
-        </div>`;
+        </div>
+        <div class="rs-view-program-extra">${programHtml}${formAnswersHtml}</div>`;
 
     const modal = document.getElementById('rsViewModal');
     if (modal) modal.style.display = 'flex';

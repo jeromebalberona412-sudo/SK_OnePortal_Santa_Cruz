@@ -157,12 +157,7 @@
         <div class="stat-card stat-card-green">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statRemaining">₱0.00</span>
-                <div class="stat-card-icon stat-icon-green">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                    </svg>
-                </div>
+                <div class="stat-card-icon stat-icon-green stat-icon-peso" aria-hidden="true">₱</div>
             </div>
             <span class="stat-card-label">Remaining Budget Balance</span>
         </div>

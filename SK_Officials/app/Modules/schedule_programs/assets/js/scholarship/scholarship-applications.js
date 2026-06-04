@@ -161,17 +161,56 @@ const SAMPLE_DATA = [
         status: 'Pending',
         submitted_at: 'Jan 8, 2025',
         submitted_time: '08:05 AM',
+        gpa: '1.85',
+        employed: false,
+        household_dependents: 5,
+        form_answers: [
+            {
+                question: 'Why do you need this scholarship assistance?',
+                answer: 'I need assistance to pay tuition and purchase books for my ICT program. My family income is limited and I want to finish my degree on time.',
+            },
+            {
+                question: 'What is your current GPA or general average?',
+                answer: '1.85 (Good Standing)',
+            },
+            {
+                question: 'Are you currently employed or receiving other income?',
+                answer: 'No',
+            },
+            {
+                question: 'Purpose of assistance (select all that apply)',
+                answer: 'Tuition Fees, Books / Equipments',
+            },
+            {
+                question: 'How many dependents are in your household?',
+                answer: '5',
+            },
+        ],
     },
 ];
 
 function initScholarshipRequests() {
+    if (window.ScholarshipViewShared) {
+        window.ScholarshipViewShared.seedScholarshipProgramIfNeeded();
+    }
+
     // Seed sample data if localStorage is empty
-    if (!localStorage.getItem('scholarship_requests_seeded_v5')) {
+    if (!localStorage.getItem('scholarship_requests_seeded_v6')) {
         localStorage.setItem('scholarship_requests', JSON.stringify(SAMPLE_DATA));
-        localStorage.setItem('scholarship_requests_seeded_v5', '1');
+        localStorage.setItem('scholarship_requests_seeded_v6', '1');
     }
 
     let records = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
+    const patrickSample = SAMPLE_DATA.find(s => s.id === 1008);
+    if (patrickSample) {
+        records = records.map(r => {
+            if (r.id === 1008 && (!r.form_answers || !r.form_answers.length)) {
+                return { ...r, ...patrickSample };
+            }
+            return r;
+        });
+        localStorage.setItem('scholarship_requests', JSON.stringify(records));
+    }
     let deleteTargetId = null;
     let viewTargetId = null;
 
@@ -257,10 +296,6 @@ function initScholarshipRequests() {
     const rejectReasonClose = document.getElementById('scholRejectReasonClose');
     const rejectReasonCancel = document.getElementById('scholRejectReasonCancel');
     const rejectReasonConfirm = document.getElementById('scholRejectReasonConfirm');
-    const rejectReasonOtherCheckbox = document.getElementById('rejectReasonOtherCheckbox');
-    const rejectReasonOtherField = document.getElementById('rejectReasonOtherField');
-    const rejectReasonOtherText = document.getElementById('rejectReasonOtherText');
-
     let filterSearch = '';
     let filterStartDate = '';
     let filterEndDate = '';
@@ -268,21 +303,8 @@ function initScholarshipRequests() {
     let filterEndTime = '';
     let filterType = 'all'; // New filter for all/recent/monthly/yearly
 
-    // ── Rejection Reason Modal Handler ──────────────────────────────────────
-    if (rejectReasonOtherCheckbox && rejectReasonOtherField) {
-        rejectReasonOtherCheckbox.addEventListener('change', () => {
-            rejectReasonOtherField.style.display = rejectReasonOtherCheckbox.checked ? 'block' : 'none';
-            if (!rejectReasonOtherCheckbox.checked) {
-                rejectReasonOtherText.value = '';
-            }
-        });
-    }
-
     function openRejectReasonModal() {
-        // Reset all checkboxes and other field
-        document.querySelectorAll('.reject-reason-checkbox').forEach(cb => cb.checked = false);
-        if (rejectReasonOtherText) rejectReasonOtherText.value = '';
-        if (rejectReasonOtherField) rejectReasonOtherField.style.display = 'none';
+        document.querySelectorAll('.reject-reason-checkbox').forEach(cb => { cb.checked = false; });
         if (rejectReasonModal) rejectReasonModal.style.display = 'flex';
     }
 
@@ -826,31 +848,35 @@ function initScholarshipRequests() {
         else if (action === 'delete') { deleteTargetId = id; deleteModal.style.display = 'flex'; }
     });
 
-    // ── View modal — Simple participant details for sports ──────────────
+    function formatApplicantName(r) {
+        const middle = r.middle_name ? `${r.middle_name.charAt(0)}. ` : '';
+        return `${r.first_name || ''} ${middle}${r.last_name || ''}`.trim();
+    }
+
+    function getApplicantInitials(r) {
+        return ((r.first_name?.[0] || '') + (r.last_name?.[0] || '')).toUpperCase();
+    }
+
+    // ── View modal — Scholarship application PDF-style details ───────────
     function openViewModal(r) {
         const statusCls = r.status === 'Approved' ? 'schol-pill-approved'
             : r.status === 'Rejected' ? 'schol-pill-rejected'
                 : 'schol-pill-pending';
 
-        // Format requirements
         const reqList = [];
         if (r.cor_certified) reqList.push('COR – Certified True Copy');
         if (r.photo_id) reqList.push('Photo Copy of ID');
+        const purposeText = r.purpose || (Array.isArray(r.purpose_list) ? r.purpose_list.join(', ') : '—');
+        const fullName = formatApplicantName(r);
+        const initials = getApplicantInitials(r);
+        const SV = window.ScholarshipViewShared;
+        const esc = (s) => (SV ? SV.escapeHtml(s) : String(s ?? ''));
+        const program = SV ? SV.loadScholarshipProgram() : null;
+        const programHtml = SV ? SV.renderProgramInformationSection(program) : '';
+        const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
 
         viewBody.innerHTML = `
             <div style="max-width:800px;margin:0 auto;">
-                <!-- Header Card -->
-                <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius:12px;padding:32px;margin-bottom:24px;box-shadow:0 8px 16px rgba(102,126,234,0.2);color:white;text-align:center;">
-                    <div style="width:100px;height:100px;background:rgba(255,255,255,0.2);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:700;border:3px solid rgba(255,255,255,0.3);">
-                        ${(r.first_name?.[0] || '') + (r.last_name?.[0] || '')}
-                    </div>
-                    <h2 style="font-size:28px;font-weight:700;margin:0 0 8px;">${r.first_name || ''} ${r.middle_name ? r.middle_name.charAt(0) + '. ' : ''}${r.last_name || ''}</h2>
-                    <div style="font-size:16px;opacity:0.95;margin-bottom:12px;">${r.sports_type || 'Sports Program'}</div>
-                    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.25);padding:6px 16px;border-radius:999px;font-size:14px;font-weight:600;">
-                        <span class="schol-pill ${statusCls}" style="margin:0;">${r.status}</span>
-                    </div>
-                </div>
-
                 <!-- Personal Information -->
                 <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                     <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
@@ -885,18 +911,34 @@ function initScholarshipRequests() {
                     </div>
                 </div>
 
-                <!-- Sports & Requirements -->
+                <!-- Education & Scholarship -->
                 <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                     <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        Sports & Requirements
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+                        Education & Scholarship
                     </h3>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                        <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Sports Type</div>
-                            <div style="font-size:16px;font-weight:700;color:#667eea;">${r.sports_type || '—'}</div>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                        <div style="grid-column:1/-1;">
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">School Name</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.school_name || '—'}</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">School Address</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.school_address || '—'}</div>
                         </div>
                         <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Year Level</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.year_level || '—'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Program / Strand</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.program_strand || '—'}</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Purpose of Application</div>
+                            <div style="font-size:15px;font-weight:600;color:#111827;">${purposeText}</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
                             <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Submitted Requirements</div>
                             ${reqList.length > 0 ? reqList.map(req => `
                                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -908,8 +950,12 @@ function initScholarshipRequests() {
                     </div>
                 </div>
 
+                ${programHtml}
+
+                ${formAnswersHtml}
+
                 <!-- Submission Details -->
-                <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                     <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         Submission Details
@@ -924,6 +970,16 @@ function initScholarshipRequests() {
                             <div style="font-size:15px;font-weight:600;color:#111827;">${r.submitted_time || '—'}</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Applicant summary -->
+                <div style="background:white;border-radius:12px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;align-items:center;gap:16px;border-top:3px solid #213F99;">
+                    <div style="width:56px;height:56px;background:#e8eef9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#213F99;flex-shrink:0;">${initials}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:4px;">${fullName}</div>
+                        <div style="font-size:14px;color:#6b7280;">${esc(program?.programName || 'Scholarship Program')}</div>
+                    </div>
+                    <span class="schol-pill ${statusCls}" style="flex-shrink:0;">${r.status}</span>
                 </div>
             </div>
         `;
@@ -991,11 +1047,7 @@ function initScholarshipRequests() {
         rejectReasonConfirm.addEventListener('click', () => {
             const selectedReasons = [];
             document.querySelectorAll('.reject-reason-checkbox:checked').forEach(cb => {
-                if (cb.value === 'Other' && rejectReasonOtherText && rejectReasonOtherText.value.trim()) {
-                    selectedReasons.push(`Other: ${rejectReasonOtherText.value.trim()}`);
-                } else if (cb.value !== 'Other') {
-                    selectedReasons.push(cb.value);
-                }
+                selectedReasons.push(cb.value);
             });
 
             if (selectedReasons.length === 0) {
