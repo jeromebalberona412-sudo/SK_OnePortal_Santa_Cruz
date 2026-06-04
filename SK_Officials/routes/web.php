@@ -136,31 +136,35 @@ Route::middleware([
     Route::delete('/api/schedule-kk-profiling/{id}', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'destroy'])->name('schedule-kk-profiling.destroy');
 
     Route::get('/schedule-programs', function () {
-        return view('schedule_programs::schedule-programs');
-    })->name('schedule-programs');
+        return view('Program_Management::program-management');
+    })->name('schedule-programs'); // legacy route name kept for sidebar
+
+    Route::get('/program-management', function () {
+        return redirect()->route('schedule-programs');
+    });
 
     Route::get('/schedule-programs/sports-application-form', function () {
-        return view('schedule_programs::sports.schedule');
+        return view('Program_Management::sports.schedule');
     })->name('schedule-programs.sports-application-form');
 
     Route::get('/sports-application-form', function () {
-        return view('schedule_programs::sports.schedule');
+        return view('Program_Management::sports.schedule');
     })->name('sports-application-form');
 
     // ── Scholarship routes (pure front-end, no DB) ──
     Route::get('/scholarship-schedule', function () {
-        return view('schedule_programs::scholarship.scholarship-schedule');
+        return view('Program_Management::scholarship.scholarship-schedule');
     })->name('scholarship.schedule');
 
     Route::get('/scholarship-schedule/{id}', function ($id) {
-        return view('schedule_programs::scholarship.scholarship-schedule', ['formId' => $id]);
+        return view('Program_Management::scholarship.scholarship-schedule', ['formId' => $id]);
     })->name('scholarship.schedule.edit');
 
     Route::redirect('/scholar-application-form', '/scholarship-schedule');
     Route::redirect('/scholar-application-form/{id}', '/scholarship-schedule/{id}');
 
     Route::get('/scholarship-applications', function () {
-        return view('schedule_programs::scholarship.scholarship-applications');
+        return view('Program_Management::scholarship.scholarship-applications');
     })->name('scholarship.applications');
 
     Route::redirect('/scholarship-application-request', '/scholarship-applications');
@@ -174,142 +178,61 @@ Route::middleware([
 
     // ── Approved Scholars (pure front-end, no DB) ──
     Route::get('/approved-scholars', function () {
-        return view('schedule_programs::scholarship.approved-scholars');
+        return view('Program_Management::scholarship.approved-scholars');
     })->name('approved-scholars');
 
     Route::redirect('/scholar-list', '/approved-scholars');
 
     // ── Scholar Evaluation route (pure front-end, no DB) ──
     Route::get('/scholar-evaluation', function () {
-        return view('schedule_programs::scholarship.evaluation');
+        return view('Program_Management::scholarship.evaluation');
     })->name('scholar.evaluation');
 
     Route::redirect('/sports', '/sport_list');
 
     // ── Sports List route (pure front-end, no DB) ──
     Route::get('/sport_list', function () {
-        return view('schedule_programs::sports.list');
+        return view('Program_Management::sports.list');
     })->name('sport.list');
 
     // ── Sports requests route (pure front-end, no DB) ──
     Route::get('/sports-requests', function () {
-        return view('schedule_programs::sports.requests');
+        return view('Program_Management::sports.requests');
     })->name('sports-requests');
 
     // ── Sports evaluation route (pure front-end, no DB) ──
     Route::get('/sports-evaluation', function () {
-        return view('schedule_programs::sports.evaluation');
+        return view('Program_Management::sports.evaluation');
     })->name('sports.evaluation');
 
-    // ── Environmental routes (pure front-end, no DB) ──
-    Route::get('/environmental-schedule', function () {
-        return view('schedule_programs::environmental.schedule');
-    })->name('environmental.schedule');
-    Route::get('/environmental-requests', function () {
-        return view('schedule_programs::environmental.requests');
-    })->name('environmental.requests');
-    Route::get('/environmental-list', function () {
-        return view('schedule_programs::environmental.list');
-    })->name('environmental.list');
-    Route::get('/environmental-evaluation', function () {
-        return view('schedule_programs::environmental.evaluation');
-    })->name('environmental.evaluation');
+    // ── Committee survey modules (config-driven: one blade + JS per tab) ──
+    $surveyPrograms = require app_path('Modules/Program_Management/config/survey-programs.php');
 
-    // ── Disaster routes (pure front-end, no DB) ──
-    Route::get('/disaster-schedule', function () {
-        return view('schedule_programs::disaster.schedule');
-    })->name('disaster.schedule');
-    Route::get('/disaster-requests', function () {
-        return view('schedule_programs::disaster.requests');
-    })->name('disaster.requests');
-    Route::get('/disaster-list', function () {
-        return view('schedule_programs::disaster.list');
-    })->name('disaster.list');
-    Route::get('/disaster-evaluation', function () {
-        return view('schedule_programs::disaster.evaluation');
-    })->name('disaster.evaluation');
+    $surveyTabViews = [
+        'forms' => ['view' => 'survey.survey-forms', 'title' => 'Survey Forms', 'subtitle' => 'Create and manage survey questions for Kabataan members.'],
+        'results' => ['view' => 'survey.survey-results', 'title' => 'Survey Results', 'subtitle' => 'View Kabataan who answered your surveys and read each response.'],
+        'analytics' => ['view' => 'survey.survey-analytics', 'title' => 'Survey Analytics', 'subtitle' => 'Charts and counts per question — see how many chose each answer.'],
+    ];
 
-    // ── Livelihood routes (pure front-end, no DB) ──
-    Route::get('/livelihood-schedule', function () {
-        return view('schedule_programs::livelihood.schedule');
-    })->name('livelihood.schedule');
-    Route::get('/livelihood-requests', function () {
-        return view('schedule_programs::livelihood.requests');
-    })->name('livelihood.requests');
-    Route::get('/livelihood-list', function () {
-        return view('schedule_programs::livelihood.list');
-    })->name('livelihood.list');
-    Route::get('/livelihood-evaluation', function () {
-        return view('schedule_programs::livelihood.evaluation');
-    })->name('livelihood.evaluation');
+    foreach ($surveyPrograms as $key => $meta) {
+        foreach ($surveyTabViews as $tab => $tabMeta) {
+            Route::get("/{$key}-survey-{$tab}", function () use ($key, $meta, $tab, $tabMeta) {
+                return view('Program_Management::'.$tabMeta['view'], [
+                    'committee' => $key,
+                    'activeTab' => $tab,
+                    'committeeTitle' => $meta['title'],
+                    'committeeDescription' => $meta['description'],
+                    'skHead' => $meta['sk_head'],
+                    'activities' => $meta['activities'],
+                    'pageTitle' => $tabMeta['title'],
+                    'pageSubtitle' => $tabMeta['subtitle'],
+                ]);
+            })->name("{$key}.survey.{$tab}");
+        }
 
-    // ── Medicines routes (pure front-end, no DB) ──
-    Route::get('/medicines-schedule', function () {
-        return view('schedule_programs::medicines.schedule');
-    })->name('medicines.schedule');
-    Route::get('/medicines-requests', function () {
-        return view('schedule_programs::medicines.requests');
-    })->name('medicines.requests');
-    Route::get('/medicines-list', function () {
-        return view('schedule_programs::medicines.list');
-    })->name('medicines.list');
-    Route::get('/medicines-evaluation', function () {
-        return view('schedule_programs::medicines.evaluation');
-    })->name('medicines.evaluation');
-
-    // ── Anti-drug routes (pure front-end, no DB) ──
-    Route::get('/antidrug-schedule', function () {
-        return view('schedule_programs::antidrug.schedule');
-    })->name('antidrug.schedule');
-    Route::get('/antidrug-requests', function () {
-        return view('schedule_programs::antidrug.requests');
-    })->name('antidrug.requests');
-    Route::get('/antidrug-list', function () {
-        return view('schedule_programs::antidrug.list');
-    })->name('antidrug.list');
-    Route::get('/antidrug-evaluation', function () {
-        return view('schedule_programs::antidrug.evaluation');
-    })->name('antidrug.evaluation');
-
-    // ── Gender routes (pure front-end, no DB) ──
-    Route::get('/gender-schedule', function () {
-        return view('schedule_programs::gender.schedule');
-    })->name('gender.schedule');
-    Route::get('/gender-requests', function () {
-        return view('schedule_programs::gender.requests');
-    })->name('gender.requests');
-    Route::get('/gender-list', function () {
-        return view('schedule_programs::gender.list');
-    })->name('gender.list');
-    Route::get('/gender-evaluation', function () {
-        return view('schedule_programs::gender.evaluation');
-    })->name('gender.evaluation');
-
-    // ── Feeding routes (pure front-end, no DB) ──
-    Route::get('/feeding-schedule', function () {
-        return view('schedule_programs::feeding.schedule');
-    })->name('feeding.schedule');
-    Route::get('/feeding-requests', function () {
-        return view('schedule_programs::feeding.requests');
-    })->name('feeding.requests');
-    Route::get('/feeding-list', function () {
-        return view('schedule_programs::feeding.list');
-    })->name('feeding.list');
-    Route::get('/feeding-evaluation', function () {
-        return view('schedule_programs::feeding.evaluation');
-    })->name('feeding.evaluation');
-
-    // ── Others routes (pure front-end, no DB) ──
-    Route::get('/others-schedule', function () {
-        return view('schedule_programs::others.schedule');
-    })->name('others.schedule');
-    Route::get('/others-requests', function () {
-        return view('schedule_programs::others.requests');
-    })->name('others.requests');
-    Route::get('/others-list', function () {
-        return view('schedule_programs::others.list');
-    })->name('others.list');
-    Route::get('/others-evaluation', function () {
-        return view('schedule_programs::others.evaluation');
-    })->name('others.evaluation');
+        Route::redirect("/{$key}-schedule", "/{$key}-survey-forms");
+        Route::redirect("/{$key}-requests", "/{$key}-survey-results");
+        Route::redirect("/{$key}-list", "/{$key}-survey-results");
+        Route::redirect("/{$key}-evaluation", "/{$key}-survey-analytics");
+    }
 });

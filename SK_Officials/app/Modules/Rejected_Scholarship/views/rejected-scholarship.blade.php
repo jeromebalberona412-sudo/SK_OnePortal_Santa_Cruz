@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -9,7 +9,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
-        'app/Modules/schedule_programs/assets/css/scholarship/scholarship_application_form.css',
+        'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Rejected_Scholarship/assets/css/rejected-scholarship.css'
     ])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -25,7 +25,7 @@
 <main class="main-content">
     <div class="page-container rejected-schol-page schol-page-container">
 
-        @include('schedule_programs::scholarship.partials.page-top', [
+        @include('Program_Management::scholarship.partials.page-top', [
             'activeTab' => 'rejected',
             'pageTitle' => 'Rejected Scholars',
             'pageSubtitle' => 'Scholarship applications that were rejected. Restore to return them to the application queue.',
@@ -130,7 +130,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
-    'app/Modules/schedule_programs/assets/js/scholarship/scholarship-view-shared.js',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Rejected_Scholarship/assets/js/rejected-scholarship.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
