@@ -14,7 +14,7 @@
 
                     <div class="kabataan-hero-actions">
                         <a href="{{ route('login') }}" class="kabataan-button kabataan-button-primary">Get Started</a>
-                        <a href="{{ route('homepage.section', ['section' => 'about']) }}" class="kabataan-button kabataan-button-secondary">Learn More</a>
+                        <a href="{{ route('about') }}" class="kabataan-button kabataan-button-secondary">Learn More</a>
                     </div>
 
                     <div class="kabataan-hero-stats" aria-label="Platform highlights" style="display: none;">

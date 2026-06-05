@@ -129,8 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearInterval(timerInterval);
             }
             
-            // Redirect to profile or settings
-            window.location.href = '/settings';
+            // Redirect to profile
+            window.location.href = '/profile';
         });
     }
     

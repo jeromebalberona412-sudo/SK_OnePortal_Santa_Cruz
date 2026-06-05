@@ -1,4 +1,106 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Modal open/close functions for program categories
+    window.openEducationModal = function() {
+        const modal = document.getElementById('educationModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeEducationModal = function() {
+        const modal = document.getElementById('educationModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.openAntiDrugsModal = function() {
+        const modal = document.getElementById('antiDrugsModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeAntiDrugsModal = function() {
+        const modal = document.getElementById('antiDrugsModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.openAgricultureModal = function() {
+        const modal = document.getElementById('agricultureModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeAgricultureModal = function() {
+        const modal = document.getElementById('agricultureModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.openDisasterModal = function() {
+        const modal = document.getElementById('disasterModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeDisasterModal = function() {
+        const modal = document.getElementById('disasterModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.openSportsModal = function() {
+        const modal = document.getElementById('sportsModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeSportsModal = function() {
+        const modal = document.getElementById('sportsModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.openGenderModal = function() {
+        const modal = document.getElementById('genderModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeGenderModal = function() {
+        const modal = document.getElementById('genderModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.openHealthModal = function() {
+        const modal = document.getElementById('healthModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeHealthModal = function() {
+        const modal = document.getElementById('healthModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.openOthersModal = function() {
+        const modal = document.getElementById('othersModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeOthersModal = function() {
+        const modal = document.getElementById('othersModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    // Terms toggle function
+    window.toggleTerms = function() {
+        const termsContent = document.getElementById('termsContent');
+        const chevron = document.querySelector('.chevron-icon');
+        if (termsContent) {
+            termsContent.classList.toggle('expanded');
+            if (chevron) {
+                chevron.style.transform = termsContent.classList.contains('expanded') ? 'rotate(180deg)' : 'rotate(0)';
+            }
+        }
+    };
+
+    // Apply button toggle
+    window.toggleApplyButton = function() {
+        const checkbox = document.getElementById('agreeTerms');
+        const button = document.getElementById('applyNowBtn');
+        if (checkbox && button) {
+            button.disabled = !checkbox.checked;
+        }
+    };
+
     // Global handler for category clicks
     window.handleCategoryClick = function(categoryId) {
         console.log('Category clicked:', categoryId);
@@ -171,31 +273,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ── Programs Drawer (mobile/tablet) ───────────────────────────────────────
     const drawerBtn      = document.getElementById('programsDrawerBtn');
-    const sidebar        = document.querySelector('.programs-sidebar');
+    const drawerSidebar  = document.getElementById('programsDrawerSidebar');
     const backdrop       = document.getElementById('programsDrawerBackdrop');
 
     function openDrawer() {
-        sidebar?.classList.add('drawer-open');
+        drawerSidebar?.classList.add('drawer-open');
         backdrop?.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
     function closeDrawer() {
-        sidebar?.classList.remove('drawer-open');
+        drawerSidebar?.classList.remove('drawer-open');
         backdrop?.classList.remove('active');
         document.body.style.overflow = '';
     }
 
     drawerBtn?.addEventListener('click', () => {
-        sidebar?.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
+        drawerSidebar?.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
     });
 
     backdrop?.addEventListener('click', closeDrawer);
 
     // Close drawer when a program category is clicked (opens a modal)
-    document.querySelectorAll('.program-category').forEach(cat => {
+    document.querySelectorAll('#programsDrawerSidebar .program-category').forEach(cat => {
         cat.addEventListener('click', () => {
-            if (window.innerWidth <= 1200) closeDrawer();
+            closeDrawer();
+        });
+    });
+
+    // Close drawer when a barangay profile is clicked
+    document.querySelectorAll('#programsDrawerSidebar .brgy-profile-item').forEach(item => {
+        item.addEventListener('click', () => {
+            closeDrawer();
         });
     });
 

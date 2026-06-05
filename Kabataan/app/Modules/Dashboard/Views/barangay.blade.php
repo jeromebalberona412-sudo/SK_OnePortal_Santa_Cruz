@@ -10,6 +10,10 @@
     <meta http-equiv="Expires" content="0">
     <title>SK Barangay {{ $name }} - SK OnePortal</title>
     @vite([
+        'app/Modules/Layout/assets/css/kabataan-header.css',
+        'app/Modules/Layout/assets/js/kabataan-header.js',
+        'app/Modules/Layout/assets/css/kabataan-logout.css',
+        'app/Modules/Layout/assets/js/kabataan-logout.js',
         'app/Modules/Profile/assets/css/profile.css',
         'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Dashboard/assets/css/notif.css',
@@ -163,58 +167,8 @@
 <body class="youth-profile">
     @include('dashboard::loading')
 
-    {{-- NAVBAR --}}
-    <nav class="top-navbar">
-        <div class="navbar-container">
-            <div class="navbar-left">
-                <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="navbar-logo">
-                <span class="navbar-title">SK OnePortal</span>
-            </div>
-            <div class="navbar-center">
-                <div class="search-bar">
-                    <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                    </svg>
-                    <input type="text" placeholder="Search posts, programs, announcements..." class="search-input">
-                </div>
-            </div>
-            <div class="navbar-right">
-                @include('dashboard::notification')
-                @include('dashboard::chatbot')
-                <div class="user-menu">
-                    <button class="user-avatar-btn">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=667eea&color=fff" alt="User Avatar">
-                    </button>
-                    <div class="user-dropdown">
-                        <div class="dropdown-header">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=667eea&color=fff" alt="User Avatar">
-                            <div>
-                                <p class="user-name">{{ $user->name ?? 'Youth User' }}</p>
-                                <p class="user-email">{{ $user->email ?? 'youth@skportal.com' }}</p>
-                            </div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('profile') }}" class="dropdown-item">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
-                            My Profile
-                        </a>
-                        <a href="{{ route('settings') }}" class="dropdown-item">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-                            Settings
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="dropdown-item logout-btn">
-                                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    {{-- KABATAAN HEADER (consistent across all pages) --}}
+    @include('layout::kabataan-header', ['showSearch' => true])
 
     {{-- MAIN --}}
     <main class="profile-main">

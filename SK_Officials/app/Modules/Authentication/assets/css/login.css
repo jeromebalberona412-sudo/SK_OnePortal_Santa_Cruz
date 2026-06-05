@@ -726,7 +726,7 @@ html {
     width: 20px;
     height: 20px;
     cursor: pointer;
-    accent-color: var(--sk-yellow);
+    accent-color: #000000;
     border-radius: 6px;
 }
 

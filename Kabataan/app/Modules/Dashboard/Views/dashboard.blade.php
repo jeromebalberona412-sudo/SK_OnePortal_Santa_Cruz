@@ -39,46 +39,8 @@
     <!-- Main Content -->
     <main class="dashboard-main">
         <div class="dashboard-container">
-            <!-- Left Sidebar (Optional - for future use) -->
-            
-            <!-- Center Content - Social Feed -->
-            <div class="feed-section">
-                <!-- Success Message -->
-                @if (session('success'))
-                    <div class="alert alert-success">
-                        <svg viewBox="0 0 20 20" fill="currentColor" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        {{ session('success') }}
-                    </div>
-                @endif
-                
-                <div class="feed-header">
-                    <div>
-                        <h1>SK Community Feed</h1>
-                        <p>See the latest posts, events, and programs from SK officials.</p>
-                    </div>
-                </div>
-
-                <div class="feed-filter-bar" style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0;">
-                    <button class="feed-tab active" onclick="setFeedFilter(this,'all')">All</button>
-                    <button class="feed-tab" onclick="setFeedFilter(this,'announcement')">Announcements</button>
-                    <button class="feed-tab" onclick="setFeedFilter(this,'event')">Events</button>
-                    <button class="feed-tab" onclick="setFeedFilter(this,'activity')">Activities</button>
-                    <button class="feed-tab" onclick="setFeedFilter(this,'program')">Programs</button>
-                </div>
-
-                <div id="feed-posts"></div>
-
-                <div style="text-align:center;padding:8px 0 16px;">
-                    <button class="view-details-btn" id="load-more-btn" onclick="loadMorePosts()" style="display:none;">
-                        Load More
-                    </button>
-                </div>
-            </div>
-
-            <!-- Right Sidebar -->
-            <aside class="programs-sidebar">
+            <!-- Left Sidebar - Programs -->
+            <aside class="programs-sidebar-left">
                 <div class="sidebar-card">
                     <h2 class="sidebar-title">Programs in Your Barangay</h2>
                     <p class="sidebar-subtitle">Available programs in Barangay {{ $user->barangay ?? '1' }}</p>
@@ -213,9 +175,47 @@
                         </div>
                     </div>
                 </div>
+            </aside>
 
-                {{-- Barangay SK Profiles --}}
-                <div class="sidebar-card" style="margin-top:16px;">
+            <!-- Center Content - Social Feed -->
+            <div class="feed-section">
+                <!-- Success Message -->
+                @if (session('success'))
+                    <div class="alert alert-success">
+                        <svg viewBox="0 0 20 20" fill="currentColor" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ session('success') }}
+                    </div>
+                @endif
+                
+                <div class="feed-header">
+                    <div>
+                        <h1>SK Community Feed</h1>
+                        <p>See the latest posts, events, and programs from SK officials.</p>
+                    </div>
+                </div>
+
+                <div class="feed-filter-bar" style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0;">
+                    <button class="feed-tab active" onclick="setFeedFilter(this,'all')">All</button>
+                    <button class="feed-tab" onclick="setFeedFilter(this,'announcement')">Announcements</button>
+                    <button class="feed-tab" onclick="setFeedFilter(this,'event')">Events</button>
+                    <button class="feed-tab" onclick="setFeedFilter(this,'activity')">Activities</button>
+                    <button class="feed-tab" onclick="setFeedFilter(this,'program')">Programs</button>
+                </div>
+
+                <div id="feed-posts"></div>
+
+                <div style="text-align:center;padding:8px 0 16px;">
+                    <button class="view-details-btn" id="load-more-btn" onclick="loadMorePosts()" style="display:none;">
+                        Load More
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Barangay SK Profiles -->
+            <aside class="barangay-sidebar-right">
+                <div class="sidebar-card">
                     <h2 class="sidebar-title">Barangay SK Profiles</h2>
                     <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
                     <div class="barangay-profiles-list">
@@ -259,6 +259,190 @@
             </aside>
         </div>
     </main>
+
+    <!-- Mobile Drawer Backdrop -->
+    <div id="programsDrawerBackdrop" class="programs-drawer-backdrop"></div>
+
+    <!-- Mobile Drawer -->
+    <aside class="programs-sidebar" id="programsDrawerSidebar">
+        <div class="sidebar-card">
+            <h2 class="sidebar-title">Programs in Your Barangay</h2>
+            <p class="sidebar-subtitle">Available programs in Barangay {{ $user->barangay ?? '1' }}</p>
+            
+            <div class="program-categories">
+                <!-- Education -->
+                <div class="program-category" onclick="openEducationModal()" style="cursor: pointer;">
+                    <div class="category-icon education">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                        </svg>
+                    </div>
+                    <div class="category-content">
+                        <h3>Education</h3>
+                        <p>1 active program</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Anti-Drugs -->
+                <div class="program-category" data-category="anti-drugs" onclick="openAntiDrugsModal()" style="cursor: pointer;">
+                    <div class="category-icon anti-drugs">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="category-content">
+                        <h3>Anti-Drugs</h3>
+                        <p>1 active program</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Agriculture -->
+                <div class="program-category" data-category="agriculture" onclick="openAgricultureModal()" style="cursor: pointer;">
+                    <div class="category-icon agriculture">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="category-content">
+                        <h3>Agriculture</h3>
+                        <p>1 active program</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Disaster Preparedness -->
+                <div class="program-category" data-category="disaster" onclick="openDisasterModal()" style="cursor: pointer;">
+                    <div class="category-icon disaster">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="category-content">
+                        <h3>Disaster Preparedness</h3>
+                        <p>1 active program</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Sports Development -->
+                <div class="program-category" data-category="sports" onclick="openSportsModal()" style="cursor: pointer;">
+                    <div class="category-icon sports">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="category-content">
+                        <h3>Sports Development</h3>
+                        <p>1 active program</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Gender and Development -->
+                <div class="program-category" data-category="gender" onclick="openGenderModal()" style="cursor: pointer;">
+                    <div class="category-icon gender">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                    </div>
+                    <div class="category-content">
+                        <h3>Gender and Development</h3>
+                        <p>1 active program</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Health -->
+                <div class="program-category" data-category="health" onclick="openHealthModal()" style="cursor: pointer;">
+                    <div class="category-icon health">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="category-content">
+                        <h3>Health</h3>
+                        <p>1 active program</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+
+                <!-- Others -->
+                <div class="program-category" data-category="others" onclick="openOthersModal()" style="cursor: pointer;">
+                    <div class="category-icon others">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="category-content">
+                        <h3>Others</h3>
+                        <p>1 active program</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Barangay SK Profiles --}}
+        <div class="sidebar-card" style="margin-top:16px;">
+            <h2 class="sidebar-title">Barangay SK Profiles</h2>
+            <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
+            <div class="barangay-profiles-list">
+                @php
+                $brgyList = [
+                    ['name'=>'Alipit',        'chairman'=>'[SK Chairman]','color'=>'#4CAF50','programs'=>2,'events'=>3,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                    ['name'=>'Bagumbayan',    'chairman'=>'[SK Chairman]','color'=>'#2196F3','programs'=>1,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                    ['name'=>'Bubukal',       'chairman'=>'[SK Chairman]','color'=>'#9C27B0','programs'=>0,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                    ['name'=>'Duhat',         'chairman'=>'[SK Chairman]','color'=>'#FF9800','programs'=>1,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                    ['name'=>'Gatid',         'chairman'=>'[SK Chairman]','color'=>'#009688','programs'=>1,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                    ['name'=>'Labuin',        'chairman'=>'[SK Chairman]','color'=>'#f44336','programs'=>2,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                    ['name'=>'Pagsawitan',    'chairman'=>'[SK Chairman]','color'=>'#673AB7','programs'=>1,'events'=>3,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                    ['name'=>'San Jose',      'chairman'=>'[SK Chairman]','color'=>'#0450a8','programs'=>0,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                    ['name'=>'Santisima Cruz','chairman'=>'[SK Chairman]','color'=>'#FF5722','programs'=>2,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
+                ];
+                @endphp
+                @foreach ($brgyList as $brgy)
+                <div class="brgy-profile-item"
+                    data-brgy-name="{{ $brgy['name'] }}"
+                    data-brgy-chairman="{{ $brgy['chairman'] }}"
+                    data-brgy-members="{{ implode('|', $brgy['members']) }}"
+                    data-brgy-color="{{ $brgy['color'] }}"
+                    data-brgy-programs="{{ $brgy['programs'] }}"
+                    data-brgy-events="{{ $brgy['events'] }}"
+                    style="cursor:pointer;"
+                >
+                    <div class="brgy-avatar" style="background:{{ $brgy['color'] }};">
+                        {{ strtoupper(substr($brgy['name'], 0, 2)) }}
+                    </div>
+                    <div class="brgy-info">
+                        <p class="brgy-name">Brgy. {{ $brgy['name'] }}</p>
+                        <p class="brgy-chair">{{ $brgy['chairman'] }}</p>
+                    </div>
+                    <svg style="width:16px;height:16px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </aside>
 
     <div id="educationModal" class="program-modal">
         <div class="modal-overlay"></div>

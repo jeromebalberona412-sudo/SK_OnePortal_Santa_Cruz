@@ -23,18 +23,18 @@
                 <h3 class="kabataan-footer-heading">Quick Links</h3>
                 <ul class="kabataan-footer-links">
                     <li><a href="{{ route('homepage') }}">Home</a></li>
-                    <li><a href="{{ route('homepage.section', ['section' => 'about']) }}">About</a></li>
-                    <li><a href="{{ route('homepage.section', ['section' => 'faqs']) }}">FAQs</a></li>
-                    <li><a href="{{ route('homepage.section', ['section' => 'contact']) }}">Contact</a></li>
+                    <li><a href="{{ route('about') }}">About</a></li>
+                    <li><a href="{{ route('faqs') }}">FAQs</a></li>
+                    <li><a href="{{ route('contact') }}">Contact</a></li>
                 </ul>
             </div>
 
             <div class="col-6 col-md-3 col-lg-2 kabataan-footer-col">
                 <h3 class="kabataan-footer-heading">Services</h3>
                 <ul class="kabataan-footer-links">
-                    <li><a href="{{ route('homepage.section', ['section' => 'about']) }}">Program Discovery</a></li>
+                    <li><a href="{{ route('about') }}">Program Discovery</a></li>
                     <li><a href="{{ route('register') }}">Youth Registration</a></li>
-                    <li><a href="{{ route('homepage.section', ['section' => 'faqs']) }}">Help &amp; Support</a></li>
+                    <li><a href="{{ route('faqs') }}">Help &amp; Support</a></li>
                 </ul>
             </div>
 

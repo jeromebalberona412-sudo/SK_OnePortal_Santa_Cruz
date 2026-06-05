@@ -28,7 +28,7 @@ class DashboardController extends Controller
 
         $barangayName = $registration?->barangay?->name ?? 'Santa Cruz';
 
-        return view('dashboard::index', [
+        return view('dashboard::dashboard', [
             'user'                => $user,
             'showKkUpdateModal'   => (bool) ($registration && session()->pull('show_kk_profiling_update', false)),
             'kkUpdateBarangay'    => $registration ? $barangayName : null,

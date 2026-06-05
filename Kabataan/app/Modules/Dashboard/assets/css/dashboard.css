@@ -254,7 +254,7 @@ body.youth-dashboard {
     max-width: 1400px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 320px 1fr 320px;
     gap: 24px;
     height: calc(100vh - var(--nav-h) - 48px);
 }
@@ -496,7 +496,30 @@ body.youth-dashboard {
 .send-comment-btn svg { width: 16px; height: 16px; }
 .send-comment-btn:hover { background: var(--brand-dark); }
 
-/* ── SIDEBAR ── */
+/* ── SIDEBARS ── */
+.programs-sidebar-left {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+}
+
+.programs-sidebar-left::-webkit-scrollbar { width: 6px; }
+.programs-sidebar-left::-webkit-scrollbar-track { background: transparent; }
+.programs-sidebar-left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+.barangay-sidebar-right {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+}
+
+.barangay-sidebar-right::-webkit-scrollbar { width: 6px; }
+.barangay-sidebar-right::-webkit-scrollbar-track { background: transparent; }
+.barangay-sidebar-right::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+/* Keep old class for compatibility */
 .programs-sidebar {
     height: 100%;
     overflow-y: auto;
@@ -755,7 +778,11 @@ body.youth-dashboard {
     .feed-section { height: auto; overflow-y: visible; }
     .dashboard-main { height: auto; overflow: visible; }
     body.youth-dashboard { overflow: auto; height: auto; }
-    .programs-drawer-btn { display: flex !important; }
+
+    .programs-sidebar-left,
+    .barangay-sidebar-right {
+        display: none;
+    }
 
     .programs-sidebar {
         position: fixed;
@@ -781,6 +808,11 @@ body.youth-dashboard {
     }
 
     .programs-drawer-backdrop.active { display: block; }
+}
+
+/* Hide programs drawer button on desktop */
+@media (min-width: 1201px) {
+    .programs-drawer-btn { display: none !important; }
 }
 
 @media (max-width: 768px) {
@@ -858,21 +890,24 @@ body.youth-dashboard {
     margin-bottom: 12px;
     border-bottom: 2px solid var(--border);
     padding-bottom: 0;
+    width: 100%;
 }
 
 .feed-tab {
-    padding: 10px 18px;
+    padding: 12px 24px;
     background: none;
     border: none;
     border-bottom: 3px solid transparent;
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
     position: relative;
     bottom: -2px;
+    flex: 1;
+    text-align: center;
 }
 
 .feed-tab:hover {
@@ -1273,10 +1308,6 @@ body.youth-dashboard {
     box-shadow: none;
 }
 
-.apply-now-button.enabled {
-    /* Remove the pulse animation that causes jumping */
-    /* animation: enablePulse 0.5s ease; */
-}
 
 /* Remove the pulse animation keyframes */
 /*

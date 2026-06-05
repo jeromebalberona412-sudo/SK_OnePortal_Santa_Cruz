@@ -10,7 +10,7 @@
                 </p>
                 <div class="about-hero-actions">
                     <a href="{{ route('register') }}" class="about-btn about-btn-primary">Create Account</a>
-                    <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="about-btn about-btn-secondary">Read FAQs</a>
+                    <a href="{{ route('faqs') }}" class="about-btn about-btn-secondary">Read FAQs</a>
                 </div>
             </div>
 
@@ -252,7 +252,7 @@
                     <div class="col-lg-4">
                         <div class="about-hero-actions justify-content-lg-end">
                             <a href="{{ route('login') }}" class="about-btn about-btn-primary">Sign In</a>
-                            <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="about-btn about-btn-secondary">Contact SK</a>
+                            <a href="{{ route('contact') }}" class="about-btn about-btn-secondary">Contact SK</a>
                         </div>
                     </div>
                 </div>
