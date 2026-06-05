@@ -214,6 +214,8 @@ body {
 .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    margin: 0;
+    padding: 0;
 }
 
 .table-wrapper::-webkit-scrollbar { height: 4px; }
@@ -226,9 +228,17 @@ body {
     border-collapse: collapse;
     font-size: 13px;
     min-width: 750px;
+    margin: 0;
 }
 
-.prev-kab-table thead { background: #2c2c3e; }
+.prev-kab-table thead {
+    background: #2c2c3e;
+    display: table-header-group;
+}
+
+.prev-kab-table thead tr {
+    display: table-row;
+}
 
 .prev-kab-table th {
     font-size: 12px;
@@ -304,6 +314,21 @@ body {
 
 .btn-action-view:hover { background: #2c2c3e; }
 
+.btn-action-delete {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(239,68,68,.35);
+    transition: all .2s ease;
+}
+
+.btn-action-delete:hover { background: #dc2626; }
+
 .empty-state-row td {
     text-align: center;
     font-size: 13px;
@@ -371,6 +396,10 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 1100;
+}
+
+.delete-modal-box {
+    max-width: 480px;
 }
 
 .modal-box {
@@ -675,6 +704,32 @@ body {
     flex-shrink: 0;
 }
 
+/* ── Other Reason Textarea ── */
+.other-reason-textarea {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #374151;
+    resize: vertical;
+    box-sizing: border-box;
+    min-height: 72px;
+    max-height: 150px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.4;
+    overflow-y: auto;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.other-reason-textarea:focus {
+    outline: none;
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(44,44,62,.15);
+}
+
 /* ── Preview Modal ── */
 .preview-modal-box { max-width: 900px; }
 
@@ -907,4 +962,199 @@ body {
 .preview-table--full td.sig-cell svg {
     display: block;
     margin: 0 auto;
+}
+
+/* ── Upload Progress Indicator ── */
+.upload-progress-container {
+    padding: 16px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    margin-bottom: 14px;
+}
+
+.upload-progress-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.upload-progress-spinner {
+    flex-shrink: 0;
+}
+
+.spinner-icon {
+    animation: spin 1s linear infinite;
+    color: #22c55e;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.upload-progress-text {
+    flex: 1;
+}
+
+.upload-progress-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #166534;
+    margin-bottom: 4px;
+}
+
+.upload-progress-status {
+    font-size: 12px;
+    color: #15803d;
+}
+
+.upload-progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.upload-progress-percentage {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: #166534;
+}
+
+/* ── Toast Notifications ── */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+    max-width: 400px;
+    animation: toastSlideIn 0.3s ease;
+    border-left: 4px solid;
+}
+
+.toast.success {
+    border-left-color: #22c55e;
+}
+
+.toast.error {
+    border-left-color: #ef4444;
+}
+
+.toast-icon {
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
+.toast.success .toast-icon {
+    color: #22c55e;
+}
+
+.toast.error .toast-icon {
+    color: #ef4444;
+}
+
+.toast-message {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toast-close:hover {
+    color: #6b7280;
+}
+
+.toast.toast-exit {
+    animation: toastSlideOut 0.3s ease forwards;
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastSlideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* ── Button Loading State ── */
+.btn.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn.loading::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    left: 50%;
+    top: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+}
+
+.btn.loading span {
+    visibility: hidden;
 }

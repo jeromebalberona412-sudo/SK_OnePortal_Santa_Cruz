@@ -140,25 +140,33 @@ function renderTable() {
     if (!tableBody) return;
 
     if (slice.length === 0) {
-        tableBody.innerHTML = `<tr class="empty-state-row"><td colspan="13">No records found.</td></tr>`;
+        tableBody.innerHTML = `<tr class="empty-state-row"><td colspan="20">No records found.</td></tr>`;
     } else {
         tableBody.innerHTML = slice.map((r, i) => `
             <tr>
                 <td>${(currentPage - 1) * ROWS_PER_PAGE + i + 1}</td>
-                <td class="fullname-cell">${r.name || fullName(r)}</td>
-                <td>${r.age}</td>
-                <td>${r.barangay}</td>
-                <td>${r.homeAddress || r.purokZone || '—'}</td>
-                <td>${r.sex}</td>
-                <td>${r.civilStatus}</td>
-                <td>${r.youthClassification}</td>
-                <td>${r.youthAgeGroup}</td>
-                <td>${r.education}</td>
-                <td>${r.workStatus}</td>
-                <td><span class="voter-badge ${r.registeredVoter === 'YES' || r.registeredVoter === 'Yes' ? 'yes' : 'no'}">${r.registeredVoter}</span></td>
+                <td class="fullname-cell">${r.name || fullName(r) || 'None'}</td>
+                <td>${r.age || 'None'}</td>
+                <td>${r.birthday || 'None'}</td>
+                <td>${r.sex || 'None'}</td>
+                <td>${r.civilStatus || 'None'}</td>
+                <td>${r.youthClassification || 'None'}</td>
+                <td>${r.youthAgeGroup || 'None'}</td>
+                <td>${r.contact || 'None'}</td>
+                <td>${r.homeAddress || r.purokZone || 'None'}</td>
+                <td>${r.education || 'None'}</td>
+                <td>${r.workStatus || 'None'}</td>
+                <td><span class="voter-badge ${r.registeredVoter === 'YES' || r.registeredVoter === 'Yes' ? 'yes' : 'no'}">${r.registeredVoter || 'None'}</span></td>
+                <td>${r.votingHistory || 'None'}</td>
+                <td>${r.kkAssembly || 'None'}</td>
+                <td>${r.votingFrequency || 'None'}</td>
+                <td>${r.barangay || 'None'}</td>
+                <td>${r.region || 'None'}</td>
+                <td>${r.province || 'None'}</td>
+                <td>${r.city || 'None'}</td>
                 <td>
                     <div class="row-actions">
-                        <button class="btn-action-view" onclick="openViewModal(${r.id})">View</button>
+                        <button class="btn-action-delete" onclick="openDeleteModal(${r.id})">Delete</button>
                     </div>
                 </td>
             </tr>
@@ -200,58 +208,16 @@ window.goToPage = function(p) {
     renderTable();
 };
 
-/* ── View Modal ── */
-window.openViewModal = function(id) {
-    const r = PREV_KAB_DATA.find(rec => rec.id === id);
-    if (!r) return;
+/* ── Delete Modal ── */
+let deleteRecordId = null;
 
-    setText('pvRespondentNumber', r.respondentNo);
-    setText('pvDate',       r.date);
-    setText('pvLastName',   r.lastName);
-    setText('pvFirstName',  r.firstName);
-    setText('pvMiddleName', r.middleName);
-    setText('pvSuffix',     r.suffix);
-    setText('pvRegion',     r.region);
-    setText('pvProvince',   r.province);
-    setText('pvCity',       r.city);
-    setText('pvBarangay',   r.barangay);
-    setText('pvPurokZone',  r.purokZone);
-    setText('pvAge',        r.age);
-    setText('pvDob',        r.birthday);
-    setText('pvEmail',      r.email);
-    setText('pvContact',    r.contact);
-    setText('pvFacebook',   r.facebook);
-
-    setCheckboxes('pvSex',                 r.sex);
-    setCheckboxes('pvCivilStatus',         r.civilStatus);
-    setCheckboxes('pvYouthAgeGroup',       normalizeValue('pvYouthAgeGroup', r.youthAgeGroup));
-    setCheckboxes('pvYouthClassification', normalizeValue('pvYouthClassification', r.youthClassification));
-    setCheckboxes('pvWorkStatus',          normalizeValue('pvWorkStatus', r.workStatus));
-    setCheckboxes('pvEducation',           normalizeValue('pvEducation', r.education));
-    setCheckboxes('pvSKVoter',             r.skVoter);
-    setCheckboxes('pvNatVoter',            r.natVoter);
-    setCheckboxes('pvVotingHistory',       r.votingHistory);
-    setCheckboxes('pvVotingFrequency',     normalizeValue('pvVotingFrequency', r.votingFrequency));
-    setCheckboxes('pvKKAssembly',          r.kkAssembly);
-    setCheckboxes('pvVotingReason',        r.votingReason);
-    setCheckboxes('pvGroupChat',           r.groupChat);
-
-    // Signature — image or text
-    const sigSvg  = document.getElementById('pvSignatureSvg');
-    const sigText = document.getElementById('pvSignatureText');
-    const printedName = [r.firstName, r.middleName ? r.middleName.charAt(0) + '.' : null, r.lastName, r.suffix].filter(Boolean).join(' ');
-
-    if (r.signature && r.signature.startsWith('data:image')) {
-        if (sigSvg) sigSvg.innerHTML = '';
-        if (sigText) sigText.innerHTML = `<img src="${r.signature}" alt="Signature" style="max-width:100%;max-height:60px;display:block;"><span style="display:block;margin-top:4px;font-weight:600;">${printedName}</span>`;
-    } else {
-        if (sigSvg) {
-            sigSvg.innerHTML = `<path d="${getSignaturePath(r.id)}" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
-        }
-        if (sigText) sigText.textContent = printedName;
-    }
-
-    document.getElementById('prevKabViewModal').style.display = 'flex';
+window.openDeleteModal = function(id) {
+    deleteRecordId = id;
+    document.getElementById('prevKabDeleteModal').style.display = 'flex';
+    document.getElementById('deleteReason').value = '';
+    document.getElementById('otherReason').value = '';
+    document.getElementById('otherReasonGroup').style.display = 'none';
+    document.getElementById('charCount').textContent = '0';
 };
 
 function setText(id, val) {
@@ -303,27 +269,114 @@ function normalizeValue(field, value) {
     return value;
 }
 
-/* ── Modal close / maximize ── */
+/* ── Modal close ── */
 document.querySelectorAll('[data-modal-close]').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.getElementById('prevKabViewModal').style.display   = 'none';
+        document.getElementById('prevKabDeleteModal').style.display = 'none';
         document.getElementById('prevKabUploadModal').style.display = 'none';
         resetUploadModal();
     });
 });
 
-const viewBackdrop = document.getElementById('prevKabViewModal');
-if (viewBackdrop) {
-    viewBackdrop.addEventListener('click', e => {
-        if (e.target === viewBackdrop) viewBackdrop.style.display = 'none';
+const deleteBackdrop = document.getElementById('prevKabDeleteModal');
+if (deleteBackdrop) {
+    deleteBackdrop.addEventListener('click', e => {
+        if (e.target === deleteBackdrop) deleteBackdrop.style.display = 'none';
     });
 }
 
-const viewToggleBtn = document.getElementById('prevKabViewModalToggle');
-if (viewToggleBtn) {
-    viewToggleBtn.addEventListener('click', () => {
-        viewBackdrop?.classList.toggle('modal-maximized');
-        viewToggleBtn.textContent = viewBackdrop?.classList.contains('modal-maximized') ? '❐' : '□';
+/* ── Delete Reason Handling ── */
+const otherReasonGroup = document.getElementById('otherReasonGroup');
+const otherReasonTextarea = document.getElementById('otherReason');
+const charCountSpan = document.getElementById('charCount');
+const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+// Handle checkbox changes for delete reason
+document.querySelectorAll('input[name="deleteReason"]').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+        const otherCheckbox = document.querySelector('input[name="deleteReason"][value="Other"]');
+        if (otherCheckbox && otherCheckbox.checked) {
+            otherReasonGroup.style.display = 'block';
+        } else {
+            otherReasonGroup.style.display = 'none';
+        }
+    });
+});
+
+if (otherReasonTextarea) {
+    otherReasonTextarea.addEventListener('input', () => {
+        const currentLength = otherReasonTextarea.value.length;
+        charCountSpan.textContent = currentLength;
+        
+        // Enforce 500 character limit
+        if (currentLength > 500) {
+            otherReasonTextarea.value = otherReasonTextarea.value.substring(0, 500);
+            charCountSpan.textContent = 500;
+        }
+    });
+}
+
+if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', () => {
+        // Get all checked checkboxes
+        const checkedReasons = Array.from(document.querySelectorAll('input[name="deleteReason"]:checked'))
+            .map(cb => cb.value);
+
+        if (checkedReasons.length === 0) {
+            alert('Please select a reason for deletion.');
+            return;
+        }
+
+        const otherCheckbox = document.querySelector('input[name="deleteReason"][value="Other"]');
+        const otherReason = otherReasonTextarea.value;
+
+        // If Other is selected, validate the textarea
+        if (otherCheckbox && otherCheckbox.checked && !otherReason.trim()) {
+            alert('Please provide a reason in the Other field.');
+            return;
+        }
+
+        // Build the final reason string
+        let finalReason = checkedReasons.join(', ');
+        if (otherCheckbox && otherCheckbox.checked) {
+            finalReason = `Other: ${otherReason}`;
+        }
+
+        if (!confirm(`Are you sure you want to delete this record?\n\nReason: ${finalReason}`)) {
+            return;
+        }
+
+        // Send delete request to server
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.textContent = 'Deleting...';
+
+        fetch(`/previous-kabataan/${deleteRecordId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reason: finalReason }),
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                document.getElementById('prevKabDeleteModal').style.display = 'none';
+                loadData();
+                showToast('✅ Record deleted successfully.');
+            } else {
+                showToast('❌ Failed to delete record. Please try again.', 'error');
+            }
+        })
+        .catch(() => {
+            showToast('❌ Network error. Please try again.', 'error');
+        })
+        .finally(() => {
+            confirmDeleteBtn.disabled = false;
+            confirmDeleteBtn.textContent = 'Delete';
+        });
     });
 }
 
@@ -483,6 +536,10 @@ function resetUploadModal() {
     if (uploadModal) uploadModal.classList.remove('modal-maximized');
     const uploadToggleBtn = document.getElementById('prevKabUploadModalToggle');
     if (uploadToggleBtn) uploadToggleBtn.textContent = '□';
+    // Hide upload progress indicator
+    hideUploadProgress();
+    // Reset button loading state
+    if (confirmSaveBtn) setButtonLoading(confirmSaveBtn, false);
 }
 
 /* ── Generate full mock rows for preview ── */
@@ -540,25 +597,25 @@ function renderFullPreviewTable(rows) {
     tbody.innerHTML = rows.map((r, idx) => `
         <tr>
             <td>${idx + 1}</td>
-            <td>${r.name || [r.lastName, r.firstName, r.middleName].filter(Boolean).join(', ')}</td>
-            <td>${r.age}</td>
-            <td>${r.birthday}</td>
-            <td>${r.sex}</td>
-            <td>${r.civilStatus}</td>
-            <td>${r.youthClassification}</td>
-            <td>${r.youthAgeGroup}</td>
-            <td>${r.contact}</td>
-            <td>${r.homeAddress || r.purokZone}</td>
-            <td>${r.education}</td>
-            <td>${r.workStatus}</td>
-            <td>${r.registeredVoter}</td>
-            <td>${r.votingHistory}</td>
-            <td>${r.kkAssembly}</td>
-            <td>${r.votingFrequency}</td>
-            <td>${r.barangay}</td>
-            <td>${r.region}</td>
-            <td>${r.province}</td>
-            <td>${r.city}</td>
+            <td>${r.name || [r.lastName, r.firstName, r.middleName].filter(Boolean).join(', ') || 'None'}</td>
+            <td>${r.age || 'None'}</td>
+            <td>${r.birthday || 'None'}</td>
+            <td>${r.sex || 'None'}</td>
+            <td>${r.civilStatus || 'None'}</td>
+            <td>${r.youthClassification || 'None'}</td>
+            <td>${r.youthAgeGroup || 'None'}</td>
+            <td>${r.contact || 'None'}</td>
+            <td>${r.homeAddress || r.purokZone || 'None'}</td>
+            <td>${r.education || 'None'}</td>
+            <td>${r.workStatus || 'None'}</td>
+            <td>${r.registeredVoter || 'None'}</td>
+            <td>${r.votingHistory || 'None'}</td>
+            <td>${r.kkAssembly || 'None'}</td>
+            <td>${r.votingFrequency || 'None'}</td>
+            <td>${r.barangay || 'None'}</td>
+            <td>${r.region || 'None'}</td>
+            <td>${r.province || 'None'}</td>
+            <td>${r.city || 'None'}</td>
         </tr>
     `).join('');
 }
@@ -568,8 +625,12 @@ if (confirmSaveBtn) {
     confirmSaveBtn.addEventListener('click', () => {
         if (!uploadedRows.length) return;
 
-        confirmSaveBtn.disabled = true;
-        confirmSaveBtn.textContent = 'Saving...';
+        // Show upload progress indicator
+        showUploadProgress();
+        updateUploadProgress(0, uploadedRows.length);
+
+        // Set button to loading state
+        setButtonLoading(confirmSaveBtn, true, 'Confirm & Save');
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         const BATCH = 200;
@@ -582,14 +643,19 @@ if (confirmSaveBtn) {
 
         const sendBatch = (idx) => {
             if (idx >= batches.length) {
+                // Upload complete
+                hideUploadProgress();
                 uploadModal.style.display = 'none';
                 resetUploadModal();
+                setButtonLoading(confirmSaveBtn, false);
                 loadData();
-                showToast(`${totalSaved} record(s) saved successfully.`);
+                showToast(`✅ Successfully uploaded ${totalSaved} records.`);
                 return;
             }
 
-            confirmSaveBtn.textContent = `Saving... (${idx * BATCH}/${uploadedRows.length})`;
+            // Update progress
+            const currentProgress = Math.min(idx * BATCH + BATCH, uploadedRows.length);
+            updateUploadProgress(currentProgress, uploadedRows.length);
 
             fetch('/previous-kabataan/upload', {
                 method: 'POST',
@@ -606,15 +672,15 @@ if (confirmSaveBtn) {
                     totalSaved += res.saved;
                     sendBatch(idx + 1);
                 } else {
-                    showToast('Failed to save records. Please try again.', 'error');
-                    confirmSaveBtn.disabled = false;
-                    confirmSaveBtn.textContent = 'Confirm & Save';
+                    hideUploadProgress();
+                    setButtonLoading(confirmSaveBtn, false);
+                    showToast('❌ Upload failed. Please try again.', 'error');
                 }
             })
             .catch(() => {
-                showToast('Network error. Please try again.', 'error');
-                confirmSaveBtn.disabled = false;
-                confirmSaveBtn.textContent = 'Confirm & Save';
+                hideUploadProgress();
+                setButtonLoading(confirmSaveBtn, false);
+                showToast('❌ Network error. Please try again.', 'error');
             });
         };
 
@@ -622,29 +688,87 @@ if (confirmSaveBtn) {
     });
 }
 
-/* ── Header center banner (replaces bottom toast) ── */
-function showToast(msg) {
-    const banner     = document.getElementById('headerCenterBanner');
-    const bannerText = document.getElementById('headerSuccessBannerText');
-    if (!banner || !bannerText) return;
+/* ── Toast Notification System ── */
+function showToast(message, type = 'success', duration = 4000) {
+    const container = document.getElementById('prevKabToastContainer');
+    if (!container) return;
 
-    bannerText.textContent = msg;
-    banner.style.display = 'flex';
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
 
-    // Reset animation
-    const inner = document.getElementById('headerSuccessBanner');
-    if (inner) {
-        inner.style.animation = 'none';
-        // Force reflow then re-apply
-        void inner.offsetWidth;
-        inner.style.animation = 'bannerFadeIn 0.3s ease';
+    const icon = type === 'success' ? '✅' : '❌';
+
+    toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <span class="toast-message">${message}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto-dismiss after duration
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('toast-exit');
+            toast.addEventListener('animationend', () => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            });
+        }
+    }, duration);
+}
+
+/* ── Upload Progress Indicator Functions ── */
+function showUploadProgress() {
+    const progressContainer = document.getElementById('prevKabUploadProgress');
+    if (progressContainer) {
+        progressContainer.style.display = 'block';
+    }
+}
+
+function hideUploadProgress() {
+    const progressContainer = document.getElementById('prevKabUploadProgress');
+    if (progressContainer) {
+        progressContainer.style.display = 'none';
+    }
+}
+
+function updateUploadProgress(current, total) {
+    const progressBar = document.getElementById('prevKabProgressBar');
+    const progressStatus = document.getElementById('prevKabProgressStatus');
+    const progressPercentage = document.getElementById('prevKabProgressPercentage');
+
+    if (progressBar) {
+        const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+        progressBar.style.width = `${percentage}%`;
     }
 
-    // Auto-hide after 4 seconds
-    clearTimeout(window._prevKabBannerTimer);
-    window._prevKabBannerTimer = setTimeout(() => {
-        banner.style.display = 'none';
-    }, 4000);
+    if (progressStatus) {
+        progressStatus.textContent = `${current} / ${total} records uploaded`;
+    }
+
+    if (progressPercentage) {
+        const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+        progressPercentage.textContent = `${percentage}%`;
+    }
+}
+
+/* ── Button Loading State ── */
+function setButtonLoading(button, isLoading, originalText = '') {
+    if (!button) return;
+
+    if (isLoading) {
+        button.classList.add('loading');
+        button.disabled = true;
+        button.dataset.originalText = originalText || button.textContent;
+    } else {
+        button.classList.remove('loading');
+        button.disabled = false;
+        if (button.dataset.originalText) {
+            button.textContent = button.dataset.originalText;
+        }
+    }
 }
 
 /* ── Event Listeners ── */
