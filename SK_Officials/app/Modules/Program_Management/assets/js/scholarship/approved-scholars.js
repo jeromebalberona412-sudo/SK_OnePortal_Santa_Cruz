@@ -172,7 +172,7 @@ function renderScholarTable() {
                 <div class="prog-tbl-actions">
                     <button type="button" class="prog-btn prog-btn-view" data-scholar-idx="${actualIndex}">View</button>
                     <button type="button" class="prog-btn prog-btn-edit" data-scholar-edit="${actualIndex}">Edit</button>
-                    <button type="button" class="prog-btn prog-btn-delete" data-scholar-delete="${actualIndex}">Delete</button>
+                    <button type="button" class="prog-btn prog-btn-revoke" data-scholar-revoke="${actualIndex}" style="background-color:#ef4444;color:#fff;border:none;">Revoke</button>
                 </div>
             </td>
         </tr>`;
@@ -193,6 +193,14 @@ function renderScholarTable() {
         });
     });
 
+    tbody.querySelectorAll('[data-scholar-revoke]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const idx = parseInt(this.getAttribute('data-scholar-revoke'), 10);
+            const s = filteredScholars[idx];
+            if (s) openRevokeModal(idx, s);
+        });
+    });
+
     tbody.querySelectorAll('[data-scholar-delete]').forEach(btn => {
         btn.addEventListener('click', function () {
             const idx = parseInt(this.getAttribute('data-scholar-delete'), 10);
@@ -203,12 +211,160 @@ function renderScholarTable() {
             applyFilters();
         });
     });
+
+    // Revoke Approval Modal handlers
+    const revokeModal = document.getElementById('slRevokeModal');
+    const revokeClose = document.getElementById('slRevokeClose');
+    const revokeCancel = document.getElementById('btnCancelRevoke');
+    const revokeConfirm = document.getElementById('btnConfirmRevoke');
+    const revokeMaximize = document.getElementById('slRevokeMaximize');
+    const revokeBox = document.getElementById('slRevokeBox');
+    const revokeOtherCheckbox = document.getElementById('slRevokeOtherCheckbox');
+    const revokeReasonField = document.getElementById('slRevokeReasonField');
+    const revokeReasonInput = document.getElementById('revokeReason');
+    const revokeReasonCount = document.getElementById('revokeReasonCount');
+
+    if (revokeClose) revokeClose.addEventListener('click', closeRevokeModal);
+    if (revokeCancel) revokeCancel.addEventListener('click', closeRevokeModal);
+    if (revokeModal) {
+        revokeModal.addEventListener('click', (e) => {
+            if (e.target === revokeModal) closeRevokeModal();
+        });
+    }
+
+    // Maximize/Restore for Revoke modal
+    if (revokeMaximize && revokeBox) {
+        revokeMaximize.addEventListener('click', () => {
+            if (revokeBox.classList.contains('sl-modal-maximized')) {
+                revokeBox.classList.remove('sl-modal-maximized');
+                revokeMaximize.textContent = '□';
+                revokeMaximize.title = 'Maximize';
+            } else {
+                revokeBox.classList.add('sl-modal-maximized');
+                revokeMaximize.textContent = '⧉';
+                revokeMaximize.title = 'Restore Down';
+            }
+        });
+    }
+
+    // Other checkbox handler
+    if (revokeOtherCheckbox && revokeReasonField) {
+        revokeOtherCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                revokeReasonField.style.display = 'block';
+            } else {
+                revokeReasonField.style.display = 'none';
+                if (revokeReasonInput) revokeReasonInput.value = '';
+                if (revokeReasonCount) revokeReasonCount.textContent = '0';
+            }
+        });
+    }
+
+    // Character counter for revoke reason
+    if (revokeReasonInput && revokeReasonCount) {
+        revokeReasonInput.addEventListener('input', function () {
+            revokeReasonCount.textContent = this.value.length;
+        });
+    }
+
+    // Checkbox handlers - ensure only one is selected
+    document.querySelectorAll('.sl-revoke-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            if (this.checked) {
+                document.querySelectorAll('.sl-revoke-checkbox').forEach(cb => {
+                    if (cb !== this) cb.checked = false;
+                });
+            }
+        });
+    });
+
+    if (revokeConfirm) {
+        revokeConfirm.addEventListener('click', confirmRevokeApproval);
+    }
 }
 
 function initializeExportButton() {
     const exportBtn = document.getElementById('slExportCsvBtn');
     if (!exportBtn) return;
     exportBtn.addEventListener('click', () => exportToCsv(filteredScholars));
+}
+
+function openRevokeModal(idx, scholar) {
+    const revokeModal = document.getElementById('slRevokeModal');
+    const revokeNameInput = document.getElementById('revokeScholarName');
+    const revokeIndexInput = document.getElementById('revokeScholarIndex');
+    const revokeReasonInput = document.getElementById('revokeReason');
+    const revokeReasonCount = document.getElementById('revokeReasonCount');
+    const revokeReasonField = document.getElementById('slRevokeReasonField');
+    const revokeOtherCheckbox = document.getElementById('slRevokeOtherCheckbox');
+
+    if (!revokeModal) return;
+
+    const fullName = `${scholar.last_name || ''}, ${scholar.first_name || ''}${scholar.middle_name ? ' ' + scholar.middle_name.charAt(0) + '.' : ''}`;
+
+    if (revokeNameInput) revokeNameInput.value = fullName;
+    if (revokeIndexInput) revokeIndexInput.value = idx;
+    if (revokeReasonInput) revokeReasonInput.value = '';
+    if (revokeReasonCount) revokeReasonCount.textContent = '0';
+    if (revokeReasonField) revokeReasonField.style.display = 'none';
+
+    // Uncheck all checkboxes
+    document.querySelectorAll('.sl-revoke-checkbox').forEach(cb => cb.checked = false);
+
+    revokeModal.style.display = 'flex';
+}
+
+function closeRevokeModal() {
+    const revokeModal = document.getElementById('slRevokeModal');
+    if (revokeModal) revokeModal.style.display = 'none';
+}
+
+function confirmRevokeApproval() {
+    const revokeIndexInput = document.getElementById('revokeScholarIndex');
+    const revokeReasonInput = document.getElementById('revokeReason');
+    const revokeOtherCheckbox = document.getElementById('slRevokeOtherCheckbox');
+
+    if (!revokeIndexInput) return;
+
+    const idx = parseInt(revokeIndexInput.value, 10);
+    let reason = '';
+
+    // Get selected reason from checkboxes
+    const selectedCheckbox = document.querySelector('.sl-revoke-checkbox:checked');
+    if (selectedCheckbox) {
+        if (selectedCheckbox.value === 'other') {
+            reason = revokeReasonInput ? revokeReasonInput.value.trim() : '';
+        } else {
+            reason = selectedCheckbox.value;
+        }
+    }
+
+    if (!reason) {
+        alert('Please select a revocation reason or check "Other" and provide a custom reason.');
+        return;
+    }
+
+    const scholarToRevoke = filteredScholars[idx];
+    if (!scholarToRevoke) return;
+
+    // Find the scholar in the main SL_SCHOLARS array
+    const originalIndex = SL_SCHOLARS.indexOf(scholarToRevoke);
+    if (originalIndex === -1) return;
+
+    // Update the scholar's status to Rejected and add revocation reason
+    SL_SCHOLARS[originalIndex].status = 'Rejected';
+    SL_SCHOLARS[originalIndex].revocation_reason = reason;
+    SL_SCHOLARS[originalIndex].revoked_at = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+    // Save to localStorage
+    localStorage.setItem('sl_scholars', JSON.stringify(SL_SCHOLARS));
+
+    // Close modal and refresh table
+    closeRevokeModal();
+    applyFilters();
+
+    // Show success message
+    alert(`Scholar approval has been revoked. The record has been moved to Rejected Scholars.`);
 }
 
 function exportToCsv(scholars) {
@@ -268,9 +424,8 @@ function openScholarModal(r) {
     const body = document.getElementById('slViewBody');
     if (!modal || !body) return;
 
-    const chk = (checked) => checked
-        ? `<span class="sl-pdf-chk sl-pdf-chk-on"><span class="sl-pdf-chk-mark"></span></span>`
-        : `<span class="sl-pdf-chk"></span>`;
+    const fullName = `${r.first_name || ''} ${r.last_name || ''}${r.suffix ? ' ' + r.suffix : ''}`.trim();
+    const paymentStatus = slNormalizePaymentStatus(r);
 
     const purposes = [
         { label: 'Tuition Fees', key: 'Tuition Fees' },
@@ -279,100 +434,129 @@ function openScholarModal(r) {
         { label: 'Others', key: 'Others' },
     ];
     const purposeList = r.purpose_list || [];
-    const purposeRows = purposes.map(p => {
+    const purposeCheckboxes = purposes.map(p => {
         const isChecked = purposeList.some(v =>
             v.toLowerCase().replace(/[\s/]/g, '') === p.key.toLowerCase().replace(/[\s/]/g, '')
         );
-        const extra = (p.key === 'Others' && r.purpose_others) ? ` (${r.purpose_others})` : '';
-        return `<div class="sl-pdf-chk-row">${chk(isChecked)} <span>${p.label}${extra}</span></div>`;
+        return `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="width:16px;height:16px;cursor:not-allowed;">
+                <span style="font-size:13px;color:#374151;">${p.label}</span>
+            </div>
+        `;
     }).join('');
 
-    const fullName = `${r.first_name || ''} ${r.last_name || ''}${r.suffix ? ' ' + r.suffix : ''}`.trim();
-    const printedName = `${r.first_name || ''} ${r.middle_name ? r.middle_name.charAt(0) + '. ' : ''}${r.last_name || ''}${r.suffix ? ' ' + r.suffix : ''}`.trim();
-    const paymentStatus = slNormalizePaymentStatus(r);
-
     body.innerHTML = `
-    <div class="sl-pdf-wrap">
-        <div class="sl-view-payment-banner">
+    <div style="background:#fff;padding:24px;border-radius:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:12px;background:#f3f4f6;border-radius:6px;">
             <span class="sl-badge ${slPaymentBadgeClass(paymentStatus)}">${escapeSl(paymentStatus)}</span>
-            <span>Payment Status</span>
+            <span style="font-size:14px;font-weight:600;color:#374151;">Payment Status</span>
         </div>
-        <div class="sl-pdf-header">
-            <img src="/images/barangay_logo.png" alt="SK Logo" class="sl-pdf-logo" onerror="this.style.display='none'">
-            <h2 class="sl-pdf-title">SCHOLARSHIP APPLICATION FORM</h2>
-            <div class="sl-pdf-picbox">Picture Here</div>
-        </div>
-        <div class="sl-pdf-date-row">
-            <span class="sl-pdf-label">Date:</span>
-            <span class="sl-pdf-underline sl-pdf-val">${escapeSl(r.approved_at || '—')}</span>
-        </div>
-        <div class="sl-pdf-section-title">APPLICANT'S PERSONAL INFORMATION:</div>
-        <div class="sl-pdf-row">
-            <span class="sl-pdf-label">Last Name:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-flex1">${escapeSl(r.last_name || '—')}</span>
-            <span class="sl-pdf-label">First Name:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-flex1">${escapeSl(r.first_name || '—')}</span>
-            <span class="sl-pdf-label">Middle Name:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-flex1">${escapeSl(r.middle_name || '—')}</span>
-        </div>
-        <div class="sl-pdf-row">
-            <span class="sl-pdf-label">Date of Birth:</span>
-            <span class="sl-pdf-underline sl-pdf-val">${escapeSl(r.date_of_birth || '—')}</span>
-            <span class="sl-pdf-label">Gender:</span>
-            <span class="sl-pdf-underline sl-pdf-val">${escapeSl(r.gender || '—')}</span>
-            <span class="sl-pdf-label">Age:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-narrow">${escapeSl(r.age || '—')}</span>
-            <span class="sl-pdf-label">Contact No:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-flex1">${escapeSl(r.contact_no || '—')}</span>
-        </div>
-        <div class="sl-pdf-row">
-            <span class="sl-pdf-label">Complete Address:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-full">${escapeSl(r.address || '—')}</span>
-        </div>
-        <div class="sl-pdf-row">
-            <span class="sl-pdf-label">Email Address:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-flex1">${escapeSl(r.email || '—')}</span>
-        </div>
-        <div class="sl-pdf-section-title" style="margin-top:18px;">ACADEMIC INFORMATION:</div>
-        <div class="sl-pdf-row">
-            <span class="sl-pdf-label">Name of School:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-full">${escapeSl(r.school_name || '—')}</span>
-        </div>
-        <div class="sl-pdf-row">
-            <span class="sl-pdf-label">School Address:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-full">${escapeSl(r.school_address || '—')}</span>
-        </div>
-        <div class="sl-pdf-row">
-            <span class="sl-pdf-label">Year/Grade Level:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-flex1">${escapeSl(r.year_level || '—')}</span>
-            <span class="sl-pdf-label">Program/Strand:</span>
-            <span class="sl-pdf-underline sl-pdf-val sl-pdf-flex2">${escapeSl(r.program_strand || '—')}</span>
-        </div>
-        <div class="sl-pdf-two-col" style="margin-top:18px;">
-            <div>
-                <div class="sl-pdf-section-title">SCHOLARSHIP INFORMATION:</div>
-                <div class="sl-pdf-sublabel" style="margin-bottom:8px;">Purpose of Scholarship:</div>
-                ${purposeRows}
-            </div>
-            <div>
-                <div class="sl-pdf-section-title">
-                    SUBMITTED REQUIREMENTS:
-                    <span class="sl-pdf-note">Note: To be filled out by SK officials</span>
-                </div>
-                <div class="sl-pdf-req-item">
-                    <div class="sl-pdf-chk-row">${chk(r.cor_certified)}<span>COR – CERTIFIED TRUE COPY</span></div>
-                </div>
-                <div class="sl-pdf-req-item">
-                    <div class="sl-pdf-chk-row">${chk(r.photo_id)}<span>PHOTO COPY OF ID (FRONT AND BACK)</span></div>
+
+        <div style="margin-bottom:24px;">
+            <h3 style="font-size:16px;font-weight:600;color:#1f2937;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">SCHOLARSHIP APPLICATION FORM</h3>
+            <div style="background:#f9fafb;padding:16px;border-radius:6px;margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:80px;height:80px;background:#e5e7eb;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6b7280;">Photo</div>
+                    <div>
+                        <div style="font-size:13px;color:#6b7280;">Date:</div>
+                        <div style="font-size:14px;font-weight:500;color:#374151;">${escapeSl(r.approved_at || '—')}</div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="sl-pdf-sig-wrap">
-            <div class="sl-pdf-sig-block">
-                <div class="sl-pdf-sig-name">${escapeSl(fullName)}</div>
-                <div class="sl-pdf-sig-line"></div>
-                <div class="sl-pdf-sig-printed">${escapeSl(printedName)}</div>
-                <div class="sl-pdf-sig-sublabel">Name and Signature of Participant</div>
+
+        <div style="margin-bottom:24px;">
+            <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">APPLICANT'S PERSONAL INFORMATION</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Last Name</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.last_name || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">First Name</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.first_name || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Middle Name</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.middle_name || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Date of Birth</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.date_of_birth || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Gender</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.gender || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Age</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.age || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Contact No</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.contact_no || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Email Address</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.email || '—')}</div>
+                </div>
+            </div>
+            <div style="margin-top:16px;">
+                <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Complete Address</label>
+                <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.address || '—')}</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+            <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">ACADEMIC INFORMATION</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Name of School</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.school_name || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">School Address</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.school_address || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Year/Grade Level</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.year_level || '—')}</div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Program/Strand</label>
+                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.program_strand || '—')}</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+            <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">SCHOLARSHIP INFORMATION</h4>
+            <div style="background:#f9fafb;padding:16px;border-radius:6px;">
+                <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:8px;">Purpose of Scholarship</label>
+                ${purposeCheckboxes}
+            </div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+            <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">SUBMITTED REQUIREMENTS</h4>
+            <div style="background:#f9fafb;padding:16px;border-radius:6px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <input type="checkbox" ${r.cor_certified ? 'checked' : ''} disabled style="width:16px;height:16px;cursor:not-allowed;">
+                    <span style="font-size:13px;color:#374151;">COR – CERTIFIED TRUE COPY</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" ${r.photo_id ? 'checked' : ''} disabled style="width:16px;height:16px;cursor:not-allowed;">
+                    <span style="font-size:13px;color:#374151;">PHOTO COPY OF ID (FRONT AND BACK)</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;">
+            <div style="text-align:center;">
+                <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;">${escapeSl(fullName)}</div>
+                <div style="width:200px;height:1px;background:#e5e7eb;margin:0 auto 8px;"></div>
+                <div style="font-size:12px;color:#6b7280;">Name and Signature of Participant</div>
             </div>
         </div>
     </div>`;

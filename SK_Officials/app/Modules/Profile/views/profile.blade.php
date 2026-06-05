@@ -39,6 +39,16 @@
         <!-- Left Column - Profile Information -->
         <div class="profile-left-column">
 
+            <!-- Action Buttons at Top -->
+            <div class="profile-top-actions">
+                <a href="{{ route('change-email') }}" class="btn-setting-action">
+                    Change Email
+                </a>
+                <a href="{{ route('change-password') }}" class="btn-setting-action">
+                    Change Password
+                </a>
+            </div>
+
             <!-- SK Chairman Card -->
             <section class="sk-chairman-section">
                 <div class="official-card">
@@ -174,29 +184,9 @@
                         </h2>
                     </div>
                     <div class="card-body">
-                        <!-- Email Address Section -->
-                        <div class="account-setting-item">
-                            <div class="setting-info">
-                                <h3>Email Address</h3>
-                                <p>Change your account email address via verification link.</p>
-                            </div>
-                            <a href="{{ route('change-email') }}" class="btn-setting-action">
-                                Change Email
-                            </a>
-                        </div>
-                        
-                        <div class="setting-divider"></div>
-                        
-                        <!-- Password Section -->
-                        <div class="account-setting-item">
-                            <div class="setting-info">
-                                <h3>Password</h3>
-                                <p>Change your account password via email reset link.</p>
-                            </div>
-                            <a href="{{ route('change-password') }}" class="btn-setting-action">
-                                Change Password
-                            </a>
-                        </div>
+                        <p style="color: #6b7280; text-align: center; padding: 20px;">
+                            Use the buttons at the top of the page to change your email or password.
+                        </p>
                     </div>
                 </div>
             </section>

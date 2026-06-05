@@ -33,6 +33,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'verified', 'sk_official.access', 'trusted.device'])->group(function () {
     Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('password.change');
+    Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('change-password');
     Route::post('/change-password', [AuthController::class, 'updatePassword'])->name('password.change.update');
 });
 

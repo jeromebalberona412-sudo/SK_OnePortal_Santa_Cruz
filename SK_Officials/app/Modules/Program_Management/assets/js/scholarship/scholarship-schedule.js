@@ -110,8 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const fields = [
             'programName', 'programCommittee', 'participationQty',
             'programVenue', 'programDescription', 'programTerms',
-            'schedStartDate', 'schedEndDate', 'programStatus',
-            'schedStartTime', 'schedEndTime'
+            'schedStartDate', 'schedEndDate', 'programStatus'
         ];
 
         fields.forEach(id => {
@@ -120,10 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (el.tagName === 'SELECT') {
                     if (id === 'programStatus') {
                         el.value = 'open';
-                    } else if (id === 'schedStartTime') {
-                        el.value = '08:00';
-                    } else if (id === 'schedEndTime') {
-                        el.value = '17:00';
                     } else {
                         el.value = '';
                     }
@@ -145,26 +140,33 @@ document.addEventListener('DOMContentLoaded', () => {
     function openModal(forEditId) {
         if (modal) {
             modal.style.display = 'flex';
-            if (modal) modal.classList.add('schol-modal-maximized');
-            if (modalBox) modalBox.classList.add('schol-modal-maximized');
+            // Don't auto-maximize when opening
+            if (modal) modal.classList.remove('schol-modal-maximized');
+            if (modalBox) modalBox.classList.remove('schol-modal-maximized');
             if (maximizeBtn) {
-                maximizeBtn.textContent = '⧉';
-                maximizeBtn.title = 'Restore Down';
+                maximizeBtn.textContent = '□';
+                maximizeBtn.title = 'Maximize';
             }
             try {
-                resetModalForm();
-                const committeeEl = document.getElementById('programCommittee');
-                if (committeeEl) committeeEl.value = SAF_COMMITTEE;
-                if (window.SpfbFormBuilder) {
-                    window.SpfbFormBuilder.reset();
-                }
-                setupCounters();
-                const modalTitle = modal.querySelector('.schol-modal-header h3');
-                if (modalTitle && !forEditId) {
-                    modalTitle.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-                        Create Scholarship Program
-                    `;
+                if (!forEditId) {
+                    // Create mode - reset form
+                    resetModalForm();
+                    const committeeEl = document.getElementById('programCommittee');
+                    if (committeeEl) committeeEl.value = SAF_COMMITTEE;
+                    if (window.SpfbFormBuilder) {
+                        window.SpfbFormBuilder.reset();
+                    }
+                    setupCounters();
+                    const modalTitle = document.getElementById('scholarProgramModalTitle');
+                    if (modalTitle) {
+                        modalTitle.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                            Create Scholarship Program
+                        `;
+                    }
+                } else {
+                    // Edit mode - setup counters for existing data
+                    setupCounters();
                 }
             } catch (e) {
                 console.error('Error in openModal:', e);
@@ -317,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="col-actions">
                     <div class="prog-tbl-actions">
                         <button type="button" class="prog-btn prog-btn-view" data-form-view="${f.id}">View</button>
+                        <button type="button" class="prog-btn prog-btn-edit" data-form-edit="${f.id}">Edit</button>
                         <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${f.id}">Delete</button>
                     </div>
                 </td>
@@ -327,11 +330,66 @@ document.addEventListener('DOMContentLoaded', () => {
         tableBody.querySelectorAll('[data-form-view]').forEach(btn => {
             btn.addEventListener('click', () => openFormPreview(btn.getAttribute('data-form-view')));
         });
+        tableBody.querySelectorAll('[data-form-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                editProgram(btn.getAttribute('data-form-edit'));
+            });
+        });
         tableBody.querySelectorAll('[data-form-delete]').forEach(btn => {
             btn.addEventListener('click', () => {
                 openDeleteProgramModal(btn.getAttribute('data-form-delete'));
             });
         });
+    }
+
+    function editProgram(formId) {
+        const f = loadForms().find(x => x.id === formId);
+        if (!f) return;
+
+        editingProgramId = formId;
+
+        // Populate the modal with existing data
+        document.getElementById('programName').value = f.programName || '';
+        document.getElementById('programCommittee').value = f.committee || SAF_COMMITTEE;
+        document.getElementById('participationQty').value = f.participationQty || '';
+        document.getElementById('programVenue').value = f.venue || '';
+        document.getElementById('programDescription').value = f.description || '';
+        document.getElementById('programTerms').value = f.terms || '';
+        document.getElementById('schedStartDate').value = f.startDate || '';
+        document.getElementById('schedEndDate').value = f.endDate || '';
+        document.getElementById('programStatus').value = f.status || 'open';
+
+        // Update counters
+        document.getElementById('programNameCount').textContent = (f.programName || '').length;
+        document.getElementById('venueCount').textContent = (f.venue || '').length;
+        document.getElementById('descriptionCount').textContent = (f.description || '').length;
+        document.getElementById('termsCount').textContent = (f.terms || '').length;
+
+        // Load custom questions if available
+        if (window.SpfbFormBuilder && f.customQuestions) {
+            window.SpfbFormBuilder.loadQuestions(f.customQuestions);
+        }
+
+        // Load announcement if available
+        if (f.announcement) {
+            const announcementEl = document.getElementById('spfbAnnouncement');
+            const announcementCountEl = document.getElementById('spfbAnnouncementCount');
+            if (announcementEl) {
+                announcementEl.value = f.announcement;
+                if (announcementCountEl) announcementCountEl.textContent = f.announcement.length;
+            }
+        }
+
+        // Update modal title
+        const modalTitle = document.getElementById('scholarProgramModalTitle');
+        if (modalTitle) {
+            modalTitle.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit Scholarship Program
+            `;
+        }
+
+        openModal(formId);
     }
 
     function openFormPreview(formId) {
@@ -359,138 +417,125 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusStyle = statusColors[status] || statusColors.open;
 
         viewProgramBody.innerHTML = `
-            <div style="padding:24px;background:#f9fafb;">
-                <!-- Program Header -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-                        <h2 style="font-size:24px;font-weight:700;margin:0;color:#111827;">${escapeHtml(f.programName)}</h2>
-                        <span style="display:inline-flex;align-items:center;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};">${statusStyle.label}</span>
-                    </div>
-                    
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px;">
-                        <div style="padding:12px;background:#f9fafb;border-radius:8px;">
-                            <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Program Type</div>
-                            <div style="font-size:14px;font-weight:600;color:#111827;">${escapeHtml(f.programType)}</div>
-                        </div>
-                        <div style="padding:12px;background:#f9fafb;border-radius:8px;">
-                            <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Committee</div>
-                            <div style="font-size:14px;font-weight:600;color:#111827;">${escapeHtml(f.committee)}</div>
-                        </div>
-                        <div style="padding:12px;background:#f9fafb;border-radius:8px;">
-                            <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Participants</div>
-                            <div style="font-size:14px;font-weight:600;color:#111827;">${escapeHtml(f.participationQty || 'N/A')}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Schedule Information -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Schedule Information
-                    </h3>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
-                        <div>
-                            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Start Date & Time</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(f.startDate)} at ${formatTime(f.startTime)}</div>
+            <div style="padding:24px;background:#f0f1f5;">
+                <!-- Program Information Section -->
+                <div class="schol-schedule-card" style="margin-bottom:20px;">
+                    <h4 class="schol-schedule-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Program Information
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                        <div style="grid-column:1/-1;">
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program Name <span class="schol-req">*</span></label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.programName)}</div>
+                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(f.programName || '').length}/200 characters</div>
                         </div>
                         <div>
-                            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">End Date & Time</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(f.endDate)} at ${formatTime(f.endTime)}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program Type</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.programType)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Committee</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.committee)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Participation Quantity</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.participationQty || 'N/A')}</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Venue</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${escapeHtml(f.venue || 'Not specified')}</div>
+                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(f.venue || '').length}/500 characters</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Description</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:80px;white-space:pre-wrap;">${escapeHtml(f.description || 'Not specified')}</div>
+                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(f.description || '').length}/500 characters</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Terms and Conditions</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:100px;white-space:pre-wrap;">${escapeHtml(f.terms || 'Not specified')}</div>
+                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(f.terms || '').length}/500 characters</div>
                         </div>
                     </div>
                 </div>
 
-                ${f.venue ? `
-                <!-- Venue -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        Venue
-                    </h3>
-                    <div style="font-size:14px;color:#374151;line-height:1.6;">${escapeHtml(f.venue)}</div>
+                <!-- Schedule Section -->
+                <div class="schol-schedule-card" style="margin-bottom:20px;">
+                    <h4 class="schol-schedule-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Application Window Schedule
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Start Date <span class="schol-req">*</span></label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.startDate)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">End Date <span class="schol-req">*</span></label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.endDate)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Status</label>
+                            <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};box-shadow:0 1px 2px rgba(0,0,0,0.1);">${statusStyle.label}</span>
+                        </div>
+                    </div>
                 </div>
-                ` : ''}
 
-                ${f.description ? `
-                <!-- Description -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Description
-                    </h3>
-                    <div style="font-size:14px;color:#374151;line-height:1.8;">${escapeHtml(f.description)}</div>
-                </div>
-                ` : ''}
-
-                ${f.terms ? `
-                <!-- Terms and Conditions -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Terms and Conditions
-                    </h3>
-                    <div style="font-size:14px;color:#374151;line-height:1.8;white-space:pre-wrap;">${escapeHtml(f.terms)}</div>
-                </div>
-                ` : ''}
-
-                <!-- Application Forms Section -->
-                <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Application Forms
-                    </h3>
+                <!-- Application Form Section -->
+                <div class="schol-schedule-card">
+                    <h4 class="schol-schedule-title" style="margin-bottom:16px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Application Form Builder
+                    </h4>
                     
+                    <!-- Announcement Section -->
+                    <div style="background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Announcement <span class="schol-req">*</span></label>
+                        <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">This message will be shown to Kabataan members when they open the application form.</div>
+                        <div style="font-size:15px;color:#374151;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;min-height:80px;white-space:pre-wrap;">${escapeHtml(f.announcement || 'No announcement set')}</div>
+                    </div>
+
                     <!-- Custom Questions (Google Form Style) -->
                     ${f.customQuestions && f.customQuestions.length > 0 ? `
-                        <div style="margin-bottom:32px;">
-                            <h4 style="font-size:15px;font-weight:600;color:#374151;margin:0 0 16px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;">Custom Questions (Google Form Style)</h4>
-                            <div style="background:#f8f9fa;border-radius:8px;padding:20px;border:1px solid #e5e7eb;">
-                                <!-- Form Header -->
-                                <div style="background:#673ab7;color:white;padding:20px;border-radius:8px 8px 0 0;margin:-20px -20px 20px;">
-                                    <h5 style="font-size:24px;font-weight:400;margin:0 0 8px;">${escapeHtml(f.programName)}</h5>
-                                    <p style="font-size:13px;margin:0;opacity:0.9;">Additional Questions</p>
-                                </div>
-
-                                ${f.customQuestions.map((q, idx) => `
-                                    <div style="background:white;border-radius:8px;padding:20px;margin-bottom:16px;border:1px solid #e5e7eb;">
-                                        <div style="font-size:14px;color:#202124;font-weight:500;margin-bottom:8px;">
-                                            ${idx + 1}. ${escapeHtml(q.label || q.question)}
-                                            ${q.required ? '<span style="color:#d93025;margin-left:4px;">*</span>' : ''}
-                                        </div>
-                                        <div style="font-size:12px;color:#5f6368;font-style:italic;margin-bottom:12px;">
-                                            Type: ${escapeHtml(q.type || 'Short Answer')}
-                                        </div>
-                                        ${q.options && q.options.length > 0 ? `
-                                            <div style="margin-top:12px;padding-left:8px;">
-                                                ${q.options.map(opt => `
-                                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                                        <div style="width:16px;height:16px;border:2px solid #5f6368;border-radius:50%;"></div>
-                                                        <span style="font-size:13px;color:#202124;">${escapeHtml(opt)}</span>
-                                                    </div>
-                                                `).join('')}
-                                            </div>
-                                        ` : `
-                                            <div style="border-bottom:1px dotted #dadce0;padding:8px 0;color:#5f6368;font-size:13px;">Your answer</div>
-                                        `}
-                                    </div>
-                                `).join('')}
+                        <div style="background:#f8f9fa;border-radius:12px;padding:24px;border:2px solid #e5e7eb;">
+                            <!-- Form Header -->
+                            <div style="background:#673ab7;color:white;padding:24px;border-radius:12px 12px 0 0;margin:-24px -24px 24px;">
+                                <h5 style="font-size:26px;font-weight:500;margin:0 0 8px;">${escapeHtml(f.programName)}</h5>
+                                <p style="font-size:14px;margin:0;opacity:0.95;">Application Form Questions</p>
                             </div>
+
+                            ${f.customQuestions.map((q, idx) => `
+                                <div style="background:white;border-radius:8px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                                    <div style="font-size:15px;color:#202124;font-weight:500;margin-bottom:10px;">
+                                        ${idx + 1}. ${escapeHtml(q.label || q.question)}
+                                        ${q.required ? '<span style="color:#d93025;margin-left:4px;">*</span>' : ''}
+                                    </div>
+                                    <div style="font-size:13px;color:#5f6368;font-style:italic;margin-bottom:16px;">
+                                        Type: ${escapeHtml(q.type || 'Short Answer')}
+                                    </div>
+                                    ${q.options && q.options.length > 0 ? `
+                                        <div style="margin-top:16px;padding-left:12px;">
+                                            ${q.options.map(opt => `
+                                                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                                                    <div style="width:18px;height:18px;border:2px solid #5f6368;border-radius:50%;flex-shrink:0;"></div>
+                                                    <span style="font-size:14px;color:#202124;">${escapeHtml(opt)}</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : `
+                                        <div style="border-bottom:2px dotted #dadce0;padding:12px 0;color:#5f6368;font-size:14px;">Your answer</div>
+                                    `}
+                                </div>
+                            `).join('')}
                         </div>
                     ` : `
-                        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;text-align:center;margin-bottom:32px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <div style="font-size:14px;color:#856404;font-weight:500;">No custom questions added</div>
-                            <div style="font-size:12px;color:#856404;margin-top:4px;">Applicants will use the Kabataan application form with their profile details.</div>
+                        <div style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:24px;text-align:center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" style="margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div style="font-size:16px;color:#856404;font-weight:600;">No custom questions added</div>
+                            <div style="font-size:14px;color:#856404;margin-top:8px;">Applicants will use the Kabataan application form with their profile details.</div>
                         </div>
                     `}
-
-                    ${f.announcement ? `
-                    <div style="margin-top:16px;padding:16px;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd;">
-                        <h4 style="font-size:14px;font-weight:600;color:#0369a1;margin:0 0 8px;">Announcement for Applicants</h4>
-                        <p style="font-size:14px;color:#374151;line-height:1.6;margin:0;white-space:pre-wrap;">${escapeHtml(f.announcement)}</p>
-                    </div>
-                    ` : ''}
                 </div>
             </div>
         `;
@@ -523,12 +568,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const endDate = document.getElementById('schedEndDate')?.value?.trim();
         const status = document.getElementById('programStatus')?.value || 'open';
 
-        const startTime = document.getElementById('schedStartTime')?.value || '08:00';
-        const endTime = document.getElementById('schedEndTime')?.value || '17:00';
-
         if (!programName) { showToast('Please enter a program name.', 'error'); return; }
         if (!startDate || !endDate) { showToast('Please select start and end dates.', 'error'); return; }
-        if (!startTime || !endTime) { showToast('Please select start and end times.', 'error'); return; }
 
         let participationQty = '';
         if (participationQtyRaw !== '') {
@@ -563,8 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     terms: programTerms || '',
                     startDate,
                     endDate,
-                    startTime,
-                    endTime,
                     status,
                     customQuestions,
                     announcement,
@@ -592,8 +631,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 terms: programTerms || '',
                 startDate,
                 endDate,
-                startTime,
-                endTime,
                 status,
                 customQuestions,
                 announcement,

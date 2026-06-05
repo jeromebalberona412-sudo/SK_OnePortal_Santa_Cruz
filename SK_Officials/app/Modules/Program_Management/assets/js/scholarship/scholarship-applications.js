@@ -789,7 +789,7 @@ function initScholarshipRequests() {
         tbody.innerHTML = '';
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr class="schol-empty-row"><td colspan="9">No applications found.</td></tr>`;
+            tbody.innerHTML = `<tr class="schol-empty-row"><td colspan="8">No applications found.</td></tr>`;
         } else {
             filtered.forEach((r, i) => {
                 const statusCls = r.status === 'Approved' ? 'schol-pill-approved'
@@ -813,8 +813,6 @@ function initScholarshipRequests() {
                     <td style="text-align:center;">
                         <div class="schol-tbl-actions prog-tbl-actions">
                             <button class="schol-tbl-btn schol-tbl-btn-view prog-btn prog-btn-view" data-action="view" data-id="${r.id}">View</button>
-                            <button class="schol-tbl-btn schol-tbl-btn-edit prog-btn prog-btn-edit" data-action="edit" data-id="${r.id}">Edit</button>
-                            <button class="schol-tbl-btn schol-tbl-btn-delete prog-btn prog-btn-delete" data-action="delete" data-id="${r.id}">Delete</button>
                         </div>
                     </td>
                 `;
@@ -844,8 +842,6 @@ function initScholarshipRequests() {
         if (!record) return;
 
         if (action === 'view') { viewTargetId = id; openViewModal(record); }
-        else if (action === 'edit') { viewTargetId = id; openViewModal(record); }
-        else if (action === 'delete') { deleteTargetId = id; deleteModal.style.display = 'flex'; }
     });
 
     function formatApplicantName(r) {

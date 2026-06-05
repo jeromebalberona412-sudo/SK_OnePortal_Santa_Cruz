@@ -191,15 +191,15 @@
 
 <!-- ── Scholar View Modal ── -->
 <div class="sl-modal-overlay" id="slViewModal" style="display:none;">
-    <div class="sl-modal-box" id="slViewBox">
+    <div class="sl-modal-box" id="slViewBox" style="max-width:800px;">
         <div class="sl-modal-header">
-            <h3>Application Details — PDF View</h3>
+            <h3>Application Details</h3>
             <div style="display:flex;align-items:center;gap:2px;">
                 <button type="button" class="sl-modal-close" id="slViewMaximize" title="Maximize">□</button>
                 <button type="button" class="sl-modal-close" id="slViewClose" title="Close">&times;</button>
             </div>
         </div>
-        <div class="sl-modal-body" id="slViewBody"></div>
+        <div class="sl-modal-body" id="slViewBody" style="background:#f9fafb;"></div>
     </div>
 </div>
 
@@ -231,6 +231,71 @@
             <div class="sl-edit-actions">
                 <button type="button" class="sl-edit-btn sl-edit-btn-cancel" id="btnCancelEdit">Cancel</button>
                 <button type="button" class="sl-edit-btn sl-edit-btn-save" id="btnSaveEdit">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Revoke Approval Modal ── -->
+<div class="sl-modal-overlay" id="slRevokeModal" style="display:none;">
+    <div class="sl-modal-box" style="max-width:550px;" id="slRevokeBox">
+        <div class="sl-modal-header sl-modal-header-danger">
+            <h3>Revoke Scholar Approval</h3>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="sl-modal-close" id="slRevokeMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="sl-modal-close" id="slRevokeClose" title="Close">&times;</button>
+            </div>
+        </div>
+        <div class="sl-modal-body" style="padding:24px;">
+            <input type="hidden" id="revokeScholarIndex">
+            
+            <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:16px;">You are about to revoke the approval of this scholarship beneficiary. Please provide a reason for revoking the approval. This action will move the record from Approved Scholars to Rejected Scholars.</p>
+            
+            <div class="sl-edit-field">
+                <label for="revokeScholarName" class="sl-edit-label">Scholar Name</label>
+                <input type="text" id="revokeScholarName" class="sl-edit-input" readonly style="background:#f3f4f6;cursor:not-allowed;">
+            </div>
+
+            <div class="sl-edit-field" style="margin-top:16px;">
+                <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Select Revocation Reason:</label>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
+                        <input type="checkbox" class="sl-revoke-checkbox" value="Your application has been rejected due to an approval error during the review process.">
+                        <span>Approval error during review process</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
+                        <input type="checkbox" class="sl-revoke-checkbox" value="Your application has been rejected because it was mistakenly approved during evaluation.">
+                        <span>Mistakenly approved during evaluation</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
+                        <input type="checkbox" class="sl-revoke-checkbox" value="Your application has been rejected because the submitted requirements did not meet the program requirements upon further review.">
+                        <span>Requirements did not meet program standards</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
+                        <input type="checkbox" class="sl-revoke-checkbox" value="Your application has been rejected because additional verification revealed incomplete eligibility requirements.">
+                        <span>Incomplete eligibility requirements</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
+                        <input type="checkbox" class="sl-revoke-checkbox" value="We apologize for the inconvenience. Your application was mistakenly approved and has been returned to the rejected applications list for proper evaluation.">
+                        <span>Mistakenly approved - returned for evaluation</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
+                        <input type="checkbox" class="sl-revoke-checkbox" id="slRevokeOtherCheckbox" value="other">
+                        <span>Other (specify below)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="sl-edit-field" id="slRevokeReasonField" style="margin-top:16px;display:none;">
+                <label for="revokeReason" class="sl-edit-label">Revocation Reason <span style="color:#ef4444;">*</span></label>
+                <textarea id="revokeReason" class="sl-edit-input" rows="4" placeholder="Enter the reason for revoking approval..." maxlength="500" style="resize:none;"></textarea>
+                <div style="font-size:11px;color:#6b7280;margin-top:4px;text-align:right;"><span id="revokeReasonCount">0</span>/500 characters</div>
+                <p class="sl-edit-hint">This reason will be stored and displayed in the Rejected Scholars details page.</p>
+            </div>
+
+            <div class="sl-edit-actions">
+                <button type="button" class="sl-edit-btn sl-edit-btn-cancel" id="btnCancelRevoke" style="background-color:#9ca3af;color:#fff;border:none;">Cancel</button>
+                <button type="button" class="sl-edit-btn" id="btnConfirmRevoke" style="background-color:#ef4444;color:#fff;border:none;">Revoke</button>
             </div>
         </div>
     </div>

@@ -19,14 +19,15 @@
                         <tr>
                             <th class="survey-col-title">Survey Title</th>
                             <th>Activity</th>
-                            <th>Questions</th>
-                            <th>Responses</th>
+                            <th>Open Date</th>
+                            <th>Close Date</th>
                             <th>Status</th>
+                            <th>Responses</th>
                             <th class="col-actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="surveyFormsTableBody">
-                        <tr><td colspan="6" class="saf-table-empty">Loading surveys…</td></tr>
+                        <tr><td colspan="7" class="saf-table-empty">Loading surveys…</td></tr>
                     </tbody>
                 </table>
             </div>

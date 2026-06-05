@@ -172,7 +172,7 @@ function countResponsesForSurvey(surveyId) {
 }
 
 function seedSampleData() {
-    const seedKey = storageKey('seeded_v2_attendance');
+    const seedKey = storageKey('seeded_v3_scheduling');
     const existing = loadSurveys();
     const isOldAutoSample = existing.length === 1 && (
         (existing[0].title || '').includes('Youth Feedback Survey') ||
@@ -190,11 +190,20 @@ function seedSampleData() {
     const surveyId = isOldAutoSample ? existing[0].id : uid('srv');
     const questionId = 'q_attendance';
 
+    // Set dates for sample survey (open for 30 days)
+    const now = new Date();
+    const openDate = new Date(now);
+    openDate.setDate(openDate.getDate() - 7); // Opened 7 days ago
+    const closeDate = new Date(now);
+    closeDate.setDate(closeDate.getDate() + 23); // Closes in 23 days
+
     const sampleSurvey = {
         id: surveyId,
         title: `${activity} — Attendance Survey`,
         activity,
         description: 'Pakit sagot kung nakadalo ka sa programang ito. Isang tanong lang — Oo o Hindi.',
+        openDate: openDate.toISOString().split('T')[0],
+        closeDate: closeDate.toISOString().split('T')[0],
         status: 'open',
         questions: [
             {
@@ -241,6 +250,7 @@ function seedSampleData() {
     saveResponses(responses);
     localStorage.setItem(seedKey, '1');
     localStorage.removeItem(storageKey('seeded_v1'));
+    localStorage.removeItem(storageKey('seeded_v2_attendance'));
 }
 
 // ── Forms Tab ─────────────────────────────────────────────────────────────
@@ -254,6 +264,24 @@ function bindFormsTab() {
     document.getElementById('viewSurveyClose')?.addEventListener('click', () => {
         document.getElementById('viewSurveyModal').style.display = 'none';
     });
+    document.getElementById('viewSurveyMaximize')?.addEventListener('click', toggleViewSurveyMaximize);
+    document.getElementById('surveyFormMaximize')?.addEventListener('click', toggleSurveyFormMaximize);
+    
+    // Character count for survey description
+    const surveyDesc = document.getElementById('surveyDescription');
+    const surveyDescCount = document.getElementById('surveyDescCount');
+    if (surveyDesc && surveyDescCount) {
+        surveyDesc.addEventListener('input', () => {
+            surveyDescCount.textContent = surveyDesc.value.length;
+        });
+    }
+    
+    // Set min date for date pickers to today
+    const today = new Date().toISOString().split('T')[0];
+    const openDateInput = document.getElementById('surveyOpenDate');
+    const closeDateInput = document.getElementById('surveyCloseDate');
+    if (openDateInput) openDateInput.setAttribute('min', today);
+    if (closeDateInput) closeDateInput.setAttribute('min', today);
 }
 
 function openSurveyModal(survey) {
@@ -268,7 +296,15 @@ function openSurveyModal(survey) {
     document.getElementById('surveyTitle').value = survey?.title || '';
     document.getElementById('surveyActivity').value = survey?.activity || cfg.activities[0] || '';
     document.getElementById('surveyDescription').value = survey?.description || '';
-    document.getElementById('surveyStatus').value = survey?.status || 'open';
+    document.getElementById('surveyOpenDate').value = survey?.openDate || '';
+    document.getElementById('surveyCloseDate').value = survey?.closeDate || '';
+    document.getElementById('surveyStatus').value = survey?.status || 'scheduled';
+    
+    // Update character count
+    const surveyDescCount = document.getElementById('surveyDescCount');
+    if (surveyDescCount) {
+        surveyDescCount.textContent = (survey?.description || '').length;
+    }
 
     if (window.GFormBuilder) {
         window.GFormBuilder.reset();
@@ -297,13 +333,33 @@ function saveSurveyForm() {
         showToast('Add at least one question with a label.', 'error');
         return;
     }
+    
+    const openDate = document.getElementById('surveyOpenDate')?.value || '';
+    const closeDate = document.getElementById('surveyCloseDate')?.value || '';
+    
+    // Validate dates
+    if (openDate && closeDate && new Date(closeDate) <= new Date(openDate)) {
+        showToast('Close date must be later than open date.', 'error');
+        return;
+    }
+    
+    if (!openDate || !closeDate) {
+        showToast('Open date and close date are required.', 'error');
+        return;
+    }
+
+    // Auto-update status based on dates
+    let status = document.getElementById('surveyStatus')?.value || 'pending';
+    status = autoUpdateStatus(status, openDate, closeDate);
 
     const payload = {
         id: editingSurveyId || uid('srv'),
         title,
         activity: document.getElementById('surveyActivity')?.value || '',
         description: document.getElementById('surveyDescription')?.value?.trim() || '',
-        status: document.getElementById('surveyStatus')?.value || 'open',
+        openDate,
+        closeDate,
+        status,
         questions,
         createdAt: editingSurveyId
             ? (loadSurveys().find(s => s.id === editingSurveyId)?.createdAt || new Date().toISOString())
@@ -319,6 +375,21 @@ function saveSurveyForm() {
     closeSurveyModal();
     renderFormsTable();
     showToast('Survey saved successfully.');
+}
+
+function autoUpdateStatus(currentStatus, openDate, closeDate) {
+    const now = new Date();
+    const open = new Date(openDate);
+    const close = new Date(closeDate);
+    
+    // Auto-determine status based on dates
+    if (now < open) {
+        return 'scheduled';
+    } else if (now >= open && now <= close) {
+        return 'open';
+    } else {
+        return 'closed';
+    }
 }
 
 function formatSurveyDate(iso) {
@@ -345,7 +416,7 @@ function renderFormsTable() {
     }
 
     if (!surveys.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="saf-table-empty">
+        tbody.innerHTML = `<tr><td colspan="7" class="saf-table-empty">
             <div class="survey-empty-state">
                 <p><strong>No survey forms yet</strong></p>
                 <p>Create questions for <em>${escapeHtml(getConfig().title)}</em> activities. Kabataan responses appear under Survey Results and Survey Analytics.</p>
@@ -356,18 +427,21 @@ function renderFormsTable() {
 
     tbody.innerHTML = surveys.map(s => {
         const respCount = countResponsesForSurvey(s.id);
-        const statusCls = s.status === 'open' ? 'schol-pill-approved' : 'schol-pill-rejected';
-        const statusLabel = s.status === 'open' ? 'Open' : 'Closed';
+        const statusCls = getStatusClass(s.status);
+        const statusLabel = getStatusLabel(s.status);
         const qCount = (s.questions || []).length;
+        const openDateDisplay = s.openDate ? formatDate(s.openDate) : '—';
+        const closeDateDisplay = s.closeDate ? formatDate(s.closeDate) : '—';
         return `
             <tr>
                 <td class="survey-col-title">
                     <div class="survey-cell-title">${escapeHtml(s.title)}</div>
                 </td>
                 <td data-label="Activity">${escapeHtml(s.activity || '—')}</td>
-                <td data-label="Questions">${qCount}</td>
-                <td data-label="Responses">${respCount}</td>
+                <td data-label="Open Date">${openDateDisplay}</td>
+                <td data-label="Close Date">${closeDateDisplay}</td>
                 <td data-label="Status"><span class="schol-pill ${statusCls}">${statusLabel}</span></td>
+                <td data-label="Responses">${respCount}</td>
                 <td class="col-actions" data-label="Actions">
                     <div class="schol-tbl-actions prog-tbl-actions">
                         <button type="button" class="schol-tbl-btn schol-tbl-btn-view prog-btn prog-btn-view" data-view-survey="${s.id}">View</button>
@@ -402,10 +476,48 @@ function renderFormsTable() {
     });
 }
 
+function getStatusClass(status) {
+    switch(status) {
+        case 'scheduled': return 'schol-pill-scheduled';
+        case 'open': return 'schol-pill-approved';
+        case 'closed': return 'schol-pill-rejected';
+        default: return 'schol-pill-rejected';
+    }
+}
+
+function getStatusLabel(status) {
+    switch(status) {
+        case 'scheduled': return 'Scheduled';
+        case 'open': return 'Open';
+        case 'closed': return 'Closed';
+        default: return 'Unknown';
+    }
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
 function openViewSurveyModal(survey) {
     const body = document.getElementById('viewSurveyBody');
+    const respCount = countResponsesForSurvey(survey.id);
     body.innerHTML = `
-        <div class="gform-preview-header"><h4>${escapeHtml(survey.title)}</h4><p style="margin:6px 0 0;font-size:13px;opacity:0.9;">${escapeHtml(survey.activity || '')}</p></div>
+        <div class="gform-preview-header">
+            <h4>${escapeHtml(survey.title)}</h4>
+            <div class="gform-preview-info">
+                <div><strong>Activity:</strong> ${escapeHtml(survey.activity || '—')}</div>
+                <div><strong>Open Date:</strong> ${formatDate(survey.openDate)}</div>
+                <div><strong>Close Date:</strong> ${formatDate(survey.closeDate)}</div>
+                <div><strong>Status:</strong> ${getStatusLabel(survey.status)}</div>
+                <div><strong>Responses:</strong> ${respCount}</div>
+            </div>
+        </div>
         ${(survey.questions || []).map((q, i) => `
             <div class="gform-preview-q">
                 <div style="font-weight:500;margin-bottom:6px;">${i + 1}. ${escapeHtml(q.label)}${q.required ? '<span style="color:#d93025"> *</span>' : ''}</div>
@@ -414,6 +526,42 @@ function openViewSurveyModal(survey) {
             </div>
         `).join('')}`;
     document.getElementById('viewSurveyModal').style.display = 'flex';
+}
+
+function toggleViewSurveyMaximize() {
+    const modal = document.getElementById('viewSurveyModal');
+    const box = document.getElementById('viewSurveyBox');
+    const btn = document.getElementById('viewSurveyMaximize');
+    
+    if (modal.classList.contains('schol-modal-maximized')) {
+        modal.classList.remove('schol-modal-maximized');
+        box.classList.remove('schol-modal-maximized');
+        btn.textContent = '□';
+        btn.title = 'Maximize';
+    } else {
+        modal.classList.add('schol-modal-maximized');
+        box.classList.add('schol-modal-maximized');
+        btn.textContent = '⧉';
+        btn.title = 'Restore Down';
+    }
+}
+
+function toggleSurveyFormMaximize() {
+    const modal = document.getElementById('surveyFormModal');
+    const box = document.getElementById('surveyFormBox');
+    const btn = document.getElementById('surveyFormMaximize');
+    
+    if (modal.classList.contains('schol-modal-maximized')) {
+        modal.classList.remove('schol-modal-maximized');
+        box.classList.remove('schol-modal-maximized');
+        btn.textContent = '□';
+        btn.title = 'Maximize';
+    } else {
+        modal.classList.add('schol-modal-maximized');
+        box.classList.add('schol-modal-maximized');
+        btn.textContent = '⧉';
+        btn.title = 'Restore Down';
+    }
 }
 
 // ── Results Tab ───────────────────────────────────────────────────────────
@@ -530,8 +678,14 @@ function openResponseModal(response, survey) {
     }).join('');
 
     body.innerHTML = `
-        <p style="margin:0 0 12px;"><strong>${escapeHtml(response.respondentName)}</strong> · ${escapeHtml(response.barangay || '')}</p>
-        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">Survey: ${escapeHtml(survey.title)}</p>
+        <div class="gform-preview-header">
+            <h4>${escapeHtml(response.respondentName)}</h4>
+            <div class="gform-preview-info">
+                <div><strong>Survey:</strong> ${escapeHtml(survey.title)}</div>
+                <div><strong>Barangay:</strong> ${escapeHtml(response.barangay || '—')}</div>
+                <div><strong>Date Submitted:</strong> ${formatSurveyDate(response.submittedAt)}</div>
+            </div>
+        </div>
         ${answersHtml}`;
     document.getElementById('viewResponseModal').style.display = 'flex';
 }

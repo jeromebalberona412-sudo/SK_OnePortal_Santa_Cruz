@@ -1,7 +1,7 @@
 @extends('Program_Management::survey._layout')
 
 @section('survey_actions')
-    <button type="button" class="schol-btn schol-btn-outline" id="btnExportAnalytics">Export Analytics CSV</button>
+    <button type="button" class="schol-btn schol-btn-success" id="btnExportAnalytics">Export Analytics CSV</button>
 @endsection
 
 @section('survey_content')
@@ -12,6 +12,7 @@
                 <option value="">Select survey…</option>
             </select>
             <input type="date" id="analyticsDateFrom" class="schol-input" aria-label="From date">
+            <span class="date-separator">to</span>
             <input type="date" id="analyticsDateTo" class="schol-input" aria-label="To date">
             <select id="analyticsQuestionFilter" class="schol-input" aria-label="Filter by question">
                 <option value="">All questions</option>

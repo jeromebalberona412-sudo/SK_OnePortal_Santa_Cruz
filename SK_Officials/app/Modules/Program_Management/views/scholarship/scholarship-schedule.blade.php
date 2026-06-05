@@ -140,12 +140,12 @@
 <div class="schol-modal-overlay" id="scholarProgramModal" style="display:none;">
     <div class="schol-modal-box schol-modal-xl schol-modal-maximized" id="scholarProgramBox">
         <div class="schol-modal-header">
-            <h3>
+            <h3 id="scholarProgramModalTitle">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
                 Create Scholarship Program
             </h3>
             <div style="display:flex;align-items:center;gap:2px;">
-                <button type="button" class="schol-modal-close" id="scholarProgramMaximize" title="Restore Down" style="font-size:16px;padding:2px 8px;opacity:0.85;">⧉</button>
+                <button type="button" class="schol-modal-close" id="scholarProgramMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
                 <button type="button" class="schol-modal-close" id="scholarProgramClose" title="Close">&times;</button>
             </div>
         </div>
@@ -205,116 +205,8 @@
                         <input type="date" id="schedStartDate" class="schol-input" required>
                     </div>
                     <div class="schol-field">
-                        <label for="schedStartTime">Start Time <span class="schol-req">*</span></label>
-                        <select id="schedStartTime" class="schol-input" required>
-                            <option value="">Select Time</option>
-                            <option value="00:00">12:00 AM</option>
-                            <option value="00:30">12:30 AM</option>
-                            <option value="01:00">1:00 AM</option>
-                            <option value="01:30">1:30 AM</option>
-                            <option value="02:00">2:00 AM</option>
-                            <option value="02:30">2:30 AM</option>
-                            <option value="03:00">3:00 AM</option>
-                            <option value="03:30">3:30 AM</option>
-                            <option value="04:00">4:00 AM</option>
-                            <option value="04:30">4:30 AM</option>
-                            <option value="05:00">5:00 AM</option>
-                            <option value="05:30">5:30 AM</option>
-                            <option value="06:00">6:00 AM</option>
-                            <option value="06:30">6:30 AM</option>
-                            <option value="07:00">7:00 AM</option>
-                            <option value="07:30">7:30 AM</option>
-                            <option value="08:00" selected>8:00 AM</option>
-                            <option value="08:30">8:30 AM</option>
-                            <option value="09:00">9:00 AM</option>
-                            <option value="09:30">9:30 AM</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="10:30">10:30 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                            <option value="11:30">11:30 AM</option>
-                            <option value="12:00">12:00 PM</option>
-                            <option value="12:30">12:30 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="13:30">1:30 PM</option>
-                            <option value="14:00">2:00 PM</option>
-                            <option value="14:30">2:30 PM</option>
-                            <option value="15:00">3:00 PM</option>
-                            <option value="15:30">3:30 PM</option>
-                            <option value="16:00">4:00 PM</option>
-                            <option value="16:30">4:30 PM</option>
-                            <option value="17:00">5:00 PM</option>
-                            <option value="17:30">5:30 PM</option>
-                            <option value="18:00">6:00 PM</option>
-                            <option value="18:30">6:30 PM</option>
-                            <option value="19:00">7:00 PM</option>
-                            <option value="19:30">7:30 PM</option>
-                            <option value="20:00">8:00 PM</option>
-                            <option value="20:30">8:30 PM</option>
-                            <option value="21:00">9:00 PM</option>
-                            <option value="21:30">9:30 PM</option>
-                            <option value="22:00">10:00 PM</option>
-                            <option value="22:30">10:30 PM</option>
-                            <option value="23:00">11:00 PM</option>
-                            <option value="23:30">11:30 PM</option>
-                        </select>
-                    </div>
-                    <div class="schol-field">
                         <label for="schedEndDate">End Date <span class="schol-req">*</span></label>
                         <input type="date" id="schedEndDate" class="schol-input" required>
-                    </div>
-                    <div class="schol-field">
-                        <label for="schedEndTime">End Time <span class="schol-req">*</span></label>
-                        <select id="schedEndTime" class="schol-input" required>
-                            <option value="">Select Time</option>
-                            <option value="00:00">12:00 AM</option>
-                            <option value="00:30">12:30 AM</option>
-                            <option value="01:00">1:00 AM</option>
-                            <option value="01:30">1:30 AM</option>
-                            <option value="02:00">2:00 AM</option>
-                            <option value="02:30">2:30 AM</option>
-                            <option value="03:00">3:00 AM</option>
-                            <option value="03:30">3:30 AM</option>
-                            <option value="04:00">4:00 AM</option>
-                            <option value="04:30">4:30 AM</option>
-                            <option value="05:00">5:00 AM</option>
-                            <option value="05:30">5:30 AM</option>
-                            <option value="06:00">6:00 AM</option>
-                            <option value="06:30">6:30 AM</option>
-                            <option value="07:00">7:00 AM</option>
-                            <option value="07:30">7:30 AM</option>
-                            <option value="08:00">8:00 AM</option>
-                            <option value="08:30">8:30 AM</option>
-                            <option value="09:00">9:00 AM</option>
-                            <option value="09:30">9:30 AM</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="10:30">10:30 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                            <option value="11:30">11:30 AM</option>
-                            <option value="12:00">12:00 PM</option>
-                            <option value="12:30">12:30 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="13:30">1:30 PM</option>
-                            <option value="14:00">2:00 PM</option>
-                            <option value="14:30">2:30 PM</option>
-                            <option value="15:00">3:00 PM</option>
-                            <option value="15:30">3:30 PM</option>
-                            <option value="16:00">4:00 PM</option>
-                            <option value="16:30">4:30 PM</option>
-                            <option value="17:00" selected>5:00 PM</option>
-                            <option value="17:30">5:30 PM</option>
-                            <option value="18:00">6:00 PM</option>
-                            <option value="18:30">6:30 PM</option>
-                            <option value="19:00">7:00 PM</option>
-                            <option value="19:30">7:30 PM</option>
-                            <option value="20:00">8:00 PM</option>
-                            <option value="20:30">8:30 PM</option>
-                            <option value="21:00">9:00 PM</option>
-                            <option value="21:30">9:30 PM</option>
-                            <option value="22:00">10:00 PM</option>
-                            <option value="22:30">10:30 PM</option>
-                            <option value="23:00">11:00 PM</option>
-                            <option value="23:30">11:30 PM</option>
-                        </select>
                     </div>
                     <div class="schol-field">
                         <label for="programStatus">Status</label>

@@ -994,6 +994,13 @@ body {
     gap: 10px;
 }
 
+.profile-top-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    justify-content: flex-end;
+}
+
 .profile-page-title {
     font-size: 26px;
     font-weight: 800;

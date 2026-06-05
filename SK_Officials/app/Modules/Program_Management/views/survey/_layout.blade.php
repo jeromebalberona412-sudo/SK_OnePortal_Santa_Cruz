@@ -47,14 +47,6 @@
             <p class="survey-hero-desc">{{ $committeeDescription }}</p>
             <p class="survey-sk-head">SK Head: <strong>{{ $skHead }}</strong></p>
         </div>
-        <div class="survey-hero-activities">
-            <h2 class="survey-activities-label">Program activities</h2>
-            <ul class="survey-activity-chips">
-                @foreach($activities as $activity)
-                    <li>{{ $activity }}</li>
-                @endforeach
-            </ul>
-        </div>
     </section>
 
     @include('Program_Management::partials.survey-tabs', ['activeTab' => $activeTab, 'committee' => $committee])
