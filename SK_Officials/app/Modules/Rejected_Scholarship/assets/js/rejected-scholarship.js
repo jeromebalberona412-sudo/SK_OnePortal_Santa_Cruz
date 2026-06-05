@@ -54,9 +54,23 @@ function rsApplyTabFilter(records, filter) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 function rsApplyAllFilters() {
     const byTab = rsApplyTabFilter(rsAllRecords, rsActiveFilter);
-    return window.SkArchive
+    const filtered = window.SkArchive
         ? SkArchive.filterByArchiveTerm(byTab, rsArchiveTerm, ['submitted_at', 'rejected_at'])
         : byTab;
+    
+    // Sort alphabetically by last name, then first name
+    filtered.sort((a, b) => {
+        const lastNameA = (a.last_name || '').toLowerCase();
+        const lastNameB = (b.last_name || '').toLowerCase();
+        if (lastNameA !== lastNameB) {
+            return lastNameA.localeCompare(lastNameB);
+        }
+        const firstNameA = (a.first_name || '').toLowerCase();
+        const firstNameB = (b.first_name || '').toLowerCase();
+        return firstNameA.localeCompare(firstNameB);
+    });
+    
+    return filtered;
 }
 
 function initRejectedScholarship() {

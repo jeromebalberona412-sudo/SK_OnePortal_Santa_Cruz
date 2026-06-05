@@ -1319,14 +1319,7 @@ body {
     color: #374151;
 }
 
-.sl-badge-pending-release,
-.sl-badge-pending {
-    background: #fed7aa;
-    color: #92400e;
-}
-
-.sl-badge-claimed,
-.sl-badge-paid {
+.sl-badge-claimed {
     background: #d1fae5;
     color: #065f46;
 }

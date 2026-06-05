@@ -1,15 +1,15 @@
 // ── Scholar List (Approved Scholars) ───────────────────────────────────────
 
-const SL_PAYMENT_STATUSES = ['Pending Release', 'Claimed', 'Unclaimed'];
+const SL_PAYMENT_STATUSES = ['Claimed', 'Unclaimed'];
 
 function slNormalizePaymentStatus(scholar) {
     if (scholar.payment_status && SL_PAYMENT_STATUSES.includes(scholar.payment_status)) {
         return scholar.payment_status;
     }
     if (scholar.status === 'Paid') return 'Claimed';
-    if (scholar.status === 'Pending Payout') return 'Pending Release';
+    if (scholar.status === 'Pending Payout') return 'Unclaimed';
     if (scholar.status === 'Cancelled') return 'Unclaimed';
-    return 'Pending Release';
+    return 'Unclaimed';
 }
 
 function slEnsurePaymentStatuses() {
@@ -19,40 +19,6 @@ function slEnsurePaymentStatuses() {
 }
 
 const SL_SCHOLARS = [
-    {
-        last_name: 'Reyes', first_name: 'Maria', middle_name: 'Santos', suffix: '',
-        date_of_birth: '03/14/2005', gender: 'Female', age: 20,
-        contact_no: '09171234567', email: 'maria.reyes@email.com',
-        address: '123 Sampaguita St., Brgy. Calios, Santa Cruz, Laguna',
-        school_name: 'Laguna State Polytechnic University',
-        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
-        year_level: '2nd Year',
-        program_strand: 'Bachelor of Secondary Education (BSED)',
-        program_abbr: 'BSED',
-        purpose: 'Tuition Fees, Books / Equipments',
-        purpose_list: ['Tuition Fees', 'Books / Equipments'], purpose_others: '',
-        cor_certified: true, photo_id: true,
-        approved_at: 'Jan 15, 2025',
-        scholarship_year: '2026',
-        payment_status: 'Claimed'
-    },
-    {
-        last_name: 'Dela Cruz', first_name: 'Jose', middle_name: 'Ramos', suffix: 'Jr.',
-        date_of_birth: '11/20/2004', gender: 'Male', age: 21,
-        contact_no: '09721234567', email: 'jose.delacruz@email.com',
-        address: '88 Magsaysay St., Brgy. Calios, Santa Cruz, Laguna',
-        school_name: 'Laguna State Polytechnic University',
-        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
-        year_level: '3rd Year',
-        program_strand: 'Bachelor of Science in Information Technology (BSIT)',
-        program_abbr: 'BSIT',
-        purpose: 'Tuition Fees, Living Expenses',
-        purpose_list: ['Tuition Fees', 'Living Expenses'], purpose_others: '',
-        cor_certified: true, photo_id: true,
-        approved_at: 'Jan 25, 2025',
-        scholarship_year: '2026',
-        payment_status: 'Pending Release'
-    },
     {
         last_name: 'Bautista', first_name: 'Kristine', middle_name: 'Flores', suffix: '',
         date_of_birth: '06/08/2005', gender: 'Female', age: 20,
@@ -71,21 +37,21 @@ const SL_SCHOLARS = [
         payment_status: 'Unclaimed'
     },
     {
-        last_name: 'Santos', first_name: 'Mark', middle_name: 'Villanueva', suffix: '',
-        date_of_birth: '09/15/2003', gender: 'Male', age: 22,
-        contact_no: '09941234567', email: 'mark.santos@email.com',
-        address: '22 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
-        school_name: 'University of the Philippines Los Baños',
-        school_address: 'Brgy. College, Los Baños, Laguna 4031',
-        year_level: '4th Year',
-        program_strand: 'Bachelor of Science in Computer Science (BSCS)',
-        program_abbr: 'BS Computer Science',
+        last_name: 'Dela Cruz', first_name: 'Jose', middle_name: 'Ramos', suffix: 'Jr.',
+        date_of_birth: '11/20/2004', gender: 'Male', age: 21,
+        contact_no: '09721234567', email: 'jose.delacruz@email.com',
+        address: '88 Magsaysay St., Brgy. Calios, Santa Cruz, Laguna',
+        school_name: 'Laguna State Polytechnic University',
+        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
+        year_level: '3rd Year',
+        program_strand: 'Bachelor of Science in Information Technology (BSIT)',
+        program_abbr: 'BSIT',
         purpose: 'Tuition Fees, Living Expenses',
         purpose_list: ['Tuition Fees', 'Living Expenses'], purpose_others: '',
-        cor_certified: true, photo_id: false,
-        approved_at: 'Feb 20, 2025',
+        cor_certified: true, photo_id: true,
+        approved_at: 'Jan 25, 2025',
         scholarship_year: '2026',
-        payment_status: 'Claimed'
+        payment_status: 'Unclaimed'
     },
     {
         last_name: 'Lim', first_name: 'Angela', middle_name: 'Cruz', suffix: '',
@@ -102,12 +68,46 @@ const SL_SCHOLARS = [
         cor_certified: false, photo_id: true,
         approved_at: 'Mar 5, 2025',
         scholarship_year: '2025',
-        payment_status: 'Pending Release'
+        payment_status: 'Unclaimed'
+    },
+    {
+        last_name: 'Reyes', first_name: 'Maria', middle_name: 'Santos', suffix: '',
+        date_of_birth: '03/14/2005', gender: 'Female', age: 20,
+        contact_no: '09171234567', email: 'maria.reyes@email.com',
+        address: '123 Sampaguita St., Brgy. Calios, Santa Cruz, Laguna',
+        school_name: 'Laguna State Polytechnic University',
+        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
+        year_level: '2nd Year',
+        program_strand: 'Bachelor of Secondary Education (BSED)',
+        program_abbr: 'BSED',
+        purpose: 'Tuition Fees, Books / Equipments',
+        purpose_list: ['Tuition Fees', 'Books / Equipments'], purpose_others: '',
+        cor_certified: true, photo_id: true,
+        approved_at: 'Jan 15, 2025',
+        scholarship_year: '2026',
+        payment_status: 'Claimed'
+    },
+    {
+        last_name: 'Santos', first_name: 'Mark', middle_name: 'Villanueva', suffix: '',
+        date_of_birth: '09/15/2003', gender: 'Male', age: 22,
+        contact_no: '09941234567', email: 'mark.santos@email.com',
+        address: '22 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
+        school_name: 'University of the Philippines Los Baños',
+        school_address: 'Brgy. College, Los Baños, Laguna 4031',
+        year_level: '4th Year',
+        program_strand: 'Bachelor of Science in Computer Science (BSCS)',
+        program_abbr: 'BS Computer Science',
+        purpose: 'Tuition Fees, Living Expenses',
+        purpose_list: ['Tuition Fees', 'Living Expenses'], purpose_others: '',
+        cor_certified: true, photo_id: false,
+        approved_at: 'Feb 20, 2025',
+        scholarship_year: '2026',
+        payment_status: 'Claimed'
     },
 ];
 
 let currentPage = 1;
-let perPage = 25;
+let perPage = 10;
 let activePaymentFilter = 'all';
 let filteredScholars = [];
 
@@ -136,7 +136,7 @@ function escapeSl(str) {
 function slPaymentBadgeClass(status) {
     if (status === 'Claimed') return 'sl-badge-claimed';
     if (status === 'Unclaimed') return 'sl-badge-unclaimed';
-    return 'sl-badge-pending-release';
+    return 'sl-badge-default';
 }
 
 function renderScholarTable() {
@@ -219,37 +219,43 @@ function renderScholarTable() {
     const revokeConfirm = document.getElementById('btnConfirmRevoke');
     const revokeMaximize = document.getElementById('slRevokeMaximize');
     const revokeBox = document.getElementById('slRevokeBox');
-    const revokeOtherCheckbox = document.getElementById('slRevokeOtherCheckbox');
+    const revokeOtherRadio = document.getElementById('slRevokeOtherRadio');
     const revokeReasonField = document.getElementById('slRevokeReasonField');
     const revokeReasonInput = document.getElementById('revokeReason');
     const revokeReasonCount = document.getElementById('revokeReasonCount');
 
-    if (revokeClose) revokeClose.addEventListener('click', closeRevokeModal);
-    if (revokeCancel) revokeCancel.addEventListener('click', closeRevokeModal);
+    const closeRevoke = () => {
+        revokeModal.style.display = 'none';
+        revokeBox.classList.remove('sl-modal-maximized');
+        revokeModal.classList.remove('sl-overlay-maximized');
+        if (revokeMaximize) {
+            revokeMaximize.textContent = '□';
+            revokeMaximize.title = 'Maximize';
+        }
+    };
+
+    if (revokeClose) revokeClose.addEventListener('click', closeRevoke);
+    if (revokeCancel) revokeCancel.addEventListener('click', closeRevoke);
     if (revokeModal) {
         revokeModal.addEventListener('click', (e) => {
-            if (e.target === revokeModal) closeRevokeModal();
+            if (e.target === revokeModal) closeRevoke();
         });
     }
 
     // Maximize/Restore for Revoke modal
     if (revokeMaximize && revokeBox) {
         revokeMaximize.addEventListener('click', () => {
-            if (revokeBox.classList.contains('sl-modal-maximized')) {
-                revokeBox.classList.remove('sl-modal-maximized');
-                revokeMaximize.textContent = '□';
-                revokeMaximize.title = 'Maximize';
-            } else {
-                revokeBox.classList.add('sl-modal-maximized');
-                revokeMaximize.textContent = '⧉';
-                revokeMaximize.title = 'Restore Down';
-            }
+            revokeBox.classList.toggle('sl-modal-maximized');
+            const isMax = revokeBox.classList.contains('sl-modal-maximized');
+            revokeMaximize.textContent = isMax ? '⧉' : '□';
+            revokeMaximize.title = isMax ? 'Restore Down' : 'Maximize';
+            if (revokeModal) revokeModal.classList.toggle('sl-overlay-maximized', isMax);
         });
     }
 
-    // Other checkbox handler
-    if (revokeOtherCheckbox && revokeReasonField) {
-        revokeOtherCheckbox.addEventListener('change', function () {
+    // Other radio button handler
+    if (revokeOtherRadio && revokeReasonField) {
+        revokeOtherRadio.addEventListener('change', function () {
             if (this.checked) {
                 revokeReasonField.style.display = 'block';
             } else {
@@ -266,17 +272,6 @@ function renderScholarTable() {
             revokeReasonCount.textContent = this.value.length;
         });
     }
-
-    // Checkbox handlers - ensure only one is selected
-    document.querySelectorAll('.sl-revoke-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function () {
-            if (this.checked) {
-                document.querySelectorAll('.sl-revoke-checkbox').forEach(cb => {
-                    if (cb !== this) cb.checked = false;
-                });
-            }
-        });
-    });
 
     if (revokeConfirm) {
         revokeConfirm.addEventListener('click', confirmRevokeApproval);
@@ -296,7 +291,7 @@ function openRevokeModal(idx, scholar) {
     const revokeReasonInput = document.getElementById('revokeReason');
     const revokeReasonCount = document.getElementById('revokeReasonCount');
     const revokeReasonField = document.getElementById('slRevokeReasonField');
-    const revokeOtherCheckbox = document.getElementById('slRevokeOtherCheckbox');
+    const revokeOtherRadio = document.getElementById('slRevokeOtherRadio');
 
     if (!revokeModal) return;
 
@@ -308,8 +303,15 @@ function openRevokeModal(idx, scholar) {
     if (revokeReasonCount) revokeReasonCount.textContent = '0';
     if (revokeReasonField) revokeReasonField.style.display = 'none';
 
-    // Uncheck all checkboxes
-    document.querySelectorAll('.sl-revoke-checkbox').forEach(cb => cb.checked = false);
+    // Reset radio buttons to default (Mistakenly Approved)
+    const radioButtons = document.querySelectorAll('input[name="revokeReason"]');
+    radioButtons.forEach(rb => {
+        if (rb.value === 'Mistakenly Approved') {
+            rb.checked = true;
+        } else {
+            rb.checked = false;
+        }
+    });
 
     revokeModal.style.display = 'flex';
 }
@@ -322,25 +324,29 @@ function closeRevokeModal() {
 function confirmRevokeApproval() {
     const revokeIndexInput = document.getElementById('revokeScholarIndex');
     const revokeReasonInput = document.getElementById('revokeReason');
-    const revokeOtherCheckbox = document.getElementById('slRevokeOtherCheckbox');
+    const revokeOtherRadio = document.getElementById('slRevokeOtherRadio');
 
     if (!revokeIndexInput) return;
 
     const idx = parseInt(revokeIndexInput.value, 10);
     let reason = '';
 
-    // Get selected reason from checkboxes
-    const selectedCheckbox = document.querySelector('.sl-revoke-checkbox:checked');
-    if (selectedCheckbox) {
-        if (selectedCheckbox.value === 'other') {
+    // Get selected reason from radio buttons
+    const selectedRadio = document.querySelector('input[name="revokeReason"]:checked');
+    if (selectedRadio) {
+        if (selectedRadio.value === 'other') {
             reason = revokeReasonInput ? revokeReasonInput.value.trim() : '';
+            if (!reason) {
+                alert('Please enter a revocation reason when selecting "Other Reason".');
+                return;
+            }
         } else {
-            reason = selectedCheckbox.value;
+            reason = selectedRadio.value;
         }
     }
 
     if (!reason) {
-        alert('Please select a revocation reason or check "Other" and provide a custom reason.');
+        alert('Please select a revocation reason.');
         return;
     }
 
@@ -425,141 +431,136 @@ function openScholarModal(r) {
     if (!modal || !body) return;
 
     const fullName = `${r.first_name || ''} ${r.last_name || ''}${r.suffix ? ' ' + r.suffix : ''}`.trim();
+    const initials = `${(r.first_name || '').charAt(0)}${(r.last_name || '').charAt(0)}`.toUpperCase();
     const paymentStatus = slNormalizePaymentStatus(r);
 
-    const purposes = [
-        { label: 'Tuition Fees', key: 'Tuition Fees' },
-        { label: 'Books/Equipments', key: 'Books / Equipments' },
-        { label: 'Living Expenses', key: 'Living Expenses' },
-        { label: 'Others', key: 'Others' },
-    ];
-    const purposeList = r.purpose_list || [];
-    const purposeCheckboxes = purposes.map(p => {
-        const isChecked = purposeList.some(v =>
-            v.toLowerCase().replace(/[\s/]/g, '') === p.key.toLowerCase().replace(/[\s/]/g, '')
-        );
-        return `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                <input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="width:16px;height:16px;cursor:not-allowed;">
-                <span style="font-size:13px;color:#374151;">${p.label}</span>
-            </div>
-        `;
-    }).join('');
+    const purposeText = r.purpose || (Array.isArray(r.purpose_list) ? r.purpose_list.join(', ') : '—');
+    const reqList = [];
+    if (r.cor_certified) reqList.push('COR – CERTIFIED TRUE COPY');
+    if (r.photo_id) reqList.push('PHOTO COPY OF ID (FRONT AND BACK)');
+
+    const SV = window.ScholarshipViewShared;
+    const esc = (s) => (SV ? SV.escapeHtml(s) : String(s ?? ''));
+    const program = SV ? SV.loadScholarshipProgram() : null;
+    const programHtml = SV ? SV.renderProgramInformationSection(program) : '';
+    const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
+
+    const statusStyle = paymentStatus === 'Claimed' 
+        ? { bg: '#dcfce7', text: '#166534', label: 'Claimed' }
+        : paymentStatus === 'Pending Release'
+        ? { bg: '#fef3c7', text: '#92400e', label: 'Pending Release' }
+        : { bg: '#fee2e2', text: '#991b1b', label: 'Unclaimed' };
 
     body.innerHTML = `
-    <div style="background:#fff;padding:24px;border-radius:8px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:12px;background:#f3f4f6;border-radius:6px;">
-            <span class="sl-badge ${slPaymentBadgeClass(paymentStatus)}">${escapeSl(paymentStatus)}</span>
-            <span style="font-size:14px;font-weight:600;color:#374151;">Payment Status</span>
-        </div>
-
-        <div style="margin-bottom:24px;">
-            <h3 style="font-size:16px;font-weight:600;color:#1f2937;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">SCHOLARSHIP APPLICATION FORM</h3>
-            <div style="background:#f9fafb;padding:16px;border-radius:6px;margin-bottom:16px;">
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <div style="width:80px;height:80px;background:#e5e7eb;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6b7280;">Photo</div>
+        <div style="padding:24px;background:#f0f1f5;">
+            <!-- Personal Information -->
+            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Personal Information
+                </h4>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
                     <div>
-                        <div style="font-size:13px;color:#6b7280;">Date:</div>
-                        <div style="font-size:14px;font-weight:500;color:#374151;">${escapeSl(r.approved_at || '—')}</div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Date of Birth</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.date_of_birth) || 'Not specified'}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Gender</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.gender) || 'Not specified'}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Age</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.age) || 'Not specified'}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Contact Number</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.contact_no) || 'Not specified'}</div>
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Address</label>
+                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${esc(r.address) || 'Not specified'}</div>
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Email Address</label>
+                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.email) || 'Not specified'}</div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div style="margin-bottom:24px;">
-            <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">APPLICANT'S PERSONAL INFORMATION</h4>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Last Name</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.last_name || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">First Name</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.first_name || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Middle Name</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.middle_name || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Date of Birth</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.date_of_birth || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Gender</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.gender || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Age</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.age || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Contact No</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.contact_no || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Email Address</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.email || '—')}</div>
+            <!-- Education & Scholarship -->
+            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+                    Education & Scholarship
+                </h4>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                    <div style="grid-column:1/-1;">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">School Name</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.school_name) || 'Not specified'}</div>
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">School Address</label>
+                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${esc(r.school_address) || 'Not specified'}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Year Level</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.year_level) || 'Not specified'}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program / Strand</label>
+                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${esc(r.program_strand) || 'Not specified'}</div>
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Purpose of Application</label>
+                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${purposeText || 'Not specified'}</div>
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Submitted Requirements</label>
+                        <div style="background:#f9fafb;border-radius:8px;padding:16px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                            ${reqList.length > 0 ? reqList.map(req => `
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span style="font-size:14px;color:#111827;">${req}</span>
+                                </div>
+                            `).join('') : '<span style="font-size:14px;color:#9ca3af;">No requirements submitted</span>'}
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div style="margin-top:16px;">
-                <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Complete Address</label>
-                <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.address || '—')}</div>
-            </div>
-        </div>
 
-        <div style="margin-bottom:24px;">
-            <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">ACADEMIC INFORMATION</h4>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Name of School</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.school_name || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">School Address</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.school_address || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Year/Grade Level</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.year_level || '—')}</div>
-                </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Program/Strand</label>
-                    <div style="padding:8px 12px;background:#f3f4f6;border-radius:4px;font-size:13px;color:#374151;">${escapeSl(r.program_strand || '—')}</div>
-                </div>
-            </div>
-        </div>
+            ${programHtml}
 
-        <div style="margin-bottom:24px;">
-            <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">SCHOLARSHIP INFORMATION</h4>
-            <div style="background:#f9fafb;padding:16px;border-radius:6px;">
-                <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:8px;">Purpose of Scholarship</label>
-                ${purposeCheckboxes}
-            </div>
-        </div>
+            ${formAnswersHtml}
 
-        <div style="margin-bottom:24px;">
-            <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">SUBMITTED REQUIREMENTS</h4>
-            <div style="background:#f9fafb;padding:16px;border-radius:6px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                    <input type="checkbox" ${r.cor_certified ? 'checked' : ''} disabled style="width:16px;height:16px;cursor:not-allowed;">
-                    <span style="font-size:13px;color:#374151;">COR – CERTIFIED TRUE COPY</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <input type="checkbox" ${r.photo_id ? 'checked' : ''} disabled style="width:16px;height:16px;cursor:not-allowed;">
-                    <span style="font-size:13px;color:#374151;">PHOTO COPY OF ID (FRONT AND BACK)</span>
+            <!-- Payment Status -->
+            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Payment Status
+                </h4>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Current Status</label>
+                        <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};box-shadow:0 1px 2px rgba(0,0,0,0.1);">${statusStyle.label}</span>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Date Approved</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.approved_at) || 'Not specified'}</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;">
-            <div style="text-align:center;">
-                <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;">${escapeSl(fullName)}</div>
-                <div style="width:200px;height:1px;background:#e5e7eb;margin:0 auto 8px;"></div>
-                <div style="font-size:12px;color:#6b7280;">Name and Signature of Participant</div>
+            <!-- Applicant summary -->
+            <div style="background:white;border-radius:12px;padding:20px 24px;box-shadow:0 1px 3px rgba(0,0,0,0.1);display:flex;align-items:center;gap:16px;border-top:3px solid #213F99;">
+                <div style="width:56px;height:56px;background:#e8eef9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#213F99;flex-shrink:0;">${initials}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:4px;">${fullName}</div>
+                    <div style="font-size:14px;color:#6b7280;">${esc(program?.programName || 'Scholarship Program')}</div>
+                </div>
+                <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};box-shadow:0 1px 2px rgba(0,0,0,0.1);flex-shrink:0;">${statusStyle.label}</span>
             </div>
         </div>
-    </div>`;
+    `;
 
     modal.style.display = 'flex';
 }
@@ -653,6 +654,18 @@ function applyFilters() {
         return true;
     });
 
+    // Sort filtered scholars alphabetically by last name, then first name
+    filteredScholars.sort((a, b) => {
+        const lastNameA = (a.last_name || '').toLowerCase();
+        const lastNameB = (b.last_name || '').toLowerCase();
+        if (lastNameA !== lastNameB) {
+            return lastNameA.localeCompare(lastNameB);
+        }
+        const firstNameA = (a.first_name || '').toLowerCase();
+        const firstNameB = (b.first_name || '').toLowerCase();
+        return firstNameA.localeCompare(firstNameB);
+    });
+
     currentPage = 1;
     updateSummaryCards();
     renderScholarTable();
@@ -660,20 +673,10 @@ function applyFilters() {
 }
 
 function initializePagination() {
-    const perPageSelect = document.getElementById('slPerPage');
     const firstBtn = document.getElementById('slFirstPage');
     const prevBtn = document.getElementById('slPrevPage');
     const nextBtn = document.getElementById('slNextPage');
     const lastBtn = document.getElementById('slLastPage');
-
-    if (perPageSelect) {
-        perPageSelect.addEventListener('change', (e) => {
-            perPage = parseInt(e.target.value, 10);
-            currentPage = 1;
-            renderScholarTable();
-            renderPagination();
-        });
-    }
 
     if (firstBtn) firstBtn.addEventListener('click', () => goToPage(1));
     if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
@@ -785,15 +788,36 @@ function saveEditStatus() {
 function initializeEditModal() {
     const editModal = document.getElementById('slEditModal');
     const editClose = document.getElementById('slEditClose');
+    const editMaxBtn = document.getElementById('slEditMaximize');
+    const editBox = document.getElementById('slEditBox');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
     const btnSaveEdit = document.getElementById('btnSaveEdit');
 
-    if (editClose) editClose.addEventListener('click', closeEditModal);
-    if (btnCancelEdit) btnCancelEdit.addEventListener('click', closeEditModal);
+    const closeEdit = () => {
+        editModal.style.display = 'none';
+        editBox.classList.remove('sl-modal-maximized');
+        editModal.classList.remove('sl-overlay-maximized');
+        if (editMaxBtn) {
+            editMaxBtn.textContent = '□';
+            editMaxBtn.title = 'Maximize';
+        }
+    };
+
+    if (editClose) editClose.addEventListener('click', closeEdit);
+    if (btnCancelEdit) btnCancelEdit.addEventListener('click', closeEdit);
     if (btnSaveEdit) btnSaveEdit.addEventListener('click', saveEditStatus);
     if (editModal) {
         editModal.addEventListener('click', (e) => {
-            if (e.target === editModal) closeEditModal();
+            if (e.target === editModal) closeEdit();
+        });
+    }
+    if (editMaxBtn && editBox) {
+        editMaxBtn.addEventListener('click', () => {
+            editBox.classList.toggle('sl-modal-maximized');
+            const isMax = editBox.classList.contains('sl-modal-maximized');
+            editMaxBtn.textContent = isMax ? '⧉' : '□';
+            editMaxBtn.title = isMax ? 'Restore Down' : 'Maximize';
+            if (editModal) editModal.classList.toggle('sl-overlay-maximized', isMax);
         });
     }
 }

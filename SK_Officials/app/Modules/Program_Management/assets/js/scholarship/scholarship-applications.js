@@ -296,7 +296,30 @@ function initScholarshipRequests() {
     const rejectReasonClose = document.getElementById('scholRejectReasonClose');
     const rejectReasonCancel = document.getElementById('scholRejectReasonCancel');
     const rejectReasonConfirm = document.getElementById('scholRejectReasonConfirm');
+    const rejectReasonOther = document.getElementById('rejectReasonOther');
+    const rejectReasonOtherInput = document.getElementById('rejectReasonOtherInput');
+    const rejectReasonOtherCount = document.getElementById('rejectReasonOtherCount');
     let filterSearch = '';
+
+    // Rejection Reason "Other" checkbox handler
+    if (rejectReasonOther && rejectReasonOtherInput && rejectReasonOtherCount) {
+        rejectReasonOther.addEventListener('change', () => {
+            if (rejectReasonOther.checked) {
+                rejectReasonOtherInput.style.display = 'block';
+                rejectReasonOtherCount.style.display = 'block';
+            } else {
+                rejectReasonOtherInput.style.display = 'none';
+                rejectReasonOtherCount.style.display = 'none';
+                rejectReasonOtherInput.value = '';
+                rejectReasonOtherCount.textContent = '0/500 characters';
+            }
+        });
+
+        // Character counter for "other" input
+        rejectReasonOtherInput.addEventListener('input', () => {
+            rejectReasonOtherCount.textContent = `${rejectReasonOtherInput.value.length}/500 characters`;
+        });
+    }
     let filterStartDate = '';
     let filterEndDate = '';
     let filterStartTime = '';
@@ -784,7 +807,17 @@ function initScholarshipRequests() {
             }
 
             return r.status === 'Pending' && matchesSearch && matchesFilterType && matchesDateRange && matchesTimeRange;
-        }).sort((a, b) => parseSubmitted(a) - parseSubmitted(b));
+        }).sort((a, b) => {
+            // Sort alphabetically by last name, then first name
+            const lastNameA = (a.last_name || '').toLowerCase();
+            const lastNameB = (b.last_name || '').toLowerCase();
+            if (lastNameA !== lastNameB) {
+                return lastNameA.localeCompare(lastNameB);
+            }
+            const firstNameA = (a.first_name || '').toLowerCase();
+            const firstNameB = (b.first_name || '').toLowerCase();
+            return firstNameA.localeCompare(firstNameB);
+        });
 
         tbody.innerHTML = '';
 
@@ -872,76 +905,78 @@ function initScholarshipRequests() {
         const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
 
         viewBody.innerHTML = `
-            <div style="max-width:800px;margin:0 auto;">
+            <div style="padding:24px;background:#f0f1f5;">
                 <!-- Personal Information -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                    <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         Personal Information
-                    </h3>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
                         <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Date of Birth</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.date_of_birth || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Date of Birth</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.date_of_birth || 'Not specified'}</div>
                         </div>
                         <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Gender</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.gender || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Gender</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.gender || 'Not specified'}</div>
                         </div>
                         <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Age</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.age || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Age</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.age || 'Not specified'}</div>
                         </div>
                         <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Contact Number</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.contact_no || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Contact Number</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.contact_no || 'Not specified'}</div>
                         </div>
                         <div style="grid-column:1/-1;">
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Address</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.address || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Address</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${r.address || 'Not specified'}</div>
                         </div>
                         <div style="grid-column:1/-1;">
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Email Address</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.email || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Email Address</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.email || 'Not specified'}</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Education & Scholarship -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                    <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
                         Education & Scholarship
-                    </h3>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
                         <div style="grid-column:1/-1;">
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">School Name</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.school_name || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">School Name</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.school_name || 'Not specified'}</div>
                         </div>
                         <div style="grid-column:1/-1;">
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">School Address</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.school_address || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">School Address</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${r.school_address || 'Not specified'}</div>
                         </div>
                         <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Year Level</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.year_level || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Year Level</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.year_level || 'Not specified'}</div>
                         </div>
                         <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Program / Strand</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.program_strand || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program / Strand</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${r.program_strand || 'Not specified'}</div>
                         </div>
                         <div style="grid-column:1/-1;">
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Purpose of Application</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${purposeText}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Purpose of Application</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${purposeText || 'Not specified'}</div>
                         </div>
                         <div style="grid-column:1/-1;">
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Submitted Requirements</div>
-                            ${reqList.length > 0 ? reqList.map(req => `
-                                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                    <span style="font-size:13px;color:#111827;">${req}</span>
-                                </div>
-                            `).join('') : '<span style="font-size:13px;color:#9ca3af;">No requirements submitted</span>'}
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Submitted Requirements</label>
+                            <div style="background:#f9fafb;border-radius:8px;padding:16px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                                ${reqList.length > 0 ? reqList.map(req => `
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span style="font-size:14px;color:#111827;">${req}</span>
+                                    </div>
+                                `).join('') : '<span style="font-size:14px;color:#9ca3af;">No requirements submitted</span>'}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -951,25 +986,25 @@ function initScholarshipRequests() {
                 ${formAnswersHtml}
 
                 <!-- Submission Details -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                    <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         Submission Details
-                    </h3>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
                         <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Date Submitted</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.submitted_at || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Date Submitted</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.submitted_at || 'Not specified'}</div>
                         </div>
                         <div>
-                            <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Time Submitted</div>
-                            <div style="font-size:15px;font-weight:600;color:#111827;">${r.submitted_time || '—'}</div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Time Submitted</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.submitted_time || 'Not specified'}</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Applicant summary -->
-                <div style="background:white;border-radius:12px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;align-items:center;gap:16px;border-top:3px solid #213F99;">
+                <div style="background:white;border-radius:12px;padding:20px 24px;box-shadow:0 1px 3px rgba(0,0,0,0.1);display:flex;align-items:center;gap:16px;border-top:3px solid #213F99;">
                     <div style="width:56px;height:56px;background:#e8eef9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#213F99;flex-shrink:0;">${initials}</div>
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:4px;">${fullName}</div>

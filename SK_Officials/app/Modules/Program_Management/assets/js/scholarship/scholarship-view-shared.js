@@ -161,70 +161,98 @@
     function renderProgramInformationSection(program) {
         const p = program || SAMPLE_SCHOLARSHIP_PROGRAM;
         const status = formatStatusLabel(p.status);
-        const statusBg = status === 'Open' ? '#dcfce7' : '#fee2e2';
-        const statusColor = status === 'Open' ? '#166534' : '#991b1b';
+        const statusStyle = status === 'Open' || status === 'open' 
+            ? { bg: '#dcfce7', text: '#166534', label: 'Open' }
+            : { bg: '#fee2e2', text: '#991b1b', label: 'Closed' };
 
         return `
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 20px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;">Program Information</h3>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
-                    <div style="grid-column:1/-1;">
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Program Name</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(p.programName)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Program Type</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(p.programType)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Committee</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(p.committee)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Participation Quantity</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(p.participationQty || '—')}</div>
-                    </div>
-                    <div style="grid-column:1/-1;">
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Venue</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(p.venue || '—')}</div>
-                    </div>
-                    <div style="grid-column:1/-1;">
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Description</div>
-                        <div style="font-size:14px;color:#374151;line-height:1.7;">${escapeHtml(p.description || '—')}</div>
-                    </div>
-                    <div style="grid-column:1/-1;">
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Terms and Conditions</div>
-                        <div style="font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap;">${escapeHtml(p.terms || '—')}</div>
-                    </div>
-                </div>
-
-                <h4 style="font-size:15px;font-weight:700;color:#111827;margin:24px 0 12px;">Application Window Schedule</h4>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
-                    <div>
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Start Date</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${formatDisplayDate(p.startDate)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Start Time</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${formatTime12(p.startTime)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">End Date</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${formatDisplayDate(p.endDate)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">End Time</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${formatTime12(p.endTime)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Status</div>
-                        <span style="display:inline-flex;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;background:${statusBg};color:${statusColor};">${status}</span>
+            <div style="padding:24px;background:#f0f1f5;">
+                <!-- Program Information Section -->
+                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Program Information
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                        <div style="grid-column:1/-1;">
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program Name <span style="color:#dc2626;">*</span></label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(p.programName)}</div>
+                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(p.programName || '').length}/200 characters</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program Type</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(p.programType)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Committee</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(p.committee)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Participation Quantity</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(p.participationQty || 'N/A')}</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Venue</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${escapeHtml(p.venue || 'Not specified')}</div>
+                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(p.venue || '').length}/500 characters</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Description</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:80px;white-space:pre-wrap;">${escapeHtml(p.description || 'Not specified')}</div>
+                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(p.description || '').length}/500 characters</div>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Terms and Conditions</label>
+                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:100px;white-space:pre-wrap;">${escapeHtml(p.terms || 'Not specified')}</div>
+                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(p.terms || '').length}/500 characters</div>
+                        </div>
                     </div>
                 </div>
 
-                <h4 style="font-size:15px;font-weight:700;color:#111827;margin:24px 0 12px;">Application Form Builder</h4>
-                <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Announcement</div>
-                <div style="font-size:14px;color:#374151;line-height:1.7;padding:14px;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd;white-space:pre-wrap;">${escapeHtml(p.announcement || '—')}</div>
+                <!-- Schedule Section -->
+                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Application Window Schedule
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Start Date <span style="color:#dc2626;">*</span></label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${formatDisplayDate(p.startDate)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Start Time</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${formatTime12(p.startTime)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">End Date <span style="color:#dc2626;">*</span></label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${formatDisplayDate(p.endDate)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">End Time</label>
+                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${formatTime12(p.endTime)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Status</label>
+                            <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};box-shadow:0 1px 2px rgba(0,0,0,0.1);">${statusStyle.label}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Application Form Builder Section -->
+                <div style="background:white;border-radius:12px;padding:24px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Application Form Builder
+                    </h4>
+                    
+                    <!-- Announcement Section -->
+                    <div style="background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Announcement <span style="color:#dc2626;">*</span></label>
+                        <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">This message will be shown to Kabataan members when they open the application form.</div>
+                        <div style="font-size:15px;color:#374151;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;min-height:80px;white-space:pre-wrap;">${escapeHtml(p.announcement || 'No announcement set')}</div>
+                    </div>
+                </div>
             </div>`;
     }
 
@@ -233,28 +261,32 @@
         const programName = program?.programName || 'Scholarship Application';
 
         if (!answers.length) {
-            return '';
+            return `
+                <div style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:24px;text-align:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" style="margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <div style="font-size:16px;color:#856404;font-weight:600;">No custom questions added</div>
+                    <div style="font-size:14px;color:#856404;margin-top:8px;">Applicants will use the Kabataan application form with their profile details.</div>
+                </div>`;
         }
 
         return `
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                <h3 style="font-size:18px;font-weight:700;color:#111827;margin:0 0 16px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;">Application Form Responses</h3>
-                <div style="background:#f8f9fa;border-radius:8px;padding:20px;border:1px solid #e5e7eb;">
-                    <div style="background:#673ab7;color:white;padding:16px 20px;border-radius:8px 8px 0 0;margin:-20px -20px 20px;">
-                        <h4 style="font-size:20px;font-weight:500;margin:0 0 6px;">${escapeHtml(programName)}</h4>
-                        <p style="font-size:13px;margin:0;opacity:0.9;">Applicant responses (Google Form style)</p>
-                    </div>
-                    ${answers.map((item, idx) => `
-                        <div style="background:white;border-radius:8px;padding:16px 18px;margin-bottom:12px;border:1px solid #dadce0;">
-                            <div style="font-size:14px;color:#202124;font-weight:500;margin-bottom:10px;">
-                                ${idx + 1}. ${escapeHtml(item.question)}
-                            </div>
-                            <div style="font-size:14px;color:#111827;line-height:1.6;padding:10px 12px;background:#f1f3f4;border-radius:6px;border-left:3px solid #673ab7;">
-                                ${escapeHtml(item.answer || '—')}
-                            </div>
-                        </div>
-                    `).join('')}
+            <div style="background:#f8f9fa;border-radius:12px;padding:24px;border:2px solid #e5e7eb;">
+                <!-- Form Header -->
+                <div style="background:#673ab7;color:white;padding:24px;border-radius:12px 12px 0 0;margin:-24px -24px 24px;">
+                    <h5 style="font-size:26px;font-weight:500;margin:0 0 8px;">${escapeHtml(programName)}</h5>
+                    <p style="font-size:14px;margin:0;opacity:0.95;">Application Form Questions</p>
                 </div>
+
+                ${answers.map((item, idx) => `
+                    <div style="background:white;border-radius:8px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="font-size:15px;color:#202124;font-weight:500;margin-bottom:10px;">
+                            ${idx + 1}. ${escapeHtml(item.question)}
+                        </div>
+                        <div style="font-size:14px;color:#111827;line-height:1.6;padding:12px;background:#f9fafb;border-radius:6px;border-left:3px solid #673ab7;">
+                            ${escapeHtml(item.answer || '—')}
+                        </div>
+                    </div>
+                `).join('')}
             </div>`;
     }
 

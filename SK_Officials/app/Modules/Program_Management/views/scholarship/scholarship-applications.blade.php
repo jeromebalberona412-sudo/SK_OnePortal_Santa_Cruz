@@ -152,6 +152,12 @@
                     <input type="checkbox" class="reject-reason-checkbox" value="Incorrect Information Provided" style="cursor:pointer;width:16px;height:16px;">
                     <span>Incorrect Information Provided</span>
                 </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
+                    <input type="checkbox" class="reject-reason-checkbox" id="rejectReasonOther" value="Other" style="cursor:pointer;width:16px;height:16px;">
+                    <span>Other</span>
+                </label>
+                <textarea id="rejectReasonOtherInput" class="schol-input" placeholder="Please specify the reason (max 500 characters)" maxlength="500" rows="3" style="display:none;margin-top:8px;resize:none;"></textarea>
+                <div style="font-size:11px;color:#6b7280;text-align:right;margin-top:4px;display:none;" id="rejectReasonOtherCount">0/500 characters</div>
             </div>
         </div>
         <div class="schol-modal-footer">

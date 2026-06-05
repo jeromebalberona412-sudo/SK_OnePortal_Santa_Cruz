@@ -288,6 +288,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const allForms = loadForms();
         const forms = filterFormsByDate(allForms, filterValue);
         
+        // Sort forms alphabetically by program name
+        forms.sort((a, b) => {
+            const nameA = (a.programName || '').toLowerCase();
+            const nameB = (b.programName || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+        
         // Update program count
         const countEl = document.getElementById('programCount');
         if (countEl) {

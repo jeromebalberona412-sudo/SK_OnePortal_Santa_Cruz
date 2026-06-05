@@ -88,7 +88,6 @@
             <div class="sl-toolbar-left">
                 <div class="sl-payment-filter-tabs" role="tablist" aria-label="Payment status filter">
                     <button type="button" class="sl-payment-tab active" data-payment-filter="all">All</button>
-                    <button type="button" class="sl-payment-tab" data-payment-filter="Pending Release">Pending Release</button>
                     <button type="button" class="sl-payment-tab" data-payment-filter="Claimed">Claimed</button>
                     <button type="button" class="sl-payment-tab" data-payment-filter="Unclaimed">Unclaimed</button>
                 </div>
@@ -174,15 +173,6 @@
                         </svg>
                     </button>
                 </div>
-                <div class="sl-per-page">
-                    <label for="slPerPage">Per page:</label>
-                    <select id="slPerPage" class="sl-per-page-select">
-                        <option value="10">10</option>
-                        <option value="25" selected>25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
             </div>
         </div>
 
@@ -205,14 +195,17 @@
 
 <!-- ── Edit Status Modal ── -->
 <div class="sl-modal-overlay" id="slEditModal" style="display:none;">
-    <div class="sl-modal-box" style="max-width:500px;">
+    <div class="sl-modal-box" id="slEditBox" style="max-width:500px;">
         <div class="sl-modal-header">
             <h3>Edit Payment Status</h3>
-            <button type="button" class="sl-modal-close" id="slEditClose">&times;</button>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="sl-modal-close" id="slEditMaximize" title="Maximize">□</button>
+                <button type="button" class="sl-modal-close" id="slEditClose" title="Close">&times;</button>
+            </div>
         </div>
         <div class="sl-modal-body" style="padding:24px;">
             <input type="hidden" id="editScholarIndex">
-            
+
             <div class="sl-edit-field">
                 <label for="editScholarName" class="sl-edit-label">Scholar Name</label>
                 <input type="text" id="editScholarName" class="sl-edit-input" readonly style="background:#f3f4f6;cursor:not-allowed;">
@@ -221,7 +214,6 @@
             <div class="sl-edit-field">
                 <label for="editPaymentStatus" class="sl-edit-label">Payment Status <span style="color:#ef4444;">*</span></label>
                 <select id="editPaymentStatus" class="sl-edit-input" required>
-                    <option value="Pending Release">Pending Release</option>
                     <option value="Claimed">Claimed</option>
                     <option value="Unclaimed">Unclaimed</option>
                 </select>
@@ -260,28 +252,12 @@
                 <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Select Revocation Reason:</label>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
-                        <input type="checkbox" class="sl-revoke-checkbox" value="Your application has been rejected due to an approval error during the review process.">
-                        <span>Approval error during review process</span>
+                        <input type="radio" name="revokeReason" value="Mistakenly Approved" checked>
+                        <span>Mistakenly Approved</span>
                     </label>
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
-                        <input type="checkbox" class="sl-revoke-checkbox" value="Your application has been rejected because it was mistakenly approved during evaluation.">
-                        <span>Mistakenly approved during evaluation</span>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
-                        <input type="checkbox" class="sl-revoke-checkbox" value="Your application has been rejected because the submitted requirements did not meet the program requirements upon further review.">
-                        <span>Requirements did not meet program standards</span>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
-                        <input type="checkbox" class="sl-revoke-checkbox" value="Your application has been rejected because additional verification revealed incomplete eligibility requirements.">
-                        <span>Incomplete eligibility requirements</span>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
-                        <input type="checkbox" class="sl-revoke-checkbox" value="We apologize for the inconvenience. Your application was mistakenly approved and has been returned to the rejected applications list for proper evaluation.">
-                        <span>Mistakenly approved - returned for evaluation</span>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
-                        <input type="checkbox" class="sl-revoke-checkbox" id="slRevokeOtherCheckbox" value="other">
-                        <span>Other (specify below)</span>
+                        <input type="radio" name="revokeReason" value="other" id="slRevokeOtherRadio">
+                        <span>Other Reason</span>
                     </label>
                 </div>
             </div>
