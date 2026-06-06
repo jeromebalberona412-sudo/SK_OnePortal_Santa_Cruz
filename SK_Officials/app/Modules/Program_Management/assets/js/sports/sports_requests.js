@@ -60,101 +60,6 @@ const SAMPLE_SPORTS_DATA = [
         status: 'Pending',
         paymentStatus: null,
         rejectionReasons: []
-    },
-    {
-        id: 2004,
-        lastName: 'Lim',
-        firstName: 'Ana',
-        middleName: 'Cruz',
-        suffix: '',
-        dateOfBirth: '2004-11-18',
-        age: 21,
-        contact: '09501234567',
-        email: 'ana.lim@email.com',
-        address: '321 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
-        sport: 'Volleyball',
-        division: 'Youth Division (18-21)',
-        dateApplied: 'May 1, 2026',
-        requirementFile: { name: 'requirements.pdf', size: '2.9 MB' },
-        status: 'Pending',
-        paymentStatus: null,
-        rejectionReasons: []
-    },
-    {
-        id: 2005,
-        lastName: 'Garcia',
-        firstName: 'Carlos',
-        middleName: 'Mendoza',
-        suffix: '',
-        dateOfBirth: '1996-07-05',
-        age: 29,
-        contact: '09611234567',
-        email: 'carlos.garcia@email.com',
-        address: '654 Quezon Blvd., Brgy. Calios, Santa Cruz, Laguna',
-        sport: 'Basketball',
-        division: 'Senior Division (26-30)',
-        dateApplied: 'May 2, 2026',
-        requirementFile: { name: 'requirements.pdf', size: '6.7 MB' },
-        status: 'Pending',
-        paymentStatus: null,
-        rejectionReasons: []
-    },
-    {
-        id: 2006,
-        lastName: 'Mendoza',
-        firstName: 'Sofia',
-        middleName: 'Torres',
-        suffix: '',
-        dateOfBirth: '2009-02-14',
-        age: 17,
-        contact: '09721234567',
-        email: 'sofia.mendoza@email.com',
-        address: '987 Luna St., Brgy. Calios, Santa Cruz, Laguna',
-        sport: 'Volleyball',
-        division: 'Cadet Division (15-17)',
-        dateApplied: 'May 3, 2026',
-        requirementFile: { name: 'requirements.pdf', size: '3.3 MB' },
-        status: 'Pending',
-        paymentStatus: null,
-        rejectionReasons: []
-    },
-    {
-        id: 2007,
-        lastName: 'Torres',
-        firstName: 'Miguel',
-        middleName: 'Bautista',
-        suffix: '',
-        dateOfBirth: '2002-09-30',
-        age: 23,
-        contact: '09831234567',
-        email: 'miguel.torres@email.com',
-        address: '147 Aguinaldo Ave., Brgy. Calios, Santa Cruz, Laguna',
-        sport: 'Basketball',
-        division: 'Young Adult (22-25)',
-        dateApplied: 'May 4, 2026',
-        requirementFile: { name: 'requirements.pdf', size: '7.5 MB' },
-        status: 'Pending',
-        paymentStatus: null,
-        rejectionReasons: []
-    },
-    {
-        id: 2008,
-        lastName: 'Cruz',
-        firstName: 'Isabella',
-        middleName: 'Villanueva',
-        suffix: '',
-        dateOfBirth: '2005-12-08',
-        age: 20,
-        contact: '09941234567',
-        email: 'isabella.cruz@email.com',
-        address: '258 Del Pilar St., Brgy. Calios, Santa Cruz, Laguna',
-        sport: 'Volleyball',
-        division: 'Youth Division (18-21)',
-        dateApplied: 'May 5, 2026',
-        requirementFile: { name: 'requirements.pdf', size: '4.8 MB' },
-        status: 'Pending',
-        paymentStatus: null,
-        rejectionReasons: []
     }
 ];
 
@@ -166,8 +71,14 @@ function initSportsRequests() {
         localStorage.setItem('sports_applications', JSON.stringify(SAMPLE_SPORTS_DATA));
         localStorage.setItem('sports_applications_seeded_v2', '1');
     }
-
+    
+    // Force re-seed to ensure sample data is present
     let applications = JSON.parse(localStorage.getItem('sports_applications') || '[]');
+    if (applications.length === 0) {
+        localStorage.setItem('sports_applications', JSON.stringify(SAMPLE_SPORTS_DATA));
+        applications = JSON.parse(localStorage.getItem('sports_applications') || '[]');
+    }
+    
     let currentApplicationId = null;
 
     const tbody = document.getElementById('sportsTableBody');
@@ -370,6 +281,16 @@ function initSportsRequests() {
             btn.addEventListener('click', () => {
                 const id = parseInt(btn.getAttribute('data-id'), 10);
                 openViewModal(id);
+            });
+        });
+
+        // Attach event listeners to delete buttons
+        tbody.querySelectorAll('.sports-tbl-btn-delete').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = parseInt(btn.getAttribute('data-id'), 10);
+                if (typeof window._sportsRequestsDeleteModal === 'function') {
+                    window._sportsRequestsDeleteModal(id);
+                }
             });
         });
     }
@@ -1287,3 +1208,67 @@ function initSportsRequests() {
         }, 3000);
     }
 }
+
+// ── Sports Requests: Delete Application (wired after DOMContentLoaded) ───────
+document.addEventListener('DOMContentLoaded', () => {
+    // We wire delete separately so it doesn't conflict with the main initSportsRequests function
+    let _pendingDeleteAppId = null;
+
+    const _scholDeleteModal   = document.getElementById('scholDeleteModal');
+    const _scholDeleteClose   = document.getElementById('scholDeleteClose');
+    const _scholDeleteCancel  = document.getElementById('scholDeleteCancel');
+    const _scholDeleteConfirm = document.getElementById('scholDeleteConfirm');
+
+    function _openDeleteModal(appId) {
+        _pendingDeleteAppId = appId;
+        if (_scholDeleteModal) _scholDeleteModal.style.display = 'flex';
+    }
+
+    function _closeDeleteModal() {
+        _pendingDeleteAppId = null;
+        if (_scholDeleteModal) _scholDeleteModal.style.display = 'none';
+    }
+
+    if (_scholDeleteClose)  _scholDeleteClose.addEventListener('click', _closeDeleteModal);
+    if (_scholDeleteCancel) _scholDeleteCancel.addEventListener('click', _closeDeleteModal);
+    if (_scholDeleteModal)  _scholDeleteModal.addEventListener('click', e => { if (e.target === _scholDeleteModal) _closeDeleteModal(); });
+
+    if (_scholDeleteConfirm) {
+        _scholDeleteConfirm.addEventListener('click', () => {
+            if (_pendingDeleteAppId === null) return;
+            let apps = JSON.parse(localStorage.getItem('sports_applications') || '[]');
+            apps = apps.filter(a => a.id !== _pendingDeleteAppId);
+            localStorage.setItem('sports_applications', JSON.stringify(apps));
+            _closeDeleteModal();
+
+            // Re-render the table by re-triggering the table render
+            const tbody = document.getElementById('scholTableBody');
+            const total  = document.getElementById('statTotal');
+            const pending = document.getElementById('statPending');
+            const approved = document.getElementById('statApproved');
+            const rejected = document.getElementById('statRejected');
+
+            if (total)    total.textContent    = apps.length;
+            if (pending)  pending.textContent  = apps.filter(a => a.status === 'Pending').length;
+            if (approved) approved.textContent = apps.filter(a => a.status === 'Approved').length;
+            if (rejected) rejected.textContent = apps.filter(a => a.status === 'Rejected').length;
+
+            // Show toast
+            const toastEl = document.getElementById('scholToast');
+            const toastMsg = document.getElementById('scholToastMsg');
+            if (toastEl && toastMsg) {
+                toastMsg.textContent = 'Application deleted successfully.';
+                toastEl.style.background = '#22c55e';
+                toastEl.style.display = 'flex';
+                setTimeout(() => { toastEl.style.display = 'none'; }, 2800);
+            }
+
+            // Reload the table rows by firing a search input event
+            const searchInput = document.getElementById('scholSearch');
+            if (searchInput) searchInput.dispatchEvent(new Event('input'));
+        });
+    }
+
+    // Expose openDeleteModal globally so the renderTable buttons can call it
+    window._sportsRequestsDeleteModal = _openDeleteModal;
+});

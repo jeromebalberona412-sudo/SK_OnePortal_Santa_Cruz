@@ -100,9 +100,12 @@ export default defineConfig({
                 'app/Modules/Program_Management/assets/css/sports/sports_application_form.css',
                 'app/Modules/Program_Management/assets/css/sports/sports_list.css',
                 'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
+                'app/Modules/Program_Management/assets/css/sports/sports-tabs.css',
                 'app/Modules/Program_Management/assets/js/sports/sports_application_form.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_requests.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_list.js',
+                'app/Modules/Program_Management/assets/js/sports/sports_schedule.js',
+                'app/Modules/Program_Management/assets/js/sports/sports-tabs.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_report.js',
                 // Shared Schedule Programs Assets
                 'app/Modules/Program_Management/assets/css/shared/sk-report-editor.css',

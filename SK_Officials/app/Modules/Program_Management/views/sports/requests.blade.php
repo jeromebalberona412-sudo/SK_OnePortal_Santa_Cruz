@@ -101,7 +101,7 @@
                         <th class="col-actions">ACTIONS</th>
                     </tr>
                 </thead>
-                <tbody id="scholTableBody"></tbody>
+                <tbody id="sportsTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -112,20 +112,23 @@
 <!-- ══════════════════════════════════════════════════════════════
      View Application Modal — Simple Participant Details
      ══════════════════════════════════════════════════════════════ -->
-<div class="schol-modal-overlay" id="scholViewModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-lg" id="scholViewBox">
+<div class="schol-modal-overlay" id="viewModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-lg" id="viewBox">
         <div class="schol-modal-header">
             <h3>Participant Details</h3>
-            <button type="button" class="schol-modal-close" id="scholViewClose" title="Close">&times;</button>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="schol-modal-close" id="viewMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="schol-modal-close" id="viewClose" title="Close">&times;</button>
+            </div>
         </div>
-        <div class="schol-modal-body" id="scholViewBody" style="background:#f9fafb;padding:32px;"></div>
+        <div class="schol-modal-body" id="viewModalBody" style="background:#f9fafb;padding:32px;"></div>
         <!-- Footer: Approve + Reject only -->
         <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-approve" id="scholApproveBtn">
+            <button type="button" class="schol-btn schol-btn-approve" id="btnApprove">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 Approve
             </button>
-            <button type="button" class="schol-btn schol-btn-reject" id="scholRejectBtn">
+            <button type="button" class="schol-btn schol-btn-reject" id="btnReject">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 Reject
             </button>
@@ -134,11 +137,11 @@
 </div>
 
 <!-- ── Rejection Reason Modal ── -->
-<div class="schol-modal-overlay" id="scholRejectReasonModal" style="display:none;">
+<div class="schol-modal-overlay" id="rejectReasonModal" style="display:none;">
     <div class="schol-modal-box schol-modal-md">
         <div class="schol-modal-header schol-modal-header-danger">
             <h3>Rejection Reason</h3>
-            <button type="button" class="schol-modal-close" id="scholRejectReasonClose">&times;</button>
+            <button type="button" class="schol-modal-close" id="rejectReasonClose">&times;</button>
         </div>
         <div class="schol-modal-body">
             <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:16px;">Please select the reason(s) for rejecting this application:</p>
@@ -176,39 +179,26 @@
             </div>
         </div>
         <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-outline" id="scholRejectReasonCancel">Cancel</button>
-            <button type="button" class="schol-btn schol-btn-danger" id="scholRejectReasonConfirm">Confirm Rejection</button>
+            <button type="button" class="schol-btn schol-btn-outline" id="rejectReasonCancel">Cancel</button>
+            <button type="button" class="schol-btn schol-btn-danger" id="rejectReasonConfirm">Confirm Rejection</button>
         </div>
     </div>
 </div>
 
-<!-- ── Delete Confirm Modal ── -->
-<div class="schol-modal-overlay" id="scholDeleteModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-sm">
-        <div class="schol-modal-header schol-modal-header-danger">
-            <h3>Delete Application</h3>
-            <button type="button" class="schol-modal-close" id="scholDeleteClose">&times;</button>
-        </div>
-        <div class="schol-modal-body">
-            <p style="font-size:14px;color:#374151;line-height:1.6;">Are you sure you want to delete this application? This action cannot be undone.</p>
-        </div>
-        <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-outline" id="scholDeleteCancel">Cancel</button>
-            <button type="button" class="schol-btn schol-btn-danger" id="scholDeleteConfirm">Delete</button>
-        </div>
-    </div>
-</div>
-
-<!-- Toast -->
-<div class="schol-toast" id="scholToast" style="display:none;">
+<!-- Toast (matches IDs used by sports_requests.js) -->
+<div class="schol-toast" id="scholToast" style="display:none;position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;color:#fff;z-index:9999;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,.2);">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     <span id="scholToastMsg"></span>
+</div>
+<!-- Sports toast for JS-initiated toasts -->
+<div class="schol-toast" id="sportsToast" style="display:none;position:fixed;bottom:60px;right:20px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;color:#fff;z-index:9999;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,.2);">
+    <span id="sportsToastMsg"></span>
 </div>
 
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
-    'app/Modules/Program_Management/assets/js/scholarship/scholarship_requests.js'
+    'app/Modules/Program_Management/assets/js/sports/sports_requests.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>

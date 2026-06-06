@@ -33,6 +33,7 @@
 
         <main class="sch-app-main">
             <form id="scholarshipApplicationForm" class="sch-app-form" novalidate>
+                @include('programs::scholarship.sections.kk_profile_information')
                 @include('programs::scholarship.sections.personal_information')
                 @include('programs::scholarship.sections.educational_background')
                 @include('programs::scholarship.sections.background_information')

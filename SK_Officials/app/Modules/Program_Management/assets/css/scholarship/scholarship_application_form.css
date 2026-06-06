@@ -151,6 +151,20 @@ body {
     border-bottom-color: #f5c518;
     background: #fffbeb;
     font-weight: 700;
+    position: relative;
+}
+
+.scholarship-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: #f5c518;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.3);
 }
 
 .scholarship-tab.active svg {

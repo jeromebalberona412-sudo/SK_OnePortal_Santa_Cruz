@@ -904,47 +904,72 @@ function initScholarshipRequests() {
         const programHtml = SV ? SV.renderProgramInformationSection(program) : '';
         const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
 
+        // KK Profile Data Section
+        const kkProfileData = r.kk_profile_data || {};
+        const kkProfilingFields = program?.kkProfilingFields || [];
+        const hasKKProfileData = kkProfilingFields.length > 0 && Object.keys(kkProfileData).length > 0;
+
+        const kkProfileHtml = hasKKProfileData ? `
+            <!-- KK Profile Information -->
+            <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <h4 style="font-size:16px;font-weight:700;color:#0369a1;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    KK Profile Information
+                    <span style="margin-left:auto;font-size:12px;font-weight:600;color:#64748b;background:#fff;padding:4px 12px;border-radius:20px;border:1px solid #0ea5e9;">Auto-filled from KK Profile</span>
+                </h4>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                    ${kkProfilingFields.map(field => {
+                        const fieldLabels = {
+                            last_name: 'Last Name',
+                            first_name: 'First Name',
+                            middle_name: 'Middle Name',
+                            suffix: 'Suffix',
+                            full_name: 'Full Name',
+                            birthday: 'Birthday',
+                            age: 'Age',
+                            sex: 'Sex',
+                            civil_status: 'Civil Status',
+                            contact_number: 'Contact Number',
+                            email: 'Email Address',
+                            home_address: 'Home Address',
+                            region: 'Region',
+                            province: 'Province',
+                            city: 'City/Municipality',
+                            barangay: 'Barangay',
+                            purok_zone: 'Purok/Zone',
+                            youth_classification: 'Youth Classification',
+                            youth_age_group: 'Youth Age Group',
+                            education: 'Educational Attainment',
+                            current_school: 'Current School',
+                            course_strand: 'Course / Strand',
+                            work_status: 'Work Status',
+                            sk_voter: 'Registered SK Voter',
+                            sk_voted: 'Voted Last Election',
+                            kk_assembly: 'Attended KK Assembly',
+                            vote_frequency: 'Number of KK Assembly Attendances'
+                        };
+                        const value = kkProfileData[field];
+                        if (!value) return '';
+                        return `
+                            <div style="${field === 'home_address' || field === 'full_name' ? 'grid-column:1/-1;' : ''}">
+                                <label style="font-size:13px;font-weight:600;color:#0369a1;margin-bottom:6px;display:block;">${fieldLabels[field] || field}</label>
+                                <div style="font-size:15px;color:#111827;padding:10px 14px;background:#fff;border-radius:6px;border:1px solid #bae6fd;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(value)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        ` : '';
+
         viewBody.innerHTML = `
             <div style="padding:24px;background:#f0f1f5;">
-                <!-- Personal Information -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        Personal Information
-                    </h4>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Date of Birth</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.date_of_birth || 'Not specified'}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Gender</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.gender || 'Not specified'}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Age</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.age || 'Not specified'}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Contact Number</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.contact_no || 'Not specified'}</div>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Address</label>
-                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${r.address || 'Not specified'}</div>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Email Address</label>
-                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.email || 'Not specified'}</div>
-                        </div>
-                    </div>
-                </div>
+                ${kkProfileHtml}
 
-                <!-- Education & Scholarship -->
+                <!-- Scholarship Application Responses -->
                 <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                     <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
-                        Education & Scholarship
+                        Scholarship Application Responses
                     </h4>
                     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
                         <div style="grid-column:1/-1;">

@@ -82,7 +82,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadForms() {
         try {
-            return JSON.parse(localStorage.getItem(SAF_STORAGE_KEY) || '[]');
+            const stored = localStorage.getItem(SAF_STORAGE_KEY);
+            if (stored) return JSON.parse(stored);
+            
+            // Add sample data with KK Profiling fields selected
+            const sampleData = [
+                {
+                    id: 'sample-program-1',
+                    programName: 'SK Academic Scholarship Program',
+                    programType: 'Equitable Access to Quality Education',
+                    committee: SAF_COMMITTEE,
+                    participationQty: '50',
+                    venue: 'SK Hall, Barangay Santa Cruz',
+                    description: 'Scholarship program for deserving students in the community',
+                    terms: 'Must maintain a GPA of 85% or higher',
+                    startDate: '2026-06-01',
+                    endDate: '2026-06-30',
+                    status: 'open',
+                    customQuestions: [],
+                    announcement: 'Welcome to the SK Academic Scholarship Program. Please complete the application form below.',
+                    kkProfilingFields: ['full_name', 'age', 'sex', 'home_address', 'contact_number', 'email', 'education', 'current_school', 'course_strand', 'civil_status'],
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            
+            localStorage.setItem(SAF_STORAGE_KEY, JSON.stringify(sampleData));
+            return sampleData;
         } catch {
             return [];
         }
@@ -134,6 +159,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ['programNameCount', 'venueCount', 'descriptionCount', 'termsCount', 'spfbAnnouncementCount'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.textContent = '0';
+        });
+
+        // Reset KK Profiling field checkboxes
+        document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
+            checkbox.checked = false;
         });
     }
 
@@ -334,43 +364,78 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         }).join('');
 
+        // Rebind all event listeners after table refresh
         tableBody.querySelectorAll('[data-form-view]').forEach(btn => {
-            btn.addEventListener('click', () => openFormPreview(btn.getAttribute('data-form-view')));
-        });
-        tableBody.querySelectorAll('[data-form-edit]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                editProgram(btn.getAttribute('data-form-edit'));
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const formId = btn.getAttribute('data-form-view');
+                console.log('View button clicked for:', formId);
+                openFormPreview(formId);
             });
         });
+        
+        tableBody.querySelectorAll('[data-form-edit]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const formId = btn.getAttribute('data-form-edit');
+                console.log('Edit button clicked for:', formId);
+                editProgram(formId);
+            });
+        });
+        
         tableBody.querySelectorAll('[data-form-delete]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                openDeleteProgramModal(btn.getAttribute('data-form-delete'));
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const formId = btn.getAttribute('data-form-delete');
+                console.log('Delete button clicked for:', formId);
+                openDeleteProgramModal(formId);
             });
         });
     }
 
     function editProgram(formId) {
         const f = loadForms().find(x => x.id === formId);
-        if (!f) return;
+        if (!f) {
+            console.error('Program not found:', formId);
+            return;
+        }
 
         editingProgramId = formId;
 
         // Populate the modal with existing data
-        document.getElementById('programName').value = f.programName || '';
-        document.getElementById('programCommittee').value = f.committee || SAF_COMMITTEE;
-        document.getElementById('participationQty').value = f.participationQty || '';
-        document.getElementById('programVenue').value = f.venue || '';
-        document.getElementById('programDescription').value = f.description || '';
-        document.getElementById('programTerms').value = f.terms || '';
-        document.getElementById('schedStartDate').value = f.startDate || '';
-        document.getElementById('schedEndDate').value = f.endDate || '';
-        document.getElementById('programStatus').value = f.status || 'open';
+        const programNameEl = document.getElementById('programName');
+        const committeeEl = document.getElementById('programCommittee');
+        const participationQtyEl = document.getElementById('participationQty');
+        const venueEl = document.getElementById('programVenue');
+        const descriptionEl = document.getElementById('programDescription');
+        const termsEl = document.getElementById('programTerms');
+        const startDateEl = document.getElementById('schedStartDate');
+        const endDateEl = document.getElementById('schedEndDate');
+        const statusEl = document.getElementById('programStatus');
+
+        if (programNameEl) programNameEl.value = f.programName || '';
+        if (committeeEl) committeeEl.value = f.committee || SAF_COMMITTEE;
+        if (participationQtyEl) participationQtyEl.value = f.participationQty || '';
+        if (venueEl) venueEl.value = f.venue || '';
+        if (descriptionEl) descriptionEl.value = f.description || '';
+        if (termsEl) termsEl.value = f.terms || '';
+        if (startDateEl) startDateEl.value = f.startDate || '';
+        if (endDateEl) endDateEl.value = f.endDate || '';
+        if (statusEl) statusEl.value = f.status || 'open';
 
         // Update counters
-        document.getElementById('programNameCount').textContent = (f.programName || '').length;
-        document.getElementById('venueCount').textContent = (f.venue || '').length;
-        document.getElementById('descriptionCount').textContent = (f.description || '').length;
-        document.getElementById('termsCount').textContent = (f.terms || '').length;
+        const programNameCountEl = document.getElementById('programNameCount');
+        const venueCountEl = document.getElementById('venueCount');
+        const descriptionCountEl = document.getElementById('descriptionCount');
+        const termsCountEl = document.getElementById('termsCount');
+
+        if (programNameCountEl) programNameCountEl.textContent = (f.programName || '').length;
+        if (venueCountEl) venueCountEl.textContent = (f.venue || '').length;
+        if (descriptionCountEl) descriptionCountEl.textContent = (f.description || '').length;
+        if (termsCountEl) termsCountEl.textContent = (f.terms || '').length;
 
         // Load custom questions if available
         if (window.SpfbFormBuilder && f.customQuestions) {
@@ -387,6 +452,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Load KK Profiling field selections if available
+        if (f.kkProfilingFields && Array.isArray(f.kkProfilingFields)) {
+            document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
+                checkbox.checked = f.kkProfilingFields.includes(checkbox.value);
+            });
+        }
+
         // Update modal title
         const modalTitle = document.getElementById('scholarProgramModalTitle');
         if (modalTitle) {
@@ -396,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        // Open the modal
         openModal(formId);
     }
 
@@ -503,6 +576,71 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="font-size:15px;color:#374151;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;min-height:80px;white-space:pre-wrap;">${escapeHtml(f.announcement || 'No announcement set')}</div>
                     </div>
 
+                    <!-- KK Profiling Integration Section -->
+                    <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:20px;margin-bottom:20px;">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                            <h5 style="margin:0;font-size:16px;font-weight:700;color:#0369a1;">Include KK Profiling Data</h5>
+                        </div>
+                        <p style="font-size:13px;color:#475569;margin-bottom:16px;line-height:1.6;">
+                            Select KK Profiling fields to automatically include in scholarship applications. Selected fields will be auto-filled from the applicant's KK Profile and displayed as read-only.
+                        </p>
+                        
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                            ${(() => {
+                                const allFields = [
+                                    { value: 'last_name', label: 'Last Name' },
+                                    { value: 'first_name', label: 'First Name' },
+                                    { value: 'middle_name', label: 'Middle Name' },
+                                    { value: 'suffix', label: 'Suffix' },
+                                    { value: 'full_name', label: 'Full Name' },
+                                    { value: 'birthday', label: 'Birthday' },
+                                    { value: 'age', label: 'Age' },
+                                    { value: 'sex', label: 'Sex' },
+                                    { value: 'civil_status', label: 'Civil Status' },
+                                    { value: 'contact_number', label: 'Contact Number' },
+                                    { value: 'email', label: 'Email Address' },
+                                    { value: 'home_address', label: 'Home Address' },
+                                    { value: 'region', label: 'Region' },
+                                    { value: 'province', label: 'Province' },
+                                    { value: 'city', label: 'City/Municipality' },
+                                    { value: 'barangay', label: 'Barangay' },
+                                    { value: 'purok_zone', label: 'Purok/Zone' },
+                                    { value: 'youth_classification', label: 'Youth Classification' },
+                                    { value: 'youth_age_group', label: 'Youth Age Group' },
+                                    { value: 'education', label: 'Educational Attainment' },
+                                    { value: 'current_school', label: 'Current School' },
+                                    { value: 'course_strand', label: 'Course / Strand' },
+                                    { value: 'work_status', label: 'Work Status' },
+                                    { value: 'sk_voter', label: 'Registered SK Voter' },
+                                    { value: 'sk_voted', label: 'Voted Last Election' },
+                                    { value: 'kk_assembly', label: 'Attended KK Assembly' },
+                                    { value: 'vote_frequency', label: 'Number of KK Assembly Attendances' }
+                                ];
+                                const selectedFields = f.kkProfilingFields || [];
+                                return allFields.map(field => {
+                                    const isChecked = selectedFields.includes(field.value);
+                                    return `
+                                        <label style="display:flex;align-items:center;gap:8px;cursor:${isChecked ? 'default' : 'not-allowed'};font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid ${isChecked ? '#0ea5e9' : '#e2e8f0'};border-radius:6px;transition:all 0.2s;">
+                                            <input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="cursor:not-allowed;width:18px;height:18px;accent-color:#fbbf24;">
+                                            <span>${field.label}</span>
+                                        </label>
+                                    `;
+                                }).join('');
+                            })()}
+                        </div>
+                        
+                        ${f.kkProfilingFields && f.kkProfilingFields.length > 0 ? `
+                            <div style="margin-top:16px;font-size:13px;color:#0369a1;font-weight:600;">
+                                ${f.kkProfilingFields.length} field(s) selected for auto-fill
+                            </div>
+                        ` : `
+                            <div style="margin-top:16px;font-size:13px;color:#64748b;">
+                                No KK Profiling fields selected. Applicants will need to manually enter all information.
+                            </div>
+                        `}
+                    </div>
+
                     <!-- Custom Questions (Google Form Style) -->
                     ${f.customQuestions && f.customQuestions.length > 0 ? `
                         <div style="background:#f8f9fa;border-radius:12px;padding:24px;border:2px solid #e5e7eb;">
@@ -595,6 +733,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const announcement = document.getElementById('spfbAnnouncement')?.value?.trim() || '';
 
+        // Get selected KK Profiling fields
+        const kkProfilingFields = [];
+        document.querySelectorAll('.kk-profiling-field:checked').forEach(checkbox => {
+            kkProfilingFields.push(checkbox.value);
+        });
+
         const forms = loadForms();
         
         if (editingProgramId) {
@@ -614,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     status,
                     customQuestions,
                     announcement,
+                    kkProfilingFields,
                     updatedAt: new Date().toISOString()
                 };
                 
@@ -641,6 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 status,
                 customQuestions,
                 announcement,
+                kkProfilingFields,
                 createdAt: new Date().toISOString(),
             };
 
@@ -657,6 +803,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
     if (saveBtn) saveBtn.addEventListener('click', handleSave);
+
+    // KK Profiling field selection handlers
+    const selectAllKKBtn = document.getElementById('selectAllKKFields');
+    const clearAllKKBtn = document.getElementById('clearAllKKFields');
+
+    if (selectAllKKBtn) {
+        selectAllKKBtn.addEventListener('click', () => {
+            document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        });
+    }
+
+    if (clearAllKKBtn) {
+        clearAllKKBtn.addEventListener('click', () => {
+            document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+    }
     if (modal) {
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
     }

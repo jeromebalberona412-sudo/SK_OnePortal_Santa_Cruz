@@ -138,7 +138,7 @@
 
 <!-- Comprehensive Scholarship Program Modal -->
 <div class="schol-modal-overlay" id="scholarProgramModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-xl schol-modal-maximized" id="scholarProgramBox">
+    <div class="schol-modal-box schol-modal-xl" id="scholarProgramBox">
         <div class="schol-modal-header">
             <h3 id="scholarProgramModalTitle">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
@@ -226,6 +226,134 @@
                 </h4>
                 
                 @include('GForm_Builder::partials.announcement-field')
+                
+                <!-- KK Profiling Integration Section -->
+                <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        <h5 style="margin:0;font-size:16px;font-weight:700;color:#0369a1;">Include KK Profiling Data</h5>
+                    </div>
+                    <p style="font-size:13px;color:#475569;margin-bottom:16px;line-height:1.6;">
+                        Select KK Profiling fields to automatically include in scholarship applications. Selected fields will be auto-filled from the applicant's KK Profile and displayed as read-only.
+                    </p>
+                    
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="last_name" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Last Name</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="first_name" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>First Name</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="middle_name" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Middle Name</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="suffix" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Suffix</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="full_name" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Full Name</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="birthday" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Birthday</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="age" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Age</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="sex" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Sex</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="civil_status" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Civil Status</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="contact_number" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Contact Number</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="email" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Email Address</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="home_address" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Home Address</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="region" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Region</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="province" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Province</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="city" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>City/Municipality</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="barangay" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Barangay</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="purok_zone" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Purok/Zone</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="youth_classification" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Youth Classification</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="youth_age_group" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Youth Age Group</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="education" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Educational Attainment</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="current_school" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Current School</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="course_strand" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Course / Strand</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="work_status" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Work Status</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="sk_voter" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Registered SK Voter</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="sk_voted" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Voted Last Election</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="kk_assembly" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Attended KK Assembly</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
+                            <input type="checkbox" class="kk-profiling-field" value="vote_frequency" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
+                            <span>Number of KK Assembly Attendances</span>
+                        </label>
+                    </div>
+                    
+                    <div style="margin-top:16px;display:flex;gap:12px;">
+                        <button type="button" id="selectAllKKFields" style="padding:8px 16px;font-size:13px;font-weight:600;color:#0369a1;background:#e0f2fe;border:1px solid #0ea5e9;border-radius:6px;cursor:pointer;transition:all 0.2s;">Select All</button>
+                        <button type="button" id="clearAllKKFields" style="padding:8px 16px;font-size:13px;font-weight:600;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;transition:all 0.2s;">Clear All</button>
+                    </div>
+                </div>
+                
                 @include('GForm_Builder::partials.custom-questions-builder')
 
             </div>
@@ -380,9 +508,7 @@
         <div class="schol-modal-body" id="viewProgramBody" style="max-height:calc(100vh - 200px);overflow-y:auto;">
             <!-- Content will be populated by JavaScript -->
         </div>
-        <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-outline" id="viewProgramCloseBtn">Close</button>
-        </div>
+        {{-- Close button intentionally removed from footer; use the × button in header --}}
     </div>
 </div>
 

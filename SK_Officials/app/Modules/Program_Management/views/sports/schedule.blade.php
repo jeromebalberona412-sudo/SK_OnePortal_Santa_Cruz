@@ -157,14 +157,17 @@
 </main>
 
 <!-- Program Creation/Edit Modal -->
-<div class="schol-modal-overlay" id="scholarProgramModal" style="display:none;">
+<div class="schol-modal-overlay" id="scholarProgramModal" style="display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="schol-modal-box schol-modal-xl" id="scholarProgramBox">
         <div class="schol-modal-header">
             <h3>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
                 <span id="modalTitle">Create Sports Program</span>
             </h3>
-            <button type="button" class="schol-modal-close" id="scholarProgramClose" title="Close">&times;</button>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" class="schol-modal-close" id="scholarProgramMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="schol-modal-close" id="scholarProgramClose" title="Close">&times;</button>
+            </div>
         </div>
         <div class="schol-modal-body" style="background:#f0f1f5;max-height:calc(100vh - 180px);overflow-y:auto;">
             
@@ -219,21 +222,13 @@
                         <input type="date" id="schedStartDate" class="schol-input" required>
                     </div>
                     <div class="schol-field">
-                        <label for="schedStartTime">Start Time <span class="schol-req">*</span></label>
-                        <input type="time" id="schedStartTime" class="schol-input" required>
-                    </div>
-                    <div class="schol-field">
                         <label for="schedEndDate">End Date <span class="schol-req">*</span></label>
                         <input type="date" id="schedEndDate" class="schol-input" required>
                     </div>
                     <div class="schol-field">
-                        <label for="schedEndTime">End Time <span class="schol-req">*</span></label>
-                        <input type="time" id="schedEndTime" class="schol-input" required>
-                    </div>
-                    <div class="schol-field">
                         <label for="programStatus">Status</label>
                         <select id="programStatus" class="schol-input">
-                            <option value="auto">Auto (Based on Date/Time)</option>
+                            <option value="auto">Auto (Based on Date)</option>
                             <option value="open">Open</option>
                             <option value="closed">Closed</option>
                             <option value="upcoming">Upcoming</option>
@@ -296,6 +291,24 @@
     </div>
 </div>
 
+<!-- Delete Program Confirmation Modal -->
+<div class="schol-modal-overlay" id="slDeleteModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-sm">
+        <div class="schol-modal-header schol-modal-header-danger">
+            <h3>Delete Sports Program</h3>
+            <button type="button" class="schol-modal-close" id="slDeleteClose">&times;</button>
+        </div>
+        <div class="schol-modal-body">
+            <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:8px;">Are you sure you want to delete <strong id="slDeleteName" style="color:#111827;"></strong>?</p>
+            <p style="font-size:13px;color:#9ca3af;">This action cannot be undone.</p>
+        </div>
+        <div class="schol-modal-footer">
+            <button type="button" class="schol-btn schol-btn-outline" id="slDeleteCancel">Cancel</button>
+            <button type="button" class="schol-btn schol-btn-danger" id="slDeleteConfirm">Delete</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="sports-toast" id="safToast" style="display:none;"></div>
 
@@ -303,7 +316,7 @@
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholar_application_from.js',
-    'app/Modules/Program_Management/assets/js/scholarship/scholar_schedule.js',
+    'app/Modules/Program_Management/assets/js/sports/sports_schedule.js',
     'app/Modules/GForm_Builder/assets/js/gform-builder.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

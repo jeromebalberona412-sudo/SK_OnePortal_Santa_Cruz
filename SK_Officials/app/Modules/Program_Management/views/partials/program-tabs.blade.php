@@ -28,15 +28,21 @@
                 'requests' => 'sports-requests',
                 'list' => 'sport.list',
                 'evaluation' => 'sports.evaluation'
+            ],
+            'labels' => [
+                'form' => 'Sports Schedule',
+                'requests' => 'Sports Applications',
+                'list' => 'Approved Participants',
+                'evaluation' => 'Evaluation'
             ]
         ],
     ];
     
     $currentProgram = $programs[$programType] ?? $programs['scholarship'];
     $tabLabels = $currentProgram['labels'] ?? [
-        'form' => 'Program Schedule',
-        'requests' => 'Program Request',
-        'list' => 'Program List',
+        'form' => 'Sports Schedule',
+        'requests' => 'Sports Applications',
+        'list' => 'Approved Participants',
         'evaluation' => 'Evaluation'
     ];
 @endphp
