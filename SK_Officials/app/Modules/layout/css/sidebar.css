@@ -159,6 +159,7 @@
 
 .nav-link:hover .nav-icon {
     color: #1f3c6d;
+    stroke: #1f3c6d;
 }
 
 .nav-link.active {
@@ -181,6 +182,47 @@
     width: 20px;
     text-align: center;
     flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.85);
+    stroke: currentColor;
+    fill: none;
+}
+
+.nav-link,
+.nav-sublink,
+.nav-link-dropdown {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-link:focus,
+.nav-sublink:focus,
+.nav-link-dropdown:focus {
+    outline: none;
+}
+
+.nav-link:focus-visible,
+.nav-sublink:focus-visible,
+.nav-link-dropdown:focus-visible {
+    outline: 2px solid rgba(244, 194, 13, 0.75);
+    outline-offset: 2px;
+}
+
+/* Prevent brief black flash on press before navigation */
+.nav-link:active,
+.nav-sublink:active {
+    background: #f4c20d;
+    color: #1a2a4a;
+    box-shadow: 0 4px 12px rgba(244, 194, 13, 0.5);
+}
+
+.nav-link:active .nav-icon,
+.nav-sublink:active .nav-subicon {
+    color: #1a2a4a;
+    stroke: #1a2a4a;
+}
+
+.main-sidebar svg,
+.main-sidebar svg path {
+    fill: none;
 }
 
 .nav-text {
@@ -627,6 +669,7 @@
 
 .nav-sublink:hover .nav-subicon {
     color: #1f3c6d;
+    stroke: #1f3c6d;
 }
 
 /* Active — solid yellow, same as top-level active */
@@ -646,7 +689,9 @@
     height: 16px;
     flex-shrink: 0;
     color: rgba(255, 255, 255, 0.7);
-    transition: color 0.2s ease;
+    stroke: currentColor;
+    fill: none;
+    transition: color 0.2s ease, stroke 0.2s ease;
 }
 
 /* Hide sub-items when sidebar is collapsed (desktop icon-only state) */

@@ -38,11 +38,10 @@ function initializeHeader() {
         });
     }
 
-    // ── Change Password trigger → profile Account Settings tab ───────────────
+    // ── Change Password trigger ─────────────────────────────────────────────
     const changePasswordTrigger = document.getElementById('changePasswordTrigger');
     if (changePasswordTrigger) {
         changePasswordTrigger.addEventListener('click', function () {
-            sessionStorage.setItem('profileOpenSettings', 'password');
             closeProfileDropdown();
         });
     }

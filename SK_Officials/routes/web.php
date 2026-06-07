@@ -34,7 +34,9 @@ Route::middleware([
         return view('Profile::profile');
     })->name('profile');
 
-    Route::redirect('/change-email', '/profile')->name('change-email');
+    Route::get('/change-email', function () {
+        return view('Profile::change-email');
+    })->name('change-email');
 
     Route::get('/notifications', function () {
         return view('Profile::notification');
@@ -173,6 +175,10 @@ Route::middleware([
     })->name('rejected-scholars');
 
     Route::redirect('/rejected-scholarship', '/rejected-scholars');
+
+    Route::get('/rejected-sports', function () {
+        return view('Rejected_Sports::rejected-sports');
+    })->name('rejected-sports');
 
     // ── Approved Scholars (pure front-end, no DB) ──
     Route::get('/approved-scholars', function () {

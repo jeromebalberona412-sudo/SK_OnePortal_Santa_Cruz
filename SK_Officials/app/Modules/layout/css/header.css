@@ -248,7 +248,9 @@
     height: 32px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid #e1e5e9;
+    background: #ffffff;
+    flex-shrink: 0;
 }
 
 .user-name {
@@ -306,7 +308,8 @@
     height: 44px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(244, 194, 13, 0.7);
+    border: 2px solid #e1e5e9;
+    background: #ffffff;
     flex-shrink: 0;
 }
 

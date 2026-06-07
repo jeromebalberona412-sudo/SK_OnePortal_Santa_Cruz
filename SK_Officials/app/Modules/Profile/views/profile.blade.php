@@ -175,151 +175,39 @@
                 </div>
 
                 <!-- Email Address Row -->
-                <div class="account-settings-block" id="settingsBlockEmail">
-                    <div class="account-settings-row">
-                        <div class="account-settings-info">
-                            <div class="account-settings-icon">
-                                <i class="fa-solid fa-envelope"></i>
-                            </div>
-                            <div>
-                                <div class="account-settings-label">Email Address</div>
-                                <div class="account-settings-desc">Change your account email address via verification link.</div>
-                            </div>
-                        </div>
-                        <button type="button" class="account-settings-btn" id="btnToggleChangeEmail" aria-expanded="false" aria-controls="panelChangeEmail">
+                <div class="account-settings-row">
+                    <div class="account-settings-info">
+                        <div class="account-settings-icon">
                             <i class="fa-solid fa-envelope"></i>
-                            Change Email
-                        </button>
-                    </div>
-
-                    <div class="account-settings-panel" id="panelChangeEmail" hidden>
-                        <div class="cp-inline-card">
-                            <div class="cp-inline-header">
-                                <div class="cp-inline-icon"><i class="fa-solid fa-envelope"></i></div>
-                                <div>
-                                    <div class="cp-inline-title">Change Email</div>
-                                    <div class="cp-inline-sub">Enter your current email, new email, and password to request a change.</div>
-                                </div>
-                            </div>
-
-                            <div class="cp-inline-alert cp-inline-success" id="ceInlineSuccess" style="display:none;">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span id="ceInlineSuccessText">Verification link sent to your new email address.</span>
-                            </div>
-                            <div class="cp-inline-alert cp-inline-error" id="ceInlineError" style="display:none;">
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                <span id="ceInlineErrorText">Please fix the errors below.</span>
-                            </div>
-
-                            <form class="cp-inline-form" id="ceInlineForm" novalidate>
-                                <div class="cp-inline-field">
-                                    <label class="cp-inline-label" for="ceInlineCurrentEmail">Current Email</label>
-                                    <div class="cp-inline-input-wrap">
-                                        <i class="fa-solid fa-envelope cp-inline-input-icon"></i>
-                                        <input type="email" id="ceInlineCurrentEmail" class="cp-inline-input" placeholder="Enter your current email" autocomplete="email" maxlength="100">
-                                    </div>
-                                    <div class="cp-inline-field-error" id="ceInlineCurrentEmailError"></div>
-                                </div>
-                                <div class="cp-inline-field">
-                                    <label class="cp-inline-label" for="ceInlineNewEmail">New Email Address</label>
-                                    <div class="cp-inline-input-wrap">
-                                        <i class="fa-solid fa-envelope cp-inline-input-icon"></i>
-                                        <input type="email" id="ceInlineNewEmail" class="cp-inline-input" placeholder="Enter your new email" autocomplete="email" maxlength="100">
-                                    </div>
-                                    <div class="cp-inline-field-error" id="ceInlineNewEmailError"></div>
-                                </div>
-                                <div class="cp-inline-field">
-                                    <label class="cp-inline-label" for="ceInlinePassword">Current Password</label>
-                                    <div class="cp-inline-input-wrap">
-                                        <i class="fa-solid fa-lock cp-inline-input-icon"></i>
-                                        <input type="password" id="ceInlinePassword" class="cp-inline-input" placeholder="Enter your current password" autocomplete="current-password">
-                                        <button type="button" class="cp-eye-btn" data-target="ceInlinePassword" aria-label="Toggle password visibility"><i class="fa-solid fa-eye"></i></button>
-                                    </div>
-                                    <div class="cp-inline-field-error" id="ceInlinePasswordError"></div>
-                                </div>
-                                <div class="cp-inline-actions">
-                                    <button type="button" class="cp-inline-cancel" id="ceInlineCancel">Cancel</button>
-                                    <button type="submit" class="cp-inline-submit" id="ceInlineSubmit"><span>Send Verification Link</span></button>
-                                </div>
-                            </form>
+                        </div>
+                        <div>
+                            <div class="account-settings-label">Email Address</div>
+                            <div class="account-settings-desc">Change your account email address via verification link.</div>
                         </div>
                     </div>
+                    <a href="{{ route('change-email') }}" class="account-settings-btn">
+                        <i class="fa-solid fa-envelope"></i>
+                        Change Email
+                    </a>
                 </div>
 
                 <div class="account-settings-divider"></div>
 
                 <!-- Password Row -->
-                <div class="account-settings-block" id="settingsBlockPassword">
-                    <div class="account-settings-row">
-                        <div class="account-settings-info">
-                            <div class="account-settings-icon">
-                                <i class="fa-solid fa-lock"></i>
-                            </div>
-                            <div>
-                                <div class="account-settings-label">Password</div>
-                                <div class="account-settings-desc">Change your account password via email reset link.</div>
-                            </div>
+                <div class="account-settings-row">
+                    <div class="account-settings-info">
+                        <div class="account-settings-icon">
+                            <i class="fa-solid fa-lock"></i>
                         </div>
-                        <button type="button" class="account-settings-btn" id="btnToggleChangePassword" aria-expanded="false" aria-controls="panelChangePassword">
-                            <i class="fa-solid fa-key"></i>
-                            Change Password
-                        </button>
-                    </div>
-
-                    <div class="account-settings-panel" id="panelChangePassword" hidden>
-                        <div class="cp-inline-card">
-                            <div class="cp-inline-header">
-                                <div class="cp-inline-icon"><i class="fa-solid fa-key"></i></div>
-                                <div>
-                                    <div class="cp-inline-title">Change Password</div>
-                                    <div class="cp-inline-sub">Enter your current password and choose a new one.</div>
-                                </div>
-                            </div>
-
-                            <div class="cp-inline-alert cp-inline-success" id="cpInlineSuccess" style="display:none;">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span id="cpInlineSuccessText">Password updated successfully.</span>
-                            </div>
-                            <div class="cp-inline-alert cp-inline-error" id="cpInlineError" style="display:none;">
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                <span id="cpInlineErrorText">Please fix the errors below.</span>
-                            </div>
-
-                            <form class="cp-inline-form" id="cpInlineForm" novalidate>
-                                <div class="cp-inline-field">
-                                    <label class="cp-inline-label" for="cpCurrent">Current Password</label>
-                                    <div class="cp-inline-input-wrap">
-                                        <i class="fa-solid fa-lock cp-inline-input-icon"></i>
-                                        <input type="password" id="cpCurrent" class="cp-inline-input" placeholder="Enter current password" autocomplete="current-password">
-                                        <button type="button" class="cp-eye-btn" data-target="cpCurrent" aria-label="Toggle password visibility"><i class="fa-solid fa-eye"></i></button>
-                                    </div>
-                                    <div class="cp-inline-field-error" id="cpCurrentError"></div>
-                                </div>
-                                <div class="cp-inline-field">
-                                    <label class="cp-inline-label" for="cpNew">New Password</label>
-                                    <div class="cp-inline-input-wrap">
-                                        <i class="fa-solid fa-lock cp-inline-input-icon"></i>
-                                        <input type="password" id="cpNew" class="cp-inline-input" placeholder="Enter new password" autocomplete="new-password">
-                                        <button type="button" class="cp-eye-btn" data-target="cpNew" aria-label="Toggle password visibility"><i class="fa-solid fa-eye"></i></button>
-                                    </div>
-                                    <div class="cp-inline-field-error" id="cpNewError"></div>
-                                </div>
-                                <div class="cp-inline-field">
-                                    <label class="cp-inline-label" for="cpConfirm">Confirm New Password</label>
-                                    <div class="cp-inline-input-wrap">
-                                        <i class="fa-solid fa-lock cp-inline-input-icon"></i>
-                                        <input type="password" id="cpConfirm" class="cp-inline-input" placeholder="Confirm new password" autocomplete="new-password">
-                                        <button type="button" class="cp-eye-btn" data-target="cpConfirm" aria-label="Toggle password visibility"><i class="fa-solid fa-eye"></i></button>
-                                    </div>
-                                    <div class="cp-inline-field-error" id="cpConfirmError"></div>
-                                </div>
-                                <div class="cp-inline-actions">
-                                    <button type="button" class="cp-inline-cancel" id="cpInlineCancel">Cancel</button>
-                                    <button type="submit" class="cp-inline-submit" id="cpInlineSubmit"><span>Update Password</span></button>
-                                </div>
-                            </form>
+                        <div>
+                            <div class="account-settings-label">Password</div>
+                            <div class="account-settings-desc">Change your account password via email reset link.</div>
                         </div>
                     </div>
+                    <a href="{{ route('change-password') }}" class="account-settings-btn">
+                        <i class="fa-solid fa-key"></i>
+                        Change Password
+                    </a>
                 </div>
 
             </div><!-- /account-settings-card -->

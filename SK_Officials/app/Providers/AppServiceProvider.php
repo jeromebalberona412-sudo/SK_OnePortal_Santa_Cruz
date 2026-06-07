@@ -21,30 +21,38 @@ class AppServiceProvider extends ServiceProvider
 
         $this->loadModuleRoutes();
         $this->loadModuleViews();
-        $this->shareBarangayLogo();
+        $this->shareLayoutUserContext();
     }
 
-    private function shareBarangayLogo(): void
+    private function shareLayoutUserContext(): void
     {
-        View::composer('layout::sidebar', function ($view) {
+        View::composer(['layout::sidebar', 'layout::header'], function ($view) {
             $user = Auth::user();
 
             $barangayName = null;
             $barangayLogoUrl = null;
+            $userDisplayName = 'SK Officials User';
 
-            if ($user && $user->barangay_id) {
-                $barangayName = DB::table('barangays')
-                    ->where('id', $user->barangay_id)
-                    ->value('name');
+            if ($user) {
+                $userDisplayName = $user->name ?: 'SK Officials User';
 
-                $barangayLogoUrl = DB::table('barangay_logos')
-                    ->where('barangay_id', $user->barangay_id)
-                    ->value('url');
+                if ($user->barangay_id) {
+                    $barangayName = DB::table('barangays')
+                        ->where('id', $user->barangay_id)
+                        ->value('name');
+
+                    $barangayLogoUrl = DB::table('barangay_logos')
+                        ->where('barangay_id', $user->barangay_id)
+                        ->value('url');
+                }
             }
 
             $view->with([
                 'barangayName'    => $barangayName,
                 'barangayLogoUrl' => $barangayLogoUrl,
+                'userDisplayName' => $userDisplayName,
+                'userAvatarUrl'   => $barangayLogoUrl ?: asset('images/SK_OnePortal_logo.png'),
+                'userAvatarAlt'   => ($barangayName ?? 'SK OnePortal') . ' Logo',
             ]);
         });
     }

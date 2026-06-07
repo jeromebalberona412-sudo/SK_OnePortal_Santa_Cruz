@@ -4,16 +4,11 @@
         <div class="sidebar-admin">
             
             <div class="admin-avatar">
-                <!-- Barangay Logo -->
-                @if($barangayLogoUrl)
-                    <img src="{{ $barangayLogoUrl }}" alt="{{ $barangayName ?? 'Barangay' }} Logo" class="admin-logo">
-                @else
-                    <img src="{{ asset('images/SK_OnePortal_logo.png') }}" alt="SK OnePortal Logo" class="admin-logo">
-                @endif
+                <img src="{{ $userAvatarUrl }}" alt="{{ $userAvatarAlt }}" class="admin-logo">
             </div>
 
             <div class="admin-info">
-                <span class="admin-name">Sk Officials User</span>
+                <span class="admin-name">{{ $userDisplayName }}</span>
                 <span class="admin-role">{{ $barangayName ?? 'Barangay' }}</span>
             </div>
 
@@ -174,7 +169,7 @@
                 </li>
 
                 <!-- ── Archived (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship') ? 'open' : '' }}" id="archivedDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports') ? 'open' : '' }}" id="archivedDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="archivedToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="21 8 21 21 3 21 3 8"></polyline>
@@ -246,6 +241,18 @@
                                     <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
                                 </svg>
                                 <span>Rejected Scholarships</span>
+                            </a>
+                        </li>
+
+                        <!-- Rejected Sports Applications -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('rejected-sports') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-sports') ? 'active' : '' }}">
+                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                                    <path d="M2 12h20"></path>
+                                </svg>
+                                <span>Rejected Sports</span>
                             </a>
                         </li>
 

@@ -115,6 +115,8 @@ export default defineConfig({
                 // Rejected Scholarship module assets
                 'app/Modules/Rejected_Scholarship/assets/css/rejected-scholarship.css',
                 'app/Modules/Rejected_Scholarship/assets/js/rejected-scholarship.js',
+                // Rejected Sports module assets
+                'app/Modules/Rejected_Sports/assets/js/rejected-sports.js',
                 // AI Assistant module assets
                 'app/Modules/AI_Assistant/assets/css/ai-assistant-modal-form.css',
                 'app/Modules/AI_Assistant/assets/js/ai-assistant-modal-form.js',
