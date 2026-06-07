@@ -4,6 +4,7 @@
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Annual Barangay Youth Investment Program (ABYIP) — SK Officials Portal</title>
 
     <!-- PDF.js Library -->
@@ -24,6 +25,7 @@
 
 @include('layout::header')
 @include('layout::sidebar')
+@include('loading')
 
 <main class="main-content">
     <div class="page-container abyip-page">
@@ -35,14 +37,6 @@
             </div>
             <div class="page-header-right">
                 <div class="abyip-filters-row">
-                    <div class="abyip-filter-item">
-                        <select id="abyipStatusFilter" class="abyip-filter-select">
-                            <option value="">All Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                    </div>
                     <div class="abyip-filter-item">
                         <select id="abyipYearFilter" class="abyip-filter-select">
                             <option value="">All Years</option>
@@ -79,8 +73,6 @@
                                 <th scope="col">Title</th>
                                 <th scope="col">Date Created</th>
                                 <th scope="col">Time Created</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Remarks</th>
                                 <th scope="col" class="abyip-records-actions-col">Actions</th>
                             </tr>
                         </thead>
@@ -426,28 +418,6 @@
         </div>
     </div>
 
-    <!-- After Save ABYIP (create): title + remarks -->
-    <div class="modal-backdrop" id="abyipMetaModal" aria-hidden="true">
-        <div class="modal-box abyip-meta-modal-box" role="dialog" aria-labelledby="abyipMetaHeading">
-            <div class="abyip-meta-modal-inner">
-                <h4 id="abyipMetaHeading">Save ABYIP record</h4>
-                <p class="abyip-meta-hint">Set the record title and add optional remarks. Title is pre-filled as ABYIP CY 2026 — you can edit it. Maximum 100 characters each.</p>
-                <div class="abyip-meta-field">
-                    <label for="abyipMetaTitleInput">Title <span class="abyip-meta-char-hint" id="abyipTitleCharCount">0/100</span></label>
-                    <input type="text" id="abyipMetaTitleInput" class="abyip-meta-input" maxlength="100" autocomplete="off">
-                </div>
-                <div class="abyip-meta-field">
-                    <label for="abyipMetaRemarksInput">Remarks <span class="abyip-meta-char-hint" id="abyipRemarksCharCount">0/100</span></label>
-                    <textarea id="abyipMetaRemarksInput" class="abyip-meta-textarea" rows="3" maxlength="100" placeholder="Optional" style="resize: none;"></textarea>
-                </div>
-                <div class="abyip-meta-actions">
-                    <button type="button" class="btn-cancel" id="abyipMetaCancel">Cancel</button>
-                    <button type="button" class="btn-save" id="abyipMetaConfirm">Save record</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Delete confirmation -->
     <div class="modal-backdrop" id="deleteConfirmModal" aria-hidden="true">
         <div class="modal-box abyip-delete-modal-box" role="dialog" aria-labelledby="deleteConfirmHeading">
@@ -463,7 +433,6 @@
                 </div>
                 <h4 id="deleteConfirmHeading">Delete this ABYIP record?</h4>
                 <p class="abyip-delete-desc">This removes the record from your list. This action cannot be undone.</p>
-                <p class="delete-remaining-info" id="deleteRemainingInfo"></p>
             </div>
             <div class="abyip-delete-modal-footer">
                 <button type="button" class="btn-cancel" id="deleteCancelBtn">Cancel</button>

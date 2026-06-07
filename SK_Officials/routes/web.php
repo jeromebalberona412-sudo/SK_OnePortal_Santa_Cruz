@@ -102,6 +102,11 @@ Route::middleware([
         return view('Programs::programs');
     })->name('programs');
 
+    Route::prefix('api/programs')->group(function () {
+        Route::get('/', [\App\Modules\Programs\Controllers\ProgramController::class, 'index'])->name('api.programs.index');
+        Route::put('/{programId}/duration', [\App\Modules\Programs\Controllers\ProgramController::class, 'updateDuration'])->name('api.programs.update-duration');
+    });
+
     Route::get('/budget-finance', function () {
         return view('BudgetFinance::budget-finance');
     })->name('budget-finance');
@@ -114,6 +119,14 @@ Route::middleware([
     Route::get('/abyip', function () {
         return view('ABYIP::abyip');
     })->name('abyip.index');
+
+    Route::prefix('api/abyip')->group(function () {
+        Route::get('/', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'index'])->name('api.abyip.index');
+        Route::get('/{id}', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'show'])->name('api.abyip.show');
+        Route::post('/', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'store'])->name('api.abyip.store');
+        Route::put('/{id}', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'update'])->name('api.abyip.update');
+        Route::delete('/{id}', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'destroy'])->name('api.abyip.destroy');
+    });
 
     Route::get('/kabataan', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'index'])->name('kabataan');
     Route::get('/kabataan/data', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'data'])->name('kabataan.data');

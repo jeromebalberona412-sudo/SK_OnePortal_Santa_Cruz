@@ -673,13 +673,62 @@ create index IF not exists kabataan_registrations_submitted_at_index on public.k
 
 ///
 ALTER TABLE official_profiles
-ADD COLUMN sex VARCHAR(10);
+ADD COLUMN IF NOT EXISTS sex VARCHAR(10) NULL;
 
-CREATE TABLE committees (
+CREATE TABLE IF NOT EXISTS committees (
     id BIGSERIAL PRIMARY KEY,
     committee_name VARCHAR(255) NOT NULL,
     committee_head_id BIGINT NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT committees_committee_head_id_foreign FOREIGN KEY (committee_head_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT committees_committee_head_id_unique UNIQUE (committee_head_id)
+);
+
+CREATE TABLE IF NOT EXISTS abyips (
+    id BIGSERIAL PRIMARY KEY,
+    tenant_id BIGINT,
+    barangay_id BIGINT NOT NULL,
+    created_by BIGINT,
+    title VARCHAR(255) NOT NULL,
+    calendar_year SMALLINT NOT NULL,
+    region VARCHAR(100) NOT NULL DEFAULT 'IV-A CALABARZON',
+    province VARCHAR(100) NOT NULL DEFAULT 'Laguna',
+    municipality VARCHAR(100) NOT NULL DEFAULT 'Santa Cruz',
+    sk_council_name VARCHAR(255),
+    barangay_estimated_budget NUMERIC(15,2),
+    sk_fund_amount NUMERIC(15,2),
+    total_expenditure NUMERIC(15,2),
+    prepared_by_name VARCHAR(255),
+    prepared_by_position VARCHAR(255),
+    approved_by_name VARCHAR(255),
+    approved_by_position VARCHAR(255),
+    source_type VARCHAR(20) NOT NULL DEFAULT 'word',
+    document_html TEXT,
+    pdf_data TEXT,
+    sk_youth_development_and_empowerment_programs JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT abyips_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE SET NULL,
+    CONSTRAINT abyips_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+    CONSTRAINT abyips_created_by_foreign FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT abyips_barangay_id_calendar_year_unique UNIQUE (barangay_id, calendar_year)
+);
+
+CREATE INDEX IF NOT EXISTS abyips_barangay_id_calendar_year_index ON abyips (barangay_id, calendar_year);
+
+CREATE TABLE IF NOT EXISTS abyip_programs (
+    id CHAR(1) PRIMARY KEY,
+    programs VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS abyip_detected_programs (
+    abyip_id BIGINT NOT NULL,
+    program_id CHAR(1) NOT NULL,
+    PRIMARY KEY (abyip_id, program_id),
+    CONSTRAINT abyip_detected_programs_abyip_id_foreign FOREIGN KEY (abyip_id) REFERENCES abyips (id) ON DELETE CASCADE,
+    CONSTRAINT abyip_detected_programs_program_id_foreign FOREIGN KEY (program_id) REFERENCES abyip_programs (id) ON DELETE CASCADE
 );

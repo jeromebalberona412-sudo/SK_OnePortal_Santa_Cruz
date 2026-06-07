@@ -1,27 +1,63 @@
-// ABYIP — document totals, records (localStorage), modals
-// Create flow: Save ABYIP (document) → meta modal (editable Title default "ABYIP CY 2025", Remarks) → record saved to table.
-// Table: Title, Date, Time (12h), Status, Remarks (read-only), Actions. View mode: Print ABYIP + header close only.
+// ABYIP — document totals, records (database), modals
+// Create flow: Upload Word/PDF → save via API.
+(function () {
+'use strict';
 
-const ABYIP_STORAGE_KEY = 'abyip_records_v3';
-const ABYIP_DELETE_COUNT_KEY = 'abyip_delete_count_v3';
-const ABYIP_MAX_DELETES = 3;
 const DEFAULT_RECORD_TITLE = 'ABYIP CY 2026';
 
 let abyipRecords = [];
 let abyipModalMode = 'create';
-let currentEditId = null;
 let recordPendingDeleteId = null;
-let pendingCreateDocumentHtml = null;
 let pendingPdfData = null; // Store PDF data temporarily
+let pendingPdfExtractedText = null; // Text extracted from PDF for program auto-detection
 let pendingIsImported = false; // Track if pending record is an imported Word doc
 
 let filterSearchText = '';
-let filterStatus = '';
 let filterYear = '';
 let searchDebounceTimer = null;
 
-// Static status - all records are always Pending
-const STATIC_STATUS = 'Pending';
+const abyipCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+async function abyipApiFetch(url, options = {}) {
+    const { headers: extraHeaders, body, ...rest } = options;
+    const headers = {
+        'X-CSRF-TOKEN': abyipCsrfToken(),
+        'Accept': 'application/json',
+        ...extraHeaders,
+    };
+
+    if (body && !(body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
+
+    const res = await fetch(url, {
+        ...rest,
+        headers,
+        body: body && !(body instanceof FormData) ? JSON.stringify(body) : body,
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+        const message = data.message || Object.values(data.errors || {}).flat()[0] || 'Request failed.';
+        throw new Error(message);
+    }
+
+    return data;
+}
+
+function mapRecordFromApi(record) {
+    return {
+        id: record.id,
+        title: record.title,
+        dateCreated: record.date_created,
+        documentHtml: record.document_html || '',
+        pdfData: record.pdf_data || null,
+        isPdf: record.source_type === 'pdf',
+        isImported: record.source_type === 'word',
+        calendarYear: record.calendar_year,
+    };
+}
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-PH', {
@@ -151,11 +187,6 @@ function escapeAttr(s) {
         .replace(/</g, '&lt;');
 }
 
-function statusSelectClass(status) {
-    const s = (status || 'Pending').toLowerCase();
-    return 'abyip-row-status abyip-st-' + s.replace(/\s+/g, '-');
-}
-
 function getRecordSearchHaystack(record) {
     if (!record) return '';
     const d = record.dateCreated ? new Date(record.dateCreated) : null;
@@ -179,15 +210,13 @@ function getRecordSearchHaystack(record) {
 }
 
 function recordMatchesFilters(record) {
-    // Status filter
-    if (filterStatus && record.status !== filterStatus) {
-        return false;
-    }
-    
     // Year filter
     if (filterYear) {
-        const recordDate = record.dateCreated ? new Date(record.dateCreated) : null;
-        const recordYear = recordDate && !Number.isNaN(recordDate.getTime()) ? recordDate.getFullYear().toString() : '';
+        const recordYear = record.calendarYear
+            ? String(record.calendarYear)
+            : (record.dateCreated
+                ? String(new Date(record.dateCreated).getFullYear())
+                : '');
         if (recordYear !== filterYear) {
             return false;
         }
@@ -209,10 +238,6 @@ function getFilteredRecords() {
     return abyipRecords.filter(recordMatchesFilters);
 }
 
-function buildStatusDisplay() {
-    return '<span class="status-badge status-pending">Pending</span>';
-}
-
 function renderRecordsTable() {
     const tbody = document.getElementById('recordsTableBody');
     if (!tbody) return;
@@ -226,22 +251,19 @@ function renderRecordsTable() {
 
     if (abyipRecords.length === 0) {
         tbody.innerHTML =
-            '<tr><td colspan="6" class="abyip-records-empty">No ABYIP records yet. Click &ldquo;Create ABYIP&rdquo; to add one.</td></tr>';
+            '<tr><td colspan="4" class="abyip-records-empty">No ABYIP records yet. Upload a Word or PDF document to get started.</td></tr>';
         return;
     }
 
     const filtered = getFilteredRecords();
     if (filtered.length === 0) {
         tbody.innerHTML =
-            '<tr><td colspan="6" class="abyip-records-empty">No records match your search.</td></tr>';
+            '<tr><td colspan="4" class="abyip-records-empty">No records match your search.</td></tr>';
         return;
     }
 
     tbody.innerHTML = filtered
         .map((record) => {
-            const remarksText = record.statusRemarks || '';
-            const remaining = getRemainingDeletes();
-            const deleteDisabled = remaining <= 0 ? ' disabled title="Maximum deletions reached (3/3)"' : '';
             return (
                 '<tr data-record-id="' +
                 record.id +
@@ -255,23 +277,14 @@ function renderRecordsTable() {
                 '<td class="abyip-records-time">' +
                 formatTimeCreated12(record.dateCreated) +
                 '</td>' +
-                '<td class="abyip-records-status-cell">' +
-                buildStatusDisplay() +
-                '</td>' +
-                '<td class="abyip-records-remarks-readonly">' +
-                escapeHtml(remarksText) +
-                '</td>' +
                 '<td class="abyip-records-actions">' +
                 '<div class="action-buttons-cell">' +
                 '<button type="button" class="btn-action-view" data-action="view" data-id="' +
                 record.id +
                 '">View</button>' +
-                '<button type="button" class="btn-action-edit" data-action="edit" data-id="' +
-                record.id +
-                '">Edit</button>' +
                 '<button type="button" class="btn-action-delete" data-action="delete" data-id="' +
                 record.id +
-                '"' + deleteDisabled + '>Delete</button>' +
+                '">Delete</button>' +
                 '</div></td></tr>'
             );
         })
@@ -354,9 +367,8 @@ function setMainModalFooterMode(mode) {
     }
 }
 
-function openAbyipModal(mode, recordId) {
+async function openAbyipModal(mode, recordId) {
     abyipModalMode = mode;
-    currentEditId = recordId != null ? recordId : null;
 
     const modal = document.getElementById('abyipModal');
     const titleEl = document.getElementById('abyipModalTitle');
@@ -368,9 +380,6 @@ function openAbyipModal(mode, recordId) {
     if (mode === 'view') {
         header.classList.add('view-mode');
         titleEl.textContent = 'View Annual Barangay Youth Investment Program (ABYIP)';
-    } else if (mode === 'edit') {
-        header.classList.add('edit-mode');
-        titleEl.textContent = 'Edit Annual Barangay Youth Investment Program (ABYIP)';
     } else {
         titleEl.textContent = 'Create Annual Barangay Youth Investment Program (ABYIP)';
     }
@@ -380,40 +389,25 @@ function openAbyipModal(mode, recordId) {
         setMainModalFooterMode('edit');
         setMountContentEditable(true);
     } else {
-        const record = abyipRecords.find((r) => r.id === recordId);
+        let record = abyipRecords.find((r) => r.id === recordId);
         if (!record) return;
-        
-        // Check if this is a PDF record
+
+        try {
+            const response = await abyipApiFetch(`/api/abyip/${recordId}`);
+            record = mapRecordFromApi(response.data);
+        } catch (error) {
+            showNotification(error.message || 'Failed to load ABYIP record.', 'error');
+            return;
+        }
+
         if (record.isPdf && record.pdfData) {
-            // PDF records are always view-only
-            if (mode === 'edit') {
-                showNotification('This document cannot be edited. Imported PDF files are view-only.', 'error');
-                return;
-            }
             renderStoredPdf(record.pdfData, record.title);
             setMainModalFooterMode('view');
-        } else if (record.isImported) {
-            // Imported Word records are view-only
-            if (mode === 'edit') {
-                showNotification('This document cannot be edited. Imported MS Word files are view-only.', 'error');
-                return;
-            }
+        } else {
             const html = record.documentHtml && record.documentHtml.length > 0 ? record.documentHtml : getDefaultDocumentHtml();
             setFormRootHtml(html);
             setMainModalFooterMode('view');
             setMountContentEditable(false);
-        } else {
-            // Regular ABYIP document
-            const html = record.documentHtml && record.documentHtml.length > 0 ? record.documentHtml : getDefaultDocumentHtml();
-            setFormRootHtml(html);
-
-            if (mode === 'view') {
-                setMainModalFooterMode('view');
-                setMountContentEditable(false);
-            } else {
-                setMainModalFooterMode('edit');
-                setMountContentEditable(true);
-            }
         }
     }
 
@@ -434,124 +428,67 @@ function closeAbyipModal() {
     setMainModalFooterMode('edit');
 }
 
-function openMetaModalForCreate() {
-    const m = document.getElementById('abyipMetaModal');
-    const titleIn = document.getElementById('abyipMetaTitleInput');
-    const remIn = document.getElementById('abyipMetaRemarksInput');
-    const titleCount = document.getElementById('abyipTitleCharCount');
-    const remarksCount = document.getElementById('abyipRemarksCharCount');
-
-    if (titleIn) {
-        titleIn.value = DEFAULT_RECORD_TITLE;
-        titleIn.readOnly = false; // Title is editable, pre-filled with default
-        if (titleCount) titleCount.textContent = titleIn.value.length + '/100';
-        // Wire up title character counter
-        titleIn.oninput = function () {
-            if (titleCount) titleCount.textContent = titleIn.value.length + '/100';
-        };
-    }
-    if (remIn) {
-        remIn.value = '';
-        if (remarksCount) remarksCount.textContent = '0/100';
-        // Wire up remarks character counter
-        remIn.oninput = function () {
-            if (remarksCount) remarksCount.textContent = remIn.value.length + '/100';
-        };
+async function saveAbyip() {
+    if (abyipModalMode !== 'create' && abyipModalMode !== 'import' && abyipModalMode !== 'pdf-view') {
+        return;
     }
 
-    if (m) {
-        m.classList.add('active');
-        m.setAttribute('aria-hidden', 'false');
+    const isPdf = abyipModalMode === 'pdf-view';
+
+    if (isPdf && !pendingPdfData) {
+        showNotification('No PDF data to save.', 'error');
+        return;
     }
-    if (titleIn) titleIn.focus();
-}
 
-function closeMetaModalOnly() {
-    const m = document.getElementById('abyipMetaModal');
-    if (m) {
-        m.classList.remove('active');
-        m.setAttribute('aria-hidden', 'true');
-    }
-}
-
-function closeMetaModal() {
-    closeMetaModalOnly();
-    pendingCreateDocumentHtml = null;
-}
-
-function saveAbyip() {
-    const mount = document.getElementById('abyipModalContentMount');
-    const documentHtml = mount ? mount.innerHTML : '';
-
-    if (abyipModalMode === 'edit' && currentEditId != null) {
-        const record = abyipRecords.find((r) => r.id === currentEditId);
-        if (record) {
-            record.documentHtml = documentHtml;
+    let documentHtml = null;
+    if (!isPdf) {
+        const mount = document.getElementById('abyipModalContentMount');
+        const modalTable = document.getElementById('abyipModalTable');
+        const tbody = modalTable?.querySelector('tbody');
+        if (tbody) normalizeImportedTableRows(tbody);
+        documentHtml = mount ? mount.innerHTML : '';
+        if (!documentHtml) {
+            showNotification('Document content is required.', 'error');
+            return;
         }
-        persistRecords();
+    }
+
+    const calendarYear = new Date().getFullYear();
+    const saveBtn = document.getElementById('abyipModalSave');
+    if (saveBtn) saveBtn.disabled = true;
+
+    if (typeof window.showLoading === 'function') {
+        window.showLoading('Saving ABYIP');
+    }
+
+    try {
+        await abyipApiFetch('/api/abyip', {
+            method: 'POST',
+            body: {
+                title: DEFAULT_RECORD_TITLE,
+                source_type: isPdf ? 'pdf' : 'word',
+                calendar_year: calendarYear,
+                document_html: isPdf ? null : documentHtml,
+                pdf_data: isPdf ? pendingPdfData : null,
+                extracted_text: isPdf ? pendingPdfExtractedText : null,
+            },
+        });
+
+        pendingPdfData = null;
+        pendingPdfExtractedText = null;
+        pendingIsImported = false;
+        closeAbyipModal();
+        await loadRecords();
         renderRecordsTable();
-        closeAbyipModal();
-        showNotification('ABYIP updated successfully.', 'success');
-        return;
+        showNotification('ABYIP record saved.', 'success');
+    } catch (error) {
+        showNotification(error.message || 'Failed to save ABYIP record.', 'error');
+    } finally {
+        if (typeof window.hideLoading === 'function') {
+            window.hideLoading();
+        }
+        if (saveBtn) saveBtn.disabled = false;
     }
-
-    if (abyipModalMode === 'create' || abyipModalMode === 'import' || abyipModalMode === 'pdf-view') {
-        pendingCreateDocumentHtml = documentHtml;
-        pendingIsImported = (abyipModalMode === 'import');
-        closeAbyipModal();
-        openMetaModalForCreate();
-    }
-}
-
-function confirmMetaSave() {
-    if (pendingCreateDocumentHtml == null) {
-        closeMetaModal();
-        return;
-    }
-
-    const titleIn = document.getElementById('abyipMetaTitleInput');
-    const remIn = document.getElementById('abyipMetaRemarksInput');
-    const title = (titleIn && titleIn.value.trim()) || DEFAULT_RECORD_TITLE;
-    const statusRemarks = (remIn && remIn.value.trim()) || '';
-
-    const nextId = abyipRecords.length ? Math.max(...abyipRecords.map((r) => r.id)) + 1 : 1;
-    
-    const newRecord = {
-        id: nextId,
-        title,
-        dateCreated: new Date().toISOString(),
-        status: STATIC_STATUS,
-        statusRemarks,
-        documentHtml: pendingCreateDocumentHtml
-    };
-    
-    // If this is a PDF record, store the PDF data
-    if (pendingPdfData) {
-        newRecord.isPdf = true;
-        newRecord.pdfData = pendingPdfData;
-    }
-    
-    // Mark imported Word documents as view-only
-    if (pendingIsImported) {
-        newRecord.isImported = true;
-    }
-    
-    abyipRecords.push(newRecord);
-
-    pendingCreateDocumentHtml = null;
-    pendingPdfData = null;
-    pendingIsImported = false;
-    closeMetaModalOnly();
-    persistRecords();
-    renderRecordsTable();
-    showNotification('ABYIP record saved.', 'success');
-}
-
-function cancelMetaSave() {
-    pendingCreateDocumentHtml = null;
-    pendingPdfData = null;
-    pendingIsImported = false;
-    closeMetaModal();
 }
 
 function printAbyipDocument() {
@@ -573,39 +510,13 @@ function printAbyipDocument() {
     }, 500);
 }
 
-function loadRecords() {
+async function loadRecords() {
     try {
-        const stored = localStorage.getItem(ABYIP_STORAGE_KEY);
-        abyipRecords = stored ? JSON.parse(stored) : [];
+        const response = await abyipApiFetch('/api/abyip');
+        abyipRecords = (response.data || []).map(mapRecordFromApi);
     } catch (e) {
         abyipRecords = [];
     }
-}
-
-function persistRecords() {
-    localStorage.setItem(ABYIP_STORAGE_KEY, JSON.stringify(abyipRecords));
-}
-
-function getDeleteCount() {
-    return parseInt(localStorage.getItem(ABYIP_DELETE_COUNT_KEY) || '0', 10);
-}
-
-function incrementDeleteCount() {
-    const count = getDeleteCount() + 1;
-    localStorage.setItem(ABYIP_DELETE_COUNT_KEY, String(count));
-    return count;
-}
-
-function getRemainingDeletes() {
-    return Math.max(0, ABYIP_MAX_DELETES - getDeleteCount());
-}
-
-function updateRecordStatus(id, status) {
-    const record = abyipRecords.find((r) => r.id === id);
-    if (!record) return;
-    record.status = status;
-    persistRecords();
-    renderRecordsTable();
 }
 
 function showNotification(message, type) {
@@ -628,26 +539,9 @@ function showNotification(message, type) {
 }
 
 function openDeleteModal(id) {
-    const remaining = getRemainingDeletes();
-    if (remaining <= 0) {
-        showNotification('You have reached the maximum of 3 deletions allowed. No more ABYIP records can be deleted.', 'error');
-        return;
-    }
-
     recordPendingDeleteId = id;
     const m = document.getElementById('deleteConfirmModal');
     if (m) {
-        // Update the modal message to show remaining deletes
-        const msgEl = m.querySelector('.delete-remaining-info');
-        if (msgEl) {
-            const afterDelete = remaining - 1;
-            if (afterDelete === 0) {
-                msgEl.textContent = 'Warning: This is your last allowed deletion. You will not be able to delete any more records after this.';
-            } else {
-                msgEl.textContent = 'You have ' + remaining + ' deletion' + (remaining !== 1 ? 's' : '') + ' remaining (including this one). Maximum is ' + ABYIP_MAX_DELETES + '.';
-            }
-            msgEl.style.display = '';
-        }
         m.classList.add('active');
         m.setAttribute('aria-hidden', 'false');
     }
@@ -929,18 +823,19 @@ function exportPdfToWord() {
     showNotification('PDF exported to MS Word successfully!', 'success');
 }
 
-function confirmDeleteRecord() {
+async function confirmDeleteRecord() {
     if (recordPendingDeleteId == null) return;
-    abyipRecords = abyipRecords.filter((r) => r.id !== recordPendingDeleteId);
-    incrementDeleteCount();
-    persistRecords();
-    renderRecordsTable();
-    closeDeleteModal();
-    const remaining = getRemainingDeletes();
-    const msg = remaining === 0
-        ? 'ABYIP deleted successfully. You have used all 3 allowed deletions.'
-        : `ABYIP deleted successfully. You have ${remaining} deletion${remaining !== 1 ? 's' : ''} remaining.`;
-    showNotification(msg, 'success');
+
+    try {
+        await abyipApiFetch(`/api/abyip/${recordPendingDeleteId}`, { method: 'DELETE' });
+        await loadRecords();
+        renderRecordsTable();
+        closeDeleteModal();
+        showNotification('ABYIP deleted successfully.', 'success');
+    } catch (error) {
+        closeDeleteModal();
+        showNotification(error.message || 'Failed to delete ABYIP record.', 'error');
+    }
 }
 
 function openCreateOptionsModal() {
@@ -1020,9 +915,40 @@ function handleWordImport(event) {
     reader.readAsText(file);
 }
 
+function normalizeImportedTableRows(tbody) {
+    if (!tbody) return;
+
+    const categoryPattern = /\b[A-J]\.\s|Equitable Access to Quality Education|Environmental Protection|Disaster Risk Reduction|Youth Employment and Livelihood|^Health$|Anti-Drug and Peace and Order|Gender Sensitivity|Feeding Program for KK Members|Sports Development|Other Programs/i;
+
+    tbody.querySelectorAll('tr').forEach((row) => {
+        const text = (row.textContent || '').trim();
+        const upper = text.toUpperCase();
+
+        row.classList.remove('section-header', 'subsection-header', 'category-header', 'total-row');
+
+        if (/^TOTAL\b/.test(upper) || upper.includes('TOTAL EXPENDITURE')) {
+            row.classList.add('total-row');
+        } else if (upper.includes('SK YOUTH DEVELOPMENT')) {
+            row.classList.add('subsection-header');
+        } else if (upper.includes('EXPENDITURE') || upper.includes('RECEIPTS')) {
+            row.classList.add('section-header');
+        } else if (categoryPattern.test(text)) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length <= 3 || cells[1]?.getAttribute('colspan')) {
+                row.classList.add('category-header');
+            }
+        }
+
+        row.querySelectorAll('td').forEach((cell, index) => {
+            if (index >= 6 && index <= 8) {
+                cell.classList.add('number');
+            }
+        });
+    });
+}
+
 function openAbyipModalWithImport(importedTable) {
     abyipModalMode = 'import';
-    currentEditId = null;
 
     const modal = document.getElementById('abyipModal');
     const titleEl = document.getElementById('abyipModalTitle');
@@ -1046,8 +972,8 @@ function openAbyipModalWithImport(importedTable) {
             
             if (tbody && importedTbody) {
                 tbody.innerHTML = importedTbody.innerHTML;
-                
-                // Make cells editable
+                normalizeImportedTableRows(tbody);
+
                 tbody.querySelectorAll('td').forEach(cell => {
                     if (!cell.hasAttribute('contenteditable')) {
                         cell.setAttribute('contenteditable', 'true');
@@ -1070,6 +996,76 @@ function openAbyipModalWithImport(importedTable) {
     document.body.style.overflow = 'hidden';
 
     requestAnimationFrame(() => updateTotals());
+}
+
+async function extractPdfTextForPrograms(pdfDoc) {
+    const lines = [];
+    const programLines = [];
+
+    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1 });
+        const textContent = await page.getTextContent();
+        const leftColumnLimit = viewport.width * 0.38;
+        const rowMap = new Map();
+
+        textContent.items.forEach(function (item) {
+            const text = (item.str || '').trim();
+            if (!text) {
+                return;
+            }
+
+            const x = item.transform[4];
+            const y = Math.round(item.transform[5]);
+            const rowKey = pageNum + ':' + y;
+            const bucket = rowMap.get(rowKey) || { y: y, parts: [] };
+            bucket.parts.push({ x: x, text: text, isLeft: x <= leftColumnLimit });
+            rowMap.set(rowKey, bucket);
+        });
+
+        Array.from(rowMap.values())
+            .sort(function (a, b) { return b.y - a.y; })
+            .forEach(function (row) {
+                row.parts.sort(function (a, b) { return a.x - b.x; });
+                const fullLine = row.parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim();
+                const leftLine = row.parts
+                    .filter(function (part) { return part.isLeft; })
+                    .map(function (part) { return part.text; })
+                    .join(' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                if (fullLine) {
+                    lines.push(fullLine);
+                }
+
+                if (leftLine && /^[A-J]\.\s/i.test(leftLine)) {
+                    programLines.push(leftLine);
+                } else if (fullLine && /^[A-J]\.\s/i.test(fullLine)) {
+                    programLines.push(fullLine);
+                }
+            });
+    }
+
+    const sectionIndex = lines.findIndex(function (line) {
+        return /SK\s+YOUTH\s+DEVELOPMENT/i.test(line);
+    });
+
+    const output = [];
+    if (sectionIndex >= 0) {
+        output.push(lines[sectionIndex]);
+    }
+    programLines.forEach(function (line) {
+        if (!output.includes(line)) {
+            output.push(line);
+        }
+    });
+
+    if (output.length === 0) {
+        return lines.join('\n');
+    }
+
+    return output.join('\n');
 }
 
 function openImportPdfFilePicker() {
@@ -1105,14 +1101,17 @@ function handlePdfImport(event) {
             // Use PDF.js to render PDF
             const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
             
-            loadingTask.promise.then(function(pdf) {
-                // Store PDF data temporarily
+            loadingTask.promise.then(async function(pdf) {
                 pendingPdfData = base64String;
-                
-                // Render all pages in continuous scroll
+
+                try {
+                    pendingPdfExtractedText = await extractPdfTextForPrograms(pdf);
+                } catch (extractError) {
+                    console.error('PDF text extraction error:', extractError);
+                    pendingPdfExtractedText = null;
+                }
+
                 openAbyipModalWithPdfPreview(pdf, file.name);
-                
-                // Reset file input
                 fileInput.value = '';
             }).catch(function(error) {
                 console.error('PDF loading error:', error);
@@ -1137,7 +1136,6 @@ function handlePdfImport(event) {
 
 function openAbyipModalWithPdfPreview(pdfDoc, filename) {
     abyipModalMode = 'pdf-view';
-    currentEditId = null;
 
     const modal = document.getElementById('abyipModal');
     const titleEl = document.getElementById('abyipModalTitle');
@@ -1282,16 +1280,8 @@ function renderStoredPdf(base64Data, filename) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Clear any existing sample data (one-time cleanup)
-    const hasCleared = localStorage.getItem('abyip_sample_cleared_v1');
-    if (!hasCleared) {
-        localStorage.removeItem(ABYIP_STORAGE_KEY);
-        localStorage.removeItem(ABYIP_DELETE_COUNT_KEY);
-        localStorage.setItem('abyip_sample_cleared_v1', 'true');
-    }
-    
-    loadRecords();
+document.addEventListener('DOMContentLoaded', async function () {
+    await loadRecords();
     renderRecordsTable();
 
     addCalculationListeners();
@@ -1303,9 +1293,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('addAbyipBtn')?.addEventListener('click', function() {
         // Check if an ABYIP record already exists for the current year (2026)
         const currentYear = new Date().getFullYear();
-        const existingRecordForYear = abyipRecords.some(record => {
-            if (!record.dateCreated) return false;
-            const recordYear = new Date(record.dateCreated).getFullYear();
+        const existingRecordForYear = abyipRecords.some((record) => {
+            const recordYear = record.calendarYear
+                || (record.dateCreated ? new Date(record.dateCreated).getFullYear() : null);
             return recordYear === currentYear;
         });
 
@@ -1336,19 +1326,12 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('abyipModalPrint')?.addEventListener('click', printAbyipDocument);
     document.getElementById('abyipModalExportWord')?.addEventListener('click', exportToWord);
 
-    document.getElementById('abyipMetaConfirm')?.addEventListener('click', confirmMetaSave);
-    document.getElementById('abyipMetaCancel')?.addEventListener('click', cancelMetaSave);
-    document.getElementById('abyipMetaModal')?.addEventListener('click', function (e) {
-        if (e.target === e.currentTarget) cancelMetaSave();
-    });
-
     document.getElementById('recordsTableBody')?.addEventListener('click', function (e) {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
         const id = parseInt(btn.getAttribute('data-id'), 10);
         const action = btn.getAttribute('data-action');
         if (action === 'view') openAbyipModal('view', id);
-        else if (action === 'edit') openAbyipModal('edit', id);
         else if (action === 'delete') openDeleteModal(id);
     });
 
@@ -1361,15 +1344,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 filterSearchText = searchInput.value || '';
                 renderRecordsTable();
             }, 200);
-        });
-    }
-
-    // Status filter
-    const statusFilter = document.getElementById('abyipStatusFilter');
-    if (statusFilter) {
-        statusFilter.addEventListener('change', function () {
-            filterStatus = statusFilter.value || '';
-            renderRecordsTable();
         });
     }
 
@@ -1406,3 +1380,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
     updateTotals();
 });
+
+})();
