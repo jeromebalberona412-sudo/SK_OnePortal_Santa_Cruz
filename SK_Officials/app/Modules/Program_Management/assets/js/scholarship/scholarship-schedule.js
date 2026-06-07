@@ -170,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function openModal(forEditId) {
         if (modal) {
             modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
             // Don't auto-maximize when opening
             if (modal) modal.classList.remove('schol-modal-maximized');
             if (modalBox) modalBox.classList.remove('schol-modal-maximized');
@@ -234,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function closeModal() {
+        document.body.style.overflow = '';
         if (modal) {
             modal.style.display = 'none';
             modal.classList.remove('schol-modal-maximized');
@@ -404,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         editingProgramId = formId;
+        openModal(formId);
 
         // Populate the modal with existing data
         const programNameEl = document.getElementById('programName');
@@ -438,8 +441,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (termsCountEl) termsCountEl.textContent = (f.terms || '').length;
 
         // Load custom questions if available
-        if (window.SpfbFormBuilder && f.customQuestions) {
-            window.SpfbFormBuilder.loadQuestions(f.customQuestions);
+        if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
+            window.SpfbFormBuilder.setQuestions(f.customQuestions || []);
         }
 
         // Load announcement if available
@@ -468,8 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        // Open the modal
-        openModal(formId);
     }
 
     function openFormPreview(formId) {
@@ -974,70 +975,77 @@ function closeActiveProgram() {
     showToast('Program closed successfully. You can now create a new program.', 'success');
 }
 
+window.editScholarshipProgram = editProgram;
+
 function editProgram(programId) {
-    const forms = loadForms();
-    const program = forms.find(f => f.id === programId);
-    
+    const program = loadForms().find(f => f.id === programId);
     if (!program) return;
-    
+
     editingProgramId = programId;
-    
-    // Open modal
+
     const modal = document.getElementById('scholarProgramModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        
-        // Populate form
-        document.getElementById('programName').value = program.programName || '';
-        document.getElementById('programCommittee').value = SAF_COMMITTEE;
-        document.getElementById('participationQty').value = program.participationQty || '';
-        document.getElementById('programVenue').value = program.venue || '';
-        document.getElementById('programDescription').value = program.description || '';
-        document.getElementById('programTerms').value = program.terms || '';
-        document.getElementById('schedStartDate').value = program.startDate || '';
-        document.getElementById('schedEndDate').value = program.endDate || '';
-        document.getElementById('programStatus').value = resolveProgramStatus(program);
-        
-        // Set unified time selectors
-        document.getElementById('schedStartTime').value = program.startTime || '08:00';
-        document.getElementById('schedEndTime').value = program.endTime || '17:00';
-        
-        // Populate announcement
-        if (program.announcement) {
-            document.getElementById('spfbAnnouncement').value = program.announcement;
-            const announcementCount = document.getElementById('spfbAnnouncementCount');
-            if (announcementCount) {
-                announcementCount.textContent = String(program.announcement.length);
-            }
+    const modalBox = document.getElementById('scholarProgramBox');
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    modal.classList.remove('schol-modal-maximized');
+    if (modalBox) modalBox.classList.remove('schol-modal-maximized');
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+    };
+
+    setValue('programName', program.programName || '');
+    setValue('programCommittee', program.committee || SAF_COMMITTEE);
+    setValue('participationQty', program.participationQty || '');
+    setValue('programVenue', program.venue || '');
+    setValue('programDescription', program.description || '');
+    setValue('programTerms', program.terms || '');
+    setValue('schedStartDate', program.startDate || '');
+    setValue('schedEndDate', program.endDate || '');
+    setValue('programStatus', resolveProgramStatus(program));
+
+    const startTimeEl = document.getElementById('schedStartTime');
+    const endTimeEl = document.getElementById('schedEndTime');
+    if (startTimeEl) startTimeEl.value = program.startTime || '08:00';
+    if (endTimeEl) endTimeEl.value = program.endTime || '17:00';
+
+    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
+        window.SpfbFormBuilder.setQuestions(program.customQuestions || []);
+    }
+
+    const announcementEl = document.getElementById('spfbAnnouncement');
+    const announcementCountEl = document.getElementById('spfbAnnouncementCount');
+    if (announcementEl) {
+        announcementEl.value = program.announcement || '';
+        if (announcementCountEl) {
+            announcementCountEl.textContent = String(announcementEl.value.length);
         }
-        
-        // Populate custom questions in form builder
-        if (program.customQuestions && program.customQuestions.length > 0) {
-            if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
-                window.SpfbFormBuilder.setQuestions(program.customQuestions);
-            }
-        }
-        
-        // Update counters
-        ['programName', 'programVenue', 'programDescription', 'programTerms'].forEach(id => {
-            const el = document.getElementById(id);
-            const counterId = id === 'programName' ? 'programNameCount' : 
-                            id === 'programVenue' ? 'venueCount' : 
-                            id === 'programDescription' ? 'descriptionCount' : 'termsCount';
-            const counter = document.getElementById(counterId);
-            if (el && counter) {
-                counter.textContent = String(el.value.length);
-            }
+    }
+
+    if (program.kkProfilingFields && Array.isArray(program.kkProfilingFields)) {
+        document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
+            checkbox.checked = program.kkProfilingFields.includes(checkbox.value);
         });
-        
-        // Update modal title
-        const modalTitle = modal.querySelector('.schol-modal-header h3');
-        if (modalTitle) {
-            modalTitle.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit Scholarship Program
-            `;
-        }
+    }
+
+    const programNameCountEl = document.getElementById('programNameCount');
+    const venueCountEl = document.getElementById('venueCount');
+    const descriptionCountEl = document.getElementById('descriptionCount');
+    const termsCountEl = document.getElementById('termsCount');
+    if (programNameCountEl) programNameCountEl.textContent = String((program.programName || '').length);
+    if (venueCountEl) venueCountEl.textContent = String((program.venue || '').length);
+    if (descriptionCountEl) descriptionCountEl.textContent = String((program.description || '').length);
+    if (termsCountEl) termsCountEl.textContent = String((program.terms || '').length);
+
+    const modalTitle = document.getElementById('scholarProgramModalTitle');
+    if (modalTitle) {
+        modalTitle.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Scholarship Program
+        `;
     }
 }
 
@@ -1087,6 +1095,7 @@ function renderFormsTable(filterValue = 'all') {
             <td class="col-actions">
                 <div class="prog-tbl-actions">
                     <button type="button" class="prog-btn prog-btn-view" data-form-view="${f.id}">View</button>
+                    <button type="button" class="prog-btn prog-btn-edit" data-form-edit="${f.id}">Edit</button>
                     <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${f.id}">Delete</button>
                 </div>
             </td>
@@ -1095,10 +1104,25 @@ function renderFormsTable(filterValue = 'all') {
     }).join('');
 
     tableBody.querySelectorAll('[data-form-view]').forEach(btn => {
-        btn.addEventListener('click', () => openFormPreview(btn.getAttribute('data-form-view')));
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openFormPreview(btn.getAttribute('data-form-view'));
+        });
+    });
+    tableBody.querySelectorAll('[data-form-edit]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editProgram(btn.getAttribute('data-form-edit'));
+        });
     });
     tableBody.querySelectorAll('[data-form-delete]').forEach(btn => {
-        btn.addEventListener('click', () => openDeleteProgramModal(btn.getAttribute('data-form-delete')));
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openDeleteProgramModal(btn.getAttribute('data-form-delete'));
+        });
     });
 }
 

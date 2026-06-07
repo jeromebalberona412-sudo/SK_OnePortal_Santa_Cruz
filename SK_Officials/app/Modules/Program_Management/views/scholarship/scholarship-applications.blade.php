@@ -67,18 +67,18 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="schol-filters-row">
-        <select id="scholFilter" class="schol-filter-input" style="min-width:150px;">
+    <!-- Search toolbar -->
+    <div class="schol-toolbar-pro">
+        <div class="schol-search-wrap schol-search-wrap--pro">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="scholSearch" class="schol-search-input" placeholder="Search by name or school..." aria-label="Search applications">
+        </div>
+        <select id="scholFilter" class="schol-filter-input schol-filter-input--compact" aria-label="Filter applications">
             <option value="all">All Applications</option>
             <option value="recent">Recent (Last 7 Days)</option>
             <option value="monthly">This Month</option>
             <option value="yearly">This Year</option>
         </select>
-        <div class="schol-search-wrap">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="scholSearch" class="schol-search-input" placeholder="Search by name or school...">
-        </div>
     </div>
 
     <!-- Applications Table -->
@@ -87,7 +87,7 @@
             <table class="schol-table">
                 <thead>
                     <tr>
-                        <th>FULL NAME<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">LN, FN, MN, Suffix</div></th>
+                        <th class="schol-col-name">FULL NAME<div class="schol-col-hint">LN, FN, MN, Suffix</div></th>
                         <th>School</th>
                         <th>Year / Level</th>
                         <th>Purpose</th>

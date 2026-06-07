@@ -2,6 +2,22 @@
 
 const SL_PAYMENT_STATUSES = ['Claimed', 'Unclaimed'];
 
+function slFormatFullName(record) {
+    if (window.ScholarshipViewShared?.formatScholarshipFullName) {
+        return window.ScholarshipViewShared.formatScholarshipFullName(record);
+    }
+    const ln = (record?.last_name || '').toUpperCase();
+    const fn = (record?.first_name || '').toUpperCase();
+    const mn = (record?.middle_name || '').toUpperCase();
+    const suffix = (record?.suffix || '').toUpperCase();
+    const parts = [fn, mn].filter(Boolean);
+    const firstMiddle = parts.join(',');
+    const suffixPart = suffix ? `,${suffix}` : '';
+    if (ln && firstMiddle) return `${ln},${firstMiddle}${suffixPart}`;
+    if (ln) return `${ln}${suffixPart}`;
+    return firstMiddle || '—';
+}
+
 function slNormalizePaymentStatus(scholar) {
     if (scholar.payment_status && SL_PAYMENT_STATUSES.includes(scholar.payment_status)) {
         return scholar.payment_status;
@@ -20,7 +36,7 @@ function slEnsurePaymentStatuses() {
 
 const SL_SCHOLARS = [
     {
-        last_name: 'Bautista', first_name: 'Kristine', middle_name: 'Flores', suffix: '',
+        last_name: 'BAUTISTA', first_name: 'KRISTINE', middle_name: 'FLORES', suffix: '',
         date_of_birth: '06/08/2005', gender: 'Female', age: 20,
         contact_no: '09831234567', email: 'kristine.bautista@email.com',
         address: '14 Quezon Blvd., Brgy. Calios, Santa Cruz, Laguna',
@@ -37,7 +53,7 @@ const SL_SCHOLARS = [
         payment_status: 'Unclaimed'
     },
     {
-        last_name: 'Dela Cruz', first_name: 'Jose', middle_name: 'Ramos', suffix: 'Jr.',
+        last_name: 'DELA CRUZ', first_name: 'JOSE', middle_name: 'RAMOS', suffix: 'JR.',
         date_of_birth: '11/20/2004', gender: 'Male', age: 21,
         contact_no: '09721234567', email: 'jose.delacruz@email.com',
         address: '88 Magsaysay St., Brgy. Calios, Santa Cruz, Laguna',
@@ -54,7 +70,7 @@ const SL_SCHOLARS = [
         payment_status: 'Unclaimed'
     },
     {
-        last_name: 'Lim', first_name: 'Angela', middle_name: 'Cruz', suffix: '',
+        last_name: 'LIM', first_name: 'ANGELA', middle_name: 'CRUZ', suffix: '',
         date_of_birth: '04/22/2007', gender: 'Female', age: 18,
         contact_no: '09051234567', email: 'angela.lim@email.com',
         address: '5 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
@@ -71,7 +87,7 @@ const SL_SCHOLARS = [
         payment_status: 'Unclaimed'
     },
     {
-        last_name: 'Reyes', first_name: 'Maria', middle_name: 'Santos', suffix: '',
+        last_name: 'REYES', first_name: 'MARIA', middle_name: 'SANTOS', suffix: '',
         date_of_birth: '03/14/2005', gender: 'Female', age: 20,
         contact_no: '09171234567', email: 'maria.reyes@email.com',
         address: '123 Sampaguita St., Brgy. Calios, Santa Cruz, Laguna',
@@ -88,7 +104,7 @@ const SL_SCHOLARS = [
         payment_status: 'Claimed'
     },
     {
-        last_name: 'Santos', first_name: 'Mark', middle_name: 'Villanueva', suffix: '',
+        last_name: 'SANTOS', first_name: 'MARK', middle_name: 'VILLANUEVA', suffix: '',
         date_of_birth: '09/15/2003', gender: 'Male', age: 22,
         contact_no: '09941234567', email: 'mark.santos@email.com',
         address: '22 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
@@ -153,7 +169,7 @@ function renderScholarTable() {
     }
 
     tbody.innerHTML = paginatedScholars.map((r, i) => {
-        const fullName = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const fullName = slFormatFullName(r);
         const displayProgram = r.program_strand || '—';
         const actualIndex = start + i;
         const paymentStatus = slNormalizePaymentStatus(r);
@@ -161,7 +177,7 @@ function renderScholarTable() {
 
         return `
         <tr>
-            <td class="sl-td-name">${escapeSl(fullName)}</td>
+            <td class="schol-fullname-cell"><span class="schol-fullname">${escapeSl(fullName)}</span></td>
             <td class="sl-td-center">${escapeSl(r.school_name || '—')}</td>
             <td class="sl-td-center">${escapeSl(r.year_level || '—')}</td>
             <td class="sl-td-center sl-td-program">${escapeSl(displayProgram)}</td>
@@ -295,7 +311,7 @@ function openRevokeModal(idx, scholar) {
 
     if (!revokeModal) return;
 
-    const fullName = `${scholar.last_name || ''}, ${scholar.first_name || ''}${scholar.middle_name ? ' ' + scholar.middle_name.charAt(0) + '.' : ''}`;
+    const fullName = slFormatFullName(scholar);
 
     if (revokeNameInput) revokeNameInput.value = fullName;
     if (revokeIndexInput) revokeIndexInput.value = idx;
@@ -377,7 +393,7 @@ function exportToCsv(scholars) {
     if (scholars.length === 0) { alert('No scholars to export.'); return; }
     const headers = ['Full Name', 'School', 'Year/Level', 'Program/Strand', 'Purpose', 'Date Approved', 'Payment Status'];
     const rows = scholars.map(r => {
-        const fullName = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const fullName = slFormatFullName(r);
         return [fullName, r.school_name || '', r.year_level || '', r.program_strand || '', r.purpose || '', r.approved_at || '', slNormalizePaymentStatus(r)];
     });
     let csv = headers.join(',') + '\n';
@@ -430,7 +446,7 @@ function openScholarModal(r) {
     const body = document.getElementById('slViewBody');
     if (!modal || !body) return;
 
-    const fullName = `${r.first_name || ''} ${r.last_name || ''}${r.suffix ? ' ' + r.suffix : ''}`.trim();
+    const fullName = slFormatFullName(r).replace(/,/g, ', ');
     const initials = `${(r.first_name || '').charAt(0)}${(r.last_name || '').charAt(0)}`.toUpperCase();
     const paymentStatus = slNormalizePaymentStatus(r);
 
@@ -746,7 +762,7 @@ function renderPagination() {
 
 function openEditModal(index, scholar) {
     const modal = document.getElementById('slEditModal');
-    const scholarName = `${scholar.last_name}, ${scholar.first_name}${scholar.middle_name ? ' ' + scholar.middle_name.charAt(0) + '.' : ''}${scholar.suffix ? ' ' + scholar.suffix : ''}`;
+    const scholarName = slFormatFullName(scholar);
 
     document.getElementById('editScholarIndex').value = index;
     document.getElementById('editScholarName').value = scholarName;

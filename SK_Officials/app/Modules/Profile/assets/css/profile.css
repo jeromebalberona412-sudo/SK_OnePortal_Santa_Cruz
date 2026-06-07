@@ -12,6 +12,7 @@ body {
     background: #f0f1f5;
     min-height: 100vh;
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
 /* Main Content Area */
@@ -21,11 +22,18 @@ body {
     min-height: calc(100vh - 70px);
     transition: margin-left 0.3s ease;
     padding: 20px;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .profile-container {
     max-width: 100%;
+    width: 100%;
+    min-width: 0;
     background: transparent;
+    overflow-x: hidden;
 }
 
 /* Profile Content Grid */
@@ -890,6 +898,27 @@ body {
     overflow: hidden;
 }
 
+.account-settings-card-header {
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.account-settings-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.account-settings-card-title i {
+    color: #6b7280;
+    font-size: 16px;
+}
+
 .account-settings-divider {
     height: 1px;
     background: #e5e7eb;
@@ -949,6 +978,7 @@ body {
     gap: 8px;
     padding: 10px 20px;
     min-width: 175px;
+    border: none;
     border-radius: 10px;
     background: linear-gradient(135deg, #2c2c3e, #3a3a4a);
     color: #f4c20d;
@@ -956,10 +986,30 @@ body {
     font-weight: 700;
     font-family: inherit;
     text-decoration: none;
+    cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(44, 44, 62, 0.3);
     white-space: nowrap;
     flex-shrink: 0;
+}
+
+.account-settings-btn--active {
+    background: linear-gradient(135deg, #1a1a2e, #2c2c3e);
+    box-shadow: 0 6px 16px rgba(44, 44, 62, 0.4);
+}
+
+.account-settings-block {
+    width: 100%;
+    min-width: 0;
+}
+
+.account-settings-panel {
+    padding: 0 20px 18px;
+}
+
+.account-settings-block--open .account-settings-row {
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 0;
 }
 
 .account-settings-btn i {
@@ -976,11 +1026,18 @@ body {
 @media (max-width: 480px) {
     .account-settings-row {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
     }
     .account-settings-btn {
         width: 100%;
+        min-width: 0;
         justify-content: center;
+    }
+    .account-settings-panel {
+        padding: 0 12px 14px;
+    }
+    .sk-account-settings-section {
+        padding: 14px;
     }
 }
 
@@ -1016,8 +1073,8 @@ body {
 
 /* ── Tab Bar ─────────────────────────────────────────────── */
 .profile-tab-bar {
-    display: flex;
-    gap: 6px;
+    display: inline-flex;
+    gap: 8px;
     margin-bottom: 22px;
     background: #fff;
     border-radius: 12px;
@@ -1025,16 +1082,18 @@ body {
     box-shadow: 0 2px 8px rgba(15,23,42,.07);
     border: 1px solid #e5e7eb;
     width: fit-content;
+    max-width: 100%;
 }
 
 .profile-tab {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 10px 22px;
     border-radius: 8px;
-    border: none;
-    background: transparent;
+    border: 2px solid transparent;
+    background: #fff;
     color: #6b7280;
     font-size: 13px;
     font-weight: 600;
@@ -1044,20 +1103,30 @@ body {
     white-space: nowrap;
 }
 
-.profile-tab i { font-size: 13px; }
+.profile-tab i {
+    font-size: 13px;
+    color: #9ca3af;
+}
 
 .profile-tab:hover {
-    background: #f3f4f6;
-    color: #111827;
+    background: #f9fafb;
+    color: #374151;
+}
+
+.profile-tab:hover i {
+    color: #6b7280;
 }
 
 .profile-tab.active {
     background: #2c2c3e;
     color: #f4c20d;
+    border-color: #f4c20d;
     box-shadow: 0 2px 8px rgba(44,44,62,.25);
 }
 
-.profile-tab.active i { color: #f4c20d; }
+.profile-tab.active i {
+    color: #f4c20d;
+}
 
 /* ── Tab Content ─────────────────────────────────────────── */
 .profile-tab-content {
@@ -1276,8 +1345,16 @@ body {
 }
 
 @media (max-width: 600px) {
-    .profile-tab-bar { width: 100%; }
-    .profile-tab { flex: 1; justify-content: center; padding: 10px 12px; font-size: 12px; }
+    .profile-tab-bar {
+        display: flex;
+        width: 100%;
+    }
+    .profile-tab {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 12px;
+        font-size: 12px;
+    }
     .cp-inline-form { max-width: 100%; }
     .cp-inline-actions { flex-direction: column; }
     .cp-inline-cancel,
@@ -1336,8 +1413,10 @@ body {
 
 .profile-field-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
     gap: 16px;
+    width: 100%;
+    min-width: 0;
 }
 
 .profile-field {
@@ -1403,90 +1482,3 @@ body {
     font-size: 13px;
 }
 
-/* ── Profile Picture Header ─────────────────────────────── */
-.profile-pic-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 24px 24px 20px;
-    border-bottom: 1px solid #f1f3f5;
-    background: #fafafa;
-    border-radius: 12px 12px 0 0;
-}
-
-.profile-pic-avatar {
-    position: relative;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #2c2c3e, #3a3a4a);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 4px 14px rgba(44, 44, 62, 0.3);
-}
-
-.profile-pic-avatar i {
-    font-size: 36px;
-    color: #f4c20d;
-}
-
-.profile-pic-logo {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 10px;
-    border-radius: 50%;
-    background: #fff;
-}
-
-.profile-pic-badge {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    font-size: 0;
-}
-
-.profile-pic-badge.active {
-    background: #22c55e;
-}
-
-.profile-pic-badge.inactive {
-    background: #ef4444;
-}
-
-.profile-pic-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.profile-pic-name {
-    font-size: 18px;
-    font-weight: 800;
-    color: #111827;
-    line-height: 1.2;
-}
-
-.profile-pic-role {
-    font-size: 13px;
-    color: #6b7280;
-    font-weight: 500;
-}
-
-@media (max-width: 480px) {
-    .profile-pic-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 20px 16px 16px;
-    }
-
-    .profile-pic-info {
-        align-items: center;
-    }
-}

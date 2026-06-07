@@ -90,20 +90,8 @@
         </div>
     </section>
 
-    <!-- Filter Section -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-            <label style="font-size:13px;font-weight:600;color:#374151;">Filter:</label>
-            <select id="programFilter" class="schol-input" style="width:auto;min-width:150px;padding:6px 12px;font-size:13px;">
-                <option value="all">All Programs</option>
-                <option value="recent">Recent (Last 7 Days)</option>
-                <option value="monthly">This Month</option>
-                <option value="yearly">This Year</option>
-            </select>
-        </div>
-        <div style="font-size:13px;color:#6b7280;">
-            Total: <span id="programCount" style="font-weight:600;color:#111827;">0</span> programs
-        </div>
+    <div class="saf-schedule-meta">
+        <span class="saf-schedule-count">Total: <strong id="programCount">0</strong> programs</span>
     </div>
 
     <div class="saf-forms-table-card">

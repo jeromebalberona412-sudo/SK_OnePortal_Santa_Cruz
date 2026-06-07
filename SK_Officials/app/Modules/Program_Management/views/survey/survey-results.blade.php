@@ -1,7 +1,7 @@
 @extends('Program_Management::survey._layout')
 
 @section('survey_actions')
-    <button type="button" class="schol-btn schol-btn-success" id="btnExportResults">Export Results CSV</button>
+    <button type="button" class="schol-btn schol-btn-save" id="btnExportResults">Export Results CSV</button>
 @endsection
 
 @section('survey_content')

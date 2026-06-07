@@ -1357,3 +1357,137 @@ select.schol-input {
         justify-content: center;
     }
 }
+
+/* ── Professional toolbar (Applications + Approved Scholars) ── */
+.schol-toolbar-pro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.schol-toolbar-pro--scholars {
+    align-items: stretch;
+    gap: 14px;
+}
+
+.schol-toolbar-pro-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.schol-search-wrap--pro {
+    flex: 1;
+    min-width: 220px;
+    max-width: 420px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    height: 40px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.schol-search-wrap--pro:focus-within {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    background: #fff;
+}
+
+.schol-search-wrap--pro svg {
+    flex-shrink: 0;
+    color: #9ca3af;
+}
+
+.schol-search-wrap--pro .schol-search-input {
+    border: none;
+    background: transparent;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-size: 14px;
+    box-shadow: none;
+}
+
+.schol-search-wrap--pro .schol-search-input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.schol-filter-input--compact {
+    min-width: 168px;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 13px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.schol-btn-export {
+    height: 40px;
+    padding: 0 16px;
+    white-space: nowrap;
+}
+
+.schol-col-name {
+    text-align: center !important;
+}
+
+.schol-col-hint,
+.sl-col-hint {
+    font-size: 9px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.75);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+}
+
+.schol-fullname-cell {
+    text-align: center;
+    min-width: 160px;
+}
+
+.schol-fullname {
+    display: inline-block;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+    .schol-toolbar-pro--scholars {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .schol-toolbar-pro-actions {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .schol-search-wrap--pro {
+        max-width: none;
+        flex: 1 1 100%;
+    }
+
+    .schol-filter-input--compact,
+    .schol-btn-export {
+        flex: 1 1 auto;
+    }
+}

@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const SAMPLE_DATA = [
     {
         id: 1001,
-        last_name: 'Reyes', first_name: 'Maria', middle_name: 'Santos',
+        last_name: 'REYES', first_name: 'MARIA', middle_name: 'SANTOS',
         date_of_birth: '2005-03-14', gender: 'Female', age: 20,
         contact_no: '09171234567',
         address: '123 Sampaguita St., Brgy. Calios, Santa Cruz, Laguna',
@@ -27,7 +27,7 @@ const SAMPLE_DATA = [
     },
     {
         id: 1002,
-        last_name: 'Cruz', first_name: 'Juan', middle_name: 'Dela',
+        last_name: 'CRUZ', first_name: 'JUAN', middle_name: 'DELA',
         date_of_birth: '2004-07-22', gender: 'Male', age: 21,
         contact_no: '09281234567',
         address: '45 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
@@ -46,7 +46,7 @@ const SAMPLE_DATA = [
     },
     {
         id: 1003,
-        last_name: 'Garcia', first_name: 'Ana', middle_name: 'Lim',
+        last_name: 'GARCIA', first_name: 'ANA', middle_name: 'LIM',
         date_of_birth: '2006-11-05', gender: 'Female', age: 18,
         contact_no: '09391234567',
         address: '78 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
@@ -65,7 +65,7 @@ const SAMPLE_DATA = [
     },
     {
         id: 1004,
-        last_name: 'Mendoza', first_name: 'Carlo', middle_name: 'Bautista',
+        last_name: 'MENDOZA', first_name: 'CARLO', middle_name: 'BAUTISTA',
         date_of_birth: '2003-05-18', gender: 'Male', age: 22,
         contact_no: '09501234567',
         address: '12 Bonifacio Rd., Brgy. Calios, Santa Cruz, Laguna',
@@ -84,7 +84,7 @@ const SAMPLE_DATA = [
     },
     {
         id: 1005,
-        last_name: 'Torres', first_name: 'Liza', middle_name: 'Villanueva',
+        last_name: 'TORRES', first_name: 'LIZA', middle_name: 'VILLANUEVA',
         date_of_birth: '2007-09-30', gender: 'Female', age: 17,
         contact_no: '09611234567',
         address: '56 Aguinaldo St., Brgy. Calios, Santa Cruz, Laguna',
@@ -103,7 +103,7 @@ const SAMPLE_DATA = [
     },
     {
         id: 1006,
-        last_name: 'Dela Cruz', first_name: 'Jose', middle_name: 'Ramos',
+        last_name: 'DELA CRUZ', first_name: 'JOSE', middle_name: 'RAMOS',
         date_of_birth: '2004-11-20', gender: 'Male', age: 21,
         contact_no: '09721234567',
         address: '88 Magsaysay St., Brgy. Calios, Santa Cruz, Laguna',
@@ -124,7 +124,7 @@ const SAMPLE_DATA = [
     },
     {
         id: 1007,
-        last_name: 'Bautista', first_name: 'Kristine', middle_name: 'Flores',
+        last_name: 'BAUTISTA', first_name: 'KRISTINE', middle_name: 'FLORES',
         date_of_birth: '2005-06-08', gender: 'Female', age: 20,
         contact_no: '09831234567',
         address: '14 Quezon Blvd., Brgy. Calios, Santa Cruz, Laguna',
@@ -145,7 +145,7 @@ const SAMPLE_DATA = [
     },
     {
         id: 1008,
-        last_name: 'Villanueva', first_name: 'Patrick', middle_name: 'Santos',
+        last_name: 'VILLANUEVA', first_name: 'PATRICK', middle_name: 'SANTOS',
         date_of_birth: '2004-03-12', gender: 'Male', age: 21,
         contact_no: '09941234567',
         address: '33 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
@@ -195,9 +195,9 @@ function initScholarshipRequests() {
     }
 
     // Seed sample data if localStorage is empty
-    if (!localStorage.getItem('scholarship_requests_seeded_v6')) {
+    if (!localStorage.getItem('scholarship_requests_seeded_v7')) {
         localStorage.setItem('scholarship_requests', JSON.stringify(SAMPLE_DATA));
-        localStorage.setItem('scholarship_requests_seeded_v6', '1');
+        localStorage.setItem('scholarship_requests_seeded_v7', '1');
     }
 
     let records = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
@@ -830,7 +830,7 @@ function initScholarshipRequests() {
                         : 'schol-pill-pending';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="text-align:center;font-weight:600;">${r.last_name}, ${r.first_name}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}</td>
+                    <td class="schol-fullname-cell"><span class="schol-fullname">${formatApplicantName(r)}</span></td>
                     <td style="text-align:center;font-size:12px;">${r.school_name || '—'}</td>
                     <td style="text-align:center;">${r.year_level || '—'}</td>
                     <td style="text-align:center;font-size:12px;">${r.purpose || '—'}</td>
@@ -878,8 +878,14 @@ function initScholarshipRequests() {
     });
 
     function formatApplicantName(r) {
-        const middle = r.middle_name ? `${r.middle_name.charAt(0)}. ` : '';
-        return `${r.first_name || ''} ${middle}${r.last_name || ''}`.trim();
+        if (window.ScholarshipViewShared?.formatScholarshipFullName) {
+            return window.ScholarshipViewShared.formatScholarshipFullName(r);
+        }
+        const ln = (r.last_name || '').toUpperCase();
+        const fn = (r.first_name || '').toUpperCase();
+        const mn = (r.middle_name || '').toUpperCase();
+        const parts = [fn, mn].filter(Boolean);
+        return parts.length ? `${ln},${parts.join(',')}` : ln || '—';
     }
 
     function getApplicantInitials(r) {

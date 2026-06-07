@@ -84,41 +84,33 @@
             </div>
         </div>
 
-        <div class="sl-toolbar-row">
-            <div class="sl-toolbar-left">
-                <div class="sl-payment-filter-tabs" role="tablist" aria-label="Payment status filter">
-                    <button type="button" class="sl-payment-tab active" data-payment-filter="all">All</button>
-                    <button type="button" class="sl-payment-tab" data-payment-filter="Claimed">Claimed</button>
-                    <button type="button" class="sl-payment-tab" data-payment-filter="Unclaimed">Unclaimed</button>
-                </div>
-                <div class="sl-filter-group sl-filter-group-inline">
-                    <div class="sl-filter-wrapper">
-                        <select id="slYearFilter" class="sl-filter-select">
-                            <option value="">All Years</option>
-                            <option value="2026">Scholarship 2026</option>
-                            <option value="2025">Scholarship 2025</option>
-                            <option value="2024">Scholarship 2024</option>
-                            <option value="2023">Scholarship 2023</option>
-                        </select>
-                    </div>
-                    <div class="sl-search-wrapper">
-                        <svg class="sl-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="m21 21-4.35-4.35"/>
-                        </svg>
-                        <input type="text" id="slSearchInput" class="sl-search-input" placeholder="Search scholars...">
-                    </div>
-                </div>
+        <div class="schol-toolbar-pro schol-toolbar-pro--scholars">
+            <div class="sl-payment-filter-tabs" role="tablist" aria-label="Payment status filter">
+                <button type="button" class="sl-payment-tab active" data-payment-filter="all">All</button>
+                <button type="button" class="sl-payment-tab" data-payment-filter="Claimed">Claimed</button>
+                <button type="button" class="sl-payment-tab" data-payment-filter="Unclaimed">Unclaimed</button>
             </div>
-            <button type="button" id="slExportCsvBtn" class="sl-btn sl-btn-export">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Export CSV
-            </button>
+            <div class="schol-toolbar-pro-actions">
+                <select id="slYearFilter" class="schol-filter-input schol-filter-input--compact" aria-label="Scholarship year">
+                    <option value="">All Years</option>
+                    <option value="2026">Scholarship 2026</option>
+                    <option value="2025" selected>Scholarship 2025</option>
+                    <option value="2024">Scholarship 2024</option>
+                    <option value="2023">Scholarship 2023</option>
+                </select>
+                <div class="schol-search-wrap schol-search-wrap--pro">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="search" id="slSearchInput" class="schol-search-input" placeholder="Search scholars..." aria-label="Search scholars">
+                </div>
+                <button type="button" id="slExportCsvBtn" class="schol-btn schol-btn-save schol-btn-export">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Export CSV
+                </button>
+            </div>
         </div>
 
         <!-- ── Scholar Table ── -->
@@ -127,8 +119,8 @@
                 <table class="sl-table">
                     <thead id="slTableHead">
                         <tr>
-                            <th>FULL NAME
-                                <div class="sl-col-hint">LN, FN, MN, Suffix</div>
+                            <th class="schol-col-name">FULL NAME
+                                <div class="schol-col-hint">LN, FN, MN, Suffix</div>
                             </th>
                             <th>School</th>
                             <th>Year / Level</th>
@@ -280,6 +272,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Program_Management/assets/js/scholarship/approved-scholars.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

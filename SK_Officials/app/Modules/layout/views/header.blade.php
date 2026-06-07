@@ -186,26 +186,10 @@
                     <div class="dropdown-divider"></div>
 
                     <!-- View Profile -->
-                    <a href="{{ route('profile') }}" class="dropdown-item">
-                        <span class="dropdown-item-icon dropdown-item-icon--profile">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="7" r="4"></circle>
-                                <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
-                            </svg>
-                        </span>
-                        View Profile
-                    </a>
+                    <a href="{{ route('profile') }}" class="dropdown-item">View Profile</a>
 
                     <!-- Change Password -->
-                    <a href="{{ route('change-password') }}" class="dropdown-item" id="changePasswordTrigger">
-                        <span class="dropdown-item-icon dropdown-item-icon--password">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                            </svg>
-                        </span>
-                        Change Password
-                    </a>
+                    <a href="{{ route('profile') }}" class="dropdown-item" id="changePasswordTrigger">Change Password</a>
 
                     <div class="dropdown-divider"></div>
 

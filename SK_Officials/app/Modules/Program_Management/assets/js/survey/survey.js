@@ -471,7 +471,7 @@ function renderFormsTable() {
             saveSurveys(loadSurveys().filter(s => s.id !== id));
             saveResponses(loadResponses().filter(r => r.surveyId !== id));
             renderFormsTable();
-            showToast('Survey deleted.');
+            showToast('Deleted successfully.');
         });
     });
 }
@@ -734,7 +734,7 @@ function downloadCsv(content, filename) {
 // ── Analytics Tab ─────────────────────────────────────────────────────────
 
 function bindAnalyticsTab() {
-    ['analyticsSurveyFilter', 'analyticsDateFrom', 'analyticsDateTo', 'analyticsQuestionFilter'].forEach(id => {
+    ['analyticsSurveyFilter', 'analyticsDateFrom', 'analyticsDateTo'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', renderAnalytics);
     });
     document.getElementById('btnExportAnalytics')?.addEventListener('click', exportAnalyticsCsv);
@@ -771,21 +771,23 @@ function renderAnalytics() {
     const uniqueRespondents = new Set(filtered.map(r => r.respondentName)).size;
 
     document.getElementById('analyticsStatsRow').innerHTML = `
-        <div class="survey-stat-card"><div class="stat-value">${surveys.length}</div><div class="stat-label">Total Surveys Created</div></div>
-        <div class="survey-stat-card"><div class="stat-value">${uniqueRespondents}</div><div class="stat-label">Total Respondents</div></div>
-        <div class="survey-stat-card"><div class="stat-value">${filtered.length}</div><div class="stat-label">Total Responses Submitted</div></div>
-        <div class="survey-stat-card"><div class="stat-value">${allResponses.length}</div><div class="stat-label">All-Time Responses</div></div>
+        <div class="analytics-stat-card analytics-stat-blue">
+            <div class="analytics-stat-value">${surveys.length}</div>
+            <div class="analytics-stat-label">Total Surveys Created</div>
+        </div>
+        <div class="analytics-stat-card analytics-stat-green">
+            <div class="analytics-stat-value">${uniqueRespondents}</div>
+            <div class="analytics-stat-label">Total Respondents</div>
+        </div>
+        <div class="analytics-stat-card analytics-stat-yellow">
+            <div class="analytics-stat-value">${filtered.length}</div>
+            <div class="analytics-stat-label">Total Responses Submitted</div>
+        </div>
+        <div class="analytics-stat-card analytics-stat-purple">
+            <div class="analytics-stat-value">${allResponses.length}</div>
+            <div class="analytics-stat-label">All-Time Responses</div>
+        </div>
     `;
-
-    const qFilter = document.getElementById('analyticsQuestionFilter');
-    if (qFilter && survey) {
-        const prev = qFilter.value;
-        qFilter.innerHTML = '<option value="">All questions</option>' +
-            (survey.questions || []).map((q, i) =>
-                `<option value="${q.id}">${i + 1}. ${escapeHtml(q.label)}</option>`
-            ).join('');
-        qFilter.value = prev;
-    }
 
     const container = document.getElementById('analyticsQuestionsContainer');
     destroyCharts();
@@ -798,9 +800,7 @@ function renderAnalytics() {
         return;
     }
 
-    const questionIdFilter = document.getElementById('analyticsQuestionFilter')?.value || '';
-    let questions = survey.questions || [];
-    if (questionIdFilter) questions = questions.filter(q => q.id === questionIdFilter);
+    const questions = survey.questions || [];
 
     if (!questions.length) {
         container.innerHTML = '<p class="saf-table-empty">No questions in this survey.</p>';
@@ -837,6 +837,7 @@ function buildQuestionAnalyticsBlock(q, survey, responses, idx) {
             }
         });
 
+        const typeLabel = q.type === 'checkbox' ? 'Checkboxes' : 'Multiple Choice';
         const rows = Object.entries(counts).map(([opt, count]) => {
             const pct = total ? Math.round((count / total) * 100) : 0;
             return `
@@ -845,20 +846,34 @@ function buildQuestionAnalyticsBlock(q, survey, responses, idx) {
                     <div class="analytics-choice-bar-wrap">
                         <div class="analytics-choice-bar" style="width:${pct}%"></div>
                     </div>
-                    <div class="analytics-choice-stats">${count} (${pct}%)</div>
+                    <div class="analytics-choice-stats"><span class="analytics-choice-count">${count}</span> <span class="analytics-choice-pct">(${pct}%)</span></div>
                 </div>`;
         }).join('');
 
         return `
-            <div class="analytics-question-block">
-                <h4>Question ${idx + 1}: ${escapeHtml(q.label)}</h4>
-                <div class="analytics-meta">Total responses: ${total} · Type: ${q.type === 'checkbox' ? 'Checkboxes' : 'Multiple Choice'}</div>
-                ${rows}
+            <article class="analytics-question-block">
+                <header class="analytics-question-head">
+                    <div class="analytics-question-head-main">
+                        <span class="analytics-q-badge">Q${idx + 1}</span>
+                        <h4 class="analytics-question-title">${escapeHtml(q.label)}</h4>
+                    </div>
+                    <div class="analytics-question-meta">
+                        <span class="analytics-meta-pill">${typeLabel}</span>
+                        <span class="analytics-meta-text">${total} response${total === 1 ? '' : 's'}</span>
+                    </div>
+                </header>
+                <div class="analytics-choices">${rows}</div>
                 <div class="analytics-charts-row">
-                    <div class="analytics-chart-box"><h5>Bar Chart</h5><canvas id="chartBar_${q.id}"></canvas></div>
-                    <div class="analytics-chart-box"><h5>Pie Chart — Response Distribution</h5><canvas id="chartPie_${q.id}"></canvas></div>
+                    <div class="analytics-chart-box">
+                        <h5>Bar Chart</h5>
+                        <div class="analytics-chart-canvas-wrap"><canvas id="chartBar_${q.id}"></canvas></div>
+                    </div>
+                    <div class="analytics-chart-box">
+                        <h5>Pie Chart — Response Distribution</h5>
+                        <div class="analytics-chart-canvas-wrap"><canvas id="chartPie_${q.id}"></canvas></div>
+                    </div>
                 </div>
-            </div>`;
+            </article>`;
     }
 
     const textAnswers = withAnswer.map(r => {
@@ -868,11 +883,19 @@ function buildQuestionAnalyticsBlock(q, survey, responses, idx) {
     }).join('') || '<p style="color:#9ca3af;font-size:14px;">No text responses yet.</p>';
 
     return `
-        <div class="analytics-question-block">
-            <h4>Question ${idx + 1}: ${escapeHtml(q.label)}</h4>
-            <div class="analytics-meta">Total responses: ${total} · Type: Text</div>
+        <article class="analytics-question-block">
+            <header class="analytics-question-head">
+                <div class="analytics-question-head-main">
+                    <span class="analytics-q-badge">Q${idx + 1}</span>
+                    <h4 class="analytics-question-title">${escapeHtml(q.label)}</h4>
+                </div>
+                <div class="analytics-question-meta">
+                    <span class="analytics-meta-pill">Text</span>
+                    <span class="analytics-meta-text">${total} response${total === 1 ? '' : 's'}</span>
+                </div>
+            </header>
             <div class="analytics-text-answers">${textAnswers}</div>
-        </div>`;
+        </article>`;
 }
 
 function initChartsForQuestion(q, survey, responses, idx) {
@@ -907,6 +930,7 @@ function initChartsForQuestion(q, survey, responses, idx) {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
             },
@@ -924,7 +948,16 @@ function initChartsForQuestion(q, survey, responses, idx) {
                     backgroundColor: colors.slice(0, labels.length),
                 }],
             },
-            options: { responsive: true },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 14, font: { size: 11 } },
+                    },
+                },
+            },
         }));
     }
 }

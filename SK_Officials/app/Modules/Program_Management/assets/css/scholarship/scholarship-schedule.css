@@ -13,6 +13,23 @@
     flex-wrap: wrap;
 }
 
+.saf-schedule-meta {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.saf-schedule-count {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.saf-schedule-count strong {
+    color: #111827;
+    font-weight: 700;
+}
+
 .saf-page-header-text {
     flex: 1;
     min-width: 240px;

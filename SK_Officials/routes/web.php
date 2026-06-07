@@ -34,9 +34,7 @@ Route::middleware([
         return view('Profile::profile');
     })->name('profile');
 
-    Route::get('/change-email', function () {
-        return view('Profile::change-email');
-    })->name('change-email');
+    Route::redirect('/change-email', '/profile')->name('change-email');
 
     Route::get('/notifications', function () {
         return view('Profile::notification');

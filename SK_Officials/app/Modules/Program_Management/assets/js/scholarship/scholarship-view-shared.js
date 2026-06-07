@@ -76,6 +76,20 @@
         return `${h12}:${m} ${ampm}`;
     }
 
+    function formatScholarshipFullName(record) {
+        const ln = String(record?.last_name || record?.lastName || '').trim().toUpperCase();
+        const fn = String(record?.first_name || record?.firstName || '').trim().toUpperCase();
+        const mn = String(record?.middle_name || record?.middleName || '').trim().toUpperCase();
+        const suffix = String(record?.suffix || '').trim().toUpperCase();
+        const parts = [fn, mn].filter(Boolean);
+        const firstMiddle = parts.join(',');
+        const suffixPart = suffix ? `,${suffix}` : '';
+        if (ln && firstMiddle) return `${ln},${firstMiddle}${suffixPart}`;
+        if (ln) return `${ln}${suffixPart}`;
+        if (firstMiddle) return `${firstMiddle}${suffixPart}`;
+        return '—';
+    }
+
     function formatStatusLabel(status) {
         if (status === 'open' || status === 'Open') return 'Open';
         if (status === 'closed' || status === 'Closed') return 'Closed';
@@ -294,6 +308,7 @@
         SAF_STORAGE_KEY,
         SAMPLE_SCHOLARSHIP_PROGRAM,
         escapeHtml,
+        formatScholarshipFullName,
         formatTime12,
         loadScholarshipProgram,
         seedScholarshipProgramIfNeeded,
