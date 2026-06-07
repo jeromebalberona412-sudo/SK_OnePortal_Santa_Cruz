@@ -135,8 +135,8 @@
                         <input type="text" id="selectedSportDisplay" name="selectedSportDisplay" readonly placeholder="Auto-filled from Step 1">
                     </div>
                     <div class="sr-field">
-                        <label for="teamName">Team Name <small>(optional)</small></label>
-                        <input type="text" id="teamName" name="teamName" placeholder="Santa Cruz Warriors">
+                        <label for="teamName">Team Name</label>
+                        <input type="text" id="teamName" name="teamName" placeholder="Santa Cruz Warriors" required>
                     </div>
                     <div class="sr-field">
                         <label for="position">Position / Role <span class="sr-req">*</span></label>

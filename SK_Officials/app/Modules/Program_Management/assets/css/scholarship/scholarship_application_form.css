@@ -895,7 +895,102 @@ select.schol-input {
     border: 2px solid #374151;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 600; color: #374151;
-    text-align: center; flex-shrink: 0; border-radius: 2px;
+}
+
+/* ── KK Profiling Auto-Fill Section ── */
+.spfb-section-kk-profile {
+    margin-top: 20px;
+}
+
+.spfb-section-desc {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.spfb-kk-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.spfb-kk-field-group {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.spfb-kk-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.spfb-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    margin-bottom: 6px;
+}
+
+.spfb-checkbox-item:hover {
+    background: #f3f4f6;
+}
+
+.spfb-checkbox-item:last-child {
+    margin-bottom: 0;
+}
+
+.spfb-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.spfb-checkbox:checked {
+    background: #2c2c3e;
+    border-color: #2c2c3e;
+}
+
+.spfb-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 6px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+}
+
+.spfb-checkbox-label {
+    font-size: 13px;
+    color: #374151;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .spfb-kk-fields-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Inline title (bold underlined like PDF) */

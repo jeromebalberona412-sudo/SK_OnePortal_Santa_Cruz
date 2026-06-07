@@ -60,6 +60,84 @@
                 </div>
             </div>
 
+            <div class="spfb-section-card spfb-section-kk-profile">
+                <div class="spfb-section-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    KK Profiling Auto-Fill Fields
+                </div>
+                <p class="spfb-section-desc">Select which KK Profiling information will automatically be included in the scholarship application. Applicants will not need to enter these details again because the system will retrieve them from their KK Profile.</p>
+
+                <div class="spfb-kk-fields-grid">
+                    <div class="spfb-kk-field-group">
+                        <h4 class="spfb-kk-group-title">Personal Information</h4>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="full_name" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Full Name</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="birthday" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Birthday</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="age" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Age</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="sex" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Sex</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="civil_status" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Civil Status</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="contact_number" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Contact Number</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="home_address" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Home Address</span>
+                        </label>
+                    </div>
+
+                    <div class="spfb-kk-field-group">
+                        <h4 class="spfb-kk-group-title">Educational Information</h4>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="current_school" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Current School</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="year_level" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Year Level</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="course_strand" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Course / Strand</span>
+                        </label>
+                    </div>
+
+                    <div class="spfb-kk-field-group">
+                        <h4 class="spfb-kk-group-title">Location Information</h4>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="barangay" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Barangay</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="city_municipality" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">City/Municipality</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="province" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Province</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="region" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Region</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             @include('GForm_Builder::partials.announcement-field')
             @include('GForm_Builder::partials.custom-questions-builder', [
                 'sectionTitle' => 'Application Form Builder',

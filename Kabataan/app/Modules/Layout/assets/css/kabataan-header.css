@@ -145,6 +145,11 @@
     flex-shrink: 0;
 }
 
+/* Hide programs button on desktop, show on mobile */
+.programs-drawer-btn {
+    display: none;
+}
+
 .kabataan-header__icon-btn svg,
 .kabataan-header .nav-icon-btn svg {
     width: 19px;
@@ -305,6 +310,11 @@
     }
 
     .kabataan-header__menu-toggle {
+        display: flex;
+    }
+
+    /* Show programs button on mobile */
+    .programs-drawer-btn {
         display: flex;
     }
 }

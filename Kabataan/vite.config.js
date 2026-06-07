@@ -34,6 +34,8 @@ export default defineConfig({
                 'app/Modules/Dashboard/assets/js/notif.js',
 
                 // Programs
+                'app/Modules/Programs/assets/css/scholarship_landing.css',
+                'app/Modules/Programs/assets/js/scholarship_landing.js',
                 'app/Modules/Programs/assets/css/scholarship_application.css',
                 'app/Modules/Programs/assets/css/scholarship_requirements.css',
                 'app/Modules/Programs/assets/js/scholarship_application.js',
