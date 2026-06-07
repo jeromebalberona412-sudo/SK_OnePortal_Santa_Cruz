@@ -8,6 +8,22 @@
 
     const VALID_ROMAN_SUFFIXES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
+    function showFieldError(el, msg) {
+        if (!el || !el.parentNode) return;
+        el.parentNode.querySelectorAll('.kkp-field-error').forEach((node) => node.remove());
+        el.classList.add('kkp-input-err');
+        const err = document.createElement('span');
+        err.className = 'kkp-field-error';
+        err.textContent = msg;
+        el.parentNode.insertBefore(err, el.nextSibling);
+    }
+
+    function clearFieldError(el) {
+        if (!el || !el.parentNode) return;
+        el.classList.remove('kkp-input-err');
+        el.parentNode.querySelectorAll('.kkp-field-error').forEach((node) => node.remove());
+    }
+
     function isValidSuffixText(value) {
         if (!value) return false;
         if (value.length > 4) return false;
@@ -63,24 +79,41 @@
             }
         });
 
-        // Restrict age input to only allow 15-30
         ageInput.addEventListener('input', function () {
-            let value = this.value.replace(/\D/g, '');
-            if (value) {
-                const num = parseInt(value, 10);
-                if (num < 15) value = '15';
-                if (num > 30) value = '30';
+            this.value = this.value.replace(/\D/g, '').slice(0, 2);
+            const value = parseInt(this.value, 10);
+            if (!isNaN(value) && value >= 15 && value <= 30) {
+                clearFieldError(this);
             }
-            this.value = value;
         });
 
         ageInput.addEventListener('blur', function () {
-            let value = parseInt(this.value, 10);
-            if (value < 15 || value > 30 || isNaN(value)) {
+            const value = parseInt(this.value, 10);
+            if (isNaN(value) || value < 15 || value > 30) {
                 this.value = '';
+                showFieldError(this, 'Age must be 15 to 30 only.');
+            } else {
+                clearFieldError(this);
             }
         });
     }
+
+    // ── Name fields: auto-uppercase (capslock) ──
+    ['kkpLastName', 'kkpFirstName', 'kkpMiddleName'].forEach((id) => {
+        const nameInput = document.getElementById(id);
+        if (!nameInput) return;
+
+        nameInput.addEventListener('input', function () {
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.toUpperCase();
+            this.setSelectionRange(start, end);
+        });
+
+        nameInput.addEventListener('blur', function () {
+            this.value = this.value.trim().toUpperCase();
+        });
+    });
 
     // ── Contact number formatter: 09 + 9 digits only (11 chars total) ──
     const contactInput = document.getElementById('kkpContactNumber');

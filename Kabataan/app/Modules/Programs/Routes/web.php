@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['web', 'auth'])->group(function () {
     Route::view('/scholarship/apply', 'programs::scholarship_landing')->name('scholarship.apply');
     Route::view('/scholarship/apply/form', 'programs::scholarship_application')->name('scholarship.apply.form');
-    Route::view('/sports/apply', 'programs::sports-registration')->name('sports.apply');
+    Route::view('/sports/apply', 'programs::sports_landing')->name('sports.apply');
+    Route::view('/sports/apply/form', 'programs::sports-registration')->name('sports.apply.form');
 
     $presurveyPrograms = [
         'anti-drugs' => [

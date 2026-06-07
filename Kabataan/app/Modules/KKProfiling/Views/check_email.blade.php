@@ -214,21 +214,43 @@
             margin-top: 1rem;
         }
 
-        .back-btn {
-            display: inline-block;
+        .check-email-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
             margin-top: 1.5rem;
+        }
+
+        .back-btn,
+        .login-btn {
+            display: inline-block;
             padding: 0.875rem 1.5rem;
-            background: linear-gradient(135deg, #44a53e 0%, #5cb854 100%);
-            color: white;
             text-decoration: none;
             border-radius: 12px;
             font-weight: 600;
             transition: box-shadow 0.3s;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #44a53e 0%, #5cb854 100%);
+            color: white;
             box-shadow: 0 8px 24px rgba(68, 165, 62, 0.25);
         }
 
         .back-btn:hover {
             box-shadow: 0 12px 32px rgba(68, 165, 62, 0.35);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
+            color: white;
+            box-shadow: 0 8px 24px rgba(4, 80, 168, 0.25);
+        }
+
+        .login-btn:hover {
+            box-shadow: 0 12px 32px rgba(4, 80, 168, 0.35);
         }
 
         @media (max-width: 1024px) {
@@ -334,13 +356,14 @@
                     <span class="resend-timer" id="resendTimer">(1:00)</span>
                 </div>
 
-                <center>
+                <div class="check-email-actions">
                     @if($barangay)
                         <a href="{{ route('kkprofiling.show', ['barangay' => $barangay]) }}" class="back-btn" onclick="handleBackClick(event)">Back to KK Profiling</a>
                     @else
                         <a href="{{ route('kkprofiling.signup') }}" class="back-btn" onclick="handleBackClick(event)">Back to KK Profiling</a>
                     @endif
-                </center>
+                    <a href="{{ route('login') }}" class="login-btn" onclick="handleBackClick(event)">Go to Login</a>
+                </div>
             </div>
         </div>
     </main>

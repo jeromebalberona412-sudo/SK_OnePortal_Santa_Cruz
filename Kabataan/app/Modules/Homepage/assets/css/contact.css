@@ -16,7 +16,12 @@
 }
 
 .kabataan-contact-intro-line {
-    display: none;
+    display: block;
+    width: 56px;
+    height: 4px;
+    margin: 14px auto 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #0450a8, #20b486);
 }
 
 @media (max-width: 640px) {

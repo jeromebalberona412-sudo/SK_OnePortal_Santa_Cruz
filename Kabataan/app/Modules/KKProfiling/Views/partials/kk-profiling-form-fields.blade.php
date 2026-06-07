@@ -212,7 +212,7 @@
 
                                     <label class="kkp-inline-label">Age: <span class="kkp-required">*</span></label>
 
-                                    <input type="number" name="age" id="kkpAge" min="15" max="30" class="kkp-uline kkp-uline-short" placeholder=" " required>
+                                    <input type="text" name="age" id="kkpAge" inputmode="numeric" pattern="[0-9]*" maxlength="2" class="kkp-uline kkp-uline-short" placeholder=" " required aria-describedby="kkpAgeHint">
 
                                 </div>
 
@@ -224,6 +224,7 @@
 
                                 </div>
 
+                                <span class="kkp-hint" id="kkpAgeHint" style="display:block;text-align:center;margin-top:2px;">Age: 15–30 years old only</span>
                                 <span class="kkp-hint" style="display:block;text-align:center;margin-top:2px;">(mm/dd/yyyy)</span>
 
                             </div>

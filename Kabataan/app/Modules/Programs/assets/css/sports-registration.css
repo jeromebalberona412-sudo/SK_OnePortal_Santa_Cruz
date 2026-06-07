@@ -19,6 +19,32 @@
 .sr-req { color: var(--sr-accent); }
 
 /* Sticky header */
+.sr-back-link {
+    max-width: 920px;
+    margin: 0 auto 12px;
+    padding: 0 16px;
+}
+
+.sr-back-link a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #0d47a1;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sr-back-link a:hover {
+    background: #0d47a1;
+    color: #fff;
+}
+
 .sr-main {
     max-width: 820px;
     margin: 0 auto;

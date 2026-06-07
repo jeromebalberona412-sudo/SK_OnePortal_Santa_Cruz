@@ -23,7 +23,7 @@ export default defineConfig({
                 'app/Modules/Layout/assets/css/kabataan-logout.css',
                 'app/Modules/Layout/assets/js/kabataan-header.js',
                 'app/Modules/Layout/assets/js/kabataan-logout.js',
-                'app/Modules/Layout/assets/css/kabataan-footer.css',
+                'app/Modules/Homepage/assets/css/kabataan-footer.css',
 
                 // Dashboard
                 'app/Modules/Dashboard/assets/css/dashboard.css',
@@ -36,6 +36,8 @@ export default defineConfig({
                 // Programs
                 'app/Modules/Programs/assets/css/scholarship_landing.css',
                 'app/Modules/Programs/assets/js/scholarship_landing.js',
+                'app/Modules/Programs/assets/css/sports_landing.css',
+                'app/Modules/Programs/assets/js/sports_landing.js',
                 'app/Modules/Programs/assets/css/scholarship_application.css',
                 'app/Modules/Programs/assets/css/scholarship_requirements.css',
                 'app/Modules/Programs/assets/js/scholarship_application.js',
@@ -70,6 +72,8 @@ export default defineConfig({
                 // KK Profiling
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling.js',
+                'app/Modules/KKProfiling/assets/css/kkprofiling-signup.css',
+                'app/Modules/KKProfiling/assets/js/kkprofiling-signup.js',
                 'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
                 'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
 

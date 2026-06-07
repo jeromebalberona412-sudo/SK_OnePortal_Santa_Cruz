@@ -27,6 +27,12 @@
     @include('layout::kabataan-header', ['showSearch' => true])
 
     <main class="sr-main">
+        <div class="sr-back-link">
+            <a href="{{ route('sports.apply') }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                <span>Back</span>
+            </a>
+        </div>
         @include('programs::sports.partials.header-banner')
         @include('programs::sports.partials.form-progress')
 

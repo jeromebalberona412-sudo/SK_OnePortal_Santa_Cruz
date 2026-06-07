@@ -34,9 +34,8 @@ class KKProfilingController extends Controller
     {
         $today = now()->toDateString();
 
-        // All schedules within date range (any status)
+        // Include active and upcoming schedules (not yet expired)
         $rows = DB::table('kk_profiling_schedules')
-            ->where('date_start', '<=', $today)
             ->where('date_expiry', '>=', $today)
             ->get(['barangay_id', 'status', 'date_start', 'date_expiry']);
 
@@ -51,12 +50,19 @@ class KKProfilingController extends Controller
             }
         }
 
-        $result = array_values(array_map(fn($row) => [
-            'barangay_id' => $row->barangay_id,
-            'status'      => $row->status,
-            'date_start'  => $row->date_start,
-            'date_expiry' => $row->date_expiry,
-        ], $map));
+        $result = array_values(array_map(function ($row) use ($today) {
+            $isOpen = $row->status === 'Ongoing'
+                && $row->date_start <= $today
+                && $row->date_expiry >= $today;
+
+            return [
+                'barangay_id'  => $row->barangay_id,
+                'status'       => $row->status,
+                'date_start'   => $row->date_start,
+                'date_expiry'  => $row->date_expiry,
+                'is_open'      => $isOpen,
+            ];
+        }, $map));
 
         return response()->json(['schedules' => $result]);
     }

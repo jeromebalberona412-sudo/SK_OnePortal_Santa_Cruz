@@ -14,7 +14,7 @@
         'app/Modules/Shared/assets/js/loading.js',
     ])
 </head>
-<body class="homepage-body">
+<body class="homepage-body kkp-form-page">
 
     @include('dashboard::loading')
 
