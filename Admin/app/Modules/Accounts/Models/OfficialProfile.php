@@ -75,6 +75,7 @@ class OfficialProfile extends Model
         'last_name',
         'middle_name',
         'suffix',
+        'sex',
         'date_of_birth',
         'age',
         'contact_number',

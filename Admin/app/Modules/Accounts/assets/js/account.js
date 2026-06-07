@@ -790,7 +790,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function populateEditForm(form, data) {
         if (!form) return;
         form.dataset.accountId = data.accountId || '';
-        ['first_name', 'last_name', 'middle_name', 'suffix', 'date_of_birth', 'age', 'contact_number', 'email', 'position', 'barangay_id', 'status', 'term_start', 'term_end', 'term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
+        ['first_name', 'last_name', 'middle_name', 'suffix', 'sex', 'date_of_birth', 'age', 'contact_number', 'email', 'position', 'barangay_id', 'status', 'term_start', 'term_end', 'term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
         clearAllErrors(form);
     }
 
@@ -821,13 +821,18 @@ document.addEventListener('DOMContentLoaded', function () {
     function openViewWithData(btn) {
         const d = btn.dataset;
         const isOfficials = getCurrentAccountType() === 'sk_officials';
-        const fullName = [d.firstName, d.middleName, d.lastName, d.suffix].filter(v => v && v.trim()).join(' ');
+        const fullName = [d.firstName, d.middleName, d.lastName]
+            .filter(v => v && v.trim())
+            .map(v => v.trim().toUpperCase())
+            .concat(d.suffix && d.suffix.trim() ? [d.suffix.trim()] : [])
+            .join(' ');
 
         const leftSections = [];
         const rightSections = [];
 
         leftSections.push(viewSection('Personal Information', [
             ['Full Name', fullName],
+            ['Sex', d.sex],
             ['Email Address', d.email],
             ['Date of Birth', d.dateOfBirth ? formatDate(d.dateOfBirth) : ''],
             ['Age', d.age],

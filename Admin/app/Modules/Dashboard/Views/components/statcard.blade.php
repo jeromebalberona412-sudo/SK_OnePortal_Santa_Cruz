@@ -1,9 +1,14 @@
 @php
-    $cardContent = function() use ($tone, $metricKey, $icon, $label) {
+    $metricValue = $value ?? null;
+    $cardContent = function () use ($tone, $metricKey, $icon, $label, $metricValue) {
         ob_start();
 @endphp
     <div class="stat-card-top">
-        <span class="stat-card-value" x-text="dashboardMetrics.{{ $metricKey }}.value">0</span>
+        @if($metricValue !== null)
+            <span class="stat-card-value">{{ number_format($metricValue) }}</span>
+        @else
+            <span class="stat-card-value" x-text="dashboardMetrics.{{ $metricKey }}.value">0</span>
+        @endif
         <div class="stat-card-icon stat-icon-{{ $tone }}">
             @switch($icon ?? '')
                 @case('users')
@@ -86,10 +91,6 @@
         </div>
     </div>
     <span class="stat-card-label">{{ $label }}</span>
-    <div class="stat-card-meta">
-        <span class="stat-card-status" x-text="dashboardMetrics.{{ $metricKey }}.status">System Stable</span>
-        <span class="stat-card-delta" x-text="dashboardMetrics.{{ $metricKey }}.delta">+2.7%</span>
-    </div>
 @php
         return ob_get_clean();
     };

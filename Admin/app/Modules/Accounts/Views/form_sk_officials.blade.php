@@ -329,6 +329,19 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group-modern">
+                                <label for="edit_sk_officials_sex" class="form-label-modern required">Sex</label>
+                                <select id="edit_sk_officials_sex" name="sex" class="form-input-modern" required>
+                                    <option value="">Select Sex</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                                <span class="form-error"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-modern">
                                 <label for="edit_sk_officials_email" class="form-label-modern required">Email Address</label>
                                 <input type="email" id="edit_sk_officials_email" name="email" class="form-input-modern" required>
                                 <span class="form-error"></span>

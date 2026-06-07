@@ -13,10 +13,10 @@
 
 @php
 	$topRowCards = [
-		['label' => 'Total Users', 'metricKey' => 'totalUsers', 'tone' => 'azure', 'icon' => 'users', 'route' => null],
-		['label' => 'Federation Accounts Count', 'metricKey' => 'federationAccounts', 'tone' => 'teal', 'icon' => 'federation', 'route' => 'accounts.federation.index'],
-		['label' => 'Official Accounts Count', 'metricKey' => 'officialAccounts', 'tone' => 'violet', 'icon' => 'officials', 'route' => 'accounts.officials.index'],
-		['label' => 'Kabataan Accounts Count', 'metricKey' => 'kabataanAccounts', 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => 'manage-kabataan.index'],
+		['label' => 'Total Users', 'metricKey' => 'totalUsers', 'value' => $accountMetrics['totalUsers'], 'tone' => 'azure', 'icon' => 'users', 'route' => null],
+		['label' => 'Total SK Federations', 'metricKey' => 'federationAccounts', 'value' => $accountMetrics['federationAccounts'], 'tone' => 'teal', 'icon' => 'federation', 'route' => 'accounts.federation.index'],
+		['label' => 'Total SK Officials', 'metricKey' => 'officialAccounts', 'value' => $accountMetrics['officialAccounts'], 'tone' => 'violet', 'icon' => 'officials', 'route' => 'accounts.officials.index'],
+		['label' => 'Total Kabataan', 'metricKey' => 'kabataanAccounts', 'value' => $accountMetrics['kabataanAccounts'], 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => 'manage-kabataan.index'],
 	];
 
 	$bottomRowCards = [
@@ -29,12 +29,12 @@
 
 <div id="mainContent" class="gov-dashboard dashboard-shell container-fluid" x-data="dashboardConsole()" aria-label="Dashboard content">
 	<!-- ══ Page Header ══════════════════════════════════════ -->
-	<div class="dash-page-header row">
-		<div class="dash-page-header-left col-md-6">
+	<div class="dash-page-header">
+		<div class="dash-page-header-left">
 			<h1 class="dash-page-title">Dashboard</h1>
 			<p class="dash-page-welcome">Welcome back Admin</p>
 		</div>
-		<div class="dash-header-filters col-md-6">
+		<div class="dash-header-filters">
 			<div class="dash-year-filter">
 				<label for="yearSelect" class="dash-year-label">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -91,7 +91,7 @@
 				<h2 class="dash-section-title">Quick Actions</h2>
 			</div>
 		</div>
-		<div class="quick-actions-grid" aria-label="Quick actions">
+		<div class="quick-actions-scroll" aria-label="Quick actions">
 			<a href="{{ route('profile') }}" class="qa-btn qa-blue">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<circle cx="12" cy="7" r="4"></circle>
@@ -167,8 +167,9 @@
 		</div>
 	</div>
 
-	<section class="dash-panels-grid" aria-label="Analytics panels">
+	<section class="distribution-analytics-grid" aria-label="Analytics panels">
 		@include('dashboard::components.piechart')
+		@include('dashboard::components.kkprofilingchart')
 	</section>
 
 	<section class="dash-panels-grid" aria-label="Operations panels">

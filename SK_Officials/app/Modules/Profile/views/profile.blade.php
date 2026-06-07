@@ -61,19 +61,19 @@
                         <div class="profile-field-row" style="margin-bottom: 14px;">
                             <div class="profile-field">
                                 <label>First Name</label>
-                                <p>Jerome</p>
+                                <p>{{ $profile['first_name'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label>Middle Name</label>
-                                <p>Sanico</p>
+                                <p>{{ $profile['middle_name'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label>Last Name</label>
-                                <p>Balberona</p>
+                                <p>{{ $profile['last_name'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label>Suffix</label>
-                                <p>None</p>
+                                <p>{{ $profile['suffix'] }}</p>
                             </div>
                         </div>
 
@@ -81,19 +81,19 @@
                         <div class="profile-field-row">
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-venus-mars"></i> Sex</label>
-                                <p>Female</p>
+                                <p>{{ $profile['sex'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-calendar-day"></i> Birthdate</label>
-                                <p>April 2, 2005</p>
+                                <p>{{ $profile['birthdate'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-mobile-screen"></i> Contact Number</label>
-                                <p>09169064515</p>
+                                <p>{{ $profile['contact_number'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-briefcase"></i> Position</label>
-                                <p>SK Chairman</p>
+                                <p>{{ $profile['position'] }}</p>
                             </div>
                         </div>
                     </div>
@@ -106,19 +106,19 @@
                         <div class="profile-field-row">
                             <div class="profile-field">
                                 <label>Region</label>
-                                <p>CALABARZON</p>
+                                <p>{{ $profile['region'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label>Province</label>
-                                <p>Laguna</p>
+                                <p>{{ $profile['province'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label>Municipality</label>
-                                <p>Santa Cruz</p>
+                                <p>{{ $profile['municipality'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label>Barangay</label>
-                                <p>Calios</p>
+                                <p>{{ $profile['barangay'] }}</p>
                             </div>
                         </div>
                     </div>
@@ -131,15 +131,15 @@
                         <div class="profile-field-row">
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-calendar-check"></i> Term Start</label>
-                                <p>February 28, 2026</p>
+                                <p>{{ $profile['term_start'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-calendar-xmark"></i> Term End</label>
-                                <p>January 7, 2030</p>
+                                <p>{{ $profile['term_end'] }}</p>
                             </div>
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-clipboard-list"></i> Committee</label>
-                                <p>Sports</p>
+                                <p>{{ $profile['committee'] }}</p>
                             </div>
                         </div>
                     </div>
@@ -152,7 +152,7 @@
                         <div class="profile-field-row">
                             <div class="profile-field">
                                 <label><i class="fa-solid fa-envelope"></i> Email</label>
-                                <p>example@gmail.com</p>
+                                <p>{{ $profile['email'] }}</p>
                             </div>
                         </div>
                     </div>
@@ -182,7 +182,7 @@
                         </div>
                         <div>
                             <div class="account-settings-label">Email Address</div>
-                            <div class="account-settings-desc">Change your account email address via verification link.</div>
+                            <div class="account-settings-desc">{{ $profile['email'] }}</div>
                         </div>
                     </div>
                     <a href="{{ route('change-email') }}" class="account-settings-btn">

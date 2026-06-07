@@ -2,6 +2,36 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeCommitteesUI();
 });
 
+const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+async function apiFetch(url, options = {}) {
+    const { headers: extraHeaders, body, ...rest } = options;
+    const headers = {
+        'X-CSRF-TOKEN': csrfToken(),
+        'Accept': 'application/json',
+        ...extraHeaders,
+    };
+
+    if (body && !(body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
+
+    const res = await fetch(url, {
+        ...rest,
+        headers,
+        body: body && !(body instanceof FormData) ? JSON.stringify(body) : body,
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+        const message = data.message || Object.values(data.errors || {}).flat()[0] || 'Request failed.';
+        throw new Error(message);
+    }
+
+    return data;
+}
+
 function initializeCommitteesUI() {
     const grid = document.getElementById('committeeGrid');
     const searchInput = document.getElementById('committeeSearch');
@@ -15,21 +45,16 @@ function initializeCommitteesUI() {
     const otherCommitteeField = document.getElementById('otherCommitteeField');
     const otherCommitteeInput = document.getElementById('otherCommitteeInput');
     const headInput = document.getElementById('committeeHeadInput');
-    const dateInput = document.getElementById('committeeDateInput');
     const descInput = document.getElementById('committeeDescriptionInput');
     const saveBtn = document.getElementById('committeeSaveBtn');
     const viewModal = document.getElementById('committeeViewModal');
-    const viewCommitteeHead = document.getElementById('viewCommitteeHead');
 
-    // Toast notification function (like calendar module)
     function showToast(message, type = 'success') {
-        // Remove existing toast if any
         const existingToast = document.querySelector('.committee-toast');
         if (existingToast) {
             existingToast.remove();
         }
 
-        // Create toast element
         const toast = document.createElement('div');
         toast.className = `committee-toast committee-toast-${type}`;
         toast.innerHTML = `
@@ -39,15 +64,12 @@ function initializeCommitteesUI() {
             <div class="committee-toast-message">${message}</div>
         `;
 
-        // Add to body
         document.body.appendChild(toast);
 
-        // Trigger animation
         setTimeout(() => {
             toast.classList.add('committee-toast-show');
         }, 10);
 
-        // Remove after 3 seconds
         setTimeout(() => {
             toast.classList.remove('committee-toast-show');
             setTimeout(() => {
@@ -56,7 +78,6 @@ function initializeCommitteesUI() {
         }, 3000);
     }
 
-    // Modal maximize/minimize (restore) controls
     function resetModalMaximize(backdropEl) {
         if (!backdropEl) return;
         backdropEl.classList.remove('modal-maximized');
@@ -83,32 +104,20 @@ function initializeCommitteesUI() {
 
     if (!grid) return;
 
-    // Start with empty list; entries appear only after "Add Committee"
-    const committees = [];
-    let editingIndex = -1;
+    let committees = [];
+    let skOfficials = [];
+    let editingId = null;
 
     let currentQuery = '';
     let currentNameFilter = '';
     let currentHeadFilter = '';
-    const officialMembers = [
-        'Paula A Talais',
-        'Jerome Balberona',
-        'Gabriel Garcia',
-        'Frankien Belangoy',
-        'Juan Dela Cruz',
-        'Jane Doe',
-        'Mark Anthony Reyes',
-        'Maria Clara Santos',
-        'Robert James Tan',
-    ];
 
     function populateDropdowns() {
-        const assignedHeads = committees.map(c => c.head);
-        const assignedCommittees = committees.map(c => c.name);
+        const assignedHeadIds = committees.map((c) => String(c.head_id));
+        const assignedCommittees = committees.map((c) => c.name);
 
-        // Populate Committee Name filter
         if (nameFilter) {
-            const uniqueNames = [...new Set(committees.map(c => c.name))].sort();
+            const uniqueNames = [...new Set(committees.map((c) => c.name))].sort();
             nameFilter.innerHTML = '<option value="">All Committees</option>';
             uniqueNames.forEach((name) => {
                 const option = document.createElement('option');
@@ -118,10 +127,9 @@ function initializeCommitteesUI() {
             });
         }
 
-        // Populate Assigned To (Head) filter
         if (headFilter) {
-            const uniqueHeads = [...new Set(committees.map(c => c.head))].sort();
-            headFilter.innerHTML = '<option value="">All Members</option>';
+            const uniqueHeads = [...new Set(committees.map((c) => c.head))].sort();
+            headFilter.innerHTML = '<option value="">All Committee Heads</option>';
             uniqueHeads.forEach((head) => {
                 const option = document.createElement('option');
                 option.value = head;
@@ -130,30 +138,26 @@ function initializeCommitteesUI() {
             });
         }
 
-        // Populate committee head input dropdown
         if (headInput) {
+            const currentValue = headInput.value;
             headInput.innerHTML = '<option value="">Select Committee Head</option>';
-            officialMembers.forEach((name) => {
-                // Skip if this person is already assigned to a committee (except when editing)
-                const isAssigned = assignedHeads.includes(name) &&
-                    !(editingIndex >= 0 && committees[editingIndex]?.head === name);
+            skOfficials.forEach((official) => {
+                const isAssigned = assignedHeadIds.includes(String(official.id)) &&
+                    !(editingId !== null && committees.find((c) => c.id === editingId)?.head_id === official.id);
 
                 if (!isAssigned) {
                     const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
+                    option.value = String(official.id);
+                    option.textContent = official.full_name;
                     headInput.appendChild(option);
                 }
             });
-            
-            // Re-enable instruction option (will be disabled on focus)
-            const instructionOption = headInput.querySelector('option[value=""]');
-            if (instructionOption) {
-                instructionOption.disabled = false;
+
+            if (currentValue) {
+                headInput.value = currentValue;
             }
         }
 
-        // Populate committee name dropdown with available committees
         if (nameInput) {
             const currentValue = nameInput.value;
             nameInput.innerHTML = '<option value="">Select Committee</option>';
@@ -172,9 +176,8 @@ function initializeCommitteesUI() {
             ];
 
             standardCommittees.forEach((committee) => {
-                // Skip if this committee is already assigned (except when editing the same committee)
                 const isAssigned = assignedCommittees.includes(committee) &&
-                    !(editingIndex >= 0 && committees[editingIndex]?.name === committee);
+                    !(editingId !== null && committees.find((c) => c.id === editingId)?.name === committee);
 
                 if (!isAssigned) {
                     const option = document.createElement('option');
@@ -184,21 +187,13 @@ function initializeCommitteesUI() {
                 }
             });
 
-            // Always add "Other" option
             const otherOption = document.createElement('option');
             otherOption.value = 'Other';
             otherOption.textContent = 'Other';
             nameInput.appendChild(otherOption);
 
-            // Restore previous selection if it still exists
             if (currentValue) {
                 nameInput.value = currentValue;
-            }
-            
-            // Re-enable instruction option (will be disabled on focus)
-            const instructionOption = nameInput.querySelector('option[value=""]');
-            if (instructionOption) {
-                instructionOption.disabled = false;
             }
         }
     }
@@ -213,13 +208,8 @@ function initializeCommitteesUI() {
                 c.head.toLowerCase().includes(currentQuery) ||
                 (c.description && c.description.toLowerCase().includes(currentQuery));
 
-            const matchesName =
-                !currentNameFilter ||
-                c.name === currentNameFilter;
-
-            const matchesHead =
-                !currentHeadFilter ||
-                c.head === currentHeadFilter;
+            const matchesName = !currentNameFilter || c.name === currentNameFilter;
+            const matchesHead = !currentHeadFilter || c.head === currentHeadFilter;
 
             return matchesSearch && matchesName && matchesHead;
         });
@@ -232,14 +222,11 @@ function initializeCommitteesUI() {
         }
 
         filtered.forEach((c) => {
-            const sourceIndex = committees.indexOf(c);
             const row = document.createElement('tr');
-
-            // Format description HTML (simplified for table display)
             const descriptionHtml = `
                 <div class="committee-description">
                     <div class="committee-description-item">
-                        <span class="committee-description-value">${c.description || c.purpose || 'N/A'}</span>
+                        <span class="committee-description-value">${c.description || 'N/A'}</span>
                     </div>
                 </div>
             `;
@@ -247,13 +234,13 @@ function initializeCommitteesUI() {
             row.innerHTML = `
                 <td>${c.name}</td>
                 <td>${c.head}</td>
-                <td>${c.assignedDate || '—'}</td>
-                <td>${c.assignedTime || '—'}</td>
+                <td>${c.assigned_date || '—'}</td>
+                <td>${c.assigned_time || '—'}</td>
                 <td>${descriptionHtml}</td>
                 <td>
                     <div class="committee-actions">
-                        <button type="button" class="btn-action-view" data-action="view" data-index="${sourceIndex}">View</button>
-                        <button type="button" class="btn-action-edit" data-action="edit" data-index="${sourceIndex}">Edit</button>
+                        <button type="button" class="btn-action-view" data-action="view" data-id="${c.id}">View</button>
+                        <button type="button" class="btn-action-edit" data-action="edit" data-id="${c.id}">Edit</button>
                     </div>
                 </td>
             `;
@@ -261,10 +248,30 @@ function initializeCommitteesUI() {
         });
     }
 
+    async function loadCommittees() {
+        const response = await apiFetch('/api/committees');
+        committees = response.data || [];
+        populateDropdowns();
+        render();
+    }
+
+    async function loadSkOfficials() {
+        const response = await apiFetch('/api/committees/sk-officials');
+        skOfficials = response.data || [];
+        populateDropdowns();
+    }
+
+    async function initializeData() {
+        try {
+            await Promise.all([loadSkOfficials(), loadCommittees()]);
+        } catch (error) {
+            showToast(error.message || 'Failed to load committees.', 'error');
+        }
+    }
+
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             currentQuery = searchInput.value.trim().toLowerCase();
-            // Sync with mobile search
             if (searchInputMobile) {
                 searchInputMobile.value = searchInput.value;
             }
@@ -275,7 +282,6 @@ function initializeCommitteesUI() {
     if (searchInputMobile) {
         searchInputMobile.addEventListener('input', () => {
             currentQuery = searchInputMobile.value.trim().toLowerCase();
-            // Sync with desktop search
             if (searchInput) {
                 searchInput.value = searchInputMobile.value;
             }
@@ -297,16 +303,14 @@ function initializeCommitteesUI() {
         });
     }
 
-    // Committee dropdown change event
     if (nameInput) {
-        // Disable instruction option when dropdown is opened/focused
         nameInput.addEventListener('focus', () => {
             const instructionOption = nameInput.querySelector('option[value=""]');
             if (instructionOption) {
                 instructionOption.disabled = true;
             }
         });
-        
+
         nameInput.addEventListener('change', () => {
             if (otherCommitteeField && otherCommitteeInput) {
                 if (nameInput.value === 'Other') {
@@ -319,7 +323,6 @@ function initializeCommitteesUI() {
         });
     }
 
-    // Committee head dropdown - disable instruction option when opened
     if (headInput) {
         headInput.addEventListener('focus', () => {
             const instructionOption = headInput.querySelector('option[value=""]');
@@ -329,7 +332,6 @@ function initializeCommitteesUI() {
         });
     }
 
-    // Character counter for description
     if (descInput) {
         const charCount = document.getElementById('descCharCount');
         descInput.addEventListener('input', () => {
@@ -341,20 +343,19 @@ function initializeCommitteesUI() {
 
     function openModal() {
         if (!modal) return;
-        populateDropdowns(); // Refresh dropdown to show available committee heads and committees
+        populateDropdowns();
         modal.style.display = 'flex';
         resetModalMaximize(modal);
-        editingIndex = -1;
+        editingId = null;
         if (saveBtn) saveBtn.textContent = 'Save';
         if (nameInput) {
             nameInput.focus();
-            nameInput.disabled = false; // Ensure enabled when opening
+            nameInput.disabled = false;
         }
         if (headInput) {
-            headInput.disabled = false; // Ensure enabled when opening
+            headInput.disabled = false;
         }
-        
-        // Reset character counter
+
         const charCount = document.getElementById('descCharCount');
         if (charCount) charCount.textContent = '0';
     }
@@ -365,19 +366,19 @@ function initializeCommitteesUI() {
         resetModalMaximize(modal);
         if (nameInput) {
             nameInput.value = '';
-            nameInput.disabled = false; // Re-enable when closing
+            nameInput.disabled = false;
         }
         if (otherCommitteeInput) otherCommitteeInput.value = '';
         if (otherCommitteeField) otherCommitteeField.style.display = 'none';
         if (headInput) {
             headInput.value = '';
-            headInput.disabled = false; // Re-enable when closing
+            headInput.disabled = false;
         }
         if (descInput) descInput.value = '';
-        
-        // Reset character counter
+
         const charCount = document.getElementById('descCharCount');
         if (charCount) charCount.textContent = '0';
+        editingId = null;
     }
 
     if (addBtn) {
@@ -388,7 +389,6 @@ function initializeCommitteesUI() {
         addBtnMobile.addEventListener('click', openModal);
     }
 
-
     if (modal) {
         modal.addEventListener('click', (e) => {
             if (e.target === modal || e.target.hasAttribute('data-modal-close') || e.target.hasAttribute('data-modal-cancel')) {
@@ -396,22 +396,23 @@ function initializeCommitteesUI() {
             }
         });
     }
+
     if (grid) {
         grid.addEventListener('click', (e) => {
             const target = e.target;
             if (!(target instanceof HTMLElement)) return;
             const action = target.getAttribute('data-action');
             if (action !== 'view' && action !== 'edit') return;
-            const index = Number(target.getAttribute('data-index'));
-            if (Number.isNaN(index) || !committees[index]) return;
-            const committee = committees[index];
+
+            const committeeId = Number(target.getAttribute('data-id'));
+            const committee = committees.find((c) => c.id === committeeId);
+            if (!committee) return;
 
             if (action === 'view') {
                 const viewName = document.getElementById('viewCommitteeName');
                 const viewNameInfo = document.getElementById('viewCommitteeNameInfo');
                 const viewHead = document.getElementById('viewCommitteeHead');
                 const viewStatus = document.getElementById('viewCommitteeStatus');
-                const viewStatusText = document.getElementById('viewCommitteeStatusText');
                 const viewDate = document.getElementById('viewCommitteeDateAssigned');
                 const viewDateCreated = document.getElementById('viewCommitteeDateCreated');
                 const viewDesc = document.getElementById('viewCommitteeDescription');
@@ -421,11 +422,12 @@ function initializeCommitteesUI() {
                 if (viewNameInfo) viewNameInfo.textContent = committee.name || '—';
                 if (viewHead) viewHead.textContent = committee.head || '—';
                 if (viewStatus) viewStatus.textContent = committee.status || 'Active';
-                if (viewStatusText) viewStatusText.textContent = committee.status || 'Active';
-                if (viewDate) viewDate.textContent = committee.assignedDate || committee.dateCreated || '—';
-                if (viewDateCreated) viewDateCreated.textContent = committee.dateCreated ? 'Assigned ' + committee.dateCreated : '';
-                if (viewDesc) viewDesc.textContent = committee.description || committee.purpose || '—';
-                if (viewResp) viewResp.textContent = committee.responsibilities || '—';
+                if (viewDate) viewDate.textContent = committee.assigned_date || '—';
+                if (viewDateCreated) {
+                    viewDateCreated.textContent = committee.assigned_date ? `Assigned ${committee.assigned_date}` : '';
+                }
+                if (viewDesc) viewDesc.textContent = committee.description || '—';
+                if (viewResp) viewResp.textContent = committee.description || '—';
 
                 if (viewModal) {
                     resetModalMaximize(viewModal);
@@ -434,25 +436,31 @@ function initializeCommitteesUI() {
                 return;
             }
 
-            editingIndex = index;
+            editingId = committee.id;
             if (nameInput) {
-                nameInput.value = committee.name;
-                nameInput.disabled = false; // Enable for editing
+                const standardValues = Array.from(nameInput.options).map((o) => o.value);
+                if (standardValues.includes(committee.name)) {
+                    nameInput.value = committee.name;
+                } else {
+                    nameInput.value = 'Other';
+                    if (otherCommitteeField) otherCommitteeField.style.display = 'block';
+                    if (otherCommitteeInput) otherCommitteeInput.value = committee.name;
+                }
+                nameInput.disabled = false;
             }
             if (headInput) {
-                headInput.value = committee.head;
-                headInput.disabled = false; // Enable for editing
+                headInput.value = String(committee.head_id);
+                headInput.disabled = false;
             }
             if (descInput) {
-                descInput.value = committee.description || committee.purpose || '';
-                // Update character counter
+                descInput.value = committee.description || '';
                 const charCount = document.getElementById('descCharCount');
                 if (charCount) {
                     charCount.textContent = descInput.value.length;
                 }
             }
             if (saveBtn) saveBtn.textContent = 'Update';
-            populateDropdowns(); // Refresh dropdown when editing
+            populateDropdowns();
             if (modal) {
                 resetModalMaximize(modal);
                 modal.style.display = 'flex';
@@ -470,13 +478,12 @@ function initializeCommitteesUI() {
     }
 
     if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
+        saveBtn.addEventListener('click', async () => {
             let name = (nameInput?.value || '').trim();
             const otherCommittee = (otherCommitteeInput?.value || '').trim();
-            const head = (headInput?.value || '').trim();
+            const headId = Number(headInput?.value || 0);
             const desc = (descInput?.value || '').trim();
 
-            // Handle Other committee option
             if (name === 'Other' && otherCommittee) {
                 name = otherCommittee;
             } else if (name === 'Other') {
@@ -484,80 +491,47 @@ function initializeCommitteesUI() {
                 return;
             }
 
-            if (!name || !head) {
-                alert('Please select a committee and assign it to someone.');
-                return;
-            }
-
-            // Check if the committee head is already assigned to another committee
-            const isDuplicateHead = committees.some((c, index) =>
-                c.head === head && index !== editingIndex
-            );
-
-            if (isDuplicateHead) {
-                alert(`${head} is already assigned to a committee. Please select someone else.`);
-                return;
-            }
-
-            // Check if the committee name is already assigned to another committee
-            const isDuplicateCommittee = committees.some((c, index) =>
-                c.name === name && index !== editingIndex
-            );
-
-            if (isDuplicateCommittee) {
-                alert(`${name} is already assigned. Please select a different committee.`);
+            if (!name || !headId) {
+                alert('Please select a committee and assign a committee head.');
                 return;
             }
 
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
 
-            // Simulated AJAX
-            setTimeout(() => {
-                // Get current date and time
-                const now = new Date();
-                const assignedDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                const assignedTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                
-                const payload = {
-                    name,
-                    head,
-                    description: desc || 'To serve the youth and community through dedicated programs and initiatives.',
-                    // Additional fields for completeness
-                    purpose: desc || 'To serve the youth and community through dedicated programs and initiatives.',
-                    responsibilities: 'Organize activities, coordinate with members, and report progress to SK council.',
-                    dateCreated: assignedDate,
-                    assignedDate: assignedDate,
-                    assignedTime: assignedTime,
-                    status: 'Active' // Default status
-                };
-                if (editingIndex >= 0 && committees[editingIndex]) {
-                    // Preserve existing description fields and timestamps when editing
-                    committees[editingIndex] = {
-                        ...committees[editingIndex],
-                        ...payload,
-                        // Keep original assignment date/time when editing
-                        assignedDate: committees[editingIndex].assignedDate || assignedDate,
-                        assignedTime: committees[editingIndex].assignedTime || assignedTime
-                    };
+            const payload = {
+                committee_name: name,
+                committee_head_id: headId,
+                description: desc,
+            };
+
+            try {
+                if (editingId !== null) {
+                    await apiFetch(`/api/committees/${editingId}`, {
+                        method: 'PUT',
+                        body: payload,
+                    });
+                    showToast('Update successful.');
                 } else {
-                    committees.push(payload);
+                    await apiFetch('/api/committees', {
+                        method: 'POST',
+                        body: payload,
+                    });
+                    showToast('Assignment successful.');
                 }
 
                 closeModal();
-                render();
-                populateDropdowns(); // Refresh dropdowns after saving
+                await loadCommittees();
+            } catch (error) {
+                alert(error.message || 'Failed to save committee.');
+            } finally {
                 saveBtn.disabled = false;
-                saveBtn.textContent = 'Save';
-                showToast(editingIndex >= 0 ? 'Update successful.' : 'Assignment successful.');
-                editingIndex = -1;
-            }, 500);
+                saveBtn.textContent = editingId !== null ? 'Update' : 'Save';
+            }
         });
-
     }
 
-    populateDropdowns();
-    render();
+    initializeData();
     wireModalToggle(modal);
     wireModalToggle(viewModal);
 }

@@ -83,12 +83,14 @@
                             @php
                                 $profile = $account->officialProfile;
                                 $term = $profile?->latestTerm;
+                                $firstName = $profile?->first_name ? mb_strtoupper($profile->first_name, 'UTF-8') : null;
+                                $lastName = $profile?->last_name ? mb_strtoupper($profile->last_name, 'UTF-8') : null;
                                 $middleName = trim((string) ($profile?->middle_name ?? ''));
-                                $middleInitial = $middleName !== '' ? strtoupper(substr($middleName, 0, 1)).'.' : null;
+                                $middleInitial = $middleName !== '' ? mb_strtoupper(mb_substr($middleName, 0, 1, 'UTF-8'), 'UTF-8').'.' : null;
                                 $fullName = trim(collect([
-                                    $profile?->first_name,
+                                    $firstName,
                                     $middleInitial,
-                                    $profile?->last_name,
+                                    $lastName,
                                     $profile?->suffix,
                                 ])->filter()->implode(' '));
                                 $displayName = $fullName !== '' ? $fullName : ($account->name ?? 'N/A');
@@ -108,10 +110,11 @@
                                             type="button"
                                             class="btn-view-modern btn-view-account"
                                             data-account-id="{{ $account->id }}"
-                                            data-first-name="{{ $profile?->first_name ?? '' }}"
-                                            data-last-name="{{ $profile?->last_name ?? '' }}"
-                                            data-middle-name="{{ $profile?->middle_name ?? '' }}"
+                                            data-first-name="{{ $firstName ?? '' }}"
+                                            data-last-name="{{ $lastName ?? '' }}"
+                                            data-middle-name="{{ $middleName !== '' ? mb_strtoupper($middleName, 'UTF-8') : '' }}"
                                             data-suffix="{{ $profile?->suffix ?? '' }}"
+                                            data-sex="{{ $profile?->sex ?? '' }}"
                                             data-date-of-birth="{{ $profile?->date_of_birth?->toDateString() ?? '' }}"
                                             data-age="{{ $profile?->age ?? '' }}"
                                             data-contact-number="{{ $profile?->contact_number ?? '' }}"
@@ -132,10 +135,11 @@
                                             type="button"
                                             class="btn-edit-modern btn-edit-account"
                                             data-account-id="{{ $account->id }}"
-                                            data-first-name="{{ $profile?->first_name ?? '' }}"
-                                            data-last-name="{{ $profile?->last_name ?? '' }}"
-                                            data-middle-name="{{ $profile?->middle_name ?? '' }}"
+                                            data-first-name="{{ $firstName ?? '' }}"
+                                            data-last-name="{{ $lastName ?? '' }}"
+                                            data-middle-name="{{ $middleName !== '' ? mb_strtoupper($middleName, 'UTF-8') : '' }}"
                                             data-suffix="{{ $profile?->suffix ?? '' }}"
+                                            data-sex="{{ $profile?->sex ?? '' }}"
                                             data-date-of-birth="{{ $profile?->date_of_birth?->toDateString() ?? '' }}"
                                             data-age="{{ $profile?->age ?? '' }}"
                                             data-contact-number="{{ $profile?->contact_number ?? '' }}"

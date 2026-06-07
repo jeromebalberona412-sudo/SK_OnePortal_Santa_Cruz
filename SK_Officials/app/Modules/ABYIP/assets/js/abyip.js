@@ -1072,13 +1072,6 @@ function openAbyipModalWithImport(importedTable) {
     requestAnimationFrame(() => updateTotals());
 }
 
-function useTemplate() {
-    closeCreateOptionsModal();
-    openAbyipModal('create', null);
-    showNotification('Template loaded successfully!', 'success');
-}
-
-// PDF Import Functions
 function openImportPdfFilePicker() {
     closeCreateOptionsModal();
     const fileInput = document.getElementById('pdfFileInput');
@@ -1324,7 +1317,6 @@ document.addEventListener('DOMContentLoaded', function () {
         openCreateOptionsModal();
     });
 
-    document.getElementById('selectTemplateBtn')?.addEventListener('click', useTemplate);
     document.getElementById('selectImportBtn')?.addEventListener('click', openImportWordFilePicker);
     document.getElementById('selectImportPdfBtn')?.addEventListener('click', openImportPdfFilePicker);
     document.getElementById('createOptionsClose')?.addEventListener('click', closeCreateOptionsModal);

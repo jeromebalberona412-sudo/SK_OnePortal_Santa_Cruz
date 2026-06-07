@@ -6,6 +6,7 @@
 @import './audittable.css';
 @import './barangaydistribution.css';
 @import './piechart.css';
+@import './kkprofilingchart.css';
 @import './statcard.css';
 @import './trendchart.css';
 
@@ -88,6 +89,12 @@ body {
     flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 28px;
+    width: 100%;
+}
+
+.dash-page-header-left {
+    flex: 1 1 220px;
+    min-width: 0;
 }
 
 .dash-page-title {
@@ -119,6 +126,8 @@ body {
     gap: 12px;
     justify-content: flex-end;
     flex-wrap: wrap;
+    flex: 0 1 auto;
+    margin-left: auto;
 }
 
 /* ── Year filter ─────────────────────────────────────────── */
@@ -238,7 +247,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     align-items: stretch;
-    min-height: 110px;
+    min-height: 96px;
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
     border: 1.5px solid #e5e7eb;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -374,28 +383,6 @@ body {
     margin-top: 8px;
 }
 
-/* ── Meta (status + delta) ───────────────────────────────── */
-.stat-card-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    font-size: 10px;
-    color: #9ca3af;
-    letter-spacing: 0.02em;
-    margin-top: 4px;
-}
-
-.stat-card-status {
-    color: #6b7280;
-    font-weight: 600;
-}
-
-.stat-card-delta {
-    color: #1565c0;
-    font-weight: 700;
-}
-
 /* ══════════════════════════════════════════════════════════
    QUICK ACTIONS SECTION
 ══════════════════════════════════════════════════════════ */
@@ -431,13 +418,40 @@ body {
     margin-top: 2px;
 }
 
-/* Single horizontal scrollable row — no wrapping */
-/* Quick actions should wrap (no page horizontal scroll). */
-.quick-actions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+/* Single horizontal scrollable row — matches SK Officials dashboard */
+.dash-section-card:has(.quick-actions-scroll) {
+    overflow: visible;
+}
+
+.quick-actions-scroll {
+    display: flex;
+    flex-wrap: nowrap;
     gap: 10px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #e5e7eb transparent;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
     width: 100%;
+}
+
+.quick-actions-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.quick-actions-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 .qa-btn {
@@ -455,8 +469,6 @@ body {
     font-family: inherit;
     flex-shrink: 0;
     text-decoration: none;
-    width: 100%;
-    justify-content: center;
 }
 
 .qa-btn svg {
@@ -1275,28 +1287,9 @@ body {
         padding: 16px 14px;
     }
 
+    .stats-grid,
     .stats-2row-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 8px;
-    }
-
-    .stat-card {
-        padding: 11px 12px;
-        min-height: 96px;
-    }
-
-    .stat-card-icon {
-        width: 34px;
-        height: 34px;
-    }
-
-    .stat-card-icon svg {
-        width: 16px;
-        height: 16px;
-    }
-
-    .stat-card-value {
-        font-size: 20px;
+        gap: 12px;
     }
 }
 
@@ -1306,80 +1299,59 @@ body {
     }
 
     .dash-page-header {
-        position: relative;
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: space-between;
-        flex-wrap: nowrap;
-        gap: 8px;
-        margin-bottom: 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
     }
 
     .dash-page-header-left {
-        flex: 1;
-        min-width: 0;
+        flex: none;
+        width: 100%;
+    }
+
+    .dash-header-filters {
+        width: 100%;
+        justify-content: flex-start;
+        margin-left: 0;
     }
 
     .dash-page-title {
         font-size: 20px;
     }
 
+    .dash-page-welcome,
     .dash-page-sub {
         font-size: 12px;
     }
 
-    .dash-year-filter {
+    .dash-year-filter,
+    .dash-term-filter {
         padding: 5px 10px;
         gap: 5px;
-        flex-shrink: 0;
-        align-self: flex-start;
+        flex: 1 1 140px;
     }
 
-    .dash-year-label {
+    .dash-year-label,
+    .dash-term-label {
         font-size: 11px;
         gap: 4px;
     }
 
-    .dash-year-label svg {
+    .dash-year-label svg,
+    .dash-term-label svg {
         width: 12px;
         height: 12px;
     }
 
-    .dash-year-select {
+    .dash-year-select,
+    .dash-term-select {
         font-size: 12px;
     }
 
+    .stats-grid,
     .stats-2row-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 8px;
-    }
-
-    .stat-card {
-        padding: 10px 10px 8px;
-        min-height: 90px;
-        border-radius: 9px;
-    }
-
-    .stat-card-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 7px;
-    }
-
-    .stat-card-icon svg {
-        width: 14px;
-        height: 14px;
-    }
-
-    .stat-card-value {
-        font-size: 18px;
-        line-height: 1.1;
-    }
-
-    .stat-card-label {
-        font-size: 9px;
-        line-height: 1.2;
-        margin-top: 6px;
+        gap: 10px;
     }
 
     .qa-btn {
@@ -1391,6 +1363,11 @@ body {
         padding: 14px;
     }
 
+    .dash-panels-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
     .dashboard-row--analytics,
     .dashboard-row--operations {
         grid-template-columns: 1fr;
@@ -1400,13 +1377,14 @@ body {
 /* Panels (Pie / Health / Audit / Barangay Distribution) */
 .dash-panels-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem;
     width: 100%;
     margin-bottom: 2rem;
+    min-width: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
     .dash-panels-grid {
         grid-template-columns: 1fr;
     }
@@ -1421,48 +1399,21 @@ body {
         font-size: 17px;
     }
 
-    .stats-2row-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 6px;
+    .dash-header-filters {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .stat-card {
-        padding: 8px 8px 6px;
-        min-height: 80px;
-        border-radius: 8px;
+    .dash-year-filter,
+    .dash-term-filter {
+        width: 100%;
     }
 
-    .stat-card-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
+    .dash-section-title {
+        font-size: 14px;
     }
 
-    .stat-card-icon svg {
-        width: 12px;
-        height: 12px;
-    }
-
-    .stat-card-value {
-        font-size: 16px;
-        font-weight: 800;
-    }
-
-    .stat-card-label {
-        font-size: 8px;
-        line-height: 1.1;
-        margin-top: 5px;
-    }
-
-    .dash-year-filter {
-        padding: 4px 8px;
-    }
-
-    .dash-year-label svg {
-        display: block;
-    }
-
-    .dash-year-select {
+    .dash-section-subtitle {
         font-size: 11px;
     }
 }

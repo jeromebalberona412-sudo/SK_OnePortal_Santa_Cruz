@@ -27,16 +27,14 @@
     <div class="barangay-logos-container">
 
         {{-- ── Page Header ── --}}
-        <div class="bl-page-header row">
-            <div class="col-md-6">
+        <div class="bl-page-header">
+            <div class="bl-page-header-text">
                 <h1 class="bl-page-title">SK Barangay Logos</h1>
                 <p class="bl-page-subtitle">Manage logo images for each barangay in Santa Cruz</p>
             </div>
 
-            <div class="bl-header-controls col-md-6">
-                <div class="row align-items-center">
-                    {{-- Search bar --}}
-                    <div class="bl-search-wrap col-md-5">
+            <div class="bl-header-controls">
+                    <div class="bl-search-wrap">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-search-icon">
                             <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
                             <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -57,8 +55,7 @@
                         </button>
                     </div>
 
-                    {{-- Counter pill --}}
-                    <div class="bl-counter-pill col-md-3">
+                    <div class="bl-counter-pill">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-counter-icon">
                             <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
                             <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.8"/>
@@ -70,17 +67,13 @@
                         <span class="bl-counter-label">Uploaded</span>
                     </div>
 
-                    {{-- Hide / Show toggle --}}
-                    <div class="col-md-4">
-                        <button type="button" class="bl-toggle-btn w-100" id="toggleLogosBtn">
+                    <button type="button" class="bl-toggle-btn" id="toggleLogosBtn">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" id="toggleIcon">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
                                 <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
                             </svg>
                             <span id="toggleBtnText">Hide Logos</span>
                         </button>
-                    </div>
-                </div>
             </div>
         </div>
 

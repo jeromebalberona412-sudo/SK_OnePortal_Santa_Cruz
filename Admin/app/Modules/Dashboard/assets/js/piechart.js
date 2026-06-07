@@ -1,27 +1,29 @@
 let userDistributionPieChart;
 
 window.pieChartFilter = function pieChartFilter(distribution) {
-    const defaultDistribution = distribution || { federation: 0, officials: 0, kabataan: 0 };
-    
+    const defaultDistribution = distribution || { federation: 0, officials: 0 };
+
     return {
         showFederation: true,
         showOfficials: true,
-        showKabataan: true,
         counts: {
-            federation: defaultDistribution.federation,
-            officials: defaultDistribution.officials,
-            kabataan: defaultDistribution.kabataan
+            federation: defaultDistribution.federation ?? 0,
+            officials: defaultDistribution.officials ?? 0,
+        },
+
+        init() {
+            this.$nextTick(() => this.updateChart());
         },
 
         formatCount(count) {
-            return count.toLocaleString();
+            return Number(count ?? 0).toLocaleString();
         },
 
         updateChart() {
             if (typeof window.updatePieChartData === 'function') {
-                window.updatePieChartData(this.showFederation, this.showOfficials, this.showKabataan);
+                window.updatePieChartData(this.showFederation, this.showOfficials, this.counts);
             }
-        }
+        },
     };
 };
 
@@ -38,19 +40,11 @@ function initUserDistributionPieChart() {
     userDistributionPieChart = new window.Chart(canvas, {
         type: 'pie',
         data: {
-            labels: ['SK Federation', 'SK Officials', 'Kabataan'],
+            labels: ['SK Federation', 'SK Officials'],
             datasets: [{
-                data: [0, 0, 0],
-                backgroundColor: [
-                    '#ef4444',
-                    '#eab308',
-                    '#22c55e'
-                ],
-                borderColor: [
-                    '#ef4444',
-                    '#eab308',
-                    '#22c55e'
-                ],
+                data: [0, 0],
+                backgroundColor: ['#ef4444', '#eab308'],
+                borderColor: ['#ef4444', '#eab308'],
                 borderWidth: 2,
             }],
         },
@@ -74,15 +68,15 @@ function initUserDistributionPieChart() {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : '0.00';
                             return `${label}: ${value.toLocaleString()} (${percentage}%)`;
-                        }
-                    }
+                        },
+                    },
                 },
             },
         },
     });
 }
 
-window.updatePieChartData = function (showFederation, showOfficials, showKabataan) {
+window.updatePieChartData = function (showFederation, showOfficials, counts = {}) {
     if (!userDistributionPieChart) {
         return;
     }
@@ -93,20 +87,14 @@ window.updatePieChartData = function (showFederation, showOfficials, showKabataa
 
     if (showFederation) {
         labels.push('SK Federation');
-        data.push(0);
+        data.push(Number(counts.federation ?? 0));
         colors.push('#ef4444');
     }
 
     if (showOfficials) {
         labels.push('SK Officials');
-        data.push(0);
+        data.push(Number(counts.officials ?? 0));
         colors.push('#eab308');
-    }
-
-    if (showKabataan) {
-        labels.push('Kabataan');
-        data.push(0);
-        colors.push('#22c55e');
     }
 
     userDistributionPieChart.data.labels = labels;
@@ -126,6 +114,10 @@ function tryBootPieChart() {
     }
 
     initUserDistributionPieChart();
+
+    if (window.__USER_DISTRIBUTION__) {
+        window.updatePieChartData(true, true, window.__USER_DISTRIBUTION__);
+    }
 }
 
 window.addEventListener('sk:frontend-deps-ready', tryBootPieChart);

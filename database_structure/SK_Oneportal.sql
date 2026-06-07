@@ -166,6 +166,7 @@ create table public.official_profiles (
   last_name character varying(255) not null,
   middle_name character varying(100) null,
   suffix character varying(20) null,
+  sex character varying(10) null,
   date_of_birth date null,
   age smallint null,
   contact_number character varying(20) null,
@@ -200,6 +201,18 @@ create table public.official_profiles (
 ) TABLESPACE pg_default;
 
 create index IF not exists official_profiles_tenant_id_index on public.official_profiles using btree (tenant_id) TABLESPACE pg_default;
+
+create table public.committees (
+  id bigserial not null,
+  committee_name character varying(255) not null,
+  committee_head_id bigint not null,
+  description text null,
+  created_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  constraint committees_pkey primary key (id),
+  constraint committees_committee_head_id_foreign foreign KEY (committee_head_id) references users (id) on delete CASCADE,
+  constraint committees_committee_head_id_unique unique (committee_head_id)
+) TABLESPACE pg_default;
 
 create table public.official_terms (
   id bigserial not null,
@@ -657,3 +670,16 @@ create index IF not exists kabataan_registrations_tenant_id_barangay_id_index on
 create index IF not exists kabataan_registrations_status_index on public.kabataan_registrations using btree (status) TABLESPACE pg_default;
 create index IF not exists kabataan_registrations_email_index on public.kabataan_registrations using btree (email) TABLESPACE pg_default;
 create index IF not exists kabataan_registrations_submitted_at_index on public.kabataan_registrations using btree (submitted_at) TABLESPACE pg_default;
+
+///
+ALTER TABLE official_profiles
+ADD COLUMN sex VARCHAR(10);
+
+CREATE TABLE committees (
+    id BIGSERIAL PRIMARY KEY,
+    committee_name VARCHAR(255) NOT NULL,
+    committee_head_id BIGINT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

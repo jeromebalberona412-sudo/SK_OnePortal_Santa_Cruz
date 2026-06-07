@@ -141,6 +141,7 @@ class AccountService
                     'last_name' => $normalizedData['last_name'],
                     'middle_name' => $normalizedData['middle_name'] ?? null,
                     'suffix' => $normalizedData['suffix'] ?? null,
+                    'sex' => $normalizedData['sex'] ?? null,
                     'date_of_birth' => $normalizedData['date_of_birth'] ?? null,
                     'age' => $this->deriveAge($normalizedData['date_of_birth'] ?? null),
                     'contact_number' => $normalizedData['contact_number'] ?? null,
@@ -274,6 +275,7 @@ class AccountService
             'last_name' => $data['last_name'],
             'middle_name' => $data['middle_name'] ?? null,
             'suffix' => $data['suffix'] ?? null,
+            'sex' => $data['sex'] ?? null,
             'date_of_birth' => $data['date_of_birth'] ?? null,
             'age' => $this->deriveAge($data['date_of_birth'] ?? null),
             'contact_number' => $data['contact_number'] ?? null,
@@ -434,10 +436,23 @@ class AccountService
     protected function withNormalizedMiddleName(array $data): array
     {
         $middleName = $this->normalizeMiddleName($data['middle_name'] ?? ($data['middle_initial'] ?? null));
-        $data['middle_name'] = $middleName;
+        $data['first_name'] = $this->normalizePersonName($data['first_name'] ?? null);
+        $data['last_name'] = $this->normalizePersonName($data['last_name'] ?? null);
+        $data['middle_name'] = $this->normalizePersonName($middleName);
         unset($data['middle_initial']);
 
         return $data;
+    }
+
+    protected function normalizePersonName(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : mb_strtoupper($trimmed, 'UTF-8');
     }
 
     protected function normalizeMiddleName(mixed $value): ?string

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Modules\Authentication\Notifications\SkOfficialResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -92,6 +94,16 @@ class User extends Authenticatable implements MustVerifyEmail
             'otp_last_sent_at' => 'datetime',
             'deleted_at' => 'datetime',
         ];
+    }
+
+    public function barangay(): BelongsTo
+    {
+        return $this->belongsTo(Barangay::class);
+    }
+
+    public function officialProfile(): HasOne
+    {
+        return $this->hasOne(OfficialProfile::class);
     }
 
     public function hasRole(string ...$roles): bool

@@ -30,9 +30,8 @@ Route::middleware([
         return view('AI_Assistant::ai-assistant', compact('userName', 'userFirstName', 'userInitials'));
     })->name('ai-assistant');
 
-    Route::get('/profile', function () {
-        return view('Profile::profile');
-    })->name('profile');
+    Route::get('/profile', [\App\Modules\Profile\Controllers\ProfileController::class, 'index'])
+        ->name('profile');
 
     Route::get('/change-email', function () {
         return view('Profile::change-email');
@@ -91,6 +90,13 @@ Route::middleware([
     Route::get('/committees', function () {
         return view('Committees::committees');
     })->name('committees');
+
+    Route::prefix('api/committees')->group(function () {
+        Route::get('/', [\App\Modules\Committees\Controllers\CommitteeController::class, 'index'])->name('api.committees.index');
+        Route::get('/sk-officials', [\App\Modules\Committees\Controllers\CommitteeController::class, 'officials'])->name('api.committees.officials');
+        Route::post('/', [\App\Modules\Committees\Controllers\CommitteeController::class, 'store'])->name('api.committees.store');
+        Route::put('/{id}', [\App\Modules\Committees\Controllers\CommitteeController::class, 'update'])->name('api.committees.update');
+    });
 
     Route::get('/programs', function () {
         return view('Programs::programs');

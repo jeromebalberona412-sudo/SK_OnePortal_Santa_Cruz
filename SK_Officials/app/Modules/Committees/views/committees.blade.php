@@ -4,6 +4,7 @@
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Committees - SK Officials Portal</title>
 
     @vite([
@@ -58,7 +59,7 @@
                     </select>
                 </div>
                 <div class="filter-item">
-                    <label for="committeeHeadFilter" class="filter-label">Assigned To</label>
+                    <label for="committeeHeadFilter" class="filter-label">Committee Head</label>
                     <select id="committeeHeadFilter" class="filter-select">
                         <option value="">All Members</option>
                     </select>
@@ -86,7 +87,7 @@
                         <thead>
                             <tr>
                                 <th>Committee Name</th>
-                                <th>Assigned To</th>
+                                <th>Committee Head</th>
                                 <th>Assigned Date</th>
                                 <th>Assigned Time</th>
                                 <th>Description</th>
@@ -183,7 +184,7 @@
             {{-- Info grid --}}
             <div class="cv-info-grid">
                 <div class="cv-info-card cv-info-card-full">
-                    <div class="cv-info-label">SK Official</div>
+                    <div class="cv-info-label">Committee Head</div>
                     <div class="cv-info-value" id="viewCommitteeHead">—</div>
                 </div>
                 <div class="cv-info-card cv-info-card-full">
