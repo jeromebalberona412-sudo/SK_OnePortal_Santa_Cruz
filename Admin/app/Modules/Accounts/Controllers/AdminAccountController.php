@@ -5,6 +5,7 @@ namespace App\Modules\Accounts\Controllers;
 use App\Modules\Accounts\Database\Seeders\BarangaySeeder;
 use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Accounts\Requests\BatchStoreAccountsRequest;
 use App\Modules\Accounts\Requests\ExtendTermRequest;
 use App\Modules\Accounts\Requests\StoreAccountRequest;
 use App\Modules\Accounts\Requests\UpdateAccountRequest;
@@ -121,6 +122,45 @@ class AdminAccountController extends Controller
         $this->authorize('create', User::class);
 
         return view('accounts::add_sk_fed');
+    }
+
+    public function batchStore(BatchStoreAccountsRequest $request): JsonResponse
+    {
+        $this->authorize('create', User::class);
+
+        $tenantId = $this->resolveTenantId($request->user());
+        $this->ensureTenantBarangays($tenantId);
+
+        $validated = $request->validated();
+        $result = $this->accountService->batchCreateAccounts(
+            $validated['accounts'],
+            $validated['role'],
+            $request->user()
+        );
+
+        $created = $result['created'];
+        $failedCount = count($result['failed']);
+        $total = $created + $failedCount;
+
+        if ($created === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No accounts were created. Please review the uploaded rows and try again.',
+                'created' => 0,
+                'failed' => $result['failed'],
+            ], 422);
+        }
+
+        $message = $failedCount > 0
+            ? "{$created} of {$total} accounts created successfully. {$failedCount} row(s) failed."
+            : "{$created} account".($created === 1 ? '' : 's').' created successfully.';
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'created' => $created,
+            'failed' => $result['failed'],
+        ]);
     }
 
     public function store(StoreAccountRequest $request): Response|RedirectResponse

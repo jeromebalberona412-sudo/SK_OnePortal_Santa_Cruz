@@ -20,24 +20,73 @@ class AccountService
     {
     }
 
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return array{created: int, failed: list<array{row: int, email: ?string, message: string}>}
+     */
+    public function batchCreateAccounts(array $rows, string $role, User $admin): array
+    {
+        $importService = new BatchAccountImportService((int) $admin->tenant_id);
+        $created = 0;
+        $failed = [];
+
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 1;
+            $email = is_array($row) ? (string) ($row['email'] ?? $row['email address'] ?? '') : '';
+
+            try {
+                $normalized = $importService->normalizeAccountRow($row, $role);
+                $this->createAccount($normalized, $admin);
+                $created++;
+            } catch (ValidationException $exception) {
+                $failed[] = [
+                    'row' => $rowNumber,
+                    'email' => $email !== '' ? $email : null,
+                    'message' => collect($exception->errors())->flatten()->first() ?? 'Validation failed.',
+                ];
+            } catch (\Illuminate\Database\QueryException $exception) {
+                $message = str_contains(strtolower($exception->getMessage()), 'duplicate')
+                    ? 'Email already exists.'
+                    : 'Database error while creating this account.';
+
+                $failed[] = [
+                    'row' => $rowNumber,
+                    'email' => $email !== '' ? $email : null,
+                    'message' => $message,
+                ];
+            } catch (\Throwable $exception) {
+                report($exception);
+
+                $message = $exception->getMessage();
+                if (str_contains(strtolower($message), 'password setup email')) {
+                    $message = 'Account saved locally failed because the password setup email could not be sent.';
+                }
+
+                $failed[] = [
+                    'row' => $rowNumber,
+                    'email' => $email !== '' ? $email : null,
+                    'message' => $message !== ''
+                        ? $message
+                        : 'Unable to create account for this row.',
+                ];
+            }
+        }
+
+        return [
+            'created' => $created,
+            'failed' => $failed,
+        ];
+    }
+
     public function createAccount(array $data, User $admin): User
     {
         $normalizedData = $this->withNormalizedMiddleName($data);
         $shouldSendReset = empty($normalizedData['password']);
 
-        return DB::transaction(function () use ($normalizedData, $admin, $shouldSendReset) {
+        $user = DB::transaction(function () use ($normalizedData, $admin) {
             $user = $this->createUser($normalizedData, $admin);
             $this->assignRole($user, $normalizedData['role']);
             $this->assignBarangay($user, (int) $normalizedData['barangay_id']);
-
-            // Send the initial password setup email immediately after creating
-            // the account record and assigning role/barangay. This matches the
-            // SK Federations flow where users receive a "set up password" email
-            // as soon as the account exists, before additional profile data is
-            // created.
-            if ($shouldSendReset) {
-                $this->sendInitialResetLinkOrFail($user);
-            }
 
             $profile = $this->createOfficialProfile($user, $normalizedData);
             $this->createTermRecord($profile, [
@@ -54,8 +103,18 @@ class AccountService
                 ['role' => $normalizedData['role'], 'email' => $user->email]
             );
 
-            return $user;
+            return $user->fresh(['officialProfile.terms', 'barangay']);
         });
+
+        if ($shouldSendReset) {
+            try {
+                $this->sendInitialResetLink($user);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        return $user;
     }
 
     public function updateAccount(User $account, array $data, User $admin): User

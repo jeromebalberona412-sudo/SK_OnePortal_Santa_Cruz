@@ -11,6 +11,7 @@ Route::middleware(['auth', 'ensure2fa', 'role:admin'])->group(function () {
 
     Route::get('/accounts/create', [AdminAccountController::class, 'create'])->name('accounts.create');
     Route::post('/accounts', [AdminAccountController::class, 'store'])->name('accounts.store');
+    Route::post('/accounts/batch', [AdminAccountController::class, 'batchStore'])->name('accounts.batch-store');
 
     Route::put('/accounts/{user}', [AdminAccountController::class, 'update'])->name('accounts.update');
 

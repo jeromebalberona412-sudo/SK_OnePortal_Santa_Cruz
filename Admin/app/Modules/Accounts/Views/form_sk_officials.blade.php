@@ -221,8 +221,8 @@
             </div>
 
             {{-- ── BATCH UPLOAD ── --}}
-            <div id="addOfficialBatchPane" style="display:none;">
-                <p class="batch-hint">Upload an Excel file (.xlsx or .xls). First row must be column headers.</p>
+            <div id="addOfficialBatchPane" style="display:none;" data-barangays='@json($barangays->pluck("name", "id"))'>
+                <p class="batch-hint">Upload an Excel file (.xlsx or .xls). The file will be scanned and shown in a preview table first. Click <strong>Create Accounts</strong> only when the rows look correct.</p>
                 <details class="expected-cols-toggle">
                     <summary>Expected columns</summary>
                     <p class="expected-cols-list">
@@ -249,11 +249,11 @@
                 <div class="batch-footer">
                     <button type="button" class="btn-cancel-light" id="officialBatchCancelBtn"
                             onclick="resetBatchUpload()">Cancel</button>
-                    <button type="button" class="btn-submit-light" id="officialBatchConfirmBtn">
+                    <button type="button" class="btn-submit-light" id="officialBatchConfirmBtn" disabled>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="M20 6L9 17l-5-5"/>
+                            <path d="M12 4v16m8-8H4"/>
                         </svg>
-                        Confirm Import
+                        Create Accounts
                     </button>
                 </div>
             </div>

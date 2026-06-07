@@ -13,8 +13,6 @@
 
 @section('head')
     @vite(['app/Modules/Accounts/assets/css/account.css'])
-    {{-- SheetJS must load before account.js so XLSX is defined when the batch upload handler runs --}}
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 @endsection
 
 @section('content')

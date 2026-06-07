@@ -4,31 +4,74 @@
 //         view modal, pagination, batch upload
 // =============================================================
 
+import * as XLSX from 'xlsx';
+
 // ── Shared helpers ────────────────────────────────────────────
-function toggleModal(modalId, show) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
+function lockBodyScroll() {
+    if (document.body.dataset.scrollLocked === '1') return;
 
-    // Store current scroll position before opening modal
     const scrollY = window.scrollY;
+    document.body.dataset.scrollLocked = '1';
+    document.body.dataset.scrollY = String(scrollY);
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+}
 
-    modal.style.display = show ? 'flex' : 'none';
-
-    // Restore scroll position after opening modal to prevent auto-scroll
-    if (show) {
-        window.scrollTo(0, scrollY);
-        // Prevent body scroll when modal is open
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollY}px`;
-        document.body.style.width = '100%';
-    } else {
-        // Restore body scroll when modal is closed
+function unlockBodyScroll() {
+    if (document.body.dataset.scrollLocked !== '1') {
         document.body.style.removeProperty('overflow');
         document.body.style.removeProperty('position');
         document.body.style.removeProperty('top');
         document.body.style.removeProperty('width');
-        window.scrollTo(0, scrollY);
+        return;
+    }
+
+    const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('position');
+    document.body.style.removeProperty('top');
+    document.body.style.removeProperty('width');
+    delete document.body.dataset.scrollLocked;
+    delete document.body.dataset.scrollY;
+    window.scrollTo(0, scrollY);
+}
+
+function isAnyModalOpen() {
+    return Array.from(document.querySelectorAll('.modal-overlay')).some((modal) => {
+        const display = window.getComputedStyle(modal).display;
+        return display !== 'none';
+    });
+}
+
+function hideAllAccountModals() {
+    document.querySelectorAll('.modal-overlay').forEach((modal) => {
+        modal.style.display = 'none';
+    });
+}
+
+function cleanupAccountUiState() {
+    hideLoadingOverlay();
+    hideAllAccountModals();
+    if (!isAnyModalOpen()) {
+        unlockBodyScroll();
+    }
+}
+
+function toggleModal(modalId, show) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.style.display = show ? 'flex' : 'none';
+
+    if (show) {
+        lockBodyScroll();
+        return;
+    }
+
+    if (!isAnyModalOpen()) {
+        unlockBodyScroll();
     }
 }
 
@@ -87,21 +130,29 @@ function setFormFieldValue(form, name, value) {
     if (field) field.value = value;
 }
 
-function showLoadingOverlay() {
+function showLoadingOverlay(message = 'Processing...') {
     let overlay = document.getElementById('loadingOverlay');
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'loadingOverlay';
-        overlay.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Processing...</p></div>`;
+        overlay.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>${message}</p></div>`;
         document.body.appendChild(overlay);
+    } else {
+        const label = overlay.querySelector('p');
+        if (label) label.textContent = message;
     }
     overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
 }
 
 function hideLoadingOverlay() {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) { overlay.style.display = 'none'; document.body.style.overflow = ''; }
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+    if (!isAnyModalOpen()) {
+        unlockBodyScroll();
+    }
 }
 
 function showFieldError(form, fieldName, message) {
@@ -428,6 +479,7 @@ function _showEditSuccessByType() {
 
 // ── DOMContentLoaded: wire up everything ──────────────────────
 document.addEventListener('DOMContentLoaded', function () {
+    cleanupAccountUiState();
 
     // ── Pagination ────────────────────────────────────────────
     const recordsPerPage = 10;
@@ -516,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function () {
             for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
             payload.term_status = payload.term_status || (payload.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
 
-            showLoadingOverlay();
+            showLoadingOverlay('Creating account...');
             fetch('/accounts', {
                 method: 'POST',
                 headers: {
@@ -532,8 +584,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     return { ok: r.ok, data };
                 })
                 .then(({ ok, data }) => {
-                    hideLoadingOverlay();
                     if (!ok || !data.success) {
+                        cleanupAccountUiState();
                         if (data.errors) {
                             let handledError = false;
                             Object.keys(data.errors).forEach(f => {
@@ -548,15 +600,19 @@ document.addEventListener('DOMContentLoaded', function () {
                                 alert(firstError);
                             }
                         } else {
-                            alert('Failed to create account. Please try again.');
+                            alert(data.message || 'Failed to create account. Please try again.');
                         }
                         return;
                     }
-                    closeAddSkOfficialsModal();
-                    showSkOfficialsSuccessModal();
-                    setTimeout(() => window.location.reload(), 1000);
+
+                    cleanupAccountUiState();
+                    showAccountToast(data.message || 'SK Officials account successfully created!', 'success');
+                    window.setTimeout(() => window.location.reload(), 900);
                 })
-                .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
+                .catch(() => {
+                    cleanupAccountUiState();
+                    alert('An unexpected error occurred. Please try again.');
+                });
         });
 
         // Text-only name fields
@@ -598,7 +654,7 @@ document.addEventListener('DOMContentLoaded', function () {
             for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
             payload.term_status = payload.term_status || (payload.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
 
-            showLoadingOverlay();
+            showLoadingOverlay('Creating account...');
             fetch('/accounts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), 'Accept': 'application/json' },
@@ -606,8 +662,8 @@ document.addEventListener('DOMContentLoaded', function () {
             })
                 .then(async r => { const ct = r.headers.get('content-type') || ''; const data = ct.includes('application/json') ? await r.json() : {}; return { ok: r.ok, data }; })
                 .then(({ ok, data }) => {
-                    hideLoadingOverlay();
                     if (!ok || !data.success) {
+                        cleanupAccountUiState();
                         if (data.errors) {
                             let handledError = false;
                             Object.keys(data.errors).forEach(f => {
@@ -626,12 +682,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         return;
                     }
-                    closeAddAccountModal();
-                    showAddSuccessModal();
-                    // Reload page to show new account
-                    setTimeout(() => window.location.reload(), 1000);
+                    cleanupAccountUiState();
+                    showAccountToast(data.message || 'Account successfully created!', 'success');
+                    window.setTimeout(() => window.location.reload(), 900);
                 })
-                .catch(() => { hideLoadingOverlay(); alert('An unexpected error occurred. Please try again.'); });
+                .catch(() => {
+                    cleanupAccountUiState();
+                    alert('An unexpected error occurred. Please try again.');
+                });
         });
 
         // Text-only / numbers-only for fed add form
@@ -911,12 +969,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // -- Batch upload (SK Officials) ---------------------------
 
-    // Fixed column order — matches the Excel template exactly
-    const BATCH_LABELS = [
-        'First Name', 'Middle Name', 'Last Name', 'Suffix', 'Sex',
-        'Birthdate', 'Age', 'Contact Number', 'Position', 'Status',
-        'Region', 'Province', 'Municipality', 'Barangay',
-        'Term Start Date', 'Term End Date', 'Committee', 'Email Address'
+    const BATCH_HEADER_ALIASES = {
+        'first name': 'first_name',
+        first_name: 'first_name',
+        'middle name': 'middle_name',
+        middle_name: 'middle_name',
+        'last name': 'last_name',
+        last_name: 'last_name',
+        suffix: 'suffix',
+        sex: 'sex',
+        gender: 'sex',
+        birthdate: 'date_of_birth',
+        'birth date': 'date_of_birth',
+        'date of birth': 'date_of_birth',
+        date_of_birth: 'date_of_birth',
+        dob: 'date_of_birth',
+        age: 'age',
+        'contact number': 'contact_number',
+        contact_number: 'contact_number',
+        contact: 'contact_number',
+        position: 'position',
+        status: 'status',
+        region: 'region',
+        province: 'province',
+        municipality: 'municipality',
+        barangay: 'barangay',
+        'barangay name': 'barangay',
+        barangay_name: 'barangay',
+        'term start date': 'term_start',
+        'term start': 'term_start',
+        term_start: 'term_start',
+        'start date': 'term_start',
+        'term end date': 'term_end',
+        'term end': 'term_end',
+        term_end: 'term_end',
+        'end date': 'term_end',
+        committee: 'committee',
+        'email address': 'email',
+        email: 'email',
+    };
+
+    const BATCH_REQUIRED_HEADER_GROUPS = [
+        { label: 'First Name', keys: ['first name', 'first_name'] },
+        { label: 'Last Name', keys: ['last name', 'last_name'] },
+        { label: 'Email Address', keys: ['email address', 'email'] },
+        { label: 'Sex', keys: ['sex', 'gender'] },
+        { label: 'Birthdate', keys: ['birthdate', 'birth date', 'date of birth', 'date_of_birth', 'dob'] },
+        { label: 'Contact Number', keys: ['contact number', 'contact_number', 'contact'] },
+        { label: 'Position', keys: ['position'] },
+        { label: 'Barangay', keys: ['barangay', 'barangay name', 'barangay_name'] },
+        { label: 'Term Start Date', keys: ['term start date', 'term start', 'term_start', 'start date'] },
+        { label: 'Term End Date', keys: ['term end date', 'term end', 'term_end', 'end date'] },
     ];
 
     const fileInput = document.getElementById('officialBatchFile');
@@ -925,92 +1028,159 @@ document.addEventListener('DOMContentLoaded', function () {
     const preview = document.getElementById('officialBatchPreview');
     const confirmBtn = document.getElementById('officialBatchConfirmBtn');
 
-    // Stores the parsed batch rows so Confirm Import can use them
-    var _batchParsedRows = [];
-    var _batchParsedHeaders = [];
+    let _batchParsedRows = [];
+    let _batchParsedHeaders = [];
+    let _batchMappedAccounts = [];
 
-    // Read the Excel file and render preview immediately
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function formatBatchCell(value) {
+        if (value === null || value === undefined || value === '') {
+            return '&mdash;';
+        }
+
+        if (value instanceof Date) {
+            return escapeHtml(value.toLocaleDateString('en-CA'));
+        }
+
+        return escapeHtml(String(value).trim());
+    }
+
+    function normalizeHeaderKey(header) {
+        return String(header || '').trim().toLowerCase();
+    }
+
+    function resolveBatchFieldKey(header) {
+        const normalized = normalizeHeaderKey(header);
+        if (BATCH_HEADER_ALIASES[normalized]) {
+            return BATCH_HEADER_ALIASES[normalized];
+        }
+
+        return normalized.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    }
+
+    function excelSerialToDateString(serial) {
+        const utcDays = Math.floor(Number(serial) - 25569);
+        const date = new Date(utcDays * 86400 * 1000);
+        return date.toISOString().slice(0, 10);
+    }
+
+    function coerceBatchCellValue(fieldKey, value) {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+
+        if (value instanceof Date) {
+            return value.toISOString().slice(0, 10);
+        }
+
+        if (typeof value === 'number' && ['term_start', 'term_end', 'date_of_birth'].includes(fieldKey)) {
+            return excelSerialToDateString(value);
+        }
+
+        return String(value).trim();
+    }
+
+    function getMissingBatchHeaders(headers) {
+        const normalizedHeaders = headers.map(normalizeHeaderKey);
+
+        return BATCH_REQUIRED_HEADER_GROUPS
+            .filter((group) => !group.keys.some((key) => normalizedHeaders.includes(key)))
+            .map((group) => group.label);
+    }
+
+    function mapRowToAccount(headers, row) {
+        const mapped = {};
+
+        headers.forEach((header, index) => {
+            const key = resolveBatchFieldKey(header);
+            if (!key) return;
+
+            mapped[key] = coerceBatchCellValue(key, row[index]);
+        });
+
+        return mapped;
+    }
+
     function handleBatchFile(file) {
         if (!file) return;
         if (fileLabel) fileLabel.textContent = file.name;
 
-        var reader = new FileReader();
+        const reader = new FileReader();
         reader.onload = function (e) {
             try {
-                var data = new Uint8Array(e.target.result);
-                var wb = XLSX.read(data, { type: 'array', raw: false });
-                var ws = wb.Sheets[wb.SheetNames[0]];
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array', raw: false, cellDates: true });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const allRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
-                var allRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                const nonEmptyRows = allRows.filter((row) =>
+                    row.some((cell) => String(cell).trim() !== '')
+                );
 
-                var dataRows = allRows.filter(function (row) {
-                    return row.some(function (cell) {
-                        return String(cell).trim() !== '';
-                    });
-                });
-
-                if (dataRows.length === 0) {
+                if (nonEmptyRows.length < 2) {
                     _batchParsedHeaders = [];
                     _batchParsedRows = [];
-                    renderBatchPreview([], []);
+                    _batchMappedAccounts = [];
+                    renderBatchPreview([], [], 'No data rows found in the uploaded file.');
                     return;
                 }
 
-                _batchParsedHeaders = dataRows[0].map(function (h) { return String(h).trim(); });
-                _batchParsedRows = dataRows.slice(1);
+                _batchParsedHeaders = nonEmptyRows[0].map((header) => String(header).trim());
+                _batchParsedRows = nonEmptyRows.slice(1).filter((row) =>
+                    row.some((cell) => String(cell).trim() !== '')
+                );
+                _batchMappedAccounts = _batchParsedRows.map((row) =>
+                    mapRowToAccount(_batchParsedHeaders, row)
+                );
 
-                renderBatchPreview(_batchParsedHeaders, _batchParsedRows);
+                const missingHeaders = getMissingBatchHeaders(_batchParsedHeaders);
+                let previewMessage = _batchParsedRows.length + ' row' + (_batchParsedRows.length !== 1 ? 's' : '') + ' ready for review';
+                if (missingHeaders.length > 0) {
+                    previewMessage = 'Missing required columns: ' + missingHeaders.join(', ') + '.';
+                }
+
+                renderBatchPreview(_batchParsedHeaders, _batchParsedRows, previewMessage, missingHeaders.length > 0);
             } catch (err) {
                 console.error('Batch upload read error:', err);
                 _batchParsedHeaders = [];
                 _batchParsedRows = [];
-                renderBatchPreview([], []);
+                _batchMappedAccounts = [];
+                renderBatchPreview([], [], 'Unable to read the Excel file. Please upload a valid .xlsx or .xls file.');
             }
         };
         reader.readAsArrayBuffer(file);
     }
 
-    // Sample row shown when the file has no data rows
-    var SAMPLE_ROW = [
-        'Juan', 'Dela', 'Cruz', 'Jr.', 'Male',
-        '01/01/2000', '24', '09171234567', 'SK Chairman', 'Active',
-        'IV-A CALABARZON', 'Laguna', 'Santa Cruz', 'Alipit',
-        '01/01/2023', '12/31/2025', 'Youth Dev', 'juan@email.com'
-    ];
-
-    // Render the preview table using whatever headers + rows came from the file
-    function renderBatchPreview(headers, rows) {
+    function renderBatchPreview(headers, rows, message, hasHeaderErrors = false) {
         if (!preview) return;
 
-        // If no headers at all, use the fixed template columns
-        var displayHeaders = headers.length > 0 ? headers : BATCH_LABELS;
-
-        var theadCells = displayHeaders.map(function (h) {
-            return '<th>' + h + '</th>';
-        }).join('');
-
-        var displayRows = rows;
-        var isSample = false;
-
-        // If no data rows, inject one sample row so the table is never empty
         if (rows.length === 0) {
-            displayRows = [SAMPLE_ROW];
-            isSample = true;
+            preview.innerHTML = '<p class="batch-row-count" style="color:#94a3b8;">' + escapeHtml(message || 'Upload an Excel file to preview rows.') + '</p>';
+            preview.style.display = '';
+            if (confirmBtn) confirmBtn.disabled = true;
+            return;
         }
 
-        var tbodyRows = displayRows.map(function (row) {
-            var cells = displayHeaders.map(function (_, i) {
-                var val = row[i] !== undefined ? String(row[i]).trim() : '';
-                return '<td>' + (val || '&mdash;') + '</td>';
+        const theadCells = headers.map((header) => '<th>' + escapeHtml(header) + '</th>').join('');
+        const tbodyRows = rows.map((row) => {
+            const cells = headers.map((_, index) => {
+                const value = row[index];
+                return '<td>' + formatBatchCell(value) + '</td>';
             }).join('');
             return '<tr>' + cells + '</tr>';
         }).join('');
 
-        var rowCount = isSample
-            ? '<p class="batch-row-count" style="color:#94a3b8;">Showing sample row — no data found in file</p>'
-            : '<p class="batch-row-count">' + rows.length + ' row' + (rows.length !== 1 ? 's' : '') + ' found</p>';
+        const messageClass = hasHeaderErrors ? 'batch-row-count batch-row-count-error' : 'batch-row-count';
 
-        preview.innerHTML = rowCount +
+        preview.innerHTML =
+            '<p class="' + messageClass + '">' + escapeHtml(message || '') + '</p>' +
             '<div class="batch-preview-wrap">' +
             '<table class="batch-preview-table">' +
             '<thead><tr>' + theadCells + '</tr></thead>' +
@@ -1018,122 +1188,82 @@ document.addEventListener('DOMContentLoaded', function () {
             '</table></div>';
 
         preview.style.display = '';
-        if (confirmBtn) confirmBtn.disabled = false;
+        if (confirmBtn) confirmBtn.disabled = hasHeaderErrors;
     }
 
-    // Reset batch pane to initial state
     window.resetBatchUpload = function () {
-        if (fileInput) { fileInput.value = ''; }
-        if (fileLabel) { fileLabel.textContent = 'Supported: .xlsx, .xls'; }
-        if (preview) { preview.innerHTML = ''; preview.style.display = 'none'; }
+        if (fileInput) fileInput.value = '';
+        if (fileLabel) fileLabel.textContent = 'Supported: .xlsx, .xls';
+        _batchParsedHeaders = [];
+        _batchParsedRows = [];
+        _batchMappedAccounts = [];
+        if (preview) {
+            preview.innerHTML = '';
+            preview.style.display = 'none';
+        }
+        if (confirmBtn) confirmBtn.disabled = true;
         switchAddOfficialTab('manual');
     };
 
-    // Confirm Import — injects actual uploaded rows into the main table
     if (confirmBtn) {
-        confirmBtn.addEventListener('click', function () {
-            var tbody = document.querySelector('.accounts-table tbody');
-            if (!tbody) { closeAddSkOfficialsModal(); showAccountToast('SK Officials imported successfully!', 'success'); return; }
+        confirmBtn.addEventListener('click', async function () {
+            if (_batchMappedAccounts.length === 0) return;
 
-            // Use parsed rows from the uploaded file; fall back to SAMPLE_ROW if none
-            var rowsToInsert = _batchParsedRows.length > 0 ? _batchParsedRows : [SAMPLE_ROW];
-            var hdrs = _batchParsedHeaders.length > 0 ? _batchParsedHeaders : BATCH_LABELS;
-
-            // Build a header→index map (case-insensitive)
-            var hdrMap = {};
-            hdrs.forEach(function (h, i) { hdrMap[h.toLowerCase().trim()] = i; });
-
-            function col(row, name) {
-                var idx = hdrMap[name.toLowerCase()];
-                return idx !== undefined && row[idx] !== undefined ? String(row[idx]).trim() : '';
+            const missingHeaders = getMissingBatchHeaders(_batchParsedHeaders);
+            if (missingHeaders.length > 0) {
+                alert(
+                    'Your Excel file is missing required columns:\n\n' +
+                    missingHeaders.join('\n') +
+                    '\n\nPlease use the full template with Barangay, Term Start Date, Term End Date, Email Address, and other required fields.'
+                );
+                return;
             }
 
-            // Remove "No accounts found" empty row if present
-            var emptyRow = tbody.querySelector('td[colspan]');
-            if (emptyRow) emptyRow.closest('tr').remove();
+            showLoadingOverlay('Creating accounts...');
+            confirmBtn.disabled = true;
 
-            rowsToInsert.forEach(function (row) {
-                var firstName = col(row, 'first name') || col(row, 'first_name') || (row[0] ? String(row[0]).trim() : '');
-                var middleName = col(row, 'middle name') || col(row, 'middle_name') || (row[1] ? String(row[1]).trim() : '');
-                var lastName = col(row, 'last name') || col(row, 'last_name') || (row[2] ? String(row[2]).trim() : '');
-                var suffix = col(row, 'suffix') || (row[3] ? String(row[3]).trim() : '');
-                var sex = col(row, 'sex') || (row[4] ? String(row[4]).trim() : '');
-                var birthdate = col(row, 'birthdate') || (row[5] ? String(row[5]).trim() : '');
-                var age = col(row, 'age') || (row[6] ? String(row[6]).trim() : '');
-                var contact = col(row, 'contact number') || col(row, 'contact_number') || (row[7] ? String(row[7]).trim() : '');
-                var position = col(row, 'position') || (row[8] ? String(row[8]).trim() : '');
-                var status = col(row, 'status') || (row[9] ? String(row[9]).trim() : 'Active');
-                var barangay = col(row, 'barangay') || (row[13] ? String(row[13]).trim() : '');
-                var termStart = col(row, 'term start date') || col(row, 'term_start') || (row[14] ? String(row[14]).trim() : '');
-                var termEnd = col(row, 'term end date') || col(row, 'term_end') || (row[15] ? String(row[15]).trim() : '');
-                var committee = col(row, 'committee') || (row[16] ? String(row[16]).trim() : '');
-                var email = col(row, 'email address') || col(row, 'email') || (row[17] ? String(row[17]).trim() : '');
+            try {
+                const response = await fetch('/accounts/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        role: 'sk_official',
+                        accounts: _batchMappedAccounts,
+                    }),
+                });
 
-                // Build display name
-                var nameParts = [firstName, middleName ? middleName.charAt(0) + '.' : '', lastName, suffix].filter(Boolean);
-                var displayName = nameParts.join(' ');
+                const data = await response.json().catch(() => ({}));
 
-                var statusLower = status.toLowerCase();
-                var statusClass = statusLower === 'active' ? 'active' : 'inactive';
+                if (!response.ok || !data.success) {
+                    cleanupAccountUiState();
+                    let errorMessage = data.message || 'Batch account creation failed.';
+                    if (Array.isArray(data.failed) && data.failed.length > 0) {
+                        const details = data.failed
+                            .slice(0, 5)
+                            .map((item) => 'Row ' + item.row + ': ' + item.message)
+                            .join('\n');
+                        errorMessage += '\n\n' + details;
+                    }
+                    alert(errorMessage);
+                    confirmBtn.disabled = false;
+                    return;
+                }
 
-                var tr = document.createElement('tr');
-                tr.innerHTML =
-                    '<td>' + (displayName || '—') + '</td>' +
-                    '<td>' + (email || '—') + '</td>' +
-                    '<td>' + (barangay || '—') + '</td>' +
-                    '<td>' + (position || '—') + '</td>' +
-                    '<td>' + (termEnd || '—') + '</td>' +
-                    '<td><span class="status-badge ' + statusClass + '">' + status + '</span></td>' +
-                    '<td><div class="action-buttons-container">' +
-                    '<button type="button" class="btn-view-modern btn-view-account"' +
-                    ' data-first-name="' + firstName + '"' +
-                    ' data-middle-name="' + middleName + '"' +
-                    ' data-last-name="' + lastName + '"' +
-                    ' data-suffix="' + suffix + '"' +
-                    ' data-date-of-birth="' + birthdate + '"' +
-                    ' data-age="' + age + '"' +
-                    ' data-contact-number="' + contact + '"' +
-                    ' data-email="' + email + '"' +
-                    ' data-position="' + position + '"' +
-                    ' data-barangay-name="' + barangay + '"' +
-                    ' data-status="' + status + '"' +
-                    ' data-term-status="ACTIVE"' +
-                    ' data-term-start="' + termStart + '"' +
-                    ' data-term-end="' + termEnd + '"' +
-                    ' data-email-verified-at="">View</button>' +
-                    '<button type="button" class="btn-edit-modern btn-edit-account"' +
-                    ' data-account-id=""' +
-                    ' data-first-name="' + firstName + '"' +
-                    ' data-middle-name="' + middleName + '"' +
-                    ' data-last-name="' + lastName + '"' +
-                    ' data-suffix="' + suffix + '"' +
-                    ' data-date-of-birth="' + birthdate + '"' +
-                    ' data-age="' + age + '"' +
-                    ' data-contact-number="' + contact + '"' +
-                    ' data-email="' + email + '"' +
-                    ' data-position="' + position + '"' +
-                    ' data-status="' + status + '"' +
-                    ' data-term-status="ACTIVE"' +
-                    ' data-term-start="' + termStart + '"' +
-                    ' data-term-end="' + termEnd + '">Edit</button>' +
-                    '<button type="button" class="btn-delete-modern btn-delete-account"' +
-                    ' data-account-id=""' +
-                    ' data-display-name="' + displayName + '">Delete</button>' +
-                    '</div></td>';
+                cleanupAccountUiState();
+                resetBatchUpload();
 
-                tbody.appendChild(tr);
-            });
-
-            // Re-init pagination
-            allAccounts = Array.from(tbody.querySelectorAll('tr'))
-                .filter(function (r) { return !r.querySelector('td[colspan]'); })
-                .map(function (el, i) { return { element: el, index: i }; });
-            filteredAccounts = allAccounts.slice();
-            currentPage = 1;
-            updatePagination();
-
-            closeAddSkOfficialsModal();
-            showAccountToast('SK Officials imported successfully!', 'success');
+                const toastType = Array.isArray(data.failed) && data.failed.length > 0 ? 'edit' : 'success';
+                showAccountToast(data.message || 'Accounts created successfully.', toastType);
+                window.setTimeout(() => window.location.reload(), 900);
+            } catch (error) {
+                cleanupAccountUiState();
+                confirmBtn.disabled = false;
+                alert('Unable to create accounts from the uploaded file. Please try again.');
+            }
         });
     }
 
