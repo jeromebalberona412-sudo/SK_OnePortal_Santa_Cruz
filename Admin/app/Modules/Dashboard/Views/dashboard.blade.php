@@ -137,12 +137,6 @@
 					</svg>
 					Barangay Logos
 			</a>
-			<a href="{{ route('contact.manage') }}" class="qa-btn qa-yellow">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-					</svg>
-					Manage Contacts
-			</a>
 			<a href="{{ route('auditlogs.index') }}" class="qa-btn qa-yellow">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -175,7 +169,6 @@
 
 	<section class="dash-panels-grid" aria-label="Analytics panels">
 		@include('dashboard::components.piechart')
-		@include('dashboard::components.platformhealth')
 	</section>
 
 	<section class="dash-panels-grid" aria-label="Operations panels">
