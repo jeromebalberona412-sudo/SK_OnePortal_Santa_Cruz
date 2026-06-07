@@ -173,35 +173,31 @@
 
 <!-- ── Scholar View Modal ── -->
 <div class="sl-modal-overlay" id="slViewModal" style="display:none;">
-    <div class="sl-modal-box" id="slViewBox" style="max-width:800px;">
+    <div class="sl-modal-box sl-modal-box--view" id="slViewBox">
         <div class="sl-modal-header">
             <h3>Application Details</h3>
-            <div style="display:flex;align-items:center;gap:2px;">
-                <button type="button" class="sl-modal-close" id="slViewMaximize" title="Maximize">□</button>
+            <div class="sl-modal-header-actions">
+                <button type="button" class="sl-modal-close sl-modal-maximize-btn" id="slViewMaximize" title="Maximize">□</button>
                 <button type="button" class="sl-modal-close" id="slViewClose" title="Close">&times;</button>
             </div>
         </div>
-        <div class="sl-modal-body" id="slViewBody" style="background:#f9fafb;"></div>
+        <div class="sl-modal-body" id="slViewBody"></div>
     </div>
 </div>
 
 <!-- ── Edit Status Modal ── -->
 <div class="sl-modal-overlay" id="slEditModal" style="display:none;">
-    <div class="sl-modal-box" id="slEditBox" style="max-width:500px;">
+    <div class="sl-modal-box sl-modal-box--edit" id="slEditBox">
         <div class="sl-modal-header">
             <h3>Edit Payment Status</h3>
-            <div style="display:flex;align-items:center;gap:2px;">
-                <button type="button" class="sl-modal-close" id="slEditMaximize" title="Maximize">□</button>
+            <div class="sl-modal-header-actions">
+                <button type="button" class="sl-modal-close sl-modal-maximize-btn" id="slEditMaximize" title="Maximize">□</button>
                 <button type="button" class="sl-modal-close" id="slEditClose" title="Close">&times;</button>
             </div>
         </div>
-        <div class="sl-modal-body" style="padding:24px;">
+        <div class="sl-modal-body sl-modal-body--form">
             <input type="hidden" id="editScholarIndex">
-
-            <div class="sl-edit-field">
-                <label for="editScholarName" class="sl-edit-label">Scholar Name</label>
-                <input type="text" id="editScholarName" class="sl-edit-input" readonly style="background:#f3f4f6;cursor:not-allowed;">
-            </div>
+            <div id="slEditSummary"></div>
 
             <div class="sl-edit-field">
                 <label for="editPaymentStatus" class="sl-edit-label">Payment Status <span style="color:#ef4444;">*</span></label>
@@ -222,25 +218,21 @@
 
 <!-- ── Revoke Approval Modal ── -->
 <div class="sl-modal-overlay" id="slRevokeModal" style="display:none;">
-    <div class="sl-modal-box" style="max-width:550px;" id="slRevokeBox">
+    <div class="sl-modal-box sl-modal-box--revoke" id="slRevokeBox">
         <div class="sl-modal-header sl-modal-header-danger">
             <h3>Revoke Scholar Approval</h3>
-            <div style="display:flex;align-items:center;gap:2px;">
-                <button type="button" class="sl-modal-close" id="slRevokeMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+            <div class="sl-modal-header-actions">
+                <button type="button" class="sl-modal-close sl-modal-maximize-btn" id="slRevokeMaximize" title="Maximize">□</button>
                 <button type="button" class="sl-modal-close" id="slRevokeClose" title="Close">&times;</button>
             </div>
         </div>
-        <div class="sl-modal-body" style="padding:24px;">
+        <div class="sl-modal-body sl-modal-body--form">
             <input type="hidden" id="revokeScholarIndex">
-            
-            <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:16px;">You are about to revoke the approval of this scholarship beneficiary. Please provide a reason for revoking the approval. This action will move the record from Approved Scholars to Rejected Scholars.</p>
-            
-            <div class="sl-edit-field">
-                <label for="revokeScholarName" class="sl-edit-label">Scholar Name</label>
-                <input type="text" id="revokeScholarName" class="sl-edit-input" readonly style="background:#f3f4f6;cursor:not-allowed;">
-            </div>
+            <div id="slRevokeSummary"></div>
 
-            <div class="sl-edit-field" style="margin-top:16px;">
+            <p class="sl-revoke-notice">You are about to revoke the approval of this scholarship beneficiary. Please provide a reason for revoking the approval. This action will move the record from Approved Scholars to Rejected Scholars.</p>
+
+            <div class="sl-edit-field">
                 <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Select Revocation Reason:</label>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">

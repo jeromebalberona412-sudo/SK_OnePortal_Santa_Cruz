@@ -34,6 +34,75 @@ function slEnsurePaymentStatuses() {
     });
 }
 
+function slGetInitials(record) {
+    const fn = (record?.first_name || '').charAt(0);
+    const ln = (record?.last_name || '').charAt(0);
+    return `${fn}${ln}`.toUpperCase() || '—';
+}
+
+function slPaymentStatusMeta(status) {
+    const label = String(status || 'Unclaimed').toUpperCase();
+    if (status === 'Claimed') return { bg: '#dcfce7', text: '#166534', label };
+    if (status === 'Pending Release') return { bg: '#fef3c7', text: '#92400e', label };
+    return { bg: '#fee2e2', text: '#991b1b', label };
+}
+
+function slRenderScholarSummaryHtml(scholar) {
+    const fullName = slFormatFullName(scholar);
+    const initials = slGetInitials(scholar);
+    const paymentStatus = slNormalizePaymentStatus(scholar);
+    const meta = slPaymentStatusMeta(paymentStatus);
+    const approvedAt = scholar.approved_at || '—';
+
+    return `
+        <div class="sl-scholar-summary">
+            <div class="sl-scholar-summary-top">
+                <div class="sl-scholar-summary-identity">
+                    <div class="sl-scholar-summary-avatar">${initials}</div>
+                    <div class="sl-scholar-summary-name">${escapeSl(fullName)}</div>
+                </div>
+                <span class="sl-scholar-summary-badge" style="background:${meta.bg};color:${meta.text};">${meta.label}</span>
+            </div>
+            <div class="sl-scholar-summary-payment">
+                <div class="sl-scholar-summary-payment-title">Payment Status</div>
+                <div class="sl-scholar-summary-grid">
+                    <div class="sl-scholar-summary-item">
+                        <span class="sl-scholar-summary-label">Current Status</span>
+                        <span class="sl-scholar-summary-status" style="background:${meta.bg};color:${meta.text};">${meta.label}</span>
+                    </div>
+                    <div class="sl-scholar-summary-item">
+                        <span class="sl-scholar-summary-label">Date Approved</span>
+                        <span class="sl-scholar-summary-value">${escapeSl(approvedAt)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+}
+
+function slResetModalMaximize(overlay, box, maxBtn) {
+    if (box) box.classList.remove('sl-modal-maximized');
+    if (overlay) overlay.classList.remove('sl-overlay-maximized');
+    if (maxBtn) {
+        maxBtn.textContent = '□';
+        maxBtn.title = 'Maximize';
+    }
+}
+
+function slToggleModalMaximize(overlay, box, maxBtn, e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    if (!box) return;
+    box.classList.toggle('sl-modal-maximized');
+    const isMax = box.classList.contains('sl-modal-maximized');
+    if (maxBtn) {
+        maxBtn.textContent = isMax ? '⧉' : '□';
+        maxBtn.title = isMax ? 'Restore Down' : 'Maximize';
+    }
+    if (overlay) overlay.classList.toggle('sl-overlay-maximized', isMax);
+}
+
 const SL_SCHOLARS = [
     {
         last_name: 'BAUTISTA', first_name: 'KRISTINE', middle_name: 'FLORES', suffix: '',
@@ -173,7 +242,7 @@ function renderScholarTable() {
         const displayProgram = r.program_strand || '—';
         const actualIndex = start + i;
         const paymentStatus = slNormalizePaymentStatus(r);
-        const statusBadge = `<span class="sl-badge ${slPaymentBadgeClass(paymentStatus)}">${escapeSl(paymentStatus)}</span>`;
+        const statusBadge = `<span class="sl-badge ${slPaymentBadgeClass(paymentStatus)}">${escapeSl(paymentStatus.toUpperCase())}</span>`;
 
         return `
         <tr>
@@ -242,12 +311,7 @@ function renderScholarTable() {
 
     const closeRevoke = () => {
         revokeModal.style.display = 'none';
-        revokeBox.classList.remove('sl-modal-maximized');
-        revokeModal.classList.remove('sl-overlay-maximized');
-        if (revokeMaximize) {
-            revokeMaximize.textContent = '□';
-            revokeMaximize.title = 'Maximize';
-        }
+        slResetModalMaximize(revokeModal, revokeBox, revokeMaximize);
     };
 
     if (revokeClose) revokeClose.addEventListener('click', closeRevoke);
@@ -258,14 +322,9 @@ function renderScholarTable() {
         });
     }
 
-    // Maximize/Restore for Revoke modal
     if (revokeMaximize && revokeBox) {
-        revokeMaximize.addEventListener('click', () => {
-            revokeBox.classList.toggle('sl-modal-maximized');
-            const isMax = revokeBox.classList.contains('sl-modal-maximized');
-            revokeMaximize.textContent = isMax ? '⧉' : '□';
-            revokeMaximize.title = isMax ? 'Restore Down' : 'Maximize';
-            if (revokeModal) revokeModal.classList.toggle('sl-overlay-maximized', isMax);
+        revokeMaximize.addEventListener('click', (e) => {
+            slToggleModalMaximize(revokeModal, revokeBox, revokeMaximize, e);
         });
     }
 
@@ -302,18 +361,18 @@ function initializeExportButton() {
 
 function openRevokeModal(idx, scholar) {
     const revokeModal = document.getElementById('slRevokeModal');
-    const revokeNameInput = document.getElementById('revokeScholarName');
+    const revokeBox = document.getElementById('slRevokeBox');
+    const revokeMaximize = document.getElementById('slRevokeMaximize');
+    const revokeSummary = document.getElementById('slRevokeSummary');
     const revokeIndexInput = document.getElementById('revokeScholarIndex');
     const revokeReasonInput = document.getElementById('revokeReason');
     const revokeReasonCount = document.getElementById('revokeReasonCount');
     const revokeReasonField = document.getElementById('slRevokeReasonField');
-    const revokeOtherRadio = document.getElementById('slRevokeOtherRadio');
 
     if (!revokeModal) return;
 
-    const fullName = slFormatFullName(scholar);
-
-    if (revokeNameInput) revokeNameInput.value = fullName;
+    slResetModalMaximize(revokeModal, revokeBox, revokeMaximize);
+    if (revokeSummary) revokeSummary.innerHTML = slRenderScholarSummaryHtml(scholar);
     if (revokeIndexInput) revokeIndexInput.value = idx;
     if (revokeReasonInput) revokeReasonInput.value = '';
     if (revokeReasonCount) revokeReasonCount.textContent = '0';
@@ -334,7 +393,10 @@ function openRevokeModal(idx, scholar) {
 
 function closeRevokeModal() {
     const revokeModal = document.getElementById('slRevokeModal');
+    const revokeBox = document.getElementById('slRevokeBox');
+    const revokeMaximize = document.getElementById('slRevokeMaximize');
     if (revokeModal) revokeModal.style.display = 'none';
+    slResetModalMaximize(revokeModal, revokeBox, revokeMaximize);
 }
 
 function confirmRevokeApproval() {
@@ -416,12 +478,7 @@ function initializeModal() {
 
     const closeView = () => {
         modal.style.display = 'none';
-        modalBox.classList.remove('sl-modal-maximized');
-        modal.classList.remove('sl-overlay-maximized');
-        if (maxBtn) {
-            maxBtn.textContent = '□';
-            maxBtn.title = 'Maximize';
-        }
+        slResetModalMaximize(modal, modalBox, maxBtn);
     };
 
     if (closeBtn) closeBtn.addEventListener('click', closeView);
@@ -431,24 +488,20 @@ function initializeModal() {
         });
     }
     if (maxBtn && modalBox) {
-        maxBtn.addEventListener('click', () => {
-            modalBox.classList.toggle('sl-modal-maximized');
-            const isMax = modalBox.classList.contains('sl-modal-maximized');
-            maxBtn.textContent = isMax ? '⧉' : '□';
-            maxBtn.title = isMax ? 'Restore Down' : 'Maximize';
-            if (modal) modal.classList.toggle('sl-overlay-maximized', isMax);
+        maxBtn.addEventListener('click', (e) => {
+            slToggleModalMaximize(modal, modalBox, maxBtn, e);
         });
     }
 }
 
 function openScholarModal(r) {
     const modal = document.getElementById('slViewModal');
+    const modalBox = document.getElementById('slViewBox');
+    const maxBtn = document.getElementById('slViewMaximize');
     const body = document.getElementById('slViewBody');
     if (!modal || !body) return;
 
-    const fullName = slFormatFullName(r).replace(/,/g, ', ');
-    const initials = `${(r.first_name || '').charAt(0)}${(r.last_name || '').charAt(0)}`.toUpperCase();
-    const paymentStatus = slNormalizePaymentStatus(r);
+    slResetModalMaximize(modal, modalBox, maxBtn);
 
     const purposeText = r.purpose || (Array.isArray(r.purpose_list) ? r.purpose_list.join(', ') : '—');
     const reqList = [];
@@ -460,15 +513,12 @@ function openScholarModal(r) {
     const program = SV ? SV.loadScholarshipProgram() : null;
     const programHtml = SV ? SV.renderProgramInformationSection(program) : '';
     const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
-
-    const statusStyle = paymentStatus === 'Claimed' 
-        ? { bg: '#dcfce7', text: '#166534', label: 'Claimed' }
-        : paymentStatus === 'Pending Release'
-        ? { bg: '#fef3c7', text: '#92400e', label: 'Pending Release' }
-        : { bg: '#fee2e2', text: '#991b1b', label: 'Unclaimed' };
+    const summaryHtml = slRenderScholarSummaryHtml(r);
 
     body.innerHTML = `
         <div style="padding:24px;background:#f0f1f5;">
+            ${summaryHtml}
+
             <!-- Personal Information -->
             <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                 <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
@@ -547,34 +597,6 @@ function openScholarModal(r) {
             ${programHtml}
 
             ${formAnswersHtml}
-
-            <!-- Payment Status -->
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                    Payment Status
-                </h4>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Current Status</label>
-                        <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};box-shadow:0 1px 2px rgba(0,0,0,0.1);">${statusStyle.label}</span>
-                    </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Date Approved</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.approved_at) || 'Not specified'}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Applicant summary -->
-            <div style="background:white;border-radius:12px;padding:20px 24px;box-shadow:0 1px 3px rgba(0,0,0,0.1);display:flex;align-items:center;gap:16px;border-top:3px solid #213F99;">
-                <div style="width:56px;height:56px;background:#e8eef9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#213F99;flex-shrink:0;">${initials}</div>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:4px;">${fullName}</div>
-                    <div style="font-size:14px;color:#6b7280;">${esc(program?.programName || 'Scholarship Program')}</div>
-                </div>
-                <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};box-shadow:0 1px 2px rgba(0,0,0,0.1);flex-shrink:0;">${statusStyle.label}</span>
-            </div>
         </div>
     `;
 
@@ -762,17 +784,25 @@ function renderPagination() {
 
 function openEditModal(index, scholar) {
     const modal = document.getElementById('slEditModal');
-    const scholarName = slFormatFullName(scholar);
+    const editBox = document.getElementById('slEditBox');
+    const editMaxBtn = document.getElementById('slEditMaximize');
+    const editSummary = document.getElementById('slEditSummary');
+
+    slResetModalMaximize(modal, editBox, editMaxBtn);
+    if (editSummary) editSummary.innerHTML = slRenderScholarSummaryHtml(scholar);
 
     document.getElementById('editScholarIndex').value = index;
-    document.getElementById('editScholarName').value = scholarName;
     document.getElementById('editPaymentStatus').value = slNormalizePaymentStatus(scholar);
 
     modal.style.display = 'flex';
 }
 
 function closeEditModal() {
-    document.getElementById('slEditModal').style.display = 'none';
+    const modal = document.getElementById('slEditModal');
+    const editBox = document.getElementById('slEditBox');
+    const editMaxBtn = document.getElementById('slEditMaximize');
+    if (modal) modal.style.display = 'none';
+    slResetModalMaximize(modal, editBox, editMaxBtn);
 }
 
 function saveEditStatus() {
@@ -811,12 +841,7 @@ function initializeEditModal() {
 
     const closeEdit = () => {
         editModal.style.display = 'none';
-        editBox.classList.remove('sl-modal-maximized');
-        editModal.classList.remove('sl-overlay-maximized');
-        if (editMaxBtn) {
-            editMaxBtn.textContent = '□';
-            editMaxBtn.title = 'Maximize';
-        }
+        slResetModalMaximize(editModal, editBox, editMaxBtn);
     };
 
     if (editClose) editClose.addEventListener('click', closeEdit);
@@ -828,12 +853,8 @@ function initializeEditModal() {
         });
     }
     if (editMaxBtn && editBox) {
-        editMaxBtn.addEventListener('click', () => {
-            editBox.classList.toggle('sl-modal-maximized');
-            const isMax = editBox.classList.contains('sl-modal-maximized');
-            editMaxBtn.textContent = isMax ? '⧉' : '□';
-            editMaxBtn.title = isMax ? 'Restore Down' : 'Maximize';
-            if (editModal) editModal.classList.toggle('sl-overlay-maximized', isMax);
+        editMaxBtn.addEventListener('click', (e) => {
+            slToggleModalMaximize(editModal, editBox, editMaxBtn, e);
         });
     }
 }
