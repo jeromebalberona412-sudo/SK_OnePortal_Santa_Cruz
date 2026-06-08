@@ -271,11 +271,5 @@
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Authentication/assets/js/loader.js'])
-@if (session('verification_wait') && session()->has('sk_official_email_verification_pending'))
-    <script>window.location.replace("{{ route('sk_official.verification.wait', [], false) }}");</script>
-@endif
-@if (session('takeover_wait') && session()->has('sk_official_takeover_pending'))
-    <script>window.location.replace("{{ route('sk_official.takeover.wait', [], false) }}");</script>
-@endif
 </body>
 </html>

@@ -20,10 +20,8 @@ Route::post('/change-email/set-password/{id}/{token}', [\App\Modules\Profile\Con
 
 Route::middleware([
     'auth',
-    'verified',
     'single.session',
     'sk_official.access',
-    'trusted.device',
     'must.change.password',
 ])->group(function () {
     Route::get('/dashboard', function () {

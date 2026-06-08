@@ -52,7 +52,7 @@ return [
     ],
 
     'feature_flags' => [
-        'features.device_verification' => (bool) env('SK_OFFICIAL_FEATURE_DEVICE_VERIFICATION', true),
+        'features.device_verification' => (bool) env('SK_OFFICIAL_FEATURE_DEVICE_VERIFICATION', false),
         'features.login_alert_notifications' => (bool) env('SK_OFFICIAL_FEATURE_LOGIN_ALERTS', true),
         'features.suspicious_login_detection' => (bool) env('SK_OFFICIAL_FEATURE_SUSPICIOUS_LOGIN', true),
     ],

@@ -90,53 +90,12 @@ class AuthenticationService
             return null;
         }
 
-        // Single-session takeover check
-        if ($this->hasActiveSession($user, $request)) {
-            $this->storeTakeoverPending($user, $request);
-
-            $this->auditLogService->log(
-                event: 'login_takeover_initiated',
-                user: $user,
-                request: $request,
-                metadata: [],
-                outcome: AuthAuditLogService::OUTCOME_SUCCESS,
-                resourceType: 'auth',
-                resourceId: $user->getKey(),
-            );
-
-            // Redirect to takeover flow — Fortify will receive null and throw ValidationException,
-            // but we redirect before that via a session flag checked in the login view.
-            // Store credentials in session so the takeover flow can complete login.
-            $request->session()->put('sk_official_takeover_pending', [
-                'user_id'    => $user->getKey(),
-                'email'      => $user->email,
-                'started_at' => now()->toIso8601String(),
-            ]);
-
-            // Signal to Fortify's authenticateUsing callback to redirect instead of failing
-            $request->session()->put('sk_official_redirect_takeover', true);
-
-            return null;
-        }
-
-        // Email verification check
-        if (! $user->hasVerifiedEmail()) {
-            $this->startEmailVerificationWait(
-                user: $user,
-                email: $email,
-                request: $request,
-                reason: 'email_unverified',
-                message: 'A verification email has been sent. Complete verification to continue.'
-            );
-
-            return null;
-        }
-
         // Successful login
         $this->loginSecurityService->recordAttempt($user, $email, true, $request);
         $this->loginSecurityService->clearAfterSuccess($user);
         $user->recordLogin((string) $request->ip());
 
+        $this->invalidatePreviousSession($user);
         $this->assignSessionOwnership($user, $request);
 
         $this->auditLogService->log(

@@ -125,19 +125,19 @@ class AuthController extends Controller
         ]);
     }
 
-    public function showTakeoverWait(Request $request): View|RedirectResponse
+    public function showTakeoverWait(Request $request): RedirectResponse
     {
-        $takeoverData = $this->authenticationService->showTakeoverWaitData($request);
+        $request->session()->forget([
+            'sk_official_takeover_pending',
+            'sk_official_redirect_takeover',
+            'takeover_wait',
+        ]);
 
-        if ($takeoverData instanceof RedirectResponse) {
-            return $takeoverData;
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
         }
 
-        return view('authentication::takeover-wait', [
-            'email' => (string) ($takeoverData['email'] ?? ''),
-            'resendLocked' => (bool) ($takeoverData['resendLocked'] ?? false),
-            'cooldownSeconds' => (int) ($takeoverData['cooldownSeconds'] ?? 0),
-        ]);
+        return redirect()->route('login');
     }
 
     public function sendTakeoverOtp(Request $request): RedirectResponse
