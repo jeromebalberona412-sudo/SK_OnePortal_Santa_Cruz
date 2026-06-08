@@ -126,6 +126,7 @@ class AuthenticationService
         $user->recordLogin((string) $request->ip());
 
         $this->assignSessionOwnership($user, $request);
+        $this->trustedDeviceService->trust($user, $request);
 
         $this->auditLogService->log(
             event: 'login_success',

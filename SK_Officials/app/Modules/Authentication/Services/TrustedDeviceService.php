@@ -9,16 +9,21 @@ use Illuminate\Support\Facades\Schema;
 
 class TrustedDeviceService
 {
+    protected function tableName(): string
+    {
+        return 'sk_official_trusted_devices';
+    }
+
     public function isTrusted(User $user, Request $request): bool
     {
-        if (! Schema::hasTable('trusted_devices')) {
+        if (! Schema::hasTable($this->tableName())) {
             return false;
         }
 
         $fingerprint = app(DeviceFingerprintService::class)->fingerprint($request);
         $expirationDays = (int) config('sk_official_auth.trusted_device.expiration_days', 30);
 
-        return DB::table('trusted_devices')
+        return DB::table($this->tableName())
             ->where('user_id', $user->getKey())
             ->where('fingerprint', $fingerprint)
             ->where('expires_at', '>', now())
@@ -27,14 +32,14 @@ class TrustedDeviceService
 
     public function trust(User $user, Request $request): void
     {
-        if (! Schema::hasTable('trusted_devices')) {
+        if (! Schema::hasTable($this->tableName())) {
             return;
         }
 
         $fingerprint = app(DeviceFingerprintService::class)->fingerprint($request);
         $expirationDays = (int) config('sk_official_auth.trusted_device.expiration_days', 30);
 
-        DB::table('trusted_devices')->updateOrInsert(
+        DB::table($this->tableName())->updateOrInsert(
             [
                 'user_id'     => $user->getKey(),
                 'fingerprint' => $fingerprint,
@@ -51,13 +56,13 @@ class TrustedDeviceService
 
     public function revoke(User $user, Request $request): void
     {
-        if (! Schema::hasTable('trusted_devices')) {
+        if (! Schema::hasTable($this->tableName())) {
             return;
         }
 
         $fingerprint = app(DeviceFingerprintService::class)->fingerprint($request);
 
-        DB::table('trusted_devices')
+        DB::table($this->tableName())
             ->where('user_id', $user->getKey())
             ->where('fingerprint', $fingerprint)
             ->delete();

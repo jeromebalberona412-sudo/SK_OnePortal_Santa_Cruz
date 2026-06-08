@@ -5,6 +5,7 @@ namespace App\Modules\Authentication\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Authentication\Services\AuthenticationService;
+use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\PasswordResetService;
 use App\Modules\Authentication\Services\TenantContextService;
 use App\Modules\Profile\Services\PasswordChangeService;
@@ -29,6 +30,7 @@ class AuthController extends Controller
         protected TenantContextService $tenantContextService,
         protected PasswordResetService $passwordResetService,
         protected PasswordChangeService $passwordChangeService,
+        protected EmailVerificationDeviceService $emailVerificationDeviceService,
     ) {}
 
     public function showLogin(): View
@@ -67,6 +69,7 @@ class AuthController extends Controller
             'email' => (string) ($pending['email'] ?? ''),
             'expiresAtIso' => $expiresAt->toIso8601String(),
             'waitMinutes' => (int) config('sk_official_auth.verification.wait_minutes', 15),
+            'resendCooldown' => $this->emailVerificationDeviceService->resendCooldownRemaining($pending),
         ]);
     }
 
@@ -108,6 +111,7 @@ class AuthController extends Controller
                 'state' => 'pending',
                 'expires_at' => $expiresAt->toIso8601String(),
                 'seconds_remaining' => max(0, now()->diffInSeconds($expiresAt, false)),
+                'resend_cooldown' => $this->emailVerificationDeviceService->resendCooldownRemaining($pending),
             ]);
         }
 
@@ -116,6 +120,7 @@ class AuthController extends Controller
                 'state' => 'pending',
                 'expires_at' => $expiresAt->toIso8601String(),
                 'seconds_remaining' => max(0, now()->diffInSeconds($expiresAt, false)),
+                'resend_cooldown' => $this->emailVerificationDeviceService->resendCooldownRemaining($pending),
             ]);
         }
 
@@ -173,18 +178,36 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $tenantId = $this->tenantContextService->tenantId();
+        $pending = $request->session()->get('sk_official_email_verification_pending');
 
-        $user = User::query()
-            ->where('email', $validated['email'])
-            ->when($tenantId !== null, fn ($query) => $query->where('tenant_id', $tenantId))
-            ->first();
-
-        if ($user && $user->hasRole(User::ROLE_SK_OFFICIAL)) {
-            $user->sendEmailVerificationNotification();
+        if (! is_array($pending)) {
+            return redirect()->route('login')->withErrors([
+                'verification' => 'No verification session is currently pending.',
+            ]);
         }
 
-        return back();
+        $remaining = $this->emailVerificationDeviceService->resendCooldownRemaining($pending);
+
+        if ($remaining > 0) {
+            return back()->withErrors([
+                'email' => "Please wait {$remaining} seconds before resending.",
+            ]);
+        }
+
+        $user = User::query()->find((int) ($pending['user_id'] ?? 0));
+
+        if ($user === null || strtolower((string) $user->email) !== strtolower((string) $validated['email'])) {
+            return back()->withErrors([
+                'email' => 'Unable to resend verification for this session.',
+            ]);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        $pending['verification_last_sent_at'] = now()->toIso8601String();
+        $request->session()->put('sk_official_email_verification_pending', $pending);
+
+        return back()->with('status', 'Verification email resent.');
     }
 
     public function showVerificationSuccess(): View
@@ -254,9 +277,13 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'email', 'max:100'],
         ]);
 
-        $this->passwordResetService->sendResetLink($request, (string) $validated['email']);
+        try {
+            $this->passwordResetService->sendResetLink($request, (string) $validated['email']);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors())->withInput();
+        }
 
-        return back()->with('status', 'A password reset link has been sent');
+        return back()->with('status', 'A password reset link has been sent to your email address.');
     }
 
     public function showResetPassword(Request $request, string $token): View|RedirectResponse

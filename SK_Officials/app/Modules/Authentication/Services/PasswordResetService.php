@@ -49,7 +49,9 @@ class PasswordResetService
                 $this->logResetFailure($request, $user, $normalizedEmail, 'blocked_scope', AuthAuditLogService::OUTCOME_BLOCKED);
             }
 
-            return;
+            throw ValidationException::withMessages([
+                'email' => ['We could not find an account associated with this email address.'],
+            ]);
         }
 
         $status = $this->broker()->sendResetLink(

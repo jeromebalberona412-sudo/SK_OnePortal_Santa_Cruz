@@ -8,6 +8,8 @@ use App\Modules\Authentication\Services\FeatureFlagService;
 use App\Modules\Authentication\Services\TrustedDeviceService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureTrustedDevice
@@ -20,8 +22,7 @@ class EnsureTrustedDevice
 
     public function handle(Request $request, Closure $next): Response
     {
-        // If device verification feature is disabled, skip
-        if (! $this->featureFlagService->deviceVerificationEnabled()) {
+        if (! $this->deviceVerificationEnabled()) {
             return $next($request);
         }
 
@@ -32,21 +33,34 @@ class EnsureTrustedDevice
             return $next($request);
         }
 
-        // If device is already trusted, proceed
+        if ($request->routeIs(
+            'sk_official.verification.wait',
+            'sk_official.verification.wait.status',
+            'sk_official.verification.resend',
+            'sk_official.verification.verify',
+            'sk_official.verification.success',
+        )) {
+            return $next($request);
+        }
+
         if ($this->trustedDeviceService->isTrusted($user, $request)) {
             return $next($request);
         }
 
-        // Device not trusted — require email verification
-        if (! $user->hasVerifiedEmail()) {
-            $this->emailVerificationDeviceService->storePendingVerification($user, $request);
+        $this->emailVerificationDeviceService->storePendingVerification($user, $request, [
+            'reason' => 'session_device_verification',
+        ]);
 
-            return redirect()->route('sk_official.verification.wait');
-        }
+        Auth::logout();
 
-        // Email is verified — trust this device going forward
-        $this->trustedDeviceService->trust($user, $request);
+        return redirect()
+            ->route('sk_official.verification.wait')
+            ->with('status', 'We sent a verification link to your email. Please verify to continue on this device.');
+    }
 
-        return $next($request);
+    protected function deviceVerificationEnabled(): bool
+    {
+        return $this->featureFlagService->deviceVerificationEnabled()
+            || Schema::hasTable('sk_official_trusted_devices');
     }
 }

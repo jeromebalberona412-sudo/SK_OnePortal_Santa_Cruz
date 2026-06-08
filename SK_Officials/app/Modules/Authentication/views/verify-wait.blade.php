@@ -68,15 +68,31 @@
                         Expires in: <span id="countdown-timer">{{ sprintf('%02d:%02d', $waitMinutes, 0) }}</span>
                     </p>
 
+                    @if ($errors->any())
+                        <div class="sk-alert sk-alert-error" style="margin-bottom: 1rem;">
+                            @foreach ($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if (session('status'))
+                        <div class="sk-alert sk-alert-success" style="margin-bottom: 1rem;">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
                     <div class="resend-section">
+                        <div class="resend-cooldown" id="resend-cooldown" @if($resendCooldown <= 0) style="display: none;" @endif>
+                            Resend available in <strong id="resend-cooldown-count">{{ $resendCooldown > 0 ? sprintf('%d:%02d', intdiv($resendCooldown, 60), $resendCooldown % 60) : '1:00' }}</strong>
+                        </div>
                         <form method="POST" action="{{ route('sk_official.verification.resend', [], false) }}" id="resend-form">
                             @csrf
                             <input type="hidden" name="email" value="{{ $email }}">
-                            <button type="submit" class="sk-submit-btn btn-resend" id="resend-btn">
+                            <button type="submit" class="sk-submit-btn btn-resend" id="resend-btn" @if($resendCooldown > 0) disabled @endif>
                                 Resend Verification Email
                             </button>
                         </form>
-                        <div class="resend-cooldown" id="resend-cooldown" style="display: none;"></div>
                     </div>
 
                     <div class="form-footer">
@@ -103,6 +119,9 @@
         </div>
     </div>
 
+    <script>
+        window.skVerifyResendCooldown = {{ (int) $resendCooldown }};
+    </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
