@@ -37,6 +37,7 @@ export default defineConfig({
                 'app/Modules/Profile/assets/css/change-email.css',
                 'app/Modules/Profile/assets/js/change-email.js',
                 'app/Modules/Profile/assets/js/change-email-verify.js',
+                'app/Modules/Profile/assets/js/change-password-verify.js',
                 'app/Modules/Profile/assets/css/notification.css',
                 'app/Modules/Profile/assets/js/notification.js',
                 // Calendar module assets

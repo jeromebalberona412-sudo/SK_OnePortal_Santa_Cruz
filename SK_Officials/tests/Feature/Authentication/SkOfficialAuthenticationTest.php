@@ -146,10 +146,17 @@ it('redirects first-login officials to change password until they update it', fu
 
     get('/dashboard')->assertRedirect('/change-password');
 
+    Notification::fake();
+
     post('/change-password', [
         'password' => 'NewPassword123!',
         'password_confirmation' => 'NewPassword123!',
-    ])->assertRedirect('/login');
+    ])->assertRedirect('/change-password/verify');
 
-    expect((bool) $user->fresh()->must_change_password)->toBeFalse();
+    $freshUser = $user->fresh();
+    expect($freshUser->pending_password)->not->toBeNull();
+    expect($freshUser->password_change_token)->not->toBeNull();
+    expect((bool) $freshUser->must_change_password)->toBeTrue();
+
+    Notification::assertSentTo($freshUser, \App\Modules\Profile\Notifications\PasswordChangeVerificationNotification::class);
 });

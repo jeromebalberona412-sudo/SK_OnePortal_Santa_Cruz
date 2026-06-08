@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\PasswordResetService;
 use App\Modules\Authentication\Services\TenantContextService;
+use App\Modules\Profile\Services\PasswordChangeService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -26,6 +28,7 @@ class AuthController extends Controller
         protected AuthenticationService $authenticationService,
         protected TenantContextService $tenantContextService,
         protected PasswordResetService $passwordResetService,
+        protected PasswordChangeService $passwordChangeService,
     ) {}
 
     public function showLogin(): View
@@ -306,8 +309,14 @@ class AuthController extends Controller
         return view('authentication::password-reset-success');
     }
 
-    public function showChangePassword(): View
+    public function showChangePassword(Request $request): View|RedirectResponse
     {
+        $user = $request->user()->fresh();
+
+        if ($this->passwordChangeService->hasPendingChange($user)) {
+            return redirect()->route('change-password.verify');
+        }
+
         return view('Profile::change-password');
     }
 
@@ -329,26 +338,15 @@ class AuthController extends Controller
             ],
         ]);
 
-        if (Hash::check((string) $validated['password'], (string) $user->password)) {
-            return back()->withErrors([
-                'password' => 'Your new password must be different from your current password.',
-            ]);
+        try {
+            $this->passwordChangeService->requestChange($user, (string) $validated['password']);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors());
         }
 
-        $user->password = Hash::make((string) $validated['password']);
-        $user->remember_token = null;
-        $user->save();
-
-        // Update must_change_password to false using raw query with PostgreSQL casting
-        User::query()
-            ->whereKey($user->getKey())
-            ->update(['must_change_password' => DB::raw("'false'::boolean")]);
-
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login')->with('status', 'Password changed successfully. Please log in again.');
+        return redirect()
+            ->route('change-password.verify')
+            ->with('status', 'Verification link sent to your email address.');
     }
 
     /**

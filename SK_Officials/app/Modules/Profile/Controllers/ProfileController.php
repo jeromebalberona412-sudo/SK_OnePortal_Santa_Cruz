@@ -2,8 +2,11 @@
 
 namespace App\Modules\Profile\Controllers;
 
+use App\Models\User;
 use App\Modules\Profile\Services\EmailChangeService;
+use App\Modules\Profile\Services\PasswordChangeService;
 use App\Modules\Profile\Services\ProfileService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -17,6 +20,7 @@ class ProfileController extends Controller
     public function __construct(
         private readonly ProfileService $profileService,
         private readonly EmailChangeService $emailChangeService,
+        private readonly PasswordChangeService $passwordChangeService,
     ) {
     }
 
@@ -170,5 +174,124 @@ class ProfileController extends Controller
         return redirect()
             ->route('login')
             ->with('status', 'Password set successfully. Sign in with your new email and password.');
+    }
+
+    public function showChangePasswordVerify(Request $request): View|RedirectResponse
+    {
+        $user = $request->user()->fresh();
+
+        if (! $this->passwordChangeService->hasPendingChange($user)) {
+            if ($this->wasPasswordChangeConfirmed($request, $user)) {
+                return $this->finishPasswordChangeLogout($request, $user);
+            }
+
+            $request->session()->forget('password_change_verify_active');
+
+            return redirect()->route('change-password');
+        }
+
+        $request->session()->put('password_change_verify_active', true);
+
+        return view('Profile::change-password-verify', [
+            'user' => $user,
+            'resendCooldown' => $this->passwordChangeService->resendCooldownRemaining($user),
+        ]);
+    }
+
+    public function checkChangePasswordVerifyStatus(Request $request): JsonResponse
+    {
+        $user = $request->user()->fresh();
+
+        if ($this->passwordChangeService->hasPendingChange($user)) {
+            return response()->json([
+                'state' => 'pending',
+                'resend_cooldown' => $this->passwordChangeService->resendCooldownRemaining($user),
+            ]);
+        }
+
+        if ($this->wasPasswordChangeConfirmed($request, $user)) {
+            $request->session()->forget('password_change_verify_active');
+            $this->passwordChangeService->forgetRecentlyConfirmed($user->id);
+
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return response()->json([
+                'state' => 'confirmed',
+                'redirect' => route('login'),
+                'message' => 'Password changed successfully. Please sign in with your new password.',
+            ]);
+        }
+
+        return response()->json([
+            'state' => 'cancelled',
+            'redirect' => route('change-password'),
+            'message' => 'Password change request is no longer active.',
+        ]);
+    }
+
+    public function resendChangePassword(Request $request): RedirectResponse
+    {
+        try {
+            $this->passwordChangeService->resend($request->user()->fresh());
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors());
+        }
+
+        return back()->with('status', 'Verification email resent.');
+    }
+
+    public function cancelChangePassword(Request $request): RedirectResponse
+    {
+        $this->passwordChangeService->cancel($request->user()->fresh());
+        $request->session()->forget('password_change_verify_active');
+        $this->passwordChangeService->forgetRecentlyConfirmed($request->user()->id);
+
+        return redirect()
+            ->route('change-password')
+            ->with('status', 'Password change request cancelled.');
+    }
+
+    protected function wasPasswordChangeConfirmed(Request $request, User $user): bool
+    {
+        return $this->passwordChangeService->wasRecentlyConfirmed($user->id)
+            || (bool) $request->session()->get('password_change_verify_active', false);
+    }
+
+    protected function finishPasswordChangeLogout(Request $request, User $user): RedirectResponse
+    {
+        $request->session()->forget('password_change_verify_active');
+        $this->passwordChangeService->forgetRecentlyConfirmed($user->id);
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Password changed successfully. Please sign in with your new password.');
+    }
+
+    public function confirmChangePassword(Request $request, int $id, string $token): RedirectResponse
+    {
+        try {
+            $user = $this->passwordChangeService->confirm($id, $token);
+        } catch (ValidationException $exception) {
+            return redirect()
+                ->route('login')
+                ->withErrors($exception->errors());
+        }
+
+        if (Auth::check()) {
+            Auth::logout();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Password changed successfully for '.$user->email.'. Please sign in with your new password.');
     }
 }

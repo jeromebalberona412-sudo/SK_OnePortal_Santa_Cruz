@@ -5,13 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!form) return;
 
-    document.querySelectorAll('.cp-pw-toggle').forEach((btn) => {
+    document.querySelectorAll('.toggle-password').forEach((btn) => {
         btn.addEventListener('click', () => {
-            const target = document.getElementById(btn.dataset.target);
+            const target = document.getElementById(btn.dataset.target || '');
             if (!target) return;
+
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
             const isPassword = target.type === 'password';
+
             target.type = isPassword ? 'text' : 'password';
-            btn.classList.toggle('pw-visible', isPassword);
+
+            if (eyeOpen && eyeClosed) {
+                eyeOpen.style.display = isPassword ? 'none' : 'flex';
+                eyeClosed.style.display = isPassword ? 'flex' : 'none';
+            }
         });
     });
 

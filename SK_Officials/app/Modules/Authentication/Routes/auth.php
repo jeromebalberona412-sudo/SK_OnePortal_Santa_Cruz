@@ -35,6 +35,10 @@ Route::middleware(['auth', 'sk_official.access'])->group(function () {
     Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('password.change');
     Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('change-password');
     Route::post('/change-password', [AuthController::class, 'updatePassword'])->name('password.change.update');
+    Route::get('/change-password/verify', [\App\Modules\Profile\Controllers\ProfileController::class, 'showChangePasswordVerify'])->name('change-password.verify');
+    Route::get('/change-password/verify-status', [\App\Modules\Profile\Controllers\ProfileController::class, 'checkChangePasswordVerifyStatus'])->name('change-password.verify.status');
+    Route::post('/change-password/resend', [\App\Modules\Profile\Controllers\ProfileController::class, 'resendChangePassword'])->name('change-password.resend');
+    Route::post('/change-password/cancel', [\App\Modules\Profile\Controllers\ProfileController::class, 'cancelChangePassword'])->name('change-password.cancel');
 });
 
 Route::middleware(['auth', 'single.session'])->post('/heartbeat', [AuthController::class, 'heartbeat'])->name('sk_official.heartbeat');

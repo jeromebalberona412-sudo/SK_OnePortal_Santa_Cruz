@@ -11,6 +11,7 @@
     <title>Change Password - SK Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/forgot-password.css',
+        'app/Modules/Profile/assets/css/change-email.css',
         'app/Modules/Profile/assets/js/change-password.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -46,11 +47,11 @@
 
         <!-- Right Side — Card -->
         <div class="sk-login-section">
-            <div class="sk-login-card">
+            <div class="sk-login-card ce-verify-card">
 
                 <div class="card-header">
                     <h2 class="card-title">Change Password 🔐</h2>
-                    <p class="card-subtitle">Create a new password for your account.</p>
+                    <p class="card-subtitle">Create a new password for your account. We will email you a confirmation link before the change takes effect.</p>
                 </div>
 
                 <!-- Error Alert -->
@@ -149,15 +150,15 @@
                         @enderror
                     </div>
 
-                    <button type="submit" class="sk-submit-btn">
-                        <span>Change Password</span>
+                    <button type="submit" class="sk-submit-btn" id="cpSubmitBtn">
+                        <span id="cpBtnText">Change Password</span>
                         <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                         </svg>
                     </button>
                 </form>
 
-                <div class="youth-register-section">
+                <div class="youth-register-section ce-back-section">
                     <p class="register-text">
                         Back to profile?
                         <a href="{{ route('profile') }}" class="register-link">Go to Profile</a>

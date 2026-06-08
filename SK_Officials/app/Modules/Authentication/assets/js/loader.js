@@ -218,7 +218,7 @@ class Loader {
     disableFormElements(container) {
         if (!container) return;
 
-        const formElements = container.querySelectorAll('input, button, select, textarea, a');
+        const formElements = container.querySelectorAll('input:not([type="hidden"]), button, select, textarea, a');
         formElements.forEach(element => {
             element.disabled = true;
             element.style.pointerEvents = 'none';
@@ -232,7 +232,7 @@ class Loader {
     enableFormElements(container) {
         if (!container) return;
 
-        const formElements = container.querySelectorAll('input, button, select, textarea, a');
+        const formElements = container.querySelectorAll('input:not([type="hidden"]), button, select, textarea, a');
         formElements.forEach(element => {
             element.disabled = false;
             element.style.pointerEvents = '';

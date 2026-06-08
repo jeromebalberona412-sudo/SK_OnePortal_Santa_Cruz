@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmInput = document.getElementById('password_confirmation');
     const passwordRules = document.getElementById('passwordRules');
     const clientError = document.getElementById('password-client-error');
+    const submitBtn = document.getElementById('cpSubmitBtn');
+    const btnText = document.getElementById('cpBtnText');
 
     if (!form || !passwordInput) {
         return;
@@ -14,6 +16,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const maxLength = Number.parseInt(form.dataset.passwordMaxLength || '64', 10);
     const minLength = 8;
+
+    function showSubmitLoading() {
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('is-loading');
+        }
+        if (btnText) {
+            btnText.textContent = 'Changing password...';
+        }
+        // Use overlay only — never disable form inputs (breaks CSRF _token → 419).
+        if (window.showLoading) {
+            window.showLoading('Changing password...');
+        }
+    }
 
     function validatePasswordStrength(password) {
         const hasLowerCase = /[a-z]/.test(password);
@@ -106,7 +122,10 @@ document.addEventListener('DOMContentLoaded', function () {
             showClientError('Passwords do not match.');
             confirmInput.classList.add('is-invalid');
             confirmInput.focus();
+            return;
         }
+
+        showSubmitLoading();
     });
 
     document.querySelectorAll('.pw-toggle-btn').forEach(function (btn) {

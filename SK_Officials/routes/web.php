@@ -18,6 +18,10 @@ Route::post('/change-email/set-password/{id}/{token}', [\App\Modules\Profile\Con
     ->middleware('throttle:6,1')
     ->name('change-email.set-password.update');
 
+Route::get('/change-password/confirm/{id}/{token}', [\App\Modules\Profile\Controllers\ProfileController::class, 'confirmChangePassword'])
+    ->middleware('throttle:6,1')
+    ->name('change-password.confirm');
+
 Route::middleware([
     'auth',
     'single.session',
