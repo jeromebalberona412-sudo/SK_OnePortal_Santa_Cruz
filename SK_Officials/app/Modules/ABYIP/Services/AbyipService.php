@@ -4,6 +4,7 @@ namespace App\Modules\ABYIP\Services;
 
 use App\Models\AbyipDocument;
 use App\Models\AbyipProgram;
+use App\Models\AbyipProgramActivity;
 use App\Models\User;
 use DOMDocument;
 use DOMElement;
@@ -34,7 +35,7 @@ class AbyipService
     {
         $document = $this->findDocumentModel($user, $documentId);
 
-        return $this->formatDocument($document->load('detectedPrograms'));
+        return $this->formatDocument($document->load(['programs.activities', 'activities']));
     }
 
     /**
@@ -77,14 +78,15 @@ class AbyipService
             'source_type' => $sourceType,
             'document_html' => $data['document_html'] ?? null,
             'pdf_data' => $data['pdf_data'] ?? null,
-            'sk_youth_development_and_empowerment_programs' => $this->formatYouthProgramsForStorage(
-                $parsed['sk_youth_development_and_empowerment_programs'] ?? []
-            ),
         ]);
 
-        $this->syncDetectedPrograms($document, $parsed['sk_youth_development_and_empowerment_programs'] ?? []);
+        $this->syncProgramsAndActivities(
+            $document,
+            $parsed['line_items'] ?? [],
+            $parsed['sk_youth_development_and_empowerment_programs'] ?? []
+        );
 
-        return $this->formatDocument($document->fresh('detectedPrograms'));
+        return $this->formatDocument($document->fresh(['programs.activities', 'activities']));
     }
 
     /**
@@ -153,71 +155,137 @@ class AbyipService
             'total_expenditure' => $document->total_expenditure,
             'prepared_by_name' => $document->prepared_by_name,
             'approved_by_name' => $document->approved_by_name,
-            'sk_youth_development_and_empowerment_programs' => $document->sk_youth_development_and_empowerment_programs ?? [],
-            'detected_programs' => $document->relationLoaded('detectedPrograms')
-                ? $document->detectedPrograms->map(fn (AbyipProgram $program) => [
+            'programs' => $document->relationLoaded('programs')
+                ? $document->programs->map(fn (AbyipProgram $program) => [
                     'id' => $program->id,
-                    'programs' => $program->programs,
+                    'program_letter' => $program->program_letter,
+                    'program_name' => $program->program_name,
+                    'activities' => $program->relationLoaded('activities')
+                        ? $program->activities->map(fn (AbyipProgramActivity $activity) => $this->formatActivity($activity))->values()->all()
+                        : [],
                 ])->values()->all()
+                : [],
+            'line_items' => $document->relationLoaded('activities')
+                ? $document->activities
+                    ->whereNull('program_id')
+                    ->map(fn (AbyipProgramActivity $activity) => $this->formatActivity($activity))
+                    ->values()
+                    ->all()
                 : [],
         ];
     }
 
     /**
-     * @param  list<array<string, mixed>>  $detectedPrograms
+     * @param  list<array<string, mixed>>  $lineItems
+     * @param  list<array<string, mixed>>  $youthPrograms
      */
-    protected function syncDetectedPrograms(AbyipDocument $document, array $detectedPrograms): void
-    {
-        $letters = [];
+    protected function syncProgramsAndActivities(
+        AbyipDocument $document,
+        array $lineItems,
+        array $youthPrograms
+    ): void {
+        $programMap = [];
+        $sortOrder = 0;
 
-        foreach ($detectedPrograms as $program) {
+        foreach ($youthPrograms as $program) {
             $letter = strtoupper((string) ($program['letter'] ?? ''));
-            $label = trim((string) ($program['label'] ?? $program['programs'] ?? ''));
+            $name = trim((string) ($program['name'] ?? $this->stripProgramLetterPrefix((string) ($program['label'] ?? ''))));
 
-            if ($letter === '' || ! $this->isValidYouthProgramLetter($letter) || $label === '') {
+            if ($letter === '' || ! $this->isValidYouthProgramLetter($letter) || $name === '') {
                 continue;
             }
 
-            AbyipProgram::query()->updateOrCreate(
-                ['id' => $letter],
-                ['programs' => $label]
-            );
+            $model = AbyipProgram::create([
+                'abyip_id' => $document->id,
+                'program_letter' => $letter,
+                'program_name' => $name,
+                'sort_order' => $sortOrder++,
+            ]);
 
-            $letters[] = $letter;
+            $programMap[$letter] = $model->id;
+
+            foreach ($program['activities'] ?? [] as $activity) {
+                $this->createActivityRow($document->id, $model->id, $activity, $sortOrder++, [
+                    'program_section' => 'SK Youth Development and Empowerment Programs',
+                    'row_type' => 'data',
+                ]);
+            }
         }
 
-        $document->detectedPrograms()->sync(array_values(array_unique($letters)));
+        foreach ($lineItems as $item) {
+            if (($item['row_type'] ?? '') !== 'data') {
+                continue;
+            }
+
+            if (($item['program_section'] ?? '') === 'SK Youth Development and Empowerment Programs') {
+                continue;
+            }
+
+            $this->createActivityRow($document->id, null, $item, $sortOrder++, [
+                'program_section' => $item['program_section'] ?? null,
+                'row_type' => $item['row_type'] ?? 'data',
+            ]);
+        }
     }
 
     /**
-     * @param  list<array<string, mixed>>  $detectedPrograms
-     * @return list<array<string, mixed>>
+     * @param  array<string, mixed>  $item
+     * @param  array<string, mixed>  $defaults
      */
-    protected function formatYouthProgramsForStorage(array $detectedPrograms): array
+    protected function createActivityRow(
+        int $abyipId,
+        ?int $programId,
+        array $item,
+        int $sortOrder,
+        array $defaults = []
+    ): void {
+        $ppaName = trim((string) ($item['ppa_name'] ?? ''));
+        $activityName = $programId !== null ? $ppaName : null;
+
+        AbyipProgramActivity::create([
+            'abyip_id' => $abyipId,
+            'program_id' => $programId,
+            'activity_name' => $activityName !== '' ? $activityName : null,
+            'code' => $item['code'] ?? null,
+            'ppas' => $ppaName !== '' ? $ppaName : null,
+            'description' => $item['description'] ?? null,
+            'expected_result' => $item['expected_result'] ?? null,
+            'performance_indicator' => $item['performance_indicator'] ?? null,
+            'period_of_implementation' => $item['period_of_implementation'] ?? null,
+            'budget' => $item['budget_total'] ?? $item['budget'] ?? null,
+            'person_responsible' => $item['person_responsible'] ?? null,
+            'mooe' => $item['budget_mooe'] ?? null,
+            'co' => $item['budget_co'] ?? null,
+            'total' => $item['budget_total'] ?? null,
+            'row_type' => $defaults['row_type'] ?? ($item['row_type'] ?? null),
+            'program_section' => $defaults['program_section'] ?? ($item['program_section'] ?? null),
+            'sort_order' => $sortOrder,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function formatActivity(AbyipProgramActivity $activity): array
     {
-        $formatted = [];
-
-        foreach ($detectedPrograms as $program) {
-            $letter = strtoupper((string) ($program['letter'] ?? ''));
-            $label = trim((string) ($program['label'] ?? $program['programs'] ?? ''));
-            $name = trim((string) ($program['name'] ?? $this->stripProgramLetterPrefix($label)));
-
-            if ($letter === '' || ! $this->isValidYouthProgramLetter($letter) || $label === '') {
-                continue;
-            }
-
-            $formatted[] = [
-                'id' => $letter,
-                'programs' => $label,
-                'name' => $name,
-                'activities' => $program['activities'] ?? [],
-                'budget_mooe' => $program['budget_mooe'] ?? 0,
-                'budget_co' => $program['budget_co'] ?? 0,
-                'budget_total' => $program['budget_total'] ?? 0,
-            ];
-        }
-
-        return $formatted;
+        return [
+            'id' => $activity->id,
+            'program_id' => $activity->program_id,
+            'activity_name' => $activity->activity_name,
+            'code' => $activity->code,
+            'ppas' => $activity->ppas,
+            'description' => $activity->description,
+            'expected_result' => $activity->expected_result,
+            'performance_indicator' => $activity->performance_indicator,
+            'period_of_implementation' => $activity->period_of_implementation,
+            'budget' => $activity->budget,
+            'person_responsible' => $activity->person_responsible,
+            'mooe' => $activity->mooe,
+            'co' => $activity->co,
+            'total' => $activity->total,
+            'row_type' => $activity->row_type,
+            'program_section' => $activity->program_section,
+        ];
     }
 
     /**

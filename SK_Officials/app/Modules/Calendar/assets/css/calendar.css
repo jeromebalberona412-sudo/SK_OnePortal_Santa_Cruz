@@ -353,8 +353,9 @@ body {
 }
 
 .calendar-modal.modal-maximized textarea {
-    min-height: 200px;
-    flex: 1;
+    min-height: 140px;
+    max-height: 220px;
+    height: 180px;
 }
 
 .calendar-modal-header {
@@ -440,7 +441,9 @@ body {
 }
 
 .calendar-modal textarea.calendar-note-content {
-    min-height: 100px;
+    min-height: 120px;
+    max-height: 180px;
+    height: 140px;
 }
 
 .calendar-modal textarea {
@@ -449,9 +452,44 @@ body {
     border: 1px solid #d1d5db;
     padding: 10px;
     font-size: 14px;
-    resize: vertical;
+    resize: none;
     min-height: 120px;
-    flex: 1;
+    max-height: 180px;
+    height: 140px;
+    box-sizing: border-box;
+}
+
+.calendar-note-char-counter {
+    font-size: 12px;
+    color: #6b7280;
+    text-align: right;
+    margin-top: 4px;
+}
+
+.calendar-note-char-counter.is-over {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.calendar-action-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: calendarSpin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.calendar-action-spinner-dark {
+    border-color: rgba(0, 0, 0, 0.15);
+    border-top-color: #2c2c3e;
+}
+
+@keyframes calendarSpin {
+    to { transform: rotate(360deg); }
 }
 
 .calendar-modal textarea[readonly] {

@@ -1,5 +1,5 @@
 Database = SK_Oneportal
-Last Updated = 2026-05-03
+Last Updated = 2026-06-08
 
 -- ============================================================
 -- CORE / SHARED TABLES
@@ -683,6 +683,74 @@ ADD COLUMN IF NOT EXISTS respondent_number VARCHAR(32) NULL,
 ADD COLUMN IF NOT EXISTS respondent_sequence INTEGER NULL,
 ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
 
+-- ABYIP schema migration (auto-detected programs + activities per upload)
+ALTER TABLE abyips
+DROP COLUMN IF EXISTS sk_youth_development_and_empowerment_programs;
+
+DROP TABLE IF EXISTS abyip_detected_programs;
+DROP TABLE IF EXISTS abyip_program_activities;
+DROP TABLE IF EXISTS abyip_programs;
+
+CREATE TABLE IF NOT EXISTS abyip_programs (
+  id BIGSERIAL NOT NULL,
+  abyip_id BIGINT NOT NULL,
+  program_letter CHAR(1) NULL,
+  program_name VARCHAR(255) NOT NULL,
+  sort_order INTEGER NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT abyip_programs_pkey PRIMARY KEY (id),
+  CONSTRAINT abyip_programs_abyip_id_foreign FOREIGN KEY (abyip_id) REFERENCES abyips (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS abyip_programs_abyip_id_index ON abyip_programs (abyip_id);
+
+CREATE TABLE IF NOT EXISTS abyip_program_activities (
+  id BIGSERIAL NOT NULL,
+  abyip_id BIGINT NOT NULL,
+  program_id BIGINT NULL,
+  activity_name VARCHAR(255) NULL,
+  code VARCHAR(50) NULL,
+  ppas VARCHAR(255) NULL,
+  description TEXT NULL,
+  expected_result TEXT NULL,
+  performance_indicator TEXT NULL,
+  period_of_implementation VARCHAR(255) NULL,
+  budget NUMERIC(15, 2) NULL,
+  person_responsible VARCHAR(255) NULL,
+  mooe NUMERIC(15, 2) NULL,
+  co NUMERIC(15, 2) NULL,
+  total NUMERIC(15, 2) NULL,
+  row_type VARCHAR(30) NULL,
+  program_section VARCHAR(255) NULL,
+  sort_order INTEGER NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT abyip_program_activities_pkey PRIMARY KEY (id),
+  CONSTRAINT abyip_program_activities_abyip_id_foreign FOREIGN KEY (abyip_id) REFERENCES abyips (id) ON DELETE CASCADE,
+  CONSTRAINT abyip_program_activities_program_id_foreign FOREIGN KEY (program_id) REFERENCES abyip_programs (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS abyip_program_activities_abyip_id_index ON abyip_program_activities (abyip_id);
+CREATE INDEX IF NOT EXISTS abyip_program_activities_program_id_index ON abyip_program_activities (program_id);
+
+CREATE TABLE IF NOT EXISTS calendar_notes (
+  id BIGSERIAL NOT NULL,
+  barangay_id BIGINT NOT NULL,
+  user_id BIGINT NULL,
+  note_date DATE NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content VARCHAR(500) NOT NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT calendar_notes_pkey PRIMARY KEY (id),
+  CONSTRAINT calendar_notes_barangay_id_note_date_unique UNIQUE (barangay_id, note_date),
+  CONSTRAINT calendar_notes_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+  CONSTRAINT calendar_notes_user_id_foreign FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS calendar_notes_barangay_id_note_date_index ON calendar_notes (barangay_id, note_date);
+
 ALTER TABLE official_profiles
 ADD COLUMN IF NOT EXISTS sex VARCHAR(10) NULL;
 
@@ -697,49 +765,97 @@ CREATE TABLE IF NOT EXISTS committees (
     CONSTRAINT committees_committee_head_id_unique UNIQUE (committee_head_id)
 );
 
-CREATE TABLE IF NOT EXISTS abyips (
-    id BIGSERIAL PRIMARY KEY,
-    tenant_id BIGINT,
-    barangay_id BIGINT NOT NULL,
-    created_by BIGINT,
-    title VARCHAR(255) NOT NULL,
-    calendar_year SMALLINT NOT NULL,
-    region VARCHAR(100) NOT NULL DEFAULT 'IV-A CALABARZON',
-    province VARCHAR(100) NOT NULL DEFAULT 'Laguna',
-    municipality VARCHAR(100) NOT NULL DEFAULT 'Santa Cruz',
-    sk_council_name VARCHAR(255),
-    barangay_estimated_budget NUMERIC(15,2),
-    sk_fund_amount NUMERIC(15,2),
-    total_expenditure NUMERIC(15,2),
-    prepared_by_name VARCHAR(255),
-    prepared_by_position VARCHAR(255),
-    approved_by_name VARCHAR(255),
-    approved_by_position VARCHAR(255),
-    source_type VARCHAR(20) NOT NULL DEFAULT 'word',
-    document_html TEXT,
-    pdf_data TEXT,
-    sk_youth_development_and_empowerment_programs JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT abyips_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE SET NULL,
-    CONSTRAINT abyips_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
-    CONSTRAINT abyips_created_by_foreign FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
-    CONSTRAINT abyips_barangay_id_calendar_year_unique UNIQUE (barangay_id, calendar_year)
-);
+create table public.abyips (
+  id bigserial not null,
+  tenant_id bigint null,
+  barangay_id bigint not null,
+  created_by bigint null,
+  title character varying(255) not null,
+  calendar_year smallint not null,
+  region character varying(100) not null default 'IV-A CALABARZON'::character varying,
+  province character varying(100) not null default 'Laguna'::character varying,
+  municipality character varying(100) not null default 'Santa Cruz'::character varying,
+  sk_council_name character varying(255) null,
+  barangay_estimated_budget numeric(15, 2) null,
+  sk_fund_amount numeric(15, 2) null,
+  total_expenditure numeric(15, 2) null,
+  prepared_by_name character varying(255) null,
+  prepared_by_position character varying(255) null,
+  approved_by_name character varying(255) null,
+  approved_by_position character varying(255) null,
+  source_type character varying(20) not null default 'word'::character varying,
+  document_html text null,
+  pdf_data text null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint abyips_pkey primary key (id),
+  constraint abyips_barangay_id_calendar_year_unique unique (barangay_id, calendar_year),
+  constraint abyips_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
+  constraint abyips_created_by_foreign foreign KEY (created_by) references users (id) on delete set null,
+  constraint abyips_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete set null
+) TABLESPACE pg_default;
 
-CREATE INDEX IF NOT EXISTS abyips_barangay_id_calendar_year_index ON abyips (barangay_id, calendar_year);
+create index IF not exists abyips_barangay_id_calendar_year_index on public.abyips using btree (barangay_id, calendar_year) TABLESPACE pg_default;
 
-CREATE TABLE IF NOT EXISTS abyip_programs (
-    id CHAR(1) PRIMARY KEY,
-    programs VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Programs auto-detected per uploaded ABYIP (Word/PDF) — e.g. "A. Equitable Access to Quality Education"
+create table public.abyip_programs (
+  id bigserial not null,
+  abyip_id bigint not null,
+  program_letter character(1) null,
+  program_name character varying(255) not null,
+  sort_order integer null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint abyip_programs_pkey primary key (id),
+  constraint abyip_programs_abyip_id_foreign foreign KEY (abyip_id) references abyips (id) on delete CASCADE
+) TABLESPACE pg_default;
 
-CREATE TABLE IF NOT EXISTS abyip_detected_programs (
-    abyip_id BIGINT NOT NULL,
-    program_id CHAR(1) NOT NULL,
-    PRIMARY KEY (abyip_id, program_id),
-    CONSTRAINT abyip_detected_programs_abyip_id_foreign FOREIGN KEY (abyip_id) REFERENCES abyips (id) ON DELETE CASCADE,
-    CONSTRAINT abyip_detected_programs_program_id_foreign FOREIGN KEY (program_id) REFERENCES abyip_programs (id) ON DELETE CASCADE
-);
+create index IF not exists abyip_programs_abyip_id_index on public.abyip_programs using btree (abyip_id) TABLESPACE pg_default;
+
+-- Activities under each program (or standalone expenditure rows) — auto-detected from upload
+-- activity_name = sub-items below program_name (e.g. "Support to ALS and RIC" under program A)
+create table public.abyip_program_activities (
+  id bigserial not null,
+  abyip_id bigint not null,
+  program_id bigint null,
+  activity_name character varying(255) null,
+  code character varying(50) null,
+  ppas character varying(255) null,
+  description text null,
+  expected_result text null,
+  performance_indicator text null,
+  period_of_implementation character varying(255) null,
+  budget numeric(15, 2) null,
+  person_responsible character varying(255) null,
+  mooe numeric(15, 2) null,
+  co numeric(15, 2) null,
+  total numeric(15, 2) null,
+  row_type character varying(30) null,
+  program_section character varying(255) null,
+  sort_order integer null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint abyip_program_activities_pkey primary key (id),
+  constraint abyip_program_activities_abyip_id_foreign foreign KEY (abyip_id) references abyips (id) on delete CASCADE,
+  constraint abyip_program_activities_program_id_foreign foreign KEY (program_id) references abyip_programs (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists abyip_program_activities_abyip_id_index on public.abyip_program_activities using btree (abyip_id) TABLESPACE pg_default;
+create index IF not exists abyip_program_activities_program_id_index on public.abyip_program_activities using btree (program_id) TABLESPACE pg_default;
+
+create table public.calendar_notes (
+  id bigserial not null,
+  barangay_id bigint not null,
+  user_id bigint null,
+  note_date date not null,
+  title character varying(255) not null,
+  content character varying(500) not null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint calendar_notes_pkey primary key (id),
+  constraint calendar_notes_barangay_id_note_date_unique unique (barangay_id, note_date),
+  constraint calendar_notes_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
+  constraint calendar_notes_user_id_foreign foreign KEY (user_id) references users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists calendar_notes_barangay_id_note_date_index on public.calendar_notes using btree (barangay_id, note_date) TABLESPACE pg_default;

@@ -45,6 +45,13 @@ Route::middleware([
         return view('Calendar::calendar');
     })->name('calendar');
 
+    Route::prefix('api/calendar')->group(function () {
+        Route::get('/notes', [\App\Modules\Calendar\Controllers\CalendarController::class, 'index'])->name('api.calendar.notes.index');
+        Route::post('/notes', [\App\Modules\Calendar\Controllers\CalendarController::class, 'store'])->name('api.calendar.notes.store');
+        Route::put('/notes/{id}', [\App\Modules\Calendar\Controllers\CalendarController::class, 'update'])->name('api.calendar.notes.update');
+        Route::delete('/notes/{id}', [\App\Modules\Calendar\Controllers\CalendarController::class, 'destroy'])->name('api.calendar.notes.destroy');
+    });
+
     Route::get('/announcements', function () {
         $user  = auth()->user();
         $brgy  = \App\Models\Barangay::find($user->barangay_id);

@@ -3,30 +3,27 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AbyipProgram extends Model
 {
-    public $incrementing = false;
-
     protected $table = 'abyip_programs';
 
-    protected $keyType = 'string';
-
-    protected $primaryKey = 'id';
-
     protected $fillable = [
-        'id',
-        'programs',
+        'abyip_id',
+        'program_letter',
+        'program_name',
+        'sort_order',
     ];
 
-    public function abyips(): BelongsToMany
+    public function abyip(): BelongsTo
     {
-        return $this->belongsToMany(
-            AbyipDocument::class,
-            'abyip_detected_programs',
-            'program_id',
-            'abyip_id'
-        );
+        return $this->belongsTo(AbyipDocument::class, 'abyip_id');
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(AbyipProgramActivity::class, 'program_id');
     }
 }

@@ -2,6 +2,27 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeCalendar();
 });
 
+const CONTENT_MAX = 500;
+
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+async function calendarApiFetch(url, options = {}) {
+    const res = await fetch(url, {
+        ...options,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken(),
+            ...(options.headers || {}),
+        },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.message || 'Request failed.');
+    return json;
+}
+
 function showConfirm(options) {
     return new Promise((resolve) => {
         const { title, message, confirmText = 'OK', cancelText = 'Cancel', confirmClass = 'confirm-primary', theme = 'default' } = options;
@@ -61,12 +82,7 @@ function showToast(message, type) {
     if (existing) existing.remove();
     const toast = document.createElement('div');
     toast.className = 'app-toast app-toast-show app-toast-' + (type || 'success');
-
-    let icon = '✓';
-    if (type === 'error') {
-        icon = '✕';
-    }
-
+    const icon = type === 'error' ? '✕' : '✓';
     toast.innerHTML = '<span class="app-toast-icon">' + icon + '</span> ' + message;
     document.body.appendChild(toast);
     setTimeout(() => {
@@ -92,28 +108,69 @@ function initializeCalendar() {
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const notes = {};
+    let isLoadingNotes = false;
 
-    // Function to check if a date is in the past
-    function isDateInPast(year, month, day) {
-        const checkDate = new Date(year, month, day);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
-        checkDate.setHours(0, 0, 0, 0);
-        return checkDate < today;
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const todayKey = `${currentYear}-${today.getMonth()}-${today.getDate()}`;
+
+    function dateKeyToIso(year, monthIndex, day) {
+        const m = String(monthIndex + 1).padStart(2, '0');
+        const d = String(day).padStart(2, '0');
+        return `${year}-${m}-${d}`;
     }
 
-    // Function to check if a date is today or in the future
-    function isDateCurrentOrFuture(year, month, day) {
-        return !isDateInPast(year, month, day);
+    function isoToDateKey(iso) {
+        const [y, m, d] = iso.split('-').map(Number);
+        return `${y}-${m - 1}-${d}`;
+    }
+
+    function isToday(year, monthIndex, day) {
+        return year === currentYear && monthIndex === today.getMonth() && day === today.getDate();
+    }
+
+    function canModifyNote(year, monthIndex, day) {
+        return isToday(year, monthIndex, day);
+    }
+
+    function canViewNote(year, monthIndex, day) {
+        const key = `${year}-${monthIndex}-${day}`;
+        const note = notes[key];
+        return !!(note && (note.title || note.content));
+    }
+
+    async function loadNotes() {
+        if (isLoadingNotes) return;
+        isLoadingNotes = true;
+        const year = current.getFullYear();
+        const month = current.getMonth() + 1;
+
+        try {
+            const json = await calendarApiFetch(`/api/calendar/notes?year=${year}&month=${month}`);
+            Object.keys(notes).forEach((k) => delete notes[k]);
+            (json.data || []).forEach((note) => {
+                const key = isoToDateKey(note.note_date);
+                notes[key] = {
+                    id: note.id,
+                    title: note.title,
+                    content: note.content,
+                };
+            });
+        } catch (err) {
+            showToast(err.message || 'Failed to load calendar notes.', 'error');
+        } finally {
+            isLoadingNotes = false;
+            render();
+        }
     }
 
     prevBtn.addEventListener('click', () => {
         current.setMonth(current.getMonth() - 1);
-        render();
+        loadNotes();
     });
     nextBtn.addEventListener('click', () => {
         current.setMonth(current.getMonth() + 1);
-        render();
+        loadNotes();
     });
     jumpBtn.addEventListener('click', () => openJumpModal());
 
@@ -129,7 +186,7 @@ function initializeCalendar() {
         const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
 
         const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        weekdayNames.forEach(name => {
+        weekdayNames.forEach((name) => {
             const header = document.createElement('div');
             header.className = 'calendar-day-header';
             header.textContent = name;
@@ -138,25 +195,21 @@ function initializeCalendar() {
 
         for (let i = 0; i < startWeekday; i++) grid.appendChild(document.createElement('div'));
 
-        const today = new Date();
-        const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
         const monthName = monthNames[monthIndex];
 
         for (let day = 1; day <= daysInMonth; day++) {
             const cell = document.createElement('div');
             const dateKey = `${year}-${monthIndex}-${day}`;
-            const dayOfWeek = new Date(year, monthIndex, day).getDay();
-            const isSaturday = dayOfWeek === 6;
             const note = notes[dateKey];
             const hasNote = note && (note.title || note.content);
-            const isPastDate = isDateInPast(year, monthIndex, day);
-            const canEdit = isDateCurrentOrFuture(year, monthIndex, day);
+            const isTodayCell = dateKey === todayKey;
+            const canEdit = canModifyNote(year, monthIndex, day);
+            const isPastYear = year < currentYear;
 
             cell.className = 'calendar-day';
-            if (dateKey === todayKey) cell.classList.add('is-today');
+            if (isTodayCell) cell.classList.add('is-today');
             if (hasNote) cell.classList.add('has-notes');
-            if (isPastDate) cell.classList.add('is-past');
-
+            if (!canEdit && (hasNote || isPastYear)) cell.classList.add('is-past');
 
             const dayNumber = document.createElement('div');
             dayNumber.className = 'calendar-day-number';
@@ -170,10 +223,10 @@ function initializeCalendar() {
 
             const addLabel = document.createElement('div');
             addLabel.className = 'calendar-day-add';
-            if (isPastDate && hasNote) {
+            if (hasNote && !canEdit) {
                 addLabel.textContent = 'View note';
-            } else if (isPastDate) {
-                addLabel.textContent = 'Past date';
+            } else if (!hasNote && !canEdit) {
+                addLabel.textContent = isPastYear ? 'Past year' : 'Today only';
             } else if (hasNote) {
                 addLabel.textContent = 'Edit note';
             } else {
@@ -181,9 +234,7 @@ function initializeCalendar() {
             }
             cell.appendChild(addLabel);
 
-            cell.addEventListener('click', (e) => {
-                if (!e.target.closest('.calendar-day-cell-actions')) openEditor(dateKey, day, monthName);
-            });
+            cell.addEventListener('click', () => openEditor(dateKey, day, monthName, year, monthIndex));
             grid.appendChild(cell);
         }
     }
@@ -301,7 +352,7 @@ function initializeCalendar() {
             current.setMonth(selMonth);
             current.setDate(1);
             hide();
-            render();
+            loadNotes();
         }
 
         function onCancel() { hide(); }
@@ -317,8 +368,15 @@ function initializeCalendar() {
         overlay.classList.add('show');
     }
 
-    let backdrop, modal, titleInput, contentArea, closeBtn, cancelBtn, saveBtn, editBtn, delBtn, toggleBtn;
-    let dateKey, isEditMode, originalNote;
+    let backdrop, modal, titleInput, contentArea, charCounter, closeBtn, cancelBtn, saveBtn, editBtn, delBtn, toggleBtn;
+    let dateKey, isEditMode, originalNote, activeYear, activeMonthIndex, activeDay;
+
+    function updateCharCounter() {
+        if (!charCounter || !contentArea) return;
+        const len = contentArea.value.length;
+        charCounter.textContent = `${len} / ${CONTENT_MAX} characters`;
+        charCounter.classList.toggle('is-over', len > CONTENT_MAX);
+    }
 
     function switchToViewMode() {
         isEditMode = false;
@@ -327,10 +385,11 @@ function initializeCalendar() {
         titleInput.readOnly = true;
         contentArea.value = note.content || '';
         contentArea.readOnly = true;
+        if (charCounter) charCounter.style.display = 'none';
         cancelBtn.style.display = 'none';
         saveBtn.style.display = 'none';
-        editBtn.style.display = '';
-        delBtn.style.display = '';
+        editBtn.style.display = canModifyNote(activeYear, activeMonthIndex, activeDay) ? '' : 'none';
+        delBtn.style.display = canModifyNote(activeYear, activeMonthIndex, activeDay) ? '' : 'none';
     }
 
     function switchToEditMode() {
@@ -339,21 +398,32 @@ function initializeCalendar() {
         originalNote = { title: note.title || '', content: note.content || '' };
         titleInput.readOnly = false;
         contentArea.readOnly = false;
+        if (charCounter) charCounter.style.display = '';
+        updateCharCounter();
         cancelBtn.style.display = '';
         saveBtn.style.display = '';
         editBtn.style.display = 'none';
         delBtn.style.display = 'none';
     }
 
-    function openEditor(dateKeyParam, day, monthLabelText) {
+    function openEditor(dateKeyParam, day, monthLabelText, year, monthIndex) {
         dateKey = dateKeyParam;
+        activeYear = year;
+        activeMonthIndex = monthIndex;
+        activeDay = day;
+
         const note = notes[dateKey];
         const hasNote = note && (note.title || note.content);
+        const canEdit = canModifyNote(year, monthIndex, day);
 
-        // Parse the dateKey to get year, month, day
-        const [year, month, dayNum] = dateKey.split('-').map(Number);
-        const isPastDate = isDateInPast(year, month, dayNum);
-        const canEdit = isDateCurrentOrFuture(year, month, dayNum);
+        if (!hasNote && !canEdit) {
+            if (year < currentYear) {
+                showToast('Cannot add notes to past years.', 'error');
+            } else {
+                showToast('Notes can only be added on today\'s date.', 'error');
+            }
+            return;
+        }
 
         let backdropEl = document.querySelector('.calendar-modal-backdrop');
         if (!backdropEl) {
@@ -370,9 +440,10 @@ function initializeCalendar() {
                     </div>
                     <div class="calendar-modal-body">
                         <label class="calendar-note-label">Title</label>
-                        <input type="text" class="calendar-note-title-input" placeholder="Note title..." />
+                        <input type="text" class="calendar-note-title-input" placeholder="Note title..." maxlength="255" />
                         <label class="calendar-note-label">Content</label>
-                        <textarea class="calendar-note-content" placeholder="Write your note..."></textarea>
+                        <textarea class="calendar-note-content" placeholder="Write your note..." maxlength="${CONTENT_MAX}"></textarea>
+                        <div class="calendar-note-char-counter">0 / ${CONTENT_MAX} characters</div>
                         <div class="calendar-modal-actions">
                             <button type="button" class="btn-secondary calendar-modal-cancel" style="display:none">Cancel</button>
                             <button type="button" class="btn-primary calendar-modal-save" style="display:none">Save</button>
@@ -387,10 +458,10 @@ function initializeCalendar() {
 
         backdrop = backdropEl;
         modal = backdrop.querySelector('.calendar-modal');
-        const titleHeading = modal.querySelector('.calendar-modal-title');
-        titleHeading.textContent = `Notes for ${monthLabelText} ${day}`;
+        modal.querySelector('.calendar-modal-title').textContent = `Notes for ${monthLabelText} ${day}`;
         titleInput = modal.querySelector('.calendar-note-title-input');
         contentArea = modal.querySelector('.calendar-note-content');
+        charCounter = modal.querySelector('.calendar-note-char-counter');
         closeBtn = modal.querySelector('.calendar-modal-close');
         cancelBtn = modal.querySelector('.calendar-modal-cancel');
         saveBtn = modal.querySelector('.calendar-modal-save');
@@ -403,50 +474,20 @@ function initializeCalendar() {
         originalNote = note ? { title: note.title || '', content: note.content || '' } : { title: '', content: '' };
 
         if (hasNote) {
-            if (canEdit) {
-                // Can edit existing note
-                titleInput.readOnly = true;
-                contentArea.readOnly = true;
-                isEditMode = false;
-                cancelBtn.style.display = 'none';
-                saveBtn.style.display = 'none';
-                editBtn.style.display = '';
-                delBtn.style.display = '';
-            } else {
-                // Past date - can only view
-                titleInput.readOnly = true;
-                contentArea.readOnly = true;
-                isEditMode = false;
-                cancelBtn.style.display = 'none';
-                saveBtn.style.display = 'none';
-                editBtn.style.display = 'none';
-                delBtn.style.display = 'none';
-            }
+            switchToViewMode();
         } else {
-            if (canEdit) {
-                // Can add new note
-                titleInput.readOnly = false;
-                contentArea.readOnly = false;
-                isEditMode = true;
-                cancelBtn.style.display = '';
-                saveBtn.style.display = '';
-                editBtn.style.display = 'none';
-                delBtn.style.display = 'none';
-            } else {
-                // Past date - cannot add note
-                showToast('Cannot add notes to past dates', 'error');
-                return;
-            }
+            switchToEditMode();
         }
 
         backdrop.classList.remove('modal-maximized');
         modal.classList.remove('modal-maximized');
         toggleBtn.textContent = '□';
 
+        contentArea.oninput = updateCharCounter;
+
         function hide() {
             backdrop.classList.remove('show', 'modal-maximized');
             modal.classList.remove('modal-maximized');
-            render();
             closeBtn.removeEventListener('click', onClose);
             cancelBtn.removeEventListener('click', onCancel);
             saveBtn.removeEventListener('click', onSave);
@@ -454,6 +495,7 @@ function initializeCalendar() {
             delBtn.removeEventListener('click', onDelete);
             toggleBtn.removeEventListener('click', onToggle);
             backdrop.removeEventListener('click', onBackdrop);
+            contentArea.oninput = null;
         }
 
         function onClose() {
@@ -472,53 +514,130 @@ function initializeCalendar() {
             if (e.target === backdrop) onClose();
         }
 
-        async function onEditClick() {
-            // Re-check if editing is still allowed
-            const [year, month, dayNum] = dateKey.split('-').map(Number);
-            const canEdit = isDateCurrentOrFuture(year, month, dayNum);
-
-            if (!canEdit) {
-                showToast('Cannot edit notes on past dates', 'error');
+        function onEditClick() {
+            if (!canModifyNote(activeYear, activeMonthIndex, activeDay)) {
+                showToast('Notes can only be edited on today\'s date in the current year.', 'error');
                 return;
             }
-
-            switchToEditMode(); 
-            titleInput.focus(); 
-            showToast('Edit successful');
+            switchToEditMode();
+            titleInput.focus();
         }
 
         async function onDelete() {
-            // Re-check if deletion is still allowed
-            const [year, month, dayNum] = dateKey.split('-').map(Number);
-            const canEdit = isDateCurrentOrFuture(year, month, dayNum);
-
-            if (!canEdit) {
-                showToast('Cannot delete notes on past dates', 'error');
+            if (!canModifyNote(activeYear, activeMonthIndex, activeDay)) {
+                showToast('Notes can only be deleted on today\'s date in the current year.', 'error');
                 return;
             }
 
-            const ok = await showConfirm({ title: 'Delete Note', message: 'Delete this note?', confirmText: 'Delete', cancelText: 'Cancel', confirmClass: 'confirm-danger', theme: 'delete' });
-            if (ok) { delete notes[dateKey]; hide(); showToast('Delete successful'); }
+            const ok = await showConfirm({
+                title: 'Delete Note',
+                message: 'Delete this note?',
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                confirmClass: 'confirm-danger',
+                theme: 'delete',
+            });
+            if (!ok) return;
+
+            const noteId = notes[dateKey]?.id;
+            if (!noteId) return;
+
+            const defaultHtml = delBtn.innerHTML;
+            delBtn.disabled = true;
+            delBtn.innerHTML = '<span class="calendar-action-spinner"></span> Deleting...';
+
+            try {
+                await calendarApiFetch(`/api/calendar/notes/${noteId}`, { method: 'DELETE' });
+                delete notes[dateKey];
+                hide();
+                await loadNotes();
+                showToast('Note deleted.');
+            } catch (err) {
+                showToast(err.message || 'Failed to delete note.', 'error');
+            } finally {
+                delBtn.disabled = false;
+                delBtn.innerHTML = defaultHtml;
+            }
         }
 
         async function onSave() {
             const title = titleInput.value.trim();
             const content = contentArea.value.trim();
-            const hadNote = !!notes[dateKey];
+
+            if (!title) {
+                showToast('Title is required.', 'error');
+                return;
+            }
+            if (!content) {
+                showToast('Content is required.', 'error');
+                return;
+            }
+            if (content.length > CONTENT_MAX) {
+                showToast(`Content must be ${CONTENT_MAX} characters or less.`, 'error');
+                return;
+            }
+
+            if (!canModifyNote(activeYear, activeMonthIndex, activeDay)) {
+                showToast('Notes can only be saved on today\'s date in the current year.', 'error');
+                return;
+            }
+
+            const hadNote = !!notes[dateKey]?.id;
             if (hadNote) {
-                const ok = await showConfirm({ title: 'Save Changes', message: 'Are you sure you want to save changes?', confirmText: 'Save', cancelText: 'Cancel', confirmClass: 'confirm-edit', theme: 'edit' });
+                const ok = await showConfirm({
+                    title: 'Save Changes',
+                    message: 'Are you sure you want to save changes?',
+                    confirmText: 'Save',
+                    cancelText: 'Cancel',
+                    confirmClass: 'confirm-edit',
+                    theme: 'edit',
+                });
                 if (!ok) return;
             }
-            if (title || content) notes[dateKey] = { title, content };
-            else delete notes[dateKey];
-            originalNote = { title, content };
-            if (notes[dateKey]) { switchToViewMode(); showToast('Save changes successful'); }
-            else { hide(); showToast('Note removed'); }
+
+            const defaultHtml = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="calendar-action-spinner calendar-action-spinner-dark"></span> Saving...';
+
+            const isoDate = dateKeyToIso(activeYear, activeMonthIndex, activeDay);
+
+            try {
+                let saved;
+                if (hadNote) {
+                    const json = await calendarApiFetch(`/api/calendar/notes/${notes[dateKey].id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ title, content }),
+                    });
+                    saved = json.data;
+                } else {
+                    const json = await calendarApiFetch('/api/calendar/notes', {
+                        method: 'POST',
+                        body: JSON.stringify({ note_date: isoDate, title, content }),
+                    });
+                    saved = json.data;
+                }
+
+                notes[dateKey] = {
+                    id: saved.id,
+                    title: saved.title,
+                    content: saved.content,
+                };
+                originalNote = { title, content };
+                switchToViewMode();
+                render();
+                showToast(hadNote ? 'Note updated.' : 'Note saved.');
+            } catch (err) {
+                showToast(err.message || 'Failed to save note.', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = defaultHtml;
+            }
         }
 
         function onCancel() {
             titleInput.value = originalNote.title;
             contentArea.value = originalNote.content;
+            updateCharCounter();
             if (notes[dateKey]) switchToViewMode();
             else hide();
         }
@@ -538,8 +657,9 @@ function initializeCalendar() {
         backdrop.addEventListener('click', onBackdrop);
 
         backdrop.classList.add('show');
+        updateCharCounter();
         (titleInput.value ? contentArea : titleInput).focus();
     }
 
-    render();
+    loadNotes();
 }

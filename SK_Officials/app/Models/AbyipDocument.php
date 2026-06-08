@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AbyipDocument extends Model
 {
@@ -34,7 +34,6 @@ class AbyipDocument extends Model
         'source_type',
         'document_html',
         'pdf_data',
-        'sk_youth_development_and_empowerment_programs',
     ];
 
     protected function casts(): array
@@ -44,7 +43,6 @@ class AbyipDocument extends Model
             'barangay_estimated_budget' => 'decimal:2',
             'sk_fund_amount' => 'decimal:2',
             'total_expenditure' => 'decimal:2',
-            'sk_youth_development_and_empowerment_programs' => 'array',
         ];
     }
 
@@ -58,13 +56,13 @@ class AbyipDocument extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function detectedPrograms(): BelongsToMany
+    public function programs(): HasMany
     {
-        return $this->belongsToMany(
-            AbyipProgram::class,
-            'abyip_detected_programs',
-            'abyip_id',
-            'program_id'
-        );
+        return $this->hasMany(AbyipProgram::class, 'abyip_id');
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(AbyipProgramActivity::class, 'abyip_id');
     }
 }

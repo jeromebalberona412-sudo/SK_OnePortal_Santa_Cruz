@@ -826,6 +826,14 @@ function exportPdfToWord() {
 async function confirmDeleteRecord() {
     if (recordPendingDeleteId == null) return;
 
+    const confirmBtn = document.getElementById('deleteConfirmBtn');
+    const defaultHtml = confirmBtn ? confirmBtn.innerHTML : 'Delete';
+
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="abyip-delete-spinner"></span> Deleting...';
+    }
+
     try {
         await abyipApiFetch(`/api/abyip/${recordPendingDeleteId}`, { method: 'DELETE' });
         await loadRecords();
@@ -835,6 +843,11 @@ async function confirmDeleteRecord() {
     } catch (error) {
         closeDeleteModal();
         showNotification(error.message || 'Failed to delete ABYIP record.', 'error');
+    } finally {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = defaultHtml;
+        }
     }
 }
 
