@@ -112,6 +112,13 @@ class RegistrationEvaluationService
                 'status'            => 'active',
                 'reviewed_at'       => now(),
             ]);
+
+            try {
+                (new RespondentNumberService())->assignToRegistration($registration->fresh());
+            } catch (\Throwable $e) {
+                report($e);
+            }
+
             return true;
         }
 

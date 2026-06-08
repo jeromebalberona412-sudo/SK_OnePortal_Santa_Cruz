@@ -4,6 +4,7 @@ namespace App\Modules\KKProfilingRequests\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
+use App\Services\RespondentNumberService;
 use App\Modules\KKProfilingRequests\Notifications\KabataanApprovedNotification;
 use App\Modules\KKProfilingRequests\Notifications\KabataanRejectedNotification;
 use Illuminate\Http\Request;
@@ -86,7 +87,12 @@ class KKProfilingRequestsController extends Controller
 
             return [
                 'id'              => $r->id,
-                'respondent_number' => $formData['respondent_number'] ?? null,
+                'respondent_number'   => $r->respondent_number,
+                'respondent_sequence' => $r->respondent_sequence,
+                'respondent_display'  => RespondentNumberService::displaySequence(
+                    $r->respondent_sequence,
+                    $r->respondent_number
+                ),
                 'last_name'       => $r->last_name,
                 'first_name'      => $r->first_name,
                 'middle_name'     => $r->middle_name,
@@ -185,6 +191,8 @@ class KKProfilingRequestsController extends Controller
                     'reviewed_at'         => now(),
                     'review_notes'        => null,
                 ]);
+
+                app(RespondentNumberService::class)->assignToRegistration($registration->fresh());
                 
                 \Log::info('Updated registration status', ['id' => $registration->id, 'new_status' => 'active']);
 
@@ -198,8 +206,18 @@ class KKProfilingRequestsController extends Controller
                 }
             });
 
+            $approved = KabataanRegistration::find($id);
+
             \Log::info('Approval completed successfully', ['id' => $id]);
-            return response()->json(['success' => true, 'message' => 'Registration approved.']);
+            return response()->json([
+                'success'             => true,
+                'message'             => 'KK Profiling approved successfully.',
+                'respondent_sequence' => $approved?->respondent_sequence,
+                'respondent_display'  => RespondentNumberService::displaySequence(
+                    $approved?->respondent_sequence,
+                    $approved?->respondent_number
+                ),
+            ]);
         } catch (\Exception $e) {
             \Log::error('Approve failed with exception', [
                 'id' => $id,

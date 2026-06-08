@@ -246,11 +246,11 @@ class KKProfilingController extends Controller
         }
 
         $existingForm = $registration->form_data ?? [];
-        $respondentNumber = $existingForm['respondent_number']
-            ?? $request->input('respondent_number')
-            ?? ('KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5((string) $registration->id), 0, 6)));
-
-        $validated['respondent_number'] = $respondentNumber;
+        if (!empty($existingForm['respondent_number'])) {
+            $validated['respondent_number'] = $existingForm['respondent_number'];
+        } else {
+            unset($validated['respondent_number']);
+        }
         $validated['profile_updated_year'] = (int) date('Y');
         $validated['profile_updated_at'] = now()->toIso8601String();
         $validated['civil_status'] = $request->input('civil_status', []);
@@ -354,8 +354,8 @@ class KKProfilingController extends Controller
             ]);
         }
 
-        // Capture all other fields without validation
-        $validated['respondent_number'] = 'KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 6));
+        // Respondent number is assigned by SK Officials on approval — not at submit
+        unset($validated['respondent_number']);
         $validated['civil_status'] = $request->input('civil_status', []);
         $validated['youth_classification'] = $request->input('youth_classification', []);
         $validated['youth_age_group'] = $request->input('youth_age_group', []);

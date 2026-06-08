@@ -130,15 +130,18 @@ Route::middleware([
 
     Route::get('/kabataan', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'index'])->name('kabataan');
     Route::get('/kabataan/data', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'data'])->name('kabataan.data');
+    Route::post('/kabataan', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'store'])->name('kabataan.store');
+    Route::put('/kabataan/{id}', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'update'])->name('kabataan.update');
+    Route::delete('/kabataan/{id}', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'destroy'])->name('kabataan.destroy');
 
     Route::get('/previous-kabataan', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'index'])->name('previous-kabataan');
     Route::get('/previous-kabataan/data', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'data'])->name('previous-kabataan.data');
     Route::post('/previous-kabataan/upload', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'upload'])->name('previous-kabataan.upload');
     Route::post('/previous-kabataan/move/{id}', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'moveFromActive'])->name('previous-kabataan.move');
 
-    Route::get('/deleted-kabataan', function () {
-        return view('Deleted_Kabataan::deleted-kabataan');
-    })->name('deleted-kabataan');
+    Route::get('/deleted-kabataan', [\App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController::class, 'index'])->name('deleted-kabataan');
+    Route::get('/deleted-kabataan/data', [\App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController::class, 'data'])->name('deleted-kabataan.data');
+    Route::post('/deleted-kabataan/{id}/restore', [\App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController::class, 'restore'])->name('deleted-kabataan.restore');
 
     Route::get('/deleted-abyip', function () {
         return view('Deleted_Abyip::deleted-abyip');

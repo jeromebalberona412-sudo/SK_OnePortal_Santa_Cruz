@@ -10,7 +10,8 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
-        'app/Modules/Kabataan/assets/css/kabataan.css'
+        'app/Modules/Kabataan/assets/css/kabataan.css',
+        'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -173,22 +174,29 @@
 
             <!-- View-only: paper form layout -->
             <div class="kabataan-view-details" id="kabataanViewDetails" style="display:none;">
-                <div class="kabataan-form-scroll">
+                <div class="kabataan-form-scroll kk-view-paper">
 
-                    <div class="kkf-header">
-                        <div class="kkf-header-title-col">
-                            <div class="kkf-main-title">KK Survey Questionnaire</div>
-                            <div class="kkf-main-hint">View-only record.</div>
+                    <div class="kkp-form-header">
+                        <div class="kkp-form-title-col">
+                            <div class="kkp-form-main-title">KK Survey Questionnaire</div>
+                            <div class="kkp-form-header-fields">
+                                <div class="kkp-hdr-field">
+                                    <span class="kkp-hdr-label">Respondent #:</span>
+                                    <span class="kkp-hdr-input kkp-hdr-input-readonly" id="vRespondentNumber"></span>
+                                </div>
+                                <div class="kkp-hdr-field">
+                                    <span class="kkp-hdr-label">Date:</span>
+                                    <span class="kkp-hdr-input kkp-hdr-input-readonly" id="vDate"></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="kkf-header-fields-col">
-                            <div class="kkf-header-field">
-                                <span class="kkf-hdr-label">Respondent #:</span>
-                                <span class="kkf-view-val kkf-hdr-input" id="vRespondentNumber"></span>
-                            </div>
-                            <div class="kkf-header-field">
-                                <span class="kkf-hdr-label">Date:</span>
-                                <span class="kkf-view-val kkf-hdr-input" id="vDate"></span>
-                            </div>
+                        <div class="kkp-form-logo">
+                            <img
+                                id="kabataanViewBarangayLogo"
+                                src="{{ $barangayLogoUrl ?? asset('images/SK_OnePortal_logo.png') }}"
+                                alt="{{ ($barangayName ?? 'Barangay') }} SK Logo"
+                                onerror="this.onerror=null;this.src='{{ asset('images/SK_OnePortal_logo.png') }}';"
+                            >
                         </div>
                     </div>
 
@@ -381,22 +389,30 @@
 
             <!-- Panel: Manual entry form -->
             <div class="kabataan-mode-panel kabataan-panel-manual" id="kabataanPanelManual">
-                <div class="kabataan-form-scroll" id="kabataanFormScroll">
+                <div class="kabataan-form-scroll kk-view-paper" id="kabataanFormScroll">
 
                     {{-- PAPER FORM HEADER --}}
-                    <div class="kkf-header">
-                        <div class="kkf-header-title-col">
-                            <div class="kkf-main-title">KK Survey Questionnaire</div>
+                    <div class="kkp-form-header">
+                        <div class="kkp-form-title-col">
+                            <div class="kkp-form-main-title">KK Survey Questionnaire</div>
+                            <div class="kkp-form-header-fields">
+                                <div class="kkp-hdr-field">
+                                    <span class="kkp-hdr-label">Respondent #:</span>
+                                    <input type="text" id="kabataanRespondentNumber" class="kkp-hdr-input kkp-hdr-input-readonly" value="Auto-assigned on save" readonly tabindex="-1">
+                                </div>
+                                <div class="kkp-hdr-field">
+                                    <label class="kkp-hdr-label" for="kabataanDate">Date:</label>
+                                    <input type="date" id="kabataanDate" class="kkp-hdr-input">
+                                </div>
+                            </div>
                         </div>
-                        <div class="kkf-header-fields-col">
-                            <div class="kkf-header-field">
-                                <label class="kkf-hdr-label" for="kabataanRespondentNumber">Respondent #:</label>
-                                <input type="text" id="kabataanRespondentNumber" class="kkf-hdr-input" placeholder="___________">
-                            </div>
-                            <div class="kkf-header-field">
-                                <label class="kkf-hdr-label" for="kabataanDate">Date:</label>
-                                <input type="date" id="kabataanDate" class="kkf-hdr-input">
-                            </div>
+                        <div class="kkp-form-logo">
+                            <img
+                                id="kabataanFormBarangayLogo"
+                                src="{{ $barangayLogoUrl ?? asset('images/SK_OnePortal_logo.png') }}"
+                                alt="{{ ($barangayName ?? 'Barangay') }} SK Logo"
+                                onerror="this.onerror=null;this.src='{{ asset('images/SK_OnePortal_logo.png') }}';"
+                            >
                         </div>
                     </div>
 

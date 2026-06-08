@@ -637,6 +637,8 @@ create table public.kabataan_registrations (
   suffix character varying(10) null,
   email character varying(150) null,
   contact_number character varying(15) null,
+  respondent_number character varying(32) null,
+  respondent_sequence integer null,
   form_data json not null,
   status character varying(30) not null default 'pending_verification'::character varying,
   evaluation_status character varying(30) null,
@@ -648,6 +650,7 @@ create table public.kabataan_registrations (
   review_notes text null,
   created_at timestamp without time zone null,
   updated_at timestamp without time zone null,
+  deleted_at timestamp without time zone null,
   constraint kabataan_registrations_pkey primary key (id),
   constraint kabataan_registrations_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete CASCADE,
   constraint kabataan_registrations_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
@@ -670,8 +673,16 @@ create index IF not exists kabataan_registrations_tenant_id_barangay_id_index on
 create index IF not exists kabataan_registrations_status_index on public.kabataan_registrations using btree (status) TABLESPACE pg_default;
 create index IF not exists kabataan_registrations_email_index on public.kabataan_registrations using btree (email) TABLESPACE pg_default;
 create index IF not exists kabataan_registrations_submitted_at_index on public.kabataan_registrations using btree (submitted_at) TABLESPACE pg_default;
+create index IF not exists kabataan_registrations_deleted_at_index on public.kabataan_registrations using btree (deleted_at) TABLESPACE pg_default;
+create unique index IF not exists kabataan_registrations_unique_respondent on public.kabataan_registrations using btree (tenant_id, barangay_id, respondent_number) TABLESPACE pg_default
+where (respondent_number is not null);
 
 ///
+ALTER TABLE kabataan_registrations
+ADD COLUMN IF NOT EXISTS respondent_number VARCHAR(32) NULL,
+ADD COLUMN IF NOT EXISTS respondent_sequence INTEGER NULL,
+ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
+
 ALTER TABLE official_profiles
 ADD COLUMN IF NOT EXISTS sex VARCHAR(10) NULL;
 

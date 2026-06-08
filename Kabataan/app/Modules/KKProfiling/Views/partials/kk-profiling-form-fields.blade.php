@@ -8,8 +8,6 @@
 
                             <div class="kkp-form-header-fields">
 
-                                <input type="hidden" name="respondent_number" value="{{ $respondentNumber ?? '' }}">
-
                                 <div class="kkp-hdr-field">
 
                                     <span class="kkp-hdr-label">Respondent #:</span>

@@ -1,3 +1,18 @@
+function showKabataanToast(message, type) {
+    const existing = document.querySelector('.app-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'app-toast app-toast-show app-toast-' + (type || 'success');
+    const icon = type === 'error' ? '✕' : '✓';
+    toast.innerHTML = '<span class="app-toast-icon">' + icon + '</span> ' + message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.remove('app-toast-show');
+        toast.classList.add('app-toast-hide');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeKabataanUI();
 });
@@ -160,13 +175,17 @@ function initializeKabataanUI() {
             if (!el) return;
             // email fallback
             const val = k[key] !== undefined ? k[key] : (key === 'emailAddress' ? k.email : undefined);
+            if (id === 'kabataanRespondentNumber') {
+                el.value = val && val !== '—' ? String(val) : 'Auto-assigned on save';
+                return;
+            }
             el.value = val === null || val === undefined ? '' : String(val);
         });
     }
 
     function clearForm() {
         setFormData({
-            respondentNumber: '', date: '',
+            respondentNumber: 'Auto-assigned on save', date: '',
             lastName: '', firstName: '', middleName: '', suffix: '',
             region: '', province: '', city: '', barangay: '', purokZone: '',
             sex: 'Male', age: '', birthday: '',
@@ -270,7 +289,7 @@ function initializeKabataanUI() {
             const education = k.educationalBackground || k.highestEducation || '';
             const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (education && education.toLowerCase().includes(q));
             const matchGender = !currentGender || k.sex === currentGender;
-            const matchPurok = !currentPurok || k.barangay === currentPurok;
+            const matchPurok = !currentPurok || k.purokZone === currentPurok;
             const matchEducation = !currentEducation || education === currentEducation;
             return matchSearch && matchGender && matchPurok && matchEducation;
         });
@@ -290,19 +309,19 @@ function initializeKabataanUI() {
             const index = kabataan.indexOf(k);
             const full = fullNameFrom(k);
             const tr = document.createElement('tr');
+            if (k.id) tr.dataset.recordId = String(k.id);
             tr.innerHTML = `
-                <td>${k.respondentNumber || '-'}</td>
+                <td>${k.respondentNumber || '—'}</td>
                 <td class="kabataan-fullname-cell">
                     <span class="kabataan-fullname">${full}</span>
                 </td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
-                <td>${k.barangay || '-'}</td>
+                <td>${k.purokZone || '-'}</td>
                 <td>${k.educationalBackground || k.highestEducation || '-'}</td>
                 <td>
                     <div class="kabataan-actions">
                         <button type="button" class="btn-action-view" data-action="view" data-index="${index}">View</button>
-                        <button type="button" class="btn-action-edit" data-action="edit" data-index="${index}">Edit</button>
                         <button type="button" class="btn-action-delete" data-action="delete" data-index="${index}">Delete</button>
                     </div>
                 </td>
@@ -535,7 +554,7 @@ function initializeKabataanUI() {
         if (!btn) return;
         const action = btn.dataset.action;
         const index = parseInt(btn.dataset.index, 10);
-        if ((action === 'view' || action === 'edit') && !Number.isNaN(index)) openModal(action, index);
+        if (action === 'view' && !Number.isNaN(index)) openModal(action, index);
         if (action === 'delete' && !Number.isNaN(index)) openDeleteConfirm(index);
     });
 
@@ -568,13 +587,86 @@ function initializeKabataanUI() {
     if (deleteCancelBtn) deleteCancelBtn.addEventListener('click', closeDeleteConfirm);
 
     if (deleteConfirmBtn) {
+        const deleteBtnDefaultHtml = deleteConfirmBtn.innerHTML;
+
         deleteConfirmBtn.addEventListener('click', () => {
-            if (pendingDeleteIndex === null) return;
-            kabataan.splice(pendingDeleteIndex, 1);
+            if (pendingDeleteIndex === null || deleteConfirmBtn.disabled) return;
+
+            const record = kabataan[pendingDeleteIndex];
+            const recordId = record?.id;
+            const row = recordId
+                ? tbody.querySelector(`tr[data-record-id="${recordId}"]`)
+                : null;
+
             closeDeleteConfirm();
-            currentPage = 1;
-            render();
+
+            if (!recordId) {
+                kabataan.splice(pendingDeleteIndex, 1);
+                render();
+                showKabataanToast('Kabataan record moved to Deleted Items.', 'success');
+                return;
+            }
+
+            deleteConfirmBtn.disabled = true;
+            deleteConfirmBtn.innerHTML = '<span class="kabataan-delete-spinner"></span> Deleting...';
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            fetch(`/kabataan/${recordId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (!res.success) throw new Error(res.message || 'Delete failed');
+
+                if (row) {
+                    row.classList.add('kabataan-row-deleting');
+                    setTimeout(() => loadData(), 320);
+                } else {
+                    loadData();
+                }
+
+                showKabataanToast('Kabataan record moved to Deleted Items.', 'success');
+            })
+            .catch(err => showKabataanToast(err.message || 'Failed to delete record.', 'error'))
+            .finally(() => {
+                deleteConfirmBtn.disabled = false;
+                deleteConfirmBtn.innerHTML = deleteBtnDefaultHtml;
+            });
         });
+    }
+
+    function buildApiPayload(d) {
+        return {
+            last_name: d.lastName,
+            first_name: d.firstName,
+            middle_name: d.middleName,
+            suffix: d.suffix,
+            email: d.emailAddress,
+            contact_number: d.contactNumber,
+            age: d.age,
+            sex: d.sex,
+            birthday: d.birthday,
+            purok_zone: d.purokZone,
+            civil_status: d.civilStatus,
+            youth_classification: d.youthClassification,
+            youth_age_group: d.youthAgeGroup,
+            work_status: d.workStatus,
+            education: d.educationalBackground,
+            sk_voter: d.registeredSKVoter,
+            national_voter: d.registeredNationalVoter,
+            sk_voted: d.votingHistory,
+            kk_assembly: d.attendedKKAssembly,
+            kk_times: d.kkTimes || d.votingFrequency,
+            kk_reason: d.kkReason || d.votingReason,
+            facebook: d.facebookAccount,
+            group_chat: d.willingToJoinGroupChat,
+            signature: d.signature,
+        };
     }
 
     if (saveBtn) {
@@ -587,28 +679,36 @@ function initializeKabataanUI() {
                 return;
             }
 
-            const record = { ...defaultRecord(), ...d };
-            record.age = record.age === '' ? 0 : Number(record.age) || 0;
-            // Keep legacy aliases in sync
-            record.email = record.emailAddress;
-            record.dob   = record.birthday;
+            const payload = buildApiPayload(d);
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const isEdit = editingIndex !== null && kabataan[editingIndex]?.id;
+            const url = isEdit ? `/kabataan/${kabataan[editingIndex].id}` : '/kabataan';
+            const method = isEdit ? 'PUT' : 'POST';
 
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
 
-            setTimeout(() => {
-                if (editingIndex !== null && kabataan[editingIndex]) {
-                    kabataan[editingIndex] = record;
-                    sortKabataanAlphabetically();
-                } else {
-                    kabataan.push(record);
-                    sortKabataanAlphabetically();
-                }
+            fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (!res.success) throw new Error(res.message || 'Save failed');
                 closeModal();
-                render();
+                loadData();
+            })
+            .catch(err => alert(err.message || 'Failed to save record.'))
+            .finally(() => {
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
-            }, 500);
+            });
         });
     }
 
@@ -1003,7 +1103,9 @@ function initializeKabataanUI() {
             (response.data || []).forEach(r => {
                 kabataan.push({
                     id: r.id,
-                    respondentNumber: r.respondent_no,
+                    respondentNumber: r.respondent_no && r.respondent_no !== '—'
+                        ? String(parseInt(r.respondent_no, 10) || r.respondent_no)
+                        : '—',
                     lastName: r.last_name,
                     firstName: r.first_name,
                     middleName: r.middle_name,
@@ -1024,9 +1126,9 @@ function initializeKabataanUI() {
                     registeredSKVoter: r.sk_voter,
                     registeredNationalVoter: r.national_voter,
                     votingHistory: r.sk_voted,
-                    votingFrequency: r.vote_frequency,
+                    kkTimes: r.kk_times,
                     attendedKKAssembly: r.kk_assembly,
-                    votingReason: Array.isArray(r.kk_reason) ? r.kk_reason[0] : r.kk_reason,
+                    kkReason: r.kk_reason,
                     facebookAccount: r.facebook,
                     willingToJoinGroupChat: r.group_chat,
                     signature: r.signature,

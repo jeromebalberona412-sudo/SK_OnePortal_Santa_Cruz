@@ -1,3 +1,14 @@
+function formatRespondentDisplay(seq, fullNumber) {
+    if (seq !== null && seq !== undefined && seq !== '') {
+        return String(parseInt(seq, 10));
+    }
+    if (fullNumber && fullNumber !== '—') {
+        const last = String(fullNumber).split('-').pop();
+        return last ? String(parseInt(last, 10)) : '—';
+    }
+    return '—';
+}
+
 // Module-level toast — accessible by all functions in this file
 function showToast(message, type) {
     const existing = document.querySelector('.app-toast');
@@ -87,7 +98,7 @@ function initializeKKProfilingRequestsUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 9;
+            td.colSpan = 8;
             td.textContent = 'No KK Profiling requests for this status.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -152,7 +163,6 @@ function initializeKKProfilingRequestsUI() {
                 <td>${purokZone}</td>
                 <td>${voterStatus}</td>
                 <td><span class="kk-status-pill ${statusClass}">${r.status}</span></td>
-                <td>${r.evaluationNotes?.message || '—'}</td>
                 <td><div class="kk-actions"><button type="button" class="kk-btn-view" data-action="view" data-id="${r.id}">View</button></div></td>
             `;
             tbody.appendChild(tr);
@@ -710,13 +720,18 @@ function initializeKKProfilingRequestsUI() {
 
     const approveConfirmBtn = document.getElementById('kkApproveConfirmBtn');
     if (approveConfirmBtn) {
-        approveConfirmBtn.addEventListener('click', () => {
-            if (activeRequestId === null) { closeModal(approveModal); return; }
+        const approveBtnDefaultHtml = approveConfirmBtn.innerHTML;
 
-            console.log('Approving request ID:', activeRequestId);
+        approveConfirmBtn.addEventListener('click', () => {
+            if (activeRequestId === null || approveConfirmBtn.disabled) {
+                closeModal(approveModal);
+                return;
+            }
+
+            approveConfirmBtn.disabled = true;
+            approveConfirmBtn.innerHTML = '<span class="kk-approve-spinner"></span> Approving...';
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-            console.log('CSRF Token:', csrfToken ? 'Found' : 'Missing');
 
             fetch(`/kk-profiling-requests/${activeRequestId}/approve`, {
                 method: 'POST',
@@ -726,24 +741,26 @@ function initializeKKProfilingRequestsUI() {
                     'Content-Type': 'application/json',
                 },
             })
-            .then(r => {
-                console.log('Response status:', r.status);
-                return r.json();
-            })
+            .then(r => r.json())
             .then(res => {
-                console.log('Response data:', res);
                 if (res.success) {
                     closeModal(approveModal);
                     closeModal(viewModal);
-                    showToast('KK Profiling Request Approved Successfully', 'success');
+                    const displayNo = res.respondent_display
+                        || formatRespondentDisplay(res.respondent_sequence);
+                    const toastMsg = displayNo && displayNo !== '—'
+                        ? `KK Profiling approved! Respondent #${displayNo} assigned.`
+                        : (res.message || 'KK Profiling approved successfully.');
+                    showToast(toastMsg, 'success');
                     loadData();
                 } else {
                     showToast(res.message || 'Failed to approve.', 'error');
                 }
             })
-            .catch(err => {
-                console.error('Fetch error:', err);
-                showToast('Network error. Please try again.', 'error');
+            .catch(() => showToast('Network error. Please try again.', 'error'))
+            .finally(() => {
+                approveConfirmBtn.disabled = false;
+                approveConfirmBtn.innerHTML = approveBtnDefaultHtml;
             });
         });
     }
@@ -826,7 +843,9 @@ function initializeKKProfilingRequestsUI() {
             (response.data || []).forEach((r, i) => {
                 requests.push({
                     id: r.id,
-                    respondentNumber: r.respondent_number || String(i + 1).padStart(3, '0'),
+                    respondentNumber: r.respondent_display
+                        || formatRespondentDisplay(r.respondent_sequence, r.respondent_number),
+                    respondentSequence: r.respondent_sequence,
                     date: r.submitted_at || '—',
                     lastName: r.last_name,
                     firstName: r.first_name,

@@ -1268,6 +1268,27 @@ body {
     margin-right: 8px;
 }
 
+.kk-approve-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: kkApproveSpin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes kkApproveSpin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-approve-confirm:disabled {
+    opacity: 0.85;
+    cursor: wait;
+}
+
 @media (max-width: 768px) {
     .app-toast {
         top: 70px;

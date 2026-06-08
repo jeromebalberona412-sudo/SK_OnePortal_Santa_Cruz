@@ -375,6 +375,10 @@ body {
     transform: translateY(0);
 }
 
+.dk-toast.dk-toast-error {
+    background: #ef4444;
+}
+
 @media (max-width: 768px) {
     .page-header-section { flex-direction: column; align-items: flex-start; }
     .filter-input { min-width: 100%; }
@@ -458,6 +462,81 @@ body {
 
 .restore-modal-footer {
     justify-content: center;
+}
+
+/* ── Restore spinner ── */
+.dk-restore-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: dkSpin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes dkSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Deleted meta strip (view modal) ── */
+.dk-deleted-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    padding: 14px 22px;
+    background: #fef2f2;
+    border-bottom: 1px solid #fecaca;
+    flex-shrink: 0;
+}
+
+.dk-deleted-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dk-deleted-meta-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #991b1b;
+}
+
+.dk-deleted-meta-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #7f1d1d;
+}
+
+.dk-view-subtitle {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 2px;
+}
+
+.dk-view-modal-box {
+    max-width: min(960px, 96vw);
+    max-height: 92vh;
+    width: 100%;
+}
+
+.dk-view-modal-body {
+    padding: 0;
+    overflow: hidden;
+}
+
+.dk-view-backdrop.view-modal-maximized .dk-view-modal-box {
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
 }
 
 /* ── View modal ── */

@@ -4,15 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class KabataanRegistration extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'kabataan_registrations';
 
     protected $fillable = [
         'tenant_id', 'barangay_id', 'user_id', 'reviewed_by_user_id',
         'last_name', 'first_name', 'middle_name', 'suffix',
-        'email', 'contact_number', 'form_data', 'status',
+        'email', 'contact_number', 'respondent_number', 'respondent_sequence',
+        'form_data', 'status',
         'evaluation_status', 'evaluation_notes',
         'submitted_at', 'email_verified_at', 'password_set_at',
         'reviewed_at', 'review_notes',
@@ -25,6 +29,7 @@ class KabataanRegistration extends Model
         'email_verified_at'  => 'datetime',
         'password_set_at'    => 'datetime',
         'reviewed_at'        => 'datetime',
+        'deleted_at'         => 'datetime',
     ];
 
     public function barangay(): BelongsTo

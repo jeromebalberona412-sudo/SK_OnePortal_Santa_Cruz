@@ -3349,3 +3349,75 @@ body {
         width: 100%;
     }
 }
+
+/* Toast notifications */
+.app-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    padding: 12px 24px;
+    border-radius: 10px;
+    background: #22c55e;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.app-toast.app-toast-error {
+    background: #ef4444;
+}
+
+.app-toast.app-toast-show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.app-toast.app-toast-hide {
+    transform: translateX(-50%) translateY(-100px);
+    opacity: 0;
+}
+
+.app-toast-icon {
+    margin-right: 8px;
+}
+
+/* Row delete animation */
+.kabataan-row-deleting {
+    animation: kabataanRowDelete 0.32s ease forwards;
+    pointer-events: none;
+}
+
+@keyframes kabataanRowDelete {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+        background: #fef2f2;
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(24px);
+        background: #fee2e2;
+    }
+}
+
+.kabataan-delete-spinner,
+.kk-approve-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: kabataanSpin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes kabataanSpin {
+    to { transform: rotate(360deg); }
+}

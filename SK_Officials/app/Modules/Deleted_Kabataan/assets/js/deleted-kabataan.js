@@ -1,147 +1,102 @@
-// Deleted Kabataan Module
+// Deleted Kabataan Module — fetches soft-deleted records from API
 
 document.addEventListener('DOMContentLoaded', function () {
     initDeletedKabataan();
 });
 
-const deletedKabataanRecords = [
-    {
-        id: 'dk-001',
-        respondentNumber: '009',
-        firstName: 'Ramon',
-        middleName: 'Jose',
-        lastName: 'Villanueva',
-        suffix: '',
-        sex: 'Male',
-        age: 20,
-        barangay: 'DAMAYAN',
-        purokZone: 'Zone 5',
-        educationalBackground: 'College Level',
-        youthClassification: 'In School Youth',
-        workStatus: 'Student',
-        civilStatus: 'Single',
-        contactNumber: '09187654321',
-        deletedDate: 'Apr 20, 2026',
-        deletedTime: '09:45 AM',
-        _deletedTs: new Date('2026-04-20T09:45:00'),
-        skTerm: '2025-2027',
-    },
-    {
-        id: 'dk-002',
-        respondentNumber: '010',
-        firstName: 'Liza',
-        middleName: 'Mae',
-        lastName: 'Santos',
-        suffix: '',
-        sex: 'Female',
-        age: 17,
-        barangay: 'IMELDA',
-        purokZone: 'Zone 3',
-        educationalBackground: 'High School Level',
-        youthClassification: 'In School Youth',
-        workStatus: 'Student',
-        civilStatus: 'Single',
-        contactNumber: '09198765432',
-        deletedDate: 'Apr 12, 2026',
-        deletedTime: '02:30 PM',
-        _deletedTs: new Date('2026-04-12T14:30:00'),
-        skTerm: '2025-2027',
-    },
-    {
-        id: 'dk-003',
-        respondentNumber: '007',
-        firstName: 'Marco',
-        middleName: 'Luis',
-        lastName: 'Fernandez',
-        suffix: '',
-        sex: 'Male',
-        age: 21,
-        barangay: 'POBLACION II',
-        purokZone: 'Zone 1',
-        educationalBackground: 'College Graduate',
-        youthClassification: 'Working Youth',
-        workStatus: 'Employed',
-        civilStatus: 'Single',
-        contactNumber: '09171230001',
-        deletedDate: 'Oct 15, 2024',
-        deletedTime: '11:20 AM',
-        _deletedTs: new Date('2024-10-15T11:20:00'),
-        skTerm: '2022-2025',
-    },
-];
-
-deletedKabataanRecords.forEach(r => {
-    if (!r.skTerm) r.skTerm = window.SkArchive ? SkArchive.inferTermFromDate(r._deletedTs) : '2025-2027';
-});
-
-let dkArchiveTerm = '2025-2027';
+let dkRecords = [];
 let dkFiltered = [];
 let dkCurrentPage = 1;
 const dkPerPage = 10;
 let dkPendingRestoreId = null;
 let dkActiveFilter = 'all';
-
-// ── Date helpers ──────────────────────────────────────────────────────────────
-function dkNow() { return new Date('2026-04-20T12:00:00'); } // simulated "now"
-
-function dkIsToday(ts) {
-    const n = dkNow();
-    return ts.getFullYear() === n.getFullYear() && ts.getMonth() === n.getMonth() && ts.getDate() === n.getDate();
-}
-
-function dkIsThisWeek(ts) {
-    const n = dkNow();
-    const startOfWeek = new Date(n);
-    startOfWeek.setDate(n.getDate() - n.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-    return ts >= startOfWeek;
-}
-
-function dkIsThisMonth(ts) {
-    const n = dkNow();
-    return ts.getFullYear() === n.getFullYear() && ts.getMonth() === n.getMonth();
-}
-
-function dkApplyFilter(records, filter) {
-    if (filter === 'today') return records.filter(r => dkIsToday(r._deletedTs));
-    if (filter === 'week')  return records.filter(r => dkIsThisWeek(r._deletedTs));
-    if (filter === 'month') return records.filter(r => dkIsThisMonth(r._deletedTs));
-    return records;
-}
-
-function dkApplyAllFilters() {
-    const byDate = dkApplyFilter(deletedKabataanRecords, dkActiveFilter);
-    return window.SkArchive
-        ? SkArchive.filterByArchiveTerm(byDate, dkArchiveTerm, ['_deletedTs'])
-        : byDate;
-}
+let dkArchiveTerm = '2025-2027';
+let dkSearchQuery = '';
+let dkIsLoading = false;
 
 function initDeletedKabataan() {
     if (window.SkArchive) {
         SkArchive.mountShowArchiveFilter((termId) => {
             dkArchiveTerm = termId;
-            dkFiltered = dkApplyAllFilters();
+            dkApplyClientFilters();
             dkCurrentPage = 1;
             renderTable();
         });
-    } else {
-        dkFiltered = dkApplyAllFilters();
     }
-    renderStats();
-    renderTable();
     bindSearch();
     bindFilterTabs();
     bindRestoreModal();
     bindViewModal();
+    loadData();
+}
+
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+async function loadData() {
+    if (dkIsLoading) return;
+    dkIsLoading = true;
+    setTableLoading(true);
+
+    const params = new URLSearchParams();
+    if (dkSearchQuery) params.set('search', dkSearchQuery);
+    if (dkActiveFilter !== 'all') params.set('filter', dkActiveFilter);
+
+    try {
+        const res = await fetch(`/deleted-kabataan/data?${params.toString()}`, {
+            headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) throw new Error('Failed to load deleted records.');
+        const json = await res.json();
+        dkRecords = (json.data || []).map(normalizeRecord);
+        renderStats(json.stats || {});
+        dkApplyClientFilters();
+        dkCurrentPage = 1;
+        renderTable();
+    } catch (err) {
+        showToast(err.message || 'Failed to load deleted records.', 'error');
+        dkRecords = [];
+        dkFiltered = [];
+        renderStats({ total: 0, today: 0, month: 0 });
+        renderTable();
+    } finally {
+        dkIsLoading = false;
+        setTableLoading(false);
+    }
+}
+
+function normalizeRecord(r) {
+    return {
+        ...r,
+        _deletedTs: r.deleted_at ? new Date(r.deleted_at) : null,
+        skTerm: window.SkArchive && r.deleted_at
+            ? SkArchive.inferTermFromDate(r.deleted_at)
+            : '2025-2027',
+    };
+}
+
+function dkApplyClientFilters() {
+    let list = dkRecords.slice();
+    if (window.SkArchive) {
+        list = SkArchive.filterByArchiveTerm(list, dkArchiveTerm, ['_deletedTs', 'deleted_at']);
+    }
+    dkFiltered = list;
+}
+
+function setTableLoading(loading) {
+    const tbody = document.getElementById('deletedKabataanTableBody');
+    if (!tbody || !loading) return;
+    tbody.innerHTML = `<tr class="empty-state-row"><td colspan="8">Loading deleted records…</td></tr>`;
 }
 
 // ── Stats cards ───────────────────────────────────────────────────────────────
-function renderStats() {
+function renderStats(stats) {
     const row = document.getElementById('dkStatsRow');
     if (!row) return;
-    const total   = deletedKabataanRecords.length;
-    const month   = deletedKabataanRecords.filter(r => dkIsThisMonth(r._deletedTs)).length;
-    const today   = deletedKabataanRecords.filter(r => dkIsToday(r._deletedTs)).length;
+    const total = stats.total ?? 0;
+    const month = stats.month ?? 0;
+    const today = stats.today ?? 0;
 
     row.innerHTML = `
         <div class="stat-card stat-card-red">
@@ -180,17 +135,20 @@ function bindFilterTabs() {
             document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             dkActiveFilter = this.dataset.filter;
-            const labels = { all: 'All Deleted Records', today: 'Deleted Today', week: 'Deleted This Week', month: 'Deleted This Month' };
+            const labels = {
+                all: 'All Deleted Records',
+                today: 'Deleted Today',
+                week: 'Deleted This Week',
+                month: 'Deleted This Month',
+            };
             const label = document.getElementById('dkSectionLabel');
             if (label) label.textContent = labels[dkActiveFilter] || 'Deleted Records';
-            dkFiltered = dkApplyAllFilters();
-            dkCurrentPage = 1;
-            renderTable();
+            loadData();
         });
     });
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
+// ── Render table ────────────────────────────────────────────────────────────────
 function renderTable() {
     const tbody = document.getElementById('deletedKabataanTableBody');
     const info  = document.getElementById('deletedKabataanPaginationInfo');
@@ -208,37 +166,56 @@ function renderTable() {
     }
 
     tbody.innerHTML = page.map(r => {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const fullName = r.full_name || formatFullName(r);
+        const canRestore = !window.SkArchive || SkArchive.canRestoreRecord(r, ['_deletedTs', 'deleted_at']);
         return `
-        <tr>
-            <td style="font-weight:600;color:#111827;">${fullName}</td>
-            <td>${r.age || '—'}</td>
-            <td>${r.sex || '—'}</td>
-            <td>${r.barangay || '—'}</td>
-            <td>${r.educationalBackground || '—'}</td>
-            <td><span class="deleted-at-badge">${r.deletedDate}</span></td>
-            <td><span class="deleted-time-badge">${r.deletedTime}</span></td>
+        <tr data-id="${r.id}">
+            <td style="font-weight:600;color:#111827;">${escHtml(fullName)}</td>
+            <td>${escHtml(r.age)}</td>
+            <td>${escHtml(r.sex)}</td>
+            <td>${escHtml(r.purok_zone)}</td>
+            <td>${escHtml(r.education)}</td>
+            <td><span class="deleted-at-badge">${escHtml(r.deleted_date)}</span></td>
+            <td><span class="deleted-time-badge">${escHtml(r.deleted_time)}</span></td>
             <td>
                 <div class="action-btns">
-                    <button class="btn-view-action" data-id="${r.id}">View</button>
-                    ${(window.SkArchive && SkArchive.canRestoreRecord(r, ['_deletedTs']))
-                        ? `<button class="btn-restore-action" data-id="${r.id}">Restore</button>`
+                    <button type="button" class="btn-view-action" data-id="${r.id}">View</button>
+                    ${canRestore
+                        ? `<button type="button" class="btn-restore-action" data-id="${r.id}">Restore</button>`
                         : `<button type="button" class="btn-restore-action is-disabled" disabled title="Past term — view only">Restore</button>`}
                 </div>
             </td>
         </tr>`;
     }).join('');
 
-    if (info) info.textContent = `Showing ${start + 1}–${Math.min(end, dkFiltered.length)} of ${dkFiltered.length} records`;
+    if (info) {
+        info.textContent = `Showing ${start + 1}–${Math.min(end, dkFiltered.length)} of ${dkFiltered.length} records`;
+    }
 
     renderPagination(dkFiltered.length);
 
-    tbody.querySelectorAll('.btn-restore-action').forEach(btn => {
-        btn.addEventListener('click', function () { openRestoreModal(this.dataset.id); });
+    tbody.querySelectorAll('.btn-restore-action:not(.is-disabled)').forEach(btn => {
+        btn.addEventListener('click', () => openRestoreModal(btn.dataset.id));
     });
     tbody.querySelectorAll('.btn-view-action').forEach(btn => {
-        btn.addEventListener('click', function () { openViewModal(this.dataset.id); });
+        btn.addEventListener('click', () => openViewModal(btn.dataset.id));
     });
+}
+
+function formatFullName(r) {
+    let name = `${r.last_name}, ${r.first_name}`;
+    if (r.middle_name) name += ` ${r.middle_name}`;
+    if (r.suffix) name += ` ${r.suffix}`;
+    return name;
+}
+
+function escHtml(value) {
+    if (value == null || value === '') return '—';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 
 function renderPagination(total) {
@@ -249,89 +226,259 @@ function renderPagination(total) {
 
     if (nums) {
         nums.innerHTML = Array.from({ length: pages }, (_, i) => `
-            <button class="pagination-btn ${i + 1 === dkCurrentPage ? 'active' : ''}">${i + 1}</button>
+            <button type="button" class="pagination-btn ${i + 1 === dkCurrentPage ? 'active' : ''}">${i + 1}</button>
         `).join('');
         nums.querySelectorAll('.pagination-btn').forEach((btn, i) => {
             btn.addEventListener('click', () => { dkCurrentPage = i + 1; renderTable(); });
         });
     }
-    if (prev) { prev.disabled = dkCurrentPage === 1; prev.onclick = () => { dkCurrentPage--; renderTable(); }; }
-    if (next) { next.disabled = dkCurrentPage >= pages || pages === 0; next.onclick = () => { dkCurrentPage++; renderTable(); }; }
+    if (prev) {
+        prev.disabled = dkCurrentPage === 1;
+        prev.onclick = () => { if (dkCurrentPage > 1) { dkCurrentPage--; renderTable(); } };
+    }
+    if (next) {
+        next.disabled = dkCurrentPage >= pages || pages === 0;
+        next.onclick = () => { if (dkCurrentPage < pages) { dkCurrentPage++; renderTable(); } };
+    }
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
 function bindSearch() {
     const input = document.getElementById('deletedKabataanSearch');
     if (!input) return;
+    let debounce = null;
     input.addEventListener('input', function () {
-        const q = this.value.toLowerCase();
-        const base = dkApplyAllFilters();
-        dkFiltered = base.filter(r =>
-            `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase().includes(q) ||
-            (r.barangay || '').toLowerCase().includes(q)
-        );
-        dkCurrentPage = 1;
-        renderTable();
+        dkSearchQuery = this.value.trim();
+        clearTimeout(debounce);
+        debounce = setTimeout(() => loadData(), 300);
     });
 }
 
-// ── View modal ────────────────────────────────────────────────────────────────
+// ── View modal (KK questionnaire) ───────────────────────────────────────────────
 function openViewModal(id) {
-    const r = deletedKabataanRecords.find(x => x.id === id);
+    const r = dkRecords.find(x => String(x.id) === String(id));
     if (!r) return;
-    const body = document.getElementById('dkViewModalBody');
-    const L = window.SkRecordViewLayout;
-    if (!body || !L) return;
 
-    const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
-    const F = L.profileField;
-    const R = L.profileRow;
-    const S = L.profileSection;
+    const dateEl = document.getElementById('dkViewDeletedDate');
+    const timeEl = document.getElementById('dkViewDeletedTime');
+    if (dateEl) dateEl.textContent = r.deleted_date || '—';
+    if (timeEl) timeEl.textContent = r.deleted_time || '—';
 
-    body.innerHTML = `
-        <div class="record-view-profile-layout">
-            ${S('Personal Information', 'fa-solid fa-user', `
-                <p class="record-view-fullname">${L.escHtml(fullName)}</p>
-                ${R(
-                    F('Age', r.age) +
-                    F('Sex', r.sex, 'fa-solid fa-venus-mars') +
-                    F('Civil Status', r.civilStatus) +
-                    F('Contact Number', r.contactNumber, 'fa-solid fa-mobile-screen')
-                )}
-                ${R(
-                    F('Purok / Zone', r.purokZone) +
-                    F('Barangay', r.barangay, 'fa-solid fa-location-dot')
-                )}
-            `)}
-            ${S('Classification & Status', 'fa-solid fa-id-card', R(
-                F('Youth Classification', r.youthClassification) +
-                F('Work Status', r.workStatus) +
-                F('Education', r.educationalBackground, 'fa-solid fa-graduation-cap')
-            ))}
-            ${L.profileMetaSection('Deletion Information', 'fa-solid fa-trash-can', R(
-                F('Deleted Date', r.deletedDate, 'fa-solid fa-calendar-day') +
-                F('Deleted Time', r.deletedTime, 'fa-solid fa-clock')
-            ))}
-        </div>`;
+    populateDkViewModal(r);
 
     const modal = document.getElementById('dkViewModal');
     if (modal) modal.style.display = 'flex';
 }
 
+function populateDkViewModal(record) {
+    const request = {
+        respondentNumber: record.respondent_display || '—',
+        date: record.submitted_at || '—',
+        firstName: record.first_name,
+        middleName: record.middle_name,
+        lastName: record.last_name,
+        suffix: record.suffix || 'None',
+        age: record.age,
+        birthday: record.birthday,
+        sex: record.sex,
+        civilStatus: record.civil_status,
+        region: record.region,
+        province: record.province,
+        city: record.city,
+        barangay: record.barangay,
+        purokZone: record.purok_zone,
+        emailAddress: record.email,
+        contactNumber: record.contact_number,
+        youthClassification: record.youth_classification,
+        youthAgeGroup: record.youth_age_group,
+        workStatus: record.work_status,
+        educationalBackground: record.education,
+        registeredSKVoter: record.sk_voter,
+        registeredNationalVoter: record.national_voter,
+        votingHistory: record.sk_voted,
+        attendedKKAssembly: record.kk_assembly,
+        kkTimes: record.kk_times,
+        kkReason: record.kk_reason,
+        facebookAccount: record.facebook,
+        willingToJoinGroupChat: record.group_chat,
+        signature: record.signature,
+        barangayLogoUrl: record.barangay_logo_url,
+    };
+
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val ?? '—';
+    };
+
+    const setCheck = (id, checked) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'checkbox') {
+            el.checked = !!checked;
+            return;
+        }
+        const text = el.textContent.replace(/^[☐☑]\s*/, '');
+        el.textContent = (checked ? '☑ ' : '☐ ') + text;
+        el.style.fontWeight = checked ? '700' : '400';
+        el.style.color = checked ? '#1a1a1a' : '#6b7280';
+    };
+
+    const matchesValue = (stored, candidates) => {
+        const normalized = (stored || '').trim().toLowerCase();
+        return candidates.some(c => normalized === c.trim().toLowerCase());
+    };
+
+    const formatBirthdayDisplay = (value) => {
+        if (!value || value === '—') return '—';
+        const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+        if (iso) return `${iso[2]}/${iso[3]}/${iso[1]}`;
+        return value;
+    };
+
+    const {
+        respondentNumber, date, firstName, middleName, lastName, suffix, age, birthday, sex, civilStatus,
+        region, province, city, barangay, purokZone, emailAddress, contactNumber,
+        youthClassification, youthAgeGroup, workStatus, educationalBackground,
+        registeredSKVoter, registeredNationalVoter, votingHistory, kkTimes, kkReason, attendedKKAssembly,
+        facebookAccount, willingToJoinGroupChat, signature,
+    } = request;
+
+    setVal('kkViewRespondentNumber', respondentNumber);
+    setVal('kkViewDate', date);
+    setVal('kkViewLastName', lastName || '—');
+    setVal('kkViewFirstName', firstName || '—');
+    setVal('kkViewMiddleName', middleName || '—');
+    setVal('kkViewSuffix', suffix || 'None');
+    setVal('kkViewRegion', region || '—');
+    setVal('kkViewProvince', province || '—');
+    setVal('kkViewCity', city || '—');
+    setVal('kkViewBarangay', barangay || '—');
+    setVal('kkViewPurokZone', purokZone || '—');
+    setCheck('kkViewSex_Male', sex === 'Male');
+    setCheck('kkViewSex_Female', sex === 'Female');
+    setVal('kkViewAge', age || '—');
+    setVal('kkViewBirthday', formatBirthdayDisplay(birthday) || '—');
+    setVal('kkViewEmailAddress', emailAddress || '—');
+    setVal('kkViewContactNumber', contactNumber || '—');
+
+    const csMap = {
+        kkViewCS_Single: 'Single', kkViewCS_Married: 'Married', kkViewCS_Widowed: 'Widowed',
+        kkViewCS_Divorced: 'Divorced', kkViewCS_Separated: 'Separated', kkViewCS_Annulled: 'Annulled',
+        kkViewCS_Unknown: 'Unknown', kkViewCS_Livein: 'Live-in',
+    };
+    Object.entries(csMap).forEach(([id, val]) => setCheck(id, civilStatus === val));
+
+    const yagMap = {
+        kkViewYAG_Child: 'Child Youth (15-17 yrs old)',
+        kkViewYAG_Core: 'Core Youth (18-24 yrs old)',
+        kkViewYAG_Young: 'Young Adult (15-30 yrs old)',
+    };
+    Object.entries(yagMap).forEach(([id, val]) => setCheck(id, youthAgeGroup === val));
+
+    const ebMap = {
+        kkViewEB_ElemLevel: ['Elementary Level'],
+        kkViewEB_ElemGrad: ['Elementary Grad'],
+        kkViewEB_HSLevel: ['High School Level', 'High school level'],
+        kkViewEB_HSGrad: ['High School Grad', 'High school Grad'],
+        kkViewEB_VocGrad: ['Vocational Grad'],
+        kkViewEB_ColLevel: ['College Level'],
+        kkViewEB_ColGrad: ['College Grad'],
+        kkViewEB_MasLevel: ['Masters Level'],
+        kkViewEB_MasGrad: ['Masters Grad'],
+        kkViewEB_DocLevel: ['Doctorate Level'],
+        kkViewEB_DocGrad: ['Doctorate Graduate'],
+    };
+    Object.entries(ebMap).forEach(([id, vals]) => setCheck(id, matchesValue(educationalBackground, vals)));
+
+    const ycMap = {
+        kkViewYC_ISY: ['In School Youth', 'In school Youth'],
+        kkViewYC_OSY: ['Out of School Youth'],
+        kkViewYC_Working: ['Working Youth'],
+        kkViewYC_PWD: ['Person w/ Disability'],
+        kkViewYC_CICL: ['Children in Conflict w/ Law', 'Children In Conflict w/ Law'],
+        kkViewYC_IP: ['Indigenous People'],
+    };
+    Object.entries(ycMap).forEach(([id, vals]) => setCheck(id, matchesValue(youthClassification, vals)));
+
+    const wsMap = {
+        kkViewWS_Employed: 'Employed', kkViewWS_Unemployed: 'Unemployed',
+        kkViewWS_SelfEmployed: 'Self-Employed', kkViewWS_Looking: 'Currently looking for a Job',
+        kkViewWS_NotInterested: 'Not Interested Looking for a Job',
+    };
+    Object.entries(wsMap).forEach(([id, val]) => setCheck(id, workStatus === val));
+
+    setCheck('kkViewSKV_Yes', registeredSKVoter === 'Yes');
+    setCheck('kkViewSKV_No', registeredSKVoter === 'No');
+    setCheck('kkViewNV_Yes', registeredNationalVoter === 'Yes');
+    setCheck('kkViewNV_No', registeredNationalVoter === 'No');
+    setCheck('kkViewVH_Yes', votingHistory === 'Yes');
+    setCheck('kkViewVH_No', votingHistory === 'No');
+    setCheck('kkViewKK_Yes', attendedKKAssembly === 'Yes');
+    setCheck('kkViewKK_No', attendedKKAssembly === 'No');
+    setCheck('kkViewKKTimes_12', kkTimes === '1-2 Times');
+    setCheck('kkViewKKTimes_34', kkTimes === '3-4 Times');
+    setCheck('kkViewKKTimes_5', kkTimes === '5 and above');
+
+    const normalizedReason = (kkReason || '').trim();
+    setCheck('kkViewVR_NoKK',
+        normalizedReason === 'There was no KK Assembly Meeting'
+        || normalizedReason === 'There was no KK Assembly');
+    setCheck('kkViewVR_NotInt',
+        normalizedReason === 'Not interested to Attend'
+        || normalizedReason === 'Not Interested to Attend');
+
+    setVal('kkViewFacebookAccount', facebookAccount || '—');
+    setCheck('kkViewGC_Yes', willingToJoinGroupChat === 'Yes');
+    setCheck('kkViewGC_No', willingToJoinGroupChat === 'No');
+
+    const logoEl = document.getElementById('kkViewBarangayLogo');
+    if (logoEl && request.barangayLogoUrl) {
+        logoEl.src = request.barangayLogoUrl;
+        logoEl.alt = `${barangay || 'Barangay'} SK Logo`;
+    }
+
+    const sigNameEl = document.getElementById('kkViewSignatureName');
+    const sigPreview = document.getElementById('kkViewSignaturePreview');
+    const sigOverlay = document.getElementById('kkViewSignatureOverlay');
+    const nameParts = [
+        firstName,
+        middleName ? middleName.charAt(0) + '.' : null,
+        lastName,
+        suffix && suffix !== 'None' ? suffix : null,
+    ].filter(Boolean);
+    const printedName = nameParts.join(' ') || '—';
+    if (sigNameEl) sigNameEl.textContent = printedName;
+    if (sigPreview && sigOverlay) {
+        if (signature && signature.startsWith('data:image')) {
+            sigPreview.src = signature;
+            sigOverlay.style.display = 'flex';
+        } else {
+            sigPreview.removeAttribute('src');
+            sigOverlay.style.display = 'none';
+        }
+    }
+
+    const rejectionWrap = document.getElementById('kkViewRejectionWrap');
+    if (rejectionWrap) rejectionWrap.style.display = 'none';
+}
+
 function bindViewModal() {
-    const modal    = document.getElementById('dkViewModal');
-    const box      = document.getElementById('dkViewModalBox');
-    const closeBtn = document.getElementById('dkViewModalClose');
+    const modal     = document.getElementById('dkViewModal');
+    const box       = document.getElementById('dkViewModalBox');
+    const closeBtn  = document.getElementById('dkViewModalClose');
     const toggleBtn = document.getElementById('dkViewModalToggle');
 
     const close = () => {
-        if (modal) { modal.style.display = 'none'; modal.classList.remove('view-modal-maximized'); }
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('view-modal-maximized');
+        }
         if (box) box.classList.remove('view-modal-maximized');
         if (toggleBtn) toggleBtn.textContent = '□';
     };
 
     if (closeBtn) closeBtn.addEventListener('click', close);
-    if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
     if (toggleBtn && box) {
         toggleBtn.addEventListener('click', function (e) {
@@ -346,15 +493,15 @@ function bindViewModal() {
 
 // ── Restore modal ─────────────────────────────────────────────────────────────
 function openRestoreModal(id) {
-    const record = deletedKabataanRecords.find(r => r.id === id);
+    const record = dkRecords.find(r => String(r.id) === String(id));
     if (!record) return;
-    if (window.SkArchive && !SkArchive.canRestoreRecord(record, ['_deletedTs'])) {
-        alert('This record is from a past SK term and cannot be restored. View-only archive.');
+    if (window.SkArchive && !SkArchive.canRestoreRecord(record, ['_deletedTs', 'deleted_at'])) {
+        showToast('This record is from a past SK term and cannot be restored.', 'error');
         return;
     }
     dkPendingRestoreId = id;
     const nameEl = document.getElementById('dkRestoreName');
-    if (nameEl) nameEl.textContent = `${record.lastName}, ${record.firstName}${record.middleName ? ' ' + record.middleName : ''}`;
+    if (nameEl) nameEl.textContent = record.full_name || formatFullName(record);
     const modal = document.getElementById('dkRestoreModal');
     if (modal) modal.style.display = 'flex';
 }
@@ -369,28 +516,48 @@ function bindRestoreModal() {
     const cancelBtn  = document.getElementById('dkRestoreCancelBtn');
     const confirmBtn = document.getElementById('dkRestoreConfirmBtn');
     const modal      = document.getElementById('dkRestoreModal');
+    const defaultHtml = confirmBtn ? confirmBtn.innerHTML : 'Restore';
 
-    if (cancelBtn)  cancelBtn.addEventListener('click', closeRestoreModal);
-    if (modal)      modal.addEventListener('click', e => { if (e.target === modal) closeRestoreModal(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', closeRestoreModal);
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeRestoreModal(); });
 
     if (confirmBtn) {
-        confirmBtn.addEventListener('click', function () {
-            if (!dkPendingRestoreId) return;
-            const record = deletedKabataanRecords.find(r => r.id === dkPendingRestoreId);
-            const name = record ? `${record.lastName}, ${record.firstName}` : 'Record';
-            const idx = deletedKabataanRecords.findIndex(r => r.id === dkPendingRestoreId);
-            if (idx !== -1) deletedKabataanRecords.splice(idx, 1);
-            dkFiltered = dkApplyFilter(deletedKabataanRecords, dkActiveFilter);
-            closeRestoreModal();
-            dkCurrentPage = 1;
-            renderStats();
-            renderTable();
-            showRestoreBanner('dkRestoreBanner', 'dkRestoreBannerText', `${name} has been restored to the Kabataan list.`);
+        confirmBtn.addEventListener('click', async function () {
+            if (!dkPendingRestoreId || confirmBtn.disabled) return;
+
+            const record = dkRecords.find(r => String(r.id) === String(dkPendingRestoreId));
+            const name = record ? (record.full_name || formatFullName(record)) : 'Record';
+
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="dk-restore-spinner"></span> Restoring...';
+
+            try {
+                const res = await fetch(`/deleted-kabataan/${dkPendingRestoreId}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                    },
+                });
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(json.message || 'Failed to restore record.');
+
+                closeRestoreModal();
+                showToast(json.message || `${name} restored to Kabataan list.`, 'success');
+                showRestoreBanner('dkRestoreBanner', 'dkRestoreBannerText', `${name} has been restored to the Kabataan list.`);
+                await loadData();
+            } catch (err) {
+                showToast(err.message || 'Failed to restore record.', 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = defaultHtml;
+            }
         });
     }
 }
 
-// ── Restore success banner ────────────────────────────────────────────────────
+// ── Notifications ─────────────────────────────────────────────────────────────
 function showRestoreBanner(bannerId, textId, message) {
     const banner = document.getElementById(bannerId);
     const text   = document.getElementById(textId);
@@ -404,11 +571,12 @@ function showRestoreBanner(bannerId, textId, message) {
     }, 4000);
 }
 
-// ── Toast (kept for compatibility) ───────────────────────────────────────────
-function showToast(toastId, message) {
-    const toast = document.getElementById(toastId);
+function showToast(message, type) {
+    const toast = document.getElementById('dkToast');
     if (!toast) return;
     toast.textContent = message;
+    toast.classList.remove('dk-toast-error');
+    if (type === 'error') toast.classList.add('dk-toast-error');
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
+    setTimeout(() => toast.classList.remove('show'), 3200);
 }

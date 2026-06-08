@@ -4,12 +4,14 @@
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Deleted Kabataan - SK Officials Portal</title>
 
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
-        'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css'
+        'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css',
+        'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -109,16 +111,36 @@
 </div>
 
 <!-- View Modal -->
-<div class="restore-modal-backdrop" id="dkViewModal" style="display:none;">
-    <div class="restore-modal-box view-modal-box" id="dkViewModalBox">
+<div class="restore-modal-backdrop dk-view-backdrop" id="dkViewModal" style="display:none;">
+    <div class="restore-modal-box view-modal-box dk-view-modal-box kk-view-modal-wide" id="dkViewModalBox">
         <div class="restore-modal-header view-modal-header">
-            <h2 class="restore-modal-title">Record Details</h2>
+            <div>
+                <h2 class="restore-modal-title">KK Survey Questionnaire</h2>
+                <span class="dk-view-subtitle">Deleted Kabataan Record</span>
+            </div>
             <div class="view-modal-controls">
                 <button type="button" class="view-modal-toggle" id="dkViewModalToggle" aria-label="Maximize">□</button>
                 <button type="button" class="view-modal-close" id="dkViewModalClose">&times;</button>
             </div>
         </div>
-        <div class="view-modal-body" id="dkViewModalBody"></div>
+        <div class="dk-deleted-meta" id="dkDeletedMeta">
+            <div class="dk-deleted-meta-item">
+                <span class="dk-deleted-meta-label">Deleted Date</span>
+                <span class="dk-deleted-meta-value" id="dkViewDeletedDate">—</span>
+            </div>
+            <div class="dk-deleted-meta-item">
+                <span class="dk-deleted-meta-label">Deleted Time</span>
+                <span class="dk-deleted-meta-value" id="dkViewDeletedTime">—</span>
+            </div>
+        </div>
+        <div class="view-modal-body dk-view-modal-body kk-qs-body">
+            <div class="kk-qs-scroll-wrapper">
+                @include('KKProfilingRequests::partials.kk-profiling-view-questionnaire', [
+                    'barangayLogoUrl' => $barangayLogoUrl ?? null,
+                    'barangayName' => $barangayName ?? null,
+                ])
+            </div>
+        </div>
     </div>
 </div>
 

@@ -149,7 +149,6 @@
                                 <th>Purok/Zone</th>
                                 <th>Registered Voter</th>
                                 <th>Status</th>
-                                <th>Reason</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
