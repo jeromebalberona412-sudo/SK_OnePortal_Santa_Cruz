@@ -181,10 +181,14 @@ class AdminAccountController extends Controller
             );
             Log::info('AdminAccountController@store: Account created successfully.', ['user_id' => $user->id]);
 
+            $statusMessage = empty($validatedData['password'])
+                ? 'Account created successfully. A password setup email has been sent.'
+                : 'Account created successfully.';
+
             if ($request->expectsJson()) {
                 return response([
                     'success' => true,
-                    'message' => 'Account created successfully.',
+                    'message' => $statusMessage,
                     'data' => ['id' => $user->id],
                 ]);
             }
@@ -194,7 +198,7 @@ class AdminAccountController extends Controller
                 : 'accounts.federation.index';
 
             return redirect()->route($redirectRoute)
-                ->with('status', 'Account created successfully.');
+                ->with('status', $statusMessage);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('AdminAccountController@store: Validation failed.', [
                 'errors' => $e->errors(),

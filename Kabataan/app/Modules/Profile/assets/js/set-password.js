@@ -69,15 +69,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const changePasswordForm = document.getElementById('changePasswordForm');
-    if (!changePasswordForm) return;
+    const form = document.getElementById('setPasswordForm');
+    if (!form) return;
 
-    changePasswordForm.addEventListener('submit', function (e) {
+    form.addEventListener('submit', function (e) {
         const newPassword = document.getElementById('password')?.value || '';
         const passwordConfirmation = document.getElementById('password_confirmation')?.value || '';
-        const submitBtn = document.getElementById('cpSubmitBtn');
-        const btnText = document.getElementById('cpBtnText');
+        const submitBtn = document.getElementById('spSubmitBtn');
+        const btnText = document.getElementById('spBtnText');
         const errorElement = document.getElementById('confirmPasswordError');
+        const successOverlay = document.getElementById('spSuccessOverlay');
 
         if (errorElement) errorElement.style.display = 'none';
 
@@ -99,8 +100,18 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        e.preventDefault();
+
         if (submitBtn) submitBtn.disabled = true;
-        if (btnText) btnText.textContent = 'Sending…';
-        if (window.showLoading) window.showLoading('Sending verification link…');
+        if (btnText) btnText.textContent = 'Setting password…';
+
+        if (successOverlay) {
+            successOverlay.removeAttribute('hidden');
+            successOverlay.classList.add('is-visible');
+        }
+
+        setTimeout(() => {
+            form.submit();
+        }, 1400);
     });
 });

@@ -19,7 +19,6 @@
 <body class="youth-login-page">
     @include('dashboard::loading')
 
-    <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
         <div class="youth-gradient-overlay"></div>
@@ -31,90 +30,114 @@
     </div>
 
     <main class="youth-login-container">
-
-        <!-- Left Side — Logo & Branding -->
         <div class="youth-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
-                    <img
-                        src="/images/skoneportal_logo.webp"
-                        alt="SK OnePortal Logo"
-                        class="youth-logo"
-                    >
+                    <img src="/images/skoneportal_logo.webp" alt="SK OnePortal Logo" class="youth-logo">
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
                 <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
             </div>
         </div>
 
-        <!-- Right Side — Card -->
         <div class="youth-login-section">
             <div class="youth-login-card">
+                <div id="ceVerifySection"
+                     data-status-url="{{ route('change-email.verify.status', [], false) }}">
+                    <div class="card-header">
+                        <h2 class="card-title">Verify Email Change ✉️</h2>
+                        <p class="card-subtitle">We sent a confirmation link to your new email address.</p>
+                    </div>
 
-                {{-- Verification Sent Section --}}
-                <div id="ceVerifySection">
-
-                    <!-- Sent header -->
-                    <div class="ce-sent-header">
-                        <div class="ce-sent-icon">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
+                    <div class="ce-verify-content">
+                        <div class="ce-sent-header">
+                            <div class="ce-sent-icon">
+                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ce-sent-title" id="ceStatusTitle">{{ $awaitingPassword ? 'Email Verified!' : 'Verification Sent!' }}</div>
+                            <div class="ce-sent-sub" id="ceStatusSub">{{ $awaitingPassword ? 'Set your new password on the other tab to finish the email change.' : 'Open your inbox and tap the confirmation link.' }}</div>
                         </div>
-                        <div class="ce-sent-title">Verification Sent!</div>
-                        <div class="ce-sent-sub">Check your new email inbox and click the link.</div>
-                    </div>
 
-                    <!-- Info box -->
-                    <div class="ce-info-box">
-                        Verification link sent! A confirmation link has been sent to <strong id="cePendingEmail">{{ session('pending_email') ?? '—' }}</strong>. Your current email remains active until you verify the new one.
-                    </div>
-
-                    <!-- Status table -->
-                    <div class="ce-status-table">
-                        <div class="ce-status-row">
-                            <span class="ce-status-key">Current email</span>
-                            <span class="ce-status-val" id="ceCurrentEmailVal">{{ $user->email ?? '—' }}</span>
+                        <div class="cp-listening-badge {{ $awaitingPassword ? 'is-confirmed' : '' }}" id="ceListeningBadge">
+                            <span class="cp-listening-dot"></span>
+                            {{ $awaitingPassword ? 'Waiting for new password…' : 'Listening for email confirmation…' }}
                         </div>
-                        <div class="ce-status-row">
-                            <span class="ce-status-key">Pending email</span>
-                            <span class="ce-status-val" id="cePendingEmailVal">{{ session('pending_email') ?? '—' }}</span>
+
+                        @if ($errors->any())
+                            <div class="youth-alert youth-alert-error">
+                                @foreach ($errors->all() as $error)
+                                    <div>{{ $error }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @if (session('status'))
+                            <div class="ce-info-box">{{ session('status') }}</div>
+                        @endif
+
+                        <div class="ce-info-box">
+                            A confirmation link has been sent to <strong id="cePendingEmail">{{ $user->pending_email }}</strong>. Your current email stays active until you verify the new one.
                         </div>
-                        <div class="ce-status-row">
-                            <span class="ce-status-key">Status</span>
-                            <span class="ce-status-val">
-                                <span class="ce-badge-awaiting">Awaiting verification</span>
-                            </span>
+
+                        <div class="ce-status-table">
+                            <div class="ce-status-row">
+                                <span class="ce-status-key">Current email</span>
+                                <span class="ce-status-val" id="ceCurrentEmailVal">{{ $user->email }}</span>
+                            </div>
+                            <div class="ce-status-row">
+                                <span class="ce-status-key">Pending email</span>
+                                <span class="ce-status-val" id="cePendingEmailVal">{{ $user->pending_email }}</span>
+                            </div>
+                            <div class="ce-status-row">
+                                <span class="ce-status-key">Status</span>
+                                <span class="ce-status-val">
+                                    <span class="ce-badge-awaiting" id="ceStatusBadge" @if($awaitingPassword) style="background:#fef3c7;color:#92400e;" @endif>{{ $awaitingPassword ? 'Awaiting password' : 'Awaiting verification' }}</span>
+                                </span>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Resend timer -->
-                    <div class="ce-resend-timer" id="ceTimer">
-                        Resend available in <strong id="ceTimerCount">60</strong>s
-                    </div>
+                        @unless($awaitingPassword)
+                            <div class="ce-resend-timer" id="ceTimer" @if($resendCooldown <= 0) style="display:none;" @endif>
+                                Resend available in <strong id="ceTimerCount">{{ $resendCooldown > 0 ? sprintf('%d:%02d', intdiv($resendCooldown, 60), $resendCooldown % 60) : '1:00' }}</strong>
+                            </div>
 
-                    <!-- Action buttons -->
-                    <div class="ce-actions">
-                        <button type="button" class="ce-btn-resend" id="ceResendBtn" disabled>
-                            Resend Verification
-                        </button>
-                        <button type="button" class="ce-btn-cancel" id="ceCancelBtn">
-                            Cancel Request
-                        </button>
-                    </div>
+                            <div class="ce-actions">
+                                <form action="{{ route('change-email.resend') }}" method="POST" id="ceResendForm">
+                                    @csrf
+                                    <button type="submit" class="ce-btn-resend" id="ceResendBtn" @if($resendCooldown > 0) disabled @endif>
+                                        Resend Verification
+                                    </button>
+                                </form>
+                                <form action="{{ route('change-email.cancel') }}" method="POST" id="ceCancelForm">
+                                    @csrf
+                                    <button type="submit" class="ce-btn-cancel" id="ceCancelBtn">
+                                        Cancel Request
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="ce-info-box">
+                                Complete the <strong>Set New Password</strong> step on the tab where you opened the confirmation link. This page will sign you out automatically once your password is set.
+                            </div>
+                        @endunless
 
-                    <div class="youth-register-section ce-back-section">
-                        <p class="register-text">
-                            <a href="{{ route('profile') }}" class="register-link">← Back to Profile</a>
-                        </p>
+                        <div class="youth-register-section ce-back-section">
+                            <p class="register-text">
+                                <a href="{{ route('profile') }}" class="register-link">← Back to Profile</a>
+                            </p>
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
-
     </main>
 
+    <script>
+        window.ceResendCooldown = {{ (int) $resendCooldown }};
+        window.ceAwaitingPassword = {{ $awaitingPassword ? 'true' : 'false' }};
+    </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

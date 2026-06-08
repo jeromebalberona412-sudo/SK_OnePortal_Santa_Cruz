@@ -190,29 +190,7 @@
     text-align: center;
 }
 
-/* ── Password toggle for change email ─────────────────────── */
-.cp-pw-toggle {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: #9ca3af;
-    display: flex;
-    align-items: center;
-}
-
-.cp-pw-toggle svg {
-    width: 16px;
-    height: 16px;
-    stroke: currentColor;
-    fill: none;
-}
-
-.cp-pw-toggle:hover { color: #374151; }
+/* Password eye toggle uses youth-login.css (.pw-toggle-btn / .pw-eye) */
 
 /* ── No-scroll override for change-email page ───────────── */
 html,
@@ -238,4 +216,45 @@ body {
     align-items: flex-start;
     padding-top: 2rem;
     padding-bottom: 2rem;
+}
+
+.cp-listening-badge {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: #eff6ff;
+    border: 1.5px solid #93c5fd;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.cp-listening-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+    flex-shrink: 0;
+    animation: cpPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes cpPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.cp-listening-badge.is-confirmed {
+    background: #f0fdf4;
+    border-color: #22c55e;
+    color: #166534;
+}
+
+.cp-listening-badge.is-confirmed .cp-listening-dot {
+    background: #22c55e;
+    animation: none;
 }

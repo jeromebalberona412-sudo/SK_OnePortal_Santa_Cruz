@@ -40,7 +40,11 @@
             </div>
         </div>
         <div class="kkp-form-logo">
-            <img src="/images/skoneportal_logo.webp" alt="SK OnePortal Logo">
+            <img
+                src="{{ $barangayLogoUrl ?? asset('images/skoneportal_logo.webp') }}"
+                alt="{{ ($barangayName ?? 'Barangay') }} SK Logo"
+                onerror="this.onerror=null;this.src='{{ asset('images/skoneportal_logo.webp') }}';"
+            >
         </div>
     </div>
 
@@ -75,19 +79,19 @@
     <div class="kkp-row-label">Location:</div>
     <div class="kkp-loc-row">
         <div class="kkp-loc-col">
-            <input type="text" class="kkp-uline kkp-readonly" value="Region IV-A (CALABARZON)" readonly>
+            <input type="text" class="kkp-uline kkp-readonly" value="{{ $profile['region'] ?? 'Region IV-A (CALABARZON)' }}" readonly>
             <label class="kkp-col-label">Region</label>
         </div>
         <div class="kkp-loc-col">
-            <input type="text" class="kkp-uline kkp-readonly" value="{{ $user->province ?? 'Laguna' }}" readonly>
+            <input type="text" class="kkp-uline kkp-readonly" value="{{ $profile['province'] ?? 'Laguna' }}" readonly>
             <label class="kkp-col-label">Province</label>
         </div>
         <div class="kkp-loc-col">
-            <input type="text" class="kkp-uline kkp-readonly" value="{{ $user->municipality ?? 'Santa Cruz' }}" readonly>
+            <input type="text" class="kkp-uline kkp-readonly" value="{{ $profile['municipality'] ?? 'Santa Cruz' }}" readonly>
             <label class="kkp-col-label">City/Municipality</label>
         </div>
         <div class="kkp-loc-col">
-            <input type="text" class="kkp-uline kkp-readonly" value="{{ $user->barangay ?? 'N/A' }}" readonly>
+            <input type="text" class="kkp-uline kkp-readonly" value="{{ $barangayName ?? ($profile['barangayName'] ?? 'Santa Cruz') }}" readonly>
             <label class="kkp-col-label">Barangay</label>
         </div>
         <div class="kkp-loc-col">

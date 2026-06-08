@@ -2,39 +2,34 @@ document.addEventListener('DOMContentLoaded', function () {
     const COOLDOWN_SECONDS = 60;
     const POLL_INTERVAL_MS = 3000;
 
-    const verifySection = document.getElementById('ceVerifySection');
+    const verifySection = document.getElementById('cpVerifySection');
     const statusUrl = verifySection?.dataset.statusUrl || '';
-    const pendingEmail = document.getElementById('cePendingEmail')?.textContent?.trim() || 'default';
-    const cooldownKey = `kabataan_email_change_resend_${pendingEmail}`;
+    const accountEmail = verifySection?.dataset.email || 'default';
+    const cooldownKey = `kabataan_password_change_resend_${accountEmail}`;
 
-    const timerElement = document.getElementById('ceTimer');
-    const timerCountElement = document.getElementById('ceTimerCount');
-    const resendBtn = document.getElementById('ceResendBtn');
-    const resendForm = document.getElementById('ceResendForm');
-    const listeningBadge = document.getElementById('ceListeningBadge');
-    const statusTitle = document.getElementById('ceStatusTitle');
-    const statusSub = document.getElementById('ceStatusSub');
-    const statusBadge = document.getElementById('ceStatusBadge');
+    const timerElement = document.getElementById('cpTimer');
+    const timerCountElement = document.getElementById('cpTimerCount');
+    const resendBtn = document.getElementById('cpResendBtn');
+    const resendForm = document.getElementById('cpResendForm');
+    const listeningBadge = document.getElementById('cpListeningBadge');
+    const statusTitle = document.getElementById('cpStatusTitle');
+    const statusSub = document.getElementById('cpStatusSub');
+    const statusBadge = document.getElementById('cpStatusBadge');
+    const infoBox = document.getElementById('cpInfoBox');
 
     let timerInterval = null;
     let confirmationHandled = false;
-    const serverCooldown = Number(window.ceResendCooldown || 0);
+    const serverCooldown = Number(window.cpResendCooldown || 0);
 
     function showPageLoading(message) {
         if (window.showLoading) window.showLoading(message);
     }
 
-    function formatCountdown(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${String(secs).padStart(2, '0')}`;
-    }
-
-    function clearCooldown() {
+    function clearResendCooldown() {
         localStorage.removeItem(cooldownKey);
     }
 
-    function setCooldownExpiry(seconds) {
+    function setResendCooldownExpiry(seconds) {
         localStorage.setItem(cooldownKey, String(Date.now() + Math.max(1, seconds) * 1000));
     }
 
@@ -47,6 +42,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return serverCooldown > 0 ? serverCooldown : 0;
     }
 
+    function formatCountdown(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${String(secs).padStart(2, '0')}`;
+    }
+
     function updateTimerDisplay(seconds) {
         if (timerCountElement) timerCountElement.textContent = formatCountdown(seconds);
     }
@@ -57,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
             resendBtn.disabled = false;
             resendBtn.textContent = 'Resend Verification';
         }
-        clearCooldown();
+        clearResendCooldown();
     }
 
     function startTimer(seconds) {
@@ -92,12 +93,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (remaining <= 0 && serverCooldown > 0) {
             remaining = serverCooldown;
-            setCooldownExpiry(remaining);
+            setResendCooldownExpiry(remaining);
         }
 
         if (remaining > 0) {
             if (!localStorage.getItem(cooldownKey)) {
-                setCooldownExpiry(remaining);
+                setResendCooldownExpiry(remaining);
             }
             startTimer(remaining);
         } else {
@@ -105,46 +106,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function markAwaitingPasswordUI(message, pendingEmail) {
-        if (listeningBadge) {
-            listeningBadge.classList.add('is-confirmed');
-            listeningBadge.innerHTML = '<span class="cp-listening-dot"></span> Waiting for new password';
-        }
-        if (statusTitle) statusTitle.textContent = 'Email Verified!';
-        if (statusSub) {
-            statusSub.textContent = message || 'Set your new password on the other tab to finish the email change.';
-        }
-        if (statusBadge) {
-            statusBadge.textContent = 'Awaiting password';
-            statusBadge.style.background = '#fef3c7';
-            statusBadge.style.color = '#92400e';
-        }
-        if (pendingEmail) {
-            const pendingEmailVal = document.getElementById('cePendingEmailVal');
-            if (pendingEmailVal) pendingEmailVal.textContent = pendingEmail;
-        }
-    }
-
-    function markCompletedUI(message) {
+    function markConfirmedUI(message) {
         confirmationHandled = true;
         if (listeningBadge) {
             listeningBadge.classList.add('is-confirmed');
-            listeningBadge.innerHTML = '<span class="cp-listening-dot"></span> Email change complete';
+            listeningBadge.innerHTML = '<span class="cp-listening-dot"></span> Password confirmed';
         }
-        if (statusTitle) statusTitle.textContent = 'All Done!';
-        if (statusSub) statusSub.textContent = message || 'Signing you out so you can log in with your new credentials.';
+        if (statusTitle) statusTitle.textContent = 'Password Confirmed!';
+        if (statusSub) statusSub.textContent = message || 'Signing you out so you can log in with your new password.';
         if (statusBadge) {
-            statusBadge.textContent = 'Completed';
+            statusBadge.textContent = 'Confirmed';
             statusBadge.style.background = '#dcfce7';
             statusBadge.style.color = '#166534';
         }
+        if (infoBox) infoBox.textContent = message || 'Password change confirmed. Redirecting to login...';
     }
 
     function redirectToLogin(message, redirectUrl) {
-        clearCooldown();
+        clearResendCooldown();
         if (timerInterval) clearInterval(timerInterval);
-        markCompletedUI(message);
-        showPageLoading('Signing out…');
+        markConfirmedUI(message);
+        showPageLoading('Signing out...');
         setTimeout(function () {
             window.location.replace(redirectUrl || '/login');
         }, 900);
@@ -161,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (response.status === 401 || response.status === 419) {
+                redirectToLogin('Password changed successfully. Please sign in with your new password.', '/login');
                 return;
             }
 
@@ -175,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (payload.resend_cooldown > 0) {
                     const localRemaining = getRemainingSeconds();
                     if (localRemaining <= 0) {
-                        setCooldownExpiry(payload.resend_cooldown);
+                        setResendCooldownExpiry(payload.resend_cooldown);
                         startTimer(payload.resend_cooldown);
                     }
                 }
@@ -183,23 +166,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (payload.state === 'awaiting_password') {
-                markAwaitingPasswordUI(payload.message, payload.pending_email);
-                setTimeout(checkConfirmationStatus, POLL_INTERVAL_MS);
-                return;
-            }
-
-            if (payload.state === 'completed') {
+            if (payload.state === 'confirmed') {
                 redirectToLogin(
-                    payload.message || 'Email and password updated. Please sign in with your new credentials.',
+                    payload.message || 'Password changed successfully. Please sign in with your new password.',
                     payload.redirect || '/login',
                 );
                 return;
             }
 
             if (payload.state === 'cancelled') {
-                clearCooldown();
-                window.location.replace(payload.redirect || '/change-email');
+                clearResendCooldown();
+                window.location.replace(payload.redirect || '/change-password');
             }
         } catch (error) {
             setTimeout(checkConfirmationStatus, POLL_INTERVAL_MS + 2000);
@@ -207,14 +184,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     bootstrapTimer();
-
-    if (window.ceAwaitingPassword) {
-        markAwaitingPasswordUI(
-            'Set your new password on the other tab to finish the email change.',
-            document.getElementById('cePendingEmailVal')?.textContent?.trim() || '',
-        );
-    }
-
     checkConfirmationStatus();
 
     if (resendForm) {
@@ -223,17 +192,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 resendBtn.disabled = true;
                 resendBtn.textContent = 'Sending…';
             }
-            setCooldownExpiry(COOLDOWN_SECONDS);
-            showPageLoading('Resending…');
+            setResendCooldownExpiry(COOLDOWN_SECONDS);
+            if (window.showLoading) window.showLoading('Resending…');
         });
     }
 
-    const cancelForm = document.getElementById('ceCancelForm');
+    const cancelForm = document.getElementById('cpCancelForm');
     if (cancelForm) {
         cancelForm.addEventListener('submit', function () {
-            clearCooldown();
+            clearResendCooldown();
             if (timerInterval) clearInterval(timerInterval);
-            showPageLoading('Cancelling…');
+            showPageLoading('Cancelling request...');
         });
     }
 });

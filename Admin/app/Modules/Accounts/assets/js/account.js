@@ -606,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     cleanupAccountUiState();
-                    showAccountToast(data.message || 'SK Officials account successfully created!', 'success');
+                    showAccountToast(data.message || 'SK Officials account created. Password setup email sent.', 'success');
                     window.setTimeout(() => window.location.reload(), 900);
                 })
                 .catch(() => {
@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
                     cleanupAccountUiState();
-                    showAccountToast(data.message || 'Account successfully created!', 'success');
+                    showAccountToast(data.message || 'SK Federation account created. Password setup email sent.', 'success');
                     window.setTimeout(() => window.location.reload(), 900);
                 })
                 .catch(() => {

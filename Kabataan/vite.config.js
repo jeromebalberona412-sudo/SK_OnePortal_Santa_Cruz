@@ -56,6 +56,8 @@ export default defineConfig({
                 'app/Modules/Profile/assets/js/change-email-verify.js',
                 'app/Modules/Profile/assets/css/change-password.css',
                 'app/Modules/Profile/assets/js/change-password.js',
+                'app/Modules/Profile/assets/js/change-password-verify.js',
+                'app/Modules/Profile/assets/js/set-password.js',
 
                 // Homepage
                 'app/Modules/Homepage/assets/css/homepage-bootstrap.css',

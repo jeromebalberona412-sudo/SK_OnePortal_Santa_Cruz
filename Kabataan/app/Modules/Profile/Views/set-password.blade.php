@@ -8,18 +8,15 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Change Password - SK OnePortal</title>
+    <title>Set Password - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
         'app/Modules/Profile/assets/css/change-password.css',
-        'app/Modules/Profile/assets/js/change-password.js',
+        'app/Modules/Profile/assets/js/set-password.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page">
-    @include('dashboard::loading')
+<body class="youth-login-page set-password-page" data-skip-initial-loading>
 
-    <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
         <div class="youth-gradient-overlay"></div>
@@ -31,31 +28,26 @@
     </div>
 
     <main class="youth-login-container">
-
-        <!-- Left Side — Logo & Branding -->
         <div class="youth-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
-                    <img
-                        src="/images/skoneportal_logo.webp"
-                        alt="SK OnePortal Logo"
-                        class="youth-logo"
-                    >
+                    <img src="/images/skoneportal_logo.webp" alt="SK OnePortal Logo" class="youth-logo">
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
                 <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
             </div>
         </div>
 
-        <!-- Right Side — Card -->
         <div class="youth-login-section">
             <div class="youth-login-card">
                 <div class="card-header">
-                    <h2 class="card-title">
-                        Change Password 🔐
-                    </h2>
-                    <p class="card-subtitle">Create a new password for your account. We will email you a confirmation link before the change takes effect.</p>
+                    <h2 class="card-title">Set New Password 🔐</h2>
+                    <p class="card-subtitle">Your new email <strong>{{ $user->pending_email }}</strong> will be activated after you set a password.</p>
                 </div>
+
+                @if (session('status'))
+                    <div class="youth-alert youth-alert-success">{{ session('status') }}</div>
+                @endif
 
                 @if ($errors->any())
                     <div class="youth-alert youth-alert-error">
@@ -65,28 +57,13 @@
                     </div>
                 @endif
 
-                <!-- Change Password Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('change-password.post') }}" id="changePasswordForm" novalidate>
+                <form action="{{ route('change-email.set-password.update', ['id' => $user->id, 'token' => $token]) }}" method="POST" class="youth-login-form" id="setPasswordForm" novalidate>
                     @csrf
 
-                    <!-- New Password Field -->
                     <div class="youth-form-group">
-                        <label for="password" class="youth-label">
-                            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
-                            </svg>
-                            New Password
-                        </label>
+                        <label for="password" class="youth-label">New Password</label>
                         <div class="password-wrapper">
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                class="youth-input password-input"
-                                required
-                                maxlength="50"
-                                placeholder="Minimum 8 characters"
-                            >
+                            <input type="password" id="password" name="password" class="youth-input password-input" placeholder="Enter new password" autocomplete="new-password" minlength="8" maxlength="64" required>
                             <button type="button" class="pw-toggle-btn" data-target="password" aria-label="Show password" tabindex="-1">
                                 <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -108,24 +85,10 @@
                         </ul>
                     </div>
 
-                    <!-- Confirm Password Field -->
                     <div class="youth-form-group">
-                        <label for="password_confirmation" class="youth-label">
-                            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            Confirm Password
-                        </label>
+                        <label for="password_confirmation" class="youth-label">Confirm Password</label>
                         <div class="password-wrapper">
-                            <input
-                                type="password"
-                                id="password_confirmation"
-                                name="password_confirmation"
-                                class="youth-input password-input"
-                                required
-                                maxlength="50"
-                                placeholder="Re-enter your new password"
-                            >
+                            <input type="password" id="password_confirmation" name="password_confirmation" class="youth-input password-input" placeholder="Re-enter new password" autocomplete="new-password" minlength="8" maxlength="64" required>
                             <button type="button" class="pw-toggle-btn" data-target="password_confirmation" aria-label="Show password" tabindex="-1">
                                 <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -138,25 +101,28 @@
                                 </svg>
                             </button>
                         </div>
-                        <span class="inline-error" id="confirmPasswordError" style="display: none; color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem;"></span>
+                        <span class="inline-error" id="confirmPasswordError" style="display: none;"></span>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="youth-submit-btn" id="cpSubmitBtn">
-                        <span id="cpBtnText">Send Verification Link</span>
+                    <button type="submit" class="youth-submit-btn" id="spSubmitBtn">
+                        <span id="spBtnText">Set Password</span>
                     </button>
                 </form>
-
-                <!-- Back to Profile Link -->
-                <div class="youth-register-section">
-                    <p class="register-text">
-                        <a href="{{ route('profile') }}" class="register-link">← Back to Profile</a>
-                    </p>
-                </div>
             </div>
         </div>
     </main>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
+    <div id="spSuccessOverlay" class="sp-success-overlay" hidden>
+        <div class="sp-success-card">
+            <div class="sp-success-icon">
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <h3>Password Set!</h3>
+            <p>Redirecting you to sign in…</p>
+        </div>
+    </div>
+
 </body>
 </html>

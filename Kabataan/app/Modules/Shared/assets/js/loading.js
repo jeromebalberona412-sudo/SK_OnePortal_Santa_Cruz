@@ -45,6 +45,10 @@ if (!skipInitialLoading) {
     }
 }
 
+if (document.readyState !== 'loading') {
+    hideLoading();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // ── Hide loading on page fully loaded ──────────────────────────────────
     // This ensures loading screen disappears once the page is ready

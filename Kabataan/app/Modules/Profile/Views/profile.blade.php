@@ -26,78 +26,6 @@
         'app/Modules/Shared/assets/js/loading.js',
     ])
     <script>
-        // Define functions in global scope before page loads
-        function openEditModal() {
-            const modal = document.getElementById('editProfileModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            }
-        }
-
-        function closeEditModal() {
-            const modal = document.getElementById('editProfileModal');
-            if (modal) {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        function closeSuccessModal() {
-            const modal = document.getElementById('successModal');
-            if (modal) {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-                window.location.reload();
-            }
-        }
-
-        function calculateAge() {
-            const birthdateInput = document.getElementById('edit_birthdate');
-            const ageInput = document.getElementById('edit_age');
-            
-            if (birthdateInput && ageInput) {
-                const birthdate = new Date(birthdateInput.value);
-                const today = new Date();
-                let age = today.getFullYear() - birthdate.getFullYear();
-                const monthDiff = today.getMonth() - birthdate.getMonth();
-                
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
-                    age--;
-                }
-                
-                ageInput.value = age;
-            }
-        }
-
-        function updateProfile(event) {
-            event.preventDefault();
-
-            const form = document.getElementById('editProfileForm');
-            const formData = new FormData(form);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-
-            fetch('{{ route("profile.update") }}', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        closeEditModal();
-                        setTimeout(() => {
-                            const successModal = document.getElementById('successModal');
-                            if (successModal) {
-                                successModal.style.display = 'flex';
-                                document.body.style.overflow = 'hidden';
-                            }
-                        }, 300);
-                    } else {
-                        alert('Update failed. Please try again.');
-                    }
-                })
-                .catch(() => alert('Update failed. Please try again.'));
-
-            return false;
-        }
-
         function viewProgramDetails(programId) {
             console.log('Viewing program:', programId);
             alert('Program details will be available when the backend is implemented!');
@@ -122,18 +50,22 @@
         // Close modals on ESC key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeEditModal();
-                closeSuccessModal();
                 closeScheduleModal();
+                if (typeof closeKkPreviewModal === 'function') {
+                    closeKkPreviewModal();
+                }
             }
         });
 
         // Close modals when clicking outside
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('modal-overlay')) {
-                closeEditModal();
-                closeSuccessModal();
                 closeScheduleModal();
+            }
+            if (e.target.classList.contains('kabataan-modal-backdrop')) {
+                if (typeof closeKkPreviewModal === 'function') {
+                    closeKkPreviewModal();
+                }
             }
         });
     </script>
@@ -152,7 +84,7 @@
                 </div>
                 <div class="profile-info-section">
                     <div class="profile-avatar-wrapper">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->first_name . ' ' . $user->last_name) }}&size=150&background=667eea&color=fff" alt="Profile" class="profile-avatar" id="profileAvatar">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($fullName ?? $user->name) }}&size=150&background=667eea&color=fff" alt="Profile" class="profile-avatar" id="profileAvatar">
                         <button class="change-photo-btn" id="changePhotoBtn" type="button">
                             <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
@@ -161,12 +93,12 @@
                         <input type="file" id="photoUpload" accept="image/*" style="display: none;">
                     </div>
                     <div class="profile-header-info">
-                        <h1 class="profile-name">{{ $user->first_name }} {{ $user->middle_initial ? $user->middle_initial . '.' : '' }} {{ $user->last_name }} {{ $user->suffix ?? '' }}</h1>
+                        <h1 class="profile-name">{{ $fullName ?? strtoupper($user->name) }}</h1>
                         <p class="profile-location">
                             <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                             </svg>
-                            {{ $user->barangay }}, Santa Cruz, Laguna
+                            {{ $barangayName ?? 'Santa Cruz' }}, Santa Cruz, Laguna
                         </p>
                     </div>
                 </div>
@@ -438,173 +370,27 @@
         </div>
     </main>
 
-    <div class="modal-overlay" id="kkPreviewModal" style="display: none;">
-        <div class="modal-container kk-preview-modal-container" id="kkPreviewModalPanel" style="max-width: 1000px;">
+    <div class="modal-backdrop kabataan-modal-backdrop" id="kkPreviewModal" style="display: none;">
+        <div class="modal-box kabataan-modal-box kk-preview-modal-container" id="kkPreviewModalPanel">
             <div class="modal-header">
-                <h2>Personal Information</h2>
-                <div class="modal-header-actions">
-                    <button type="button" class="modal-icon-btn" id="kkPreviewFullscreenBtn" onclick="toggleKkPreviewFullscreen()" aria-label="Toggle fullscreen" title="Fullscreen">
-                        <svg class="kk-preview-icon-expand" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path d="M3 3a1 1 0 011-1h4a1 1 0 110 2H5.414l4.293 4.293a1 1 0 01-1.414-1.414L4 4.586V6a1 1 0 11-2 0V3zm14 0a1 1 0 00-1-1h-4a1 1 0 100 2h2.586l-4.293 4.293a1 1 0 101.414 1.414L16 5.414V8a1 1 0 102 0V3zM3 17a1 1 0 001 1h4a1 1 0 100-2H5.414l4.293-4.293a1 1 0 00-1.414-1.414L4 15.414V14a1 1 0 10-2 0v3zm14 0a1 1 0 01-1 1h-4a1 1 0 110-2h2.586l-4.293-4.293a1 1 0 111.414-1.414L16 14.586V13a1 1 0 112 0v4z"/>
-                        </svg>
-                        <svg class="kk-preview-icon-collapse" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path d="M5 5a1 1 0 011-1h2a1 1 0 110 2H7.414L6 7.414V8a1 1 0 11-2 0V5zm10 0a1 1 0 00-1-1h-2a1 1 0 100 2h1.586L14 7.414V8a1 1 0 102 0V5zM5 15a1 1 0 001 1h2a1 1 0 100-2H7.414L6 12.586V12a1 1 0 10-2 0v3zm10 0a1 1 0 01-1 1h-2a1 1 0 110-2h1.586L14 12.586V12a1 1 0 112 0v3z"/>
-                        </svg>
-                    </button>
-                    <button type="button" class="modal-close" onclick="closeKkPreviewModal()" aria-label="Close">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
+                <h2 class="modal-title">Personal Information</h2>
+                <div class="modal-window-controls">
+                    <button type="button" class="modal-toggle-btn" id="kkPreviewFullscreenBtn" data-modal-toggle aria-label="Maximize">□</button>
+                    <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
                 </div>
             </div>
-            <div class="modal-body">
+            <div class="modal-body kabataan-modal-body">
                 @if($kabataanRegistration)
-                    @include('profile::partials.kk-profiling-preview', ['kabataanRegistration' => $kabataanRegistration, 'user' => $user])
+                    <div class="kabataan-form-scroll">
+                        @include('profile::partials.kk-profiling-preview', [
+                            'kabataanRegistration' => $kabataanRegistration,
+                            'user' => $user,
+                            'barangayName' => $barangayName,
+                            'barangayLogoUrl' => $barangayLogoUrl,
+                            'profile' => $profile ?? [],
+                        ])
+                    </div>
                 @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Profile Modal -->
-    <div class="modal-overlay" id="editProfileModal" style="display: none;">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h2>Edit Profile</h2>
-                <button class="modal-close" onclick="closeEditModal()">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="editProfileForm" onsubmit="updateProfile(event)">
-                    <div class="form-section">
-                        <h3>Personal Information</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>First Name <span class="required">*</span></label>
-                                <input type="text" name="first_name" id="edit_first_name" value="{{ $user->first_name }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Middle Initial</label>
-                                <input type="text" name="middle_initial" id="edit_middle_initial" value="{{ $user->middle_initial ?? '' }}" maxlength="1">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Last Name <span class="required">*</span></label>
-                                <input type="text" name="last_name" id="edit_last_name" value="{{ $user->last_name }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Suffix</label>
-                                <select name="suffix" id="edit_suffix">
-                                    <option value="">None</option>
-                                    <option value="Jr." {{ ($user->suffix ?? '') === 'Jr.' ? 'selected' : '' }}>Jr.</option>
-                                    <option value="Sr." {{ ($user->suffix ?? '') === 'Sr.' ? 'selected' : '' }}>Sr.</option>
-                                    <option value="II" {{ ($user->suffix ?? '') === 'II' ? 'selected' : '' }}>II</option>
-                                    <option value="III" {{ ($user->suffix ?? '') === 'III' ? 'selected' : '' }}>III</option>
-                                    <option value="IV" {{ ($user->suffix ?? '') === 'IV' ? 'selected' : '' }}>IV</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Username <span class="required">*</span></label>
-                                <input type="text" name="username" id="edit_username" value="" placeholder="Add a Username" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Birthdate <span class="required">*</span></label>
-                                <input type="date" name="birthdate" id="edit_birthdate" value="{{ $user->birthdate }}" required onchange="calculateAge()">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Age</label>
-                                <input type="number" name="age" id="edit_age" value="{{ $user->age }}" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>Contact Number <span class="required">*</span></label>
-                                <input type="tel" name="contact_number" id="edit_contact_number" value="{{ $user->contact_number ?? '' }}" placeholder="09XXXXXXXXX" pattern="[0-9]{11}" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Email Address <span class="required">*</span></label>
-                                <input type="email" name="email" id="edit_email" value="{{ $user->email }}" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Address Information</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Province <span class="required">*</span></label>
-                                <input type="text" name="province" id="edit_province" value="Laguna" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>Municipality <span class="required">*</span></label>
-                                <input type="text" name="municipality" id="edit_municipality" value="Santa Cruz" readonly>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Barangay <span class="required">*</span></label>
-                                <select name="barangay" id="edit_barangay" required>
-                                    <option value="">Select Barangay</option>
-                                    <option value="Alipit" {{ $user->barangay === 'Alipit' ? 'selected' : '' }}>Alipit</option>
-                                    <option value="Bagumbayan" {{ $user->barangay === 'Bagumbayan' ? 'selected' : '' }}>Bagumbayan</option>
-                                    <option value="Bubukal" {{ $user->barangay === 'Bubukal' ? 'selected' : '' }}>Bubukal</option>
-                                    <option value="Calios" {{ $user->barangay === 'Calios' ? 'selected' : '' }}>Calios</option>
-                                    <option value="Duhat" {{ $user->barangay === 'Duhat' ? 'selected' : '' }}>Duhat</option>
-                                    <option value="Gatid" {{ $user->barangay === 'Gatid' ? 'selected' : '' }}>Gatid</option>
-                                    <option value="Jasaan" {{ $user->barangay === 'Jasaan' ? 'selected' : '' }}>Jasaan</option>
-                                    <option value="Labuin" {{ $user->barangay === 'Labuin' ? 'selected' : '' }}>Labuin</option>
-                                    <option value="Malinao" {{ $user->barangay === 'Malinao' ? 'selected' : '' }}>Malinao</option>
-                                    <option value="Oogong" {{ $user->barangay === 'Oogong' ? 'selected' : '' }}>Oogong</option>
-                                    <option value="Pagsawitan" {{ $user->barangay === 'Pagsawitan' ? 'selected' : '' }}>Pagsawitan</option>
-                                    <option value="Palasan" {{ $user->barangay === 'Palasan' ? 'selected' : '' }}>Palasan</option>
-                                    <option value="Patimbao" {{ $user->barangay === 'Patimbao' ? 'selected' : '' }}>Patimbao</option>
-                                    <option value="Poblacion I" {{ $user->barangay === 'Poblacion I' ? 'selected' : '' }}>Poblacion I</option>
-                                    <option value="Poblacion II" {{ $user->barangay === 'Poblacion II' ? 'selected' : '' }}>Poblacion II</option>
-                                    <option value="Poblacion III" {{ $user->barangay === 'Poblacion III' ? 'selected' : '' }}>Poblacion III</option>
-                                    <option value="Poblacion IV" {{ $user->barangay === 'Poblacion IV' ? 'selected' : '' }}>Poblacion IV</option>
-                                    <option value="Poblacion V" {{ $user->barangay === 'Poblacion V' ? 'selected' : '' }}>Poblacion V</option>
-                                    <option value="San Jose" {{ $user->barangay === 'San Jose' ? 'selected' : '' }}>San Jose</option>
-                                    <option value="San Juan" {{ $user->barangay === 'San Juan' ? 'selected' : '' }}>San Juan</option>
-                                    <option value="San Pablo Norte" {{ $user->barangay === 'San Pablo Norte' ? 'selected' : '' }}>San Pablo Norte</option>
-                                    <option value="San Pablo Sur" {{ $user->barangay === 'San Pablo Sur' ? 'selected' : '' }}>San Pablo Sur</option>
-                                    <option value="Santisima Cruz" {{ $user->barangay === 'Santisima Cruz' ? 'selected' : '' }}>Santisima Cruz</option>
-                                    <option value="Santo Angel Central" {{ $user->barangay === 'Santo Angel Central' ? 'selected' : '' }}>Santo Angel Central</option>
-                                    <option value="Santo Angel Norte" {{ $user->barangay === 'Santo Angel Norte' ? 'selected' : '' }}>Santo Angel Norte</option>
-                                    <option value="Santo Angel Sur" {{ $user->barangay === 'Santo Angel Sur' ? 'selected' : '' }}>Santo Angel Sur</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Success Modal -->
-    <div class="modal-overlay" id="successModal" style="display: none;">
-        <div class="modal-container success-modal" style="max-width:420px;">
-            <div class="modal-body" style="text-align:center; padding: 48px 32px;">
-                <div style="width:72px;height:72px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(34,197,94,0.35);">
-                    <svg viewBox="0 0 20 20" fill="currentColor" style="width:36px;height:36px;color:white;">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <h2 style="font-size:22px;font-weight:700;color:#1e293b;margin-bottom:10px;">Profile Updated Successfully!</h2>
-                <p style="color:#64748b;font-size:14px;line-height:1.6;margin-bottom:28px;">Your profile information has been saved.</p>
-                <button class="btn-primary" onclick="closeSuccessModal()" style="padding:12px 32px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,0.3);font-family:inherit;">OK</button>
             </div>
         </div>
     </div>
@@ -1538,27 +1324,22 @@
 
     window.addEventListener('unload', function () {});
 
-    function setKkPreviewFullscreen(enabled) {
+    function resetKkPreviewModalState() {
+        const backdrop = document.getElementById('kkPreviewModal');
         const panel = document.getElementById('kkPreviewModalPanel');
-        const btn = document.getElementById('kkPreviewFullscreenBtn');
-        if (panel) {
-            panel.classList.toggle('is-fullscreen', enabled);
+        const toggleBtn = document.getElementById('kkPreviewFullscreenBtn');
+        if (backdrop) backdrop.classList.remove('modal-maximized');
+        if (panel) panel.classList.remove('modal-maximized');
+        if (toggleBtn) {
+            toggleBtn.textContent = '□';
+            toggleBtn.setAttribute('aria-label', 'Maximize');
         }
-        if (btn) {
-            btn.setAttribute('aria-label', enabled ? 'Exit fullscreen' : 'Fullscreen');
-            btn.setAttribute('title', enabled ? 'Exit fullscreen' : 'Fullscreen');
-        }
-    }
-
-    function toggleKkPreviewFullscreen() {
-        const panel = document.getElementById('kkPreviewModalPanel');
-        if (!panel) return;
-        setKkPreviewFullscreen(!panel.classList.contains('is-fullscreen'));
     }
 
     function openKkPreviewModal() {
         const modal = document.getElementById('kkPreviewModal');
         if (modal) {
+            resetKkPreviewModalState();
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
@@ -1569,9 +1350,24 @@
         if (modal) {
             modal.style.display = 'none';
             document.body.style.overflow = 'auto';
-            setKkPreviewFullscreen(false);
+            resetKkPreviewModalState();
         }
     }
+
+    document.getElementById('kkPreviewFullscreenBtn')?.addEventListener('click', function () {
+        const backdrop = document.getElementById('kkPreviewModal');
+        const panel = document.getElementById('kkPreviewModalPanel');
+        if (!backdrop || !panel) return;
+        const isMax = !backdrop.classList.contains('modal-maximized');
+        backdrop.classList.toggle('modal-maximized', isMax);
+        panel.classList.toggle('modal-maximized', isMax);
+        this.textContent = isMax ? '⧉' : '□';
+        this.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
+    });
+
+    document.querySelectorAll('#kkPreviewModal [data-modal-close]').forEach(function (btn) {
+        btn.addEventListener('click', closeKkPreviewModal);
+    });
     </script>
 </body>
 </html>

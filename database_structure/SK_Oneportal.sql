@@ -687,12 +687,18 @@ create unique index IF not exists kabataan_registrations_unique_respondent on pu
 where (respondent_number is not null);
 
 ///
+-- Kabataan account settings (change email / change password verification)
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS pending_email VARCHAR(255) NULL,
 ADD COLUMN IF NOT EXISTS email_change_token VARCHAR(255) NULL,
 ADD COLUMN IF NOT EXISTS email_change_token_expires_at TIMESTAMP NULL,
 ADD COLUMN IF NOT EXISTS email_change_verified_at TIMESTAMP NULL,
-ADD COLUMN IF NOT EXISTS email_change_last_sent_at TIMESTAMP NULL;
+ADD COLUMN IF NOT EXISTS email_change_last_sent_at TIMESTAMP NULL,
+ADD COLUMN IF NOT EXISTS pending_password VARCHAR(255) NULL,
+ADD COLUMN IF NOT EXISTS password_change_token VARCHAR(255) NULL,
+ADD COLUMN IF NOT EXISTS password_change_token_expires_at TIMESTAMP NULL,
+ADD COLUMN IF NOT EXISTS password_change_last_sent_at TIMESTAMP NULL,
+ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
 
 ALTER TABLE kabataan_registrations
 ADD COLUMN IF NOT EXISTS respondent_number VARCHAR(32) NULL,

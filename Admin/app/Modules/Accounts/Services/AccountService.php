@@ -107,11 +107,7 @@ class AccountService
         });
 
         if ($shouldSendReset) {
-            try {
-                $this->sendInitialResetLink($user);
-            } catch (\Throwable $exception) {
-                report($exception);
-            }
+            $this->sendInitialResetLinkOrFail($user);
         }
 
         return $user;
@@ -241,24 +237,29 @@ class AccountService
     private function sendInitialResetLink(User $user): void
     {
         $token = Password::createToken($user);
-        $label = null;
-        $baseUrl = null;
+        [$label, $baseUrl] = $this->resolvePasswordSetupTarget($user);
 
+        if (! is_string($baseUrl) || $baseUrl === '' || ! is_string($label) || $label === '') {
+            throw new \RuntimeException('Password setup email could not be sent because the target application URL is not configured.');
+        }
+
+        $user->notify(new AccountResetPasswordNotification($token, $baseUrl, $label));
+    }
+
+    /**
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function resolvePasswordSetupTarget(User $user): array
+    {
         if ($user->role === User::ROLE_SK_OFFICIAL) {
-            $label = 'SK Official';
-            $baseUrl = config('services.sk_officials_app_url');
-        } elseif ($user->role === User::ROLE_SK_FED) {
-            $label = 'SK Federation';
-            $baseUrl = config('services.sk_fed_app_url');
+            return ['SK Official', config('services.sk_officials_app_url')];
         }
 
-        if (is_string($baseUrl) && $baseUrl !== '' && is_string($label) && $label !== '') {
-            $user->notify(new AccountResetPasswordNotification($token, $baseUrl, $label));
-
-            return;
+        if ($user->role === User::ROLE_SK_FED) {
+            return ['SK Federation', config('services.sk_fed_app_url')];
         }
 
-        $user->sendPasswordResetNotification($token);
+        return [null, null];
     }
 
     public function assignRole(User $user, string $role): void
