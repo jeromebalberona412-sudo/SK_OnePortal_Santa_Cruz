@@ -49,23 +49,26 @@
         <div class="sk-login-section">
             <div class="sk-login-card">
 
-                {{-- ── STEP 1: Change Email Form ─────────────────── --}}
                 <div id="ceStep1">
                     <div class="card-header">
                         <h2 class="card-title">Change Email ✉️</h2>
                         <p class="card-subtitle">Enter your current email, new email address, and current password to request a change.</p>
                     </div>
 
-                    <!-- Error alert -->
-                    <div class="sk-alert sk-alert-error" id="ceError" style="display:none;">
-                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                        <span id="ceErrorText">Something went wrong. Please try again.</span>
-                    </div>
+                    @if ($errors->any())
+                        <div class="sk-alert sk-alert-error">
+                            <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                @foreach ($errors->all() as $error)
+                                    <div>{{ $error }}</div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
-                    <!-- Form -->
-                    <form class="sk-login-form" id="ceForm" novalidate>
+                    <form class="sk-login-form" id="ceForm" action="{{ route('change-email.request') }}" method="POST" novalidate>
                         @csrf
 
                         {{-- Current Email --}}
@@ -84,6 +87,7 @@
                                     placeholder="Enter your current email"
                                     autocomplete="email"
                                     maxlength="100"
+                                    value="{{ old('current_email', $user->email ?? '') }}"
                                     autofocus
                                     required
                                 >
@@ -107,6 +111,7 @@
                                     placeholder="Enter your new email address"
                                     autocomplete="off"
                                     maxlength="100"
+                                    value="{{ old('new_email') }}"
                                     required
                                 >
                             </div>
@@ -153,65 +158,6 @@
                             </svg>
                         </button>
                     </form>
-
-                    <div class="youth-register-section ce-back-section">
-                        <p class="register-text">
-                            <a href="{{ route('profile') }}" class="register-link">← Back to Profile</a>
-                        </p>
-                    </div>
-                </div>
-
-                {{-- ── STEP 2: Verification Sent ─────────────────── --}}
-                <div id="ceStep2" style="display:none;">
-
-                    <!-- Sent header -->
-                    <div class="ce-sent-header">
-                        <div class="ce-sent-icon">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                        <div class="ce-sent-title">Verification Sent!</div>
-                        <div class="ce-sent-sub">Check your new email inbox and click the link.</div>
-                    </div>
-
-                    <!-- Info box -->
-                    <div class="ce-info-box">
-                        Verification link sent! A confirmation link has been sent to <strong id="cePendingEmail"></strong>. Your current email remains active until you verify the new one.
-                    </div>
-
-                    <!-- Status table -->
-                    <div class="ce-status-table">
-                        <div class="ce-status-row">
-                            <span class="ce-status-key">Current email</span>
-                            <span class="ce-status-val" id="ceCurrentEmailVal">—</span>
-                        </div>
-                        <div class="ce-status-row">
-                            <span class="ce-status-key">Pending email</span>
-                            <span class="ce-status-val" id="cePendingEmailVal">—</span>
-                        </div>
-                        <div class="ce-status-row">
-                            <span class="ce-status-key">Status</span>
-                            <span class="ce-status-val">
-                                <span class="ce-badge-awaiting">Awaiting verification</span>
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Resend timer -->
-                    <div class="ce-resend-timer" id="ceTimer" style="display:none;">
-                        Resend available in <strong id="ceTimerCount">60</strong>s
-                    </div>
-
-                    <!-- Action buttons -->
-                    <div class="ce-actions">
-                        <button type="button" class="ce-btn-resend" id="ceResendBtn" disabled>
-                            Resend Verification
-                        </button>
-                        <button type="button" class="ce-btn-cancel" id="ceCancelBtn">
-                            Cancel Request
-                        </button>
-                    </div>
 
                     <div class="youth-register-section ce-back-section">
                         <p class="register-text">

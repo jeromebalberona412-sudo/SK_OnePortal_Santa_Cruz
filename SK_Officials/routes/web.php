@@ -6,6 +6,18 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('/change-email/confirm/{id}/{token}', [\App\Modules\Profile\Controllers\ProfileController::class, 'confirmChangeEmail'])
+    ->middleware('throttle:6,1')
+    ->name('change-email.confirm');
+
+Route::get('/change-email/set-password/{id}/{token}', [\App\Modules\Profile\Controllers\ProfileController::class, 'showSetPasswordAfterEmailChange'])
+    ->middleware('throttle:6,1')
+    ->name('change-email.set-password');
+
+Route::post('/change-email/set-password/{id}/{token}', [\App\Modules\Profile\Controllers\ProfileController::class, 'updateSetPasswordAfterEmailChange'])
+    ->middleware('throttle:6,1')
+    ->name('change-email.set-password.update');
+
 Route::middleware([
     'auth',
     'verified',
@@ -33,9 +45,11 @@ Route::middleware([
     Route::get('/profile', [\App\Modules\Profile\Controllers\ProfileController::class, 'index'])
         ->name('profile');
 
-    Route::get('/change-email', function () {
-        return view('Profile::change-email');
-    })->name('change-email');
+    Route::get('/change-email', [\App\Modules\Profile\Controllers\ProfileController::class, 'showChangeEmail'])->name('change-email');
+    Route::post('/change-email', [\App\Modules\Profile\Controllers\ProfileController::class, 'requestChangeEmail'])->name('change-email.request');
+    Route::get('/change-email/verify', [\App\Modules\Profile\Controllers\ProfileController::class, 'showChangeEmailVerify'])->name('change-email.verify');
+    Route::post('/change-email/resend', [\App\Modules\Profile\Controllers\ProfileController::class, 'resendChangeEmail'])->name('change-email.resend');
+    Route::post('/change-email/cancel', [\App\Modules\Profile\Controllers\ProfileController::class, 'cancelChangeEmail'])->name('change-email.cancel');
 
     Route::get('/notifications', function () {
         return view('Profile::notification');

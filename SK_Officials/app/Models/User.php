@@ -64,6 +64,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'otp_expires_at',
         'otp_attempts',
         'otp_last_sent_at',
+        'pending_email',
+        'email_change_token',
+        'email_change_token_expires_at',
+        'email_change_verified_at',
+        'email_change_last_sent_at',
     ];
 
     /**
@@ -92,6 +97,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_seen' => 'datetime',
             'otp_expires_at' => 'datetime',
             'otp_last_sent_at' => 'datetime',
+            'email_change_token_expires_at' => 'datetime',
+            'email_change_verified_at' => 'datetime',
+            'email_change_last_sent_at' => 'datetime',
             'deleted_at' => 'datetime',
         ];
     }

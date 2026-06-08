@@ -29,7 +29,7 @@ class EnsurePasswordChanged
         }
 
         // Already on the change-password page — don't redirect in a loop
-        if ($request->routeIs('password.change') || $request->routeIs('password.change.update') || $request->routeIs('logout') || $request->routeIs('logout.fallback')) {
+        if ($request->routeIs('password.change', 'change-password', 'password.change.update', 'logout', 'logout.fallback')) {
             return $next($request);
         }
 

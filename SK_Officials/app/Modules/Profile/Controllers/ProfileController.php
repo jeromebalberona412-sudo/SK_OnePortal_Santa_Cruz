@@ -2,15 +2,22 @@
 
 namespace App\Modules\Profile\Controllers;
 
+use App\Modules\Profile\Services\EmailChangeService;
 use App\Modules\Profile\Services\ProfileService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password as PasswordRule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    public function __construct(private readonly ProfileService $profileService)
-    {
+    public function __construct(
+        private readonly ProfileService $profileService,
+        private readonly EmailChangeService $emailChangeService,
+    ) {
     }
 
     public function index(Request $request): View
@@ -21,5 +28,147 @@ class ProfileController extends Controller
             'user' => $request->user(),
             'profile' => $profile,
         ]);
+    }
+
+    public function showChangeEmail(Request $request): View|RedirectResponse
+    {
+        $user = $request->user()->fresh();
+
+        if ($this->emailChangeService->hasPendingChange($user)) {
+            return redirect()->route('change-email.verify');
+        }
+
+        return view('Profile::change-email', [
+            'user' => $user,
+        ]);
+    }
+
+    public function requestChangeEmail(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'current_email' => ['required', 'email', 'max:255'],
+            'new_email' => ['required', 'email', 'max:255', 'different:current_email'],
+            'password' => ['required', 'string', 'max:64'],
+        ]);
+
+        try {
+            $this->emailChangeService->requestChange(
+                $request->user(),
+                $validated['current_email'],
+                $validated['new_email'],
+                $validated['password'],
+            );
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors())->withInput();
+        }
+
+        return redirect()
+            ->route('change-email.verify')
+            ->with('status', 'Verification link sent to your new email address.');
+    }
+
+    public function showChangeEmailVerify(Request $request): View|RedirectResponse
+    {
+        $user = $request->user()->fresh();
+
+        if (! $this->emailChangeService->hasPendingChange($user)) {
+            return redirect()->route('change-email');
+        }
+
+        return view('Profile::change-email-verify', [
+            'user' => $user,
+            'resendCooldown' => $this->emailChangeService->resendCooldownRemaining($user),
+        ]);
+    }
+
+    public function resendChangeEmail(Request $request): RedirectResponse
+    {
+        try {
+            $this->emailChangeService->resend($request->user()->fresh());
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors());
+        }
+
+        return back()->with('status', 'Verification email resent.');
+    }
+
+    public function cancelChangeEmail(Request $request): RedirectResponse
+    {
+        $this->emailChangeService->cancel($request->user()->fresh());
+
+        return redirect()
+            ->route('change-email')
+            ->with('status', 'Email change request cancelled.');
+    }
+
+    public function confirmChangeEmail(Request $request, int $id, string $token): RedirectResponse
+    {
+        try {
+            $result = $this->emailChangeService->confirm($id, $token);
+        } catch (ValidationException $exception) {
+            return redirect()
+                ->route('login')
+                ->withErrors($exception->errors());
+        }
+
+        if (Auth::check()) {
+            Auth::logout();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()
+            ->route('change-email.set-password', [
+                'id' => $result['user']->id,
+                'token' => $result['set_password_token'],
+            ])
+            ->with('status', 'Email changed to '.$result['user']->email.'. Set a new password to finish.');
+    }
+
+    public function showSetPasswordAfterEmailChange(Request $request, int $id, string $token): View|RedirectResponse
+    {
+        try {
+            $user = $this->emailChangeService->validateSetPasswordToken($id, $token);
+        } catch (ValidationException $exception) {
+            return redirect()
+                ->route('login')
+                ->withErrors($exception->errors());
+        }
+
+        return view('Profile::set-password', [
+            'user' => $user,
+            'token' => $token,
+        ]);
+    }
+
+    public function updateSetPasswordAfterEmailChange(Request $request, int $id, string $token): RedirectResponse
+    {
+        try {
+            $user = $this->emailChangeService->validateSetPasswordToken($id, $token);
+        } catch (ValidationException $exception) {
+            return redirect()
+                ->route('login')
+                ->withErrors($exception->errors());
+        }
+
+        $validated = $request->validate([
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                'max:'.(int) config('sk_official_auth.password_reset.password.max_length', 64),
+                PasswordRule::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
+        ]);
+
+        $this->emailChangeService->completePasswordSet($user, (string) $validated['password']);
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Password set successfully. Sign in with your new email and password.');
     }
 }

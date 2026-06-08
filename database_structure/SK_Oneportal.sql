@@ -63,6 +63,11 @@ create table public.users (
   otp_expires_at timestamp without time zone null,
   otp_attempts smallint not null default 0,
   otp_last_sent_at timestamp without time zone null,
+  pending_email character varying(255) null,
+  email_change_token character varying(255) null,
+  email_change_token_expires_at timestamp without time zone null,
+  email_change_verified_at timestamp without time zone null,
+  email_change_last_sent_at timestamp without time zone null,
   tenant_id bigint null,
   barangay_id bigint null,
   constraint users_pkey primary key (id),
@@ -678,6 +683,13 @@ create unique index IF not exists kabataan_registrations_unique_respondent on pu
 where (respondent_number is not null);
 
 ///
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS pending_email VARCHAR(255) NULL,
+ADD COLUMN IF NOT EXISTS email_change_token VARCHAR(255) NULL,
+ADD COLUMN IF NOT EXISTS email_change_token_expires_at TIMESTAMP NULL,
+ADD COLUMN IF NOT EXISTS email_change_verified_at TIMESTAMP NULL,
+ADD COLUMN IF NOT EXISTS email_change_last_sent_at TIMESTAMP NULL;
+
 ALTER TABLE kabataan_registrations
 ADD COLUMN IF NOT EXISTS respondent_number VARCHAR(32) NULL,
 ADD COLUMN IF NOT EXISTS respondent_sequence INTEGER NULL,

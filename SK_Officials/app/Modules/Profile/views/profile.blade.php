@@ -201,7 +201,7 @@
                         </div>
                         <div>
                             <div class="account-settings-label">Password</div>
-                            <div class="account-settings-desc">Change your account password via email reset link.</div>
+                            <div class="account-settings-desc">Update your account password securely.</div>
                         </div>
                     </div>
                     <a href="{{ route('change-password') }}" class="account-settings-btn">
