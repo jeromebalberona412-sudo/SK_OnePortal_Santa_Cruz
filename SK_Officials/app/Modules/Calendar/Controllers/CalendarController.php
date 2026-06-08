@@ -4,12 +4,17 @@ namespace App\Modules\Calendar\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\CalendarNote;
+use App\Services\SkOfficialActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class CalendarController extends Controller
 {
+    public function __construct(private readonly SkOfficialActivityService $activityService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -57,6 +62,13 @@ class CalendarController extends Controller
             'content' => $validated['content'],
         ]);
 
+        $this->activityService->log(
+            $user,
+            'calendar.create',
+            'Added calendar note: '.$validated['title'],
+            ['note_id' => $note->id, 'note_date' => $validated['note_date']]
+        );
+
         return response()->json([
             'message' => 'Note saved.',
             'data' => $this->formatNote($note),
@@ -77,6 +89,13 @@ class CalendarController extends Controller
 
         $note->update($validated);
 
+        $this->activityService->log(
+            $user,
+            'calendar.update',
+            'Updated calendar note: '.$validated['title'],
+            ['note_id' => $note->id]
+        );
+
         return response()->json([
             'message' => 'Note updated.',
             'data' => $this->formatNote($note->fresh()),
@@ -90,7 +109,15 @@ class CalendarController extends Controller
 
         $this->assertCanModifyDate($note->note_date->toDateString());
 
+        $title = $note->title;
         $note->delete();
+
+        $this->activityService->log(
+            $user,
+            'calendar.delete',
+            'Deleted calendar note: '.$title,
+            ['note_id' => $id]
+        );
 
         return response()->json(['message' => 'Note deleted.']);
     }
@@ -110,18 +137,18 @@ class CalendarController extends Controller
 
     protected function assertCanModifyDate(string $date): void
     {
-        $today = now()->startOfDay();
-        $noteDate = \Carbon\Carbon::parse($date)->startOfDay();
+        $currentYear = (int) now()->year;
+        $noteYear = (int) \Carbon\Carbon::parse($date)->year;
 
-        if ($noteDate->year !== $today->year) {
+        if ($noteYear < $currentYear) {
             throw ValidationException::withMessages([
-                'note_date' => ['Notes can only be added or edited for the current year.'],
+                'note_date' => ['Notes cannot be added or edited for past years.'],
             ]);
         }
 
-        if (! $noteDate->isSameDay($today)) {
+        if ($noteYear > $currentYear) {
             throw ValidationException::withMessages([
-                'note_date' => ['Notes can only be added or edited on today\'s date.'],
+                'note_date' => ['Notes cannot be added or edited for next year or beyond.'],
             ]);
         }
     }

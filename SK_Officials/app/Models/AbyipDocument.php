@@ -18,19 +18,24 @@ class AbyipDocument extends Model
         'tenant_id',
         'barangay_id',
         'created_by',
-        'title',
-        'calendar_year',
+        'fiscal_year',
+        'country',
         'region',
         'province',
         'municipality',
+        'barangay_name',
+        'document_title',
         'sk_council_name',
         'barangay_estimated_budget',
+        'sk_fund_percentage',
         'sk_fund_amount',
-        'total_expenditure',
-        'prepared_by_name',
-        'prepared_by_position',
-        'approved_by_name',
-        'approved_by_position',
+        'total_budget',
+        'prepared_by',
+        'prepared_position',
+        'prepared_by_user_id',
+        'approved_by',
+        'approved_position',
+        'approved_by_user_id',
         'source_type',
         'document_html',
         'pdf_data',
@@ -39,11 +44,27 @@ class AbyipDocument extends Model
     protected function casts(): array
     {
         return [
-            'calendar_year' => 'integer',
+            'fiscal_year' => 'integer',
             'barangay_estimated_budget' => 'decimal:2',
+            'sk_fund_percentage' => 'decimal:2',
             'sk_fund_amount' => 'decimal:2',
-            'total_expenditure' => 'decimal:2',
+            'total_budget' => 'decimal:2',
         ];
+    }
+
+    public function getTitleAttribute(): ?string
+    {
+        return $this->document_title;
+    }
+
+    public function getCalendarYearAttribute(): ?int
+    {
+        return $this->fiscal_year;
+    }
+
+    public function getTotalExpenditureAttribute(): ?string
+    {
+        return $this->total_budget;
     }
 
     public function barangay(): BelongsTo
@@ -54,6 +75,16 @@ class AbyipDocument extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function preparedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'prepared_by_user_id');
+    }
+
+    public function approvedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id');
     }
 
     public function programs(): HasMany

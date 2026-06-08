@@ -12,10 +12,23 @@ class AbyipProgram extends Model
 
     protected $fillable = [
         'abyip_id',
-        'program_letter',
+        'code',
         'program_name',
+        'description',
+        'expected_result',
+        'performance_indicator',
+        'implementation_period',
+        'person_responsible',
+        'row_type',
         'sort_order',
     ];
+
+    public function getProgramLetterAttribute(): ?string
+    {
+        $code = strtoupper(trim((string) $this->code));
+
+        return preg_match('/^[A-J]$/', $code) === 1 ? $code : null;
+    }
 
     public function abyip(): BelongsTo
     {

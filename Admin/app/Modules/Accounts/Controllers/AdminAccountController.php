@@ -245,7 +245,7 @@ class AdminAccountController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Account deactivated successfully.',
+                'message' => 'Account deleted and moved to archive.',
             ]);
         }
 

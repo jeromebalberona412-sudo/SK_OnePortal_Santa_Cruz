@@ -4,9 +4,12 @@ namespace App\Modules\KKProfilingRequests\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
+use App\Services\KkSurveyResponseService;
+use App\Services\RejectedKkProfilingService;
 use App\Services\RespondentNumberService;
 use App\Modules\KKProfilingRequests\Notifications\KabataanApprovedNotification;
 use App\Modules\KKProfilingRequests\Notifications\KabataanRejectedNotification;
+use App\Services\SkOfficialActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +17,10 @@ use Illuminate\Support\Facades\Notification;
 
 class KKProfilingRequestsController extends Controller
 {
+    public function __construct(private readonly SkOfficialActivityService $activityService)
+    {
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -165,6 +172,8 @@ class KKProfilingRequestsController extends Controller
             ]);
 
             DB::transaction(function () use ($registration, $user) {
+                app(RespondentNumberService::class)->ensureAssigned($registration);
+
                 if ($registration->evaluation_status === 'Not Profiled') {
                     $prevKabataan = \App\Models\PreviousKabataan::create([
                         'kabataan_registration_id' => $registration->id,
@@ -192,8 +201,10 @@ class KKProfilingRequestsController extends Controller
                     'review_notes'        => null,
                 ]);
 
-                app(RespondentNumberService::class)->assignToRegistration($registration->fresh());
-                
+                app(RespondentNumberService::class)->ensureAssigned($registration->fresh());
+
+                app(KkSurveyResponseService::class)->syncStatus($registration->fresh(), 'approved');
+
                 \Log::info('Updated registration status', ['id' => $registration->id, 'new_status' => 'active']);
 
                 if ($registration->user_id) {
@@ -209,6 +220,14 @@ class KKProfilingRequestsController extends Controller
             $approved = KabataanRegistration::find($id);
 
             \Log::info('Approval completed successfully', ['id' => $id]);
+
+            $this->activityService->log(
+                $user,
+                'kk.approve',
+                'Approved KK profiling request: '.($approved?->full_name ?? 'Registration #'.$id),
+                ['registration_id' => $id]
+            );
+
             return response()->json([
                 'success'             => true,
                 'message'             => 'KK Profiling approved successfully.',
@@ -235,25 +254,77 @@ class KKProfilingRequestsController extends Controller
         $request->validate(['reasons' => 'required|array|min:1']);
 
         $user = Auth::user();
-        $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
-
         $reasons = implode('; ', $request->reasons);
+        $rejectedService = app(RejectedKkProfilingService::class);
+        $respondentService = app(RespondentNumberService::class);
+        $surveyService = app(KkSurveyResponseService::class);
 
-        $registration->update([
-            'status'              => 'rejected',
-            'reviewed_by_user_id' => $user->id,
-            'reviewed_at'         => now(),
-            'review_notes'        => $reasons,
-        ]);
+        $alreadyRejected = false;
 
-        // Deactivate the linked Kabataan user account
-        if ($registration->user_id) {
-            $kabataanUser = \App\Models\User::find($registration->user_id);
-            if ($kabataanUser) {
-                $kabataanUser->update(['status' => 'REJECTED']);
-                $kabataanUser->notify(new KabataanRejectedNotification($reasons));
+        DB::transaction(function () use ($user, $id, $reasons, $rejectedService, $respondentService, $surveyService, &$alreadyRejected) {
+            $registration = KabataanRegistration::forBarangay($user->barangay_id)
+                ->lockForUpdate()
+                ->findOrFail($id);
+
+            if ($rejectedService->isAlreadyRejected($registration)) {
+                $alreadyRejected = true;
+
+                return;
             }
+
+            $respondentService->ensureAssigned($registration);
+            $registration = $registration->fresh();
+
+            $previousRegistrationStatus = $registration->status;
+            $previousEvaluationStatus = $registration->evaluation_status;
+            $previousUserStatus = null;
+            if ($registration->user_id) {
+                $previousUserStatus = \App\Models\User::find($registration->user_id)?->status;
+            }
+
+            $registration->update([
+                'status'              => 'rejected',
+                'reviewed_by_user_id' => $user->id,
+                'reviewed_at'         => now(),
+                'review_notes'        => $reasons,
+            ]);
+
+            $rejectedService->recordRejection(
+                $registration,
+                $user,
+                $reasons,
+                $previousUserStatus,
+                $previousRegistrationStatus,
+                $previousEvaluationStatus,
+            );
+
+            $surveyService->syncStatus($registration->fresh(), 'rejected');
+
+            if ($registration->user_id) {
+                $kabataanUser = \App\Models\User::find($registration->user_id);
+                if ($kabataanUser) {
+                    $kabataanUser->update(['status' => 'REJECTED']);
+                    $kabataanUser->notify(new KabataanRejectedNotification($reasons));
+                }
+            }
+        });
+
+        if ($alreadyRejected) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration already rejected.',
+                'already_rejected' => true,
+            ]);
         }
+
+        $registration = KabataanRegistration::find($id);
+
+        $this->activityService->log(
+            $user,
+            'kk.reject',
+            'Rejected KK profiling request: '.($registration?->full_name ?? 'Registration #'.$id),
+            ['registration_id' => $id, 'reasons' => $reasons]
+        );
 
         return response()->json(['success' => true, 'message' => 'Registration rejected.']);
     }

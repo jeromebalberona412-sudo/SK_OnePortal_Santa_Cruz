@@ -335,8 +335,34 @@ class AccountService
             'account_deactivated',
             'users',
             (string) $target->id,
-            ['email' => $target->email]
+            ['email' => $target->email, 'role' => $target->role]
         );
+    }
+
+    public function restoreAccount(User $target, User $admin): User
+    {
+        $this->assertSameTenant($target->tenant_id, $admin->tenant_id, 'Target account is outside your tenant scope.');
+
+        if (! $target->trashed()) {
+            throw ValidationException::withMessages([
+                'account' => 'This account is not in the deleted archive.',
+            ]);
+        }
+
+        $target->restore();
+        $target->forceFill([
+            'status' => User::STATUS_ACTIVE,
+        ])->save();
+
+        $this->logAuditAction(
+            $admin,
+            'account_restored',
+            'users',
+            (string) $target->id,
+            ['email' => $target->email, 'role' => $target->role]
+        );
+
+        return $target->fresh(['officialProfile.terms', 'barangay']);
     }
 
     public function resetPassword(User $target, string $newPassword, User $admin): void

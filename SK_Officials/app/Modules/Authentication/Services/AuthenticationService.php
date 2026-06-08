@@ -3,6 +3,7 @@
 namespace App\Modules\Authentication\Services;
 
 use App\Models\User;
+use App\Services\SkOfficialPresenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -23,6 +24,7 @@ class AuthenticationService
         protected EmailVerificationDeviceService $emailVerificationDeviceService,
         protected TrustedDeviceService $trustedDeviceService,
         protected DeviceFingerprintService $deviceFingerprintService,
+        protected SkOfficialPresenceService $presenceService,
     ) {}
 
     /**
@@ -364,9 +366,8 @@ class AuthenticationService
             return;
         }
 
-        if ($this->hasColumn('users', 'last_seen')) {
-            $user->forceFill(['last_seen' => now()])->save();
-        }
+        $this->presenceService->syncStaleOfflineStatuses();
+        $this->presenceService->markOnline($user);
     }
 
     /**
@@ -382,6 +383,8 @@ class AuthenticationService
                 $user->forceFill(['active_session_id' => null])->save();
             }
         }
+
+        $this->presenceService->markOffline($user);
     }
 
     // -------------------------------------------------------------------------
@@ -433,6 +436,7 @@ class AuthenticationService
         }
 
         $user->forceFill(['active_session_id' => $request->session()->getId()])->save();
+        $this->presenceService->markOnline($user);
     }
 
     protected function invalidatePreviousSession(User $user): void

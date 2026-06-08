@@ -3,6 +3,7 @@
 namespace App\Modules\ABYIP\Controllers;
 
 use App\Modules\ABYIP\Services\AbyipService;
+use App\Services\SkOfficialActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -11,8 +12,10 @@ use Illuminate\Validation\ValidationException;
 
 class AbyipController extends Controller
 {
-    public function __construct(private readonly AbyipService $abyipService)
-    {
+    public function __construct(
+        private readonly AbyipService $abyipService,
+        private readonly SkOfficialActivityService $activityService,
+    ) {
     }
 
     public function index(Request $request): JsonResponse
@@ -68,6 +71,13 @@ class AbyipController extends Controller
             ], 422);
         }
 
+        $this->activityService->log(
+            $request->user(),
+            'abyip.upload',
+            'Uploaded ABYIP document: '.($document['title'] ?? $validated['title']),
+            ['document_id' => $document['id'] ?? null, 'fiscal_year' => $document['fiscal_year'] ?? null]
+        );
+
         return response()->json([
             'message' => 'ABYIP record saved.',
             'data' => $document,
@@ -106,6 +116,12 @@ class AbyipController extends Controller
                 'errors' => $exception->errors(),
             ], 404);
         }
+
+        $this->activityService->log(
+            $request->user(),
+            'abyip.delete',
+            'Deleted ABYIP record #'.$id
+        );
 
         return response()->json([
             'message' => 'ABYIP deleted successfully.',

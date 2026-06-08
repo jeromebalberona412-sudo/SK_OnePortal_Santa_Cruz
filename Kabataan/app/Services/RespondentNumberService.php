@@ -43,4 +43,25 @@ class RespondentNumberService
 
         return $respondentNumber;
     }
+
+    public static function displaySequence(?int $sequence, ?string $fullNumber = null): string
+    {
+        if ($sequence) {
+            return str_pad((string) $sequence, 2, '0', STR_PAD_LEFT);
+        }
+
+        if ($fullNumber) {
+            $last = strrpos($fullNumber, '-') !== false
+                ? substr($fullNumber, strrpos($fullNumber, '-') + 1)
+                : $fullNumber;
+
+            if ($last === '') {
+                return '—';
+            }
+
+            return str_pad((string) (int) $last, 2, '0', STR_PAD_LEFT);
+        }
+
+        return '—';
+    }
 }

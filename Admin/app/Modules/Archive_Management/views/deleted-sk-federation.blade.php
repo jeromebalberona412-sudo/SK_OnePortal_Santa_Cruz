@@ -14,16 +14,12 @@
 
     <div class="dsf-page-header row">
         <div class="dsf-header-left col-md-6">
-            <h1 class="dsf-page-title">Archived SK Federation Records</h1>
+            <h1 class="dsf-page-title">Deleted SK Federation</h1>
             <p class="dsf-page-subtitle">Records removed from the SK Federation list.</p>
         </div>
         <div class="dsf-header-right col-md-6">
             <select id="dsfYearFilter" class="dsf-year-filter form-select">
                 <option value="all">All Years</option>
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
             </select>
             <select id="dsfFilterTerm" class="dsf-term-filter form-select">
                 <option value="">All Terms</option>
@@ -104,13 +100,17 @@
         <div class="dsf-modal-header dsf-view-modal-header">
             <h2 class="dsf-modal-title">View Details</h2>
             <div class="dsf-view-controls">
-                <button type="button" class="dsf-view-toggle" id="dsfViewToggle" aria-label="Maximize">□</button>
-                <button type="button" class="dsf-view-close" id="dsfViewClose">&times;</button>
+                <button type="button" class="dsf-view-toggle modal-win-btn modal-win-btn-maximize" id="dsfViewToggle" title="Maximize" aria-label="Maximize">
+                    <svg id="dsfViewToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
+                </button>
+                <button type="button" class="dsf-view-close modal-win-btn modal-win-btn-close" id="dsfViewClose" title="Close" aria-label="Close">&times;</button>
             </div>
         </div>
         <div class="dsf-view-body" id="dsfViewBody"></div>
         <div class="dsf-modal-footer">
-            <button type="button" class="dsf-btn-cancel" id="dsfViewCloseFooter" aria-label="Close">&times;</button>
+            <button type="button" class="dsf-btn-cancel" id="dsfViewCloseFooter">Close</button>
         </div>
     </div>
 </div>

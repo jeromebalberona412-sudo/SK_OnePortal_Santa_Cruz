@@ -20,10 +20,6 @@
         <div class="dso-header-right col-md-6">
             <select id="dsoYearFilter" class="dso-year-filter form-select">
                 <option value="all">All Years</option>
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
             </select>
             <select id="dsoFilterTerm" class="dso-term-filter form-select">
                 <option value="">All Terms</option>
@@ -107,13 +103,17 @@
         <div class="dso-modal-header dso-view-modal-header">
             <h2 class="dso-modal-title">View Details</h2>
             <div class="dso-view-controls">
-                <button type="button" class="dso-view-toggle" id="dsoViewToggle" aria-label="Maximize">□</button>
-                <button type="button" class="dso-view-close" id="dsoViewClose">&times;</button>
+                <button type="button" class="dso-view-toggle modal-win-btn modal-win-btn-maximize" id="dsoViewToggle" title="Maximize" aria-label="Maximize">
+                    <svg id="dsoViewToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
+                </button>
+                <button type="button" class="dso-view-close modal-win-btn modal-win-btn-close" id="dsoViewClose" title="Close" aria-label="Close">&times;</button>
             </div>
         </div>
         <div class="dso-view-body" id="dsoViewBody"></div>
         <div class="dso-modal-footer">
-            <button type="button" class="dso-btn-cancel" id="dsoViewCloseFooter" aria-label="Close">&times;</button>
+            <button type="button" class="dso-btn-cancel" id="dsoViewCloseFooter">Close</button>
         </div>
     </div>
 </div>

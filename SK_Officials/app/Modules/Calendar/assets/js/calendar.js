@@ -129,8 +129,8 @@ function initializeCalendar() {
         return year === currentYear && monthIndex === today.getMonth() && day === today.getDate();
     }
 
-    function canModifyNote(year, monthIndex, day) {
-        return isToday(year, monthIndex, day);
+    function canModifyNote(year) {
+        return year === currentYear;
     }
 
     function canViewNote(year, monthIndex, day) {
@@ -203,13 +203,14 @@ function initializeCalendar() {
             const note = notes[dateKey];
             const hasNote = note && (note.title || note.content);
             const isTodayCell = dateKey === todayKey;
-            const canEdit = canModifyNote(year, monthIndex, day);
+            const canEdit = canModifyNote(year);
             const isPastYear = year < currentYear;
+            const isNextYear = year > currentYear;
 
             cell.className = 'calendar-day';
             if (isTodayCell) cell.classList.add('is-today');
             if (hasNote) cell.classList.add('has-notes');
-            if (!canEdit && (hasNote || isPastYear)) cell.classList.add('is-past');
+            if (!canEdit && (hasNote || isPastYear || isNextYear)) cell.classList.add('is-past');
 
             const dayNumber = document.createElement('div');
             dayNumber.className = 'calendar-day-number';
@@ -226,7 +227,7 @@ function initializeCalendar() {
             if (hasNote && !canEdit) {
                 addLabel.textContent = 'View note';
             } else if (!hasNote && !canEdit) {
-                addLabel.textContent = isPastYear ? 'Past year' : 'Today only';
+                addLabel.textContent = isPastYear ? 'Past year' : 'Next year';
             } else if (hasNote) {
                 addLabel.textContent = 'Edit note';
             } else {
@@ -388,8 +389,8 @@ function initializeCalendar() {
         if (charCounter) charCounter.style.display = 'none';
         cancelBtn.style.display = 'none';
         saveBtn.style.display = 'none';
-        editBtn.style.display = canModifyNote(activeYear, activeMonthIndex, activeDay) ? '' : 'none';
-        delBtn.style.display = canModifyNote(activeYear, activeMonthIndex, activeDay) ? '' : 'none';
+        editBtn.style.display = canModifyNote(activeYear) ? '' : 'none';
+        delBtn.style.display = canModifyNote(activeYear) ? '' : 'none';
     }
 
     function switchToEditMode() {
@@ -414,13 +415,13 @@ function initializeCalendar() {
 
         const note = notes[dateKey];
         const hasNote = note && (note.title || note.content);
-        const canEdit = canModifyNote(year, monthIndex, day);
+        const canEdit = canModifyNote(year);
 
         if (!hasNote && !canEdit) {
             if (year < currentYear) {
                 showToast('Cannot add notes to past years.', 'error');
             } else {
-                showToast('Notes can only be added on today\'s date.', 'error');
+                showToast('Cannot add notes to next year or beyond.', 'error');
             }
             return;
         }
@@ -515,8 +516,8 @@ function initializeCalendar() {
         }
 
         function onEditClick() {
-            if (!canModifyNote(activeYear, activeMonthIndex, activeDay)) {
-                showToast('Notes can only be edited on today\'s date in the current year.', 'error');
+            if (!canModifyNote(activeYear)) {
+                showToast('Notes can only be edited within the current year.', 'error');
                 return;
             }
             switchToEditMode();
@@ -524,8 +525,8 @@ function initializeCalendar() {
         }
 
         async function onDelete() {
-            if (!canModifyNote(activeYear, activeMonthIndex, activeDay)) {
-                showToast('Notes can only be deleted on today\'s date in the current year.', 'error');
+            if (!canModifyNote(activeYear)) {
+                showToast('Notes can only be deleted within the current year.', 'error');
                 return;
             }
 
@@ -577,8 +578,8 @@ function initializeCalendar() {
                 return;
             }
 
-            if (!canModifyNote(activeYear, activeMonthIndex, activeDay)) {
-                showToast('Notes can only be saved on today\'s date in the current year.', 'error');
+            if (!canModifyNote(activeYear)) {
+                showToast('Notes can only be saved within the current year.', 'error');
                 return;
             }
 

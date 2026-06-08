@@ -48,11 +48,11 @@ class RespondentNumberService
         return $respondentNumber;
     }
 
-    /** Display-only: sequence number without barangay/year prefix. */
+    /** Display-only: sequence number without barangay/year prefix (01, 02, ...). */
     public static function displaySequence(?int $sequence, ?string $fullNumber = null): string
     {
         if ($sequence) {
-            return (string) $sequence;
+            return self::formatQueueNumber($sequence);
         }
 
         if ($fullNumber) {
@@ -60,9 +60,28 @@ class RespondentNumberService
                 ? substr($fullNumber, strrpos($fullNumber, '-') + 1)
                 : $fullNumber;
 
-            return $last !== '' ? (string) (int) $last : '—';
+            if ($last === '') {
+                return '—';
+            }
+
+            return self::formatQueueNumber((int) $last);
         }
 
         return '—';
+    }
+
+    public function ensureAssigned(KabataanRegistration $registration): string
+    {
+        return $this->assignToRegistration($registration->fresh());
+    }
+
+    /** Queue position for pending requests (first submitted = 01). */
+    public static function formatQueueNumber(?int $position): string
+    {
+        if (! $position || $position < 1) {
+            return '—';
+        }
+
+        return str_pad((string) $position, 2, '0', STR_PAD_LEFT);
     }
 }

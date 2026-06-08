@@ -440,6 +440,11 @@ async function saveAbyip() {
         return;
     }
 
+    if (isPdf && (!pendingPdfExtractedText || !String(pendingPdfExtractedText).trim())) {
+        showNotification('Could not read program data from this PDF. Please re-upload the file.', 'error');
+        return;
+    }
+
     let documentHtml = null;
     if (!isPdf) {
         const mount = document.getElementById('abyipModalContentMount');
@@ -1011,15 +1016,321 @@ function openAbyipModalWithImport(importedTable) {
     requestAnimationFrame(() => updateTotals());
 }
 
+function collectColumnText(parts, width, startRatio, endRatio) {
+    const start = width * startRatio;
+    const end = width * endRatio;
+
+    return parts
+        .filter(function (part) { return part.x >= start && part.x < end; })
+        .map(function (part) { return part.text; })
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function extractColumnAmounts(parts, width, startRatio, endRatio) {
+    const start = width * startRatio;
+    const end = width * endRatio;
+    const amountPattern = /^[\d,]+(?:\.\d{2})?$/;
+
+    return parts
+        .filter(function (part) { return part.x >= start && part.x < end; })
+        .map(function (part) { return part.text.replace(/\s/g, ''); })
+        .filter(function (text) { return amountPattern.test(text); })
+        .map(function (text) { return text.replace(/,/g, ''); });
+}
+
+function appendBlockField(block, key, value) {
+    const text = String(value || '').trim();
+    if (!text) {
+        return;
+    }
+
+    if (!block[key]) {
+        block[key] = text;
+        return;
+    }
+
+    if (!block[key].includes(text)) {
+        block[key] += '\n' + text;
+    }
+}
+
+function appendBlockAmounts(block, key, amounts) {
+    if (!amounts || !amounts.length) {
+        return;
+    }
+
+    const line = amounts.join('\n');
+    if (!block[key]) {
+        block[key] = line;
+        return;
+    }
+
+    block[key] += '\n' + line;
+}
+
+function parseRowColumns(row, width) {
+    const mooeAmounts = extractColumnAmounts(row.parts, width, 0.64, 0.72);
+    const coAmounts = extractColumnAmounts(row.parts, width, 0.72, 0.78);
+    const totalAmounts = extractColumnAmounts(row.parts, width, 0.78, 0.86);
+
+    return {
+        ppas: collectColumnText(row.parts, width, 0, 0.22),
+        description: collectColumnText(row.parts, width, 0.22, 0.38),
+        expected: collectColumnText(row.parts, width, 0.38, 0.46),
+        performance: collectColumnText(row.parts, width, 0.46, 0.54),
+        period: collectColumnText(row.parts, width, 0.54, 0.64),
+        mooeAmounts: mooeAmounts,
+        coAmounts: coAmounts,
+        totalAmounts: totalAmounts,
+        mooe: mooeAmounts[0] || '',
+        co: coAmounts[0] || '',
+        total: totalAmounts[0] || '',
+        person: extractPersonResponsibleValue(row.parts, width),
+        fullLine: row.parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim(),
+    };
+}
+
+function mergeRowIntoBlock(block, cols) {
+    appendBlockField(block, 'ppas', cols.ppas);
+    appendBlockField(block, 'description', cols.description);
+    appendBlockField(block, 'expected', cols.expected);
+    appendBlockField(block, 'performance', cols.performance);
+    appendBlockField(block, 'period', cols.period);
+    appendBlockAmounts(block, 'mooe', cols.mooeAmounts);
+    appendBlockAmounts(block, 'co', cols.coAmounts);
+    appendBlockAmounts(block, 'total', cols.totalAmounts);
+
+    if (cols.person) {
+        block.person = cols.person;
+    }
+}
+
+function isYouthProgramHeader(ppas, fullLine) {
+    const source = ppas || fullLine;
+    return /^([A-J])\.\s/i.test(source);
+}
+
+function extractYouthLetter(ppas, fullLine) {
+    const source = ppas || fullLine;
+    const match = source.match(/^([A-J])\.\s/i);
+    return match ? match[1].toUpperCase() : '';
+}
+
+function startsWithBulletChar(text) {
+    if (!text) {
+        return false;
+    }
+
+    const first = text.charAt(0);
+    return first === '-' || first === '\u2022' || first === '\u25CF' || first === '\uF0B7' || first === '\u00B7';
+}
+
+function isGeneralExpenditurePrimaryRow(ppas) {
+    const text = String(ppas || '').trim();
+    if (!text) {
+        return false;
+    }
+
+    if (startsWithBulletChar(text)) {
+        return false;
+    }
+
+    if (/^(A|B|C|D|E|F|G|H|I|J)\.\s/i.test(text)) {
+        return false;
+    }
+
+    if (/^(Support|Training|Clean|Payroll|Tree|Distribution|150\s|Barangay|Livelihood|Food|Medicines|Educational)/i.test(text)) {
+        return false;
+    }
+
+    return text.length <= 90;
+}
+
+function flushGeneralBlock(block, lines) {
+    if (!block || !block.ppas) {
+        return;
+    }
+
+    lines.push(buildStructuredTagRow('@ABYIP_ROW@', {
+        PPAS: block.ppas,
+        DESC: block.description || '',
+        EXP: block.expected || '',
+        PERF: block.performance || '',
+        PERIOD: block.period || '',
+        MOOE: block.mooe || '',
+        CO: block.co || '',
+        TOTAL: block.total || '',
+        PERSON: block.person || '',
+    }));
+}
+
+function flushYouthBlock(block, lines) {
+    if (!block || !block.letter) {
+        return;
+    }
+
+    lines.push(buildStructuredTagRow('@YOUTH_ROW@', {
+        LETTER: block.letter,
+        PPAS: block.ppas || '',
+        DESC: block.description || '',
+        EXP: block.expected || '',
+        PERF: block.performance || '',
+        PERIOD: block.period || '',
+        MOOE: block.mooe || '',
+        CO: block.co || '',
+        TOTAL: block.total || '',
+        PERSON: block.person || '',
+    }));
+}
+
+function createEmptyBlock(letter) {
+    return {
+        letter: letter || '',
+        ppas: '',
+        description: '',
+        expected: '',
+        performance: '',
+        period: '',
+        mooe: '',
+        co: '',
+        total: '',
+        person: '',
+    };
+}
+
+function extractAmountFromText(text) {
+    const matches = String(text || '').match(/([\d,]+(?:\.\d{2})?)/g);
+    if (!matches || !matches.length) {
+        return '';
+    }
+
+    return matches[matches.length - 1].replace(/,/g, '');
+}
+
+function extractPersonColumn(parts, width) {
+    const threshold = width * 0.86;
+    const personParts = parts
+        .filter(function (part) {
+            return part.x >= threshold && !/^\d[\d,.-]*$/.test(part.text);
+        })
+        .map(function (part) { return part.text; });
+
+    if (personParts.length) {
+        return personParts.join(' ').replace(/\s+/g, ' ').trim();
+    }
+
+    return collectColumnText(parts, width, 0.86, 1.05);
+}
+
+function extractPersonResponsibleValue(parts, width) {
+    const threshold = width * 0.82;
+    const raw = parts
+        .filter(function (part) { return part.x >= threshold; })
+        .map(function (part) { return part.text; })
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const patterns = [
+        /Sangguniang\s*Kabataan\s*Council\s*\/\s*BADAC/i,
+        /Sangguniang\s*Kabataan\s*Council\s*\/\s*ALS/i,
+        /SK\s*Chairman\s*\/\s*SK\s*Treasurer/i,
+        /Sangguniang\s*Kabataan\s*Council/i,
+        /SK\s*Treasurer/i,
+        /SK\s*Chairman/i,
+        /SK\s*Chairperson/i,
+    ];
+
+    for (let i = 0; i < patterns.length; i++) {
+        const match = raw.match(patterns[i]);
+        if (match) {
+            return normalizePersonColumnText(match[0]);
+        }
+    }
+
+    const fallback = normalizePersonColumnText(extractPersonColumn(parts, width));
+    if (fallback && /^(SK|Sangguniang)/i.test(fallback)) {
+        return fallback;
+    }
+
+    return '';
+}
+
+function normalizePersonColumnText(value) {
+    if (!value) {
+        return '';
+    }
+
+    let text = String(value).replace(/\bPerson\s*Responsible\b:?/gi, '').replace(/\s+/g, ' ').trim();
+    const replacements = [
+        [/SangguniangKabataanCouncil/gi, 'Sangguniang Kabataan Council'],
+        [/SKTreasurer/gi, 'SK Treasurer'],
+        [/SKChairman\/SKTreasurer/gi, 'SK Chairman/SK Treasurer'],
+        [/SKChairman/gi, 'SK Chairman'],
+        [/SKChairperson/gi, 'SK Chairperson'],
+        [/SangguniangKabataanCouncil\/ALS/gi, 'Sangguniang Kabataan Council/ALS'],
+        [/SangguniangKabataanCouncil\/BADAC/gi, 'Sangguniang Kabataan Council/BADAC'],
+        [/^Council$/i, 'Sangguniang Kabataan Council'],
+        [/^Kabataan Council$/i, 'Sangguniang Kabataan Council'],
+    ];
+
+    replacements.forEach(function (entry) {
+        text = text.replace(entry[0], entry[1]);
+    });
+
+    if (/^(January|February|March|April|May|June|July|August|September|October|November|December)\b/i.test(text)) {
+        return '';
+    }
+
+    if (/^\d[\d,.-]*$/.test(text)) {
+        return '';
+    }
+
+    if (/\b(payment|professional|rendered|payroll|months|charge|incurred|transport|services|nominally|without|given)\b/i.test(text)) {
+        return '';
+    }
+
+    return text;
+}
+
+function isAbyipHeaderRow(line) {
+    return /^(Code|PPAs|Description|Expected|Performance|Period|Budget|Person|MOOE|CO|Total|I\.\s*Receipts|II\.\s*Expenditure|GENERAL ADMINISTRATION|Maintenance and Other|Capital Outlay|SK\s+YOUTH\s+DEVELOPMENT|Barangay\s+Estimated\s+Budget|Sangguniang\s+Kabataan\s+Fund|10%\s+of\s+the\s+General\s+Fund)/i.test(line);
+}
+
+function isAbyipBudgetHeaderRow(line) {
+    return /Barangay\s+Estimated\s+Budget|Sangguniang\s+Kabataan\s+Fund|10%\s+of\s+the\s+General\s+Fund/i.test(line);
+}
+
+function hasStructuredTableData(ppas, description, expected, performance, period, mooe, co, total, person) {
+    const hasMoney = Boolean(mooe || co || total);
+    const hasMeta = Boolean(description || expected || performance || period || person);
+    const hasPpas = Boolean(ppas);
+
+    return hasMoney || (hasPpas && hasMeta) || (hasMeta && hasPpas);
+}
+
+function buildStructuredTagRow(tag, fields) {
+    return tag + Object.keys(fields).map(function (key) {
+        return key + ':' + (fields[key] || '');
+    }).join('|');
+}
+
 async function extractPdfTextForPrograms(pdfDoc) {
     const lines = [];
-    const programLines = [];
+    let inYouthSection = false;
+    let inExpenditureSection = false;
+    let inReceiptsSection = true;
+    let generalBlock = null;
+    let youthBlock = null;
+    const pageRows = [];
 
     for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
         const page = await pdfDoc.getPage(pageNum);
         const viewport = page.getViewport({ scale: 1 });
         const textContent = await page.getTextContent();
-        const leftColumnLimit = viewport.width * 0.38;
+        const width = viewport.width;
         const rowMap = new Map();
 
         textContent.items.forEach(function (item) {
@@ -1032,7 +1343,7 @@ async function extractPdfTextForPrograms(pdfDoc) {
             const y = Math.round(item.transform[5]);
             const rowKey = pageNum + ':' + y;
             const bucket = rowMap.get(rowKey) || { y: y, parts: [] };
-            bucket.parts.push({ x: x, text: text, isLeft: x <= leftColumnLimit });
+            bucket.parts.push({ x: x, text: text });
             rowMap.set(rowKey, bucket);
         });
 
@@ -1040,45 +1351,140 @@ async function extractPdfTextForPrograms(pdfDoc) {
             .sort(function (a, b) { return b.y - a.y; })
             .forEach(function (row) {
                 row.parts.sort(function (a, b) { return a.x - b.x; });
-                const fullLine = row.parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim();
-                const leftLine = row.parts
-                    .filter(function (part) { return part.isLeft; })
-                    .map(function (part) { return part.text; })
-                    .join(' ')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-
-                if (fullLine) {
-                    lines.push(fullLine);
-                }
-
-                if (leftLine && /^[A-J]\.\s/i.test(leftLine)) {
-                    programLines.push(leftLine);
-                } else if (fullLine && /^[A-J]\.\s/i.test(fullLine)) {
-                    programLines.push(fullLine);
-                }
+                pageRows.push({ width: width, row: row });
             });
     }
 
-    const sectionIndex = lines.findIndex(function (line) {
-        return /SK\s+YOUTH\s+DEVELOPMENT/i.test(line);
-    });
+    pageRows.forEach(function (entry) {
+        const width = entry.width;
+        const row = entry.row;
+        row.parts.sort(function (a, b) { return a.x - b.x; });
+        const cols = parseRowColumns(row, width);
+        const fullLine = cols.fullLine;
 
-    const output = [];
-    if (sectionIndex >= 0) {
-        output.push(lines[sectionIndex]);
-    }
-    programLines.forEach(function (line) {
-        if (!output.includes(line)) {
-            output.push(line);
+        if (!fullLine) {
+            return;
         }
+
+        if (/I\.\s*RECEIPTS/i.test(fullLine)) {
+            inReceiptsSection = true;
+            inExpenditureSection = false;
+        }
+
+        if (/II\.\s*EXPENDITURE/i.test(fullLine)) {
+            inExpenditureSection = true;
+            inReceiptsSection = false;
+        }
+
+        if (/Barangay\s+Estimated\s+Budget/i.test(fullLine)) {
+            const amount = extractAmountFromText(fullLine);
+            if (amount) {
+                lines.push('@ABYIP_HEADER@BARANGAY_BUDGET:' + amount);
+            }
+            lines.push(fullLine);
+            return;
+        }
+
+        if (/Sangguniang\s+Kabataan\s+Fund/i.test(fullLine)) {
+            const pctMatch = fullLine.match(/(\d+(?:\.\d+)?)\s*%/);
+            const amount = extractAmountFromText(fullLine);
+            let headerTag = '@ABYIP_HEADER@';
+            if (pctMatch) {
+                headerTag += 'SK_FUND_PERCENT:' + pctMatch[1];
+            }
+            if (amount) {
+                headerTag += (pctMatch ? '|' : '') + 'SK_FUND_AMOUNT:' + amount;
+            }
+            if (headerTag !== '@ABYIP_HEADER@') {
+                lines.push(headerTag);
+            }
+            lines.push(fullLine);
+            return;
+        }
+
+        if (isAbyipBudgetHeaderRow(fullLine)) {
+            lines.push(fullLine);
+            return;
+        }
+
+        if (/SK\s+YOUTH\s+DEVELOPMENT/i.test(fullLine)) {
+            flushGeneralBlock(generalBlock, lines);
+            generalBlock = null;
+            inYouthSection = true;
+            inExpenditureSection = true;
+            lines.push(fullLine);
+            return;
+        }
+
+        if (/Prepared\s+by/i.test(fullLine) || /Approved\s+by/i.test(fullLine)) {
+            flushGeneralBlock(generalBlock, lines);
+            generalBlock = null;
+            flushYouthBlock(youthBlock, lines);
+            youthBlock = null;
+            lines.push(fullLine);
+            return;
+        }
+
+        if (inYouthSection && /^(TOTAL|Prepared\s+by|Approved\s+by)\b/i.test(fullLine)) {
+            flushYouthBlock(youthBlock, lines);
+            youthBlock = null;
+            inYouthSection = false;
+            if (!/Prepared\s+by/i.test(fullLine) && !/Approved\s+by/i.test(fullLine)) {
+                lines.push(fullLine);
+            }
+            return;
+        }
+
+        if (inReceiptsSection && !inExpenditureSection) {
+            lines.push(fullLine);
+            return;
+        }
+
+        if (inYouthSection) {
+            const letter = extractYouthLetter(cols.ppas, fullLine);
+            if (letter) {
+                flushYouthBlock(youthBlock, lines);
+                youthBlock = createEmptyBlock(letter);
+            }
+
+            if (youthBlock) {
+                mergeRowIntoBlock(youthBlock, cols);
+            }
+
+            lines.push(fullLine);
+            return;
+        }
+
+        if (inExpenditureSection && !inReceiptsSection && !isAbyipHeaderRow(fullLine) && !isAbyipBudgetHeaderRow(fullLine)) {
+            const isPrimary = isGeneralExpenditurePrimaryRow(cols.ppas);
+            const hasData = hasStructuredTableData(
+                cols.ppas,
+                cols.description,
+                cols.expected,
+                cols.performance,
+                cols.period,
+                cols.mooe,
+                cols.co,
+                cols.total,
+                cols.person
+            );
+
+            if (isPrimary) {
+                flushGeneralBlock(generalBlock, lines);
+                generalBlock = createEmptyBlock('');
+                mergeRowIntoBlock(generalBlock, cols);
+            } else if (generalBlock && hasData) {
+                mergeRowIntoBlock(generalBlock, cols);
+            }
+        }
+
+        lines.push(fullLine);
     });
 
-    if (output.length === 0) {
-        return lines.join('\n');
-    }
+    flushGeneralBlock(generalBlock, lines);
+    flushYouthBlock(youthBlock, lines);
 
-    return output.join('\n');
+    return lines.join('\n');
 }
 
 function openImportPdfFilePicker() {

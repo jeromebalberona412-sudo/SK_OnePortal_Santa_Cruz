@@ -58,6 +58,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_login_ip',
         'active_session_id',
         'last_seen',
+        'online_status',
         'active_device',
         'last_ip',
         'otp_code',

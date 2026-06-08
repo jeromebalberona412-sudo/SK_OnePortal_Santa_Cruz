@@ -42,17 +42,28 @@
     gap: 10px;
 }
 
+.dso-year-filter,
+.dso-term-filter,
+.dso-filter-select {
+    color: #111827;
+    background-color: #fff;
+}
+
 .dso-year-filter {
     padding: 10px 14px;
     border-radius: 10px;
     border: 1px solid #d1d5db;
     font-size: 14px;
-    color: #111827;
-    background: #fff;
     min-width: 140px;
     transition: border-color 0.2s, box-shadow 0.2s;
     font-family: inherit;
     cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 0.9rem;
+    padding-right: 2rem;
 }
 
 .dso-year-filter:focus {
@@ -489,6 +500,10 @@
 }
 
 /* ── Restore Modal ── */
+body.dso-modal-open {
+    overflow: hidden;
+}
+
 .dso-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -496,7 +511,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1600;
+    z-index: 10050;
+    padding: 16px;
 }
 
 .dso-modal-box {
@@ -618,21 +634,33 @@
 }
 
 .dso-view-toggle,
-.dso-view-close {
-    background: none;
+.dso-view-close,
+.dso-view-controls .modal-win-btn {
+    width: 28px;
+    height: 28px;
+    background: transparent;
     border: none;
     color: #fff;
     font-size: 18px;
     font-weight: 700;
     cursor: pointer;
-    padding: 4px 8px;
-    opacity: 0.85;
-    transition: opacity 0.2s;
+    padding: 0;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, opacity 0.2s;
 }
 
 .dso-view-toggle:hover,
-.dso-view-close:hover {
+.dso-view-close:hover,
+.dso-view-controls .modal-win-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
     opacity: 1;
+}
+
+.dso-view-controls .modal-win-btn svg {
+    pointer-events: none;
 }
 
 .dso-view-body {

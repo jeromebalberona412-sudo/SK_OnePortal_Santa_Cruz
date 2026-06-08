@@ -431,6 +431,82 @@ body {
     transform: translateY(0);
 }
 
+.dk-toast.dk-toast-error {
+    background: #ef4444;
+}
+
+.calendar-action-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: rkkSpin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes rkkSpin {
+    to { transform: rotate(360deg); }
+}
+
+.dk-deleted-meta,
+.rkk-rejected-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    padding: 14px 22px;
+    background: #fef2f2;
+    border-bottom: 1px solid #fecaca;
+    flex-shrink: 0;
+}
+
+.rkk-rejected-meta .dk-deleted-meta-item:first-child {
+    flex: 1 1 100%;
+    max-width: 100%;
+}
+
+.dk-deleted-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dk-deleted-meta-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #991b1b;
+}
+
+.dk-deleted-meta-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #7f1d1d;
+    word-break: break-word;
+}
+
+.dk-view-subtitle {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 2px;
+}
+
+.dk-view-modal-box {
+    max-width: min(960px, 96vw);
+    max-height: 92vh;
+    width: 100%;
+}
+
+.dk-view-modal-body {
+    overflow: auto;
+    max-height: calc(92vh - 160px);
+}
+
 @media (max-width: 768px) {
     .page-header-section {
         flex-direction: column;

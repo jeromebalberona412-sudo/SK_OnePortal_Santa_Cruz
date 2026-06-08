@@ -28,9 +28,8 @@ Route::middleware([
     'sk_official.access',
     'must.change.password',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('Dashboard::dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [\App\Modules\Dashboard\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/api/dashboard/stats', [\App\Modules\Dashboard\Controllers\DashboardController::class, 'stats'])->name('api.dashboard.stats');
 
     Route::get('/ai-assistant', function () {
         $user = auth()->user();
@@ -116,6 +115,7 @@ Route::middleware([
 
     Route::prefix('api/committees')->group(function () {
         Route::get('/', [\App\Modules\Committees\Controllers\CommitteeController::class, 'index'])->name('api.committees.index');
+        Route::get('/abyip-programs', [\App\Modules\Committees\Controllers\CommitteeController::class, 'abyipPrograms'])->name('api.committees.abyip-programs');
         Route::get('/sk-officials', [\App\Modules\Committees\Controllers\CommitteeController::class, 'officials'])->name('api.committees.officials');
         Route::post('/', [\App\Modules\Committees\Controllers\CommitteeController::class, 'store'])->name('api.committees.store');
         Route::put('/{id}', [\App\Modules\Committees\Controllers\CommitteeController::class, 'update'])->name('api.committees.update');
@@ -127,6 +127,7 @@ Route::middleware([
 
     Route::prefix('api/programs')->group(function () {
         Route::get('/', [\App\Modules\Programs\Controllers\ProgramController::class, 'index'])->name('api.programs.index');
+        Route::get('/management', [\App\Modules\Programs\Controllers\ProgramController::class, 'management'])->name('api.programs.management');
         Route::put('/{programId}/duration', [\App\Modules\Programs\Controllers\ProgramController::class, 'updateDuration'])->name('api.programs.update-duration');
     });
 
@@ -170,9 +171,9 @@ Route::middleware([
         return view('Deleted_Abyip::deleted-abyip');
     })->name('deleted-abyip');
 
-    Route::get('/rejected-kkprofiling', function () {
-        return view('Rejected_KKProfiling::rejected-kkprofiling');
-    })->name('rejected-kkprofiling');
+    Route::get('/rejected-kkprofiling', [\App\Modules\Rejected_KKProfiling\Controllers\RejectedKKProfilingController::class, 'index'])->name('rejected-kkprofiling');
+    Route::get('/rejected-kkprofiling/data', [\App\Modules\Rejected_KKProfiling\Controllers\RejectedKKProfilingController::class, 'data'])->name('rejected-kkprofiling.data');
+    Route::post('/rejected-kkprofiling/{id}/restore', [\App\Modules\Rejected_KKProfiling\Controllers\RejectedKKProfilingController::class, 'restore'])->name('rejected-kkprofiling.restore');
 
     Route::get('/schedule-kk-profiling', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'index'])->name('schedule-kk-profiling');
     Route::get('/api/schedule-kk-profiling/data', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'data'])->name('schedule-kk-profiling.data');
@@ -181,7 +182,13 @@ Route::middleware([
     Route::delete('/api/schedule-kk-profiling/{id}', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'destroy'])->name('schedule-kk-profiling.destroy');
 
     Route::get('/schedule-programs', function () {
-        return view('Program_Management::program-management');
+        $catalog = app(\App\Modules\Programs\Services\AbyipProgramCatalogService::class);
+        $management = $catalog->listForManagement(auth()->user());
+
+        return view('Program_Management::program-management', [
+            'managementPrograms' => $management['programs'],
+            'calendarYear' => $management['calendar_year'],
+        ]);
     })->name('schedule-programs'); // legacy route name kept for sidebar
 
     Route::get('/program-management', function () {

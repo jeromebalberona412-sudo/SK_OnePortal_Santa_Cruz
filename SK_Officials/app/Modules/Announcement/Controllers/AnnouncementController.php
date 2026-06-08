@@ -6,6 +6,7 @@ use App\Models\Announcement;
 use App\Models\AnnouncementComment;
 use App\Models\AnnouncementReaction;
 use App\Modules\Announcement\Services\CloudinaryService;
+use App\Services\SkOfficialActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -15,6 +16,10 @@ use Throwable;
 
 class AnnouncementController extends Controller
 {
+    public function __construct(private readonly SkOfficialActivityService $activityService)
+    {
+    }
+
     // GET /api/announcements?filter=all&page=1
     public function feed(Request $request): JsonResponse
     {
@@ -61,6 +66,13 @@ class AnnouncementController extends Controller
             'barangay_id' => $user->barangay_id,
         ]));
 
+        $this->activityService->log(
+            $user,
+            'announcement.create',
+            'Posted '.$validated['type'].': '.($validated['title'] ?: mb_substr($validated['body'], 0, 80)),
+            ['announcement_id' => $post->id]
+        );
+
         return response()->json($this->formatPost($post->load(['barangay', 'comments', 'user']), $user->id, 'sk_official'), 201);
     }
 
@@ -79,13 +91,30 @@ class AnnouncementController extends Controller
 
         $post->update($validated);
 
+        $this->activityService->log(
+            Auth::user(),
+            'announcement.update',
+            'Updated announcement: '.($post->title ?: 'Post #'.$id),
+            ['announcement_id' => $id]
+        );
+
         return response()->json($this->formatPost($post->load(['barangay', 'comments']), Auth::id(), 'sk_official'));
     }
 
     // DELETE /api/announcements/{id}
     public function destroy(int $id): JsonResponse
     {
-        Announcement::where('id', $id)->where('user_id', Auth::id())->firstOrFail()->delete();
+        $post = Announcement::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $title = $post->title ?: 'Post #'.$id;
+        $post->delete();
+
+        $this->activityService->log(
+            Auth::user(),
+            'announcement.delete',
+            'Deleted announcement: '.$title,
+            ['announcement_id' => $id]
+        );
+
         return response()->json(['success' => true]);
     }
 

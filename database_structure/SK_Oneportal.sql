@@ -61,6 +61,7 @@ create table public.users (
   last_login_ip character varying(45) null,
   active_session_id character varying(255) null,
   last_seen timestamp without time zone null,
+  online_status character varying(20) not null default 'offline'::character varying,
   active_device character varying(255) null,
   last_ip character varying(45) null,
   otp_code character varying(255) null,
@@ -705,19 +706,132 @@ ADD COLUMN IF NOT EXISTS respondent_number VARCHAR(32) NULL,
 ADD COLUMN IF NOT EXISTS respondent_sequence INTEGER NULL,
 ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
 
--- ABYIP schema migration (auto-detected programs + activities per upload)
+-- Rejected KK profiling archive (one row per rejected registration)
+CREATE TABLE IF NOT EXISTS rejected_kk_profiling (
+  id BIGSERIAL NOT NULL,
+  kabataan_registration_id BIGINT NOT NULL,
+  tenant_id BIGINT NULL,
+  barangay_id BIGINT NOT NULL,
+  rejected_by_user_id BIGINT NULL,
+  rejection_reason TEXT NOT NULL,
+  rejected_at TIMESTAMP NOT NULL,
+  restored_at TIMESTAMP NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT rejected_kk_profiling_pkey PRIMARY KEY (id),
+  CONSTRAINT rejected_kk_profiling_kabataan_registration_id_unique UNIQUE (kabataan_registration_id),
+  CONSTRAINT rejected_kk_profiling_kabataan_registration_id_foreign FOREIGN KEY (kabataan_registration_id) REFERENCES kabataan_registrations (id) ON DELETE CASCADE,
+  CONSTRAINT rejected_kk_profiling_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE SET NULL,
+  CONSTRAINT rejected_kk_profiling_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+  CONSTRAINT rejected_kk_profiling_rejected_by_user_id_foreign FOREIGN KEY (rejected_by_user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS rejected_kk_profiling_barangay_id_rejected_at_index ON rejected_kk_profiling (barangay_id, rejected_at);
+CREATE INDEX IF NOT EXISTS rejected_kk_profiling_barangay_id_restored_at_index ON rejected_kk_profiling (barangay_id, restored_at);
+
+ALTER TABLE rejected_kk_profiling
+ADD COLUMN IF NOT EXISTS previous_registration_status VARCHAR(50) NULL,
+ADD COLUMN IF NOT EXISTS previous_evaluation_status VARCHAR(50) NULL,
+ADD COLUMN IF NOT EXISTS previous_user_status VARCHAR(50) NULL;
+
+-- KK survey responses (analytics source; status: pending | rejected | approved)
+CREATE TABLE IF NOT EXISTS kk_survey_responses (
+  id BIGSERIAL NOT NULL,
+  tenant_id BIGINT NOT NULL,
+  barangay_id BIGINT NOT NULL,
+  kabataan_registration_id BIGINT NOT NULL,
+  respondent_number VARCHAR(50) NULL,
+  survey_date DATE NULL,
+  last_name VARCHAR(100) NOT NULL,
+  first_name VARCHAR(100) NOT NULL,
+  middle_name VARCHAR(100) NULL,
+  suffix VARCHAR(50) NULL,
+  region VARCHAR(100) NULL,
+  province VARCHAR(100) NULL,
+  municipality VARCHAR(100) NULL,
+  barangay VARCHAR(100) NULL,
+  purok_zone VARCHAR(100) NULL,
+  sex_assigned_at_birth VARCHAR(20) NULL,
+  age INTEGER NULL,
+  birthdate DATE NULL,
+  email VARCHAR(255) NULL,
+  contact_number VARCHAR(20) NULL,
+  civil_status VARCHAR(50) NULL,
+  youth_age_group VARCHAR(50) NULL,
+  educational_background VARCHAR(100) NULL,
+  youth_classification VARCHAR(100) NULL,
+  work_status VARCHAR(100) NULL,
+  registered_sk_voter BOOLEAN NOT NULL DEFAULT false,
+  registered_national_voter BOOLEAN NOT NULL DEFAULT false,
+  attended_kk_assembly BOOLEAN NOT NULL DEFAULT false,
+  voted_last_sk BOOLEAN NOT NULL DEFAULT false,
+  kk_assembly_attendance_count VARCHAR(255) NULL,
+  kk_assembly_non_attendance_reason TEXT NULL,
+  facebook_account VARCHAR(255) NULL,
+  willing_to_join_group_chat BOOLEAN NOT NULL DEFAULT false,
+  participant_signature TEXT NULL,
+  consent_given BOOLEAN NOT NULL DEFAULT true,
+  status VARCHAR(30) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT kk_survey_responses_pkey PRIMARY KEY (id),
+  CONSTRAINT kk_survey_responses_kabataan_registration_id_unique UNIQUE (kabataan_registration_id),
+  CONSTRAINT kk_survey_responses_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
+  CONSTRAINT kk_survey_responses_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+  CONSTRAINT kk_survey_responses_kabataan_registration_id_foreign FOREIGN KEY (kabataan_registration_id) REFERENCES kabataan_registrations (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS kk_survey_responses_barangay_id_status_index ON kk_survey_responses (barangay_id, status);
+CREATE INDEX IF NOT EXISTS kk_survey_responses_barangay_id_survey_date_index ON kk_survey_responses (barangay_id, survey_date);
+
+-- ABYIP schema (header + programs + activities; safe to re-run)
 ALTER TABLE abyips
 DROP COLUMN IF EXISTS sk_youth_development_and_empowerment_programs;
 
 DROP TABLE IF EXISTS abyip_detected_programs;
-DROP TABLE IF EXISTS abyip_program_activities;
-DROP TABLE IF EXISTS abyip_programs;
+
+ALTER TABLE abyips RENAME COLUMN calendar_year TO fiscal_year;
+ALTER TABLE abyips RENAME COLUMN title TO document_title;
+ALTER TABLE abyips RENAME COLUMN prepared_by_name TO prepared_by;
+ALTER TABLE abyips RENAME COLUMN prepared_by_position TO prepared_position;
+ALTER TABLE abyips RENAME COLUMN approved_by_name TO approved_by;
+ALTER TABLE abyips RENAME COLUMN approved_by_position TO approved_position;
+ALTER TABLE abyips RENAME COLUMN total_expenditure TO total_budget;
+
+ALTER TABLE abyips
+ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Republic of the Philippines',
+ADD COLUMN IF NOT EXISTS barangay_name VARCHAR(255) NULL;
+
+ALTER TABLE abyips
+ADD COLUMN IF NOT EXISTS prepared_by_user_id BIGINT NULL,
+ADD COLUMN IF NOT EXISTS approved_by_user_id BIGINT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_abyip_prepared_by') THEN
+    ALTER TABLE abyips
+    ADD CONSTRAINT fk_abyip_prepared_by
+    FOREIGN KEY (prepared_by_user_id) REFERENCES users (id) ON DELETE SET NULL;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_abyip_approved_by') THEN
+    ALTER TABLE abyips
+    ADD CONSTRAINT fk_abyip_approved_by
+    FOREIGN KEY (approved_by_user_id) REFERENCES users (id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS abyip_programs (
   id BIGSERIAL NOT NULL,
   abyip_id BIGINT NOT NULL,
-  program_letter CHAR(1) NULL,
+  code VARCHAR(20) NULL,
   program_name VARCHAR(255) NOT NULL,
+  description TEXT NULL,
+  expected_result TEXT NULL,
+  performance_indicator TEXT NULL,
+  implementation_period VARCHAR(255) NULL,
+  person_responsible VARCHAR(255) NULL,
+  row_type VARCHAR(30) NULL,
   sort_order INTEGER NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL,
@@ -730,21 +844,12 @@ CREATE INDEX IF NOT EXISTS abyip_programs_abyip_id_index ON abyip_programs (abyi
 CREATE TABLE IF NOT EXISTS abyip_program_activities (
   id BIGSERIAL NOT NULL,
   abyip_id BIGINT NOT NULL,
-  program_id BIGINT NULL,
-  activity_name VARCHAR(255) NULL,
-  code VARCHAR(50) NULL,
-  ppas VARCHAR(255) NULL,
-  description TEXT NULL,
-  expected_result TEXT NULL,
-  performance_indicator TEXT NULL,
-  period_of_implementation VARCHAR(255) NULL,
+  program_id BIGINT NOT NULL,
+  activity_name VARCHAR(255) NOT NULL,
   budget NUMERIC(15, 2) NULL,
-  person_responsible VARCHAR(255) NULL,
   mooe NUMERIC(15, 2) NULL,
   co NUMERIC(15, 2) NULL,
   total NUMERIC(15, 2) NULL,
-  row_type VARCHAR(30) NULL,
-  program_section VARCHAR(255) NULL,
   sort_order INTEGER NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL,
@@ -792,39 +897,52 @@ create table public.abyips (
   tenant_id bigint null,
   barangay_id bigint not null,
   created_by bigint null,
-  title character varying(255) not null,
-  calendar_year smallint not null,
-  region character varying(100) not null default 'IV-A CALABARZON'::character varying,
-  province character varying(100) not null default 'Laguna'::character varying,
-  municipality character varying(100) not null default 'Santa Cruz'::character varying,
+  fiscal_year smallint not null,
+  country character varying(100) not null default 'Republic of the Philippines'::character varying,
+  region character varying(100) null,
+  province character varying(100) null,
+  municipality character varying(100) null,
+  barangay_name character varying(255) null,
+  document_title character varying(255) not null,
   sk_council_name character varying(255) null,
-  barangay_estimated_budget numeric(15, 2) null,
-  sk_fund_amount numeric(15, 2) null,
-  total_expenditure numeric(15, 2) null,
-  prepared_by_name character varying(255) null,
-  prepared_by_position character varying(255) null,
-  approved_by_name character varying(255) null,
-  approved_by_position character varying(255) null,
+  barangay_estimated_budget numeric(15, 2) not null default 0,
+  sk_fund_percentage numeric(5, 2) not null default 10.00,
+  sk_fund_amount numeric(15, 2) not null default 0,
+  total_budget numeric(15, 2) null,
+  prepared_by character varying(255) null,
+  prepared_position character varying(255) null,
+  prepared_by_user_id bigint null,
+  approved_by character varying(255) null,
+  approved_position character varying(255) null,
+  approved_by_user_id bigint null,
   source_type character varying(20) not null default 'word'::character varying,
   document_html text null,
   pdf_data text null,
   created_at timestamp without time zone null,
   updated_at timestamp without time zone null,
   constraint abyips_pkey primary key (id),
-  constraint abyips_barangay_id_calendar_year_unique unique (barangay_id, calendar_year),
+  constraint abyips_barangay_id_fiscal_year_unique unique (barangay_id, fiscal_year),
   constraint abyips_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
   constraint abyips_created_by_foreign foreign KEY (created_by) references users (id) on delete set null,
-  constraint abyips_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete set null
+  constraint abyips_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete set null,
+  constraint fk_abyip_prepared_by foreign KEY (prepared_by_user_id) references users (id) on delete set null,
+  constraint fk_abyip_approved_by foreign KEY (approved_by_user_id) references users (id) on delete set null
 ) TABLESPACE pg_default;
 
-create index IF not exists abyips_barangay_id_calendar_year_index on public.abyips using btree (barangay_id, calendar_year) TABLESPACE pg_default;
+create index IF not exists abyips_barangay_id_fiscal_year_index on public.abyips using btree (barangay_id, fiscal_year) TABLESPACE pg_default;
 
--- Programs auto-detected per uploaded ABYIP (Word/PDF) — e.g. "A. Equitable Access to Quality Education"
+-- Programs: General Administration line items + SK Youth Development A–J programs
 create table public.abyip_programs (
   id bigserial not null,
   abyip_id bigint not null,
-  program_letter character(1) null,
+  code character varying(20) null,
   program_name character varying(255) not null,
+  description text null,
+  expected_result text null,
+  performance_indicator text null,
+  implementation_period character varying(255) null,
+  person_responsible character varying(255) null,
+  row_type character varying(30) null,
   sort_order integer null,
   created_at timestamp without time zone null,
   updated_at timestamp without time zone null,
@@ -834,26 +952,16 @@ create table public.abyip_programs (
 
 create index IF not exists abyip_programs_abyip_id_index on public.abyip_programs using btree (abyip_id) TABLESPACE pg_default;
 
--- Activities under each program (or standalone expenditure rows) — auto-detected from upload
--- activity_name = sub-items below program_name (e.g. "Support to ALS and RIC" under program A)
+-- Activities: bullet items under youth programs (e.g. "Support to ALS and RIC")
 create table public.abyip_program_activities (
   id bigserial not null,
   abyip_id bigint not null,
-  program_id bigint null,
-  activity_name character varying(255) null,
-  code character varying(50) null,
-  ppas character varying(255) null,
-  description text null,
-  expected_result text null,
-  performance_indicator text null,
-  period_of_implementation character varying(255) null,
+  program_id bigint not null,
+  activity_name character varying(255) not null,
   budget numeric(15, 2) null,
-  person_responsible character varying(255) null,
   mooe numeric(15, 2) null,
   co numeric(15, 2) null,
   total numeric(15, 2) null,
-  row_type character varying(30) null,
-  program_section character varying(255) null,
   sort_order integer null,
   created_at timestamp without time zone null,
   updated_at timestamp without time zone null,
@@ -881,3 +989,29 @@ create table public.calendar_notes (
 ) TABLESPACE pg_default;
 
 create index IF not exists calendar_notes_barangay_id_note_date_index on public.calendar_notes using btree (barangay_id, note_date) TABLESPACE pg_default;
+
+-- SK Officials online presence + activity audit log
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS online_status VARCHAR(20) NOT NULL DEFAULT 'offline';
+
+CREATE TABLE IF NOT EXISTS sk_official_activities (
+  id BIGSERIAL NOT NULL,
+  tenant_id BIGINT NULL,
+  barangay_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  action VARCHAR(80) NOT NULL,
+  description VARCHAR(500) NOT NULL,
+  metadata JSON NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT sk_official_activities_pkey PRIMARY KEY (id),
+  CONSTRAINT sk_official_activities_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE SET NULL,
+  CONSTRAINT sk_official_activities_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+  CONSTRAINT sk_official_activities_user_id_foreign FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS sk_official_activities_barangay_id_created_at_index
+  ON public.sk_official_activities USING btree (barangay_id, created_at) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS sk_official_activities_user_id_index
+  ON public.sk_official_activities USING btree (user_id) TABLESPACE pg_default;

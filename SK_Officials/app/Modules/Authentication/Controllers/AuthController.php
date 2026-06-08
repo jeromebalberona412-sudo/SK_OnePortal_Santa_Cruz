@@ -251,11 +251,17 @@ class AuthController extends Controller
         return redirect()->route('sk_official.verification.success');
     }
 
-    public function logout(): RedirectResponse
+    public function logout(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        if ($user instanceof User) {
+            $this->authenticationService->clearSessionOwnershipOnLogout($user, $request);
+        }
+
         Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('login');
     }

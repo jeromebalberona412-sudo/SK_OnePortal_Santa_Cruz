@@ -4,6 +4,7 @@
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard — SK Officials Portal</title>
 
     <!-- Bootstrap 5 -->
@@ -29,7 +30,7 @@
     <div class="dash-page-header">
         <div class="dash-page-header-left">
             <h1 class="dash-page-title">Dashboard</h1>
-            <p class="dash-page-sub">Welcome back, <strong>Calios</strong> &mdash; SK Official</p>
+            <p class="dash-page-sub">Welcome back, <strong id="dashUserName">{{ $userFirstName ?? 'SK Official' }}</strong> &mdash; SK Official</p>
         </div>
         <div class="dash-year-filter">
             <label for="yearSelect" class="dash-year-label">
@@ -41,12 +42,7 @@
                 </svg>
                 Year
             </label>
-            <select id="yearSelect" class="dash-year-select">
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026" selected>2026</option>
-            </select>
+            <select id="yearSelect" class="dash-year-select"></select>
         </div>
     </div>
 
@@ -72,7 +68,7 @@
     <div class="stats-2row-grid mb-3">
 
         <!-- 1. Total Kabataan -->
-        <div class="stat-card stat-card-blue">
+        <div class="stat-card stat-card-blue" data-href="{{ route('kabataan') }}" title="View Kabataan records">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statKabataan">0</span>
                 <div class="stat-card-icon stat-icon-blue">
@@ -89,7 +85,7 @@
 
 
         <!-- 3. Pending KK -->
-        <div class="stat-card stat-card-orange">
+        <div class="stat-card stat-card-orange" data-href="{{ route('kk-profiling-requests') }}" title="View pending KK profiling requests">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statPending">0</span>
                 <div class="stat-card-icon stat-icon-orange">
@@ -103,7 +99,7 @@
         </div>
 
         <!-- 4. Approved -->
-        <div class="stat-card stat-card-green">
+        <div class="stat-card stat-card-green" data-href="{{ route('kabataan') }}" title="View approved Kabataan records">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statApproved">0</span>
                 <div class="stat-card-icon stat-icon-green">
@@ -115,10 +111,10 @@
             <span class="stat-card-label">Approved KK Profiles</span>
         </div>
 
-        <!-- 5. Active Programs -->
-        <div class="stat-card stat-card-teal">
+        <!-- 5. Rejected KK -->
+        <div class="stat-card stat-card-teal" data-href="{{ route('rejected-kkprofiling') }}" title="View rejected KK profiling records">
             <div class="stat-card-top">
-                <span class="stat-card-value" id="statPrograms">0</span>
+                <span class="stat-card-value" id="statRejected">0</span>
                 <div class="stat-card-icon stat-icon-teal">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -131,7 +127,7 @@
         </div>
 
         <!-- 6. Active Programs -->
-        <div class="stat-card stat-card-teal">
+        <div class="stat-card stat-card-teal" data-href="{{ route('programs') }}" title="View programs">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statActivePrograms">0</span>
                 <div class="stat-card-icon stat-icon-teal">
@@ -145,7 +141,7 @@
         </div>
 
         <!-- 7. Total Budget -->
-        <div class="stat-card stat-card-yellow">
+        <div class="stat-card stat-card-yellow" data-href="{{ route('budget-finance') }}" title="View budget and finance">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statBudget">₱0.00</span>
                 <div class="stat-card-icon stat-icon-yellow stat-icon-peso" aria-hidden="true">₱</div>
@@ -154,7 +150,7 @@
         </div>
 
         <!-- 8. Remaining Budget -->
-        <div class="stat-card stat-card-green">
+        <div class="stat-card stat-card-green" data-href="{{ route('budget-finance') }}" title="View budget and finance">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statRemaining">₱0.00</span>
                 <div class="stat-card-icon stat-icon-green stat-icon-peso" aria-hidden="true">₱</div>
@@ -163,7 +159,7 @@
         </div>
 
         <!-- 9. Total Expenses -->
-        <div class="stat-card stat-card-red">
+        <div class="stat-card stat-card-red" data-href="{{ route('budget-finance') }}" title="View budget and finance">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statExpenses">₱0.00</span>
                 <div class="stat-card-icon stat-icon-red stat-icon-peso" aria-hidden="true">₱</div>
@@ -172,7 +168,7 @@
         </div>
 
         <!-- 10. Deleted Kabataan -->
-        <div class="stat-card stat-card-slate">
+        <div class="stat-card stat-card-slate" data-href="{{ route('deleted-kabataan') }}" title="View deleted Kabataan records">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statDeletedKabataan">0</span>
                 <div class="stat-card-icon stat-icon-slate">
@@ -189,7 +185,7 @@
 
 
         <!-- 12. Rejected Items -->
-        <div class="stat-card stat-card-rose">
+        <div class="stat-card stat-card-rose" data-href="{{ route('rejected-kkprofiling') }}" title="View rejected items">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statRejectedItems">0</span>
                 <div class="stat-card-icon stat-icon-rose">
@@ -406,7 +402,31 @@
             <div class="chart-canvas-wrap">
                 <canvas id="chartMonthlyRequests"></canvas>
             </div>
-            <div class="line-chart-filter-row">
+            <div class="line-chart-filter-row line-chart-controls">
+                <div class="line-chart-select-group">
+                    <label for="kkChartGranularity" class="dash-filter-label">View</label>
+                    <select id="kkChartGranularity" class="dash-filter-select">
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
+                </div>
+                <div class="line-chart-select-group" id="kkChartMonthWrap" hidden>
+                    <label for="kkChartMonth" class="dash-filter-label">Month</label>
+                    <select id="kkChartMonth" class="dash-filter-select">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
                 <label class="line-chart-checkbox">
                     <input type="checkbox" id="filterApproved" checked>
                     <span class="line-chart-checkbox-box" style="background:#22c55e;"></span>

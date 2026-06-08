@@ -30,7 +30,7 @@
             <div class="page-header-left">
                 <h1 class="page-title">Programs</h1>
                 <p class="page-subtitle">
-                    Plan and track major SK initiatives, budgets, and timelines.
+                    Plan and track major SK initiatives and timelines.
                 </p>
             </div>
         </section>
@@ -63,15 +63,6 @@
                     </div>
                 </div>
                 <span class="stat-card-label">Completed</span>
-            </div>
-            <div class="stat-card stat-card-yellow">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="progStatBudget">₱0</span>
-                    <div class="stat-card-icon stat-icon-yellow">
-                        <span class="stat-icon-peso" aria-hidden="true">₱</span>
-                    </div>
-                </div>
-                <span class="stat-card-label">Total Budget</span>
             </div>
         </div>
 
@@ -129,7 +120,6 @@
                                     <th>Program Title</th>
                                     <th>Description</th>
                                     <th>Committee</th>
-                                    <th>Budget</th>
                                     <th>Duration</th>
                                     <th>Status</th>
                                     <th class="col-actions">Actions</th>
@@ -223,10 +213,6 @@
             <div class="modal-field">
                 <label>Description</label>
                 <textarea id="viewProgramName" readonly rows="4" style="width:100%;border-radius:10px;border:1px solid #d1d5db;padding:8px 10px;font-size:13px;font-family:inherit;color:#374151;background:#f9fafb;resize:none;line-height:1.6;"></textarea>
-            </div>
-            <div class="modal-field">
-                <label>Budget</label>
-                <input type="text" id="viewProgramBudget" readonly>
             </div>
             <div class="modal-field">
                 <label>Duration</label>

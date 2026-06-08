@@ -1,3 +1,33 @@
+const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+async function apiFetch(url, options = {}) {
+    const { headers: extraHeaders, body, ...rest } = options;
+    const headers = {
+        'X-CSRF-TOKEN': csrfToken(),
+        'Accept': 'application/json',
+        ...extraHeaders,
+    };
+
+    if (body && !(body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
+
+    const res = await fetch(url, {
+        ...rest,
+        headers,
+        body: body && !(body instanceof FormData) ? JSON.stringify(body) : body,
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+        const message = data.message || Object.values(data.errors || {}).flat()[0] || 'Request failed.';
+        throw new Error(message);
+    }
+
+    return data;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeProgramsUI();
 });
@@ -27,7 +57,6 @@ function initializeProgramsUI() {
     const viewProgramType = document.getElementById('viewProgramType');
     const viewProgramName = document.getElementById('viewProgramName');
     const viewProgramTitle = document.getElementById('viewProgramTitle');
-    const viewProgramBudget = document.getElementById('viewProgramBudget');
     const viewProgramDuration = document.getElementById('viewProgramDuration');
     const viewProgramStatus = document.getElementById('viewProgramStatus');
 
@@ -71,98 +100,11 @@ function initializeProgramsUI() {
 
     if (!tbody) return;
 
-    // ABYIP SK Youth Development and Empowerment Programs data
-    const programs = [
-        {
-            title: "Equitable Access to Quality Education",
-            description: "Provide school supplies to ALS Students and elementary, high school and college Students. Support to ALS and RIC, 150 Students for Educational Assistance, Support to Elementary and Daycare.",
-            committee: "Equitable Access to Quality Education",
-            budget: 175000,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "ongoing"
-        },
-        {
-            title: "Environmental Protection",
-            description: "Honorarium for services rendered in the Clean Up Drive. Activities include Clean-Up Drive, Payroll for Laborer, and Tree Planting.",
-            committee: "Environmental Protection",
-            budget: 60000,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "ongoing"
-        },
-        {
-            title: "Disaster Risk Reduction and Resiliency",
-            description: "Disaster preparedness measures to prepare for and reduce the effects of disaster. Includes Training on Disaster Preparedness for Youth Volunteer Groups and Distribution of Relief Goods for KK Members.",
-            committee: "Disaster Risk Reduction and Resiliency",
-            budget: 30000,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "planned"
-        },
-        {
-            title: "Youth Employment and Livelihood",
-            description: "Increased number of skilled and employed youth. Includes Livelihood Training and provision of food and other supplies.",
-            committee: "Youth Employment and Livelihood",
-            budget: 20000,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "planned"
-        },
-        {
-            title: "Health",
-            description: "Campaigning Materials for Anti-Drugs such as Leaflets, posters, and tarpaulins. Provision of Medicines and Medical Equipment to decrease drug-dependent youth.",
-            committee: "Health",
-            budget: 30000,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "ongoing"
-        },
-        {
-            title: "Anti-Drug and Peace and Order",
-            description: "Orientation for Anti-Drug and Physical Abuse with Foods and Accommodations. Aims to decrease number of drug dependent youth and youth who tried using illegal drugs.",
-            committee: "Anti-Drug and Peace and Order",
-            budget: 10000,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "planned"
-        },
-        {
-            title: "Feeding Program for KK Members",
-            description: "Improve the health and physique of the children. Program targets youth and children in the vicinity of the Barangay.",
-            committee: "Feeding Program for KK Members",
-            budget: 15000,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "ongoing"
-        },
-        {
-            title: "Sports Development",
-            description: "Provide sports and recreational activities in the Barangay to promote Sportsmanship. Includes Supplies and Materials, Food and Accommodation, and Officiating fees.",
-            committee: "Sports Development",
-            budget: 250000,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "ongoing"
-        },
-        {
-            title: "Other Programs",
-            description: "Cost of expenditures for simultaneous General Assembly of the Barangay. Includes Katipunan ng Kabataan (KK) General Assembly, Barangay Day Celebration, and Youth Week.",
-            committee: "Other Programs",
-            budget: 67547.67,
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            status: "planned"
-        }
-    ];
+    let programs = [];
 
     let currentQuery = '';
     let currentCommittee = '';
     let currentStatus = '';
-
-    function formatBudget(value) {
-        return '₱ ' + value.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
 
     function formatDuration(start, end) {
         const opts = { month: 'short', day: '2-digit', year: 'numeric' };
@@ -194,7 +136,7 @@ function initializeProgramsUI() {
         if (filtered.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = 7;
+            td.colSpan = 6;
             td.textContent = 'No programs found matching the current filters.';
             td.style.textAlign = 'center';
             td.style.fontSize = '13px';
@@ -209,7 +151,6 @@ function initializeProgramsUI() {
                     <td class="program-title-cell">${p.title}</td>
                     <td class="program-desc-cell">${p.description}</td>
                     <td>${p.committee}</td>
-                    <td class="program-budget">${formatBudget(p.budget)}</td>
                     <td class="program-duration">${formatDuration(p.startDate, p.endDate)}</td>
                     <td>
                         <span class="status-pill ${p.status}">
@@ -234,6 +175,26 @@ function initializeProgramsUI() {
         updateSummary(programs);
     }
 
+    function populateCommitteeFilter() {
+        if (!committeeFilter) return;
+
+        const uniqueCommittees = [...new Set(programs.map((p) => p.committee))].sort();
+        committeeFilter.innerHTML = '<option value="">All Committees</option>';
+        uniqueCommittees.forEach((name) => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            committeeFilter.appendChild(option);
+        });
+    }
+
+    async function loadPrograms() {
+        const response = await apiFetch('/api/programs');
+        programs = response.data?.programs || [];
+        populateCommitteeFilter();
+        render();
+    }
+
     function updateSummary(list) {
         if (!summaryTotal) return;
 
@@ -251,14 +212,9 @@ function initializeProgramsUI() {
         const statTotal = document.getElementById('progStatTotal');
         const statOngoing = document.getElementById('progStatOngoing');
         const statCompleted = document.getElementById('progStatCompleted');
-        const statBudget = document.getElementById('progStatBudget');
         if (statTotal) statTotal.textContent = total;
         if (statOngoing) statOngoing.textContent = ongoing;
         if (statCompleted) statCompleted.textContent = completed;
-        if (statBudget) {
-            const totalBudget = list.reduce((sum, p) => sum + p.budget, 0);
-            statBudget.textContent = '₱' + totalBudget.toLocaleString('en-PH');
-        }
     }
 
     if (searchInput) {
@@ -297,7 +253,6 @@ function initializeProgramsUI() {
                 if (viewProgramType) viewProgramType.value = program.committee;
                 if (viewProgramName) viewProgramName.value = program.description || '-';
                 if (viewProgramTitle) viewProgramTitle.value = program.title;
-                if (viewProgramBudget) viewProgramBudget.value = formatBudget(program.budget);
                 if (viewProgramDuration) viewProgramDuration.value = formatDuration(program.startDate, program.endDate);
                 if (viewProgramStatus) {
                     viewProgramStatus.value = program.status.charAt(0).toUpperCase() + program.status.slice(1);
@@ -340,10 +295,11 @@ function initializeProgramsUI() {
     }
 
     if (editDurationSave) {
-        editDurationSave.addEventListener('click', () => {
+        editDurationSave.addEventListener('click', async () => {
             const idx   = parseInt(editDurationIndex.value, 10);
             const start = editStartDate.value;
             const end   = editEndDate.value;
+            const program = programs[idx];
 
             if (!start || !end) {
                 showProgramToast('Both start and end dates are required.', 'error');
@@ -355,15 +311,35 @@ function initializeProgramsUI() {
                 return;
             }
 
-            programs[idx].startDate = start;
-            programs[idx].endDate   = end;
-            closeEditDurationModal();
-            render();
-            showProgramToast('Edited successfully!');
+            if (!program) {
+                showProgramToast('Program not found.', 'error');
+                return;
+            }
+
+            try {
+                await apiFetch(`/api/programs/${program.id}/duration`, {
+                    method: 'PUT',
+                    body: {
+                        start_date: start,
+                        end_date: end,
+                    },
+                });
+
+                programs[idx].startDate = start;
+                programs[idx].endDate = end;
+                closeEditDurationModal();
+                render();
+                showProgramToast('Edited successfully!');
+            } catch (error) {
+                showProgramToast(error.message || 'Failed to update duration.', 'error');
+            }
         });
     }
 
-    render();
+    loadPrograms().catch((error) => {
+        showProgramToast(error.message || 'Failed to load programs.', 'error');
+        render();
+    });
 
     // Wire toggle buttons after modals exist in DOM
     wireModalToggle(viewModal);

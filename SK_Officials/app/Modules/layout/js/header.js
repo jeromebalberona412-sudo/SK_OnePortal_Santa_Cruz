@@ -59,6 +59,9 @@ function initializeHeader() {
         initializeNotifications();
     }
 
+    // ── Session heartbeat (keeps online status in sync) ─────────────────────
+    initializeSessionHeartbeat();
+
     // ── Global outside-click — single listener on document ──────────────────
     document.addEventListener('click', function (e) {
         // Close profile dropdown when clicking outside
@@ -381,6 +384,42 @@ function updateNotificationBadge(count) {
         notifCountPill.textContent = unread;
         notifCountPill.style.display = unread > 0 ? 'inline' : 'none';
     }
+}
+
+function getHeartbeatCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta?.content) {
+        return meta.content;
+    }
+
+    const tokenInput = document.querySelector('#logoutForm input[name="_token"]');
+    return tokenInput?.value ?? '';
+}
+
+function initializeSessionHeartbeat() {
+    const intervalSeconds = Number(window.SK_OFFICIAL_HEARTBEAT_INTERVAL_SECONDS) || 30;
+    const intervalMs = Math.max(15, intervalSeconds) * 1000;
+
+    function sendHeartbeat() {
+        const csrf = getHeartbeatCsrfToken();
+        if (!csrf) {
+            return;
+        }
+
+        fetch('/heartbeat', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+            },
+            credentials: 'same-origin',
+        }).catch(function () {
+            // Ignore transient network errors; next tick will retry.
+        });
+    }
+
+    sendHeartbeat();
+    window.setInterval(sendHeartbeat, intervalMs);
 }
 
 // ── Exports ──────────────────────────────────────────────────────────────────

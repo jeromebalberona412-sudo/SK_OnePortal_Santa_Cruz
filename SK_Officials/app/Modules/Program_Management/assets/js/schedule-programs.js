@@ -104,9 +104,21 @@ const SP_EDUCATION_SAMPLE = {
     ],
 };
 
+function getEmbeddedPrograms() {
+    const el = document.getElementById('programManagementData');
+    if (!el) return [];
+
+    try {
+        const parsed = JSON.parse(el.textContent);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeSchedulePrograms();
-    initializeCommitteeCards();
+    initializeCommitteeCards(getEmbeddedPrograms());
 
     // ── "View Passed Scholars" standalone button ──────────────────────────
     const showPassedBtn = document.getElementById('spShowPassedBtn');
@@ -170,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Committee Cards Handler ────────────────────────────────────────────────
-function initializeCommitteeCards() {
+function initializeCommitteeCards(programs = []) {
     const committeeCards     = document.querySelectorAll('.committee-card');
     const activityBtnsPanel  = document.getElementById('spActivityButtonsPanel');
     const activityPanelTitle = document.getElementById('spActivityPanelTitle');
@@ -179,80 +191,16 @@ function initializeCommitteeCards() {
     const sportsSection      = document.getElementById('spSportsSection');
     const scholarshipLink    = document.getElementById('spScholarshipLink');
 
-    // Committee metadata
-    const committeeData = {
-        education: {
-            title: 'Equitable Access to Quality Education',
-            activities: [
-                'Support to ALS and RIC',
-                '150 Students for Educational Assistance',
-                'Support to Elementary and Daycare',
-            ],
-            link: '/scholarship-application-request',
-            linkLabel: 'Go to Scholarship Application List',
-            type: 'education',
-        },
-        environment: {
-            title: 'Environmental Protection',
-            activities: ['Clean-Up Drive', 'Payroll for Laborer', 'Tree Planting'],
-            type: 'other',
-        },
-        disaster: {
-            title: 'Disaster Risk Reduction and Resiliency',
-            activities: [
-                'Training on Disaster Preparedness for Youth Volunteer Groups',
-                'Distribution of Relief Goods for KK Members',
-            ],
-            type: 'other',
-        },
-        livelihood: {
-            title: 'Youth Employment and Livelihood',
-            activities: ['Livelihood Training', 'Food and Other Supplies'],
-            type: 'other',
-        },
-        health: {
-            title: 'Health',
-            activities: [
-                'Medicines / Medical Equipment',
-                'Campaigning Materials for Anti-Drugs (Leaflets, Posters, Tarpaulins)',
-            ],
-            type: 'other',
-        },
-        'anti-drug': {
-            title: 'Anti-Drug and Peace and Order',
-            activities: ['Orientation for Anti-Drug and Physical Abuse', 'Foods and Accommodations'],
-            type: 'other',
-        },
-        gender: {
-            title: 'Gender Sensitivity',
-            activities: ['Orientation on GAD and VAWC', 'Foods and Accommodations'],
-            type: 'other',
-        },
-        feeding: {
-            title: 'Feeding Program for KK Members',
-            activities: [
-                'Improve health and physique of children',
-                'Youth and Children in the vicinity of Barangay',
-            ],
-            type: 'other',
-        },
-        sports: {
-            title: 'Sports Development',
-            activities: ['Supplies and Materials', 'Food and Accommodation', 'Officiating Fees'],
-            link: '/sports-requests',
-            linkLabel: 'Go to Sports Application Requests',
-            type: 'sports',
-        },
-        other: {
-            title: 'Other Programs',
-            activities: [
-                'Katipunan ng Kabataan (KK) General Assembly',
-                'Barangay Day Celebration',
-                'Youth Week',
-            ],
-            type: 'other',
-        },
-    };
+    const committeeData = {};
+    programs.forEach((program) => {
+        const key = program.committee_key || 'other';
+        committeeData[key] = {
+            title: program.title || 'Program',
+            activities: program.activities || [],
+            href: program.href || '#',
+            type: program.type || 'other',
+        };
+    });
 
     function hideAllTables() {
         if (passedSection)  passedSection.style.display  = 'none';
@@ -308,41 +256,40 @@ function initializeCommitteeCards() {
     }
 
     committeeCards.forEach(card => {
-        card.addEventListener('click', function () {
+        card.addEventListener('click', function (event) {
             const committee = this.getAttribute('data-committee');
             const data      = committeeData[committee];
             if (!data) return;
 
-            // Highlight active card
-            committeeCards.forEach(c => c.classList.remove('committee-active'));
-            this.classList.add('committee-active');
-
-            // Hide all tables and reset activity buttons
-            hideAllTables();
-            if (activityBtnsPanel) activityBtnsPanel.style.display = 'none';
-
             if (data.type === 'education') {
-                // Redirect to scholar list page
-                window.location.href = '/scholar-list';
+                event.preventDefault();
+                window.location.href = data.href || '/scholar-list';
+                return;
+            }
 
-            } else if (data.type === 'sports') {
-                // Build activity filter buttons
+            if (data.type === 'sports') {
+                event.preventDefault();
+
+                committeeCards.forEach(c => c.classList.remove('committee-active'));
+                this.classList.add('committee-active');
+
+                hideAllTables();
                 buildActivityButtons(data);
-
-                // Immediately show ALL sports records
                 renderSportsPrograms(null);
 
                 const titleEl    = document.getElementById('spSportsSectionTitle');
                 const subtitleEl = document.getElementById('spSportsSectionSubtitle');
-                if (titleEl)    titleEl.textContent    = 'Sports Development';
+                if (titleEl)    titleEl.textContent    = data.title || 'Sports Development';
                 if (subtitleEl) subtitleEl.textContent = 'All approved sports applications. Click an activity button above to filter.';
 
                 if (sportsSection) {
                     sportsSection.style.display = '';
                     setTimeout(() => sportsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
                 }
+                return;
             }
-            // Other committees: no table shown
+
+            // Survey committees: follow the card link
         });
     });
 }

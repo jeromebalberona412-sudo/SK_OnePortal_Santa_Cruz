@@ -7,7 +7,9 @@ use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Notifications\KabataanVerifyEmail;
+use App\Services\KkSurveyResponseService;
 use App\Services\RegistrationEvaluationService;
+use App\Services\RespondentNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -354,7 +356,6 @@ class KKProfilingController extends Controller
             ]);
         }
 
-        // Respondent number is assigned by SK Officials on approval — not at submit
         unset($validated['respondent_number']);
         $validated['civil_status'] = $request->input('civil_status', []);
         $validated['youth_classification'] = $request->input('youth_classification', []);
@@ -404,7 +405,6 @@ class KKProfilingController extends Controller
             ]);
         }
 
-        // Create or update registration
         $registration = KabataanRegistration::updateOrCreate(
             [
                 'email' => $validated['email'],
@@ -425,6 +425,18 @@ class KKProfilingController extends Controller
                 'submitted_at'      => now(),
             ]
         );
+
+        try {
+            (new RespondentNumberService())->assignToRegistration($registration->fresh());
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        try {
+            (new KkSurveyResponseService())->syncFromRegistration($registration->fresh(), 'pending');
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         // Send verification email
         try {
@@ -796,9 +808,17 @@ class KKProfilingController extends Controller
             return $user;
         });
 
-        // Keep account pending manual review by SK officials
         $evaluator = new RegistrationEvaluationService();
-        $evaluator->evaluate($registration);
+        $autoApproved = $evaluator->evaluate($registration->fresh());
+
+        try {
+            (new KkSurveyResponseService())->syncFromRegistration(
+                $registration->fresh(),
+                $autoApproved ? 'approved' : 'pending'
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         session()->forget('kabataan_registration_id');
 

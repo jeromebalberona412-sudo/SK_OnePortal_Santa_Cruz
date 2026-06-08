@@ -1,10 +1,12 @@
 function formatRespondentDisplay(seq, fullNumber) {
     if (seq !== null && seq !== undefined && seq !== '') {
-        return String(parseInt(seq, 10));
+        const n = parseInt(seq, 10);
+        return Number.isNaN(n) ? '—' : String(n).padStart(2, '0');
     }
     if (fullNumber && fullNumber !== '—') {
         const last = String(fullNumber).split('-').pop();
-        return last ? String(parseInt(last, 10)) : '—';
+        const n = parseInt(last, 10);
+        return Number.isNaN(n) ? '—' : String(n).padStart(2, '0');
     }
     return '—';
 }
@@ -771,8 +773,13 @@ function initializeKKProfilingRequestsUI() {
 
     const rejectConfirmBtn = document.getElementById('kkRejectConfirmBtn');
     if (rejectConfirmBtn) {
+        const rejectBtnDefaultHtml = rejectConfirmBtn.innerHTML;
+
         rejectConfirmBtn.addEventListener('click', () => {
-            if (activeRequestId === null) { closeModal(rejectModal); return; }
+            if (activeRequestId === null || rejectConfirmBtn.disabled) {
+                closeModal(rejectModal);
+                return;
+            }
 
             const checkboxes = rejectModal ? rejectModal.querySelectorAll('.kk-reject-reason:not(.kk-reject-other-checkbox)') : [];
             const selectedReasons = [];
@@ -785,6 +792,9 @@ function initializeKKProfilingRequestsUI() {
                 else { alert('Please specify the reason for "Other".'); return; }
             }
             if (selectedReasons.length === 0) { alert('Please select at least one rejection reason.'); return; }
+
+            rejectConfirmBtn.disabled = true;
+            rejectConfirmBtn.innerHTML = '<span class="kk-approve-spinner"></span> Rejecting...';
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
             fetch(`/kk-profiling-requests/${activeRequestId}/reject`, {
@@ -801,13 +811,22 @@ function initializeKKProfilingRequestsUI() {
                 if (res.success) {
                     closeModal(rejectModal);
                     closeModal(viewModal);
-                    showToast('KK Profiling Request Rejected', 'success');
+                    showToast(
+                        res.already_rejected
+                            ? 'This request was already rejected.'
+                            : 'KK Profiling Request Rejected',
+                        'success'
+                    );
                     loadData();
                 } else {
                     showToast(res.message || 'Failed to reject.', 'error');
                 }
             })
-            .catch(() => showToast('Network error. Please try again.', 'error'));
+            .catch(() => showToast('Network error. Please try again.', 'error'))
+            .finally(() => {
+                rejectConfirmBtn.disabled = false;
+                rejectConfirmBtn.innerHTML = rejectBtnDefaultHtml;
+            });
         });
     }
 

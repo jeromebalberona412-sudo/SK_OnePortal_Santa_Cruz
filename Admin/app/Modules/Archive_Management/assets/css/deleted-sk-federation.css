@@ -510,6 +510,10 @@
 }
 
 /* ── Restore Modal ── */
+body.dsf-modal-open {
+    overflow: hidden;
+}
+
 .dsf-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -517,7 +521,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1600;
+    z-index: 10050;
+    padding: 16px;
 }
 
 .dsf-modal-box {
@@ -639,21 +644,33 @@
 }
 
 .dsf-view-toggle,
-.dsf-view-close {
-    background: none;
+.dsf-view-close,
+.dsf-view-controls .modal-win-btn {
+    width: 28px;
+    height: 28px;
+    background: transparent;
     border: none;
     color: #fff;
     font-size: 18px;
     font-weight: 700;
     cursor: pointer;
-    padding: 4px 8px;
-    opacity: 0.85;
-    transition: opacity 0.2s;
+    padding: 0;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, opacity 0.2s;
 }
 
 .dsf-view-toggle:hover,
-.dsf-view-close:hover {
+.dsf-view-close:hover,
+.dsf-view-controls .modal-win-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
     opacity: 1;
+}
+
+.dsf-view-controls .modal-win-btn svg {
+    pointer-events: none;
 }
 
 .dsf-view-body {

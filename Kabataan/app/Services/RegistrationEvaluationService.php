@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\KabataanRegistration;
+use App\Services\KkSurveyResponseService;
 use Illuminate\Support\Facades\DB;
 
 class RegistrationEvaluationService
@@ -115,6 +116,7 @@ class RegistrationEvaluationService
 
             try {
                 (new RespondentNumberService())->assignToRegistration($registration->fresh());
+                (new KkSurveyResponseService())->syncFromRegistration($registration->fresh(), 'approved');
             } catch (\Throwable $e) {
                 report($e);
             }

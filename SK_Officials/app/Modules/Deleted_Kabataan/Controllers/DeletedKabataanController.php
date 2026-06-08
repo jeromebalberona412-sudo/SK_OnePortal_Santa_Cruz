@@ -5,12 +5,17 @@ namespace App\Modules\Deleted_Kabataan\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Services\RespondentNumberService;
+use App\Services\SkOfficialActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class DeletedKabataanController extends Controller
 {
+    public function __construct(private readonly SkOfficialActivityService $activityService)
+    {
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -143,6 +148,13 @@ class DeletedKabataanController extends Controller
             ->findOrFail($id);
 
         $registration->restore();
+
+        $this->activityService->log(
+            $user,
+            'kabataan.restore',
+            'Restored deleted Kabataan record: '.$registration->full_name,
+            ['registration_id' => $id]
+        );
 
         return response()->json([
             'success' => true,

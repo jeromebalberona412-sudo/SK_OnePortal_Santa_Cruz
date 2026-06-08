@@ -37,112 +37,24 @@
                 <p class="section-subtitle">Select a program — survey committees use Forms, Results, and Analytics tabs</p>
             </div>
 
-            <div class="committees-grid">
-
-                <!-- A. Equitable Access to Quality Education -->
-                <a href="/scholar-list" class="committee-card" data-committee="education" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Equitable Access to Quality Education</h3>
-                    <ul class="committee-activities">
-                        <li>Support to ALS and RIC</li>
-                        <li>150 Students for Educational Assistance</li>
-                        <li>Support to Elementary and Daycare</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Jerome Balberona</span></p>
-                </a>
-
-                <!-- B. Environmental Protection -->
-                <a href="{{ route('environmental.survey.forms') }}" class="committee-card" data-committee="environment" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Environmental Protection</h3>
-                    <ul class="committee-activities">
-                        <li>Clean-Up Drive</li>
-                        <li>Payroll for Laborer</li>
-                        <li>Tree Planting</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Juan dela Cruz</span></p>
-                </a>
-
-                <!-- C. Disaster Risk Reduction and Resiliency -->
-                <a href="{{ route('disaster.survey.forms') }}" class="committee-card" data-committee="disaster" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Disaster Risk Reduction and Resiliency</h3>
-                    <ul class="committee-activities">
-                        <li>Training on Disaster Preparedness for Youth Volunteer Groups</li>
-                        <li>Distribution of Relief Goods for KK Members</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Carlo Reyes</span></p>
-                </a>
-
-                <!-- D. Youth Employment and Livelihood -->
-                <a href="{{ route('livelihood.survey.forms') }}" class="committee-card" data-committee="livelihood" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Youth Employment and Livelihood</h3>
-                    <ul class="committee-activities">
-                        <li>Livelihood Training</li>
-                        <li>Food and Other Supplies</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Ana Villanueva</span></p>
-                </a>
-
-                <!-- E. Health -->
-                <a href="{{ route('medicines.survey.forms') }}" class="committee-card" data-committee="health" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Medicines</h3>
-                    <ul class="committee-activities">
-                        <li>Medicines / Medical Equipment</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Jose Mendoza</span></p>
-                </a>
-
-                <!-- F. Anti-Drug and Peace and Order -->
-                <a href="{{ route('antidrug.survey.forms') }}" class="committee-card" data-committee="anti-drug" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Anti-Drug and Peace and Order</h3>
-                    <ul class="committee-activities">
-                        <li>Orientation for Anti-Drug and Physical Abuse</li>
-                        <li>Foods and Accommodations</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Ramon Garcia</span></p>
-                </a>
-
-                <!-- G. Gender Sensitivity -->
-                <a href="{{ route('gender.survey.forms') }}" class="committee-card" data-committee="gender" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Gender Sensitivity</h3>
-                    <ul class="committee-activities">
-                        <li>Orientation on GAD and VAWC</li>
-                        <li>Foods and Accommodations</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Liza Torres</span></p>
-                </a>
-
-                <!-- H. Feeding Program for KK Members -->
-                <a href="{{ route('feeding.survey.forms') }}" class="committee-card" data-committee="feeding" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Feeding Program for KK Members</h3>
-                    <ul class="committee-activities">
-                        <li>Improve health and physique of children</li>
-                        <li>Youth and Children in the vicinity of Barangay</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Kristine Bautista</span></p>
-                </a>
-
-                <!-- I. Sports Development -->
-                <a href="{{ route('sports-application-form') }}" class="committee-card" data-committee="sports" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Sports Development</h3>
-                    <ul class="committee-activities">
-                        <li>Supplies and Materials</li>
-                        <li>Food and Accommodation</li>
-                        <li>Officiating Fees</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Miguel Aquino</span></p>
-                </a>
-
-                <!-- J. Other Programs -->
-                <a href="{{ route('others.survey.forms') }}" class="committee-card" data-committee="other" style="text-decoration:none;color:inherit;">
-                    <h3 class="committee-title">Other Programs</h3>
-                    <ul class="committee-activities">
-                        <li>Katipunan ng Kabataan (KK) General Assembly</li>
-                        <li>Barangay Day Celebration</li>
-                        <li>Youth Week</li>
-                    </ul>
-                    <p class="committee-head">SK Head: <span>Patricia Flores</span></p>
-                </a>
-
+            <div class="committees-grid" id="programManagementGrid">
+                @forelse($managementPrograms ?? [] as $program)
+                    <a href="{{ url($program['href'] ?? '#') }}" class="committee-card" data-committee="{{ $program['committee_key'] ?? 'other' }}" style="text-decoration:none;color:inherit;">
+                        <h3 class="committee-title">{{ $program['title'] ?? 'Untitled Program' }}</h3>
+                        <ul class="committee-activities">
+                            @forelse($program['activities'] ?? [] as $activity)
+                                <li>{{ $activity }}</li>
+                            @empty
+                                <li>No activities listed</li>
+                            @endforelse
+                        </ul>
+                        <p class="committee-head">SK Head: <span>{{ $program['sk_head_display'] ?? '' }}</span></p>
+                    </a>
+                @empty
+                    <p class="section-subtitle" style="grid-column:1/-1;">No ABYIP programs found. Upload your ABYIP document first.</p>
+                @endforelse
             </div>
+            <script type="application/json" id="programManagementData">@json($managementPrograms ?? [])</script>
         </section>
 
         <!-- Old Sports Development table section removed - now using Approved Sports Applications table only -->

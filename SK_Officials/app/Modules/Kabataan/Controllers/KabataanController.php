@@ -5,12 +5,17 @@ namespace App\Modules\Kabataan\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Services\RespondentNumberService;
+use App\Services\SkOfficialActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class KabataanController extends Controller
 {
+    public function __construct(private readonly SkOfficialActivityService $activityService)
+    {
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -157,6 +162,13 @@ class KabataanController extends Controller
         $respondentNumber = app(RespondentNumberService::class)
             ->assignToRegistration($registration->fresh());
 
+        $this->activityService->log(
+            $user,
+            'kabataan.create',
+            'Added Kabataan record: '.$registration->full_name,
+            ['registration_id' => $registration->id]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Kabataan record saved.',
@@ -190,6 +202,13 @@ class KabataanController extends Controller
             'form_data'      => $formData,
         ]);
 
+        $this->activityService->log(
+            $user,
+            'kabataan.update',
+            'Updated Kabataan record: '.$registration->full_name,
+            ['registration_id' => $registration->id]
+        );
+
         return response()->json(['success' => true, 'message' => 'Kabataan record updated.']);
     }
 
@@ -197,7 +216,15 @@ class KabataanController extends Controller
     {
         $user = Auth::user();
         $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
+        $fullName = $registration->full_name;
         $registration->delete();
+
+        $this->activityService->log(
+            $user,
+            'kabataan.delete',
+            'Deleted Kabataan record: '.$fullName,
+            ['registration_id' => $id]
+        );
 
         return response()->json(['success' => true, 'message' => 'Kabataan record moved to Deleted Items.']);
     }

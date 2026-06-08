@@ -106,6 +106,7 @@ function initializeCommitteesUI() {
 
     let committees = [];
     let skOfficials = [];
+    let abyipPrograms = [];
     let editingId = null;
 
     let currentQuery = '';
@@ -162,35 +163,25 @@ function initializeCommitteesUI() {
             const currentValue = nameInput.value;
             nameInput.innerHTML = '<option value="">Select Committee</option>';
 
-            const standardCommittees = [
-                'Committee on Peace and Order',
-                'Committee on Health',
-                'Committee on Education',
-                'Committee on Environment',
-                'Committee on Social Services',
-                'Committee on Livelihood / Employment',
-                'Committee on Infrastructure',
-                'Committee on Budget and Finance',
-                'Committee on Women and Family',
-                'Committee on Youth and Sports Development'
-            ];
+            if (abyipPrograms.length === 0) {
+                const emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.textContent = 'No ABYIP programs found — upload ABYIP first';
+                emptyOption.disabled = true;
+                nameInput.appendChild(emptyOption);
+            } else {
+                abyipPrograms.forEach((committee) => {
+                    const isAssigned = assignedCommittees.includes(committee) &&
+                        !(editingId !== null && committees.find((c) => c.id === editingId)?.name === committee);
 
-            standardCommittees.forEach((committee) => {
-                const isAssigned = assignedCommittees.includes(committee) &&
-                    !(editingId !== null && committees.find((c) => c.id === editingId)?.name === committee);
-
-                if (!isAssigned) {
-                    const option = document.createElement('option');
-                    option.value = committee;
-                    option.textContent = committee;
-                    nameInput.appendChild(option);
-                }
-            });
-
-            const otherOption = document.createElement('option');
-            otherOption.value = 'Other';
-            otherOption.textContent = 'Other';
-            nameInput.appendChild(otherOption);
+                    if (!isAssigned) {
+                        const option = document.createElement('option');
+                        option.value = committee;
+                        option.textContent = committee;
+                        nameInput.appendChild(option);
+                    }
+                });
+            }
 
             if (currentValue) {
                 nameInput.value = currentValue;
@@ -261,9 +252,15 @@ function initializeCommitteesUI() {
         populateDropdowns();
     }
 
+    async function loadAbyipPrograms() {
+        const response = await apiFetch('/api/committees/abyip-programs');
+        abyipPrograms = response.data || [];
+        populateDropdowns();
+    }
+
     async function initializeData() {
         try {
-            await Promise.all([loadSkOfficials(), loadCommittees()]);
+            await Promise.all([loadSkOfficials(), loadCommittees(), loadAbyipPrograms()]);
         } catch (error) {
             showToast(error.message || 'Failed to load committees.', 'error');
         }
