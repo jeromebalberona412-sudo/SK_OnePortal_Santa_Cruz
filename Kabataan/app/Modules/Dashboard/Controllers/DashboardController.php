@@ -34,6 +34,7 @@ class DashboardController extends Controller
             'kkUpdateBarangay'    => $registration ? $barangayName : null,
             'kkRespondentNumber'  => $respondentNumber ?? '',
             'kkRespondentDisplay' => KKProfilingController::formatRespondentDisplay($respondentNumber),
+            'kkBarangayLogoUrl'   => KKProfilingController::getBarangayLogoUrl($registration?->barangay_id),
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma'        => 'no-cache',

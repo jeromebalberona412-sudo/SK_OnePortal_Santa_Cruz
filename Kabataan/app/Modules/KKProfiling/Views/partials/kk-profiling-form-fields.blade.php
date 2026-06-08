@@ -32,7 +32,11 @@
 
                         <div class="kkp-form-logo">
 
-                            <img src="/images/skoneportal_logo.webp" alt="SK OnePortal Logo">
+                            <img
+                                src="{{ $barangayLogoUrl ?? '/images/skoneportal_logo.webp' }}"
+                                alt="{{ ($barangay ?? 'Barangay') }} SK Logo"
+                                onerror="this.onerror=null;this.src='/images/skoneportal_logo.webp';"
+                            >
 
                         </div>
 
@@ -519,9 +523,9 @@
 
                                         <div class="kkp-demo-block-options">
 
-                                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="There was no KK Assembly" onchange="kkpSingleCheck(this,'kkpKkReason')"> There was no KK Assembly</label>
+                                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="There was no KK Assembly Meeting" onchange="kkpSingleCheck(this,'kkpKkReason')"> There was no KK Assembly Meeting</label>
 
-                                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="Not Interested to Attend" onchange="kkpSingleCheck(this,'kkpKkReason')"> Not Interested to Attend</label>
+                                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_reasonChk" value="Not interested to Attend" onchange="kkpSingleCheck(this,'kkpKkReason')"> Not interested to Attend</label>
 
                                             <input type="hidden" id="kkpKkReason" name="kk_reason">
 

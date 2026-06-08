@@ -464,12 +464,12 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="hint">Minimum 8 characters</div>
                         <div class="pw-rules" id="pwRules">
-                            <div class="pw-rule" data-rule="len">- At least 8 characters</div>
-                            <div class="pw-rule" data-rule="upper">- At least 1 uppercase letter</div>
-                            <div class="pw-rule" data-rule="num">- At least 1 number</div>
-                            <div class="pw-rule" data-rule="special">- At least 1 special character</div>
+                            <div class="pw-rule" data-rule="len">At least 8 characters</div>
+                            <div class="pw-rule" data-rule="lower">At least one lowercase letter</div>
+                            <div class="pw-rule" data-rule="upper">At least one uppercase letter</div>
+                            <div class="pw-rule" data-rule="num">At least one number</div>
+                            <div class="pw-rule" data-rule="special">At least one special character</div>
                         </div>
                         <div class="error" id="password-error" style="display:none;"></div>
                     </div>
@@ -536,16 +536,20 @@
                 const value = pwInput.value || '';
                 const checks = {
                     len: value.length >= 8,
+                    lower: /[a-z]/.test(value),
                     upper: /[A-Z]/.test(value),
                     num: /[0-9]/.test(value),
                     special: /[^A-Za-z0-9]/.test(value),
                 };
-                if (!rulesWrap) return checks;
-                Object.entries(checks).forEach(([key, passed]) => {
-                    const el = rulesWrap.querySelector(`[data-rule="${key}"]`);
-                    if (!el) return;
-                    el.classList.toggle('ok', passed);
-                });
+                if (rulesWrap) {
+                    Object.entries(checks).forEach(([key, passed]) => {
+                        const el = rulesWrap.querySelector(`[data-rule="${key}"]`);
+                        if (!el) return;
+                        el.classList.toggle('ok', passed);
+                    });
+                    const allPassed = Object.values(checks).every(Boolean);
+                    rulesWrap.style.display = allPassed && value.length > 0 ? 'none' : 'block';
+                }
                 return checks;
             }
             pwInput.addEventListener('input', updateRuleStatus);
@@ -581,7 +585,7 @@
                 if (!pw) {
                     isValid = false;
                     showError(pwInput, pwError, 'Password is required');
-                } else if (!(checks.len && checks.upper && checks.num && checks.special)) {
+                } else if (!(checks.len && checks.lower && checks.upper && checks.num && checks.special)) {
                     isValid = false;
                     showError(pwInput, pwError, 'Password must satisfy all requirements.');
                 }
@@ -635,7 +639,7 @@
                     if (response.redirected) {
                         console.log('Redirect detected to:', response.url);
                         window.location.href = response.url;
-                        return;
+                        return null;
                     }
 
                     // Try to parse as JSON
@@ -656,16 +660,20 @@
                         });
                     });
                 })
-                .then(({ response, data }) => {
-                    // Hide loading overlay
+                .then((result) => {
+                    if (!result) return;
+
+                    const { response, data } = result;
+
                     if (window.hideLoading) {
                         window.hideLoading();
                     }
 
-                    // Handle successful response
                     if (response.ok) {
                         console.log('Password set successfully');
-                        // Show success modal
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = 'Submit for Verification';
+                        submitBtn.style.opacity = '1';
                         if (successPop) {
                             successPop.style.display = 'flex';
                         }

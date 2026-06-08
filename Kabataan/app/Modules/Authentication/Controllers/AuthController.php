@@ -33,13 +33,13 @@ class AuthController extends Controller
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return back()
                 ->withInput($request->only('email'))
-                ->with('login_error', 'The provided credentials do not match our records.');
+                ->with('login_error', 'Invalid Email or Password');
         }
 
         if ($user->status === 'PENDING_APPROVAL') {
             return back()
                 ->withInput($request->only('email'))
-                ->with('login_error', 'Your account is pending approval by SK officials.');
+                ->with('login_error', 'Please wait for SK officials to verify your account. You will receive an email once your registration has been approved.');
         }
 
         if ($user->status === 'REJECTED') {
@@ -92,14 +92,23 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
         ]);
 
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('forgot_password_error', 'No account found with this email address. Please check your email and try again.');
+        }
+
         $status = Password::sendResetLink($request->only('email'));
 
         if ($status === Password::RESET_LINK_SENT) {
             return back()->with('status', 'A password reset link has been sent to your email address.');
         }
 
-        // Don't reveal whether the email exists
-        return back()->with('status', 'If that email is registered, a reset link has been sent.');
+        return back()
+            ->withInput($request->only('email'))
+            ->with('forgot_password_error', __($status));
     }
 
     public function showResetPassword(Request $request, string $token)

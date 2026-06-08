@@ -3,10 +3,16 @@
  * Navigation, age auto-fill, alert dismiss, and e-signature pad
  */
 
+const VALID_ROMAN_SUFFIXES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+function isValidSuffixText(value) {
+    if (!value) return false;
+    if (value.length > 4) return false;
+    return VALID_ROMAN_SUFFIXES.includes(value.toUpperCase()) || /^[A-Za-z.]+$/.test(value);
+}
+
 (function () {
     'use strict';
-
-    const VALID_ROMAN_SUFFIXES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
     function showFieldError(el, msg) {
         if (!el || !el.parentNode) return;
@@ -22,12 +28,6 @@
         if (!el || !el.parentNode) return;
         el.classList.remove('kkp-input-err');
         el.parentNode.querySelectorAll('.kkp-field-error').forEach((node) => node.remove());
-    }
-
-    function isValidSuffixText(value) {
-        if (!value) return false;
-        if (value.length > 4) return false;
-        return VALID_ROMAN_SUFFIXES.includes(value.toUpperCase()) || /^[A-Za-z.]+$/.test(value);
     }
 
     // ── Navigation Drawer ──
@@ -114,6 +114,55 @@
             this.value = this.value.trim().toUpperCase();
         });
     });
+
+    // ── Email existence check (backend) ──
+    const emailInput = document.querySelector('input[name="email"]');
+    let emailCheckTimer = null;
+
+    async function checkEmailExists(value) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const response = await fetch('/api/kkprofiling/check-email-exists', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ email: value }),
+        });
+        return response.json();
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener('blur', function () {
+            const value = (this.value || '').trim();
+            clearFieldError(this);
+            delete this.dataset.emailExists;
+
+            if (!value || /\s/.test(value) || !/^[A-Za-z0-9._%+-]+@gmail\.com$/i.test(value)) {
+                return;
+            }
+
+            clearTimeout(emailCheckTimer);
+            emailCheckTimer = setTimeout(async () => {
+                try {
+                    const result = await checkEmailExists(value);
+                    if (result.exists) {
+                        this.dataset.emailExists = 'true';
+                        showFieldError(this, result.message || 'This email already exists. Please use a different email address.');
+                    }
+                } catch (err) {
+                    // Silent fail on network error; server will validate on submit
+                }
+            }, 300);
+        });
+
+        emailInput.addEventListener('input', function () {
+            delete this.dataset.emailExists;
+            clearFieldError(this);
+        });
+    }
 
     // ── Contact number formatter: 09 + 9 digits only (11 chars total) ──
     const contactInput = document.getElementById('kkpContactNumber');
@@ -224,22 +273,33 @@
         if (hidden) hidden.value = checkbox.checked ? checkbox.value : '';
     };
 
-    // ── KK Assembly conditional show/hide ──
-    window.kkpHandleAssembly = function (checkbox) {
+    // ── KK Assembly follow-up: keep both sections visible, clear opposite answers ──
+    function syncAssemblyFollowUp() {
         const yesCell = document.getElementById('kkpAssemblyYesCell');
         const noCell = document.getElementById('kkpAssemblyNoCell');
-        if (!yesCell || !noCell) return;
+        if (yesCell) yesCell.style.display = '';
+        if (noCell) noCell.style.display = '';
+    }
 
+    window.kkpHandleAssembly = function (checkbox) {
         if (!checkbox.checked) return;
 
         if (checkbox.value === 'Yes') {
-            yesCell.style.display = '';
-            noCell.style.display = '';
+            const reasonHidden = document.getElementById('kkpKkReason');
+            if (reasonHidden) reasonHidden.value = '';
+            document.querySelectorAll('input[name="kk_reasonChk"]').forEach(function (cb) {
+                cb.checked = false;
+            });
         } else {
-            noCell.style.display = '';
-            yesCell.style.display = '';
+            const timesHidden = document.getElementById('kkpKkTimes');
+            if (timesHidden) timesHidden.value = '';
+            document.querySelectorAll('input[name="kk_timesChk"]').forEach(function (cb) {
+                cb.checked = false;
+            });
         }
     };
+
+    syncAssemblyFollowUp();
 
     // ── Auto-dismiss success alert ──
     const successAlert = document.querySelector('.kkp-alert-success');
@@ -258,7 +318,9 @@
 /* ═══════════════════════════════════════════════════════════════
    FORM SUBMISSION HANDLER - Validate then Submit Form
 ═══════════════════════════════════════════════════════════════ */
-window.handleFormSubmit = function (event) {
+window.handleFormSubmit = async function (event) {
+    event.preventDefault();
+
     // ── Clear previous errors ──
     document.querySelectorAll('.kkp-field-error').forEach(el => el.remove());
     document.querySelectorAll('.kkp-input-err').forEach(el => el.classList.remove('kkp-input-err'));
@@ -391,6 +453,9 @@ window.handleFormSubmit = function (event) {
     } else if (hasAnySpace(email.value) || !/^[A-Za-z0-9._%+-]+@gmail\.com$/i.test(email.value)) {
         errors.push('Email must be a valid @gmail.com address and must not contain spaces.');
         fieldError(email, 'Use valid @gmail.com only, no spaces.');
+    } else if (email.dataset.emailExists === 'true') {
+        errors.push('This email already exists. Please use a different email address.');
+        fieldError(email, 'This email already exists. Please use a different email address.');
     }
 
     // ── 8. Contact # ──
@@ -499,8 +564,9 @@ window.handleFormSubmit = function (event) {
         }
     }
 
-    // ── 17. KK Assembly ──
-    if (!hiddenVal('kkpKkAssembly')) {
+    // ── 17. KK Assembly (conditional follow-up) ──
+    const kkAssemblyVal = hiddenVal('kkpKkAssembly');
+    if (!kkAssemblyVal) {
         errors.push('Have you attended a KK Assembly is required.');
         const el = document.getElementById('kkpKkAssembly');
         if (el) {
@@ -509,15 +575,22 @@ window.handleFormSubmit = function (event) {
             err.textContent = 'Please select Yes or No.';
             el.parentNode.insertBefore(err, el.nextSibling);
         }
-    }
-
-    if (!hiddenVal('kkpKkTimes')) {
+    } else if (kkAssemblyVal === 'Yes' && !hiddenVal('kkpKkTimes')) {
         errors.push('KK Assembly attendance count is required.');
         const el = document.getElementById('kkpKkTimes');
         if (el) {
             const err = document.createElement('span');
             err.className = 'kkp-field-error';
             err.textContent = 'Please select number of times attended.';
+            el.parentNode.insertBefore(err, el.nextSibling);
+        }
+    } else if (kkAssemblyVal === 'No' && !hiddenVal('kkpKkReason')) {
+        errors.push('KK Assembly reason is required.');
+        const el = document.getElementById('kkpKkReason');
+        if (el) {
+            const err = document.createElement('span');
+            err.className = 'kkp-field-error';
+            err.textContent = 'Please select a reason.';
             el.parentNode.insertBefore(err, el.nextSibling);
         }
     }
@@ -569,11 +642,61 @@ window.handleFormSubmit = function (event) {
         return false;
     }
 
+    // ── Backend email existence check before submit ──
+    const emailField = document.querySelector('input[name="email"]');
+    if (emailField && emailField.value.trim()) {
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const emailCheckResponse = await fetch('/api/kkprofiling/check-email-exists', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ email: emailField.value.trim() }),
+            });
+            const emailCheckResult = await emailCheckResponse.json();
+            if (emailCheckResult.exists) {
+                emailField.dataset.emailExists = 'true';
+                fieldError(emailField, emailCheckResult.message || 'This email already exists. Please use a different email address.');
+                emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+        } catch (err) {
+            // Continue to submit; server will validate
+        }
+    }
+
     // ── All valid — submit via AJAX for proper error handling ──
     console.log('Form validation passed. Submitting to backend...');
     const submitBtn = document.getElementById('kkpSubmitBtn');
     const submitText = document.getElementById('kkpSubmitText');
     const form = document.getElementById('kkProfilingForm');
+
+    function resetSubmitState() {
+        if (window.hideLoading) {
+            window.hideLoading();
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('is-submitting');
+        }
+        if (submitText) submitText.textContent = 'Submit KK Profiling';
+    }
+
+    function applyServerFieldErrors(serverErrors) {
+        if (!serverErrors || typeof serverErrors !== 'object') return;
+
+        Object.entries(serverErrors).forEach(function ([field, messages]) {
+            const message = Array.isArray(messages) ? messages[0] : messages;
+            const input = form.querySelector('[name="' + field + '"]');
+            if (input) {
+                fieldError(input, message);
+            }
+        });
+    }
 
     if (submitBtn) {
         submitBtn.disabled = true;
@@ -585,9 +708,6 @@ window.handleFormSubmit = function (event) {
     if (window.showLoading) {
         window.showLoading('Submitting...');
     }
-
-    // Prevent default form submission and use AJAX
-    event.preventDefault();
 
     // Prepare form data
     const formData = new FormData(form);
@@ -610,7 +730,7 @@ window.handleFormSubmit = function (event) {
             if (response.redirected) {
                 console.log('Redirect detected to:', response.url);
                 window.location.href = response.url;
-                return;
+                return null;
             }
 
             // Try to parse as JSON
@@ -631,7 +751,11 @@ window.handleFormSubmit = function (event) {
                 });
             });
         })
-        .then(({ response, data }) => {
+        .then((result) => {
+            if (!result) return;
+
+            const { response, data } = result;
+
             // Handle successful response
             if (response.ok) {
                 console.log('Submission successful');
@@ -669,12 +793,18 @@ window.handleFormSubmit = function (event) {
             } else {
                 // Handle error response
                 console.error('Submission failed with status:', response.status);
+                resetSubmitState();
+
                 let errorMessage = 'Registration failed. Please try again.';
 
                 if (data && data.errors) {
-                    // Display validation errors
                     console.error('Validation errors:', data.errors);
+                    applyServerFieldErrors(data.errors);
                     errorMessage = Object.values(data.errors).flat().join('\n');
+                    const firstErr = document.querySelector('.kkp-field-error');
+                    if (firstErr) {
+                        firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 } else if (data && data.message) {
                     errorMessage = data.message;
                 } else if (response.status === 422) {
@@ -688,24 +818,10 @@ window.handleFormSubmit = function (event) {
         })
         .catch(error => {
             console.error('Submission error:', error);
-
-            // Hide loading overlay
-            if (window.hideLoading) {
-                window.hideLoading();
-            }
-
-            // Reset button state
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('is-submitting');
-            }
-            if (submitText) submitText.textContent = 'Submit KK Profiling';
-
-            // Show error message
+            resetSubmitState();
             alert('Registration failed. Please check your connection and try again.');
         });
 
-    // Return false to prevent default form submission
     return false;
 };
 
@@ -791,13 +907,59 @@ function showEmailVerification(email) {
 
     const resendEmailBtn = document.getElementById('resendEmailBtn');
     if (resendEmailBtn) {
-        resendEmailBtn.addEventListener('click', function () {
+        resendEmailBtn.addEventListener('click', async function () {
             if (this.disabled) return;
+
             const btn = this;
-            const originalText = btn.textContent;
-            btn.textContent = 'Email sent!';
-            setTimeout(() => { btn.textContent = 'Resend verification email'; }, 2500);
-            window.startResendTimer();
+            const displayEmail = document.getElementById('displayEmail');
+            const email = (displayEmail && displayEmail.textContent.trim()) || '';
+            const form = document.getElementById('kkProfilingForm');
+            const barangay = form ? (form.dataset.barangaySlug || '') : '';
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+            if (!email || email === 'your-email@example.com') {
+                return;
+            }
+
+            btn.disabled = true;
+
+            if (window.showLoading) {
+                window.showLoading('Sending verification email...');
+            }
+
+            try {
+                const response = await fetch('/api/kkprofiling/resend-verification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ email: email, barangay: barangay }),
+                });
+
+                const data = await response.json();
+
+                if (window.hideLoading) {
+                    window.hideLoading();
+                }
+
+                if (response.ok && data.success) {
+                    btn.textContent = 'Email sent!';
+                    setTimeout(() => { btn.textContent = 'Resend verification email'; }, 2500);
+                    window.startResendTimer();
+                } else {
+                    alert(data.message || 'Failed to resend verification email. Please try again.');
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                if (window.hideLoading) {
+                    window.hideLoading();
+                }
+                alert('Failed to resend verification email. Please check your connection and try again.');
+                btn.disabled = false;
+            }
         });
     }
 })();
@@ -1174,13 +1336,19 @@ function showEmailVerification(email) {
         }
 
         const kkAssembly = document.getElementById('kkpKkAssembly');
-        if (!kkAssembly || !kkAssembly.value.trim()) {
+        const kkAssemblyVal = kkAssembly ? kkAssembly.value.trim() : '';
+        if (!kkAssemblyVal) {
             errors.push('- KK Assembly attendance is required');
-        }
-
-        const kkTimes = document.getElementById('kkpKkTimes');
-        if (!kkTimes || !kkTimes.value.trim()) {
-            errors.push('- KK Assembly attendance count is required');
+        } else if (kkAssemblyVal === 'Yes') {
+            const kkTimes = document.getElementById('kkpKkTimes');
+            if (!kkTimes || !kkTimes.value.trim()) {
+                errors.push('- KK Assembly attendance count is required');
+            }
+        } else if (kkAssemblyVal === 'No') {
+            const kkReason = document.getElementById('kkpKkReason');
+            if (!kkReason || !kkReason.value.trim()) {
+                errors.push('- KK Assembly reason is required');
+            }
         }
 
         const facebook = document.querySelector('input[name="facebook"]');

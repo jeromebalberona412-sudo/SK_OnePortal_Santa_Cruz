@@ -234,8 +234,8 @@ function initializeKKProfilingRequestsUI() {
         const { respondentNumber, date, firstName, middleName, lastName, suffix, age, birthday, sex, civilStatus,
             region, province, city, barangay, purokZone, emailAddress, contactNumber,
             youthClassification, youthAgeGroup, workStatus, educationalBackground,
-            registeredSKVoter, registeredNationalVoter, votingHistory, votingFrequency, votingReason, attendedKKAssembly,
-            facebookAccount, willingToJoinGroupChat, signature, status, rejectionReason } = request;
+            registeredSKVoter, registeredNationalVoter, votingHistory, kkTimes, kkReason, attendedKKAssembly,
+            facebookAccount, willingToJoinGroupChat, signature, status, registrationStatus, rejectionReason } = request;
 
         // Build a map of field → error info for quick lookup
         const errors = request.censusErrors || [];
@@ -340,10 +340,26 @@ function initializeKKProfilingRequestsUI() {
         const setCheck = (id, checked) => {
             const el = document.getElementById(id);
             if (!el) return;
+            if (el.type === 'checkbox') {
+                el.checked = !!checked;
+                return;
+            }
             const text = el.textContent.replace(/^[☐☑]\s*/, '');
             el.textContent = (checked ? '☑ ' : '☐ ') + text;
             el.style.fontWeight = checked ? '700' : '400';
             el.style.color = checked ? '#1a1a1a' : '#6b7280';
+        };
+
+        const matchesValue = (stored, candidates) => {
+            const normalized = (stored || '').trim().toLowerCase();
+            return candidates.some((candidate) => normalized === candidate.trim().toLowerCase());
+        };
+
+        const formatBirthdayDisplay = (value) => {
+            if (!value || value === '—') return '—';
+            const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+            if (iso) return `${iso[2]}/${iso[3]}/${iso[1]}`;
+            return value;
         };
 
         setVal('kkViewRespondentNumber', respondentNumber); setVal('kkViewDate', date);
@@ -356,9 +372,10 @@ function initializeKKProfilingRequestsUI() {
         setVal('kkViewCity',     city     || '—');
         setField('kkViewBarangay',      'barangay',      barangay      || '—');
         setField('kkViewPurokZone',     'purokZone',     purokZone     || '—');
-        setVal('kkViewSexAssignedAtBirth', sex || '—');
+        setCheck('kkViewSex_Male', sex === 'Male');
+        setCheck('kkViewSex_Female', sex === 'Female');
         setField('kkViewAge',           'age',           age           || '—');
-        setField('kkViewBirthday',      'birthday',      birthday      || '—');
+        setField('kkViewBirthday',      'birthday',      formatBirthdayDisplay(birthday) || '—');
         setField('kkViewEmailAddress',  'emailAddress',  emailAddress  || '—');
         setField('kkViewContactNumber', 'contactNumber', contactNumber || '—');
 
@@ -370,7 +387,7 @@ function initializeKKProfilingRequestsUI() {
         const fieldToElId = {
             age:      'kkViewAge',
             birthday: 'kkViewBirthday',
-            sex:      'kkViewSexAssignedAtBirth',
+            sex:      'kkViewSex_Male',
             name:     'kkViewLastName',
         };
 
@@ -426,60 +443,83 @@ function initializeKKProfilingRequestsUI() {
         Object.entries(csMap).forEach(([id, val]) => setCheck(id, civilStatus === val));
         const yagMap = { kkViewYAG_Child:'Child Youth (15-17 yrs old)', kkViewYAG_Core:'Core Youth (18-24 yrs old)', kkViewYAG_Young:'Young Adult (15-30 yrs old)' };
         Object.entries(yagMap).forEach(([id, val]) => setCheck(id, youthAgeGroup === val));
-        const ebMap = { kkViewEB_ElemLevel:'Elementary Level', kkViewEB_ElemGrad:'Elementary Grad', kkViewEB_HSLevel:'High School Level', kkViewEB_HSGrad:'High School Grad', kkViewEB_VocGrad:'Vocational Grad', kkViewEB_ColLevel:'College Level', kkViewEB_ColGrad:'College Grad', kkViewEB_MasLevel:'Masters Level', kkViewEB_MasGrad:'Masters Grad', kkViewEB_DocLevel:'Doctorate Level', kkViewEB_DocGrad:'Doctorate Graduate' };
-        Object.entries(ebMap).forEach(([id, val]) => setCheck(id, educationalBackground === val));
-        const ycMap = { kkViewYC_ISY:'In School Youth', kkViewYC_OSY:'Out of School Youth', kkViewYC_Working:'Working Youth', kkViewYC_Specific:'Youth w/ Specific Needs', kkViewYC_PWD:'Person w/ Disability', kkViewYC_CICL:'Children in Conflict w/ Law', kkViewYC_IP:'Indigenous People' };
-        Object.entries(ycMap).forEach(([id, val]) => setCheck(id, youthClassification === val));
+        const ebMap = {
+            kkViewEB_ElemLevel: ['Elementary Level'],
+            kkViewEB_ElemGrad: ['Elementary Grad'],
+            kkViewEB_HSLevel: ['High School Level', 'High school level'],
+            kkViewEB_HSGrad: ['High School Grad', 'High school Grad'],
+            kkViewEB_VocGrad: ['Vocational Grad'],
+            kkViewEB_ColLevel: ['College Level'],
+            kkViewEB_ColGrad: ['College Grad'],
+            kkViewEB_MasLevel: ['Masters Level'],
+            kkViewEB_MasGrad: ['Masters Grad'],
+            kkViewEB_DocLevel: ['Doctorate Level'],
+            kkViewEB_DocGrad: ['Doctorate Graduate'],
+        };
+        Object.entries(ebMap).forEach(([id, vals]) => setCheck(id, matchesValue(educationalBackground, vals)));
+        const ycMap = {
+            kkViewYC_ISY: ['In School Youth', 'In school Youth'],
+            kkViewYC_OSY: ['Out of School Youth'],
+            kkViewYC_Working: ['Working Youth'],
+            kkViewYC_PWD: ['Person w/ Disability'],
+            kkViewYC_CICL: ['Children in Conflict w/ Law', 'Children In Conflict w/ Law'],
+            kkViewYC_IP: ['Indigenous People'],
+        };
+        Object.entries(ycMap).forEach(([id, vals]) => setCheck(id, matchesValue(youthClassification, vals)));
         const wsMap = { kkViewWS_Employed:'Employed', kkViewWS_Unemployed:'Unemployed', kkViewWS_SelfEmployed:'Self-Employed', kkViewWS_Looking:'Currently looking for a Job', kkViewWS_NotInterested:'Not Interested Looking for a Job' };
         Object.entries(wsMap).forEach(([id, val]) => setCheck(id, workStatus === val));
 
         setCheck('kkViewSKV_Yes', registeredSKVoter === 'Yes'); setCheck('kkViewSKV_No', registeredSKVoter === 'No');
         setCheck('kkViewNV_Yes', registeredNationalVoter === 'Yes'); setCheck('kkViewNV_No', registeredNationalVoter === 'No');
         setCheck('kkViewVH_Yes', votingHistory === 'Yes'); setCheck('kkViewVH_No', votingHistory === 'No');
-        setCheck('kkViewVF_12', votingFrequency === '1-2 Times'); setCheck('kkViewVF_34', votingFrequency === '3-4 Times'); setCheck('kkViewVF_5', votingFrequency === '5 and above');
         setCheck('kkViewKK_Yes', attendedKKAssembly === 'Yes'); setCheck('kkViewKK_No', attendedKKAssembly === 'No');
-        setCheck('kkViewVR_NoKK', votingReason === 'There was no KK Assembly'); setCheck('kkViewVR_NotInt', votingReason === 'Not Interested to Attend');
+        setCheck('kkViewKKTimes_12', kkTimes === '1-2 Times');
+        setCheck('kkViewKKTimes_34', kkTimes === '3-4 Times');
+        setCheck('kkViewKKTimes_5', kkTimes === '5 and above');
+        const normalizedReason = (kkReason || '').trim();
+        setCheck('kkViewVR_NoKK',
+            normalizedReason === 'There was no KK Assembly Meeting'
+            || normalizedReason === 'There was no KK Assembly');
+        setCheck('kkViewVR_NotInt',
+            normalizedReason === 'Not interested to Attend'
+            || normalizedReason === 'Not Interested to Attend');
         setVal('kkViewFacebookAccount', facebookAccount || '—');
         setCheck('kkViewGC_Yes', willingToJoinGroupChat === 'Yes'); setCheck('kkViewGC_No', willingToJoinGroupChat === 'No');
-        // Signature — render as image if base64, otherwise plain text
-        const sigEl = document.getElementById('kkViewSignature');
+
+        const logoEl = document.getElementById('kkViewBarangayLogo');
+        if (logoEl && request.barangayLogoUrl) {
+            logoEl.src = request.barangayLogoUrl;
+            logoEl.alt = `${barangay || 'Barangay'} SK Logo`;
+        }
+
+        const sigNameEl = document.getElementById('kkViewSignatureName');
+        const sigPreview = document.getElementById('kkViewSignaturePreview');
         const sigOverlay = document.getElementById('kkViewSignatureOverlay');
-        if (sigEl) {
-            const nameParts = [firstName, middleName ? middleName.charAt(0) + '.' : null, lastName, suffix].filter(Boolean);
-            const printedName = nameParts.join(' ') || '—';
+        const nameParts = [firstName, middleName ? middleName.charAt(0) + '.' : null, lastName, suffix && suffix !== 'None' ? suffix : null].filter(Boolean);
+        const printedName = nameParts.join(' ') || '—';
+        if (sigNameEl) sigNameEl.textContent = printedName;
+        if (sigPreview && sigOverlay) {
             if (signature && signature.startsWith('data:image')) {
-                sigEl.innerHTML = `<img src="${signature}" alt="Signature" style="max-width:100%;max-height:80px;display:block;"><span style="display:block;margin-top:4px;font-weight:600;">${printedName}</span>`;
-                if (sigOverlay) sigOverlay.style.display = 'none';
+                sigPreview.src = signature;
+                sigOverlay.style.display = 'flex';
             } else {
-                sigEl.innerHTML = `<span>${signature || '—'}</span><span style="display:block;margin-top:4px;font-weight:600;">${printedName}</span>`;
-                if (sigOverlay) sigOverlay.style.display = signature ? 'none' : '';
+                sigPreview.removeAttribute('src');
+                sigOverlay.style.display = 'none';
             }
         }
 
         const rejectionWrap = document.getElementById('kkViewRejectionWrap');
         const rejectionText = document.getElementById('kkViewRejectionText');
         if (rejectionWrap && rejectionText) {
-            const notes = request.evaluationNotes;
-            let displayText = '';
+            const isRejected = registrationStatus === 'rejected' || status === 'rejected';
 
-            if (status === 'Wrong Credentials' && notes?.mismatches?.length) {
-                displayText = 'Mismatched fields:\n' + notes.mismatches.map(m =>
-                    `• ${m.field}: submitted "${m.submitted}" — previous record has "${m.previous}"`
-                ).join('\n');
-            } else if (status === 'Not Profiled') {
-                displayText = notes?.message || 'No matching record found in previous kabataan.';
-            } else if (status === 'Duplicate') {
-                displayText = notes?.message || 'Already exists as an active Kabataan member.';
-            } else if (rejectionReason) {
-                displayText = rejectionReason;
-            }
-
-            if (displayText) {
+            if (isRejected && rejectionReason) {
                 rejectionWrap.style.display = 'block';
                 rejectionText.style.whiteSpace = 'pre-line';
-                rejectionText.textContent = displayText;
+                rejectionText.textContent = rejectionReason;
             } else {
                 rejectionWrap.style.display = 'none';
+                rejectionText.textContent = '';
             }
         }
 
@@ -786,7 +826,7 @@ function initializeKKProfilingRequestsUI() {
             (response.data || []).forEach((r, i) => {
                 requests.push({
                     id: r.id,
-                    respondentNumber: String(i + 1).padStart(3, '0'),
+                    respondentNumber: r.respondent_number || String(i + 1).padStart(3, '0'),
                     date: r.submitted_at || '—',
                     lastName: r.last_name,
                     firstName: r.first_name,
@@ -808,18 +848,20 @@ function initializeKKProfilingRequestsUI() {
                     workStatus: r.work_status,
                     educationalBackground: r.education,
                     votingHistory: r.sk_voted,
-                    votingFrequency: r.vote_frequency,
                     attendedKKAssembly: r.kk_assembly,
-                    votingReason: Array.isArray(r.kk_reason) ? r.kk_reason[0] : r.kk_reason,
+                    kkTimes: r.kk_times,
+                    kkReason: r.kk_reason,
                     facebookAccount: r.facebook,
                     willingToJoinGroupChat: r.group_chat,
                     signature: r.signature,
                     status: r.evaluation_status || r.status,
+                    registrationStatus: r.status,
                     evaluationNotes: r.evaluation_notes,
                     rejectionReason: r.review_notes,
-                    region: 'Region IV-A (CALABARZON)',
-                    province: 'Laguna',
-                    city: 'Santa Cruz',
+                    region: r.region || 'Region IV-A (CALABARZON)',
+                    province: r.province || 'Laguna',
+                    city: r.city || 'Santa Cruz',
+                    barangayLogoUrl: r.barangay_logo_url || null,
                 });
             });
 

@@ -32,14 +32,17 @@ function hideLoading() {
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
 
-// Show loading screen when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+// Show loading screen on initial page load (unless page opts out)
+const skipInitialLoading = document.body?.dataset?.skipInitialLoading !== undefined;
+
+if (!skipInitialLoading) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            showLoading('Loading');
+        });
+    } else {
         showLoading('Loading');
-    });
-} else {
-    // DOM is already loaded
-    showLoading('Loading');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

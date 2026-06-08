@@ -61,6 +61,7 @@ export default defineConfig({
                 'app/Modules/PreviousKabataan/assets/js/previous-kabataan.js',
                 // KK Profiling Requests module assets
                 'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
+                'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
                 'app/Modules/KKProfilingRequests/assets/js/kkprofiling-requests.js',
                 // ABYIP module assets
                 'app/Modules/ABYIP/assets/css/abyip.css',

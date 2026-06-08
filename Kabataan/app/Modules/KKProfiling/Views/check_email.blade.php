@@ -4,10 +4,25 @@
     @include('favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Check Your Email - KK Profiling</title>
-    @vite(['app/Modules/Authentication/assets/css/youth-login.css'])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    @vite([
+        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Shared/assets/css/loading.css',
+        'app/Modules/Shared/assets/js/loading.js',
+    ])
     <style>
+        #globalLoadingOverlay {
+            opacity: 0;
+            visibility: hidden;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        #globalLoadingOverlay.gl-visible {
+            pointer-events: auto;
+        }
         .youth-login-page {
             min-height: 100vh;
             display: flex;
@@ -300,7 +315,7 @@
         }
     </style>
 </head>
-<body class="youth-login-page">
+<body class="youth-login-page" data-skip-initial-loading>
     @include('dashboard::loading')
     
     <!-- Animated Background -->
@@ -352,9 +367,17 @@
                 <p class="message-text">Please check your email and click the verification link to continue with your registration.</p>
                 <p class="expiry-text">The link will expire in 24 hours.</p>
                 <div class="resend-wrap">
-                    <button type="button" class="resend-btn" id="resendBtn" disabled>Resend Email Verification</button>
+                    <button
+                        type="button"
+                        class="resend-btn"
+                        id="resendBtn"
+                        disabled
+                        data-email="{{ $email }}"
+                        @if($barangay) data-barangay="{{ $barangay }}" @endif
+                    >Resend Email Verification</button>
                     <span class="resend-timer" id="resendTimer">(1:00)</span>
                 </div>
+                <p id="resendStatus" class="message-text" style="display:none; margin-top:0.5rem;"></p>
 
                 <div class="check-email-actions">
                     @if($barangay)
@@ -368,52 +391,143 @@
         </div>
     </main>
 
-    <!-- Load loading script AFTER the overlay HTML is rendered -->
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
-
     <script>
         (function() {
             const resendBtn = document.getElementById('resendBtn');
             const resendTimer = document.getElementById('resendTimer');
             if (!resendBtn || !resendTimer) return;
 
+            const emailKey = (resendBtn.dataset.email || 'default').toLowerCase();
+            const cooldownKey = 'kabataan_kk_resend_cooldown_' + emailKey;
+            const cooldownMs = 60 * 1000;
             let timerInterval = null;
 
-            function startResendTimer() {
-                let seconds = 60;
+            function formatTimer(seconds) {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return '(' + m + ':' + (s < 10 ? '0' : '') + s + ')';
+            }
+
+            function clearCooldown() {
+                localStorage.removeItem(cooldownKey);
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'Resend Email Verification';
+                resendTimer.style.display = 'none';
+                resendTimer.textContent = '';
+            }
+
+            function applyCooldown(untilTimestamp, persist) {
+                if (persist) {
+                    localStorage.setItem(cooldownKey, String(untilTimestamp));
+                }
+
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+
                 resendBtn.disabled = true;
                 resendBtn.textContent = 'Resend Email Verification';
                 resendTimer.style.display = 'inline';
-                resendTimer.textContent = '(1:00)';
 
-                clearInterval(timerInterval);
-                timerInterval = setInterval(() => {
-                    seconds--;
-                    const m = Math.floor(seconds / 60);
-                    const s = seconds % 60;
-                    resendTimer.textContent = `(${m}:${s < 10 ? '0' : ''}${s})`;
-                    if (seconds <= 0) {
-                        clearInterval(timerInterval);
-                        resendBtn.disabled = false;
-                        resendTimer.textContent = '';
+                timerInterval = setInterval(function () {
+                    const remainingMs = untilTimestamp - Date.now();
+                    const remainingSeconds = Math.ceil(remainingMs / 1000);
+
+                    if (remainingSeconds <= 0) {
+                        clearCooldown();
+                        return;
                     }
-                }, 1000);
+
+                    resendTimer.textContent = formatTimer(remainingSeconds);
+                }, 250);
             }
 
-            // Start the timer on page load
-            startResendTimer();
+            function startNewCooldown() {
+                applyCooldown(Date.now() + cooldownMs, true);
+            }
 
-            resendBtn.addEventListener('click', function() {
+            const storedUntil = Number(localStorage.getItem(cooldownKey) || 0);
+            if (storedUntil > Date.now()) {
+                applyCooldown(storedUntil, false);
+            } else if (storedUntil > 0) {
+                localStorage.removeItem(cooldownKey);
+                clearCooldown();
+            } else {
+                startNewCooldown();
+            }
+
+            resendBtn.addEventListener('click', async function() {
                 if (this.disabled) return;
 
-                // Show temporary success message
-                const originalText = this.textContent;
-                this.textContent = 'Email sent!';
-                this.disabled = true;
+                const email = this.dataset.email;
+                const barangay = this.dataset.barangay || '';
+                const statusEl = document.getElementById('resendStatus');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-                // Restart the timer after 2 seconds
+                this.disabled = true;
+                if (statusEl) {
+                    statusEl.style.display = 'none';
+                    statusEl.style.color = '#666';
+                }
+
+                if (window.showLoading) {
+                    window.showLoading('Sending verification email...');
+                }
+
+                try {
+                    const response = await fetch('/api/kkprofiling/resend-verification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({ email: email, barangay: barangay }),
+                    });
+
+                    const data = await response.json();
+
+                    if (window.hideLoading) {
+                        window.hideLoading();
+                    }
+
+                    if (response.ok && data.success) {
+                        this.textContent = 'Email sent!';
+                        if (statusEl) {
+                            statusEl.textContent = data.message || 'Verification email has been resent. Please check your inbox.';
+                            statusEl.style.color = '#15803d';
+                            statusEl.style.display = 'block';
+                        }
+                    } else {
+                        if (statusEl) {
+                            statusEl.textContent = data.message || 'Failed to resend verification email. Please try again.';
+                            statusEl.style.color = '#b91c1c';
+                            statusEl.style.display = 'block';
+                        }
+                        this.disabled = false;
+                        return;
+                    }
+                } catch (err) {
+                    if (window.hideLoading) {
+                        window.hideLoading();
+                    }
+                    if (statusEl) {
+                        statusEl.textContent = 'Failed to resend verification email. Please check your connection and try again.';
+                        statusEl.style.color = '#b91c1c';
+                        statusEl.style.display = 'block';
+                    }
+                    this.disabled = false;
+                    return;
+                }
+
                 setTimeout(() => {
-                    startResendTimer();
+                    this.textContent = 'Resend Email Verification';
+                    startNewCooldown();
                 }, 2000);
             });
         })();

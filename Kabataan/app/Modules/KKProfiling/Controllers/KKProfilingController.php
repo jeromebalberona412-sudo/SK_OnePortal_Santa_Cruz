@@ -142,7 +142,19 @@ class KKProfilingController extends Controller
             'slug'               => $slug,
             'respondentNumber'   => $respondentNumber,
             'respondentDisplay'  => self::formatRespondentDisplay($respondentNumber),
+            'barangayLogoUrl'    => self::getBarangayLogoUrl($barangayRecord->id),
         ]);
+    }
+
+    public static function getBarangayLogoUrl(?int $barangayId): ?string
+    {
+        if (!$barangayId) {
+            return null;
+        }
+
+        return DB::table('barangay_logos')
+            ->where('barangay_id', $barangayId)
+            ->value('url');
     }
 
     /**
@@ -199,9 +211,9 @@ class KKProfilingController extends Controller
             'sk_voter'              => 'required|string',
             'national_voter'        => 'required|string',
             'sk_voted'              => 'required|string',
-            'kk_assembly'           => 'required|string',
-            'kk_times'              => 'required|string',
-            'kk_reason'             => 'required|string',
+            'kk_assembly'           => 'required|string|in:Yes,No',
+            'kk_times'              => 'required_if:kk_assembly,Yes|nullable|string',
+            'kk_reason'             => 'required_if:kk_assembly,No|nullable|string',
             'facebook'              => ['required', 'string', 'max:150', 'regex:/^\S*[^0-9]\S*$/'],
             'group_chat'            => 'required|string',
             'signature'             => 'required|string',
@@ -250,7 +262,8 @@ class KKProfilingController extends Controller
         $validated['national_voter'] = $request->input('national_voter');
         $validated['sk_voted'] = $request->input('sk_voted');
         $validated['kk_assembly'] = $request->input('kk_assembly');
-        $validated['kk_reason'] = $request->input('kk_reason', []);
+        $validated['kk_times'] = $request->input('kk_assembly') === 'Yes' ? $request->input('kk_times') : null;
+        $validated['kk_reason'] = $request->input('kk_assembly') === 'No' ? $request->input('kk_reason') : null;
         $validated['facebook'] = $request->input('facebook');
         $validated['group_chat'] = $request->input('group_chat');
         $validated['signature_name'] = $request->input('signature_name');
@@ -300,9 +313,9 @@ class KKProfilingController extends Controller
             'sk_voter'              => 'required|string',
             'national_voter'        => 'required|string',
             'sk_voted'              => 'required|string',
-            'kk_assembly'           => 'required|string',
-            'kk_times'              => 'required|string',
-            'kk_reason'             => 'required|string',
+            'kk_assembly'           => 'required|string|in:Yes,No',
+            'kk_times'              => 'required_if:kk_assembly,Yes|nullable|string',
+            'kk_reason'             => 'required_if:kk_assembly,No|nullable|string',
             'facebook'              => ['required', 'string', 'max:150', 'regex:/^\S*[^0-9]\S*$/'],
             'group_chat'            => 'required|string',
             'signature'             => 'required|string',
@@ -315,13 +328,13 @@ class KKProfilingController extends Controller
             $validText = (bool) preg_match('/^[A-Za-z.]+$/', str_replace(' ', '', $customSuffix));
 
             if (!$validRoman && !$validText) {
-                return back()->withInput()->withErrors([
+                return $this->submitErrorResponse($request, [
                     'custom_suffix' => 'Only text and valid Roman numeral suffixes are allowed.',
                 ]);
             }
 
             if ($validRoman && (strlen($compact) < 1 || strlen($compact) > 4)) {
-                return back()->withInput()->withErrors([
+                return $this->submitErrorResponse($request, [
                     'custom_suffix' => 'Suffix must not exceed 4 characters.',
                 ]);
             }
@@ -331,14 +344,14 @@ class KKProfilingController extends Controller
         try {
             $derivedAge = \Carbon\Carbon::parse($validated['birthday'])->age;
             if ($derivedAge < 15 || $derivedAge > 30 || (int) $validated['age'] !== (int) $derivedAge) {
-                return back()
-                    ->withInput()
-                    ->withErrors(['birthday' => 'Birthday and age must match and be within 15 to 30 years old.']);
+                return $this->submitErrorResponse($request, [
+                    'birthday' => 'Birthday and age must match and be within 15 to 30 years old.',
+                ]);
             }
         } catch (\Throwable $e) {
-            return back()
-                ->withInput()
-                ->withErrors(['birthday' => 'Invalid birthday value.']);
+            return $this->submitErrorResponse($request, [
+                'birthday' => 'Invalid birthday value.',
+            ]);
         }
 
         // Capture all other fields without validation
@@ -352,7 +365,8 @@ class KKProfilingController extends Controller
         $validated['national_voter'] = $request->input('national_voter');
         $validated['sk_voted'] = $request->input('sk_voted');
         $validated['kk_assembly'] = $request->input('kk_assembly');
-        $validated['kk_reason'] = $request->input('kk_reason', []);
+        $validated['kk_times'] = $request->input('kk_assembly') === 'Yes' ? $request->input('kk_times') : null;
+        $validated['kk_reason'] = $request->input('kk_assembly') === 'No' ? $request->input('kk_reason') : null;
         $validated['facebook'] = $request->input('facebook');
         $validated['group_chat'] = $request->input('group_chat');
 
@@ -369,7 +383,25 @@ class KKProfilingController extends Controller
         $barangayRecord = Barangay::where('name', $barangayName)->first();
         
         if (!$barangayRecord) {
-            return back()->withErrors(['barangay' => 'Barangay not found in database.']);
+            return $this->submitErrorResponse($request, [
+                'barangay' => 'Barangay not found in database.',
+            ]);
+        }
+
+        $email = strtolower(trim($validated['email']));
+        $existingUser = User::where('email', $email)
+            ->whereIn('status', ['ACTIVE', 'PENDING_APPROVAL', 'INACTIVE'])
+            ->exists();
+
+        $verifiedRegistration = KabataanRegistration::where('email', $email)
+            ->where('barangay_id', $barangayRecord->id)
+            ->where('status', 'email_verified')
+            ->exists();
+
+        if ($existingUser || $verifiedRegistration) {
+            return $this->submitErrorResponse($request, [
+                'email' => 'This email already exists. Please use a different email address.',
+            ]);
         }
 
         // Create or update registration
@@ -394,27 +426,9 @@ class KKProfilingController extends Controller
             ]
         );
 
-        // Generate signed verification URL
-        $verificationUrl = URL::temporarySignedRoute(
-            'kkprofiling.verify',
-            now()->addHours(24),
-            [
-                'id' => $registration->id,
-                'hash' => sha1($registration->email),
-            ]
-        );
-
         // Send verification email
         try {
-            \Log::info('Attempting to send verification email', [
-                'email' => $registration->email,
-                'url' => $verificationUrl
-            ]);
-            
-            Notification::route('mail', $registration->email)
-                ->notify(new KabataanVerifyEmail($verificationUrl));
-                
-            \Log::info('Verification email sent successfully');
+            $this->sendVerificationEmail($registration);
         } catch (\Exception $e) {
             \Log::error('Failed to send verification email', [
                 'error' => $e->getMessage(),
@@ -438,6 +452,92 @@ class KKProfilingController extends Controller
             ->route('kkprofiling.check-email')
             ->with('email', $registration->email)
             ->with('barangay', $barangay);
+    }
+
+    /**
+     * Check if an email is already registered (users or in-progress KK registration).
+     */
+    public function checkEmailExists(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email', 'regex:/^[^\s]+@gmail\.com$/i'],
+        ]);
+
+        $email = strtolower(trim($request->email));
+
+        $existingUser = User::where('email', $email)
+            ->whereIn('status', ['ACTIVE', 'PENDING_APPROVAL', 'INACTIVE'])
+            ->exists();
+
+        $verifiedRegistration = KabataanRegistration::where('email', $email)
+            ->where('status', 'email_verified')
+            ->exists();
+
+        $exists = $existingUser || $verifiedRegistration;
+
+        return response()->json([
+            'exists'  => $exists,
+            'message' => $exists ? 'This email already exists. Please use a different email address.' : null,
+        ]);
+    }
+
+    /**
+     * Resend KK Profiling email verification link.
+     */
+    public function resendVerification(Request $request)
+    {
+        $request->validate([
+            'email'    => ['required', 'email'],
+            'barangay' => ['nullable', 'string'],
+        ]);
+
+        $registration = KabataanRegistration::where('email', $request->email);
+
+        if ($request->filled('barangay')) {
+            $slug = $this->normalizeSlug($request->barangay);
+            $barangayName = $this->getBarangayName($slug);
+            if ($barangayName) {
+                $barangayRecord = Barangay::where('name', $barangayName)->first();
+                if ($barangayRecord) {
+                    $registration->where('barangay_id', $barangayRecord->id);
+                }
+            }
+        }
+
+        $registration = $registration->latest()->first();
+
+        if (!$registration) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No registration found for this email address.',
+            ], 404);
+        }
+
+        if ($registration->status !== 'pending_verification') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This email has already been verified or registration is complete.',
+            ], 422);
+        }
+
+        try {
+            $this->sendVerificationEmail($registration);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification email has been resent. Please check your inbox.',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to resend verification email', [
+                'email' => $registration->email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification email. Please try again later.',
+            ], 500);
+        }
     }
 
     /**
@@ -531,6 +631,39 @@ class KKProfilingController extends Controller
         ])->with('success', 'Email verified! Please set your password to complete registration.');
     }
 
+    private function submitErrorResponse(Request $request, array $errors)
+    {
+        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => false,
+                'message' => collect($errors)->flatten()->first(),
+                'errors'  => collect($errors)->map(fn ($msg) => is_array($msg) ? $msg : [$msg])->all(),
+            ], 422);
+        }
+
+        return back()->withInput()->withErrors($errors);
+    }
+
+    private function sendVerificationEmail(KabataanRegistration $registration): void
+    {
+        $verificationUrl = URL::temporarySignedRoute(
+            'kkprofiling.verify',
+            now()->addHours(24),
+            [
+                'id'   => $registration->id,
+                'hash' => sha1($registration->email),
+            ]
+        );
+
+        \Log::info('Sending verification email', [
+            'email' => $registration->email,
+            'url'   => $verificationUrl,
+        ]);
+
+        Notification::route('mail', $registration->email)
+            ->notify(new KabataanVerifyEmail($verificationUrl));
+    }
+
     private function getBarangaySlug(string $name): string
     {
         $slugMap = [
@@ -587,8 +720,9 @@ class KKProfilingController extends Controller
         }
 
         return view('kkprofiling::set_password', [
-            'barangay' => $registration->barangay->name,
-            'registration' => $registration,
+            'barangay'        => $registration->barangay->name,
+            'registration'    => $registration,
+            'barangayLogoUrl' => self::getBarangayLogoUrl($registration->barangay_id),
         ]);
     }
 
@@ -598,7 +732,18 @@ class KKProfilingController extends Controller
     public function storePassword(Request $request, string $barangay)
     {
         $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[^A-Za-z0-9]/',
+            ],
+        ], [
+            'password.regex' => 'Password must include uppercase, lowercase, number, and special character.',
         ]);
 
         $registrationId = session('kabataan_registration_id');

@@ -10,7 +10,8 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
-        'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css'
+        'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
+        'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -188,239 +189,11 @@
         </div>
         <div class="modal-body kk-view-modal-body kk-qs-body">
             <div class="kk-qs-scroll-wrapper">
-
-            {{-- General Info --}}
-            <div class="kk-qs-general-row">
-                <div class="kk-qs-general-field">
-                    <span class="kk-qs-field-label">Respondent #:</span>
-                    <span class="kk-qs-field-value" id="kkViewRespondentNumber"></span>
-                </div>
-                <div class="kk-qs-general-field">
-                    <span class="kk-qs-field-label">Date:</span>
-                    <span class="kk-qs-field-value" id="kkViewDate"></span>
-                </div>
+                @include('KKProfilingRequests::partials.kk-profiling-view-questionnaire', [
+                    'barangayLogoUrl' => $barangayLogoUrl ?? null,
+                    'barangayName' => $barangayName ?? null,
+                ])
             </div>
-
-            {{-- I. PROFILE --}}
-            <div class="kk-qs-section-title">I. PROFILE</div>
-
-            <div class="kk-qs-row-label">Name of Respondent:</div>
-            <div class="kk-qs-name-row">
-                <div class="kk-qs-name-col">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewLastName"></span>
-                    <span class="kk-qs-col-label">Last Name</span>
-                </div>
-                <div class="kk-qs-name-col">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewFirstName"></span>
-                    <span class="kk-qs-col-label">First Name</span>
-                </div>
-                <div class="kk-qs-name-col">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewMiddleName"></span>
-                    <span class="kk-qs-col-label">Middle Name</span>
-                </div>
-                <div class="kk-qs-name-col kk-qs-name-col--suffix">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewSuffix"></span>
-                    <span class="kk-qs-col-label">Suffix</span>
-                </div>
-            </div>
-
-            <div class="kk-qs-row-label">Location:</div>
-            <div class="kk-qs-location-row">
-                <div class="kk-qs-loc-col">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewRegion"></span>
-                    <span class="kk-qs-col-label">Region</span>
-                </div>
-                <div class="kk-qs-loc-col">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewProvince"></span>
-                    <span class="kk-qs-col-label">Province</span>
-                </div>
-                <div class="kk-qs-loc-col">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewCity"></span>
-                    <span class="kk-qs-col-label">City/Municipality</span>
-                </div>
-                <div class="kk-qs-loc-col">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewBarangay"></span>
-                    <span class="kk-qs-col-label">Barangay</span>
-                </div>
-                <div class="kk-qs-loc-col">
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewPurokZone"></span>
-                    <span class="kk-qs-col-label">Purok/Zone</span>
-                </div>
-            </div>
-
-            <div class="kk-qs-personal-row">
-                <div class="kk-qs-sex-box">
-                    <span class="kk-qs-box-label">Sex Assigned by Birth:</span>
-                    <span class="kk-qs-field-value" id="kkViewSexAssignedAtBirth"></span>
-                </div>
-                <div class="kk-qs-age-group">
-                    <div class="kk-qs-inline-field">
-                        <span class="kk-qs-field-label">Age:</span>
-                        <span class="kk-qs-field-value kk-qs-underline kk-qs-short" id="kkViewAge"></span>
-                    </div>
-                    <div class="kk-qs-inline-field">
-                        <span class="kk-qs-field-label">Birthday:</span>
-                        <span class="kk-qs-field-value kk-qs-underline" id="kkViewBirthday"></span>
-                        <span class="kk-qs-hint">(dd/mm/yy)</span>
-                    </div>
-                </div>
-                <div class="kk-qs-contact-group">
-                    <div class="kk-qs-inline-field">
-                        <span class="kk-qs-field-label">E-mail address:</span>
-                        <span class="kk-qs-field-value kk-qs-underline" id="kkViewEmailAddress"></span>
-                    </div>
-                    <div class="kk-qs-inline-field">
-                        <span class="kk-qs-field-label">Contact #:</span>
-                        <span class="kk-qs-field-value kk-qs-underline" id="kkViewContactNumber"></span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- II. DEMOGRAPHIC CHARACTERISTICS --}}
-            <div class="kk-qs-section-title">II. DEMOGRAPHIC CHARACTERISTICS</div>
-            <p class="kk-qs-instruction">Please put a Check mark next to the word or Phrase that matches your response.</p>
-
-            <div class="kk-qs-demo-grid">
-                <div class="kk-qs-demo-left">
-                    <div class="kk-qs-demo-block">
-                        <div class="kk-qs-demo-block-label">Civil Status</div>
-                        <div class="kk-qs-demo-options kk-qs-options-2col">
-                            <div class="kk-qs-options-col">
-                                <span class="kk-qs-check-item" id="kkViewCS_Single">☐ Single</span>
-                                <span class="kk-qs-check-item" id="kkViewCS_Married">☐ Married</span>
-                                <span class="kk-qs-check-item" id="kkViewCS_Widowed">☐ Widowed</span>
-                                <span class="kk-qs-check-item" id="kkViewCS_Divorced">☐ Divorced</span>
-                            </div>
-                            <div class="kk-qs-options-col">
-                                <span class="kk-qs-check-item" id="kkViewCS_Separated">☐ Separated</span>
-                                <span class="kk-qs-check-item" id="kkViewCS_Annulled">☐ Annulled</span>
-                                <span class="kk-qs-check-item" id="kkViewCS_Unknown">☐ Unknown</span>
-                                <span class="kk-qs-check-item" id="kkViewCS_Livein">☐ Live-in</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kk-qs-demo-block">
-                        <div class="kk-qs-demo-block-label">Youth Age Group</div>
-                        <div class="kk-qs-demo-options">
-                            <span class="kk-qs-check-item" id="kkViewYAG_Child">☐ Child Youth (15-17 yrs old)</span>
-                            <span class="kk-qs-check-item" id="kkViewYAG_Core">☐ Core Youth (18-24 yrs old)</span>
-                            <span class="kk-qs-check-item" id="kkViewYAG_Young">☐ Young Adult (15-30 yrs old)</span>
-                        </div>
-                    </div>
-                    <div class="kk-qs-demo-block">
-                        <div class="kk-qs-demo-block-label">Educational Background</div>
-                        <div class="kk-qs-demo-options">
-                            <span class="kk-qs-check-item" id="kkViewEB_ElemLevel">☐ Elementary Level</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_ElemGrad">☐ Elementary Grad</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_HSLevel">☐ High school Level</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_HSGrad">☐ High school Grad</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_VocGrad">☐ Vocational Grad</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_ColLevel">☐ College Level</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_ColGrad">☐ College Grad</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_MasLevel">☐ Masters Level</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_MasGrad">☐ Masters Grad</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_DocLevel">☐ Doctorate Level</span>
-                            <span class="kk-qs-check-item" id="kkViewEB_DocGrad">☐ Doctorate Graduate</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="kk-qs-demo-right">
-                    <div class="kk-qs-demo-block">
-                        <div class="kk-qs-demo-block-label">Youth Classification</div>
-                        <div class="kk-qs-demo-options">
-                            <span class="kk-qs-check-item" id="kkViewYC_ISY">☐ In school Youth</span>
-                            <span class="kk-qs-check-item" id="kkViewYC_OSY">☐ Out of School Youth</span>
-                            <span class="kk-qs-check-item" id="kkViewYC_Working">☐ Working Youth</span>
-                            <span class="kk-qs-check-item" id="kkViewYC_Specific">☐ Youth w/ Specific needs:</span>
-                            <span class="kk-qs-check-item kk-qs-indent" id="kkViewYC_PWD">☐ Person w/ Disability</span>
-                            <span class="kk-qs-check-item kk-qs-indent" id="kkViewYC_CICL">☐ Children In Conflict w/ Law</span>
-                            <span class="kk-qs-check-item kk-qs-indent" id="kkViewYC_IP">☐ Indigenous People</span>
-                        </div>
-                    </div>
-                    <div class="kk-qs-demo-block">
-                        <div class="kk-qs-demo-block-label">Work Status</div>
-                        <div class="kk-qs-demo-options">
-                            <span class="kk-qs-check-item" id="kkViewWS_Employed">☐ Employed</span>
-                            <span class="kk-qs-check-item" id="kkViewWS_Unemployed">☐ Unemployed</span>
-                            <span class="kk-qs-check-item" id="kkViewWS_SelfEmployed">☐ Self-Employed</span>
-                            <span class="kk-qs-check-item" id="kkViewWS_Looking">☐ Currently looking for a Job</span>
-                            <span class="kk-qs-check-item" id="kkViewWS_NotInterested">☐ Not Interested Looking for a Job</span>
-                        </div>
-                    </div>
-
-                    <div class="kk-qs-voter-grid">
-                        <div class="kk-qs-voter-block">
-                            <div class="kk-qs-voter-label">Registered SK Voter?</div>
-                            <span class="kk-qs-check-item" id="kkViewSKV_Yes">☐ Yes</span>
-                            <span class="kk-qs-check-item" id="kkViewSKV_No">☐ No</span>
-                        </div>
-                        <div class="kk-qs-voter-block">
-                            <div class="kk-qs-voter-label">Did you vote last SK elections?</div>
-                            <span class="kk-qs-check-item" id="kkViewVH_Yes">☐ Yes</span>
-                            <span class="kk-qs-check-item" id="kkViewVH_No">☐ No</span>
-                        </div>
-                        <div class="kk-qs-voter-block">
-                            <div class="kk-qs-voter-label">If Yes, How many times?</div>
-                            <span class="kk-qs-check-item" id="kkViewVF_12">☐ 1-2 Times</span>
-                            <span class="kk-qs-check-item" id="kkViewVF_34">☐ 3-4 Times</span>
-                            <span class="kk-qs-check-item" id="kkViewVF_5">☐ 5 and above</span>
-                        </div>
-                        <div class="kk-qs-voter-block">
-                            <div class="kk-qs-voter-label">Registered National Voter?</div>
-                            <span class="kk-qs-check-item" id="kkViewNV_Yes">☐ Yes</span>
-                            <span class="kk-qs-check-item" id="kkViewNV_No">☐ No</span>
-                        </div>
-                        <div class="kk-qs-voter-block">
-                            <div class="kk-qs-voter-label">Have you already attended a KK Assembly?</div>
-                            <span class="kk-qs-check-item" id="kkViewKK_Yes">☐ Yes</span>
-                            <span class="kk-qs-check-item" id="kkViewKK_No">☐ No</span>
-                        </div>
-                        <div class="kk-qs-voter-block">
-                            <div class="kk-qs-voter-label">If No, Why?</div>
-                            <span class="kk-qs-check-item" id="kkViewVR_NoKK">☐ There was no KK Assembly Meeting</span>
-                            <span class="kk-qs-check-item" id="kkViewVR_NotInt">☐ Not interested to Attend</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Social / Signature --}}
-            <div class="kk-qs-social-row">
-                <div class="kk-qs-inline-field">
-                    <span class="kk-qs-field-label">FB Account:</span>
-                    <span class="kk-qs-field-value kk-qs-underline" id="kkViewFacebookAccount"></span>
-                </div>
-                <div class="kk-qs-inline-field">
-                    <span class="kk-qs-field-label">Willing to join the group chat?</span>
-                    <span class="kk-qs-check-item" id="kkViewGC_Yes">☐ Yes</span>
-                    <span class="kk-qs-check-item" id="kkViewGC_No">☐ No</span>
-                </div>
-            </div>
-
-            <div class="kk-qs-signature-row">
-                <div class="kk-qs-sig-field">
-                    <div class="kk-qs-sig-container">
-                        <div class="kk-qs-sig-overlay" id="kkViewSignatureOverlay">
-                            <svg class="kk-qs-sig-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M10,40 Q20,20 30,35 T50,30 Q60,25 70,40" />
-                                <path d="M75,25 L85,45 M80,35 L95,35" />
-                                <path d="M100,25 Q110,40 120,25 Q130,10 140,25" />
-                                <path d="M145,30 Q155,20 165,30 L175,45" />
-                            </svg>
-                        </div>
-                        <span class="kk-qs-field-value kk-qs-underline" id="kkViewSignature"></span>
-                    </div>
-                    <span class="kk-qs-col-label">Name and Signature of Participant</span>
-                </div>
-            </div>
-
-            <div class="kk-view-rejection-wrap" id="kkViewRejectionWrap" style="display:none;">
-                <span class="kk-view-label">Rejection reason:</span>
-                <p class="kk-view-rejection-text" id="kkViewRejectionText"></p>
-            </div>
-
-            </div>{{-- end kk-qs-scroll-wrapper --}}
         </div>
         <div class="modal-footer kk-view-modal-footer">
             <button type="button" class="btn btn-reject" id="kkViewRejectBtn">Reject</button>
@@ -458,10 +231,6 @@
             </p>
             <div class="reject-reasons">
                 <label class="reject-reason-item">
-                    <input type="checkbox" class="kk-reject-reason" value="Incomplete information">
-                    <span>Incomplete information</span>
-                </label>
-                <label class="reject-reason-item">
                     <input type="checkbox" class="kk-reject-reason" value="Invalid birthdate / age mismatch">
                     <span>Invalid birthdate / age mismatch</span>
                 </label>
@@ -472,10 +241,6 @@
                 <label class="reject-reason-item">
                     <input type="checkbox" class="kk-reject-reason" value="Duplicate submission">
                     <span>Duplicate submission</span>
-                </label>
-                <label class="reject-reason-item">
-                    <input type="checkbox" class="kk-reject-reason" value="Illegible or missing required fields">
-                    <span>Illegible or missing required fields</span>
                 </label>
                 <label class="reject-reason-item">
                     <input type="checkbox" class="kk-reject-reason kk-reject-other-checkbox" value="Other" id="kkRejectOtherCheckbox">

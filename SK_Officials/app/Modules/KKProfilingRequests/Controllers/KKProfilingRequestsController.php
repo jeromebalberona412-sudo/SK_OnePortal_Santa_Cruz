@@ -15,7 +15,22 @@ class KKProfilingRequestsController extends Controller
 {
     public function index()
     {
-        return view('KKProfilingRequests::kkprofiling-requests');
+        $user = Auth::user();
+        $barangayName = null;
+        $barangayLogoUrl = null;
+
+        if ($user?->barangay_id) {
+            $barangay = DB::table('barangays')->where('id', $user->barangay_id)->first();
+            $barangayName = $barangay?->name;
+            $barangayLogoUrl = DB::table('barangay_logos')
+                ->where('barangay_id', $user->barangay_id)
+                ->value('url');
+        }
+
+        return view('KKProfilingRequests::kkprofiling-requests', [
+            'barangayName'    => $barangayName,
+            'barangayLogoUrl' => $barangayLogoUrl,
+        ]);
     }
 
     public function data(Request $request)
@@ -71,6 +86,7 @@ class KKProfilingRequestsController extends Controller
 
             return [
                 'id'              => $r->id,
+                'respondent_number' => $formData['respondent_number'] ?? null,
                 'last_name'       => $r->last_name,
                 'first_name'      => $r->first_name,
                 'middle_name'     => $r->middle_name,
@@ -82,6 +98,9 @@ class KKProfilingRequestsController extends Controller
                 'email'           => $r->email,
                 'contact_number'  => $r->contact_number,
                 'barangay'        => $r->barangay?->name ?? '—',
+                'region'          => $r->barangay?->region ?? 'Region IV-A (CALABARZON)',
+                'province'        => $r->barangay?->province ?? 'Laguna',
+                'city'            => $r->barangay?->municipality ?? 'Santa Cruz',
                 'purok_zone'      => $val('purok_zone'),
                 'sk_voter'        => $val('sk_voter'),
                 'national_voter'  => $val('national_voter'),
@@ -91,17 +110,20 @@ class KKProfilingRequestsController extends Controller
                 'work_status'     => $val('work_status'),
                 'education'       => $val('education'),
                 'sk_voted'        => $val('sk_voted'),
-                'vote_frequency'  => $val('vote_frequency'),
                 'kk_assembly'     => $val('kk_assembly'),
-                'kk_reason'       => is_array($formData['kk_reason'] ?? null) ? $formData['kk_reason'] : [],
+                'kk_times'        => $val('kk_times'),
+                'kk_reason'       => $val('kk_reason'),
                 'facebook'        => $val('facebook'),
-                'group_chat'      => $formData['group_chat'] ?? '—',
+                'group_chat'      => $val('group_chat'),
                 'signature'       => $formData['signature'] ?? '—',
                 'status'          => $r->status,
                 'evaluation_status' => $r->evaluation_status,
                 'evaluation_notes'  => $r->evaluation_notes,
                 'submitted_at'    => $r->submitted_at?->format('m/d/Y'),
                 'review_notes'    => $r->review_notes,
+                'barangay_logo_url' => DB::table('barangay_logos')
+                    ->where('barangay_id', $r->barangay_id)
+                    ->value('url'),
             ];
         });
 
