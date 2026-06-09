@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "bootstrap": "^5.3.8",
+        "pdfjs-dist": "^6.0.227",
         "signature_pad": "^5.1.3"
     }
 }

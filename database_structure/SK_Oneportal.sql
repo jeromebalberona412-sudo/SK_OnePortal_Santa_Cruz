@@ -953,3 +953,46 @@ CREATE TABLE IF NOT EXISTS schedule_programs (
 
 CREATE INDEX IF NOT EXISTS schedule_programs_barangay_id_status_index ON schedule_programs (barangay_id, status);
 CREATE INDEX IF NOT EXISTS schedule_programs_barangay_id_dates_index ON schedule_programs (barangay_id, start_date, end_date);
+
+CREATE TABLE IF NOT EXISTS program_applications (
+  id BIGSERIAL NOT NULL,
+  program_id BIGINT NULL,
+  kabataan_id BIGINT NULL,
+  first_name VARCHAR(255) NULL,
+  middle_name VARCHAR(255) NULL,
+  last_name VARCHAR(255) NULL,
+  suffix VARCHAR(50) NULL,
+  birthdate DATE NULL,
+  age INTEGER NULL,
+  sex VARCHAR(50) NULL,
+  civil_status VARCHAR(50) NULL,
+  purok VARCHAR(255) NULL,
+  barangay VARCHAR(255) NULL,
+  email VARCHAR(255) NULL,
+  contact_number VARCHAR(50) NULL,
+  parent_guardian_name VARCHAR(255) NULL,
+  parent_occupation VARCHAR(255) NULL,
+  parent_income NUMERIC(12, 2) NULL,
+  school_name VARCHAR(255) NULL,
+  grade_level VARCHAR(100) NULL,
+  course VARCHAR(255) NULL,
+  gwa NUMERIC(5, 2) NULL,
+  custom_answers JSON NULL,
+  required_documents JSON NULL,
+  purpose TEXT NULL,
+  remarks TEXT NULL,
+  status VARCHAR(20) NULL DEFAULT 'pending',
+  cancel_reason TEXT NULL,
+  payment_status VARCHAR(20) NULL,
+  rejection_reason TEXT NULL,
+  rejection_reasons JSON NULL,
+  reviewed_by BIGINT NULL,
+  reviewed_at TIMESTAMP NULL,
+  deleted_at TIMESTAMP NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT program_applications_pkey PRIMARY KEY (id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS program_applications_kabataan_program_unique
+  ON program_applications (kabataan_id, program_id);

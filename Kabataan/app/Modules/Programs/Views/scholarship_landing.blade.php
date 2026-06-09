@@ -42,21 +42,30 @@
         <div class="sl-card sl-card-program">
             <div class="sl-card-header">
                 <h2 class="sl-card-title">Program Information</h2>
-                <span class="sl-status-badge sl-status-open">Open</span>
+                <span class="sl-status-badge sl-status-open" id="slProgramStatusBadge">Open</span>
             </div>
             <div class="sl-card-body">
-                <h3 class="sl-program-name">Scholarship Assistance Program 2026</h3>
-                <p class="sl-program-description">Educational assistance program for qualified Kabataan members of Barangay Santa Cruz.</p>
+                <h3 class="sl-program-name" id="slProgramName">Loading program…</h3>
+                <p class="sl-program-description" id="slProgramDescription">Please wait while program details are loaded.</p>
                 
                 <div class="sl-info-grid">
                     <div class="sl-info-item">
                         <span class="sl-info-label">Application Period:</span>
-                        <span class="sl-info-value">June 1, 2026 - June 30, 2026</span>
+                        <span class="sl-info-value" id="slApplicationPeriod">—</span>
                     </div>
                     <div class="sl-info-item">
                         <span class="sl-info-label">Available Slots:</span>
-                        <span class="sl-info-value">100</span>
+                        <span class="sl-info-value" id="slAvailableSlots">—</span>
                     </div>
+                    <div class="sl-info-item">
+                        <span class="sl-info-label">Committee:</span>
+                        <span class="sl-info-value" id="slCommittee">—</span>
+                    </div>
+                </div>
+
+                <div class="sl-section">
+                    <h4 class="sl-section-title">Announcement</h4>
+                    <p class="sl-program-description" id="slAnnouncement">—</p>
                 </div>
 
                 <div class="sl-section">
@@ -76,26 +85,6 @@
                         <li>Recipients must maintain good academic standing</li>
                         <li>False information may result in disqualification</li>
                     </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Application Status Card -->
-        <div class="sl-card sl-card-status">
-            <div class="sl-card-header">
-                <h2 class="sl-card-title">Application Status</h2>
-            </div>
-            <div class="sl-card-body">
-                <div class="sl-status-content" id="applicationStatusContent">
-                    <div class="sl-status-item sl-status-not-applied">
-                        <div class="sl-status-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        </div>
-                        <div class="sl-status-text">
-                            <h3 class="sl-status-heading">Not Yet Applied</h3>
-                            <p class="sl-status-desc">You have not submitted an application for this scholarship program yet.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -251,5 +240,53 @@
             </div>
         </div>
     </aside>
+
+    <div id="applicationViewModal" class="sl-view-modal" hidden>
+        <div class="sl-view-modal-overlay"></div>
+        <div class="sl-view-modal-container" id="applicationViewContainer">
+            <div class="sl-view-modal-header">
+                <div class="sl-view-modal-header-main">
+                    <h2 id="applicationViewTitle">Application Details</h2>
+                    <p id="applicationViewMeta" class="sl-view-modal-meta"></p>
+                </div>
+                <div class="sl-view-modal-header-actions">
+                    <button type="button" class="sl-view-modal-icon-btn" id="applicationViewFullscreen" title="Fullscreen" aria-label="Fullscreen">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                    </button>
+                    <button type="button" class="sl-view-modal-icon-btn" id="applicationViewRestore" title="Restore down" aria-label="Restore down" hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>
+                    </button>
+                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationViewClose" aria-label="Close">×</button>
+                </div>
+            </div>
+            <div class="sl-view-modal-body">
+                <section class="sl-view-section">
+                    <h3 class="sl-view-section-title">Personal Information</h3>
+                    <div id="applicationViewPersonalInfo" class="sl-view-personal-grid"></div>
+                </section>
+                <section class="sl-view-section">
+                    <h3 class="sl-view-section-title">Application Answers</h3>
+                    <div id="applicationViewAnswers" class="sl-view-answers"></div>
+                </section>
+                <div id="applicationViewCancelSection" class="sl-view-cancel-section" hidden>
+                    <h3>Cancel Application</h3>
+                    <p class="sl-view-cancel-note">Provide a reason if you want to cancel and submit again later.</p>
+                    <label class="sl-view-cancel-label" for="applicationCancelReason">Cancel Reason</label>
+                    <textarea id="applicationCancelReason" class="sl-view-cancel-input" rows="4" maxlength="1000" placeholder="Type your reason for cancelling this application..."></textarea>
+                    <p id="applicationCancelError" class="sl-view-cancel-error" hidden></p>
+                    <button type="button" class="sl-btn-action sl-btn-cancel" id="applicationCancelBtn">Cancel Application</button>
+                </div>
+                <div id="applicationViewCancelledInfo" class="sl-view-cancelled-info" hidden>
+                    <h3>Cancellation Reason</h3>
+                    <p id="applicationViewCancelledReason"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.__scheduleProgramId = @json($scheduleProgramId);
+        window.__kkFieldLabels = @json($kkFieldLabels);
+    </script>
 </body>
 </html>

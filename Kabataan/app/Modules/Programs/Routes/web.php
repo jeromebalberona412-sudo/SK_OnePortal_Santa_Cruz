@@ -1,13 +1,21 @@
 <?php
 
+use App\Modules\Programs\Controllers\ProgramController;
 use Illuminate\Support\Facades\Route;
 
-/*
-| Frontend-only program application pages (no controller / no database).
-*/
 Route::middleware(['web', 'auth'])->group(function () {
-    Route::view('/scholarship/apply', 'programs::scholarship_landing')->name('scholarship.apply');
-    Route::view('/scholarship/apply/form', 'programs::scholarship_application')->name('scholarship.apply.form');
+    Route::get('/api/kabataan/programs', [ProgramController::class, 'index'])->name('kabataan.programs.index');
+    Route::get('/api/kabataan/programs/schedule/{id}', [ProgramController::class, 'showSchedule'])->name('kabataan.programs.schedule.show');
+    Route::get('/api/kabataan/programs/applications', [ProgramController::class, 'listApplications'])->name('kabataan.programs.applications.index');
+    Route::get('/api/kabataan/programs/applications/{id}', [ProgramController::class, 'showApplication'])->name('kabataan.programs.applications.show');
+    Route::post('/api/kabataan/programs/applications', [ProgramController::class, 'submitApplication'])->name('kabataan.programs.applications.store');
+    Route::post('/api/kabataan/programs/applications/{id}/cancel', [ProgramController::class, 'cancelApplication'])->name('kabataan.programs.applications.cancel');
+    Route::post('/api/kabataan/programs/documents/upload', [ProgramController::class, 'uploadDocument'])->name('kabataan.programs.documents.upload');
+    Route::get('/api/kabataan/programs/documents/{scheduleProgramId}/{questionId}', [ProgramController::class, 'showDocument'])->name('kabataan.programs.documents.show');
+
+    Route::get('/scholarship/apply', [ProgramController::class, 'scholarshipLanding'])->name('scholarship.apply');
+    Route::get('/scholarship/apply/form', [ProgramController::class, 'scholarshipForm'])->name('scholarship.apply.form');
+
     Route::view('/sports/apply', 'programs::sports_landing')->name('sports.apply');
     Route::view('/sports/apply/form', 'programs::sports-registration')->name('sports.apply.form');
 

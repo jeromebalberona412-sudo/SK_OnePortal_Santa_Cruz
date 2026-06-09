@@ -5,11 +5,16 @@ namespace App\Modules\Dashboard\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
+use App\Modules\Programs\Services\KabataanProgramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly KabataanProgramService $programService)
+    {
+    }
+
     public function index(Request $request)
     {
         if (!Auth::check()) {
@@ -30,6 +35,8 @@ class DashboardController extends Controller
 
         return view('dashboard::dashboard', [
             'user'                => $user,
+            'barangayName'        => $barangayName,
+            'programsPayload'     => $this->programService->getDashboardPayload($user),
             'showKkUpdateModal'   => (bool) ($registration && session()->pull('show_kk_profiling_update', false)),
             'kkUpdateBarangay'    => $registration ? $barangayName : null,
             'kkRespondentNumber'  => $respondentNumber ?? '',

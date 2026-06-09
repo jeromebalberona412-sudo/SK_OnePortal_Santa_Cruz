@@ -20,6 +20,7 @@
         'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Dashboard/assets/js/dashboard.js',
         'app/Modules/Programs/assets/js/programs.js',
+        'app/Modules/Programs/assets/js/kabataan-programs.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
@@ -43,136 +44,10 @@
             <aside class="programs-sidebar-left">
                 <div class="sidebar-card">
                     <h2 class="sidebar-title">Programs in Your Barangay</h2>
-                    <p class="sidebar-subtitle">Available programs in Barangay {{ $user->barangay ?? '1' }}</p>
+                    <p class="sidebar-subtitle">Available programs in Barangay {{ $barangayName ?? ($user->barangay ?? '1') }}</p>
                     
-                    <div class="program-categories">
-                        <!-- Education -->
-                        <div class="program-category" onclick="openEducationModal()" style="cursor: pointer;">
-                            <div class="category-icon education">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                                </svg>
-                            </div>
-                            <div class="category-content">
-                                <h3>Education</h3>
-                                <p>1 active program</p>
-                            </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-
-                        <!-- Anti-Drugs -->
-                        <div class="program-category" data-category="anti-drugs" onclick="openAntiDrugsModal()" style="cursor: pointer;">
-                            <div class="category-icon anti-drugs">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="category-content">
-                                <h3>Anti-Drugs</h3>
-                                <p>1 active program</p>
-                            </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-
-                        <!-- Agriculture -->
-                        <div class="program-category" data-category="agriculture" onclick="openAgricultureModal()" style="cursor: pointer;">
-                            <div class="category-icon agriculture">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="category-content">
-                                <h3>Agriculture</h3>
-                                <p>1 active program</p>
-                            </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-
-                        <!-- Disaster Preparedness -->
-                        <div class="program-category" data-category="disaster" onclick="openDisasterModal()" style="cursor: pointer;">
-                            <div class="category-icon disaster">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="category-content">
-                                <h3>Disaster Preparedness</h3>
-                                <p>1 active program</p>
-                            </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-
-                        <!-- Sports Development -->
-                        <div class="program-category" data-category="sports" onclick="openSportsModal()" style="cursor: pointer;">
-                            <div class="category-icon sports">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="category-content">
-                                <h3>Sports Development</h3>
-                                <p>1 active program</p>
-                            </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-
-                        <!-- Gender and Development -->
-                        <div class="program-category" data-category="gender" onclick="openGenderModal()" style="cursor: pointer;">
-                            <div class="category-icon gender">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                                </svg>
-                            </div>
-                            <div class="category-content">
-                                <h3>Gender and Development</h3>
-                                <p>1 active program</p>
-                            </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-
-                        <!-- Health -->
-                        <div class="program-category" data-category="health" onclick="openHealthModal()" style="cursor: pointer;">
-                            <div class="category-icon health">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="category-content">
-                                <h3>Health</h3>
-                                <p>1 active program</p>
-                            </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-
-                        <!-- Others -->
-                        <div class="program-category" data-category="others" onclick="openOthersModal()" style="cursor: pointer;">
-                            <div class="category-icon others">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="category-content">
-                                <h3>Others</h3>
-                                <p>1 active program</p>
-                            </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
+                    <div class="program-categories" id="programCategoriesContainer">
+                        <p style="text-align:center;color:#64748b;padding:16px;font-size:14px;">Loading programs…</p>
                     </div>
                 </div>
             </aside>
@@ -267,136 +142,10 @@
     <aside class="programs-sidebar" id="programsDrawerSidebar">
         <div class="sidebar-card">
             <h2 class="sidebar-title">Programs in Your Barangay</h2>
-            <p class="sidebar-subtitle">Available programs in Barangay {{ $user->barangay ?? '1' }}</p>
+            <p class="sidebar-subtitle">Available programs in Barangay {{ $barangayName ?? ($user->barangay ?? '1') }}</p>
             
-            <div class="program-categories">
-                <!-- Education -->
-                <div class="program-category" onclick="openEducationModal()" style="cursor: pointer;">
-                    <div class="category-icon education">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                        </svg>
-                    </div>
-                    <div class="category-content">
-                        <h3>Education</h3>
-                        <p>1 active program</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Anti-Drugs -->
-                <div class="program-category" data-category="anti-drugs" onclick="openAntiDrugsModal()" style="cursor: pointer;">
-                    <div class="category-icon anti-drugs">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="category-content">
-                        <h3>Anti-Drugs</h3>
-                        <p>1 active program</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Agriculture -->
-                <div class="program-category" data-category="agriculture" onclick="openAgricultureModal()" style="cursor: pointer;">
-                    <div class="category-icon agriculture">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="category-content">
-                        <h3>Agriculture</h3>
-                        <p>1 active program</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Disaster Preparedness -->
-                <div class="program-category" data-category="disaster" onclick="openDisasterModal()" style="cursor: pointer;">
-                    <div class="category-icon disaster">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="category-content">
-                        <h3>Disaster Preparedness</h3>
-                        <p>1 active program</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Sports Development -->
-                <div class="program-category" data-category="sports" onclick="openSportsModal()" style="cursor: pointer;">
-                    <div class="category-icon sports">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="category-content">
-                        <h3>Sports Development</h3>
-                        <p>1 active program</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Gender and Development -->
-                <div class="program-category" data-category="gender" onclick="openGenderModal()" style="cursor: pointer;">
-                    <div class="category-icon gender">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                        </svg>
-                    </div>
-                    <div class="category-content">
-                        <h3>Gender and Development</h3>
-                        <p>1 active program</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Health -->
-                <div class="program-category" data-category="health" onclick="openHealthModal()" style="cursor: pointer;">
-                    <div class="category-icon health">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="category-content">
-                        <h3>Health</h3>
-                        <p>1 active program</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-
-                <!-- Others -->
-                <div class="program-category" data-category="others" onclick="openOthersModal()" style="cursor: pointer;">
-                    <div class="category-icon others">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="category-content">
-                        <h3>Others</h3>
-                        <p>1 active program</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
+            <div class="program-categories" id="programCategoriesDrawerContainer">
+                <p style="text-align:center;color:#64748b;padding:16px;font-size:14px;">Loading programs…</p>
             </div>
         </div>
 
@@ -455,165 +204,9 @@
                     </svg>
                 </button>
             </div>
-            
-            <div class="modal-body" style="padding: 32px;">
-                <!-- Modern Program Card -->
-                <div class="modern-program-card">
-                    <!-- Header with gradient -->
-                    <div class="program-card-header">
-                        <div class="program-title-row">
-                            <div>
-                                <span class="program-category-tag">🎓 Education</span>
-                                <h3 class="program-card-title">SK Scholarship Assistance Program 2026</h3>
-                            </div>
-                            <span class="program-status-badge status-active">
-                                <span class="status-dot"></span>
-                                Active
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Program Details Grid -->
-                    <div class="program-details-grid">
-                        <div class="detail-card">
-                            <div class="detail-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                                </svg>
-                            </div>
-                            <div class="detail-content">
-                                <span class="detail-label">Committee Handled By</span>
-                                <span class="detail-value">Committee on Education and Youth Development</span>
-                            </div>
-                        </div>
-
-                        <div class="detail-card">
-                            <div class="detail-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="detail-content">
-                                <span class="detail-label">Program Status</span>
-                                <span class="detail-value">Active</span>
-                            </div>
-                        </div>
-
-                        <div class="detail-card">
-                            <div class="detail-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                                </svg>
-                            </div>
-                            <div class="detail-content">
-                                <span class="detail-label">Participant Quantity</span>
-                                <span class="detail-value">50 Students</span>
-                            </div>
-                        </div>
-
-                        <div class="detail-card">
-                            <div class="detail-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="detail-content">
-                                <span class="detail-label">Starting Date</span>
-                                <span class="detail-value">January 15, 2026</span>
-                            </div>
-                        </div>
-
-                        <div class="detail-card">
-                            <div class="detail-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="detail-content">
-                                <span class="detail-label">End Date</span>
-                                <span class="detail-value">March 31, 2026</span>
-                            </div>
-                        </div>
-
-                        <div class="detail-card">
-                            <div class="detail-icon" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="detail-content">
-                                <span class="detail-label">Venue</span>
-                                <span class="detail-value">SK Office, Barangay Hall, Santa Cruz, Laguna</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Description Section -->
-                    <div class="program-description-section">
-                        <h4 class="section-heading">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                            </svg>
-                            Description
-                        </h4>
-                        <p class="description-text">
-                            The SK Scholarship Assistance Program provides financial support to deserving youth pursuing higher education. This program aims to help students from low-income families achieve their academic goals by covering tuition fees, books, and other educational expenses. Priority will be given to students with excellent academic records and demonstrated financial need.
-                        </p>
-                    </div>
-
-                    <!-- Terms & Conditions Expandable -->
-                    <div class="terms-section">
-                        <button class="terms-toggle" onclick="toggleTerms(); event.stopPropagation();" id="termsToggle" type="button">
-                            <div class="terms-toggle-header">
-                                <h4 class="section-heading">
-                                    <svg viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Terms & Conditions
-                                </h4>
-                                <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                        </button>
-                        <div class="terms-content" id="termsContent">
-                            <ul class="terms-list">
-                                <li>Applicant must be a bonafide resident of Santa Cruz, Laguna</li>
-                                <li>Must be enrolled or planning to enroll in an accredited educational institution</li>
-                                <li>Must maintain a general weighted average (GWA) of at least 85% or equivalent</li>
-                                <li>Must submit all required documents including Certificate of Enrollment, Certificate of Indigency, and valid ID</li>
-                                <li>Scholarship grant is non-transferable and non-convertible to cash</li>
-                                <li>Recipients must attend mandatory orientation and community service activities</li>
-                                <li>Must submit progress reports every semester</li>
-                                <li>Failure to comply with requirements may result in scholarship termination</li>
-                                <li>Scholarship covers one academic year and may be renewed upon reapplication</li>
-                                <li>Recipients must not be receiving similar scholarships from other government agencies</li>
-                            </ul>
-                            
-                            <!-- Agreement Checkbox -->
-                            <div class="terms-agreement">
-                                <label class="agreement-checkbox" onclick="event.stopPropagation();">
-                                    <input type="checkbox" id="agreeTerms" onchange="toggleApplyButton()" onclick="event.stopPropagation();">
-                                    <span class="checkbox-custom"></span>
-                                    <span class="agreement-text">
-                                        I have read and agree to the Terms & Conditions
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Button -->
-                    <div class="program-action">
-                        <button class="apply-now-button" id="applyNowBtn" onclick="goToScholarshipApplication()" disabled>
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
-                            </svg>
-                            Apply Now
-                        </button>
-                        <p class="apply-note">Please read and agree to the Terms & Conditions to continue</p>
-                    </div>
+            <div class="modal-body" style="padding: 32px; overflow-y: auto; max-height: calc(90vh - 80px);">
+                <div id="educationProgramsContainer">
+                    <p style="text-align:center;color:#64748b;padding:32px;">Loading programs…</p>
                 </div>
             </div>
         </div>
@@ -1339,6 +932,7 @@
     @endif
     <script>
         window.__SHOW_KK_UPDATE_MODAL = @json($showKkUpdateModal ?? false);
+        window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => []]);
     </script>
 </body>
 </html>

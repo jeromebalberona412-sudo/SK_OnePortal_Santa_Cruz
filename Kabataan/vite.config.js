@@ -45,6 +45,7 @@ export default defineConfig({
                 'app/Modules/Programs/assets/css/sports-registration.css',
                 'app/Modules/Programs/assets/js/sports-registration.js',
                 'app/Modules/Programs/assets/js/programs.js',
+                'app/Modules/Programs/assets/js/kabataan-programs.js',
                 'app/Modules/Programs/assets/css/programs-pre-survey.css',
                 'app/Modules/Programs/assets/js/programs-pre-survey.js',
 
