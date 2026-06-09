@@ -140,6 +140,7 @@ class BarangayProfileService
     {
         return Announcement::query()
             ->with(['user', 'barangay', 'images'])
+            ->active()
             ->withCount(['reactions', 'comments'])
             ->where('barangay_id', $barangayId)
             ->whereRaw('"is_federation_wide" = false')

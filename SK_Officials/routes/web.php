@@ -70,6 +70,18 @@ Route::middleware([
     Route::get('/announcements', [\App\Modules\Announcement\Controllers\AnnouncementPageController::class, 'index'])
         ->name('announcements');
 
+    Route::get('/announcements/archive', [\App\Modules\Announcement\Controllers\ArchiveAnnouncementController::class, 'index'])
+        ->name('announcements.archive');
+
+    Route::get('/announcements/archive/data', [\App\Modules\Announcement\Controllers\ArchiveAnnouncementController::class, 'data'])
+        ->name('announcements.archive.data');
+
+    Route::post('/announcements/archive/{id}/restore', [\App\Modules\Announcement\Controllers\ArchiveAnnouncementController::class, 'restore'])
+        ->name('announcements.archive.restore');
+
+    Route::delete('/announcements/archive/{id}', [\App\Modules\Announcement\Controllers\ArchiveAnnouncementController::class, 'destroy'])
+        ->name('announcements.archive.destroy');
+
     // Announcement API
     Route::prefix('api/announcements')->group(function () {
         Route::get('/',              [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'feed'])->name('api.announcements.feed');

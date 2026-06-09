@@ -260,7 +260,7 @@ function buildPost(p) {
             </button>
             <div class="post-options-menu" id="options-menu-${p.id}">
               <button onclick="editPost(${p.id})"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>Edit</button>
-              <button class="danger" onclick="deletePost(${p.id})"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Delete</button>
+              <button class="danger" onclick="openArchiveModal(${p.id})"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Archive</button>
             </div>
            </div>` : '';
 
@@ -497,12 +497,45 @@ async function editPost(id) {
     document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
 }
 
-async function deletePost(id) {
-    if (!confirm('Delete this post?')) return;
-    await apiFetch(`/api/announcements/${id}`, { method: 'DELETE' });
-    knownPostIds.delete(Number(id));
-    document.querySelector(`.post-card[data-post-id="${id}"]`)?.remove();
+let pendingArchivePostId = null;
+
+function openArchiveModal(id) {
+    pendingArchivePostId = id;
+    document.getElementById('archivePostModal')?.classList.add('active');
     document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
+}
+
+function closeArchiveModal() {
+    pendingArchivePostId = null;
+    document.getElementById('archivePostModal')?.classList.remove('active');
+}
+
+async function confirmArchivePost() {
+    if (!pendingArchivePostId) return;
+    const id = pendingArchivePostId;
+    const btn = document.getElementById('confirmArchiveBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Archiving…';
+    }
+
+    try {
+        await apiFetch(`/api/announcements/${id}`, { method: 'DELETE' });
+        knownPostIds.delete(Number(id));
+        document.querySelector(`.post-card[data-post-id="${id}"]`)?.remove();
+        closeArchiveModal();
+    } catch (err) {
+        alert(err.message || 'Failed to archive post.');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Archive Post';
+        }
+    }
+}
+
+async function deletePost(id) {
+    openArchiveModal(id);
 }
 
 function setPostButtonLoading(loading) {
@@ -733,6 +766,9 @@ window.submitComment = submitComment;
 window.togglePostOptions = togglePostOptions;
 window.editPost = editPost;
 window.deletePost = deletePost;
+window.openArchiveModal = openArchiveModal;
+window.closeArchiveModal = closeArchiveModal;
+window.confirmArchivePost = confirmArchivePost;
 window.loadMorePosts = loadMorePosts;
 window.setFeedFilter = setFeedFilter;
 window.toggleNotifPopover = toggleNotifPopover;

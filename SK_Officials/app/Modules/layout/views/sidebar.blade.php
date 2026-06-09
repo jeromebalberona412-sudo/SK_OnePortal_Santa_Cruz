@@ -169,7 +169,7 @@
                 </li>
 
                 <!-- ── Archived (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports') ? 'open' : '' }}" id="archivedDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports', 'announcements.archive') ? 'open' : '' }}" id="archivedDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="archivedToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="21 8 21 21 3 21 3 8"></polyline>
@@ -208,6 +208,20 @@
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                 </svg>
                                 <span>Deleted Kabataan</span>
+                            </a>
+                        </li>
+
+                        <!-- Deleted Posts -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('announcements.archive') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('announcements.archive') ? 'active' : '' }}">
+                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6l-1 14H6L5 6"></path>
+                                    <path d="M10 11v6"></path>
+                                    <path d="M14 11v6"></path>
+                                    <path d="M9 6V4h6v2"></path>
+                                </svg>
+                                <span>Deleted Posts</span>
                             </a>
                         </li>
 

@@ -160,6 +160,28 @@
     <div id="lightboxCounter" class="lightbox-counter"></div>
 </div>
 
+{{-- Archive Post confirmation --}}
+<div id="archivePostModal" class="program-modal">
+    <div class="modal-overlay" onclick="closeArchiveModal()"></div>
+    <div class="modal-container" style="max-width:440px;">
+        <div class="modal-header">
+            <h2>Archive Post</h2>
+            <button class="modal-close" onclick="closeArchiveModal()"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:14px;color:#555;line-height:1.65;margin:0;">
+                This post will be moved to Archive.<br><br>
+                It can be restored within 30 days.<br><br>
+                After 30 days, the post and all uploaded images will be permanently deleted.
+            </p>
+        </div>
+        <div class="modal-footer-btns">
+            <button class="btn-secondary" onclick="closeArchiveModal()">Cancel</button>
+            <button class="btn-primary" id="confirmArchiveBtn" onclick="confirmArchivePost()">Archive Post</button>
+        </div>
+    </div>
+</div>
+
 {{-- Education Program Modal --}}
 {{-- removed program modals --}}
 

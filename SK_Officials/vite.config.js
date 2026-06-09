@@ -44,6 +44,8 @@ export default defineConfig({
                 // Announcement module assets
                 'app/Modules/Announcement/assets/css/announcement.css',
                 'app/Modules/Announcement/assets/js/announcement.js',
+                'app/Modules/Announcement/assets/css/announcement-archive.css',
+                'app/Modules/Announcement/assets/js/announcement-archive.js',
                 // Committees module assets
                 'app/Modules/Committees/assets/css/committees.css',
                 'app/Modules/Committees/assets/js/committees.js',

@@ -7,6 +7,7 @@ use App\Models\AnnouncementComment;
 use App\Models\AnnouncementImage;
 use App\Models\AnnouncementReaction;
 use App\Models\User;
+use App\Modules\Announcement\Services\AnnouncementArchiveService;
 use App\Modules\Announcement\Services\CloudinaryService;
 use App\Services\BarangayLogoUrlService;
 use App\Services\SkOfficialActivityService;
@@ -34,6 +35,7 @@ class AnnouncementController extends Controller
         private readonly SkOfficialActivityService $activityService,
         private readonly CloudinaryService $cloudinary,
         private readonly BarangayLogoUrlService $barangayLogoUrlService,
+        private readonly AnnouncementArchiveService $archiveService,
     ) {
     }
 
@@ -44,6 +46,7 @@ class AnnouncementController extends Controller
 
         $query = Announcement::query()
             ->select('announcements.*')
+            ->active()
             ->with(['barangay', 'comments.user', 'user', 'images'])
             ->withCount('reactions')
             ->where(function ($q) use ($user) {
@@ -138,21 +141,21 @@ class AnnouncementController extends Controller
         return response()->json($this->formatPost($post->load(['barangay', 'comments', 'images']), Auth::id(), 'sk_official'));
     }
 
-    // DELETE /api/announcements/{id}
+    // DELETE /api/announcements/{id} — archives post (30-day retention)
     public function destroy(int $id): JsonResponse
     {
-        $post = Announcement::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-        $title = $post->title ?: 'Post #'.$id;
-        $post->delete();
+        $post = Announcement::query()
+            ->active()
+            ->where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
-        $this->activityService->log(
-            Auth::user(),
-            'announcement.delete',
-            'Deleted announcement: '.$title,
-            ['announcement_id' => $id]
-        );
+        $this->archiveService->archive($post, Auth::user());
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Post moved to archive.',
+        ]);
     }
 
     // POST /api/announcements/{id}/react
