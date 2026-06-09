@@ -787,82 +787,11 @@ CREATE TABLE IF NOT EXISTS kk_survey_responses (
 CREATE INDEX IF NOT EXISTS kk_survey_responses_barangay_id_status_index ON kk_survey_responses (barangay_id, status);
 CREATE INDEX IF NOT EXISTS kk_survey_responses_barangay_id_survey_date_index ON kk_survey_responses (barangay_id, survey_date);
 
--- ABYIP schema (header + programs + activities; safe to re-run)
-ALTER TABLE abyips
-DROP COLUMN IF EXISTS sk_youth_development_and_empowerment_programs;
-
+-- ABYIP unified schema (document header + line items in one table)
+DROP TABLE IF EXISTS abyip_program_activities;
+DROP TABLE IF EXISTS abyip_programs;
 DROP TABLE IF EXISTS abyip_detected_programs;
-
-ALTER TABLE abyips RENAME COLUMN calendar_year TO fiscal_year;
-ALTER TABLE abyips RENAME COLUMN title TO document_title;
-ALTER TABLE abyips RENAME COLUMN prepared_by_name TO prepared_by;
-ALTER TABLE abyips RENAME COLUMN prepared_by_position TO prepared_position;
-ALTER TABLE abyips RENAME COLUMN approved_by_name TO approved_by;
-ALTER TABLE abyips RENAME COLUMN approved_by_position TO approved_position;
-ALTER TABLE abyips RENAME COLUMN total_expenditure TO total_budget;
-
-ALTER TABLE abyips
-ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Republic of the Philippines',
-ADD COLUMN IF NOT EXISTS barangay_name VARCHAR(255) NULL;
-
-ALTER TABLE abyips
-ADD COLUMN IF NOT EXISTS prepared_by_user_id BIGINT NULL,
-ADD COLUMN IF NOT EXISTS approved_by_user_id BIGINT NULL;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_abyip_prepared_by') THEN
-    ALTER TABLE abyips
-    ADD CONSTRAINT fk_abyip_prepared_by
-    FOREIGN KEY (prepared_by_user_id) REFERENCES users (id) ON DELETE SET NULL;
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_abyip_approved_by') THEN
-    ALTER TABLE abyips
-    ADD CONSTRAINT fk_abyip_approved_by
-    FOREIGN KEY (approved_by_user_id) REFERENCES users (id) ON DELETE SET NULL;
-  END IF;
-END $$;
-
-CREATE TABLE IF NOT EXISTS abyip_programs (
-  id BIGSERIAL NOT NULL,
-  abyip_id BIGINT NOT NULL,
-  code VARCHAR(20) NULL,
-  program_name VARCHAR(255) NOT NULL,
-  description TEXT NULL,
-  expected_result TEXT NULL,
-  performance_indicator TEXT NULL,
-  implementation_period VARCHAR(255) NULL,
-  person_responsible VARCHAR(255) NULL,
-  row_type VARCHAR(30) NULL,
-  sort_order INTEGER NULL,
-  created_at TIMESTAMP NULL,
-  updated_at TIMESTAMP NULL,
-  CONSTRAINT abyip_programs_pkey PRIMARY KEY (id),
-  CONSTRAINT abyip_programs_abyip_id_foreign FOREIGN KEY (abyip_id) REFERENCES abyips (id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS abyip_programs_abyip_id_index ON abyip_programs (abyip_id);
-
-CREATE TABLE IF NOT EXISTS abyip_program_activities (
-  id BIGSERIAL NOT NULL,
-  abyip_id BIGINT NOT NULL,
-  program_id BIGINT NOT NULL,
-  activity_name VARCHAR(255) NOT NULL,
-  budget NUMERIC(15, 2) NULL,
-  mooe NUMERIC(15, 2) NULL,
-  co NUMERIC(15, 2) NULL,
-  total NUMERIC(15, 2) NULL,
-  sort_order INTEGER NULL,
-  created_at TIMESTAMP NULL,
-  updated_at TIMESTAMP NULL,
-  CONSTRAINT abyip_program_activities_pkey PRIMARY KEY (id),
-  CONSTRAINT abyip_program_activities_abyip_id_foreign FOREIGN KEY (abyip_id) REFERENCES abyips (id) ON DELETE CASCADE,
-  CONSTRAINT abyip_program_activities_program_id_foreign FOREIGN KEY (program_id) REFERENCES abyip_programs (id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS abyip_program_activities_abyip_id_index ON abyip_program_activities (abyip_id);
-CREATE INDEX IF NOT EXISTS abyip_program_activities_program_id_index ON abyip_program_activities (program_id);
+DROP TABLE IF EXISTS abyips;
 
 CREATE TABLE IF NOT EXISTS calendar_notes (
   id BIGSERIAL NOT NULL,
@@ -895,8 +824,10 @@ CREATE TABLE IF NOT EXISTS committees (
     CONSTRAINT committees_committee_head_id_unique UNIQUE (committee_head_id)
 );
 
-create table public.abyips (
+-- ABYIP: unified document header + expenditure/youth program/activity rows
+create table public.abyip (
   id bigserial not null,
+  document_id bigint null,
   tenant_id bigint null,
   barangay_id bigint not null,
   created_by bigint null,
@@ -906,7 +837,7 @@ create table public.abyips (
   province character varying(100) null,
   municipality character varying(100) null,
   barangay_name character varying(255) null,
-  document_title character varying(255) not null,
+  document_title character varying(255) not null default ''::character varying,
   sk_council_name character varying(255) null,
   barangay_estimated_budget numeric(15, 2) not null default 0,
   sk_fund_percentage numeric(5, 2) not null default 10.00,
@@ -921,60 +852,37 @@ create table public.abyips (
   source_type character varying(20) not null default 'word'::character varying,
   document_html text null,
   pdf_data text null,
-  created_at timestamp without time zone null,
-  updated_at timestamp without time zone null,
-  constraint abyips_pkey primary key (id),
-  constraint abyips_barangay_id_fiscal_year_unique unique (barangay_id, fiscal_year),
-  constraint abyips_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
-  constraint abyips_created_by_foreign foreign KEY (created_by) references users (id) on delete set null,
-  constraint abyips_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete set null,
-  constraint fk_abyip_prepared_by foreign KEY (prepared_by_user_id) references users (id) on delete set null,
-  constraint fk_abyip_approved_by foreign KEY (approved_by_user_id) references users (id) on delete set null
-) TABLESPACE pg_default;
-
-create index IF not exists abyips_barangay_id_fiscal_year_index on public.abyips using btree (barangay_id, fiscal_year) TABLESPACE pg_default;
-
--- Programs: General Administration line items + SK Youth Development A–J programs
-create table public.abyip_programs (
-  id bigserial not null,
-  abyip_id bigint not null,
+  row_type character varying(30) not null default 'document'::character varying,
+  parent_id bigint null,
   code character varying(20) null,
-  program_name character varying(255) not null,
+  program_name character varying(255) null,
   description text null,
   expected_result text null,
   performance_indicator text null,
   implementation_period character varying(255) null,
   person_responsible character varying(255) null,
-  row_type character varying(30) null,
-  sort_order integer null,
-  created_at timestamp without time zone null,
-  updated_at timestamp without time zone null,
-  constraint abyip_programs_pkey primary key (id),
-  constraint abyip_programs_abyip_id_foreign foreign KEY (abyip_id) references abyips (id) on delete CASCADE
-) TABLESPACE pg_default;
-
-create index IF not exists abyip_programs_abyip_id_index on public.abyip_programs using btree (abyip_id) TABLESPACE pg_default;
-
--- Activities: bullet items under youth programs (e.g. "Support to ALS and RIC")
-create table public.abyip_program_activities (
-  id bigserial not null,
-  abyip_id bigint not null,
-  program_id bigint not null,
-  activity_name character varying(255) not null,
-  budget numeric(15, 2) null,
   mooe numeric(15, 2) null,
   co numeric(15, 2) null,
   total numeric(15, 2) null,
+  budget numeric(15, 2) null,
   sort_order integer null,
   created_at timestamp without time zone null,
   updated_at timestamp without time zone null,
-  constraint abyip_program_activities_pkey primary key (id),
-  constraint abyip_program_activities_abyip_id_foreign foreign KEY (abyip_id) references abyips (id) on delete CASCADE,
-  constraint abyip_program_activities_program_id_foreign foreign KEY (program_id) references abyip_programs (id) on delete CASCADE
+  constraint abyip_pkey primary key (id),
+  constraint abyip_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
+  constraint abyip_created_by_foreign foreign KEY (created_by) references users (id) on delete set null,
+  constraint abyip_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete set null,
+  constraint abyip_document_id_foreign foreign KEY (document_id) references abyip (id) on delete CASCADE,
+  constraint abyip_parent_id_foreign foreign KEY (parent_id) references abyip (id) on delete CASCADE,
+  constraint fk_abyip_prepared_by foreign KEY (prepared_by_user_id) references users (id) on delete set null,
+  constraint fk_abyip_approved_by foreign KEY (approved_by_user_id) references users (id) on delete set null
 ) TABLESPACE pg_default;
 
-create index IF not exists abyip_program_activities_abyip_id_index on public.abyip_program_activities using btree (abyip_id) TABLESPACE pg_default;
-create index IF not exists abyip_program_activities_program_id_index on public.abyip_program_activities using btree (program_id) TABLESPACE pg_default;
+create unique index IF not exists abyip_barangay_fiscal_year_document_idx on public.abyip using btree (barangay_id, fiscal_year) where (row_type = 'document'::character varying);
+create index IF not exists abyip_barangay_id_fiscal_year_index on public.abyip using btree (barangay_id, fiscal_year) TABLESPACE pg_default;
+create index IF not exists abyip_document_id_index on public.abyip using btree (document_id) TABLESPACE pg_default;
+create index IF not exists abyip_document_id_row_type_index on public.abyip using btree (document_id, row_type) TABLESPACE pg_default;
+create index IF not exists abyip_parent_id_index on public.abyip using btree (parent_id) TABLESPACE pg_default;
 
 create table public.calendar_notes (
   id bigserial not null,

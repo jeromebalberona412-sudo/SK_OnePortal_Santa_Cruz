@@ -2,9 +2,7 @@
 
 namespace App\Modules\ABYIP\Services;
 
-use App\Models\AbyipDocument;
-use App\Models\AbyipProgram;
-use App\Models\AbyipProgramActivity;
+use App\Models\Abyip;
 use App\Models\OfficialProfile;
 use App\Models\User;
 use DOMDocument;
@@ -79,12 +77,13 @@ class AbyipService
      */
     public function listForBarangay(User $user): Collection
     {
-        return AbyipDocument::query()
+        return Abyip::query()
+            ->documents()
             ->where('barangay_id', $user->barangay_id)
             ->orderByDesc('fiscal_year')
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn (AbyipDocument $document) => $this->formatDocument($document, forList: true));
+            ->map(fn (Abyip $document) => $this->formatDocument($document, forList: true));
     }
 
     /**
@@ -94,7 +93,7 @@ class AbyipService
     {
         $document = $this->findDocumentModel($user, $documentId);
 
-        return $this->formatDocument($document->load(['programs.activities', 'activities']));
+        return $this->formatDocument($document->load(['lines.children']));
     }
 
     /**
@@ -103,8 +102,8 @@ class AbyipService
      */
     public function store(User $user, array $data): array
     {
-        $sourceType = (string) ($data['source_type'] ?? AbyipDocument::SOURCE_WORD);
-        $parsed = $sourceType === AbyipDocument::SOURCE_PDF
+        $sourceType = (string) ($data['source_type'] ?? Abyip::SOURCE_WORD);
+        $parsed = $sourceType === Abyip::SOURCE_PDF
             ? $this->parseUploadedDocument(
                 documentHtml: '',
                 extractedText: (string) ($data['extracted_text'] ?? '')
@@ -120,7 +119,8 @@ class AbyipService
         $signatureUserIds = $this->resolveSignatureUserIds($user->barangay_id, $parsed);
 
         $document = \Illuminate\Support\Facades\DB::transaction(function () use ($user, $data, $fiscalYear, $sourceType, $parsed, $signatureUserIds) {
-            $document = AbyipDocument::create([
+            $document = Abyip::create([
+                'row_type' => Abyip::ROW_DOCUMENT,
                 'tenant_id' => $user->tenant_id,
                 'barangay_id' => $user->barangay_id,
                 'created_by' => $user->id,
@@ -147,7 +147,9 @@ class AbyipService
                 'pdf_data' => $data['pdf_data'] ?? null,
             ]);
 
-            $this->syncProgramsAndActivities(
+            $document->update(['document_id' => $document->id]);
+
+            $this->syncAbyipLines(
                 $document,
                 $parsed['line_items'] ?? [],
                 $parsed['sk_youth_development_and_empowerment_programs'] ?? []
@@ -156,7 +158,7 @@ class AbyipService
             return $document;
         });
 
-        return $this->formatDocument($document->fresh(['programs.activities', 'activities']));
+        return $this->formatDocument($document->fresh(['lines.children']));
     }
 
     /**
@@ -177,9 +179,10 @@ class AbyipService
         $this->findDocumentModel($user, $documentId)->delete();
     }
 
-    protected function findDocumentModel(User $user, int $documentId): AbyipDocument
+    protected function findDocumentModel(User $user, int $documentId): Abyip
     {
-        $document = AbyipDocument::query()
+        $document = Abyip::query()
+            ->documents()
             ->where('id', $documentId)
             ->where('barangay_id', $user->barangay_id)
             ->first();
@@ -195,7 +198,8 @@ class AbyipService
 
     protected function assertUniqueYear(User $user, int $fiscalYear): void
     {
-        $exists = AbyipDocument::query()
+        $exists = Abyip::query()
+            ->documents()
             ->where('barangay_id', $user->barangay_id)
             ->where('fiscal_year', $fiscalYear)
             ->exists();
@@ -210,8 +214,18 @@ class AbyipService
     /**
      * @return array<string, mixed>
      */
-    protected function formatDocument(AbyipDocument $document, bool $forList = false): array
+    protected function formatDocument(Abyip $document, bool $forList = false): array
     {
+        $programs = [];
+
+        if ($document->relationLoaded('lines')) {
+            foreach ($document->lines as $line) {
+                if (in_array($line->row_type, [Abyip::ROW_EXPENDITURE, Abyip::ROW_YOUTH_PROGRAM], true)) {
+                    $programs[] = $this->formatLineAsProgram($line);
+                }
+            }
+        }
+
         return [
             'id' => $document->id,
             'title' => $document->document_title,
@@ -240,9 +254,7 @@ class AbyipService
             'approved_by' => $document->approved_by,
             'approved_position' => $document->approved_position,
             'approved_by_user_id' => $document->approved_by_user_id,
-            'programs' => $document->relationLoaded('programs')
-                ? $document->programs->map(fn (AbyipProgram $program) => $this->formatProgram($program))->values()->all()
-                : [],
+            'programs' => $programs,
             'line_items' => [],
         ];
     }
@@ -251,8 +263,8 @@ class AbyipService
      * @param  list<array<string, mixed>>  $lineItems
      * @param  list<array<string, mixed>>  $youthPrograms
      */
-    protected function syncProgramsAndActivities(
-        AbyipDocument $document,
+    protected function syncAbyipLines(
+        Abyip $document,
         array $lineItems,
         array $youthPrograms
     ): void {
@@ -272,9 +284,9 @@ class AbyipService
                 continue;
             }
 
-            $this->createProgramRow($document->id, $item, $sortOrder++, [
+            $this->createAbyipLineRow($document, $item, $sortOrder++, [
                 'code' => $item['code'] ?? null,
-                'row_type' => 'expenditure',
+                'row_type' => Abyip::ROW_EXPENDITURE,
             ]);
         }
 
@@ -287,25 +299,32 @@ class AbyipService
             }
 
             $meta = $program['_meta'] ?? [];
-            $model = AbyipProgram::create([
-                'abyip_id' => $document->id,
+            $programRow = $this->createAbyipLineRow($document, array_merge($meta, [
+                'ppa_name' => $name,
                 'code' => $letter,
-                'program_name' => $name,
-                'description' => $meta['description'] ?? null,
-                'expected_result' => $meta['expected_result'] ?? null,
-                'performance_indicator' => $meta['performance_indicator'] ?? null,
-                'implementation_period' => $meta['period_of_implementation'] ?? null,
-                'person_responsible' => $this->extractPersonResponsibleFromValue($meta['person_responsible'] ?? null),
-                'row_type' => 'youth_program',
-                'sort_order' => $sortOrder++,
+            ]), $sortOrder++, [
+                'code' => $letter,
+                'row_type' => Abyip::ROW_YOUTH_PROGRAM,
             ]);
+
+            if ($programRow === null) {
+                continue;
+            }
 
             foreach ($program['activities'] ?? [] as $activity) {
                 if (! $this->isValidYouthActivityRecord($activity)) {
                     continue;
                 }
 
-                $this->createActivityRow($document->id, $model->id, $activity, $sortOrder++);
+                $this->createAbyipLineRow(
+                    $document,
+                    $activity,
+                    $sortOrder++,
+                    [
+                        'row_type' => Abyip::ROW_ACTIVITY,
+                        'parent_id' => $programRow->id,
+                    ]
+                );
             }
         }
     }
@@ -314,19 +333,37 @@ class AbyipService
      * @param  array<string, mixed>  $item
      * @param  array<string, mixed>  $defaults
      */
-    protected function createProgramRow(
-        int $abyipId,
+    protected function createAbyipLineRow(
+        Abyip $document,
         array $item,
         int $sortOrder,
         array $defaults = []
-    ): void {
-        $programName = trim((string) ($item['ppa_name'] ?? ''));
+    ): ?Abyip {
+        $rowType = (string) ($defaults['row_type'] ?? Abyip::ROW_EXPENDITURE);
+        $programName = trim((string) ($item['ppa_name'] ?? $item['activity_name'] ?? ''));
         if ($programName === '') {
-            return;
+            return null;
         }
 
-        AbyipProgram::create([
-            'abyip_id' => $abyipId,
+        $budgets = $this->normalizeBudgetFields([
+            'budget_mooe' => $item['budget_mooe'] ?? null,
+            'budget_co' => $item['budget_co'] ?? null,
+            'budget_total' => $item['budget_total'] ?? $item['budget'] ?? null,
+        ]);
+
+        $mooe = $budgets['budget_mooe'];
+        $co = $budgets['budget_co'];
+        $total = $budgets['budget_total'];
+        $budget = $total ?? $mooe ?? $co;
+
+        return Abyip::create([
+            'document_id' => $document->id,
+            'tenant_id' => $document->tenant_id,
+            'barangay_id' => $document->barangay_id,
+            'created_by' => $document->created_by,
+            'fiscal_year' => $document->fiscal_year,
+            'row_type' => $rowType,
+            'parent_id' => $defaults['parent_id'] ?? null,
             'code' => $defaults['code'] ?? ($item['code'] ?? null),
             'program_name' => $programName,
             'description' => $item['description'] ?? null,
@@ -334,38 +371,10 @@ class AbyipService
             'performance_indicator' => $item['performance_indicator'] ?? null,
             'implementation_period' => $item['period_of_implementation'] ?? null,
             'person_responsible' => $this->extractPersonResponsibleFromValue($item['person_responsible'] ?? null),
-            'row_type' => $defaults['row_type'] ?? ($item['row_type'] ?? 'expenditure'),
-            'sort_order' => $sortOrder,
-        ]);
-    }
-
-    /**
-     * @param  array<string, mixed>  $item
-     */
-    protected function createActivityRow(
-        int $abyipId,
-        int $programId,
-        array $item,
-        int $sortOrder
-    ): void {
-        $activityName = trim((string) ($item['ppa_name'] ?? $item['activity_name'] ?? ''));
-        if ($activityName === '') {
-            return;
-        }
-
-        $mooe = $this->parseAmount($item['budget_mooe'] ?? null);
-        $co = $this->parseAmount($item['budget_co'] ?? null);
-        $total = $this->parseAmount($item['budget_total'] ?? $item['budget'] ?? null);
-        $budget = $total ?? $mooe ?? $co;
-
-        AbyipProgramActivity::create([
-            'abyip_id' => $abyipId,
-            'program_id' => $programId,
-            'activity_name' => $activityName,
-            'budget' => $budget,
             'mooe' => $mooe,
             'co' => $co,
-            'total' => $total ?? $budget,
+            'total' => $total,
+            'budget' => $budget,
             'sort_order' => $sortOrder,
         ]);
     }
@@ -373,21 +382,25 @@ class AbyipService
     /**
      * @return array<string, mixed>
      */
-    protected function formatProgram(AbyipProgram $program): array
+    protected function formatLineAsProgram(Abyip $line): array
     {
         return [
-            'id' => $program->id,
-            'code' => $program->code,
-            'program_letter' => $program->program_letter,
-            'program_name' => $program->program_name,
-            'description' => $program->description,
-            'expected_result' => $program->expected_result,
-            'performance_indicator' => $program->performance_indicator,
-            'implementation_period' => $program->implementation_period,
-            'person_responsible' => $program->person_responsible,
-            'row_type' => $program->row_type,
-            'activities' => $program->relationLoaded('activities')
-                ? $program->activities->map(fn (AbyipProgramActivity $activity) => $this->formatActivity($activity))->values()->all()
+            'id' => $line->id,
+            'code' => $line->code,
+            'program_letter' => $line->program_letter,
+            'program_name' => $line->program_name,
+            'description' => $line->description,
+            'expected_result' => $line->expected_result,
+            'performance_indicator' => $line->performance_indicator,
+            'implementation_period' => $line->implementation_period,
+            'person_responsible' => $line->person_responsible,
+            'row_type' => $line->row_type,
+            'mooe' => $line->mooe,
+            'co' => $line->co,
+            'total' => $line->total,
+            'budget' => $line->budget,
+            'activities' => $line->relationLoaded('children')
+                ? $line->children->map(fn (Abyip $activity) => $this->formatLineAsActivity($activity))->values()->all()
                 : [],
         ];
     }
@@ -395,16 +408,37 @@ class AbyipService
     /**
      * @return array<string, mixed>
      */
-    protected function formatActivity(AbyipProgramActivity $activity): array
+    protected function formatLineAsActivity(Abyip $activity): array
     {
         return [
             'id' => $activity->id,
-            'program_id' => $activity->program_id,
-            'activity_name' => $activity->activity_name,
+            'program_id' => $activity->parent_id,
+            'activity_name' => $activity->program_name,
             'budget' => $activity->budget,
             'mooe' => $activity->mooe,
             'co' => $activity->co,
             'total' => $activity->total,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array{budget_mooe: ?string, budget_co: ?string, budget_total: ?string}
+     */
+    protected function normalizeBudgetFields(array $row): array
+    {
+        $mooe = $this->parseAmount($row['budget_mooe'] ?? null);
+        $co = $this->parseAmount($row['budget_co'] ?? null);
+        $total = $this->parseAmount($row['budget_total'] ?? null);
+
+        if ($total === null && $mooe !== null) {
+            $total = $mooe;
+        }
+
+        return [
+            'budget_mooe' => $mooe,
+            'budget_co' => $co,
+            'budget_total' => $total,
         ];
     }
 
@@ -1183,9 +1217,10 @@ class AbyipService
      */
     protected function finalizeStructuredAbyipRow(array $row): array
     {
-        $row['budget_mooe'] = $this->parseAmount($row['budget_mooe'] ?? null);
-        $row['budget_co'] = $this->parseAmount($row['budget_co'] ?? null);
-        $row['budget_total'] = $this->parseAmount($row['budget_total'] ?? null);
+        $budgets = $this->normalizeBudgetFields($row);
+        $row['budget_mooe'] = $budgets['budget_mooe'];
+        $row['budget_co'] = $budgets['budget_co'];
+        $row['budget_total'] = $budgets['budget_total'];
         $row['person_responsible'] = $this->extractPersonResponsibleFromValue($row['person_responsible'] ?? null);
 
         return $row;
@@ -1232,6 +1267,7 @@ class AbyipService
             '/Sangguniang\s*Kabataan\s*Council\s*\/\s*BADAC/i',
             '/Sangguniang\s*Kabataan\s*Council\s*\/\s*ALS/i',
             '/SK\s*Chairman\s*\/\s*SK\s*Treasurer/i',
+            '/Sangguniang\s*Kabataan\s*Counci[l]?/i',
             '/Sangguniang\s*Kabataan\s*Council/i',
             '/SK\s*Treasurer/i',
             '/SK\s*Chairman/i',
@@ -1626,15 +1662,21 @@ class AbyipService
             $name = null;
         }
 
+        $budgets = $this->normalizeBudgetFields([
+            'budget_mooe' => $mooe,
+            'budget_co' => $co,
+            'budget_total' => $total,
+        ]);
+
         return [
             'ppa_name' => $name,
             'description' => $shared['description'] ?? null,
             'expected_result' => $shared['expected_result'] ?? null,
             'performance_indicator' => $shared['performance_indicator'] ?? null,
             'period_of_implementation' => $shared['period_of_implementation'] ?? null,
-            'budget_mooe' => $mooe,
-            'budget_co' => $co,
-            'budget_total' => $total ?? $mooe,
+            'budget_mooe' => $budgets['budget_mooe'],
+            'budget_co' => $budgets['budget_co'],
+            'budget_total' => $budgets['budget_total'],
             'person_responsible' => $shared['person_responsible'] ?? null,
         ];
     }

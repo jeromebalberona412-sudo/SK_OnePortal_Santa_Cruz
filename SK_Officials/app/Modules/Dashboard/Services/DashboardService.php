@@ -2,9 +2,7 @@
 
 namespace App\Modules\Dashboard\Services;
 
-use App\Models\AbyipDocument;
-use App\Models\AbyipProgram;
-use App\Models\AbyipProgramActivity;
+use App\Models\Abyip;
 use App\Models\CalendarNote;
 use App\Models\KabataanRegistration;
 use App\Models\RejectedKkProfiling;
@@ -107,9 +105,10 @@ class DashboardService
         );
     }
 
-    private function resolveAbyipDocument(int $barangayId, int $year): ?AbyipDocument
+    private function resolveAbyipDocument(int $barangayId, int $year): ?Abyip
     {
-        $abyip = AbyipDocument::query()
+        $abyip = Abyip::query()
+            ->documents()
             ->where('barangay_id', $barangayId)
             ->where('fiscal_year', $year)
             ->orderByDesc('id')
@@ -119,7 +118,8 @@ class DashboardService
             return $abyip;
         }
 
-        return AbyipDocument::query()
+        return Abyip::query()
+            ->documents()
             ->where('barangay_id', $barangayId)
             ->orderByDesc('fiscal_year')
             ->orderByDesc('id')
@@ -198,7 +198,7 @@ class DashboardService
     /**
      * @return array{budget: float, expenses: float, remaining: float}
      */
-    private function budgetStats(?AbyipDocument $abyip): array
+    private function budgetStats(?Abyip $abyip): array
     {
         if ($abyip === null) {
             return ['budget' => 0, 'expenses' => 0, 'remaining' => 0];
@@ -206,8 +206,9 @@ class DashboardService
 
         $allocation = (float) ($abyip->sk_fund_amount ?? 0);
 
-        $expenses = (float) AbyipProgramActivity::query()
-            ->where('abyip_id', $abyip->id)
+        $expenses = (float) Abyip::query()
+            ->where('document_id', $abyip->id)
+            ->whereIn('row_type', [Abyip::ROW_EXPENDITURE, Abyip::ROW_ACTIVITY])
             ->sum(DB::raw('COALESCE(total, budget, mooe, 0)'));
 
         if ($expenses <= 0 && $abyip->total_budget !== null) {
@@ -221,16 +222,16 @@ class DashboardService
         ];
     }
 
-    private function activeProgramCount(?AbyipDocument $abyip): int
+    private function activeProgramCount(?Abyip $abyip): int
     {
         if ($abyip === null) {
             return 0;
         }
 
-        return AbyipProgram::query()
-            ->where('abyip_id', $abyip->id)
+        return Abyip::query()
+            ->where('document_id', $abyip->id)
             ->where(function ($query) {
-                $query->where('row_type', 'youth_program')
+                $query->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
                     ->orWhereIn('code', ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']);
             })
             ->count();
@@ -409,16 +410,16 @@ class DashboardService
     /**
      * @return array{labels: list<string>, values: list<float>}
      */
-    private function budgetProgramBreakdown(?AbyipDocument $abyip): array
+    private function budgetProgramBreakdown(?Abyip $abyip): array
     {
         if ($abyip === null) {
             return ['labels' => [], 'values' => []];
         }
 
-        $programs = AbyipProgram::query()
-            ->where('abyip_id', $abyip->id)
+        $programs = Abyip::query()
+            ->where('document_id', $abyip->id)
             ->where(function ($query) {
-                $query->where('row_type', 'youth_program')
+                $query->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
                     ->orWhereIn('code', ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']);
             })
             ->orderBy('sort_order')
@@ -427,11 +428,12 @@ class DashboardService
         $programIds = $programs->pluck('id')->all();
         $totalsByProgram = $programIds === []
             ? collect()
-            : AbyipProgramActivity::query()
-                ->whereIn('program_id', $programIds)
-                ->selectRaw('program_id, SUM(COALESCE(total, budget, mooe, 0)) AS activity_total')
-                ->groupBy('program_id')
-                ->pluck('activity_total', 'program_id');
+            : Abyip::query()
+                ->whereIn('parent_id', $programIds)
+                ->where('row_type', Abyip::ROW_ACTIVITY)
+                ->selectRaw('parent_id, SUM(COALESCE(total, budget, mooe, 0)) AS activity_total')
+                ->groupBy('parent_id')
+                ->pluck('activity_total', 'parent_id');
 
         $labels = [];
         $values = [];
@@ -449,9 +451,9 @@ class DashboardService
         }
 
         if ($labels === []) {
-            $general = AbyipProgram::query()
-                ->where('abyip_id', $abyip->id)
-                ->where('row_type', 'expenditure')
+            $general = Abyip::query()
+                ->where('document_id', $abyip->id)
+                ->where('row_type', Abyip::ROW_EXPENDITURE)
                 ->orderBy('sort_order')
                 ->get(['program_name']);
 
@@ -566,7 +568,8 @@ class DashboardService
      */
     private function availableYears(int $barangayId): array
     {
-        $years = AbyipDocument::query()
+        $years = Abyip::query()
+            ->documents()
             ->where('barangay_id', $barangayId)
             ->pluck('fiscal_year')
             ->map(fn ($year) => (int) $year)

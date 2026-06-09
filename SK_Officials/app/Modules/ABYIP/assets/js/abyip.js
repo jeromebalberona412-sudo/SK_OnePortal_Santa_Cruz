@@ -1016,6 +1016,95 @@ function openAbyipModalWithImport(importedTable) {
     requestAnimationFrame(() => updateTotals());
 }
 
+const ABYIP_COLUMN_DEFAULTS = {
+    ppas: [0, 0.20],
+    description: [0.20, 0.34],
+    expected: [0.34, 0.42],
+    performance: [0.42, 0.50],
+    period: [0.50, 0.62],
+    mooe: [0.62, 0.70],
+    co: [0.70, 0.74],
+    total: [0.74, 0.82],
+    person: [0.82, 1.05],
+};
+
+let abyipColumnBounds = null;
+
+function resetAbyipColumnBounds() {
+    abyipColumnBounds = null;
+}
+
+function midpoint(left, right) {
+    return (left + right) / 2;
+}
+
+function detectAbyipColumnBounds(pageRows) {
+    if (abyipColumnBounds) {
+        return abyipColumnBounds;
+    }
+
+    for (let i = 0; i < pageRows.length; i++) {
+        const entry = pageRows[i];
+        const width = entry.width;
+        const parts = entry.row.parts;
+        const markers = {};
+
+        parts.forEach(function (part) {
+            const ratio = part.x / width;
+            const text = String(part.text || '').trim().toLowerCase();
+
+            if (text === 'mooe') {
+                markers.mooe = ratio;
+            } else if (text === 'co') {
+                markers.co = ratio;
+            } else if (text === 'total') {
+                markers.total = ratio;
+            } else if (/^performance$/i.test(text) || text.indexOf('indicator') !== -1) {
+                markers.performance = markers.performance === undefined ? ratio : Math.min(markers.performance, ratio);
+            } else if (text.indexOf('period') !== -1 || text.indexOf('implementation') !== -1) {
+                markers.period = markers.period === undefined ? ratio : Math.min(markers.period, ratio);
+            } else if (text.indexOf('person') !== -1 || text.indexOf('responsible') !== -1) {
+                markers.person = markers.person === undefined ? ratio : Math.min(markers.person, ratio);
+            } else if (text === 'description') {
+                markers.description = ratio;
+            } else if (text.indexOf('expected') !== -1) {
+                markers.expected = ratio;
+            } else if (/^ppas$/i.test(text) || text.indexOf('programs') !== -1) {
+                markers.ppas = markers.ppas === undefined ? ratio : Math.min(markers.ppas, ratio);
+            }
+        });
+
+        if (markers.mooe === undefined || markers.total === undefined) {
+            continue;
+        }
+
+        const co = markers.co !== undefined ? markers.co : markers.mooe + 0.04;
+        const person = markers.person !== undefined ? markers.person : 0.84;
+        const performance = markers.performance !== undefined ? markers.performance : 0.44;
+        const period = markers.period !== undefined ? markers.period : 0.54;
+        const expected = markers.expected !== undefined ? markers.expected : 0.38;
+        const description = markers.description !== undefined ? markers.description : 0.22;
+        const ppas = markers.ppas !== undefined ? markers.ppas : 0.05;
+
+        abyipColumnBounds = {
+            ppas: [0, midpoint(ppas, description)],
+            description: [midpoint(ppas, description), midpoint(description, expected)],
+            expected: [midpoint(description, expected), midpoint(expected, performance)],
+            performance: [midpoint(expected, performance), midpoint(performance, period)],
+            period: [midpoint(performance, period), midpoint(period, markers.mooe)],
+            mooe: [midpoint(period, markers.mooe), midpoint(markers.mooe, co)],
+            co: [midpoint(markers.mooe, co), midpoint(co, markers.total)],
+            total: [midpoint(co, markers.total), midpoint(markers.total, person)],
+            person: [midpoint(markers.total, person), 1.05],
+        };
+
+        return abyipColumnBounds;
+    }
+
+    abyipColumnBounds = ABYIP_COLUMN_DEFAULTS;
+    return abyipColumnBounds;
+}
+
 function collectColumnText(parts, width, startRatio, endRatio) {
     const start = width * startRatio;
     const end = width * endRatio;
@@ -1070,24 +1159,29 @@ function appendBlockAmounts(block, key, amounts) {
     block[key] += '\n' + line;
 }
 
-function parseRowColumns(row, width) {
-    const mooeAmounts = extractColumnAmounts(row.parts, width, 0.64, 0.72);
-    const coAmounts = extractColumnAmounts(row.parts, width, 0.72, 0.78);
-    const totalAmounts = extractColumnAmounts(row.parts, width, 0.78, 0.86);
+function parseRowColumns(row, width, bounds) {
+    const columns = bounds || abyipColumnBounds || ABYIP_COLUMN_DEFAULTS;
+    const mooeAmounts = extractColumnAmounts(row.parts, width, columns.mooe[0], columns.mooe[1]);
+    const coAmounts = extractColumnAmounts(row.parts, width, columns.co[0], columns.co[1]);
+    let totalAmounts = extractColumnAmounts(row.parts, width, columns.total[0], columns.total[1]);
+
+    if (totalAmounts.length === 0 && mooeAmounts.length > 0) {
+        totalAmounts = mooeAmounts.slice();
+    }
 
     return {
-        ppas: collectColumnText(row.parts, width, 0, 0.22),
-        description: collectColumnText(row.parts, width, 0.22, 0.38),
-        expected: collectColumnText(row.parts, width, 0.38, 0.46),
-        performance: collectColumnText(row.parts, width, 0.46, 0.54),
-        period: collectColumnText(row.parts, width, 0.54, 0.64),
+        ppas: collectColumnText(row.parts, width, columns.ppas[0], columns.ppas[1]),
+        description: collectColumnText(row.parts, width, columns.description[0], columns.description[1]),
+        expected: collectColumnText(row.parts, width, columns.expected[0], columns.expected[1]),
+        performance: collectColumnText(row.parts, width, columns.performance[0], columns.performance[1]),
+        period: collectColumnText(row.parts, width, columns.period[0], columns.period[1]),
         mooeAmounts: mooeAmounts,
         coAmounts: coAmounts,
         totalAmounts: totalAmounts,
         mooe: mooeAmounts[0] || '',
         co: coAmounts[0] || '',
         total: totalAmounts[0] || '',
-        person: extractPersonResponsibleValue(row.parts, width),
+        person: extractPersonResponsibleValue(row.parts, width, columns.person[0]),
         fullLine: row.parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim(),
     };
 }
@@ -1209,8 +1303,8 @@ function extractAmountFromText(text) {
     return matches[matches.length - 1].replace(/,/g, '');
 }
 
-function extractPersonColumn(parts, width) {
-    const threshold = width * 0.86;
+function extractPersonColumn(parts, width, startRatio) {
+    const threshold = width * (startRatio !== undefined ? startRatio : 0.82);
     const personParts = parts
         .filter(function (part) {
             return part.x >= threshold && !/^\d[\d,.-]*$/.test(part.text);
@@ -1221,11 +1315,11 @@ function extractPersonColumn(parts, width) {
         return personParts.join(' ').replace(/\s+/g, ' ').trim();
     }
 
-    return collectColumnText(parts, width, 0.86, 1.05);
+    return collectColumnText(parts, width, startRatio !== undefined ? startRatio : 0.82, 1.05);
 }
 
-function extractPersonResponsibleValue(parts, width) {
-    const threshold = width * 0.82;
+function extractPersonResponsibleValue(parts, width, startRatio) {
+    const threshold = width * (startRatio !== undefined ? startRatio : 0.82);
     const raw = parts
         .filter(function (part) { return part.x >= threshold; })
         .map(function (part) { return part.text; })
@@ -1237,6 +1331,7 @@ function extractPersonResponsibleValue(parts, width) {
         /Sangguniang\s*Kabataan\s*Council\s*\/\s*BADAC/i,
         /Sangguniang\s*Kabataan\s*Council\s*\/\s*ALS/i,
         /SK\s*Chairman\s*\/\s*SK\s*Treasurer/i,
+        /Sangguniang\s*Kabataan\s*Counci[l]?/i,
         /Sangguniang\s*Kabataan\s*Council/i,
         /SK\s*Treasurer/i,
         /SK\s*Chairman/i,
@@ -1250,7 +1345,7 @@ function extractPersonResponsibleValue(parts, width) {
         }
     }
 
-    const fallback = normalizePersonColumnText(extractPersonColumn(parts, width));
+    const fallback = normalizePersonColumnText(extractPersonColumn(parts, width, startRatio));
     if (fallback && /^(SK|Sangguniang)/i.test(fallback)) {
         return fallback;
     }
@@ -1318,6 +1413,7 @@ function buildStructuredTagRow(tag, fields) {
 }
 
 async function extractPdfTextForPrograms(pdfDoc) {
+    resetAbyipColumnBounds();
     const lines = [];
     let inYouthSection = false;
     let inExpenditureSection = false;
@@ -1355,11 +1451,13 @@ async function extractPdfTextForPrograms(pdfDoc) {
             });
     }
 
+    const columnBounds = detectAbyipColumnBounds(pageRows);
+
     pageRows.forEach(function (entry) {
         const width = entry.width;
         const row = entry.row;
         row.parts.sort(function (a, b) { return a.x - b.x; });
-        const cols = parseRowColumns(row, width);
+        const cols = parseRowColumns(row, width, columnBounds);
         const fullLine = cols.fullLine;
 
         if (!fullLine) {

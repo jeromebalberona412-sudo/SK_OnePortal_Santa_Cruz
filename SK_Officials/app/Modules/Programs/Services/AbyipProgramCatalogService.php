@@ -2,8 +2,7 @@
 
 namespace App\Modules\Programs\Services;
 
-use App\Models\AbyipDocument;
-use App\Models\AbyipProgram;
+use App\Models\Abyip;
 use App\Models\Committee;
 use App\Models\User;
 use App\Modules\Committees\Services\CommitteeService;
@@ -34,13 +33,14 @@ class AbyipProgramCatalogService
     {
     }
 
-    public function getLatestAbyip(?int $barangayId): ?AbyipDocument
+    public function getLatestAbyip(?int $barangayId): ?Abyip
     {
         if ($barangayId === null) {
             return null;
         }
 
-        return AbyipDocument::query()
+        return Abyip::query()
+            ->documents()
             ->where('barangay_id', $barangayId)
             ->orderByDesc('fiscal_year')
             ->orderByDesc('id')
@@ -85,7 +85,7 @@ class AbyipProgramCatalogService
 
         $programs = $this->youthProgramsQuery($abyip->id)
             ->get()
-            ->map(fn (AbyipProgram $program) => $this->formatProgramForList(
+            ->map(fn (Abyip $program) => $this->formatProgramForList(
                 $program,
                 $heads,
                 $defaultStart,
@@ -118,7 +118,7 @@ class AbyipProgramCatalogService
 
         $programs = $this->youthProgramsQuery($abyip->id)
             ->get()
-            ->map(fn (AbyipProgram $program) => $this->formatProgramForManagement($program, $heads))
+            ->map(fn (Abyip $program) => $this->formatProgramForManagement($program, $heads))
             ->values()
             ->all();
 
@@ -155,15 +155,15 @@ class AbyipProgramCatalogService
         return $map;
     }
 
-    private function youthProgramsQuery(int $abyipId)
+    private function youthProgramsQuery(int $documentId)
     {
-        return AbyipProgram::query()
-            ->where('abyip_id', $abyipId)
+        return Abyip::query()
+            ->where('document_id', $documentId)
             ->where(function ($query) {
-                $query->where('row_type', 'youth_program')
+                $query->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
                     ->orWhereIn('code', self::YOUTH_PROGRAM_LETTERS);
             })
-            ->with(['activities' => function ($query) {
+            ->with(['children' => function ($query) {
                 $query->orderBy('sort_order')->orderBy('id');
             }])
             ->orderBy('sort_order')
@@ -175,7 +175,7 @@ class AbyipProgramCatalogService
      * @return array<string, mixed>
      */
     private function formatProgramForList(
-        AbyipProgram $program,
+        Abyip $program,
         array $heads,
         string $defaultStart,
         string $defaultEnd,
@@ -201,7 +201,7 @@ class AbyipProgramCatalogService
      * @param  array<string, string>  $heads
      * @return array<string, mixed>
      */
-    private function formatProgramForManagement(AbyipProgram $program, array $heads): array
+    private function formatProgramForManagement(Abyip $program, array $heads): array
     {
         $letter = strtoupper(trim((string) ($program->program_letter ?? $program->code ?? '')));
         $meta = self::LETTER_META[$letter] ?? [
@@ -210,8 +210,8 @@ class AbyipProgramCatalogService
             'type' => 'other',
         ];
 
-        $activities = $program->activities
-            ->map(fn ($activity) => trim((string) $activity->activity_name))
+        $activities = $program->children
+            ->map(fn ($activity) => trim((string) $activity->program_name))
             ->filter()
             ->values()
             ->all();
@@ -232,20 +232,20 @@ class AbyipProgramCatalogService
         ];
     }
 
-    private function buildProgramDescription(AbyipProgram $program): string
+    private function buildProgramDescription(Abyip $program): string
     {
         $description = trim((string) ($program->description ?? ''));
         if ($description !== '') {
             return $description;
         }
 
-        $activities = $program->activities;
+        $activities = $program->children;
         if ($activities->isEmpty()) {
             return 'No activities listed.';
         }
 
         $names = $activities
-            ->map(fn ($activity) => trim((string) $activity->activity_name))
+            ->map(fn ($activity) => trim((string) $activity->program_name))
             ->filter()
             ->values();
 
