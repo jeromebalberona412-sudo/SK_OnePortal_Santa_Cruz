@@ -93,29 +93,36 @@ window.programsModule = {
 };
 
 /**
- * Redirect to reusable pre-survey after terms agreement.
- * @param {string} programKey - key in PRESURVEY_SLUGS (e.g. 'anti-drugs', 'agriculture')
+ * Redirect to program survey landing (no terms checkbox required when survey is open).
  */
 window.goToPreSurvey = function (programKey) {
-    const slug = PRESURVEY_SLUGS[programKey];
-    const checkboxId = PRESURVEY_CHECKBOXES[programKey];
-    if (!slug || !checkboxId) return;
+    const categoryMap = {
+        'anti-drugs': 'anti-drugs',
+        agriculture: 'agriculture',
+        disaster: 'disaster',
+        gad: 'gender',
+        gender: 'gender',
+        health: 'health',
+        others: 'others',
+        environment: 'environment',
+        feeding: 'others',
+    };
 
-    const checkbox = document.getElementById(checkboxId);
-    if (!checkbox?.checked) return;
+    const categoryKey = categoryMap[programKey] || programKey;
+    const programs = window.kabataanPrograms?.getData?.()?.abyip_programs || [];
+    const program = programs.find((item) => item.category_key === categoryKey || item.modal_key === categoryKey);
 
-    const closeFnName = PRESURVEY_CLOSE_FN[programKey];
-    if (closeFnName && typeof window[closeFnName] === 'function') {
-        window[closeFnName]();
+    if (program && typeof window.goToProgramSurvey === 'function') {
+        window.goToProgramSurvey(program.id);
+        return;
     }
 
     if (typeof showLoading === 'function') {
-        showLoading('Redirecting to Pre-Survey…');
+        showLoading('Opening program survey…');
     }
 
-    const url = `/presurvey/${slug}`;
     setTimeout(() => {
-        window.location.href = url;
+        window.location.href = '/programs/survey';
     }, 650);
 };
 

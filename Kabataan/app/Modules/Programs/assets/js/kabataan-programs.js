@@ -197,7 +197,79 @@
     function renderAbyipModalBody(modal, program) {
         const body = modal?.querySelector('.modal-body');
         if (!body) return;
-        body.innerHTML = renderAbyipOnlyCard(program);
+        body.innerHTML = renderSurveyProgramCard(program);
+        bindSurveyCardActions(body);
+    }
+
+    function renderSurveyProgramCard(program, emptyNote, gradient) {
+        const headerGradient = gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        const survey = program.survey;
+        const hasOpenSurvey = Boolean(survey?.is_open);
+        const hasResponded = Boolean(survey?.has_responded);
+        const activities = (program.activities || [])
+            .map((activity) => `<li>${escapeHtml(activity)}</li>`)
+            .join('');
+
+        let actionLabel = 'Survey Not Open';
+        if (hasResponded) actionLabel = 'Already Submitted';
+        else if (hasOpenSurvey) actionLabel = 'Apply Now';
+
+        return `
+            <div class="modern-program-card">
+                <div class="program-card-header" style="background:${headerGradient};">
+                    <div class="program-title-row">
+                        <div>
+                            <span class="program-category-tag">${escapeHtml(program.emoji)} ${escapeHtml(program.short_label)}</span>
+                            <h3 class="program-card-title">${escapeHtml(program.title)}</h3>
+                        </div>
+                        <span class="program-status-badge status-active"><span class="status-dot"></span>${hasOpenSurvey ? 'Survey Open' : 'ABYIP Program'}</span>
+                    </div>
+                </div>
+                <div class="program-description-section">
+                    <h4 class="section-heading">Description</h4>
+                    <p class="description-text">${escapeHtml(program.description)}</p>
+                </div>
+                ${activities ? `<div class="program-description-section"><h4 class="section-heading">Activities</h4><ul class="terms-list">${activities}</ul></div>` : ''}
+                ${survey ? `
+                    <div class="program-details-grid">
+                        <div class="detail-card"><div class="detail-content"><span class="detail-label">Survey Open</span><span class="detail-value">${escapeHtml(survey.open_date_display || '—')}</span></div></div>
+                        <div class="detail-card"><div class="detail-content"><span class="detail-label">Survey Close</span><span class="detail-value">${escapeHtml(survey.close_date_display || '—')}</span></div></div>
+                    </div>
+                    <div class="program-description-section">
+                        <h4 class="section-heading">Announcement</h4>
+                        <p class="description-text">${escapeHtml(survey.announcement || '—')}</p>
+                    </div>
+                ` : `<p class="description-text" style="margin-top:16px;color:#64748b;">${escapeHtml(emptyNote || 'No open survey from SK Officials yet.')}</p>`}
+                <div class="program-action">
+                    <button type="button" class="apply-now-button ${hasOpenSurvey && !hasResponded ? 'enabled' : ''}" data-apply-survey="${program.id}" ${!hasOpenSurvey || hasResponded ? 'disabled' : ''}>
+                        ${actionLabel}
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function bindSurveyCardActions(container) {
+        container.querySelectorAll('[data-apply-survey]').forEach((button) => {
+            button.addEventListener('click', () => {
+                if (button.disabled) return;
+                goToProgramSurvey(button.getAttribute('data-apply-survey'));
+            });
+        });
+    }
+
+    function goToProgramSurvey(programId) {
+        if (!programId) return;
+
+        Object.values(MODAL_IDS).forEach((modalId) => {
+            document.getElementById(modalId)?.classList.remove('active');
+        });
+
+        if (typeof showLoading === 'function') showLoading('Opening program survey…');
+
+        setTimeout(() => {
+            window.location.href = `/programs/survey?program=${encodeURIComponent(programId)}`;
+        }, 650);
     }
 
     function renderAbyipOnlyCard(program, emptyNote, gradient) {
@@ -373,6 +445,7 @@
         }
 
         renderSidebars();
+        enableSurveyApplyButtons();
 
         const educationProgram = (programsData?.abyip_programs || []).find((program) => program.type === 'education');
         if (educationProgram) {
@@ -388,11 +461,40 @@
         }
     }
 
+    function enableSurveyApplyButtons() {
+        const buttonMap = {
+            'anti-drugs': 'applyNowBtnAntiDrugs',
+            agriculture: 'applyNowBtnAgriculture',
+            disaster: 'applyNowBtnDisaster',
+            gender: 'applyNowBtnGender',
+            health: 'applyNowBtnHealth',
+            others: 'applyNowBtnOthers',
+            environment: 'applyNowBtnOthers',
+            feeding: 'applyNowBtnOthers',
+        };
+
+        (programsData?.abyip_programs || []).forEach((program) => {
+            if (program.type === 'education' || program.type === 'sports') return;
+            if (!program.survey?.is_open || program.survey?.has_responded) return;
+
+            const btnId = buttonMap[program.category_key] || buttonMap[program.modal_key];
+            const btn = btnId ? document.getElementById(btnId) : null;
+            if (!btn) return;
+
+            btn.disabled = false;
+            btn.classList.add('enabled');
+            btn.onclick = () => goToProgramSurvey(program.id);
+        });
+    }
+
+    window.goToProgramSurvey = goToProgramSurvey;
+
     window.kabataanPrograms = {
         init,
         getData: () => programsData,
         schedulesForAbyipProgram,
         goToScheduleApplication,
+        goToProgramSurvey,
         renderSidebarItem,
         escapeHtml,
     };

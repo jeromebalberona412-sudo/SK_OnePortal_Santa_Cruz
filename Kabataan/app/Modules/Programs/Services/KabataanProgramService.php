@@ -12,8 +12,10 @@ use Illuminate\Validation\ValidationException;
 
 class KabataanProgramService
 {
-    public function __construct(private readonly ProgramDocumentService $documentService)
-    {
+    public function __construct(
+        private readonly ProgramDocumentService $documentService,
+        private readonly KabataanProgramSurveyService $surveyService,
+    ) {
     }
     /** @var list<string> */
     private const YOUTH_PROGRAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
@@ -373,12 +375,14 @@ class KabataanProgramService
             ->where('program_type', trim((string) $program->program_name))
             ->count();
 
-        $activeCount = $meta['type'] === 'education' || $meta['type'] === 'sports'
-            ? max($scheduleCount, $scheduleCount > 0 ? $scheduleCount : 0)
-            : ($activities !== [] ? 1 : 0);
+        $survey = $this->surveyService->summarizeOpenSurveyForProgram($user, (int) $program->id);
 
         if ($meta['type'] === 'education') {
             $activeCount = $scheduleCount;
+        } elseif ($meta['type'] === 'sports') {
+            $activeCount = $scheduleCount;
+        } else {
+            $activeCount = $survey !== null ? 1 : 0;
         }
 
         return [
@@ -394,6 +398,7 @@ class KabataanProgramService
             'short_label' => $meta['short_label'],
             'active_count' => $activeCount,
             'schedule_count' => $scheduleCount,
+            'survey' => $survey,
         ];
     }
 
