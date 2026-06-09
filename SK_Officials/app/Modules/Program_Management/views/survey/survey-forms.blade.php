@@ -10,15 +10,14 @@
 @section('survey_content')
     <div class="survey-panel">
         <div class="survey-toolbar">
-            <input type="search" id="formsSearch" class="schol-input survey-search" placeholder="Search by title or activity…" aria-label="Search surveys">
+            <input type="search" id="formsSearch" class="schol-input survey-search" placeholder="Search by program name…" aria-label="Search surveys">
         </div>
         <div class="saf-forms-table-card survey-table-card">
             <div class="saf-table-wrap">
                 <table class="saf-forms-table survey-data-table">
                     <thead>
                         <tr>
-                            <th class="survey-col-title">Survey Title</th>
-                            <th>Activity</th>
+                            <th class="survey-col-title">Program</th>
                             <th>Open Date</th>
                             <th>Close Date</th>
                             <th>Status</th>
@@ -27,7 +26,7 @@
                         </tr>
                     </thead>
                     <tbody id="surveyFormsTableBody">
-                        <tr><td colspan="7" class="saf-table-empty">Loading surveys…</td></tr>
+                        <tr><td colspan="6" class="saf-table-empty">Loading surveys…</td></tr>
                     </tbody>
                 </table>
             </div>

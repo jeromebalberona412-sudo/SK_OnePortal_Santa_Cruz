@@ -8,13 +8,10 @@
             </div>
         </div>
         <div class="schol-modal-body">
-            <div class="schol-form-group survey-form-title-group">
-                <label class="schol-label" for="surveyTitle">Survey Title <span class="required">*</span></label>
-                <input type="text" id="surveyTitle" class="schol-input" maxlength="200" placeholder="e.g. Clean-Up Drive Feedback Survey">
-            </div>
             <div class="schol-form-group">
-                <label class="schol-label" for="surveyActivity">Program Activity</label>
-                <select id="surveyActivity" class="schol-input"></select>
+                <label class="schol-label" for="surveyActivity">Program Activity <span class="required">*</span></label>
+                <select id="surveyActivity" class="schol-input" required></select>
+                <p class="schol-field-hint" id="surveyProgramHint">Survey title uses the selected ABYIP program name automatically.</p>
             </div>
             <div class="schol-form-group">
                 <label class="schol-label" for="surveyDescription">Instructions for Kabataan</label>

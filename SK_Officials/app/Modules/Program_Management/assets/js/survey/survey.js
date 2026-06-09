@@ -1,82 +1,26 @@
 /**
  * Program Management — Survey (Forms, Results, Analytics)
- * Committee/program context from #surveyProgramConfig (server) + localStorage per program key.
+ * Committee/program context from #surveyProgramConfig + database API.
  */
 import Chart from 'chart.js/auto';
-
-const COMMITTEE_CONFIG_FALLBACK = {
-    environmental: {
-        title: 'Environmental Protection',
-        skHead: 'Juan dela Cruz',
-        activities: ['Clean-Up Drive', 'Payroll for Laborer', 'Tree Planting'],
-        description: 'Create surveys for environmental programs and review Kabataan feedback.',
-    },
-    disaster: {
-        title: 'Disaster Risk Reduction and Resiliency',
-        skHead: 'Carlo Reyes',
-        activities: [
-            'Training on Disaster Preparedness for Youth Volunteer Groups',
-            'Distribution of Relief Goods for KK Members',
-        ],
-        description: 'Manage disaster preparedness surveys and youth volunteer responses.',
-    },
-    livelihood: {
-        title: 'Youth Employment and Livelihood',
-        skHead: 'Ana Villanueva',
-        activities: ['Livelihood Training', 'Food and Other Supplies'],
-        description: 'Track livelihood program surveys and participant feedback.',
-    },
-    medicines: {
-        title: 'Medicines',
-        skHead: 'Jose Mendoza',
-        activities: ['Medicines / Medical Equipment'],
-        description: 'Manage health-related surveys for medicine distribution programs.',
-    },
-    antidrug: {
-        title: 'Anti-Drug and Peace and Order',
-        skHead: 'Ramon Garcia',
-        activities: ['Orientation for Anti-Drug and Physical Abuse', 'Foods and Accommodations'],
-        description: 'Collect feedback from anti-drug and peace and order orientations.',
-    },
-    gender: {
-        title: 'Gender Sensitivity',
-        skHead: 'Liza Torres',
-        activities: ['Orientation on GAD and VAWC', 'Foods and Accommodations'],
-        description: 'Review GAD and VAWC orientation survey responses from youth.',
-    },
-    feeding: {
-        title: 'Feeding Program for KK Members',
-        skHead: 'Kristine Bautista',
-        activities: [
-            'Improve health and physique of children',
-            'Youth and Children in the vicinity of Barangay',
-        ],
-        description: 'Monitor feeding program surveys and community feedback.',
-    },
-    others: {
-        title: 'Other Programs',
-        skHead: 'Patricia Flores',
-        activities: [
-            'Katipunan ng Kabataan (KK) General Assembly',
-            'Barangay Day Celebration',
-            'Youth Week',
-        ],
-        description: 'Manage surveys for KK assemblies and community celebrations.',
-    },
-};
 
 const QUESTION_TYPES = [
     { value: 'radio', label: 'Multiple Choice' },
     { value: 'checkbox', label: 'Checkboxes' },
+    { value: 'dropdown', label: 'Dropdown' },
     { value: 'text', label: 'Short Answer' },
     { value: 'paragraph', label: 'Paragraph' },
     { value: 'number', label: 'Number' },
+    { value: 'date', label: 'Date' },
 ];
 
 let committee = 'environmental';
 let activeTab = 'forms';
 let editingSurveyId = null;
 let chartInstances = [];
+let committeeContext = { programs: [] };
+let surveys = [];
+let responses = [];
 
 function getPageProgramConfig() {
     const el = document.getElementById('surveyProgramConfig');
@@ -88,51 +32,70 @@ function getPageProgramConfig() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
+
+function apiBase() {
+    return `/api/program-surveys/${encodeURIComponent(committee)}`;
+}
+
+async function apiFetch(url, options = {}) {
+    const response = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken(),
+            'Accept': 'application/json',
+            ...(options.headers || {}),
+        },
+        ...options,
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(data.message || 'Request failed.');
+    }
+
+    return data;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
     const page = getPageProgramConfig();
     committee = document.body.dataset.committee || page.committee || 'environmental';
     activeTab = document.body.dataset.surveyTab || page.activeTab || 'forms';
 
-    seedSampleData();
     bindFormsTab();
     bindResultsTab();
     bindAnalyticsTab();
+
+    try {
+        await loadCommitteeContext();
+        await loadSurveys();
+        if (activeTab === 'results' || activeTab === 'analytics') {
+            await loadResponses();
+        }
+    } catch (error) {
+        showToast(error.message || 'Failed to load survey data.', 'error');
+    }
 
     if (activeTab === 'forms') renderFormsTable();
     if (activeTab === 'results') renderResultsTable();
     if (activeTab === 'analytics') renderAnalytics();
 });
 
-function storageKey(type) {
-    return `sk_survey_${committee}_${type}`;
+async function loadCommitteeContext() {
+    const result = await apiFetch(`${apiBase()}/meta`);
+    committeeContext = result.data || { programs: [] };
 }
 
-function loadSurveys() {
-    try {
-        return JSON.parse(localStorage.getItem(storageKey('forms')) || '[]');
-    } catch {
-        return [];
-    }
+async function loadSurveys() {
+    const result = await apiFetch(apiBase());
+    surveys = result.data || [];
 }
 
-function saveSurveys(list) {
-    localStorage.setItem(storageKey('forms'), JSON.stringify(list));
-}
-
-function loadResponses() {
-    try {
-        return JSON.parse(localStorage.getItem(storageKey('responses')) || '[]');
-    } catch {
-        return [];
-    }
-}
-
-function saveResponses(list) {
-    localStorage.setItem(storageKey('responses'), JSON.stringify(list));
-}
-
-function uid(prefix) {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+async function loadResponses() {
+    const result = await apiFetch(`${apiBase()}/responses`);
+    responses = result.data || [];
 }
 
 function escapeHtml(str) {
@@ -153,104 +116,73 @@ function showToast(msg, type = 'success') {
     showToast._t = setTimeout(() => { el.style.display = 'none'; }, 2800);
 }
 
-function getConfig() {
-    const page = getPageProgramConfig();
-    const fallback = COMMITTEE_CONFIG_FALLBACK[committee] || COMMITTEE_CONFIG_FALLBACK.environmental;
-    if (page.title) {
-        return {
-            title: page.title,
-            skHead: page.skHead || fallback.skHead,
-            activities: page.activities?.length ? page.activities : fallback.activities,
-            description: page.description || fallback.description,
-        };
+let surveySaveButtonDefaultHtml = '';
+
+function setSurveySaveButtonLoading(isLoading) {
+    const saveBtn = document.getElementById('surveyFormSave');
+    if (!saveBtn) return;
+
+    if (!surveySaveButtonDefaultHtml) {
+        surveySaveButtonDefaultHtml = saveBtn.innerHTML;
     }
-    return fallback;
-}
 
-function countResponsesForSurvey(surveyId) {
-    return loadResponses().filter(r => r.surveyId === surveyId).length;
-}
-
-function seedSampleData() {
-    const seedKey = storageKey('seeded_v3_scheduling');
-    const existing = loadSurveys();
-    const isOldAutoSample = existing.length === 1 && (
-        (existing[0].title || '').includes('Youth Feedback Survey') ||
-        (existing[0].questions || []).length > 1
-    );
-
-    if (localStorage.getItem(seedKey) && !isOldAutoSample) return;
-    if (existing.length && !isOldAutoSample) {
-        localStorage.setItem(seedKey, '1');
+    if (isLoading) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="survey-save-btn-content"><span class="survey-save-spinner"></span> Saving...</span>';
         return;
     }
 
-    const cfg = getConfig();
-    const activity = cfg.activities[0] || 'Program Activity';
-    const surveyId = isOldAutoSample ? existing[0].id : uid('srv');
-    const questionId = 'q_attendance';
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = surveySaveButtonDefaultHtml;
+}
 
-    // Set dates for sample survey (open for 30 days)
-    const now = new Date();
-    const openDate = new Date(now);
-    openDate.setDate(openDate.getDate() - 7); // Opened 7 days ago
-    const closeDate = new Date(now);
-    closeDate.setDate(closeDate.getDate() + 23); // Closes in 23 days
-
-    const sampleSurvey = {
-        id: surveyId,
-        title: `${activity} — Attendance Survey`,
-        activity,
-        description: 'Pakit sagot kung nakadalo ka sa programang ito. Isang tanong lang — Oo o Hindi.',
-        openDate: openDate.toISOString().split('T')[0],
-        closeDate: closeDate.toISOString().split('T')[0],
-        status: 'open',
-        questions: [
-            {
-                id: questionId,
-                label: 'Nakadalo ka ba sa programang ito?',
-                type: 'radio',
-                options: ['Oo', 'Hindi'],
-                required: true,
-            },
-        ],
-        createdAt: isOldAutoSample && existing[0]?.createdAt
-            ? existing[0].createdAt
-            : new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+function getConfig() {
+    const page = getPageProgramConfig();
+    return {
+        title: page.title || committeeContext.programs?.[0]?.program_name || 'Program Survey',
+        description: page.description || '',
     };
+}
 
-    const respondents = [
-        { name: 'Maria Santos', barangay: 'Calios' },
-        { name: 'Juan Dela Cruz', barangay: 'Poblacion' },
-        { name: 'Ana Villanueva', barangay: 'Calios' },
-        { name: 'Carlo Reyes', barangay: 'Santo Angel' },
-        { name: 'Liza Torres', barangay: 'Calios' },
-    ];
+function countResponsesForSurvey(surveyId) {
+    const survey = surveys.find(s => String(s.id) === String(surveyId));
+    if (survey && typeof survey.response_count === 'number') {
+        return survey.response_count;
+    }
+    return responses.filter(r => String(r.surveyId || r.survey_id) === String(surveyId)).length;
+}
 
-    const attendanceAnswers = ['Oo', 'Hindi', 'Oo', 'Oo', 'Hindi'];
+function populateProgramSelect(selectedId) {
+    const activityEl = document.getElementById('surveyActivity');
+    const hintEl = document.getElementById('surveyProgramHint');
+    if (!activityEl) return;
 
-    const responses = respondents.map((r, i) => {
-        const daysAgo = i * 3;
-        const d = new Date();
-        d.setDate(d.getDate() - daysAgo);
-        return {
-            id: uid('resp'),
-            surveyId,
-            respondentName: r.name,
-            barangay: r.barangay,
-            answers: {
-                [questionId]: attendanceAnswers[i],
-            },
-            submittedAt: d.toISOString(),
-        };
-    });
+    const programs = committeeContext.programs || [];
 
-    saveSurveys([sampleSurvey]);
-    saveResponses(responses);
-    localStorage.setItem(seedKey, '1');
-    localStorage.removeItem(storageKey('seeded_v1'));
-    localStorage.removeItem(storageKey('seeded_v2_attendance'));
+    if (!programs.length) {
+        activityEl.innerHTML = '<option value="">No ABYIP program available</option>';
+        activityEl.disabled = true;
+        if (hintEl) {
+            hintEl.textContent = 'Upload ABYIP for your barangay before creating a survey.';
+        }
+        return;
+    }
+
+    activityEl.disabled = false;
+    activityEl.innerHTML = programs.map(program => (
+        `<option value="${program.id}">${escapeHtml(program.program_name)}</option>`
+    )).join('');
+
+    if (selectedId) {
+        activityEl.value = String(selectedId);
+    }
+
+    if (hintEl) {
+        const selected = programs.find(p => String(p.id) === String(activityEl.value));
+        hintEl.textContent = selected
+            ? `Survey title: ${selected.program_name}`
+            : 'Survey title uses the selected ABYIP program name automatically.';
+    }
 }
 
 // ── Forms Tab ─────────────────────────────────────────────────────────────
@@ -266,8 +198,7 @@ function bindFormsTab() {
     });
     document.getElementById('viewSurveyMaximize')?.addEventListener('click', toggleViewSurveyMaximize);
     document.getElementById('surveyFormMaximize')?.addEventListener('click', toggleSurveyFormMaximize);
-    
-    // Character count for survey description
+
     const surveyDesc = document.getElementById('surveyDescription');
     const surveyDescCount = document.getElementById('surveyDescCount');
     if (surveyDesc && surveyDescCount) {
@@ -275,8 +206,11 @@ function bindFormsTab() {
             surveyDescCount.textContent = surveyDesc.value.length;
         });
     }
-    
-    // Set min date for date pickers to today
+
+    document.getElementById('surveyActivity')?.addEventListener('change', () => {
+        populateProgramSelect(document.getElementById('surveyActivity')?.value);
+    });
+
     const today = new Date().toISOString().split('T')[0];
     const openDateInput = document.getElementById('surveyOpenDate');
     const closeDateInput = document.getElementById('surveyCloseDate');
@@ -286,24 +220,17 @@ function bindFormsTab() {
 
 function openSurveyModal(survey) {
     editingSurveyId = survey?.id || null;
-    const cfg = getConfig();
-    const activityEl = document.getElementById('surveyActivity');
-    if (activityEl) {
-        activityEl.innerHTML = cfg.activities.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
-    }
+    populateProgramSelect(survey?.abyip_program_id || survey?.abyipProgramId);
 
     document.getElementById('surveyFormModalTitle').textContent = survey ? 'Edit Survey Form' : 'Create Survey Form';
-    document.getElementById('surveyTitle').value = survey?.title || '';
-    document.getElementById('surveyActivity').value = survey?.activity || cfg.activities[0] || '';
-    document.getElementById('surveyDescription').value = survey?.description || '';
-    document.getElementById('surveyOpenDate').value = survey?.openDate || '';
-    document.getElementById('surveyCloseDate').value = survey?.closeDate || '';
+    document.getElementById('surveyDescription').value = survey?.announcement || survey?.description || '';
+    document.getElementById('surveyOpenDate').value = survey?.openDate || survey?.open_date || '';
+    document.getElementById('surveyCloseDate').value = survey?.closeDate || survey?.close_date || '';
     document.getElementById('surveyStatus').value = survey?.status || 'scheduled';
-    
-    // Update character count
+
     const surveyDescCount = document.getElementById('surveyDescCount');
     if (surveyDescCount) {
-        surveyDescCount.textContent = (survey?.description || '').length;
+        surveyDescCount.textContent = (survey?.announcement || survey?.description || '').length;
     }
 
     if (window.GFormBuilder) {
@@ -319,76 +246,69 @@ function openSurveyModal(survey) {
 function closeSurveyModal() {
     document.getElementById('surveyFormModal').style.display = 'none';
     editingSurveyId = null;
+    setSurveySaveButtonLoading(false);
     if (window.GFormBuilder) window.GFormBuilder.reset();
 }
 
-function saveSurveyForm() {
-    const title = document.getElementById('surveyTitle')?.value?.trim();
-    if (!title) {
-        showToast('Survey title is required.', 'error');
+async function saveSurveyForm() {
+    const programId = document.getElementById('surveyActivity')?.value || '';
+    if (!programId) {
+        showToast('Select a program activity from ABYIP.', 'error');
         return;
     }
+
     const questions = (window.GFormBuilder?.getQuestions() || []).filter(q => (q.label || '').trim());
     if (!questions.length) {
         showToast('Add at least one question with a label.', 'error');
         return;
     }
-    
+
     const openDate = document.getElementById('surveyOpenDate')?.value || '';
     const closeDate = document.getElementById('surveyCloseDate')?.value || '';
-    
-    // Validate dates
-    if (openDate && closeDate && new Date(closeDate) <= new Date(openDate)) {
-        showToast('Close date must be later than open date.', 'error');
-        return;
-    }
-    
+
     if (!openDate || !closeDate) {
         showToast('Open date and close date are required.', 'error');
         return;
     }
 
-    // Auto-update status based on dates
-    let status = document.getElementById('surveyStatus')?.value || 'pending';
-    status = autoUpdateStatus(status, openDate, closeDate);
+    if (new Date(closeDate) <= new Date(openDate)) {
+        showToast('Close date must be later than open date.', 'error');
+        return;
+    }
 
     const payload = {
-        id: editingSurveyId || uid('srv'),
-        title,
-        activity: document.getElementById('surveyActivity')?.value || '',
-        description: document.getElementById('surveyDescription')?.value?.trim() || '',
-        openDate,
-        closeDate,
-        status,
+        abyip_program_id: Number(programId),
+        announcement: document.getElementById('surveyDescription')?.value?.trim() || '',
+        open_date: openDate,
+        close_date: closeDate,
+        status: document.getElementById('surveyStatus')?.value || 'scheduled',
         questions,
-        createdAt: editingSurveyId
-            ? (loadSurveys().find(s => s.id === editingSurveyId)?.createdAt || new Date().toISOString())
-            : new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
     };
 
-    let surveys = loadSurveys();
-    const idx = surveys.findIndex(s => s.id === payload.id);
-    if (idx >= 0) surveys[idx] = payload;
-    else surveys.unshift(payload);
-    saveSurveys(surveys);
-    closeSurveyModal();
-    renderFormsTable();
-    showToast('Survey saved successfully.');
-}
+    const saveBtn = document.getElementById('surveyFormSave');
+    setSurveySaveButtonLoading(true);
 
-function autoUpdateStatus(currentStatus, openDate, closeDate) {
-    const now = new Date();
-    const open = new Date(openDate);
-    const close = new Date(closeDate);
-    
-    // Auto-determine status based on dates
-    if (now < open) {
-        return 'scheduled';
-    } else if (now >= open && now <= close) {
-        return 'open';
-    } else {
-        return 'closed';
+    try {
+        if (editingSurveyId) {
+            await apiFetch(`${apiBase()}/${editingSurveyId}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload),
+            });
+        } else {
+            await apiFetch(apiBase(), {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+        }
+
+        await loadSurveys();
+        closeSurveyModal();
+        renderFormsTable();
+        showToast('Survey saved successfully.');
+    } catch (error) {
+        showToast(error.message || 'Failed to save survey.', 'error');
+    } finally {
+        setSurveySaveButtonLoading(false);
     }
 }
 
@@ -407,37 +327,39 @@ function renderFormsTable() {
     if (!tbody) return;
 
     const q = (document.getElementById('formsSearch')?.value || '').toLowerCase();
-    let surveys = loadSurveys();
+    let rows = [...surveys];
+
     if (q) {
-        surveys = surveys.filter(s =>
-            (s.title || '').toLowerCase().includes(q) ||
-            (s.activity || '').toLowerCase().includes(q)
+        rows = rows.filter(s =>
+            (s.title || s.program_name || '').toLowerCase().includes(q)
         );
     }
 
-    if (!surveys.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="saf-table-empty">
+    if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="saf-table-empty">
             <div class="survey-empty-state">
                 <p><strong>No survey forms yet</strong></p>
-                <p>Create questions for <em>${escapeHtml(getConfig().title)}</em> activities. Kabataan responses appear under Survey Results and Survey Analytics.</p>
+                <p>Create questions for <em>${escapeHtml(getConfig().title)}</em>. Kabataan responses appear under Survey Results and Survey Analytics.</p>
             </div>
         </td></tr>`;
         return;
     }
 
-    tbody.innerHTML = surveys.map(s => {
+    tbody.innerHTML = rows.map(s => {
         const respCount = countResponsesForSurvey(s.id);
         const statusCls = getStatusClass(s.status);
         const statusLabel = getStatusLabel(s.status);
         const qCount = (s.questions || []).length;
-        const openDateDisplay = s.openDate ? formatDate(s.openDate) : '—';
-        const closeDateDisplay = s.closeDate ? formatDate(s.closeDate) : '—';
+        const openDateDisplay = s.openDate || s.open_date ? formatDate(s.openDate || s.open_date) : '—';
+        const closeDateDisplay = s.closeDate || s.close_date ? formatDate(s.closeDate || s.close_date) : '—';
+        const title = s.title || s.program_name || '—';
+
         return `
             <tr>
                 <td class="survey-col-title">
-                    <div class="survey-cell-title">${escapeHtml(s.title)}</div>
+                    <div class="survey-cell-title">${escapeHtml(title)}</div>
+                    <div class="survey-cell-meta">${qCount} question${qCount === 1 ? '' : 's'}</div>
                 </td>
-                <td data-label="Activity">${escapeHtml(s.activity || '—')}</td>
                 <td data-label="Open Date">${openDateDisplay}</td>
                 <td data-label="Close Date">${closeDateDisplay}</td>
                 <td data-label="Status"><span class="schol-pill ${statusCls}">${statusLabel}</span></td>
@@ -454,30 +376,33 @@ function renderFormsTable() {
 
     tbody.querySelectorAll('[data-view-survey]').forEach(btn => {
         btn.addEventListener('click', () => {
-            const s = loadSurveys().find(x => x.id === btn.dataset.viewSurvey);
+            const s = surveys.find(x => String(x.id) === String(btn.dataset.viewSurvey));
             if (s) openViewSurveyModal(s);
         });
     });
     tbody.querySelectorAll('[data-edit-survey]').forEach(btn => {
         btn.addEventListener('click', () => {
-            const s = loadSurveys().find(x => x.id === btn.dataset.editSurvey);
+            const s = surveys.find(x => String(x.id) === String(btn.dataset.editSurvey));
             if (s) openSurveyModal(s);
         });
     });
     tbody.querySelectorAll('[data-delete-survey]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             if (!confirm('Delete this survey and all its responses?')) return;
-            const id = btn.dataset.deleteSurvey;
-            saveSurveys(loadSurveys().filter(s => s.id !== id));
-            saveResponses(loadResponses().filter(r => r.surveyId !== id));
-            renderFormsTable();
-            showToast('Deleted successfully.');
+            try {
+                await apiFetch(`${apiBase()}/${btn.dataset.deleteSurvey}`, { method: 'DELETE' });
+                await loadSurveys();
+                renderFormsTable();
+                showToast('Deleted successfully.');
+            } catch (error) {
+                showToast(error.message || 'Failed to delete survey.', 'error');
+            }
         });
     });
 }
 
 function getStatusClass(status) {
-    switch(status) {
+    switch (status) {
         case 'scheduled': return 'schol-pill-scheduled';
         case 'open': return 'schol-pill-approved';
         case 'closed': return 'schol-pill-rejected';
@@ -486,7 +411,7 @@ function getStatusClass(status) {
 }
 
 function getStatusLabel(status) {
-    switch(status) {
+    switch (status) {
         case 'scheduled': return 'Scheduled';
         case 'open': return 'Open';
         case 'closed': return 'Closed';
@@ -500,22 +425,24 @@ function formatDate(dateStr) {
     return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
     });
 }
 
 function openViewSurveyModal(survey) {
     const body = document.getElementById('viewSurveyBody');
     const respCount = countResponsesForSurvey(survey.id);
+    const title = survey.title || survey.program_name || 'Survey';
+
     body.innerHTML = `
         <div class="gform-preview-header">
-            <h4>${escapeHtml(survey.title)}</h4>
+            <h4>${escapeHtml(title)}</h4>
             <div class="gform-preview-info">
-                <div><strong>Activity:</strong> ${escapeHtml(survey.activity || '—')}</div>
-                <div><strong>Open Date:</strong> ${formatDate(survey.openDate)}</div>
-                <div><strong>Close Date:</strong> ${formatDate(survey.closeDate)}</div>
+                <div><strong>Open Date:</strong> ${formatDate(survey.openDate || survey.open_date)}</div>
+                <div><strong>Close Date:</strong> ${formatDate(survey.closeDate || survey.close_date)}</div>
                 <div><strong>Status:</strong> ${getStatusLabel(survey.status)}</div>
                 <div><strong>Responses:</strong> ${respCount}</div>
+                <div><strong>Instructions:</strong> ${escapeHtml(survey.announcement || survey.description || '—')}</div>
             </div>
         </div>
         ${(survey.questions || []).map((q, i) => `
@@ -532,7 +459,7 @@ function toggleViewSurveyMaximize() {
     const modal = document.getElementById('viewSurveyModal');
     const box = document.getElementById('viewSurveyBox');
     const btn = document.getElementById('viewSurveyMaximize');
-    
+
     if (modal.classList.contains('schol-modal-maximized')) {
         modal.classList.remove('schol-modal-maximized');
         box.classList.remove('schol-modal-maximized');
@@ -550,7 +477,7 @@ function toggleSurveyFormMaximize() {
     const modal = document.getElementById('surveyFormModal');
     const box = document.getElementById('surveyFormBox');
     const btn = document.getElementById('surveyFormMaximize');
-    
+
     if (modal.classList.contains('schol-modal-maximized')) {
         modal.classList.remove('schol-modal-maximized');
         box.classList.remove('schol-modal-maximized');
@@ -584,8 +511,8 @@ function populateSurveyFilters(selectId) {
     const first = selectId === 'analyticsSurveyFilter'
         ? '<option value="">Select survey…</option>'
         : '<option value="">All Surveys</option>';
-    sel.innerHTML = first + loadSurveys().map(s =>
-        `<option value="${s.id}">${escapeHtml(s.title)}</option>`
+    sel.innerHTML = first + surveys.map(s =>
+        `<option value="${s.id}">${escapeHtml(s.title || s.program_name || 'Survey')}</option>`
     ).join('');
     if (current) sel.value = current;
 }
@@ -596,13 +523,14 @@ function filterResponses() {
     const to = document.getElementById('resultsDateTo')?.value || '';
     const search = (document.getElementById('resultsSearch')?.value || '').toLowerCase();
 
-    return loadResponses().filter(r => {
-        if (surveyId && r.surveyId !== surveyId) return false;
-        const d = new Date(r.submittedAt);
-        if (from && d < new Date(from + 'T00:00:00')) return false;
-        if (to && d > new Date(to + 'T23:59:59')) return false;
+    return responses.filter(r => {
+        const rSurveyId = String(r.surveyId || r.survey_id || '');
+        if (surveyId && rSurveyId !== String(surveyId)) return false;
+        const d = new Date(r.submittedAt || r.submitted_at);
+        if (from && d < new Date(`${from}T00:00:00`)) return false;
+        if (to && d > new Date(`${to}T23:59:59`)) return false;
         if (search) {
-            const name = (r.respondentName || '').toLowerCase();
+            const name = (r.respondentName || r.respondent_name || '').toLowerCase();
             const brgy = (r.barangay || '').toLowerCase();
             if (!name.includes(search) && !brgy.includes(search)) return false;
         }
@@ -610,12 +538,19 @@ function filterResponses() {
     });
 }
 
-function renderResultsTable() {
+async function renderResultsTable() {
     populateSurveyFilters('resultsSurveyFilter');
     const tbody = document.getElementById('surveyResultsTableBody');
     if (!tbody) return;
 
-    const surveys = loadSurveys();
+    if (!responses.length) {
+        try {
+            await loadResponses();
+        } catch (error) {
+            showToast(error.message || 'Failed to load responses.', 'error');
+        }
+    }
+
     const rows = filterResponses();
 
     if (!rows.length) {
@@ -624,16 +559,17 @@ function renderResultsTable() {
     }
 
     tbody.innerHTML = rows.map(r => {
-        const survey = surveys.find(s => s.id === r.surveyId);
-        const date = formatSurveyDate(r.submittedAt);
+        const survey = r.survey || surveys.find(s => String(s.id) === String(r.surveyId || r.survey_id));
+        const date = formatSurveyDate(r.submittedAt || r.submitted_at);
         const answerPreview = getResponseAnswerPreview(r, survey);
+
         return `
             <tr>
                 <td class="survey-col-title">
-                    <div class="survey-cell-title">${escapeHtml(r.respondentName)}</div>
+                    <div class="survey-cell-title">${escapeHtml(r.respondentName || r.respondent_name)}</div>
                     <div class="survey-cell-meta">${escapeHtml(r.barangay || '—')}</div>
                 </td>
-                <td data-label="Survey">${escapeHtml(survey?.title || '—')}</td>
+                <td data-label="Survey">${escapeHtml(survey?.title || survey?.program_name || '—')}</td>
                 <td data-label="Barangay">${escapeHtml(r.barangay || '—')}</td>
                 <td data-label="Answer"><span class="survey-answer-pill">${escapeHtml(answerPreview)}</span></td>
                 <td data-label="Date Submitted">${date}</td>
@@ -647,8 +583,8 @@ function renderResultsTable() {
 
     tbody.querySelectorAll('[data-view-response]').forEach(btn => {
         btn.addEventListener('click', () => {
-            const r = loadResponses().find(x => x.id === btn.dataset.viewResponse);
-            const survey = loadSurveys().find(s => s.id === r?.surveyId);
+            const r = responses.find(x => String(x.id) === String(btn.dataset.viewResponse));
+            const survey = r?.survey || surveys.find(s => String(s.id) === String(r?.surveyId || r?.survey_id));
             if (r && survey) openResponseModal(r, survey);
         });
     });
@@ -659,8 +595,8 @@ function getResponseAnswerPreview(response, survey) {
     if (!questions.length) return '—';
     const q = questions[0];
     let ans = response.answers?.[q.id];
-    if (Array.isArray(ans)) ans = ans.join(', ');
     if (ans === undefined || ans === null || ans === '') return '—';
+    if (Array.isArray(ans)) ans = ans.join(', ');
     return String(ans);
 }
 
@@ -679,11 +615,11 @@ function openResponseModal(response, survey) {
 
     body.innerHTML = `
         <div class="gform-preview-header">
-            <h4>${escapeHtml(response.respondentName)}</h4>
+            <h4>${escapeHtml(response.respondentName || response.respondent_name)}</h4>
             <div class="gform-preview-info">
-                <div><strong>Survey:</strong> ${escapeHtml(survey.title)}</div>
+                <div><strong>Survey:</strong> ${escapeHtml(survey.title || survey.program_name || '—')}</div>
                 <div><strong>Barangay:</strong> ${escapeHtml(response.barangay || '—')}</div>
-                <div><strong>Date Submitted:</strong> ${formatSurveyDate(response.submittedAt)}</div>
+                <div><strong>Date Submitted:</strong> ${formatSurveyDate(response.submittedAt || response.submitted_at)}</div>
             </div>
         </div>
         ${answersHtml}`;
@@ -691,7 +627,6 @@ function openResponseModal(response, survey) {
 }
 
 function exportResultsCsv() {
-    const surveys = loadSurveys();
     const rows = filterResponses();
     if (!rows.length) {
         showToast('No data to export.', 'error');
@@ -699,15 +634,15 @@ function exportResultsCsv() {
     }
     const lines = ['Respondent,Barangay,Survey,Submitted At,Question,Answer'];
     rows.forEach(r => {
-        const survey = surveys.find(s => s.id === r.surveyId);
-        const date = new Date(r.submittedAt).toISOString();
+        const survey = r.survey || surveys.find(s => String(s.id) === String(r.surveyId || r.survey_id));
+        const date = new Date(r.submittedAt || r.submitted_at).toISOString();
         (survey?.questions || []).forEach(q => {
             let ans = r.answers?.[q.id];
             if (Array.isArray(ans)) ans = ans.join('; ');
             lines.push([
-                csvCell(r.respondentName),
+                csvCell(r.respondentName || r.respondent_name),
                 csvCell(r.barangay),
-                csvCell(survey?.title),
+                csvCell(survey?.title || survey?.program_name),
                 csvCell(date),
                 csvCell(q.label),
                 csvCell(ans),
@@ -745,11 +680,12 @@ function getFilteredResponsesForAnalytics() {
     const from = document.getElementById('analyticsDateFrom')?.value || '';
     const to = document.getElementById('analyticsDateTo')?.value || '';
 
-    return loadResponses().filter(r => {
-        if (surveyId && r.surveyId !== surveyId) return false;
-        const d = new Date(r.submittedAt);
-        if (from && d < new Date(from + 'T00:00:00')) return false;
-        if (to && d > new Date(to + 'T23:59:59')) return false;
+    return responses.filter(r => {
+        const rSurveyId = String(r.surveyId || r.survey_id || '');
+        if (surveyId && rSurveyId !== String(surveyId)) return false;
+        const d = new Date(r.submittedAt || r.submitted_at);
+        if (from && d < new Date(`${from}T00:00:00`)) return false;
+        if (to && d > new Date(`${to}T23:59:59`)) return false;
         return true;
     });
 }
@@ -759,16 +695,22 @@ function destroyCharts() {
     chartInstances = [];
 }
 
-function renderAnalytics() {
+async function renderAnalytics() {
     populateSurveyFilters('analyticsSurveyFilter');
 
-    const surveys = loadSurveys();
-    const allResponses = loadResponses();
+    if (!responses.length) {
+        try {
+            await loadResponses();
+        } catch (error) {
+            showToast(error.message || 'Failed to load responses.', 'error');
+        }
+    }
+
     const filtered = getFilteredResponsesForAnalytics();
     const surveyId = document.getElementById('analyticsSurveyFilter')?.value || '';
-    const survey = surveys.find(s => s.id === surveyId);
+    const survey = surveys.find(s => String(s.id) === String(surveyId));
 
-    const uniqueRespondents = new Set(filtered.map(r => r.respondentName)).size;
+    const uniqueRespondents = new Set(filtered.map(r => r.respondentName || r.respondent_name)).size;
 
     document.getElementById('analyticsStatsRow').innerHTML = `
         <div class="analytics-stat-card analytics-stat-blue">
@@ -784,7 +726,7 @@ function renderAnalytics() {
             <div class="analytics-stat-label">Total Responses Submitted</div>
         </div>
         <div class="analytics-stat-card analytics-stat-purple">
-            <div class="analytics-stat-value">${allResponses.length}</div>
+            <div class="analytics-stat-value">${responses.length}</div>
             <div class="analytics-stat-label">All-Time Responses</div>
         </div>
     `;
@@ -810,14 +752,14 @@ function renderAnalytics() {
     container.innerHTML = questions.map((q, idx) => buildQuestionAnalyticsBlock(q, survey, filtered, idx)).join('');
 
     questions.forEach((q, idx) => {
-        if (['radio', 'checkbox'].includes(q.type)) {
+        if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
             initChartsForQuestion(q, survey, filtered, idx);
         }
     });
 }
 
-function buildQuestionAnalyticsBlock(q, survey, responses, idx) {
-    const surveyResponses = responses.filter(r => r.surveyId === survey.id);
+function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
+    const surveyResponses = responseRows.filter(r => String(r.surveyId || r.survey_id) === String(survey.id));
     const withAnswer = surveyResponses.filter(r => {
         const a = r.answers?.[q.id];
         return a !== undefined && a !== null && a !== '' && !(Array.isArray(a) && !a.length);
@@ -825,7 +767,7 @@ function buildQuestionAnalyticsBlock(q, survey, responses, idx) {
 
     const total = withAnswer.length;
 
-    if (['radio', 'checkbox'].includes(q.type)) {
+    if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
         const counts = {};
         (q.options || []).forEach(opt => { counts[opt] = 0; });
         withAnswer.forEach(r => {
@@ -837,7 +779,7 @@ function buildQuestionAnalyticsBlock(q, survey, responses, idx) {
             }
         });
 
-        const typeLabel = q.type === 'checkbox' ? 'Checkboxes' : 'Multiple Choice';
+        const typeLabel = q.type === 'checkbox' ? 'Checkboxes' : (q.type === 'dropdown' ? 'Dropdown' : 'Multiple Choice');
         const rows = Object.entries(counts).map(([opt, count]) => {
             const pct = total ? Math.round((count / total) * 100) : 0;
             return `
@@ -898,8 +840,8 @@ function buildQuestionAnalyticsBlock(q, survey, responses, idx) {
         </article>`;
 }
 
-function initChartsForQuestion(q, survey, responses, idx) {
-    const surveyResponses = responses.filter(r => r.surveyId === survey.id);
+function initChartsForQuestion(q, survey, responseRows, idx) {
+    const surveyResponses = responseRows.filter(r => String(r.surveyId || r.survey_id) === String(survey.id));
     const labels = q.options || [];
     const counts = labels.map(opt => {
         let c = 0;
@@ -964,19 +906,19 @@ function initChartsForQuestion(q, survey, responses, idx) {
 
 function exportAnalyticsCsv() {
     const surveyId = document.getElementById('analyticsSurveyFilter')?.value || '';
-    const survey = loadSurveys().find(s => s.id === surveyId);
+    const survey = surveys.find(s => String(s.id) === String(surveyId));
     if (!survey) {
         showToast('Select a survey first.', 'error');
         return;
     }
-    const responses = getFilteredResponsesForAnalytics().filter(r => r.surveyId === surveyId);
+    const filteredRows = getFilteredResponsesForAnalytics().filter(r => String(r.surveyId || r.survey_id) === String(surveyId));
     const lines = ['Question,Answer Choice,Count,Percentage'];
 
     (survey.questions || []).forEach(q => {
-        if (!['radio', 'checkbox'].includes(q.type)) return;
+        if (!['radio', 'checkbox', 'dropdown'].includes(q.type)) return;
         const counts = {};
         (q.options || []).forEach(o => { counts[o] = 0; });
-        responses.forEach(r => {
+        filteredRows.forEach(r => {
             let val = r.answers?.[q.id];
             if (q.type === 'checkbox' && Array.isArray(val)) {
                 val.forEach(v => { counts[v] = (counts[v] || 0) + 1; });

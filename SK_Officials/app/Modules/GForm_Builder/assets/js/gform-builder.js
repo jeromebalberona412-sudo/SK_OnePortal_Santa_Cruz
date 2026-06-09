@@ -11,8 +11,10 @@
         { value: 'text',      label: 'Short Answer'    },
         { value: 'paragraph', label: 'Paragraph'       },
         { value: 'number',    label: 'Number'          },
+        { value: 'date',      label: 'Date'            },
         { value: 'checkbox',  label: 'Checkboxes'      },
         { value: 'radio',     label: 'Multiple Choice' },
+        { value: 'dropdown',  label: 'Dropdown'        },
         { value: 'file',      label: 'File Upload'     },
     ];
 
@@ -134,8 +136,8 @@
         const typeSelect = card.querySelector('.spfb-q-type-select');
         if (typeSelect) q.type = typeSelect.value;
 
-        // Read options (for checkbox/radio)
-        if (q.type === 'checkbox' || q.type === 'radio') {
+        // Read options (for checkbox/radio/dropdown)
+        if (q.type === 'checkbox' || q.type === 'radio' || q.type === 'dropdown') {
             const optInputs = card.querySelectorAll('.spfb-option-input');
             q.options = Array.from(optInputs).map(i => i.value.trim()).filter(v => v !== '');
             if (q.options.length === 0) q.options = ['Option 1'];
@@ -196,12 +198,17 @@
             previewHTML = '<div class="spfb-preview-input spfb-preview-paragraph">Long answer text</div>';
         } else if (q.type === 'number') {
             previewHTML = '<div class="spfb-preview-input" style="min-width:100px;">0</div>';
+        } else if (q.type === 'date') {
+            previewHTML = '<div class="spfb-preview-input" style="min-width:140px;">mm/dd/yyyy</div>';
         } else if (q.type === 'checkbox' || q.type === 'radio') {
             const inputType = q.type === 'checkbox' ? 'checkbox' : 'radio';
             const opts = (q.options && q.options.length) ? q.options : ['Option 1'];
             previewHTML = `<div class="spfb-preview-options">${opts.map(o =>
                 `<label class="spfb-preview-option"><input type="${inputType}" disabled> <span>${o || '(empty)'}</span></label>`
             ).join('')}</div>`;
+        } else if (q.type === 'dropdown') {
+            const opts = (q.options && q.options.length) ? q.options : ['Option 1'];
+            previewHTML = `<div class="spfb-preview-input" style="min-width:160px;">${escapeHtml(opts[0] || 'Select…')} ▾</div>`;
         } else if (q.type === 'file') {
             previewHTML = '<div class="spfb-preview-file"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> File upload field</div>';
         }
@@ -236,7 +243,7 @@
             `<option value="${t.value}" ${q.type === t.value ? 'selected' : ''}>${t.label}</option>`
         ).join('');
 
-        const hasOptions = q.type === 'checkbox' || q.type === 'radio';
+        const hasOptions = q.type === 'checkbox' || q.type === 'radio' || q.type === 'dropdown';
         const opts = (q.options && q.options.length) ? q.options : ['Option 1'];
 
         const optionsHTML = hasOptions ? `

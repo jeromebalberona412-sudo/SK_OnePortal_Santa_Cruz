@@ -212,6 +212,16 @@ Route::middleware([
         Route::delete('/{id}', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'destroy'])->name('api.schedule-programs.destroy');
     });
 
+    Route::prefix('api/program-surveys/{committee}')->group(function () {
+        Route::get('/meta', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'meta'])->name('api.program-surveys.meta');
+        Route::get('/responses', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'responses'])->name('api.program-surveys.responses');
+        Route::get('/', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'index'])->name('api.program-surveys.index');
+        Route::get('/{id}', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'show'])->name('api.program-surveys.show');
+        Route::post('/', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'store'])->name('api.program-surveys.store');
+        Route::put('/{id}', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'update'])->name('api.program-surveys.update');
+        Route::delete('/{id}', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'destroy'])->name('api.program-surveys.destroy');
+    });
+
     Route::get('/scholarship-schedule', function () {
         return view('Program_Management::scholarship.scholarship-schedule');
     })->name('scholarship.schedule');
