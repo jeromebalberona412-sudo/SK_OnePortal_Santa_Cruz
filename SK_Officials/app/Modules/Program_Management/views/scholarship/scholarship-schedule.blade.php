@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Published Scholarship Forms - SK Officials Portal</title>
     @vite([
         'app/Modules/layout/css/header.css',
@@ -146,37 +147,17 @@
                     Program Information
                 </h4>
                 <div class="schol-schedule-grid">
-                    <div class="schol-field" style="grid-column:1/-1;">
-                        <label for="programName">Program Name <span class="schol-req">*</span></label>
-                        <input type="text" id="programName" class="schol-input" placeholder="Enter program name" maxlength="200" required>
-                        <div style="font-size:11px;color:#6b7280;margin-top:4px;text-align:right;"><span id="programNameCount">0</span>/200 characters</div>
-                    </div>
                     <div class="schol-field schol-field-program-type">
                         <label for="programType">Program Type</label>
-                        <input type="text" id="programType" class="schol-input schol-input-program-type" value="Equitable Access to Quality Education" readonly>
+                        <input type="text" id="programType" class="schol-input schol-input-program-type" value="" readonly placeholder="Loading from ABYIP...">
                     </div>
                     <div class="schol-field">
                         <label for="programCommittee">Committee</label>
-                        <input type="text" id="programCommittee" class="schol-input" value="Education Committee" readonly>
+                        <input type="text" id="programCommittee" class="schol-input" value="" readonly placeholder="Loading from committees...">
                     </div>
                     <div class="schol-field">
                         <label for="participationQty">Participation Quantity</label>
                         <input type="number" id="participationQty" class="schol-input" placeholder="Number of participants" min="0" max="500" step="1">
-                    </div>
-                    <div class="schol-field" style="grid-column:1/-1;">
-                        <label for="programVenue">Venue</label>
-                        <input type="text" id="programVenue" class="schol-input" placeholder="Enter venue location" maxlength="500">
-                        <div style="font-size:11px;color:#6b7280;margin-top:4px;text-align:right;"><span id="venueCount">0</span>/500 characters</div>
-                    </div>
-                    <div class="schol-field" style="grid-column:1/-1;">
-                        <label for="programDescription">Description</label>
-                        <textarea id="programDescription" class="schol-input" rows="3" placeholder="Enter program description" maxlength="500" style="resize:none;"></textarea>
-                        <div style="font-size:11px;color:#6b7280;margin-top:4px;text-align:right;"><span id="descriptionCount">0</span>/500 characters</div>
-                    </div>
-                    <div class="schol-field" style="grid-column:1/-1;">
-                        <label for="programTerms">Terms and Conditions</label>
-                        <textarea id="programTerms" class="schol-input" rows="4" placeholder="Enter terms and conditions" maxlength="500" style="resize:none;"></textarea>
-                        <div style="font-size:11px;color:#6b7280;margin-top:4px;text-align:right;"><span id="termsCount">0</span>/500 characters</div>
                     </div>
                 </div>
             </div>
@@ -271,10 +252,6 @@
                             <span>Email Address</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="home_address" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Home Address</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
                             <input type="checkbox" class="kk-profiling-field" value="region" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
                             <span>Region</span>
                         </label>
@@ -326,14 +303,6 @@
                             <input type="checkbox" class="kk-profiling-field" value="sk_voted" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
                             <span>Voted Last Election</span>
                         </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="kk_assembly" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Attended KK Assembly</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="vote_frequency" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Number of KK Assembly Attendances</span>
-                        </label>
                     </div>
                     
                     <div style="margin-top:16px;display:flex;gap:12px;">
@@ -350,8 +319,10 @@
         <div class="schol-modal-footer">
             <button type="button" class="schol-btn schol-btn-outline" id="btnCancelProgram">Cancel</button>
             <button type="button" class="schol-btn schol-btn-save" id="btnSaveProgram">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Save Program
+                <span class="schol-save-btn-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Save Program
+                </span>
             </button>
         </div>
     </div>
@@ -528,12 +499,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         console.log('Form builder initialized and button bound');
     }
-    
-    // Setup character counters
-    setupCharacterCounter('programName', 'programNameCount');
-    setupCharacterCounter('programVenue', 'venueCount');
-    setupCharacterCounter('programDescription', 'descriptionCount');
-    setupCharacterCounter('programTerms', 'termsCount');
     
     // Setup date validation
     setupDateValidation();

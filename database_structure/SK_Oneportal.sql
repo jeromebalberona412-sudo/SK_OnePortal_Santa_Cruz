@@ -926,3 +926,30 @@ CREATE INDEX IF NOT EXISTS sk_official_activities_barangay_id_created_at_index
 
 CREATE INDEX IF NOT EXISTS sk_official_activities_user_id_index
   ON public.sk_official_activities USING btree (user_id) TABLESPACE pg_default;
+
+-- Scholarship / program schedule programs (Equitable Access to Quality Education)
+CREATE TABLE IF NOT EXISTS schedule_programs (
+  id BIGSERIAL NOT NULL,
+  tenant_id BIGINT NULL,
+  barangay_id BIGINT NOT NULL,
+  created_by BIGINT NULL,
+  program_type VARCHAR(255) NOT NULL,
+  committee VARCHAR(255) NOT NULL,
+  program_name VARCHAR(255) NOT NULL,
+  participation_quantity INTEGER NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'open',
+  announcement TEXT NULL,
+  kk_profiling_fields JSON NULL,
+  custom_questions JSON NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT schedule_programs_pkey PRIMARY KEY (id),
+  CONSTRAINT schedule_programs_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE SET NULL,
+  CONSTRAINT schedule_programs_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+  CONSTRAINT schedule_programs_created_by_foreign FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS schedule_programs_barangay_id_status_index ON schedule_programs (barangay_id, status);
+CREATE INDEX IF NOT EXISTS schedule_programs_barangay_id_dates_index ON schedule_programs (barangay_id, start_date, end_date);

@@ -1,1158 +1,56 @@
-const SAF_STORAGE_KEY = 'scholar_application_forms';
-const SAF_ACTIVE_PROGRAM_KEY = 'scholar_active_program';
-const SAF_COMMITTEE = 'Education Committee';
-
+let schedulePrograms = [];
+let programMeta = null;
 let editingProgramId = null;
 let pendingDeleteProgramId = null;
 
-function resolveProgramStatus(program) {
-    const s = program?.status;
-    if (s === 'open' || s === 'closed') return s;
-    return 'open';
+const KK_FIELD_LABELS = {
+    last_name: 'Last Name',
+    first_name: 'First Name',
+    middle_name: 'Middle Name',
+    suffix: 'Suffix',
+    full_name: 'Full Name',
+    birthday: 'Birthday',
+    age: 'Age',
+    sex: 'Sex',
+    civil_status: 'Civil Status',
+    contact_number: 'Contact Number',
+    email: 'Email Address',
+    region: 'Region',
+    province: 'Province',
+    city: 'City/Municipality',
+    barangay: 'Barangay',
+    purok_zone: 'Purok/Zone',
+    youth_classification: 'Youth Classification',
+    youth_age_group: 'Youth Age Group',
+    education: 'Educational Attainment',
+    current_school: 'Current School',
+    course_strand: 'Course / Strand',
+    work_status: 'Work Status',
+    sk_voter: 'Registered SK Voter',
+    sk_voted: 'Voted Last Election',
+};
+
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 }
 
-function formatStatusLabel(status) {
-    if (status === 'open') return 'Open';
-    if (status === 'closed') return 'Closed';
-    return 'Open';
-}
-
-function openDeleteProgramModal(id) {
-    const program = loadForms().find(f => f.id === id);
-    pendingDeleteProgramId = id;
-    const deleteModal = document.getElementById('deleteProgramModal');
-    const nameEl = document.getElementById('deleteProgramName');
-    if (nameEl) {
-        nameEl.textContent = program ? `"${program.programName}"` : '';
-    }
-    if (deleteModal) deleteModal.style.display = 'flex';
-}
-
-function closeDeleteProgramModal() {
-    pendingDeleteProgramId = null;
-    const deleteModal = document.getElementById('deleteProgramModal');
-    if (deleteModal) deleteModal.style.display = 'none';
-}
-
-function confirmDeleteProgram() {
-    if (!pendingDeleteProgramId) return;
-    const id = pendingDeleteProgramId;
-    const activeProgram = getActiveProgram();
-    if (activeProgram && activeProgram.id === id) {
-        clearActiveProgram();
-    }
-    saveForms(loadForms().filter(f => f.id !== id));
-    closeDeleteProgramModal();
-    const currentFilter = document.getElementById('programFilter')?.value || 'all';
-    renderFormsTable(currentFilter);
-    showToast('Program deleted.', 'success');
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.ScholarshipViewShared) {
-        window.ScholarshipViewShared.seedScholarshipProgramIfNeeded();
-    }
-
-    const tableBody = document.getElementById('safFormsTableBody');
-    if (!tableBody) return;
-
-    const modal = document.getElementById('scholarProgramModal');
-    const modalBox = document.getElementById('scholarProgramBox');
-    const openBtn = document.getElementById('safOpenFormBtn');
-    const closeBtn = document.getElementById('scholarProgramClose');
-    const cancelBtn = document.getElementById('btnCancelProgram');
-    const saveBtn = document.getElementById('btnSaveProgram');
-    const maximizeBtn = document.getElementById('scholarProgramMaximize');
-    const previewModal = document.getElementById('safPreviewModal');
-    const previewBody = document.getElementById('safPreviewBody');
-    const previewClose = document.getElementById('safPreviewClose');
-    const toastEl = document.getElementById('safToast');
-
-    const builder = window.SpfbFormBuilder;
-    
-
-    function showToast(msg, type) {
-        if (!toastEl) return;
-        toastEl.textContent = msg;
-        toastEl.style.display = 'flex';
-        toastEl.style.background = type === 'error' ? '#ef4444' : '#22c55e';
-        clearTimeout(showToast._t);
-        showToast._t = setTimeout(() => { toastEl.style.display = 'none'; }, 2800);
-    }
-
-    function loadForms() {
-        try {
-            const stored = localStorage.getItem(SAF_STORAGE_KEY);
-            if (stored) return JSON.parse(stored);
-            
-            // Add sample data with KK Profiling fields selected
-            const sampleData = [
-                {
-                    id: 'sample-program-1',
-                    programName: 'SK Academic Scholarship Program',
-                    programType: 'Equitable Access to Quality Education',
-                    committee: SAF_COMMITTEE,
-                    participationQty: '50',
-                    venue: 'SK Hall, Barangay Santa Cruz',
-                    description: 'Scholarship program for deserving students in the community',
-                    terms: 'Must maintain a GPA of 85% or higher',
-                    startDate: '2026-06-01',
-                    endDate: '2026-06-30',
-                    status: 'open',
-                    customQuestions: [],
-                    announcement: 'Welcome to the SK Academic Scholarship Program. Please complete the application form below.',
-                    kkProfilingFields: ['full_name', 'age', 'sex', 'home_address', 'contact_number', 'email', 'education', 'current_school', 'course_strand', 'civil_status'],
-                    createdAt: new Date().toISOString()
-                }
-            ];
-            
-            localStorage.setItem(SAF_STORAGE_KEY, JSON.stringify(sampleData));
-            return sampleData;
-        } catch {
-            return [];
-        }
-    }
-
-    function saveForms(forms) {
-        localStorage.setItem(SAF_STORAGE_KEY, JSON.stringify(forms));
-    }
-
-    function uid() {
-        return 'saf_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-    }
-
-    function escapeHtml(str) {
-        return String(str || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
-
-    function resetModalForm() {
-        editingProgramId = null;
-        
-        const fields = [
-            'programName', 'programCommittee', 'participationQty',
-            'programVenue', 'programDescription', 'programTerms',
-            'schedStartDate', 'schedEndDate', 'programStatus'
-        ];
-
-        fields.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                if (el.tagName === 'SELECT') {
-                    if (id === 'programStatus') {
-                        el.value = 'open';
-                    } else {
-                        el.value = '';
-                    }
-                } else if (el.type === 'number') {
-                    el.value = '';
-                } else {
-                    el.value = '';
-                }
-            }
-        });
-        
-        // Reset counters
-        ['programNameCount', 'venueCount', 'descriptionCount', 'termsCount', 'spfbAnnouncementCount'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = '0';
-        });
-
-        // Reset KK Profiling field checkboxes
-        document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
-            checkbox.checked = false;
-        });
-    }
-
-    function openModal(forEditId) {
-        if (modal) {
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            // Don't auto-maximize when opening
-            if (modal) modal.classList.remove('schol-modal-maximized');
-            if (modalBox) modalBox.classList.remove('schol-modal-maximized');
-            if (maximizeBtn) {
-                maximizeBtn.textContent = '□';
-                maximizeBtn.title = 'Maximize';
-            }
-            try {
-                if (!forEditId) {
-                    // Create mode - reset form
-                    resetModalForm();
-                    const committeeEl = document.getElementById('programCommittee');
-                    if (committeeEl) committeeEl.value = SAF_COMMITTEE;
-                    if (window.SpfbFormBuilder) {
-                        window.SpfbFormBuilder.reset();
-                    }
-                    setupCounters();
-                    const modalTitle = document.getElementById('scholarProgramModalTitle');
-                    if (modalTitle) {
-                        modalTitle.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-                            Create Scholarship Program
-                        `;
-                    }
-                } else {
-                    // Edit mode - setup counters for existing data
-                    setupCounters();
-                }
-            } catch (e) {
-                console.error('Error in openModal:', e);
-            }
-        }
-    }
-
-    function setupCounters() {
-        // Setup announcement counter
-        const announcementEl = document.getElementById('spfbAnnouncement');
-        const countEl = document.getElementById('spfbAnnouncementCount');
-        if (announcementEl && countEl) {
-            announcementEl.addEventListener('input', () => {
-                countEl.textContent = String(announcementEl.value.length);
-            });
-        }
-
-        // Setup description counter
-        const descriptionEl = document.getElementById('programDescription');
-        const descCountEl = document.getElementById('descriptionCount');
-        if (descriptionEl && descCountEl) {
-            descriptionEl.addEventListener('input', () => {
-                descCountEl.textContent = String(descriptionEl.value.length);
-            });
-        }
-
-        // Setup terms counter
-        const termsEl = document.getElementById('programTerms');
-        const termsCountEl = document.getElementById('termsCount');
-        if (termsEl && termsCountEl) {
-            termsEl.addEventListener('input', () => {
-                termsCountEl.textContent = String(termsEl.value.length);
-            });
-        }
-    }
-
-    function closeModal() {
-        document.body.style.overflow = '';
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('schol-modal-maximized');
-        }
-        if (modalBox) modalBox.classList.remove('schol-modal-maximized');
-        if (maximizeBtn) {
-            maximizeBtn.textContent = '□';
-            maximizeBtn.title = 'Maximize';
-        }
-        resetModalForm();
-    }
-
-    (function bindDeleteProgramModal() {
-        const deleteModal = document.getElementById('deleteProgramModal');
-        const closeBtn = document.getElementById('deleteProgramClose');
-        const cancelBtn = document.getElementById('deleteProgramCancel');
-        const confirmBtn = document.getElementById('deleteProgramConfirm');
-        if (closeBtn) closeBtn.addEventListener('click', closeDeleteProgramModal);
-        if (cancelBtn) cancelBtn.addEventListener('click', closeDeleteProgramModal);
-        if (confirmBtn) confirmBtn.addEventListener('click', confirmDeleteProgram);
-        if (deleteModal) {
-            deleteModal.addEventListener('click', (e) => {
-                if (e.target === deleteModal) closeDeleteProgramModal();
-            });
-        }
-    })();
-
-    const viewProgramMaximize = document.getElementById('viewProgramMaximize');
-    const viewProgramBox = document.getElementById('viewProgramBox');
-    if (viewProgramMaximize && viewProgramBox) {
-        viewProgramMaximize.addEventListener('click', (e) => {
-            e.stopPropagation();
-            viewProgramBox.classList.toggle('schol-modal-maximized');
-            const viewProgramModal = document.getElementById('viewProgramModal');
-            const isMax = viewProgramBox.classList.contains('schol-modal-maximized');
-            viewProgramMaximize.textContent = isMax ? '⧉' : '□';
-            viewProgramMaximize.title = isMax ? 'Restore Down' : 'Maximize';
-            if (viewProgramModal) {
-                viewProgramModal.classList.toggle('schol-modal-overlay-maximized', isMax);
-            }
-        });
-    }
-
-    function initDateMin() {
-        const today = new Date().toISOString().split('T')[0];
-        ['safStartDate', 'safEndDate'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.setAttribute('min', today);
-        });
-    }
-
-    function filterFormsByDate(forms, filterValue) {
-        if (filterValue === 'all') return forms;
-        
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        
-        return forms.filter(f => {
-            if (!f.createdAt) return false;
-            const createdDate = new Date(f.createdAt);
-            
-            switch (filterValue) {
-                case 'recent': {
-                    const sevenDaysAgo = new Date(today);
-                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                    return createdDate >= sevenDaysAgo;
-                }
-                case 'monthly': {
-                    return createdDate.getMonth() === now.getMonth() && 
-                           createdDate.getFullYear() === now.getFullYear();
-                }
-                case 'yearly': {
-                    return createdDate.getFullYear() === now.getFullYear();
-                }
-                default:
-                    return true;
-            }
-        });
-    }
-
-    function renderFormsTable(filterValue = 'all') {
-        const allForms = loadForms();
-        const forms = filterFormsByDate(allForms, filterValue);
-        
-        // Sort forms alphabetically by program name
-        forms.sort((a, b) => {
-            const nameA = (a.programName || '').toLowerCase();
-            const nameB = (b.programName || '').toLowerCase();
-            return nameA.localeCompare(nameB);
-        });
-        
-        // Update program count
-        const countEl = document.getElementById('programCount');
-        if (countEl) {
-            countEl.textContent = forms.length;
-        }
-        
-        if (!forms.length) {
-            const message = filterValue === 'all'
-                ? 'No scholarship programs yet. Click Create Scholarship Program to add one.'
-                : 'No programs found for the selected filter.';
-            tableBody.innerHTML = `<tr><td colspan="8" class="saf-table-empty">${message}</td></tr>`;
-            return;
-        }
-
-        tableBody.innerHTML = forms.map(f => {
-            const status = resolveProgramStatus(f);
-            const statusClass = status === 'open' ? 'schol-pill-approved' : 'schol-pill-rejected';
-            const statusText = formatStatusLabel(status);
-            
-            return `
-            <tr>
-                <td>${escapeHtml(f.programName)}</td>
-                <td>${escapeHtml(f.programType)}</td>
-                <td>${escapeHtml(f.committee)}</td>
-                <td>${escapeHtml(f.participationQty || 'N/A')}</td>
-                <td>${escapeHtml(f.startDate)}</td>
-                <td>${escapeHtml(f.endDate)}</td>
-                <td><span class="schol-pill ${statusClass}">${statusText}</span></td>
-                <td class="col-actions">
-                    <div class="prog-tbl-actions">
-                        <button type="button" class="prog-btn prog-btn-view" data-form-view="${f.id}">View</button>
-                        <button type="button" class="prog-btn prog-btn-edit" data-form-edit="${f.id}">Edit</button>
-                        <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${f.id}">Delete</button>
-                    </div>
-                </td>
-            </tr>
-        `;
-        }).join('');
-
-        // Rebind all event listeners after table refresh
-        tableBody.querySelectorAll('[data-form-view]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const formId = btn.getAttribute('data-form-view');
-                console.log('View button clicked for:', formId);
-                openFormPreview(formId);
-            });
-        });
-        
-        tableBody.querySelectorAll('[data-form-edit]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const formId = btn.getAttribute('data-form-edit');
-                console.log('Edit button clicked for:', formId);
-                editProgram(formId);
-            });
-        });
-        
-        tableBody.querySelectorAll('[data-form-delete]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const formId = btn.getAttribute('data-form-delete');
-                console.log('Delete button clicked for:', formId);
-                openDeleteProgramModal(formId);
-            });
-        });
-    }
-
-    function editProgram(formId) {
-        const f = loadForms().find(x => x.id === formId);
-        if (!f) {
-            console.error('Program not found:', formId);
-            return;
-        }
-
-        editingProgramId = formId;
-        openModal(formId);
-
-        // Populate the modal with existing data
-        const programNameEl = document.getElementById('programName');
-        const committeeEl = document.getElementById('programCommittee');
-        const participationQtyEl = document.getElementById('participationQty');
-        const venueEl = document.getElementById('programVenue');
-        const descriptionEl = document.getElementById('programDescription');
-        const termsEl = document.getElementById('programTerms');
-        const startDateEl = document.getElementById('schedStartDate');
-        const endDateEl = document.getElementById('schedEndDate');
-        const statusEl = document.getElementById('programStatus');
-
-        if (programNameEl) programNameEl.value = f.programName || '';
-        if (committeeEl) committeeEl.value = f.committee || SAF_COMMITTEE;
-        if (participationQtyEl) participationQtyEl.value = f.participationQty || '';
-        if (venueEl) venueEl.value = f.venue || '';
-        if (descriptionEl) descriptionEl.value = f.description || '';
-        if (termsEl) termsEl.value = f.terms || '';
-        if (startDateEl) startDateEl.value = f.startDate || '';
-        if (endDateEl) endDateEl.value = f.endDate || '';
-        if (statusEl) statusEl.value = f.status || 'open';
-
-        // Update counters
-        const programNameCountEl = document.getElementById('programNameCount');
-        const venueCountEl = document.getElementById('venueCount');
-        const descriptionCountEl = document.getElementById('descriptionCount');
-        const termsCountEl = document.getElementById('termsCount');
-
-        if (programNameCountEl) programNameCountEl.textContent = (f.programName || '').length;
-        if (venueCountEl) venueCountEl.textContent = (f.venue || '').length;
-        if (descriptionCountEl) descriptionCountEl.textContent = (f.description || '').length;
-        if (termsCountEl) termsCountEl.textContent = (f.terms || '').length;
-
-        // Load custom questions if available
-        if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
-            window.SpfbFormBuilder.setQuestions(f.customQuestions || []);
-        }
-
-        // Load announcement if available
-        if (f.announcement) {
-            const announcementEl = document.getElementById('spfbAnnouncement');
-            const announcementCountEl = document.getElementById('spfbAnnouncementCount');
-            if (announcementEl) {
-                announcementEl.value = f.announcement;
-                if (announcementCountEl) announcementCountEl.textContent = f.announcement.length;
-            }
-        }
-
-        // Load KK Profiling field selections if available
-        if (f.kkProfilingFields && Array.isArray(f.kkProfilingFields)) {
-            document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
-                checkbox.checked = f.kkProfilingFields.includes(checkbox.value);
-            });
-        }
-
-        // Update modal title
-        const modalTitle = document.getElementById('scholarProgramModalTitle');
-        if (modalTitle) {
-            modalTitle.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit Scholarship Program
-            `;
-        }
-
-    }
-
-    function openFormPreview(formId) {
-        const f = loadForms().find(x => x.id === formId);
-        const viewProgramBody = document.getElementById('viewProgramBody');
-        const viewProgramModal = document.getElementById('viewProgramModal');
-        
-        if (!f || !viewProgramBody || !viewProgramModal) return;
-
-        // Format time for display
-        const formatTime = (time24) => {
-            if (!time24) return '';
-            const [hours, minutes] = time24.split(':');
-            const h = parseInt(hours);
-            const ampm = h >= 12 ? 'PM' : 'AM';
-            const h12 = h % 12 || 12;
-            return `${h12}:${minutes} ${ampm}`;
-        };
-
-        const status = resolveProgramStatus(f);
-        const statusColors = {
-            open: { bg: '#dcfce7', text: '#166534', label: 'Open' },
-            closed: { bg: '#fee2e2', text: '#991b1b', label: 'Closed' }
-        };
-        const statusStyle = statusColors[status] || statusColors.open;
-
-        viewProgramBody.innerHTML = `
-            <div style="padding:24px;background:#f0f1f5;">
-                <!-- Program Information Section -->
-                <div class="schol-schedule-card" style="margin-bottom:20px;">
-                    <h4 class="schol-schedule-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Program Information
-                    </h4>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program Name <span class="schol-req">*</span></label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.programName)}</div>
-                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(f.programName || '').length}/200 characters</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program Type</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.programType)}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Committee</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.committee)}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Participation Quantity</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.participationQty || 'N/A')}</div>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Venue</label>
-                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${escapeHtml(f.venue || 'Not specified')}</div>
-                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(f.venue || '').length}/500 characters</div>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Description</label>
-                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:80px;white-space:pre-wrap;">${escapeHtml(f.description || 'Not specified')}</div>
-                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(f.description || '').length}/500 characters</div>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Terms and Conditions</label>
-                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:100px;white-space:pre-wrap;">${escapeHtml(f.terms || 'Not specified')}</div>
-                            <div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right;">${(f.terms || '').length}/500 characters</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Schedule Section -->
-                <div class="schol-schedule-card" style="margin-bottom:20px;">
-                    <h4 class="schol-schedule-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Application Window Schedule
-                    </h4>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Start Date <span class="schol-req">*</span></label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.startDate)}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">End Date <span class="schol-req">*</span></label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${escapeHtml(f.endDate)}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Status</label>
-                            <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};box-shadow:0 1px 2px rgba(0,0,0,0.1);">${statusStyle.label}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Application Form Section -->
-                <div class="schol-schedule-card">
-                    <h4 class="schol-schedule-title" style="margin-bottom:16px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Application Form Builder
-                    </h4>
-                    
-                    <!-- Announcement Section -->
-                    <div style="background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Announcement <span class="schol-req">*</span></label>
-                        <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">This message will be shown to Kabataan members when they open the application form.</div>
-                        <div style="font-size:15px;color:#374151;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;min-height:80px;white-space:pre-wrap;">${escapeHtml(f.announcement || 'No announcement set')}</div>
-                    </div>
-
-                    <!-- KK Profiling Integration Section -->
-                    <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:20px;margin-bottom:20px;">
-                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                            <h5 style="margin:0;font-size:16px;font-weight:700;color:#0369a1;">Include KK Profiling Data</h5>
-                        </div>
-                        <p style="font-size:13px;color:#475569;margin-bottom:16px;line-height:1.6;">
-                            Select KK Profiling fields to automatically include in scholarship applications. Selected fields will be auto-filled from the applicant's KK Profile and displayed as read-only.
-                        </p>
-                        
-                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
-                            ${(() => {
-                                const allFields = [
-                                    { value: 'last_name', label: 'Last Name' },
-                                    { value: 'first_name', label: 'First Name' },
-                                    { value: 'middle_name', label: 'Middle Name' },
-                                    { value: 'suffix', label: 'Suffix' },
-                                    { value: 'full_name', label: 'Full Name' },
-                                    { value: 'birthday', label: 'Birthday' },
-                                    { value: 'age', label: 'Age' },
-                                    { value: 'sex', label: 'Sex' },
-                                    { value: 'civil_status', label: 'Civil Status' },
-                                    { value: 'contact_number', label: 'Contact Number' },
-                                    { value: 'email', label: 'Email Address' },
-                                    { value: 'home_address', label: 'Home Address' },
-                                    { value: 'region', label: 'Region' },
-                                    { value: 'province', label: 'Province' },
-                                    { value: 'city', label: 'City/Municipality' },
-                                    { value: 'barangay', label: 'Barangay' },
-                                    { value: 'purok_zone', label: 'Purok/Zone' },
-                                    { value: 'youth_classification', label: 'Youth Classification' },
-                                    { value: 'youth_age_group', label: 'Youth Age Group' },
-                                    { value: 'education', label: 'Educational Attainment' },
-                                    { value: 'current_school', label: 'Current School' },
-                                    { value: 'course_strand', label: 'Course / Strand' },
-                                    { value: 'work_status', label: 'Work Status' },
-                                    { value: 'sk_voter', label: 'Registered SK Voter' },
-                                    { value: 'sk_voted', label: 'Voted Last Election' },
-                                    { value: 'kk_assembly', label: 'Attended KK Assembly' },
-                                    { value: 'vote_frequency', label: 'Number of KK Assembly Attendances' }
-                                ];
-                                const selectedFields = f.kkProfilingFields || [];
-                                return allFields.map(field => {
-                                    const isChecked = selectedFields.includes(field.value);
-                                    return `
-                                        <label style="display:flex;align-items:center;gap:8px;cursor:${isChecked ? 'default' : 'not-allowed'};font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid ${isChecked ? '#0ea5e9' : '#e2e8f0'};border-radius:6px;transition:all 0.2s;">
-                                            <input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="cursor:not-allowed;width:18px;height:18px;accent-color:#fbbf24;">
-                                            <span>${field.label}</span>
-                                        </label>
-                                    `;
-                                }).join('');
-                            })()}
-                        </div>
-                        
-                        ${f.kkProfilingFields && f.kkProfilingFields.length > 0 ? `
-                            <div style="margin-top:16px;font-size:13px;color:#0369a1;font-weight:600;">
-                                ${f.kkProfilingFields.length} field(s) selected for auto-fill
-                            </div>
-                        ` : `
-                            <div style="margin-top:16px;font-size:13px;color:#64748b;">
-                                No KK Profiling fields selected. Applicants will need to manually enter all information.
-                            </div>
-                        `}
-                    </div>
-
-                    <!-- Custom Questions (Google Form Style) -->
-                    ${f.customQuestions && f.customQuestions.length > 0 ? `
-                        <div style="background:#f8f9fa;border-radius:12px;padding:24px;border:2px solid #e5e7eb;">
-                            <!-- Form Header -->
-                            <div style="background:#673ab7;color:white;padding:24px;border-radius:12px 12px 0 0;margin:-24px -24px 24px;">
-                                <h5 style="font-size:26px;font-weight:500;margin:0 0 8px;">${escapeHtml(f.programName)}</h5>
-                                <p style="font-size:14px;margin:0;opacity:0.95;">Application Form Questions</p>
-                            </div>
-
-                            ${f.customQuestions.map((q, idx) => `
-                                <div style="background:white;border-radius:8px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                                    <div style="font-size:15px;color:#202124;font-weight:500;margin-bottom:10px;">
-                                        ${idx + 1}. ${escapeHtml(q.label || q.question)}
-                                        ${q.required ? '<span style="color:#d93025;margin-left:4px;">*</span>' : ''}
-                                    </div>
-                                    <div style="font-size:13px;color:#5f6368;font-style:italic;margin-bottom:16px;">
-                                        Type: ${escapeHtml(q.type || 'Short Answer')}
-                                    </div>
-                                    ${q.options && q.options.length > 0 ? `
-                                        <div style="margin-top:16px;padding-left:12px;">
-                                            ${q.options.map(opt => `
-                                                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                                                    <div style="width:18px;height:18px;border:2px solid #5f6368;border-radius:50%;flex-shrink:0;"></div>
-                                                    <span style="font-size:14px;color:#202124;">${escapeHtml(opt)}</span>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : `
-                                        <div style="border-bottom:2px dotted #dadce0;padding:12px 0;color:#5f6368;font-size:14px;">Your answer</div>
-                                    `}
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : `
-                        <div style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:24px;text-align:center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" style="margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <div style="font-size:16px;color:#856404;font-weight:600;">No custom questions added</div>
-                            <div style="font-size:14px;color:#856404;margin-top:8px;">Applicants will use the Kabataan application form with their profile details.</div>
-                        </div>
-                    `}
-                </div>
-            </div>
-        `;
-        
-        viewProgramModal.style.display = 'flex';
-        resetViewProgramModalSize();
-
-        const viewProgramCloseBtn = document.getElementById('viewProgramCloseBtn');
-        const viewProgramClose = document.getElementById('viewProgramClose');
-        const closeView = () => {
-            viewProgramModal.style.display = 'none';
-            resetViewProgramModalSize();
-        };
-
-        if (viewProgramCloseBtn) viewProgramCloseBtn.onclick = closeView;
-        if (viewProgramClose) viewProgramClose.onclick = closeView;
-        viewProgramModal.onclick = (e) => {
-            if (e.target === viewProgramModal) closeView();
-        };
-    }
-
-    function handleSave() {
-        const programName = document.getElementById('programName')?.value?.trim();
-        const programCommittee = SAF_COMMITTEE;
-        const participationQtyRaw = document.getElementById('participationQty')?.value?.trim();
-        const programVenue = document.getElementById('programVenue')?.value?.trim();
-        const programDescription = document.getElementById('programDescription')?.value?.trim();
-        const programTerms = document.getElementById('programTerms')?.value?.trim();
-        const startDate = document.getElementById('schedStartDate')?.value?.trim();
-        const endDate = document.getElementById('schedEndDate')?.value?.trim();
-        const status = document.getElementById('programStatus')?.value || 'open';
-
-        if (!programName) { showToast('Please enter a program name.', 'error'); return; }
-        if (!startDate || !endDate) { showToast('Please select start and end dates.', 'error'); return; }
-
-        let participationQty = '';
-        if (participationQtyRaw !== '') {
-            const qtyNum = parseInt(participationQtyRaw, 10);
-            if (Number.isNaN(qtyNum) || qtyNum < 0) {
-                showToast('Participation quantity cannot be negative.', 'error');
-                return;
-            }
-            participationQty = String(qtyNum);
-        }
-
-        let customQuestions = [];
-        if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
-            customQuestions = window.SpfbFormBuilder.getQuestions();
-        }
-
-        const announcement = document.getElementById('spfbAnnouncement')?.value?.trim() || '';
-
-        // Get selected KK Profiling fields
-        const kkProfilingFields = [];
-        document.querySelectorAll('.kk-profiling-field:checked').forEach(checkbox => {
-            kkProfilingFields.push(checkbox.value);
-        });
-
-        const forms = loadForms();
-        
-        if (editingProgramId) {
-            // Update existing program
-            const index = forms.findIndex(f => f.id === editingProgramId);
-            if (index !== -1) {
-                const payload = {
-                    ...forms[index],
-                    programName,
-                    committee: programCommittee,
-                    participationQty: participationQty || '',
-                    venue: programVenue || '',
-                    description: programDescription || '',
-                    terms: programTerms || '',
-                    startDate,
-                    endDate,
-                    status,
-                    customQuestions,
-                    announcement,
-                    kkProfilingFields,
-                    updatedAt: new Date().toISOString()
-                };
-                
-                forms[index] = payload;
-                saveForms(forms);
-                
-                closeModal();
-                const filterAfterSave = document.getElementById('programFilter')?.value || 'all';
-                renderFormsTable(filterAfterSave);
-                showToast('Program updated successfully!', 'success');
-            }
-        } else {
-            // Create new program
-            const payload = {
-                id: uid(),
-                programName,
-                programType: 'Equitable Access to Quality Education',
-                committee: programCommittee,
-                participationQty: participationQty || '',
-                venue: programVenue || '',
-                description: programDescription || '',
-                terms: programTerms || '',
-                startDate,
-                endDate,
-                status,
-                customQuestions,
-                announcement,
-                kkProfilingFields,
-                createdAt: new Date().toISOString(),
-            };
-
-            forms.unshift(payload);
-            saveForms(forms);
-            closeModal();
-            const filterAfterCreate = document.getElementById('programFilter')?.value || 'all';
-            renderFormsTable(filterAfterCreate);
-            showToast('Program saved successfully!', 'success');
-        }
-    }
-
-    if (openBtn) openBtn.addEventListener('click', () => openModal());
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
-    if (saveBtn) saveBtn.addEventListener('click', handleSave);
-
-    // KK Profiling field selection handlers
-    const selectAllKKBtn = document.getElementById('selectAllKKFields');
-    const clearAllKKBtn = document.getElementById('clearAllKKFields');
-
-    if (selectAllKKBtn) {
-        selectAllKKBtn.addEventListener('click', () => {
-            document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
-                checkbox.checked = true;
-            });
-        });
-    }
-
-    if (clearAllKKBtn) {
-        clearAllKKBtn.addEventListener('click', () => {
-            document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-        });
-    }
-    if (modal) {
-        modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-    }
-    if (previewClose && previewModal) {
-        previewClose.addEventListener('click', () => { previewModal.style.display = 'none'; });
-        previewModal.addEventListener('click', e => { if (e.target === previewModal) previewModal.style.display = 'none'; });
-    }
-    if (maximizeBtn && modalBox && modal) {
-        maximizeBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            modalBox.classList.toggle('schol-modal-maximized');
-            modal.classList.toggle('schol-modal-maximized', modalBox.classList.contains('schol-modal-maximized'));
-            const isMax = modalBox.classList.contains('schol-modal-maximized');
-            maximizeBtn.textContent = isMax ? '⧉' : '□';
-            maximizeBtn.title = isMax ? 'Restore Down' : 'Maximize';
-        });
-    }
-
-    // Setup filter
-    const filterSelect = document.getElementById('programFilter');
-    if (filterSelect) {
-        filterSelect.addEventListener('change', () => {
-            renderFormsTable(filterSelect.value);
-        });
-    }
-
-    renderFormsTable();
-});
-
-// ── Active Program Management ──
-function getActiveProgram() {
-    try {
-        const stored = localStorage.getItem(SAF_ACTIVE_PROGRAM_KEY);
-        return stored ? JSON.parse(stored) : null;
-    } catch {
-        return null;
-    }
-}
-
-function setActiveProgram(program) {
-    localStorage.setItem(SAF_ACTIVE_PROGRAM_KEY, JSON.stringify(program));
-}
-
-function clearActiveProgram() {
-    localStorage.removeItem(SAF_ACTIVE_PROGRAM_KEY);
-}
-
-function loadActiveProgram() {
-    const createBtn = document.getElementById('safOpenFormBtn');
-    if (createBtn) {
-        createBtn.disabled = false;
-        createBtn.style.opacity = '1';
-        createBtn.style.cursor = 'pointer';
-        createBtn.setAttribute('data-has-active', 'false');
-        createBtn.title = '';
-    }
-}
-
-function setupActiveProgramButtons() {
-    const btnViewActive = document.getElementById('btnViewActiveProgram');
-    const btnEditActive = document.getElementById('btnEditActiveProgram');
-    const btnCloseActive = document.getElementById('btnCloseActiveProgram');
-    
-    if (btnViewActive) {
-        btnViewActive.addEventListener('click', () => {
-            const activeProgram = getActiveProgram();
-            if (activeProgram) {
-                openFormPreview(activeProgram.id);
-            }
-        });
-    }
-    
-    if (btnEditActive) {
-        btnEditActive.addEventListener('click', () => {
-            const activeProgram = getActiveProgram();
-            if (activeProgram) {
-                editProgram(activeProgram.id);
-            }
-        });
-    }
-    
-    if (btnCloseActive) {
-        btnCloseActive.addEventListener('click', () => {
-            openCloseProgramModal();
-        });
-    }
-    
-    // Setup close program modal
-    const closeProgramModal = document.getElementById('closeProgramModal');
-    const closeProgramClose = document.getElementById('closeProgramClose');
-    const closeProgramCancel = document.getElementById('closeProgramCancel');
-    const closeProgramConfirm = document.getElementById('closeProgramConfirm');
-    
-    if (closeProgramClose) {
-        closeProgramClose.addEventListener('click', () => {
-            if (closeProgramModal) closeProgramModal.style.display = 'none';
-        });
-    }
-    
-    if (closeProgramCancel) {
-        closeProgramCancel.addEventListener('click', () => {
-            if (closeProgramModal) closeProgramModal.style.display = 'none';
-        });
-    }
-    
-    if (closeProgramConfirm) {
-        closeProgramConfirm.addEventListener('click', () => {
-            closeActiveProgram();
-            if (closeProgramModal) closeProgramModal.style.display = 'none';
-        });
-    }
-    
-    if (closeProgramModal) {
-        closeProgramModal.addEventListener('click', (e) => {
-            if (e.target === closeProgramModal) {
-                closeProgramModal.style.display = 'none';
-            }
-        });
-    }
-}
-
-function openCloseProgramModal() {
-    const modal = document.getElementById('closeProgramModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function closeActiveProgram() {
-    const activeProgram = getActiveProgram();
-    if (!activeProgram) return;
-    
-    // Update program status to closed
-    const forms = loadForms();
-    const index = forms.findIndex(f => f.id === activeProgram.id);
-    if (index !== -1) {
-        forms[index].status = 'closed';
-        forms[index].closedAt = new Date().toISOString();
-        saveForms(forms);
-    }
-    
-    // Clear active program
-    clearActiveProgram();
-    
-    // Reload UI
-    loadActiveProgram();
-    renderFormsTable();
-    
-    showToast('Program closed successfully. You can now create a new program.', 'success');
-}
-
-window.editScholarshipProgram = editProgram;
-
-function editProgram(programId) {
-    const program = loadForms().find(f => f.id === programId);
-    if (!program) return;
-
-    editingProgramId = programId;
-
-    const modal = document.getElementById('scholarProgramModal');
-    const modalBox = document.getElementById('scholarProgramBox');
-    if (!modal) return;
-
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    modal.classList.remove('schol-modal-maximized');
-    if (modalBox) modalBox.classList.remove('schol-modal-maximized');
-
-    const setValue = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) el.value = value;
-    };
-
-    setValue('programName', program.programName || '');
-    setValue('programCommittee', program.committee || SAF_COMMITTEE);
-    setValue('participationQty', program.participationQty || '');
-    setValue('programVenue', program.venue || '');
-    setValue('programDescription', program.description || '');
-    setValue('programTerms', program.terms || '');
-    setValue('schedStartDate', program.startDate || '');
-    setValue('schedEndDate', program.endDate || '');
-    setValue('programStatus', resolveProgramStatus(program));
-
-    const startTimeEl = document.getElementById('schedStartTime');
-    const endTimeEl = document.getElementById('schedEndTime');
-    if (startTimeEl) startTimeEl.value = program.startTime || '08:00';
-    if (endTimeEl) endTimeEl.value = program.endTime || '17:00';
-
-    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
-        window.SpfbFormBuilder.setQuestions(program.customQuestions || []);
-    }
-
-    const announcementEl = document.getElementById('spfbAnnouncement');
-    const announcementCountEl = document.getElementById('spfbAnnouncementCount');
-    if (announcementEl) {
-        announcementEl.value = program.announcement || '';
-        if (announcementCountEl) {
-            announcementCountEl.textContent = String(announcementEl.value.length);
-        }
-    }
-
-    if (program.kkProfilingFields && Array.isArray(program.kkProfilingFields)) {
-        document.querySelectorAll('.kk-profiling-field').forEach(checkbox => {
-            checkbox.checked = program.kkProfilingFields.includes(checkbox.value);
-        });
-    }
-
-    const programNameCountEl = document.getElementById('programNameCount');
-    const venueCountEl = document.getElementById('venueCount');
-    const descriptionCountEl = document.getElementById('descriptionCount');
-    const termsCountEl = document.getElementById('termsCount');
-    if (programNameCountEl) programNameCountEl.textContent = String((program.programName || '').length);
-    if (venueCountEl) venueCountEl.textContent = String((program.venue || '').length);
-    if (descriptionCountEl) descriptionCountEl.textContent = String((program.description || '').length);
-    if (termsCountEl) termsCountEl.textContent = String((program.terms || '').length);
-
-    const modalTitle = document.getElementById('scholarProgramModalTitle');
-    if (modalTitle) {
-        modalTitle.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit Scholarship Program
-        `;
-    }
-}
-
-function loadForms() {
-    try {
-        return JSON.parse(localStorage.getItem(SAF_STORAGE_KEY) || '[]');
-    } catch {
-        return [];
-    }
-}
-
-function saveForms(forms) {
-    localStorage.setItem(SAF_STORAGE_KEY, JSON.stringify(forms));
-}
-
-function renderFormsTable(filterValue = 'all') {
-    const tableBody = document.getElementById('safFormsTableBody');
-    if (!tableBody) return;
-
-    const allForms = loadForms();
-    const forms = filterFormsByDate(allForms, filterValue);
-    const countEl = document.getElementById('programCount');
-    if (countEl) countEl.textContent = forms.length;
-
-    if (!forms.length) {
-        const message = filterValue === 'all'
-            ? 'No scholarship programs yet. Click Create Scholarship Program to add one.'
-            : 'No programs found for the selected filter.';
-        tableBody.innerHTML = `<tr><td colspan="8" class="saf-table-empty">${message}</td></tr>`;
-        return;
-    }
-
-    tableBody.innerHTML = forms.map(f => {
-        const status = resolveProgramStatus(f);
-        const statusClass = status === 'open' ? 'schol-pill-approved' : 'schol-pill-rejected';
-        const statusText = formatStatusLabel(status);
-
-        return `
-        <tr>
-            <td>${escapeHtml(f.programName)}</td>
-            <td>${escapeHtml(f.programType)}</td>
-            <td>${escapeHtml(f.committee)}</td>
-            <td>${escapeHtml(f.participationQty || 'N/A')}</td>
-            <td>${escapeHtml(f.startDate)}</td>
-            <td>${escapeHtml(f.endDate)}</td>
-            <td><span class="schol-pill ${statusClass}">${statusText}</span></td>
-            <td class="col-actions">
-                <div class="prog-tbl-actions">
-                    <button type="button" class="prog-btn prog-btn-view" data-form-view="${f.id}">View</button>
-                    <button type="button" class="prog-btn prog-btn-edit" data-form-edit="${f.id}">Edit</button>
-                    <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${f.id}">Delete</button>
-                </div>
-            </td>
-        </tr>
-    `;
-    }).join('');
-
-    tableBody.querySelectorAll('[data-form-view]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            openFormPreview(btn.getAttribute('data-form-view'));
-        });
+async function apiFetch(url, options = {}) {
+    const response = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken(),
+            'Accept': 'application/json',
+            ...(options.headers || {}),
+        },
+        ...options,
     });
-    tableBody.querySelectorAll('[data-form-edit]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            editProgram(btn.getAttribute('data-form-edit'));
-        });
-    });
-    tableBody.querySelectorAll('[data-form-delete]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            openDeleteProgramModal(btn.getAttribute('data-form-delete'));
-        });
-    });
-}
 
-function filterFormsByDate(forms, filterValue) {
-    if (filterValue === 'all') return forms;
-    
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    return forms.filter(f => {
-        if (!f.createdAt) return false;
-        const createdDate = new Date(f.createdAt);
-        
-        switch (filterValue) {
-            case 'recent': {
-                const sevenDaysAgo = new Date(today);
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                return createdDate >= sevenDaysAgo;
-            }
-            case 'monthly': {
-                return createdDate.getMonth() === now.getMonth() && 
-                       createdDate.getFullYear() === now.getFullYear();
-            }
-            case 'yearly': {
-                return createdDate.getFullYear() === now.getFullYear();
-            }
-            default:
-                return true;
-        }
-    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(data.message || 'Request failed.');
+    }
+
+    return data;
 }
 
 function escapeHtml(str) {
@@ -1161,187 +59,6 @@ function escapeHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-}
-
-function openFormPreview(formId) {
-    const f = loadForms().find(x => x.id === formId);
-    const viewProgramBody = document.getElementById('viewProgramBody');
-    const viewProgramModal = document.getElementById('viewProgramModal');
-    
-    if (!f || !viewProgramBody || !viewProgramModal) return;
-
-    // Format time for display
-    const formatTime = (time24) => {
-        if (!time24) return '';
-        const [hours, minutes] = time24.split(':');
-        const h = parseInt(hours);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        const h12 = h % 12 || 12;
-        return `${h12}:${minutes} ${ampm}`;
-    };
-
-    const status = resolveProgramStatus(f);
-    const statusColors = {
-        open: { bg: '#dcfce7', text: '#166534', label: 'Open' },
-        closed: { bg: '#fee2e2', text: '#991b1b', label: 'Closed' }
-    };
-    const statusStyle = statusColors[status] || statusColors.open;
-
-    viewProgramBody.innerHTML = `
-        <div style="padding:24px;background:#f9fafb;">
-            <!-- Program Header -->
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                    <h2 style="font-size:24px;font-weight:700;margin:0;color:#111827;">${escapeHtml(f.programName)}</h2>
-                    <span style="display:inline-flex;align-items:center;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:${statusStyle.bg};color:${statusStyle.text};">${statusStyle.label}</span>
-                </div>
-                
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px;">
-                    <div style="padding:12px;background:#f9fafb;border-radius:8px;">
-                        <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Program Type</div>
-                        <div style="font-size:14px;font-weight:600;color:#111827;">${escapeHtml(f.programType)}</div>
-                    </div>
-                    <div style="padding:12px;background:#f9fafb;border-radius:8px;">
-                        <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Committee</div>
-                        <div style="font-size:14px;font-weight:600;color:#111827;">${escapeHtml(f.committee)}</div>
-                    </div>
-                    <div style="padding:12px;background:#f9fafb;border-radius:8px;">
-                        <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Participants</div>
-                        <div style="font-size:14px;font-weight:600;color:#111827;">${escapeHtml(f.participationQty || 'N/A')}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Schedule Information -->
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Schedule Information
-                </h3>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
-                    <div>
-                        <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Start Date & Time</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(f.startDate)} at ${formatTime(f.startTime)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">End Date & Time</div>
-                        <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(f.endDate)} at ${formatTime(f.endTime)}</div>
-                    </div>
-                </div>
-            </div>
-
-            ${f.venue ? `
-            <!-- Venue -->
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Venue
-                </h3>
-                <div style="font-size:14px;color:#374151;line-height:1.6;">${escapeHtml(f.venue)}</div>
-            </div>
-            ` : ''}
-
-            ${f.description ? `
-            <!-- Description -->
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Description
-                </h3>
-                <div style="font-size:14px;color:#374151;line-height:1.8;">${escapeHtml(f.description)}</div>
-            </div>
-            ` : ''}
-
-            ${f.terms ? `
-            <!-- Terms and Conditions -->
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Terms and Conditions
-                </h3>
-                <div style="font-size:14px;color:#374151;line-height:1.8;white-space:pre-wrap;">${escapeHtml(f.terms)}</div>
-            </div>
-            ` : ''}
-
-            <!-- Application Form (Google Form Style) -->
-            <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Application Form Preview
-                </h3>
-                
-                <!-- Google Form Style Container -->
-                <div style="background:#f8f9fa;border-radius:8px;padding:20px;border:1px solid #e5e7eb;">
-                    <!-- Form Header -->
-                    <div style="background:#673ab7;color:white;padding:20px;border-radius:8px 8px 0 0;margin:-20px -20px 20px;">
-                        <h4 style="font-size:28px;font-weight:400;margin:0 0 8px;">${escapeHtml(f.programName)}</h4>
-                        <p style="font-size:14px;margin:0;opacity:0.9;">Scholarship Application Form</p>
-                    </div>
-
-                    ${f.announcement ? `
-                    <div style="background:white;border-radius:8px;padding:16px;margin-bottom:16px;border:1px solid #bae6fd;">
-                        <h5 style="font-size:16px;font-weight:600;color:#0369a1;margin:0 0 8px;">Announcement</h5>
-                        <p style="font-size:14px;color:#374151;line-height:1.6;margin:0;white-space:pre-wrap;">${escapeHtml(f.announcement)}</p>
-                    </div>
-                    ` : ''}
-
-                    <!-- Custom Questions (if any) -->
-                    ${f.customQuestions && f.customQuestions.length > 0 ? `
-                        <div style="background:white;border-radius:8px;padding:24px;border:1px solid #e5e7eb;">
-                            <h5 style="font-size:18px;font-weight:600;color:#202124;margin:0 0 16px;">Additional Questions</h5>
-                            ${f.customQuestions.map((q, idx) => `
-                                <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #f0f0f0;">
-                                    <div style="font-size:14px;color:#202124;font-weight:500;margin-bottom:8px;">
-                                        ${idx + 1}. ${escapeHtml(q.question)}
-                                        ${q.required ? '<span style="color:#d93025;">*</span>' : ''}
-                                    </div>
-                                    <div style="font-size:13px;color:#5f6368;font-style:italic;">
-                                        Type: ${escapeHtml(q.type || 'Short Answer')}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : `
-                        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;text-align:center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <div style="font-size:14px;color:#856404;font-weight:500;">No custom questions added</div>
-                            <div style="font-size:12px;color:#856404;margin-top:4px;">Applicants will use the Kabataan application form with their profile details.</div>
-                        </div>
-                    `}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    viewProgramModal.style.display = 'flex';
-    resetViewProgramModalSize();
-    
-    const viewProgramCloseBtn = document.getElementById('viewProgramCloseBtn');
-    const viewProgramClose = document.getElementById('viewProgramClose');
-    
-    const closeView = () => {
-        viewProgramModal.style.display = 'none';
-        resetViewProgramModalSize();
-    };
-    
-    if (viewProgramCloseBtn) viewProgramCloseBtn.onclick = closeView;
-    if (viewProgramClose) viewProgramClose.onclick = closeView;
-    
-    viewProgramModal.onclick = (e) => {
-        if (e.target === viewProgramModal) closeView();
-    };
-}
-
-function resetViewProgramModalSize() {
-    const viewProgramBox = document.getElementById('viewProgramBox');
-    const viewProgramModal = document.getElementById('viewProgramModal');
-    const viewProgramMaximize = document.getElementById('viewProgramMaximize');
-    if (viewProgramBox) viewProgramBox.classList.remove('schol-modal-maximized');
-    if (viewProgramModal) viewProgramModal.classList.remove('schol-modal-overlay-maximized');
-    if (viewProgramMaximize) {
-        viewProgramMaximize.textContent = '□';
-        viewProgramMaximize.title = 'Maximize';
-    }
 }
 
 function showToast(msg, type) {
@@ -1354,3 +71,544 @@ function showToast(msg, type) {
     showToast._t = setTimeout(() => { toastEl.style.display = 'none'; }, 2800);
 }
 
+function setSaveButtonLoading(isLoading) {
+    const saveBtn = document.getElementById('btnSaveProgram');
+    if (!saveBtn) return;
+
+    if (isLoading) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="schol-save-btn-content"><span class="schol-save-spinner"></span> Saving...</span>';
+        return;
+    }
+
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = `
+        <span class="schol-save-btn-content">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Save Program
+        </span>
+    `;
+}
+
+function resolveProgramStatus(program) {
+    return program?.status === 'closed' ? 'closed' : 'open';
+}
+
+function formatStatusLabel(status) {
+    return status === 'closed' ? 'Closed' : 'Open';
+}
+
+function getTypeLabel(type) {
+    const map = {
+        text: 'Short Answer',
+        paragraph: 'Paragraph',
+        number: 'Number',
+        checkbox: 'Checkboxes',
+        radio: 'Multiple Choice',
+        file: 'File Upload',
+    };
+    return map[type] || type || 'Short Answer';
+}
+
+async function loadProgramMeta() {
+    const response = await apiFetch('/api/schedule-programs/meta');
+    programMeta = response.data || null;
+
+    const typeEl = document.getElementById('programType');
+    const committeeEl = document.getElementById('programCommittee');
+
+    if (typeEl) {
+        typeEl.value = programMeta?.program_type || 'Equitable Access to Quality Education';
+    }
+    if (committeeEl) {
+        committeeEl.value = programMeta?.committee || 'Education Committee';
+    }
+}
+
+async function loadPrograms() {
+    const response = await apiFetch('/api/schedule-programs');
+    schedulePrograms = Array.isArray(response.data) ? response.data : [];
+    renderFormsTable();
+}
+
+function resetModalForm() {
+    editingProgramId = null;
+
+    const participationQty = document.getElementById('participationQty');
+    const startDate = document.getElementById('schedStartDate');
+    const endDate = document.getElementById('schedEndDate');
+    const status = document.getElementById('programStatus');
+    const announcement = document.getElementById('spfbAnnouncement');
+    const announcementCount = document.getElementById('spfbAnnouncementCount');
+
+    if (participationQty) participationQty.value = '';
+    if (startDate) startDate.value = '';
+    if (endDate) endDate.value = '';
+    if (status) status.value = 'open';
+    if (announcement) announcement.value = '';
+    if (announcementCount) announcementCount.textContent = '0';
+
+    document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
+        checkbox.checked = false;
+    });
+
+    if (window.SpfbFormBuilder) {
+        window.SpfbFormBuilder.reset();
+    }
+
+    if (programMeta) {
+        const typeEl = document.getElementById('programType');
+        const committeeEl = document.getElementById('programCommittee');
+        if (typeEl) typeEl.value = programMeta.program_type || '';
+        if (committeeEl) committeeEl.value = programMeta.committee || '';
+    }
+}
+
+function openModal(forEditId) {
+    const modal = document.getElementById('scholarProgramModal');
+    const modalBox = document.getElementById('scholarProgramBox');
+    const maximizeBtn = document.getElementById('scholarProgramMaximize');
+    const modalTitle = document.getElementById('scholarProgramModalTitle');
+
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    modal.classList.remove('schol-modal-maximized');
+    if (modalBox) modalBox.classList.remove('schol-modal-maximized');
+    if (maximizeBtn) {
+        maximizeBtn.textContent = '□';
+        maximizeBtn.title = 'Maximize';
+    }
+
+    if (!forEditId) {
+        resetModalForm();
+        if (modalTitle) {
+            modalTitle.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                Create Scholarship Program
+            `;
+        }
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('scholarProgramModal');
+    const modalBox = document.getElementById('scholarProgramBox');
+    const maximizeBtn = document.getElementById('scholarProgramMaximize');
+
+    document.body.style.overflow = '';
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('schol-modal-maximized');
+    }
+    if (modalBox) modalBox.classList.remove('schol-modal-maximized');
+    if (maximizeBtn) {
+        maximizeBtn.textContent = '□';
+        maximizeBtn.title = 'Maximize';
+    }
+    resetModalForm();
+}
+
+function renderFormsTable() {
+    const tableBody = document.getElementById('safFormsTableBody');
+    const countEl = document.getElementById('programCount');
+    if (!tableBody) return;
+
+    const forms = [...schedulePrograms].sort((a, b) => {
+        const nameA = (a.program_name || '').toLowerCase();
+        const nameB = (b.program_name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+
+    if (countEl) countEl.textContent = String(forms.length);
+
+    if (!forms.length) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="saf-table-empty">No scholarship programs yet. Click Create Scholarship Program to add one.</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = forms.map((program) => {
+        const status = resolveProgramStatus(program);
+        const statusClass = status === 'open' ? 'schol-pill-approved' : 'schol-pill-rejected';
+
+        return `
+            <tr>
+                <td>${escapeHtml(program.program_name)}</td>
+                <td>${escapeHtml(program.program_type)}</td>
+                <td>${escapeHtml(program.committee)}</td>
+                <td>${escapeHtml(program.participation_quantity ?? 'N/A')}</td>
+                <td>${escapeHtml(program.start_date)}</td>
+                <td>${escapeHtml(program.end_date)}</td>
+                <td><span class="schol-pill ${statusClass}">${formatStatusLabel(status)}</span></td>
+                <td class="col-actions">
+                    <div class="prog-tbl-actions">
+                        <button type="button" class="prog-btn prog-btn-view" data-form-view="${program.id}">View</button>
+                        <button type="button" class="prog-btn prog-btn-edit" data-form-edit="${program.id}">Edit</button>
+                        <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${program.id}">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    tableBody.querySelectorAll('[data-form-view]').forEach((btn) => {
+        btn.addEventListener('click', () => openFormPreview(btn.getAttribute('data-form-view')));
+    });
+    tableBody.querySelectorAll('[data-form-edit]').forEach((btn) => {
+        btn.addEventListener('click', () => editProgram(btn.getAttribute('data-form-edit')));
+    });
+    tableBody.querySelectorAll('[data-form-delete]').forEach((btn) => {
+        btn.addEventListener('click', () => openDeleteProgramModal(btn.getAttribute('data-form-delete')));
+    });
+}
+
+function editProgram(programId) {
+    const program = schedulePrograms.find((item) => String(item.id) === String(programId));
+    if (!program) {
+        showToast('Program not found.', 'error');
+        return;
+    }
+
+    editingProgramId = program.id;
+    openModal(program.id);
+
+    const participationQty = document.getElementById('participationQty');
+    const startDate = document.getElementById('schedStartDate');
+    const endDate = document.getElementById('schedEndDate');
+    const status = document.getElementById('programStatus');
+    const typeEl = document.getElementById('programType');
+    const committeeEl = document.getElementById('programCommittee');
+    const announcementEl = document.getElementById('spfbAnnouncement');
+    const announcementCountEl = document.getElementById('spfbAnnouncementCount');
+    const modalTitle = document.getElementById('scholarProgramModalTitle');
+
+    if (participationQty) participationQty.value = program.participation_quantity ?? '';
+    if (startDate) startDate.value = program.start_date || '';
+    if (endDate) endDate.value = program.end_date || '';
+    if (status) status.value = resolveProgramStatus(program);
+    if (typeEl) typeEl.value = program.program_type || '';
+    if (committeeEl) committeeEl.value = program.committee || '';
+    if (announcementEl) {
+        announcementEl.value = program.announcement || '';
+        if (announcementCountEl) announcementCountEl.textContent = String(announcementEl.value.length);
+    }
+
+    const kkFields = program.kk_profiling_fields || [];
+    document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
+        checkbox.checked = kkFields.includes(checkbox.value);
+    });
+
+    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
+        window.SpfbFormBuilder.setQuestions(program.custom_questions || []);
+    }
+
+    if (modalTitle) {
+        modalTitle.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Scholarship Program
+        `;
+    }
+}
+
+function openFormPreview(programId) {
+    const program = schedulePrograms.find((item) => String(item.id) === String(programId));
+    const viewProgramBody = document.getElementById('viewProgramBody');
+    const viewProgramModal = document.getElementById('viewProgramModal');
+    if (!program || !viewProgramBody || !viewProgramModal) return;
+
+    const status = resolveProgramStatus(program);
+    const statusColors = {
+        open: { bg: '#dcfce7', text: '#166534', label: 'Open' },
+        closed: { bg: '#fee2e2', text: '#991b1b', label: 'Closed' },
+    };
+    const statusStyle = statusColors[status] || statusColors.open;
+    const kkFields = program.kk_profiling_fields || [];
+    const customQuestions = program.custom_questions || [];
+
+    viewProgramBody.innerHTML = `
+        <div style="padding:24px;background:#f0f1f5;">
+            <div class="schol-schedule-card" style="margin-bottom:20px;">
+                <h4 class="schol-schedule-title">Program Information</h4>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                    <div style="grid-column:1/-1;">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.program_name)}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program Type</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.program_type)}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Committee</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.committee)}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Participation Quantity</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.participation_quantity ?? 'N/A')}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="schol-schedule-card" style="margin-bottom:20px;">
+                <h4 class="schol-schedule-title">Application Window Schedule</h4>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Start Date</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.start_date)}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">End Date</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.end_date)}</div>
+                    </div>
+                    <div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Status</label>
+                        <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;background:${statusStyle.bg};color:${statusStyle.text};">${statusStyle.label}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="schol-schedule-card">
+                <h4 class="schol-schedule-title">Application Form Builder</h4>
+                <div style="background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;border:2px solid #e5e7eb;">
+                    <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Announcement</label>
+                    <div style="font-size:15px;color:#374151;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;min-height:80px;white-space:pre-wrap;">${escapeHtml(program.announcement || 'No announcement set')}</div>
+                </div>
+
+                <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <h5 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#0369a1;">Include KK Profiling Data</h5>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                        ${Object.entries(KK_FIELD_LABELS).map(([value, label]) => `
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid ${kkFields.includes(value) ? '#0ea5e9' : '#e2e8f0'};border-radius:6px;">
+                                <input type="checkbox" ${kkFields.includes(value) ? 'checked' : ''} disabled style="width:18px;height:18px;">
+                                <span>${label}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+
+                ${customQuestions.length ? `
+                    <div style="background:#f8f9fa;border-radius:12px;padding:24px;border:2px solid #e5e7eb;">
+                        ${customQuestions.map((question, index) => `
+                            <div style="background:white;border-radius:8px;padding:24px;margin-bottom:16px;border:1px solid #e5e7eb;">
+                                <div style="font-size:15px;color:#202124;font-weight:500;margin-bottom:10px;">
+                                    ${index + 1}. ${escapeHtml(question.label)}
+                                    ${question.required ? '<span style="color:#d93025;">*</span>' : ''}
+                                </div>
+                                <div style="font-size:13px;color:#5f6368;font-style:italic;">Type: ${escapeHtml(getTypeLabel(question.type))}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `
+                    <div style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:24px;text-align:center;">
+                        <div style="font-size:16px;color:#856404;font-weight:600;">No custom questions added</div>
+                    </div>
+                `}
+            </div>
+        </div>
+    `;
+
+    viewProgramModal.style.display = 'flex';
+}
+
+function openDeleteProgramModal(programId) {
+    const program = schedulePrograms.find((item) => String(item.id) === String(programId));
+    pendingDeleteProgramId = programId;
+    const deleteModal = document.getElementById('deleteProgramModal');
+    const nameEl = document.getElementById('deleteProgramName');
+    if (nameEl) {
+        nameEl.textContent = program ? `"${program.program_name}"` : '';
+    }
+    if (deleteModal) deleteModal.style.display = 'flex';
+}
+
+function closeDeleteProgramModal() {
+    pendingDeleteProgramId = null;
+    const deleteModal = document.getElementById('deleteProgramModal');
+    if (deleteModal) deleteModal.style.display = 'none';
+}
+
+async function confirmDeleteProgram() {
+    if (!pendingDeleteProgramId) return;
+
+    const confirmBtn = document.getElementById('deleteProgramConfirm');
+    const defaultHtml = confirmBtn ? confirmBtn.innerHTML : 'Delete Program';
+
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="schol-save-spinner"></span> Deleting...';
+    }
+
+    try {
+        await apiFetch(`/api/schedule-programs/${pendingDeleteProgramId}`, { method: 'DELETE' });
+        closeDeleteProgramModal();
+        await loadPrograms();
+        showToast('Program deleted successfully.', 'success');
+    } catch (error) {
+        showToast(error.message || 'Failed to delete program.', 'error');
+    } finally {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = defaultHtml;
+        }
+    }
+}
+
+async function handleSave() {
+    const startDate = document.getElementById('schedStartDate')?.value?.trim();
+    const endDate = document.getElementById('schedEndDate')?.value?.trim();
+    const status = document.getElementById('programStatus')?.value || 'open';
+    const participationQtyRaw = document.getElementById('participationQty')?.value?.trim();
+    const announcement = document.getElementById('spfbAnnouncement')?.value?.trim() || '';
+
+    if (!startDate || !endDate) {
+        showToast('Please select start and end dates.', 'error');
+        return;
+    }
+
+    let participationQuantity = null;
+    if (participationQtyRaw !== '') {
+        const qtyNum = parseInt(participationQtyRaw, 10);
+        if (Number.isNaN(qtyNum) || qtyNum < 0) {
+            showToast('Participation quantity cannot be negative.', 'error');
+            return;
+        }
+        participationQuantity = qtyNum;
+    }
+
+    let customQuestions = [];
+    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
+        customQuestions = window.SpfbFormBuilder.getQuestions();
+    }
+
+    const kkProfilingFields = [];
+    document.querySelectorAll('.kk-profiling-field:checked').forEach((checkbox) => {
+        kkProfilingFields.push(checkbox.value);
+    });
+
+    const payload = {
+        start_date: startDate,
+        end_date: endDate,
+        status,
+        participation_quantity: participationQuantity,
+        announcement,
+        kk_profiling_fields: kkProfilingFields,
+        custom_questions: customQuestions,
+    };
+
+    setSaveButtonLoading(true);
+
+    try {
+        if (editingProgramId) {
+            await apiFetch(`/api/schedule-programs/${editingProgramId}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload),
+            });
+            showToast('Program updated successfully!', 'success');
+        } else {
+            await apiFetch('/api/schedule-programs', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+            showToast('Program saved successfully!', 'success');
+        }
+
+        closeModal();
+        await loadPrograms();
+    } catch (error) {
+        showToast(error.message || 'Failed to save program.', 'error');
+    } finally {
+        setSaveButtonLoading(false);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const tableBody = document.getElementById('safFormsTableBody');
+    if (!tableBody) return;
+
+    const modal = document.getElementById('scholarProgramModal');
+    const modalBox = document.getElementById('scholarProgramBox');
+    const openBtn = document.getElementById('safOpenFormBtn');
+    const closeBtn = document.getElementById('scholarProgramClose');
+    const cancelBtn = document.getElementById('btnCancelProgram');
+    const saveBtn = document.getElementById('btnSaveProgram');
+    const maximizeBtn = document.getElementById('scholarProgramMaximize');
+
+    if (openBtn) openBtn.addEventListener('click', () => openModal());
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (saveBtn) saveBtn.addEventListener('click', handleSave);
+
+    if (modal) {
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeModal();
+        });
+    }
+
+    if (maximizeBtn && modalBox && modal) {
+        maximizeBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            modalBox.classList.toggle('schol-modal-maximized');
+            modal.classList.toggle('schol-modal-maximized', modalBox.classList.contains('schol-modal-maximized'));
+            const isMax = modalBox.classList.contains('schol-modal-maximized');
+            maximizeBtn.textContent = isMax ? '⧉' : '□';
+            maximizeBtn.title = isMax ? 'Restore Down' : 'Maximize';
+        });
+    }
+
+    const selectAllKKBtn = document.getElementById('selectAllKKFields');
+    const clearAllKKBtn = document.getElementById('clearAllKKFields');
+    if (selectAllKKBtn) {
+        selectAllKKBtn.addEventListener('click', () => {
+            document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
+                checkbox.checked = true;
+            });
+        });
+    }
+    if (clearAllKKBtn) {
+        clearAllKKBtn.addEventListener('click', () => {
+            document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+        });
+    }
+
+    const deleteClose = document.getElementById('deleteProgramClose');
+    const deleteCancel = document.getElementById('deleteProgramCancel');
+    const deleteConfirm = document.getElementById('deleteProgramConfirm');
+    const deleteModal = document.getElementById('deleteProgramModal');
+    if (deleteClose) deleteClose.addEventListener('click', closeDeleteProgramModal);
+    if (deleteCancel) deleteCancel.addEventListener('click', closeDeleteProgramModal);
+    if (deleteConfirm) deleteConfirm.addEventListener('click', confirmDeleteProgram);
+    if (deleteModal) {
+        deleteModal.addEventListener('click', (event) => {
+            if (event.target === deleteModal) closeDeleteProgramModal();
+        });
+    }
+
+    const viewProgramClose = document.getElementById('viewProgramClose');
+    const viewProgramModal = document.getElementById('viewProgramModal');
+    if (viewProgramClose && viewProgramModal) {
+        viewProgramClose.addEventListener('click', () => {
+            viewProgramModal.style.display = 'none';
+        });
+        viewProgramModal.addEventListener('click', (event) => {
+            if (event.target === viewProgramModal) {
+                viewProgramModal.style.display = 'none';
+            }
+        });
+    }
+
+    try {
+        if (typeof window.showLoading === 'function') window.showLoading();
+        await loadProgramMeta();
+        await loadPrograms();
+    } catch (error) {
+        showToast(error.message || 'Failed to load schedule programs.', 'error');
+        tableBody.innerHTML = '<tr><td colspan="8" class="saf-table-empty">Unable to load schedule programs.</td></tr>';
+    } finally {
+        if (typeof window.hideLoading === 'function') window.hideLoading();
+    }
+});
+
+window.editScholarshipProgram = editProgram;

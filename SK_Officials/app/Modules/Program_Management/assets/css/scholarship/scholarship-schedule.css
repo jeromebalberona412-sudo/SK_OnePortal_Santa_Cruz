@@ -195,3 +195,22 @@
 .schol-field-program-type {
     grid-column: span 1;
 }
+
+.schol-save-btn-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.schol-save-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: schol-save-spin 0.8s linear infinite;
+}
+
+@keyframes schol-save-spin {
+    to { transform: rotate(360deg); }
+}

@@ -118,12 +118,7 @@
     }
 
     function seedScholarshipProgramIfNeeded() {
-        if (localStorage.getItem(PROGRAM_SEED_KEY)) return;
-        const forms = loadPrograms();
-        if (!forms.length) {
-            localStorage.setItem(SAF_STORAGE_KEY, JSON.stringify([SAMPLE_SCHOLARSHIP_PROGRAM]));
-        }
-        localStorage.setItem(PROGRAM_SEED_KEY, '1');
+        // Scholarship schedules are persisted in schedule_programs via API.
     }
 
     function questionLabel(q) {

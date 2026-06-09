@@ -203,7 +203,15 @@ Route::middleware([
         return view('Program_Management::sports.schedule');
     })->name('sports-application-form');
 
-    // ── Scholarship routes (pure front-end, no DB) ──
+    Route::prefix('api/schedule-programs')->group(function () {
+        Route::get('/meta', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'meta'])->name('api.schedule-programs.meta');
+        Route::get('/', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'index'])->name('api.schedule-programs.index');
+        Route::get('/{id}', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'show'])->name('api.schedule-programs.show');
+        Route::post('/', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'store'])->name('api.schedule-programs.store');
+        Route::put('/{id}', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'update'])->name('api.schedule-programs.update');
+        Route::delete('/{id}', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'destroy'])->name('api.schedule-programs.destroy');
+    });
+
     Route::get('/scholarship-schedule', function () {
         return view('Program_Management::scholarship.scholarship-schedule');
     })->name('scholarship.schedule');
