@@ -158,7 +158,7 @@
                     <!-- Remember Me & Forgot Password -->
                     <div class="sk-form-options">
                         <label class="sk-checkbox">
-                            <input type="checkbox" id="remember" name="remember">
+                            <input type="checkbox" id="remember" name="remember" value="1">
                             <span class="checkbox-label">Remember me</span>
                         </label>
                         <button type="button" class="sk-link" id="forgotBtn">Forgot password?</button>
@@ -272,4 +272,12 @@
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
+@if (session('verification_wait') && session()->has('sk_official_email_verification_pending'))
+    <script>
+        if (typeof window.hideLoading === 'function') {
+            window.hideLoading();
+        }
+        window.location.replace("{{ route('sk_official.verification.wait', [], false) }}");
+    </script>
+@endif
 </html>

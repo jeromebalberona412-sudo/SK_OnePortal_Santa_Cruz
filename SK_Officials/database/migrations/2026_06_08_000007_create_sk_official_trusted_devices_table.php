@@ -15,14 +15,18 @@ return new class extends Migration
         Schema::create('sk_official_trusted_devices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('fingerprint', 64);
-            $table->string('user_agent', 500)->nullable();
+            $table->string('fingerprint', 128);
+            $table->string('device_token_hash', 64)->nullable();
             $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->timestamp('last_used_at')->nullable();
             $table->timestamp('expires_at');
+            $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->unique(['user_id', 'fingerprint']);
-            $table->index(['user_id', 'expires_at']);
+            $table->unique(['user_id', 'fingerprint'], 'sk_official_trusted_device_unique');
+            $table->index(['user_id', 'expires_at'], 'sk_official_trusted_device_exp_idx');
+            $table->index(['user_id', 'device_token_hash'], 'sk_official_trusted_device_token_idx');
         });
     }
 

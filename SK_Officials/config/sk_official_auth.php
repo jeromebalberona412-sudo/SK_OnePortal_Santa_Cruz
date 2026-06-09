@@ -40,7 +40,7 @@ return [
     ],
 
     'verification' => [
-        'wait_minutes' => (int) env('SK_OFFICIAL_EMAIL_VERIFICATION_WAIT_MINUTES', 10),
+        'wait_minutes' => (int) env('SK_OFFICIAL_EMAIL_VERIFICATION_WAIT_MINUTES', 60),
     ],
 
     'single_session' => [

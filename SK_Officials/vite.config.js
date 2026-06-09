@@ -13,8 +13,6 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/js/login.js',
                 'app/Modules/Authentication/assets/css/forgot-password.css',
                 'app/Modules/Authentication/assets/js/forgot-password.js',
-                'app/Modules/Authentication/assets/css/takeover-wait.css',
-                'app/Modules/Authentication/assets/js/takeover-wait.js',
                 'app/Modules/Authentication/assets/css/password-reset-success.css',
                 'app/Modules/Authentication/assets/js/password-reset-success.js',
                 'app/Modules/Authentication/assets/css/reset-password.css',

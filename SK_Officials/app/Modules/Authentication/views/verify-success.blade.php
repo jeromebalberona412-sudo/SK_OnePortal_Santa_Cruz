@@ -48,14 +48,17 @@
         <!-- Right Side - Success Card -->
         <div class="sk-login-section">
             <div class="sk-login-card">
-                <div class="success-content">
+                <div
+                    class="success-content"
+                    data-redirect-url="{{ $redirectUrl ?? route('dashboard') }}"
+                >
                     <div class="success-icon">
                         <span class="checkmark"></span>
                     </div>
 
                     <h2 class="success-title">Email Verified!</h2>
                     <p class="success-message">
-                        Your email has been successfully verified. You can now access your account and continue with the login process.
+                        Your email has been successfully verified. Redirecting you to the dashboard...
                     </p>
                 </div>
             </div>

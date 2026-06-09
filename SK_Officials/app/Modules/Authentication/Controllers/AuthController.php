@@ -47,9 +47,15 @@ class AuthController extends Controller
 
     public function showVerificationWait(Request $request): View|RedirectResponse
     {
-        $pending = $request->session()->get('sk_official_email_verification_pending');
+        if (Auth::check()) {
+            $this->clearVerificationSession($request);
 
-        if (! is_array($pending)) {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        $pending = $this->resolveVerificationPending($request);
+
+        if ($pending === null) {
             return redirect()->route('login')->withErrors([
                 'verification' => 'No verification session is currently pending.',
             ]);
@@ -58,36 +64,73 @@ class AuthController extends Controller
         $expiresAt = Carbon::parse((string) ($pending['expires_at'] ?? now()->toIso8601String()));
 
         if ($expiresAt->isPast()) {
-            $request->session()->forget('sk_official_email_verification_pending');
+            $this->clearVerificationSession($request, $pending);
 
             return redirect()->route('login')->withErrors([
                 'verification' => 'Verification session expired. Please sign in again.',
             ]);
         }
 
+        if ($this->canCompleteVerifiedLogin($pending)) {
+            $user = User::query()->find((int) ($pending['user_id'] ?? 0))?->fresh();
+
+            if ($user !== null) {
+                $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
+                $this->clearVerificationSession($request, $pending);
+
+                return redirect()->intended(route('dashboard'));
+            }
+        }
+
+        $showNotification = (bool) session('resend_started');
+
+        if (! $showNotification && ! ($pending['device_notified'] ?? false)) {
+            $showNotification = true;
+            $pending['device_notified'] = true;
+            $request->session()->put('sk_official_email_verification_pending', $pending);
+        }
+
+        $resendStarted = (bool) session('resend_started');
+
         return view('authentication::verify-wait', [
             'email' => (string) ($pending['email'] ?? ''),
-            'expiresAtIso' => $expiresAt->toIso8601String(),
-            'waitMinutes' => (int) config('sk_official_auth.verification.wait_minutes', 15),
-            'resendCooldown' => $this->emailVerificationDeviceService->resendCooldownRemaining($pending),
+            'userId' => (int) ($pending['user_id'] ?? 0),
+            'sessionKey' => sha1((string) ($pending['started_at'] ?? '').'|'.(string) ($pending['email'] ?? '')),
+            'resendCooldown' => $resendStarted
+                ? $this->emailVerificationDeviceService->resendCooldownRemaining($pending)
+                : 0,
+            'resendStarted' => $resendStarted,
+            'showNotification' => $showNotification,
+            'notificationBody' => $resendStarted
+                ? 'Verification email resent. Check your inbox.'
+                : 'Verification email sent. Check your inbox.',
         ]);
     }
 
     public function checkVerificationStatus(Request $request): JsonResponse
     {
-        $pending = $request->session()->get('sk_official_email_verification_pending');
+        if (Auth::check()) {
+            $this->clearVerificationSession($request);
 
-        if (! is_array($pending)) {
             return response()->json([
-                'state' => 'missing',
-                'message' => 'No verification session is currently pending.',
-            ], 404);
+                'state' => 'verified',
+                'redirect' => route('dashboard'),
+            ]);
+        }
+
+        $pending = $this->resolveVerificationPending($request);
+
+        if ($pending === null) {
+            return response()->json([
+                'state' => 'pending',
+                'message' => 'Waiting for email verification...',
+            ]);
         }
 
         $expiresAt = Carbon::parse((string) ($pending['expires_at'] ?? now()->toIso8601String()));
 
         if ($expiresAt->isPast()) {
-            $request->session()->forget('sk_official_email_verification_pending');
+            $this->clearVerificationSession($request, $pending);
 
             return response()->json([
                 'state' => 'expired',
@@ -95,27 +138,18 @@ class AuthController extends Controller
             ], 410);
         }
 
-        $user = User::query()->find((int) ($pending['user_id'] ?? 0));
+        $user = User::query()->find((int) ($pending['user_id'] ?? 0))?->fresh();
 
         if ($user === null) {
-            $request->session()->forget('sk_official_email_verification_pending');
+            $this->clearVerificationSession($request, $pending);
 
             return response()->json([
-                'state' => 'missing',
+                'state' => 'expired',
                 'message' => 'User not found for this verification session.',
             ], 404);
         }
 
-        if (! $user->hasVerifiedEmail()) {
-            return response()->json([
-                'state' => 'pending',
-                'expires_at' => $expiresAt->toIso8601String(),
-                'seconds_remaining' => max(0, now()->diffInSeconds($expiresAt, false)),
-                'resend_cooldown' => $this->emailVerificationDeviceService->resendCooldownRemaining($pending),
-            ]);
-        }
-
-        if ($this->requiresFreshVerification($pending) && ! $this->hasFreshVerification($user, $pending)) {
+        if (! $this->canCompleteVerifiedLogin($pending, $user)) {
             return response()->json([
                 'state' => 'pending',
                 'expires_at' => $expiresAt->toIso8601String(),
@@ -125,41 +159,12 @@ class AuthController extends Controller
         }
 
         $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
-        $request->session()->forget('sk_official_email_verification_pending');
+        $this->clearVerificationSession($request, $pending);
 
         return response()->json([
             'state' => 'verified',
             'redirect' => route('dashboard'),
         ]);
-    }
-
-    public function showTakeoverWait(Request $request): RedirectResponse
-    {
-        $request->session()->forget([
-            'sk_official_takeover_pending',
-            'sk_official_redirect_takeover',
-            'takeover_wait',
-        ]);
-
-        if (Auth::check()) {
-            return redirect()->route('dashboard');
-        }
-
-        return redirect()->route('login');
-    }
-
-    public function sendTakeoverOtp(Request $request): RedirectResponse
-    {
-        return $this->authenticationService->sendTakeoverOtp($request);
-    }
-
-    public function verifyTakeoverOtp(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'otp_code' => ['required', 'digits:6'],
-        ]);
-
-        return $this->authenticationService->verifyTakeoverOtp($request, (string) $validated['otp_code']);
     }
 
     public function heartbeat(Request $request): JsonResponse
@@ -172,15 +177,27 @@ class AuthController extends Controller
         ]);
     }
 
-    public function resendVerification(Request $request): RedirectResponse
+    public function resendVerification(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'email' => ['required', 'email'],
+            'session_key' => ['nullable', 'string', 'max:64'],
         ]);
 
-        $pending = $request->session()->get('sk_official_email_verification_pending');
+        if ($request->filled('session_key')) {
+            $request->query->set('session_key', (string) $validated['session_key']);
+        }
 
-        if (! is_array($pending)) {
+        $pending = $this->resolveVerificationPending($request);
+
+        if ($pending === null) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'No verification session is currently pending.',
+                ], 404);
+            }
+
             return redirect()->route('login')->withErrors([
                 'verification' => 'No verification session is currently pending.',
             ]);
@@ -189,30 +206,101 @@ class AuthController extends Controller
         $remaining = $this->emailVerificationDeviceService->resendCooldownRemaining($pending);
 
         if ($remaining > 0) {
-            return back()->withErrors([
-                'email' => "Please wait {$remaining} seconds before resending.",
-            ]);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => "Please wait {$remaining} seconds before resending.",
+                    'resend_cooldown' => $remaining,
+                ], 429);
+            }
+
+            return redirect()
+                ->route('sk_official.verification.wait')
+                ->withErrors([
+                    'email' => "Please wait {$remaining} seconds before resending.",
+                ]);
         }
 
         $user = User::query()->find((int) ($pending['user_id'] ?? 0));
 
         if ($user === null || strtolower((string) $user->email) !== strtolower((string) $validated['email'])) {
-            return back()->withErrors([
-                'email' => 'Unable to resend verification for this session.',
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Unable to resend verification for this session.',
+                ], 422);
+            }
+
+            return redirect()
+                ->route('sk_official.verification.wait')
+                ->withErrors([
+                    'email' => 'Unable to resend verification for this session.',
+                ]);
+        }
+
+        if ($this->canCompleteVerifiedLogin($pending, $user)) {
+            $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
+            $this->clearVerificationSession($request, $pending);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => true,
+                    'state' => 'verified',
+                    'message' => 'Email is already verified. Redirecting to dashboard...',
+                    'redirect' => route('dashboard'),
+                ]);
+            }
+
+            return redirect()->intended(route('dashboard'));
+        }
+
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Unable to send verification email. Please try again.',
+                ], 500);
+            }
+
+            return redirect()
+                ->route('sk_official.verification.wait')
+                ->withErrors([
+                    'email' => 'Unable to send verification email. Please try again.',
+                ]);
+        }
+
+        $pending['resend_last_sent_at'] = now()->toIso8601String();
+        $request->session()->put('sk_official_email_verification_pending', $pending);
+
+        $cooldownSeconds = $this->emailVerificationDeviceService->resendCooldownRemaining($pending);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Verification email resent.',
+                'resend_cooldown' => max(1, $cooldownSeconds),
             ]);
         }
 
-        $user->sendEmailVerificationNotification();
-
-        $pending['verification_last_sent_at'] = now()->toIso8601String();
-        $request->session()->put('sk_official_email_verification_pending', $pending);
-
-        return back()->with('status', 'Verification email resent.');
+        return redirect()
+            ->route('sk_official.verification.wait')
+            ->with('status', 'Verification email resent.')
+            ->with('resend_started', true);
     }
 
-    public function showVerificationSuccess(): View
+    public function showVerificationSuccess(Request $request): View|RedirectResponse
     {
-        return view('authentication::verify-success');
+        if (Auth::check()) {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        return view('authentication::verify-success', [
+            'redirectUrl' => route('dashboard'),
+        ]);
     }
 
     public function verifyEmail(Request $request, int $id, string $hash): RedirectResponse
@@ -248,7 +336,16 @@ class AuthController extends Controller
 
         event(new Verified($user));
 
-        return redirect()->route('sk_official.verification.success');
+        $pending = $request->session()->get('sk_official_email_verification_pending');
+
+        if (! is_array($pending) || (int) ($pending['user_id'] ?? 0) !== (int) $user->getKey()) {
+            $pending = ['remember_device' => false];
+        }
+
+        $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
+        $this->clearVerificationSession($request, is_array($pending) ? $pending : null);
+
+        return redirect()->intended(route('dashboard'));
     }
 
     public function logout(Request $request): RedirectResponse
@@ -380,6 +477,80 @@ class AuthController extends Controller
         return redirect()
             ->route('change-password.verify')
             ->with('status', 'Verification link sent to your email address.');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function resolveVerificationPending(Request $request): ?array
+    {
+        $pending = $request->session()->get('sk_official_email_verification_pending');
+
+        if (is_array($pending)) {
+            return $pending;
+        }
+
+        $sessionKey = (string) $request->query('session_key', '');
+        $userId = (int) $request->query('user_id', 0);
+
+        if ($sessionKey !== '') {
+            $pending = $this->authenticationService->retrieveVerificationWatch($sessionKey);
+
+            if (is_array($pending)) {
+                return $this->restoreVerificationPending($request, $pending);
+            }
+        }
+
+        if ($userId > 0) {
+            $pending = $this->authenticationService->retrieveVerificationWatchByUserId($userId);
+
+            if (is_array($pending)) {
+                return $this->restoreVerificationPending($request, $pending);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $pending
+     * @return array<string, mixed>
+     */
+    protected function restoreVerificationPending(Request $request, array $pending): array
+    {
+        $request->session()->put('sk_official_email_verification_pending', $pending);
+
+        return $pending;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $pending
+     */
+    protected function clearVerificationSession(Request $request, ?array $pending = null): void
+    {
+        $pending ??= $request->session()->get('sk_official_email_verification_pending');
+
+        if (is_array($pending)) {
+            $this->authenticationService->clearVerificationWatch($pending);
+        }
+
+        $request->session()->forget('sk_official_email_verification_pending');
+    }
+
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    protected function canCompleteVerifiedLogin(array $pending, ?User $user = null): bool
+    {
+        $user ??= User::query()->find((int) ($pending['user_id'] ?? 0))?->fresh();
+
+        if ($user === null || ! $user->hasVerifiedEmail() || $user->email_verified_at === null) {
+            return false;
+        }
+
+        $startedAt = Carbon::parse((string) ($pending['started_at'] ?? now()->toIso8601String()));
+
+        return $user->email_verified_at->greaterThanOrEqualTo($startedAt->copy()->subSeconds(5));
     }
 
     /**

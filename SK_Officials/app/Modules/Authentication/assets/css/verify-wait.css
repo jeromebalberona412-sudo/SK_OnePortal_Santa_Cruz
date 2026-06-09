@@ -34,8 +34,19 @@
 }
 
 .email-highlight {
-    color: #f5c518;
+    color: #1a1a2e;
     font-weight: 700;
+}
+
+.refresh-hint {
+    font-size: 0.95rem;
+    color: #166534;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0 0;
+    font-weight: 600;
 }
 
 .resend-section {
@@ -48,26 +59,72 @@
     font-size: 0.85rem;
     color: #dc3545;
     text-align: center;
-    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
     font-weight: 500;
 }
 
+.resend-status {
+    font-size: 0.9rem;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    text-align: center;
+}
+
+.resend-status-success {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.resend-status-error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
 .btn-resend {
-    background: #f5c518 !important;
-    color: #1a1a2e !important;
+    background: #1a1a2e !important;
+    color: #ffffff !important;
     font-weight: 700 !important;
     border: none !important;
-    box-shadow: 0 8px 24px rgba(245, 197, 24, 0.3) !important;
+    box-shadow: 0 8px 24px rgba(26, 26, 46, 0.3) !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
 }
 
 .btn-resend:hover:not(:disabled) {
-    background: #e6a800 !important;
-    box-shadow: 0 12px 32px rgba(245, 197, 24, 0.4) !important;
+    background: #2a2a3e !important;
+    color: #ffffff !important;
+    box-shadow: 0 12px 32px rgba(26, 26, 46, 0.4) !important;
 }
 
 .btn-resend:disabled {
-    opacity: 0.6;
+    opacity: 0.75;
     cursor: not-allowed;
+}
+
+.btn-resend-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: verify-resend-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+.btn-resend.is-loading .btn-resend-label {
+    opacity: 0.9;
+}
+
+@keyframes verify-resend-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .verification-state {

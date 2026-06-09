@@ -12,7 +12,6 @@
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/verify-wait.css',
-        'app/Modules/Authentication/assets/js/verify-wait.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -54,18 +53,26 @@
                     <p class="card-subtitle">Complete verification to access your account</p>
                 </div>
 
-                <div class="verify-content" data-status-url="{{ route('sk_official.verification.wait.status', [], false) }}" data-expires-at="{{ $expiresAtIso }}" data-email="{{ $email }}">
+                <div class="verify-content"
+                     data-status-url="{{ route('sk_official.verification.wait.status', [], false) }}"
+                     data-resend-url="{{ route('sk_official.verification.resend', [], false) }}"
+                     data-dashboard-url="{{ route('dashboard', [], false) }}"
+                     data-email="{{ $email }}"
+                     data-user-id="{{ (int) ($userId ?? 0) }}"
+                     data-session-key="{{ $sessionKey ?? '' }}"
+                     data-fresh-session="{{ ($resendStarted ?? false) ? '0' : '1' }}"
+                     data-resend-cooldown="{{ ($resendStarted ?? false) ? (int) $resendCooldown : 0 }}"
+                     data-resend-just-sent="{{ ($resendStarted ?? false) ? '1' : '0' }}"
+                     data-show-notification="{{ ($showNotification ?? false) ? '1' : '0' }}"
+                     data-notify-title="SK Officials"
+                     data-notify-body="{{ $notificationBody ?? 'Verification email sent. Check your inbox.' }}">
 
                     <div class="verification-state waiting" id="verification-state">
                         Waiting for email verification...
                     </div>
 
-                    <p class="countdown-text">
+                    <p class="countdown-text" id="verify-wait-message">
                         We sent a verification link to <span class="email-highlight">{{ $email }}</span>
-                    </p>
-
-                    <p class="countdown-text" id="countdown">
-                        Expires in: <span id="countdown-timer">{{ sprintf('%02d:%02d', $waitMinutes, 0) }}</span>
                     </p>
 
                     @if ($errors->any())
@@ -83,25 +90,20 @@
                     @endif
 
                     <div class="resend-section">
-                        <div class="resend-cooldown" id="resend-cooldown" @if($resendCooldown <= 0) style="display: none;" @endif>
-                            Resend available in <strong id="resend-cooldown-count">{{ $resendCooldown > 0 ? sprintf('%d:%02d', intdiv($resendCooldown, 60), $resendCooldown % 60) : '1:00' }}</strong>
+                        <div class="resend-status" id="resend-status" hidden></div>
+                        <div class="resend-cooldown" id="resend-cooldown" style="display: none;">
+                            Resend available in <strong id="resend-cooldown-count">1:00</strong>
                         </div>
-                        <form method="POST" action="{{ route('sk_official.verification.resend', [], false) }}" id="resend-form">
-                            @csrf
-                            <input type="hidden" name="email" value="{{ $email }}">
-                            <button type="submit" class="sk-submit-btn btn-resend" id="resend-btn" @if($resendCooldown > 0) disabled @endif>
-                                Resend Verification Email
-                            </button>
-                        </form>
+                        <button type="button" class="sk-submit-btn btn-resend" id="resend-btn">
+                            <span class="btn-resend-spinner" id="resend-btn-spinner" hidden></span>
+                            <span class="btn-resend-label" id="resend-btn-label">Resend Verification Email</span>
+                        </button>
                     </div>
 
-                    <div class="form-footer">
-                        <a href="{{ route('login', [], false) }}">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M19 12H5M12 19l-7-7 7-7"/>
-                            </svg>
-                            Back to login
-                        </a>
+                    <div class="form-footer" id="verify-wait-footer">
+                        <p class="refresh-hint" id="refresh-hint" hidden>
+                            Email verified! Redirecting you to the dashboard...
+                        </p>
                     </div>
                 </div>
             </div>
@@ -119,10 +121,7 @@
         </div>
     </div>
 
-    <script>
-        window.skVerifyResendCooldown = {{ (int) $resendCooldown }};
-    </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-    @vite(['app/Modules/Authentication/assets/js/loader.js'])
+    @vite(['app/Modules/Authentication/assets/js/verify-wait.js'])
 </body>
 </html>

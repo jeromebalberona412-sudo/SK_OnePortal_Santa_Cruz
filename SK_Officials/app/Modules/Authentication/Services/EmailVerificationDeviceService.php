@@ -17,7 +17,7 @@ class EmailVerificationDeviceService
      */
     public function storePendingVerification(User $user, Request $request, array $extra = []): void
     {
-        $waitMinutes = (int) config('sk_official_auth.verification.wait_minutes', 10);
+        $waitMinutes = (int) config('sk_official_auth.verification.wait_minutes', 60);
         $sentAt = now();
 
         $request->session()->put('sk_official_email_verification_pending', array_merge([
@@ -26,7 +26,6 @@ class EmailVerificationDeviceService
             'started_at' => $sentAt->toIso8601String(),
             'expires_at' => $sentAt->copy()->addMinutes($waitMinutes)->toIso8601String(),
             'verified_at_snapshot' => $user->email_verified_at?->toIso8601String() ?? '',
-            'verification_last_sent_at' => $sentAt->toIso8601String(),
             'requires_fresh_verification' => true,
         ], $extra));
 
@@ -35,7 +34,7 @@ class EmailVerificationDeviceService
 
     public function resendCooldownRemaining(array $pending): int
     {
-        $lastSent = (string) ($pending['verification_last_sent_at'] ?? $pending['started_at'] ?? '');
+        $lastSent = (string) ($pending['resend_last_sent_at'] ?? '');
 
         if ($lastSent === '') {
             return 0;

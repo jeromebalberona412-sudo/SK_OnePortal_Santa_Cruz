@@ -195,30 +195,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $notification = new \Illuminate\Auth\Notifications\VerifyEmail;
-
-        $notification->createUrlUsing(function ($notifiable) {
-            return URL::temporarySignedRoute(
-                'sk_official.verification.verify',
-                Carbon::now()->addMinutes(Config::get('auth.verification.expire', 10)),
-                [
-                    'id' => $notifiable->getKey(),
-                    'hash' => sha1($notifiable->getEmailForVerification()),
-                ]
-            );
-        });
-
-        $notification->toMailUsing(function ($notifiable, $url) {
-            return (new MailMessage)
-                ->subject('Verify Your SK Official Account')
-                ->greeting('Hello!')
-                ->line('Please verify your SK Official account to complete secure access setup.')
-                ->action('Verify Email Address', $url)
-                ->line('This verification link expires shortly for your security.')
-                ->line('If you did not request this, no further action is required.');
-        });
-
-        $this->notify($notification);
+        $this->notify(new \App\Modules\Authentication\Notifications\SkOfficialEmailVerificationNotification);
     }
 
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void

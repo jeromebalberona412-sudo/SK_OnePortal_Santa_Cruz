@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\User;
 use App\Modules\Authentication\Services\AuthenticationService;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +25,12 @@ class FortifyServiceProvider extends ServiceProvider
             $user = app(AuthenticationService::class)->authenticate($request);
 
             if ($user === null) {
+                if ($request->session()->has('sk_official_email_verification_pending')) {
+                    throw new HttpResponseException(
+                        redirect()->route('sk_official.verification.wait')
+                    );
+                }
+
                 throw ValidationException::withMessages([
                     'email' => ['Invalid Email or Password'],
                     'password' => ['Invalid Email or Password'],

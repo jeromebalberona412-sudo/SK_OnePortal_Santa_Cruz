@@ -416,6 +416,7 @@ create table public.sk_official_trusted_devices (
   id bigserial not null,
   user_id bigint not null,
   fingerprint character varying(128) not null,
+  device_token_hash character varying(64) null,
   ip_address character varying(45) null,
   user_agent text null,
   last_used_at timestamp without time zone null,
@@ -429,6 +430,8 @@ create table public.sk_official_trusted_devices (
 ) TABLESPACE pg_default;
 
 create index IF not exists sk_official_trusted_device_exp_idx on public.sk_official_trusted_devices using btree (user_id, expires_at) TABLESPACE pg_default;
+
+create index IF not exists sk_official_trusted_device_token_idx on public.sk_official_trusted_devices using btree (user_id, device_token_hash) TABLESPACE pg_default;
 
 create table public.sk_official_login_attempts (
   id bigserial not null,
