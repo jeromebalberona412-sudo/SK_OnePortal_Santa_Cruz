@@ -4,6 +4,7 @@ namespace App\Modules\KKProfilingRequests\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
+use App\Services\BarangayLogoUrlService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RejectedKkProfilingService;
 use App\Services\RespondentNumberService;
@@ -30,9 +31,7 @@ class KKProfilingRequestsController extends Controller
         if ($user?->barangay_id) {
             $barangay = DB::table('barangays')->where('id', $user->barangay_id)->first();
             $barangayName = $barangay?->name;
-            $barangayLogoUrl = DB::table('barangay_logos')
-                ->where('barangay_id', $user->barangay_id)
-                ->value('url');
+            $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
         }
 
         return view('KKProfilingRequests::kkprofiling-requests', [
@@ -134,9 +133,7 @@ class KKProfilingRequestsController extends Controller
                 'evaluation_notes'  => $r->evaluation_notes,
                 'submitted_at'    => $r->submitted_at?->format('m/d/Y'),
                 'review_notes'    => $r->review_notes,
-                'barangay_logo_url' => DB::table('barangay_logos')
-                    ->where('barangay_id', $r->barangay_id)
-                    ->value('url'),
+                'barangay_logo_url' => app(BarangayLogoUrlService::class)->resolve($r->barangay_id),
             ];
         });
 

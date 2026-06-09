@@ -4,6 +4,7 @@ namespace App\Modules\Kabataan\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
+use App\Services\BarangayLogoUrlService;
 use App\Services\RespondentNumberService;
 use App\Services\SkOfficialActivityService;
 use Illuminate\Http\Request;
@@ -27,9 +28,7 @@ class KabataanController extends Controller
                 ->where('id', $user->barangay_id)
                 ->value('name');
 
-            $barangayLogoUrl = DB::table('barangay_logos')
-                ->where('barangay_id', $user->barangay_id)
-                ->value('url');
+            $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
         }
 
         return view('Kabataan::kabataan', [

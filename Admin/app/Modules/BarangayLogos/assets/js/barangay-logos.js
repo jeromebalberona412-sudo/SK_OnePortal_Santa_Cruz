@@ -263,6 +263,12 @@
         }
     }
 
+    function withCacheBuster(url) {
+        if (!url || url.indexOf('data:') === 0) return url;
+        var sep = url.indexOf('?') >= 0 ? '&' : '?';
+        return url + sep + 'cb=' + Date.now();
+    }
+
     function doUploadLogo(index, file, previewDataUrl) {
         var card = document.getElementById('card-' + index);
         if (!card) return;
@@ -275,6 +281,12 @@
 
         // Optimistic UI
         var wasAlreadyUploaded = card.classList.contains('has-logo');
+        var previousUrl = null;
+        var imgBefore = document.getElementById('img-' + index);
+        if (imgBefore && wasAlreadyUploaded) {
+            previousUrl = imgBefore.getAttribute('data-current-url') || imgBefore.src || null;
+        }
+
         applyLogoToCard(index, previewDataUrl, null);
         setCardLoading(index, true);
         setUploadOverlay(true, wasAlreadyUploaded ? 'Updating Logo' : 'Uploading Logo');
@@ -297,11 +309,14 @@
             setCardLoading(index, false);
             setUploadOverlay(false);
             if (!result.ok) {
-                revertCard(index);
+                if (wasAlreadyUploaded && previousUrl) {
+                    applyLogoToCard(index, previousUrl, card.getAttribute('data-logo-id'));
+                } else {
+                    revertCard(index);
+                }
                 blToast(result.data.message || 'Upload failed.', 'error');
                 return;
             }
-            // Update card with real URL and logo ID from DB
             applyLogoToCard(index, result.data.url, result.data.id);
             var msg = wasAlreadyUploaded ? 'Logo changed successfully!' : 'Logo uploaded successfully!';
             blToast(msg, 'success');
@@ -309,7 +324,11 @@
         .catch(function () {
             setCardLoading(index, false);
             setUploadOverlay(false);
-            revertCard(index);
+            if (wasAlreadyUploaded && previousUrl) {
+                applyLogoToCard(index, previousUrl, card.getAttribute('data-logo-id'));
+            } else {
+                revertCard(index);
+            }
             blToast('Upload failed. Please try again.', 'error');
         });
     }
@@ -372,7 +391,9 @@
 
         if (!img || !placeholder || !removeBtn || !card) return;
 
-        img.src           = url;
+        var displayUrl = withCacheBuster(url);
+        img.src = displayUrl;
+        img.setAttribute('data-current-url', url);
         img.style.display = logosVisible ? 'block' : 'none';
 
         placeholder.style.display = 'none';
@@ -404,7 +425,8 @@
 
         if (!img || !placeholder || !removeBtn || !card) return;
 
-        img.src           = '';
+        img.src = '';
+        img.removeAttribute('data-current-url');
         img.style.display = 'none';
 
         placeholder.style.display = '';

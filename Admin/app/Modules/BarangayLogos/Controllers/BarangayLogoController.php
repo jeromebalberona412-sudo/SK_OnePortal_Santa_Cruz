@@ -6,19 +6,23 @@ use App\Modules\Accounts\Models\Barangay;
 use App\Modules\BarangayLogos\Models\BarangayLogo;
 use App\Modules\BarangayLogos\Requests\BarangayLogoRequest;
 use App\Modules\BarangayLogos\Services\CloudinaryService;
+use App\Services\BarangayLogoUrlService;
 use App\Modules\Shared\Controllers\Controller;
 use App\Modules\Shared\Models\Tenant;
 use App\Modules\Shared\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Throwable;
 
 class BarangayLogoController extends Controller
 {
-    public function __construct(private readonly CloudinaryService $cloudinary)
-    {
+    public function __construct(
+        private readonly CloudinaryService $cloudinary,
+        private readonly BarangayLogoUrlService $logoUrls,
+    ) {
     }
 
     /**
@@ -38,6 +42,10 @@ class BarangayLogoController extends Controller
             ->where('tenant_id', $tenantId)
             ->get()
             ->keyBy('barangay_id');
+
+        foreach ($logos as $logo) {
+            $logo->url = $this->logoUrls->resolve($logo->barangay_id) ?? $logo->url;
+        }
 
         return view('barangay_logos::barangay-logos', [
             'user'         => $user,
@@ -73,21 +81,22 @@ class BarangayLogoController extends Controller
                 $this->cloudinary->delete($existing->cloudinary_public_id);
             }
 
-            $publicId = 'barangay_' . $barangayId . '_tenant_' . $tenantId;
-            $result   = $this->cloudinary->upload($request->file('logo'), $publicId);
+            $publicId = 'barangay_' . $barangayId . '_tenant_' . $tenantId . '_' . Str::lower(Str::random(8));
+            $result   = $this->cloudinary->upload($request->file('logo'), $publicId, true);
 
             $logo = BarangayLogo::updateOrCreate(
                 ['barangay_id' => $barangayId, 'tenant_id' => $tenantId],
                 [
                     'uploaded_by'          => $user->id,
                     'cloudinary_public_id' => $result['public_id'],
+                    'cloudinary_version'   => $result['version'],
                     'url'                  => $result['url'],
                 ]
             );
 
             return response()->json([
                 'id'  => $logo->id,
-                'url' => $logo->url,
+                'url' => $this->logoUrls->resolve($barangayId),
             ]);
         } catch (Throwable $e) {
             Log::error('Cloudinary upload failed', [

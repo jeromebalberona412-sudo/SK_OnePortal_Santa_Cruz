@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Models\RejectedKkProfiling;
 use App\Models\User;
+use App\Services\BarangayLogoUrlService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RejectedKkProfilingService;
 use App\Services\RespondentNumberService;
@@ -34,9 +35,7 @@ class RejectedKKProfilingController extends Controller
                 ->where('id', $user->barangay_id)
                 ->value('name');
 
-            $barangayLogoUrl = DB::table('barangay_logos')
-                ->where('barangay_id', $user->barangay_id)
-                ->value('url');
+            $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
         }
 
         return view('Rejected_KKProfiling::rejected-kkprofiling', [
@@ -204,9 +203,7 @@ class RejectedKKProfilingController extends Controller
             'rejected_date'       => $rejectedAt?->format('M j, Y') ?? '—',
             'rejected_time'       => $rejectedAt?->format('g:i A') ?? '—',
             'rejected_at'         => $rejectedAt?->toIso8601String(),
-            'barangay_logo_url'   => DB::table('barangay_logos')
-                ->where('barangay_id', $r->barangay_id)
-                ->value('url'),
+            'barangay_logo_url'   => app(BarangayLogoUrlService::class)->resolve($r->barangay_id),
         ];
     }
 

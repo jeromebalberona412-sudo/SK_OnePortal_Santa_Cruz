@@ -2,10 +2,11 @@
 
 namespace App\Providers;
 
+use App\Services\BarangayLogoUrlService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,9 +42,7 @@ class AppServiceProvider extends ServiceProvider
                         ->where('id', $user->barangay_id)
                         ->value('name');
 
-                    $barangayLogoUrl = DB::table('barangay_logos')
-                        ->where('barangay_id', $user->barangay_id)
-                        ->value('url');
+                    $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
                 }
             }
 

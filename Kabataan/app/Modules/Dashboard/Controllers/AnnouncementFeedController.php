@@ -125,7 +125,7 @@ class AnnouncementFeedController extends Controller
             'type'               => $post->type,
             'title'              => $post->title,
             'body'               => $post->body,
-            'image_url'          => $post->image_url,
+            'image_url'          => app(\App\Services\CloudinaryService::class)->normalizeUrl($post->image_url),
             'link_url'           => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name'      => $post->barangay?->name,

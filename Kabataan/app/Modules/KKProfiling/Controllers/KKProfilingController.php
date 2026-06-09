@@ -150,13 +150,7 @@ class KKProfilingController extends Controller
 
     public static function getBarangayLogoUrl(?int $barangayId): ?string
     {
-        if (!$barangayId) {
-            return null;
-        }
-
-        return DB::table('barangay_logos')
-            ->where('barangay_id', $barangayId)
-            ->value('url');
+        return app(\App\Services\BarangayLogoUrlService::class)->resolve($barangayId);
     }
 
     /**

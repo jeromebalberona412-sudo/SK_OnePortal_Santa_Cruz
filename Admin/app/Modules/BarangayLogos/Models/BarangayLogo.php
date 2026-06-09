@@ -15,6 +15,7 @@ class BarangayLogo extends Model
         'tenant_id',
         'uploaded_by',
         'cloudinary_public_id',
+        'cloudinary_version',
         'url',
     ];
 

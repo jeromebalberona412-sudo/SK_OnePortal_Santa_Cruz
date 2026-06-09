@@ -4,6 +4,7 @@ namespace App\Modules\Deleted_Kabataan\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
+use App\Services\BarangayLogoUrlService;
 use App\Services\RespondentNumberService;
 use App\Services\SkOfficialActivityService;
 use Illuminate\Http\Request;
@@ -27,9 +28,7 @@ class DeletedKabataanController extends Controller
                 ->where('id', $user->barangay_id)
                 ->value('name');
 
-            $barangayLogoUrl = DB::table('barangay_logos')
-                ->where('barangay_id', $user->barangay_id)
-                ->value('url');
+            $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
         }
 
         return view('Deleted_Kabataan::deleted-kabataan', [
@@ -119,9 +118,7 @@ class DeletedKabataanController extends Controller
                 'deleted_date'      => $deletedAt?->format('M d, Y') ?? '—',
                 'deleted_time'      => $deletedAt?->format('h:i A') ?? '—',
                 'deleted_at'        => $deletedAt?->toIso8601String(),
-                'barangay_logo_url' => DB::table('barangay_logos')
-                    ->where('barangay_id', $r->barangay_id)
-                    ->value('url'),
+                'barangay_logo_url' => app(BarangayLogoUrlService::class)->resolve($r->barangay_id),
             ];
         });
 

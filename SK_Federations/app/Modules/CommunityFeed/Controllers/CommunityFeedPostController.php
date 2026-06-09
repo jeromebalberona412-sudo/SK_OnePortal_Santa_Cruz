@@ -15,6 +15,10 @@ use Throwable;
 
 class CommunityFeedPostController extends Controller
 {
+    public function __construct(private readonly CloudinaryService $cloudinary)
+    {
+    }
+
     // GET /api/community-feed?filter=all&page=1
     public function feed(Request $request): JsonResponse
     {
@@ -147,7 +151,7 @@ class CommunityFeedPostController extends Controller
 
         try {
             $publicId = 'fed_post_' . Auth::id() . '_' . Str::random(8);
-            $result   = (new CloudinaryService())->upload($request->file('image'), $publicId);
+            $result   = $this->cloudinary->upload($request->file('image'), $publicId);
             return response()->json(['url' => $result['url']]);
         } catch (Throwable $e) {
             \Log::error('Cloudinary upload failed: ' . $e->getMessage());
@@ -171,7 +175,7 @@ class CommunityFeedPostController extends Controller
             'type'               => $post->type,
             'title'              => $post->title,
             'body'               => $post->body,
-            'image_url'          => $post->image_url,
+            'image_url'          => app(\App\Services\CloudinaryService::class)->normalizeUrl($post->image_url),
             'link_url'           => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name'      => $post->barangay?->name,
