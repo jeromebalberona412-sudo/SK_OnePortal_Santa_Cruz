@@ -106,30 +106,25 @@
             <div class="sidebar-card" style="margin-top:16px;">
                 <h2 class="sidebar-title">Barangay SK Profiles</h2>
                 <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                    @php
-                    $brgyList = [
-                        ['name'=>'Alipit',        'slug'=>'alipit',        'color'=>'#4CAF50'],
-                        ['name'=>'Bagumbayan',    'slug'=>'bagumbayan',    'color'=>'#2196F3'],
-                        ['name'=>'Bubukal',       'slug'=>'bubukal',       'color'=>'#9C27B0'],
-                        ['name'=>'Duhat',         'slug'=>'duhat',         'color'=>'#FF9800'],
-                        ['name'=>'Gatid',         'slug'=>'gatid',         'color'=>'#009688'],
-                        ['name'=>'Labuin',        'slug'=>'labuin',        'color'=>'#f44336'],
-                        ['name'=>'Pagsawitan',    'slug'=>'pagsawitan',    'color'=>'#673AB7'],
-                        ['name'=>'San Jose',      'slug'=>'san-jose',      'color'=>'#0450a8'],
-                        ['name'=>'Santisima Cruz','slug'=>'santisima-cruz','color'=>'#FF5722'],
-                    ];
-                    @endphp
-                    @foreach($brgyList as $brgy)
+                <div class="brgy-link-list">
+                    @forelse($barangayProfiles as $brgy)
                     <a href="{{ route('sk-officials.barangay-profile', ['slug' => $brgy['slug']]) }}" class="brgy-link-item">
-                        <div class="brgy-link-dot" style="background:{{ $brgy['color'] }};">{{ strtoupper(substr($brgy['name'], 0, 2)) }}</div>
+                        <div class="brgy-link-dot">
+                            @if(!empty($brgy['logo_url']))
+                                <img src="{{ $brgy['logo_url'] }}" alt="Brgy. {{ $brgy['name'] }} logo" class="brgy-link-logo">
+                            @else
+                                <span class="brgy-link-initials">{{ $brgy['initials'] }}</span>
+                            @endif
+                        </div>
                         <div class="brgy-link-info">
                             <p class="brgy-link-name">Brgy. {{ $brgy['name'] }}</p>
                             <p class="brgy-link-sub">SK Officials</p>
                         </div>
                         <svg style="width:14px;height:14px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
                     </a>
-                    @endforeach
+                    @empty
+                    <p class="brgy-link-empty">No barangays found for your municipality.</p>
+                    @endforelse
                 </div>
             </div>
         </aside>

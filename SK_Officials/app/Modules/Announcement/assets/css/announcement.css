@@ -245,12 +245,21 @@ body {
 .chevron { width: 16px; height: 16px; color: #bbb; transition: color 0.25s; flex-shrink: 0; }
 
 /* Barangay link items */
+.brgy-link-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; padding-right: 2px; }
 .brgy-link-item {
     display: flex; align-items: center; gap: 10px; padding: 10px 12px;
     background: #f5f7fa; border-radius: 12px; text-decoration: none; transition: background 0.2s;
 }
 .brgy-link-item:hover { background: #eef1fb; }
-.brgy-link-dot { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
+.brgy-link-dot {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, #2c2c3e, #3a3a4a);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; overflow: hidden; border: 2px solid rgba(245, 197, 24, 0.35);
+}
+.brgy-link-logo { width: 100%; height: 100%; object-fit: cover; display: block; }
+.brgy-link-initials { font-size: 12px; font-weight: 800; color: #f5c518; }
+.brgy-link-empty { font-size: 13px; color: #94a3b8; text-align: center; padding: 16px 8px; }
 .brgy-link-info { flex: 1; min-width: 0; }
 .brgy-link-name { font-size: 13px; font-weight: 700; color: #1a1d25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brgy-link-sub { font-size: 11px; color: #999; }

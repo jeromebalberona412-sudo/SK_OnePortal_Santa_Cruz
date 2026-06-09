@@ -67,14 +67,8 @@ Route::middleware([
         Route::delete('/notes/{id}', [\App\Modules\Calendar\Controllers\CalendarController::class, 'destroy'])->name('api.calendar.notes.destroy');
     });
 
-    Route::get('/announcements', function () {
-        $user  = auth()->user();
-        $brgy  = \App\Models\Barangay::find($user->barangay_id);
-        $slug  = $brgy ? \Illuminate\Support\Str::slug($brgy->name) : 'san-jose';
-        $name  = $brgy?->name ?? 'Your Barangay';
-        $color = '#f5c518';
-        return view('Announcement::announcement', compact('slug', 'name', 'color', 'user'));
-    })->name('announcements');
+    Route::get('/announcements', [\App\Modules\Announcement\Controllers\AnnouncementPageController::class, 'index'])
+        ->name('announcements');
 
     // Announcement API
     Route::prefix('api/announcements')->group(function () {
@@ -87,27 +81,8 @@ Route::middleware([
         Route::post('/{id}/comment', [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'comment'])->name('api.announcements.comment');
     });
 
-    Route::get('/announcements/barangay/{slug}', function ($slug) {
-        $brgyList = [
-            'alipit' => ['name' => 'Alipit', 'color' => '#4CAF50'],
-            'bagumbayan' => ['name' => 'Bagumbayan', 'color' => '#2196F3'],
-            'bubukal' => ['name' => 'Bubukal', 'color' => '#9C27B0'],
-            'duhat' => ['name' => 'Duhat', 'color' => '#FF9800'],
-            'gatid' => ['name' => 'Gatid', 'color' => '#009688'],
-            'labuin' => ['name' => 'Labuin', 'color' => '#f44336'],
-            'pagsawitan' => ['name' => 'Pagsawitan', 'color' => '#673AB7'],
-            'san-jose' => ['name' => 'San Jose', 'color' => '#0450a8'],
-            'santisima-cruz' => ['name' => 'Santisima Cruz', 'color' => '#FF5722'],
-        ];
-
-        $brgy = $brgyList[$slug] ?? ['name' => ucfirst($slug), 'color' => '#f5c518'];
-
-        return view('Announcement::barangay-profile', [
-            'slug' => $slug,
-            'name' => $brgy['name'],
-            'color' => $brgy['color'],
-        ]);
-    })->name('sk-officials.barangay-profile');
+    Route::get('/announcements/barangay/{slug}', [\App\Modules\Announcement\Controllers\BarangayProfileController::class, 'show'])
+        ->name('sk-officials.barangay-profile');
 
     Route::get('/committees', function () {
         return view('Committees::committees');
