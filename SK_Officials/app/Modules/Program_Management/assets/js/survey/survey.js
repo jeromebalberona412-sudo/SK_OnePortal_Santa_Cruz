@@ -21,6 +21,7 @@ let chartInstances = [];
 let committeeContext = { programs: [] };
 let surveys = [];
 let responses = [];
+let viewResponseList = [];
 
 function getPageProgramConfig() {
     const el = document.getElementById('surveyProgramConfig');
@@ -104,6 +105,40 @@ function escapeHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+}
+
+function formatBarangay(value) {
+    if (value === null || value === undefined || value === '') return '—';
+    if (typeof value === 'object') {
+        return String(value.name || value.barangay_name || '—');
+    }
+    return String(value);
+}
+
+function normalizeAnswerValue(value) {
+    if (value === null || value === undefined || value === '') return value;
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                return parsed;
+            } catch {
+                return value;
+            }
+        }
+    }
+    return value;
+}
+
+function getResponseAnswer(response, questionId) {
+    const raw = response.answers?.[questionId] ?? response.answers?.[String(questionId)];
+    return normalizeAnswerValue(raw);
+}
+
+function getAutoSelectedSurvey() {
+    if (!surveys.length) return null;
+    return surveys[0];
 }
 
 function showToast(msg, type = 'success') {
@@ -502,6 +537,16 @@ function bindResultsTab() {
     document.getElementById('viewResponseClose')?.addEventListener('click', () => {
         document.getElementById('viewResponseModal').style.display = 'none';
     });
+    document.getElementById('viewResponseMaximize')?.addEventListener('click', toggleViewResponseMaximize);
+    document.getElementById('viewResponsePicker')?.addEventListener('change', (event) => {
+        const responseId = event.target.value;
+        if (!responseId) return;
+        const response = viewResponseList.find(r => String(r.id) === String(responseId));
+        const survey = response?.survey || surveys.find(s => String(s.id) === String(response?.surveyId || response?.survey_id));
+        if (response && survey) {
+            renderResponseModalContent(response, survey);
+        }
+    });
 }
 
 function populateSurveyFilters(selectId) {
@@ -531,7 +576,7 @@ function filterResponses() {
         if (to && d > new Date(`${to}T23:59:59`)) return false;
         if (search) {
             const name = (r.respondentName || r.respondent_name || '').toLowerCase();
-            const brgy = (r.barangay || '').toLowerCase();
+            const brgy = formatBarangay(r.barangay).toLowerCase();
             if (!name.includes(search) && !brgy.includes(search)) return false;
         }
         return true;
@@ -562,15 +607,24 @@ async function renderResultsTable() {
         const survey = r.survey || surveys.find(s => String(s.id) === String(r.surveyId || r.survey_id));
         const date = formatSurveyDate(r.submittedAt || r.submitted_at);
         const answerPreview = getResponseAnswerPreview(r, survey);
+        const responseNumber = r.responseNumber ?? r.response_number;
+        const responseBadge = responseNumber
+            ? `<span class="survey-response-seq" title="Response #${responseNumber} for this survey">#${responseNumber}</span>`
+            : '';
 
         return `
             <tr>
                 <td class="survey-col-title">
-                    <div class="survey-cell-title">${escapeHtml(r.respondentName || r.respondent_name)}</div>
-                    <div class="survey-cell-meta">${escapeHtml(r.barangay || '—')}</div>
+                    <div class="survey-respondent-row">
+                        ${responseBadge}
+                        <div class="survey-respondent-info">
+                            <div class="survey-cell-title">${escapeHtml(r.respondentName || r.respondent_name)}</div>
+                            <div class="survey-cell-meta">${escapeHtml(formatBarangay(r.barangay))}</div>
+                        </div>
+                    </div>
                 </td>
                 <td data-label="Survey">${escapeHtml(survey?.title || survey?.program_name || '—')}</td>
-                <td data-label="Barangay">${escapeHtml(r.barangay || '—')}</td>
+                <td data-label="Barangay">${escapeHtml(formatBarangay(r.barangay))}</td>
                 <td data-label="Answer"><span class="survey-answer-pill">${escapeHtml(answerPreview)}</span></td>
                 <td data-label="Date Submitted">${date}</td>
                 <td class="col-actions" data-label="Actions">
@@ -594,16 +648,18 @@ function getResponseAnswerPreview(response, survey) {
     const questions = survey?.questions || [];
     if (!questions.length) return '—';
     const q = questions[0];
-    let ans = response.answers?.[q.id];
+    let ans = getResponseAnswer(response, q.id);
     if (ans === undefined || ans === null || ans === '') return '—';
     if (Array.isArray(ans)) ans = ans.join(', ');
     return String(ans);
 }
 
-function openResponseModal(response, survey) {
+function renderResponseModalContent(response, survey) {
     const body = document.getElementById('viewResponseBody');
+    const picker = document.getElementById('viewResponsePicker');
+    const responseNumber = response.responseNumber ?? response.response_number;
     const answersHtml = (survey.questions || []).map((q, i) => {
-        let ans = response.answers?.[q.id];
+        let ans = getResponseAnswer(response, q.id);
         if (Array.isArray(ans)) ans = ans.join(', ');
         if (ans === undefined || ans === null || ans === '') ans = '—';
         return `
@@ -615,15 +671,53 @@ function openResponseModal(response, survey) {
 
     body.innerHTML = `
         <div class="gform-preview-header">
-            <h4>${escapeHtml(response.respondentName || response.respondent_name)}</h4>
+            <h4>${responseNumber ? `#${responseNumber} — ` : ''}${escapeHtml(response.respondentName || response.respondent_name)}</h4>
             <div class="gform-preview-info">
                 <div><strong>Survey:</strong> ${escapeHtml(survey.title || survey.program_name || '—')}</div>
-                <div><strong>Barangay:</strong> ${escapeHtml(response.barangay || '—')}</div>
+                <div><strong>Barangay:</strong> ${escapeHtml(formatBarangay(response.barangay))}</div>
                 <div><strong>Date Submitted:</strong> ${formatSurveyDate(response.submittedAt || response.submitted_at)}</div>
             </div>
         </div>
         ${answersHtml}`;
+
+    if (picker) {
+        picker.value = String(response.id);
+    }
+}
+
+function openResponseModal(response, survey) {
+    viewResponseList = filterResponses();
+    const picker = document.getElementById('viewResponsePicker');
+    if (picker) {
+        picker.innerHTML = viewResponseList.map(r => {
+            const seq = r.responseNumber ?? r.response_number;
+            const label = seq
+                ? `#${seq} — ${r.respondentName || r.respondent_name}`
+                : (r.respondentName || r.respondent_name);
+            return `<option value="${r.id}">${escapeHtml(label)}</option>`;
+        }).join('');
+    }
+
+    renderResponseModalContent(response, survey);
     document.getElementById('viewResponseModal').style.display = 'flex';
+}
+
+function toggleViewResponseMaximize() {
+    const modal = document.getElementById('viewResponseModal');
+    const box = document.getElementById('viewResponseBox');
+    const btn = document.getElementById('viewResponseMaximize');
+
+    if (modal.classList.contains('schol-modal-maximized')) {
+        modal.classList.remove('schol-modal-maximized');
+        box.classList.remove('schol-modal-maximized');
+        btn.textContent = '□';
+        btn.title = 'Maximize';
+    } else {
+        modal.classList.add('schol-modal-maximized');
+        box.classList.add('schol-modal-maximized');
+        btn.textContent = '⧉';
+        btn.title = 'Restore Down';
+    }
 }
 
 function exportResultsCsv() {
@@ -637,11 +731,11 @@ function exportResultsCsv() {
         const survey = r.survey || surveys.find(s => String(s.id) === String(r.surveyId || r.survey_id));
         const date = new Date(r.submittedAt || r.submitted_at).toISOString();
         (survey?.questions || []).forEach(q => {
-            let ans = r.answers?.[q.id];
+            let ans = getResponseAnswer(r, q.id);
             if (Array.isArray(ans)) ans = ans.join('; ');
             lines.push([
                 csvCell(r.respondentName || r.respondent_name),
-                csvCell(r.barangay),
+                csvCell(formatBarangay(r.barangay)),
                 csvCell(survey?.title || survey?.program_name),
                 csvCell(date),
                 csvCell(q.label),
@@ -669,20 +763,20 @@ function downloadCsv(content, filename) {
 // ── Analytics Tab ─────────────────────────────────────────────────────────
 
 function bindAnalyticsTab() {
-    ['analyticsSurveyFilter', 'analyticsDateFrom', 'analyticsDateTo'].forEach(id => {
+    ['analyticsDateFrom', 'analyticsDateTo'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', renderAnalytics);
     });
     document.getElementById('btnExportAnalytics')?.addEventListener('click', exportAnalyticsCsv);
 }
 
-function getFilteredResponsesForAnalytics() {
-    const surveyId = document.getElementById('analyticsSurveyFilter')?.value || '';
+function getFilteredResponsesForAnalytics(surveyId = null) {
+    const activeSurveyId = surveyId ?? getAutoSelectedSurvey()?.id;
     const from = document.getElementById('analyticsDateFrom')?.value || '';
     const to = document.getElementById('analyticsDateTo')?.value || '';
 
     return responses.filter(r => {
         const rSurveyId = String(r.surveyId || r.survey_id || '');
-        if (surveyId && rSurveyId !== String(surveyId)) return false;
+        if (activeSurveyId && rSurveyId !== String(activeSurveyId)) return false;
         const d = new Date(r.submittedAt || r.submitted_at);
         if (from && d < new Date(`${from}T00:00:00`)) return false;
         if (to && d > new Date(`${to}T23:59:59`)) return false;
@@ -696,8 +790,6 @@ function destroyCharts() {
 }
 
 async function renderAnalytics() {
-    populateSurveyFilters('analyticsSurveyFilter');
-
     if (!responses.length) {
         try {
             await loadResponses();
@@ -706,42 +798,28 @@ async function renderAnalytics() {
         }
     }
 
-    const filtered = getFilteredResponsesForAnalytics();
-    const surveyId = document.getElementById('analyticsSurveyFilter')?.value || '';
-    const survey = surveys.find(s => String(s.id) === String(surveyId));
-
-    const uniqueRespondents = new Set(filtered.map(r => r.respondentName || r.respondent_name)).size;
-
-    document.getElementById('analyticsStatsRow').innerHTML = `
-        <div class="analytics-stat-card analytics-stat-blue">
-            <div class="analytics-stat-value">${surveys.length}</div>
-            <div class="analytics-stat-label">Total Surveys Created</div>
-        </div>
-        <div class="analytics-stat-card analytics-stat-green">
-            <div class="analytics-stat-value">${uniqueRespondents}</div>
-            <div class="analytics-stat-label">Total Respondents</div>
-        </div>
-        <div class="analytics-stat-card analytics-stat-yellow">
-            <div class="analytics-stat-value">${filtered.length}</div>
-            <div class="analytics-stat-label">Total Responses Submitted</div>
-        </div>
-        <div class="analytics-stat-card analytics-stat-purple">
-            <div class="analytics-stat-value">${responses.length}</div>
-            <div class="analytics-stat-label">All-Time Responses</div>
-        </div>
-    `;
-
+    const survey = getAutoSelectedSurvey();
+    const programDisplay = document.getElementById('analyticsProgramDisplay');
     const container = document.getElementById('analyticsQuestionsContainer');
     destroyCharts();
 
-    if (!surveyId || !survey) {
+    if (!survey) {
+        if (programDisplay) {
+            programDisplay.textContent = 'No survey form created for this program yet.';
+        }
         container.innerHTML = `<div class="survey-empty-state survey-empty-state-lg">
-            <p><strong>Select a survey</strong></p>
-            <p>Choose a survey from the dropdown to see how many Kabataan answered each choice, with bar and pie charts.</p>
+            <p><strong>No survey available</strong></p>
+            <p>Create a survey form first. Kabataan responses will appear here automatically once submitted.</p>
         </div>`;
         return;
     }
 
+    const surveyTitle = survey.title || survey.program_name || 'Program Survey';
+    if (programDisplay) {
+        programDisplay.textContent = surveyTitle;
+    }
+
+    const filtered = getFilteredResponsesForAnalytics(survey.id);
     const questions = survey.questions || [];
 
     if (!questions.length) {
@@ -751,27 +829,30 @@ async function renderAnalytics() {
 
     container.innerHTML = questions.map((q, idx) => buildQuestionAnalyticsBlock(q, survey, filtered, idx)).join('');
 
-    questions.forEach((q, idx) => {
-        if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
-            initChartsForQuestion(q, survey, filtered, idx);
-        }
+    requestAnimationFrame(() => {
+        questions.forEach((q, idx) => {
+            if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
+                initChartsForQuestion(q, survey, filtered, idx);
+            }
+        });
     });
 }
 
 function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
     const surveyResponses = responseRows.filter(r => String(r.surveyId || r.survey_id) === String(survey.id));
     const withAnswer = surveyResponses.filter(r => {
-        const a = r.answers?.[q.id];
+        const a = getResponseAnswer(r, q.id);
         return a !== undefined && a !== null && a !== '' && !(Array.isArray(a) && !a.length);
     });
 
     const total = withAnswer.length;
+    const chartKey = `q${q.id}`;
 
     if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
         const counts = {};
         (q.options || []).forEach(opt => { counts[opt] = 0; });
         withAnswer.forEach(r => {
-            let val = r.answers[q.id];
+            let val = getResponseAnswer(r, q.id);
             if (q.type === 'checkbox' && Array.isArray(val)) {
                 val.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
             } else {
@@ -792,6 +873,10 @@ function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
                 </div>`;
         }).join('');
 
+        const chartEmptyNote = total === 0
+            ? '<p class="analytics-chart-empty">No responses yet for this question.</p>'
+            : '';
+
         return `
             <article class="analytics-question-block">
                 <header class="analytics-question-head">
@@ -808,18 +893,24 @@ function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
                 <div class="analytics-charts-row">
                     <div class="analytics-chart-box">
                         <h5>Bar Chart</h5>
-                        <div class="analytics-chart-canvas-wrap"><canvas id="chartBar_${q.id}"></canvas></div>
+                        <div class="analytics-chart-canvas-wrap">
+                            ${chartEmptyNote}
+                            <canvas id="chartBar_${chartKey}"></canvas>
+                        </div>
                     </div>
                     <div class="analytics-chart-box">
                         <h5>Pie Chart — Response Distribution</h5>
-                        <div class="analytics-chart-canvas-wrap"><canvas id="chartPie_${q.id}"></canvas></div>
+                        <div class="analytics-chart-canvas-wrap">
+                            ${chartEmptyNote}
+                            <canvas id="chartPie_${chartKey}"></canvas>
+                        </div>
                     </div>
                 </div>
             </article>`;
     }
 
     const textAnswers = withAnswer.map(r => {
-        let a = r.answers[q.id];
+        let a = getResponseAnswer(r, q.id);
         if (Array.isArray(a)) a = a.join(', ');
         return `<div class="analytics-text-answer-item">${escapeHtml(String(a))}</div>`;
     }).join('') || '<p style="color:#9ca3af;font-size:14px;">No text responses yet.</p>';
@@ -843,10 +934,11 @@ function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
 function initChartsForQuestion(q, survey, responseRows, idx) {
     const surveyResponses = responseRows.filter(r => String(r.surveyId || r.survey_id) === String(survey.id));
     const labels = q.options || [];
+    const chartKey = `q${q.id}`;
     const counts = labels.map(opt => {
         let c = 0;
         surveyResponses.forEach(r => {
-            const val = r.answers?.[q.id];
+            const val = getResponseAnswer(r, q.id);
             if (q.type === 'checkbox' && Array.isArray(val)) {
                 if (val.includes(opt)) c++;
             } else if (val === opt) {
@@ -856,9 +948,15 @@ function initChartsForQuestion(q, survey, responseRows, idx) {
         return c;
     });
 
-    const colors = ['#213F99', '#4f6fd6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'];
+    const totalCount = counts.reduce((sum, count) => sum + count, 0);
+    if (totalCount === 0) return;
 
-    const barCanvas = document.getElementById(`chartBar_${q.id}`);
+    const colors = ['#213F99', '#4f6fd6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+    const chartHeight = Math.max(220, labels.length * 36);
+
+    const barCanvas = document.getElementById(`chartBar_${chartKey}`);
+    const barWrap = barCanvas?.closest('.analytics-chart-canvas-wrap');
+    if (barWrap) barWrap.style.height = `${chartHeight}px`;
     if (barCanvas) {
         chartInstances.push(new Chart(barCanvas, {
             type: 'bar',
@@ -868,35 +966,74 @@ function initChartsForQuestion(q, survey, responseRows, idx) {
                     label: 'Responses',
                     data: counts,
                     backgroundColor: colors.slice(0, labels.length),
+                    borderRadius: 6,
+                    maxBarThickness: 28,
                 }],
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.parsed.x} response${ctx.parsed.x === 1 ? '' : 's'}`,
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0 },
+                        grid: { color: '#eef2f7' },
+                    },
+                    y: {
+                        ticks: { autoSkip: false, font: { size: 12 } },
+                        grid: { display: false },
+                    },
+                },
             },
         }));
     }
 
-    const pieCanvas = document.getElementById(`chartPie_${q.id}`);
+    const pieCanvas = document.getElementById(`chartPie_${chartKey}`);
+    const pieWrap = pieCanvas?.closest('.analytics-chart-canvas-wrap');
+    if (pieWrap) pieWrap.style.height = '260px';
     if (pieCanvas) {
         chartInstances.push(new Chart(pieCanvas, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels,
                 datasets: [{
                     data: counts,
                     backgroundColor: colors.slice(0, labels.length),
+                    borderColor: '#fff',
+                    borderWidth: 2,
                 }],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '42%',
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { boxWidth: 12, padding: 14, font: { size: 11 } },
+                        labels: {
+                            boxWidth: 14,
+                            padding: 16,
+                            font: { size: 12 },
+                            usePointStyle: true,
+                        },
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const value = ctx.parsed || 0;
+                                const pct = totalCount ? Math.round((value / totalCount) * 100) : 0;
+                                return `${ctx.label}: ${value} (${pct}%)`;
+                            },
+                        },
                     },
                 },
             },
@@ -905,13 +1042,12 @@ function initChartsForQuestion(q, survey, responseRows, idx) {
 }
 
 function exportAnalyticsCsv() {
-    const surveyId = document.getElementById('analyticsSurveyFilter')?.value || '';
-    const survey = surveys.find(s => String(s.id) === String(surveyId));
+    const survey = getAutoSelectedSurvey();
     if (!survey) {
-        showToast('Select a survey first.', 'error');
+        showToast('No survey available to export.', 'error');
         return;
     }
-    const filteredRows = getFilteredResponsesForAnalytics().filter(r => String(r.surveyId || r.survey_id) === String(surveyId));
+    const filteredRows = getFilteredResponsesForAnalytics(survey.id);
     const lines = ['Question,Answer Choice,Count,Percentage'];
 
     (survey.questions || []).forEach(q => {
@@ -919,7 +1055,7 @@ function exportAnalyticsCsv() {
         const counts = {};
         (q.options || []).forEach(o => { counts[o] = 0; });
         filteredRows.forEach(r => {
-            let val = r.answers?.[q.id];
+            let val = getResponseAnswer(r, q.id);
             if (q.type === 'checkbox' && Array.isArray(val)) {
                 val.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
             } else if (val) {

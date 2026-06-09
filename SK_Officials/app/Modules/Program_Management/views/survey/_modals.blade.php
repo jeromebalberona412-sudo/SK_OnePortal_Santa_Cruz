@@ -63,10 +63,16 @@
 </div>
 
 <div class="schol-modal-overlay" id="viewResponseModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-md">
+    <div class="schol-modal-box schol-modal-md" id="viewResponseBox">
         <div class="schol-modal-header">
             <h3>Kabataan Response</h3>
-            <button type="button" class="schol-modal-close" id="viewResponseClose" aria-label="Close">&times;</button>
+            <div class="schol-modal-header-actions">
+                <select id="viewResponsePicker" class="schol-input view-response-picker" aria-label="Select response">
+                    <option value="">Select response…</option>
+                </select>
+                <button type="button" class="schol-modal-close" id="viewResponseMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
+                <button type="button" class="schol-modal-close" id="viewResponseClose" aria-label="Close">&times;</button>
+            </div>
         </div>
         <div class="schol-modal-body" id="viewResponseBody"></div>
     </div>

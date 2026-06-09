@@ -253,11 +253,11 @@ class ProgramSurveyService
             return collect();
         }
 
-        return ProgramSurveyResponse::query()
+        $responses = ProgramSurveyResponse::query()
             ->with([
                 'survey.abyipProgram',
                 'survey.questions',
-                'registration',
+                'registration.barangay',
                 'answers.question',
             ])
             ->whereHas('survey', function ($query) use ($user, $programIds) {
@@ -266,8 +266,16 @@ class ProgramSurveyService
             })
             ->orderByDesc('submitted_at')
             ->orderByDesc('id')
-            ->get()
-            ->map(fn (ProgramSurveyResponse $response) => $this->formatResponse($response));
+            ->get();
+
+        $sequenceMap = $this->buildResponseSequenceMap($responses);
+
+        return $responses->map(
+            fn (ProgramSurveyResponse $response) => $this->formatResponse(
+                $response,
+                $sequenceMap[$response->id] ?? null,
+            ),
+        );
     }
 
     private function findModel(User $user, string $committeeKey, int $surveyId): ProgramSurvey
@@ -523,9 +531,31 @@ class ProgramSurveyService
     }
 
     /**
+     * @param  Collection<int, ProgramSurveyResponse>  $responses
+     * @return array<int, int>
+     */
+    private function buildResponseSequenceMap(Collection $responses): array
+    {
+        $map = [];
+
+        foreach ($responses->groupBy('survey_id') as $surveyResponses) {
+            $sequence = 1;
+
+            foreach ($surveyResponses->sortBy([
+                ['submitted_at', 'asc'],
+                ['id', 'asc'],
+            ]) as $response) {
+                $map[$response->id] = $sequence++;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    private function formatResponse(ProgramSurveyResponse $response): array
+    private function formatResponse(ProgramSurveyResponse $response, ?int $responseNumber = null): array
     {
         $registration = $response->registration;
         $survey = $response->survey;
@@ -533,7 +563,7 @@ class ProgramSurveyService
 
         foreach ($response->answers as $answer) {
             if ($answer->question !== null) {
-                $answers[(string) $answer->question_id] = $answer->answer;
+                $answers[(string) $answer->question_id] = $this->decodeStoredAnswer($answer->answer);
             }
         }
 
@@ -548,17 +578,39 @@ class ProgramSurveyService
             $respondentName = trim((string) ($registration->full_name ?? 'Kabataan Member'));
         }
 
+        $barangayName = trim((string) ($registration?->barangay?->name ?? ''));
+
         return [
             'id' => $response->id,
             'survey_id' => $response->survey_id,
             'surveyId' => $response->survey_id,
+            'response_number' => $responseNumber,
+            'responseNumber' => $responseNumber,
             'respondent_name' => $respondentName,
             'respondentName' => $respondentName,
-            'barangay' => $registration?->barangay ?? '—',
+            'barangay' => $barangayName !== '' ? $barangayName : '—',
             'submitted_at' => $response->submitted_at?->toIso8601String(),
             'submittedAt' => $response->submitted_at?->toIso8601String(),
             'answers' => $answers,
             'survey' => $survey !== null ? $this->formatSurvey($survey) : null,
         ];
+    }
+
+    private function decodeStoredAnswer(mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        return $value;
     }
 }

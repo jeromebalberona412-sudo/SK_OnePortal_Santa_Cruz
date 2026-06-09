@@ -13,14 +13,10 @@
 
 @section('survey_content')
     <div class="survey-panel survey-analytics-panel">
-        <div class="analytics-stats-row" id="analyticsStatsRow"></div>
-
         <div class="analytics-toolbar-pro">
-            <div class="analytics-toolbar-field analytics-toolbar-field--survey">
-                <label class="analytics-toolbar-label" for="analyticsSurveyFilter">Survey</label>
-                <select id="analyticsSurveyFilter" class="schol-input analytics-toolbar-input" aria-label="Select survey">
-                    <option value="">Select survey…</option>
-                </select>
+            <div class="analytics-toolbar-field analytics-toolbar-field--program">
+                <label class="analytics-toolbar-label">Program</label>
+                <div class="analytics-program-display" id="analyticsProgramDisplay" aria-live="polite">Loading program survey…</div>
             </div>
             <div class="analytics-toolbar-field analytics-toolbar-field--dates">
                 <label class="analytics-toolbar-label">Date range</label>
@@ -33,7 +29,7 @@
         </div>
 
         <div id="analyticsQuestionsContainer" class="analytics-container">
-            <p class="survey-empty-hint">Select a survey above to view response distribution, bar charts, and pie charts per question.</p>
+            <p class="survey-empty-hint">Loading survey analytics…</p>
         </div>
     </div>
 @endsection
