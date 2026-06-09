@@ -16,15 +16,20 @@ class ScheduleProgramController extends Controller
 
     public function meta(Request $request): JsonResponse
     {
+        $letter = strtoupper((string) $request->query('letter', ScheduleProgramService::LETTER_EDUCATION));
+
         return response()->json([
-            'data' => $this->service->resolveEducationProgramMeta($request->user()),
+            'data' => $this->service->resolveProgramMeta($request->user(), $letter),
         ]);
     }
 
     public function index(Request $request): JsonResponse
     {
+        $letter = $request->query('letter');
+        $letter = is_string($letter) && $letter !== '' ? strtoupper($letter) : null;
+
         return response()->json([
-            'data' => $this->service->listForBarangay($request->user())->values()->all(),
+            'data' => $this->service->listForBarangay($request->user(), $letter)->values()->all(),
         ]);
     }
 
@@ -42,7 +47,8 @@ class ScheduleProgramController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $program = $this->service->store($request->user(), $request->all());
+            $letter = strtoupper((string) ($request->input('program_letter') ?? $request->query('letter', ScheduleProgramService::LETTER_EDUCATION)));
+            $program = $this->service->store($request->user(), $request->all(), $letter);
 
             return response()->json([
                 'message' => 'Schedule program saved successfully.',
@@ -56,7 +62,9 @@ class ScheduleProgramController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         try {
-            $program = $this->service->update($request->user(), $id, $request->all());
+            $letter = $request->input('program_letter') ?? $request->query('letter');
+            $letter = is_string($letter) && $letter !== '' ? strtoupper($letter) : null;
+            $program = $this->service->update($request->user(), $id, $request->all(), $letter);
 
             return response()->json([
                 'message' => 'Schedule program updated successfully.',

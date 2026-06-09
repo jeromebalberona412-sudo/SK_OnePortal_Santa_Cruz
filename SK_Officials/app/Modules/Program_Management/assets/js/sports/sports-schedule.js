@@ -1,4 +1,5 @@
 let schedulePrograms = [];
+const PROGRAM_LETTER = 'I';
 let programMeta = null;
 let editingProgramId = null;
 let pendingDeleteProgramId = null;
@@ -111,22 +112,18 @@ function getTypeLabel(type) {
 }
 
 async function loadProgramMeta() {
-    const response = await apiFetch('/api/schedule-programs/meta?letter=A');
+    const response = await apiFetch(`/api/schedule-programs/meta?letter=${PROGRAM_LETTER}`);
     programMeta = response.data || null;
 
     const typeEl = document.getElementById('programType');
-    const committeeEl = document.getElementById('programCommittee');
 
     if (typeEl) {
-        typeEl.value = programMeta?.program_type || 'Equitable Access to Quality Education';
-    }
-    if (committeeEl) {
-        committeeEl.value = programMeta?.committee || 'Education Committee';
+        typeEl.value = programMeta?.program_type || 'Sports Development';
     }
 }
 
 async function loadPrograms() {
-    const response = await apiFetch('/api/schedule-programs?letter=A');
+    const response = await apiFetch(`/api/schedule-programs?letter=${PROGRAM_LETTER}`);
     schedulePrograms = Array.isArray(response.data) ? response.data : [];
     renderFormsTable();
 }
@@ -160,7 +157,6 @@ function resetModalForm() {
         const typeEl = document.getElementById('programType');
         const committeeEl = document.getElementById('programCommittee');
         if (typeEl) typeEl.value = programMeta.program_type || '';
-        if (committeeEl) committeeEl.value = programMeta.committee || '';
     }
 }
 
@@ -186,7 +182,7 @@ function openModal(forEditId) {
         if (modalTitle) {
             modalTitle.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-                Create Scholarship Program
+                Create Sports Program
             `;
         }
     }
@@ -224,7 +220,7 @@ function renderFormsTable() {
     if (countEl) countEl.textContent = String(forms.length);
 
     if (!forms.length) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="saf-table-empty">No scholarship programs yet. Click Create Scholarship Program to add one.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" class="saf-table-empty">No sports programs yet. Click Create Program to add one.</td></tr>';
         return;
     }
 
@@ -234,9 +230,7 @@ function renderFormsTable() {
 
         return `
             <tr>
-                <td>${escapeHtml(program.program_name)}</td>
                 <td>${escapeHtml(program.program_type)}</td>
-                <td>${escapeHtml(program.committee)}</td>
                 <td>${escapeHtml(program.participation_quantity ?? 'N/A')}</td>
                 <td>${escapeHtml(program.start_date)}</td>
                 <td>${escapeHtml(program.end_date)}</td>
@@ -278,7 +272,6 @@ function editProgram(programId) {
     const endDate = document.getElementById('schedEndDate');
     const status = document.getElementById('programStatus');
     const typeEl = document.getElementById('programType');
-    const committeeEl = document.getElementById('programCommittee');
     const announcementEl = document.getElementById('spfbAnnouncement');
     const announcementCountEl = document.getElementById('spfbAnnouncementCount');
     const modalTitle = document.getElementById('scholarProgramModalTitle');
@@ -288,7 +281,6 @@ function editProgram(programId) {
     if (endDate) endDate.value = program.end_date || '';
     if (status) status.value = resolveProgramStatus(program);
     if (typeEl) typeEl.value = program.program_type || '';
-    if (committeeEl) committeeEl.value = program.committee || '';
     if (announcementEl) {
         announcementEl.value = program.announcement || '';
         if (announcementCountEl) announcementCountEl.textContent = String(announcementEl.value.length);
@@ -306,7 +298,7 @@ function editProgram(programId) {
     if (modalTitle) {
         modalTitle.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit Scholarship Program
+            Edit Sports Program
         `;
     }
 }
@@ -500,15 +492,15 @@ async function handleSave() {
 
     try {
         if (editingProgramId) {
-            await apiFetch(`/api/schedule-programs/${editingProgramId}?letter=A`, {
+            await apiFetch(`/api/schedule-programs/${editingProgramId}?letter=${PROGRAM_LETTER}`, {
                 method: 'PUT',
-                body: JSON.stringify({ ...payload, program_letter: 'A' }),
+                body: JSON.stringify({ ...payload, program_letter: PROGRAM_LETTER }),
             });
             showToast('Program updated successfully!', 'success');
         } else {
-            await apiFetch('/api/schedule-programs?letter=A', {
+            await apiFetch(`/api/schedule-programs?letter=${PROGRAM_LETTER}`, {
                 method: 'POST',
-                body: JSON.stringify({ ...payload, program_letter: 'A' }),
+                body: JSON.stringify({ ...payload, program_letter: PROGRAM_LETTER }),
             });
             showToast('Program saved successfully!', 'success');
         }
@@ -605,10 +597,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadPrograms();
     } catch (error) {
         showToast(error.message || 'Failed to load schedule programs.', 'error');
-        tableBody.innerHTML = '<tr><td colspan="8" class="saf-table-empty">Unable to load schedule programs.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" class="saf-table-empty">Unable to load schedule programs.</td></tr>';
     } finally {
         if (typeof window.hideLoading === 'function') window.hideLoading();
     }
 });
 
-window.editScholarshipProgram = editProgram;
+window.editSportsProgram = editProgram;

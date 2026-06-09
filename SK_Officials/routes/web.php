@@ -187,6 +187,12 @@ Route::middleware([
         Route::delete('/{id}', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'destroy'])->name('api.schedule-programs.destroy');
     });
 
+    Route::prefix('api/program-applications')->group(function () {
+        Route::get('/', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'index'])->name('api.program-applications.index');
+        Route::get('/{id}', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'show'])->name('api.program-applications.show');
+        Route::put('/{id}/status', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'updateStatus'])->name('api.program-applications.update-status');
+    });
+
     Route::prefix('api/program-surveys/{committee}')->group(function () {
         Route::get('/meta', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'meta'])->name('api.program-surveys.meta');
         Route::get('/responses', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'responses'])->name('api.program-surveys.responses');
@@ -215,15 +221,15 @@ Route::middleware([
     Route::redirect('/scholarship-application-request', '/scholarship-applications');
     Route::redirect('/scholarship', '/scholarship-applications');
 
-    Route::get('/rejected-scholars', function () {
-        return view('Rejected_Scholarship::rejected-scholarship');
-    })->name('rejected-scholars');
+    Route::get('/rejected-scholars', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'index'])->name('rejected-scholars');
+    Route::get('/rejected-scholars/data', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'data'])->name('rejected-scholars.data');
+    Route::post('/rejected-scholars/{id}/restore', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'restore'])->name('rejected-scholars.restore');
 
     Route::redirect('/rejected-scholarship', '/rejected-scholars');
 
-    Route::get('/rejected-sports', function () {
-        return view('Rejected_Sports::rejected-sports');
-    })->name('rejected-sports');
+    Route::get('/rejected-sports', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'index'])->name('rejected-sports');
+    Route::get('/rejected-sports/data', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'data'])->name('rejected-sports.data');
+    Route::post('/rejected-sports/{id}/restore', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'restore'])->name('rejected-sports.restore');
 
     // ── Approved Scholars (pure front-end, no DB) ──
     Route::get('/approved-scholars', function () {

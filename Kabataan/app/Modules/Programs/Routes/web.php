@@ -25,8 +25,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/programs/survey', [ProgramController::class, 'surveyLanding'])->name('programs.survey.landing');
     Route::get('/programs/survey/form', [ProgramController::class, 'surveyForm'])->name('programs.survey.form');
 
-    Route::view('/sports/apply', 'programs::sports_landing')->name('sports.apply');
-    Route::view('/sports/apply/form', 'programs::sports-registration')->name('sports.apply.form');
+    Route::get('/sports/apply', [ProgramController::class, 'sportsLanding'])->name('sports.apply');
+    Route::get('/sports/apply/form', [ProgramController::class, 'sportsForm'])->name('sports.apply.form');
 
     Route::redirect('/presurvey/{slug}', '/programs/survey')->name('programs.presurvey');
 });

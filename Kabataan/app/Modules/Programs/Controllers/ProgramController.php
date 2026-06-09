@@ -173,6 +173,48 @@ class ProgramController extends Controller
         ]);
     }
 
+    public function sportsLanding(Request $request): View
+    {
+        $user = Auth::user();
+        $scheduleId = (int) $request->query('schedule', 0);
+
+        $registration = KabataanRegistration::with('barangay')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        $barangayName = $registration?->barangay?->name ?? 'Your Barangay';
+
+        return view('programs::sports_landing', [
+            'scheduleProgramId' => $scheduleId > 0 ? $scheduleId : null,
+            'barangayName' => $barangayName,
+            'kkFieldLabels' => $this->programService->kkFieldLabels(),
+        ]);
+    }
+
+    public function sportsForm(Request $request): View
+    {
+        $user = Auth::user();
+        $scheduleId = (int) $request->query('schedule', 0);
+
+        if ($scheduleId <= 0) {
+            abort(404);
+        }
+
+        $program = $this->programService->getScheduleProgramForUser($scheduleId, $user);
+        if ($program === null || ($program['program_letter'] ?? '') !== 'I') {
+            abort(404);
+        }
+
+        return view('programs::scholarship_application', [
+            'scheduleProgramId' => $scheduleId,
+            'program' => $program,
+            'kkFieldLabels' => $this->programService->kkFieldLabels(),
+            'pageTitle' => 'Sports Application',
+            'backRoute' => route('sports.apply', ['schedule' => $scheduleId]),
+        ]);
+    }
+
     public function surveyLanding(Request $request): View
     {
         $user = Auth::user();

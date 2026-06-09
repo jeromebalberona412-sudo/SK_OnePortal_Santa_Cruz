@@ -379,7 +379,7 @@
                     </div>
                 </div>
                 <div class="program-action">
-                    <button class="apply-now-button" data-apply-schedule="${schedule.id}" disabled>
+                    <button class="apply-now-button" data-apply-schedule="${schedule.id}" data-program-letter="${schedule.program_letter || ''}" disabled>
                         ${applied ? 'Already Applied' : 'Apply Now'}
                     </button>
                     <p class="apply-note">Please read and agree to the Terms & Conditions to continue</p>
@@ -420,17 +420,20 @@
             button.addEventListener('click', () => {
                 if (button.disabled || button.textContent === 'Already Applied') return;
                 const scheduleId = button.getAttribute('data-apply-schedule');
-                goToScheduleApplication(scheduleId);
+                const programLetter = button.getAttribute('data-program-letter');
+                goToScheduleApplication(scheduleId, programLetter);
             });
         });
     }
 
-    function goToScheduleApplication(scheduleId) {
+    function goToScheduleApplication(scheduleId, programLetter) {
         if (typeof closeEducationModal === 'function') closeEducationModal();
         if (typeof closeSportsModal === 'function') closeSportsModal();
         if (typeof showLoading === 'function') showLoading('Redirecting to application…');
 
-        const url = `/scholarship/apply?schedule=${encodeURIComponent(scheduleId)}`;
+        const letter = String(programLetter || '').toUpperCase();
+        const basePath = letter === 'I' ? '/sports/apply' : '/scholarship/apply';
+        const url = `${basePath}?schedule=${encodeURIComponent(scheduleId)}`;
         setTimeout(() => {
             window.location.href = url;
         }, 650);

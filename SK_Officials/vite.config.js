@@ -105,7 +105,7 @@ export default defineConfig({
                 'app/Modules/Program_Management/assets/js/sports/sports_application_form.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_requests.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_list.js',
-                'app/Modules/Program_Management/assets/js/sports/sports_schedule.js',
+                'app/Modules/Program_Management/assets/js/sports/sports-schedule.js',
                 'app/Modules/Program_Management/assets/js/sports/sports-tabs.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_report.js',
                 // Shared Schedule Programs Assets

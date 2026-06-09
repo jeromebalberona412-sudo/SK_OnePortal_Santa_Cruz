@@ -19,6 +19,7 @@ class ScheduleProgram extends Model
         'program_type',
         'committee',
         'program_name',
+        'program_letter',
         'participation_quantity',
         'start_date',
         'end_date',

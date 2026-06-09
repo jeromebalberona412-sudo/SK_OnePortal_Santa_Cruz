@@ -139,7 +139,7 @@ class BarangayProfileService
     private function listPosts(int $barangayId): Collection
     {
         return Announcement::query()
-            ->with(['user', 'barangay'])
+            ->with(['user', 'barangay', 'images'])
             ->withCount(['reactions', 'comments'])
             ->where('barangay_id', $barangayId)
             ->whereRaw('"is_federation_wide" = false')
@@ -157,7 +157,13 @@ class BarangayProfileService
                         : 'update',
                     'title' => $post->title ?: 'Barangay Update',
                     'body' => $post->body,
-                    'image_url' => $this->cloudinary->normalizeUrl($post->image_url),
+                    'image_url' => $this->cloudinary->normalizeUrl(
+                        $post->images->first()?->image_url
+                    ),
+                    'images' => $post->images
+                        ->map(fn ($img) => $this->cloudinary->normalizeUrl($img->image_url))
+                        ->values()
+                        ->all(),
                     'link_url' => $post->link_url,
                     'posted_at' => $post->created_at?->format('M j, Y') ?? '—',
                     'posted_time' => $post->created_at?->diffForHumans() ?? '',

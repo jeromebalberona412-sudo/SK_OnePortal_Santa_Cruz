@@ -41,40 +41,30 @@
         <div class="sl-card sl-card-program">
             <div class="sl-card-header">
                 <h2 class="sl-card-title">Program Information</h2>
-                <span class="sl-status-badge sl-status-open">Open</span>
+                <span class="sl-status-badge sl-status-open" id="slProgramStatusBadge">Open</span>
             </div>
             <div class="sl-card-body">
-                <h3 class="sl-program-name">Sports Development Program 2026</h3>
-                <p class="sl-program-description">Barangay youth sports registration for leagues, tournaments, and SK-led athletic activities in Santa Cruz, Laguna.</p>
+                <h3 class="sl-program-name" id="slProgramName">Loading program…</h3>
+                <p class="sl-program-description" id="slProgramDescription">Please wait while program details are loaded.</p>
 
                 <div class="sl-info-grid">
                     <div class="sl-info-item">
-                        <span class="sl-info-label">Registration Period:</span>
-                        <span class="sl-info-value">June 1, 2026 - December 15, 2026</span>
+                        <span class="sl-info-label">Application Period:</span>
+                        <span class="sl-info-value" id="slApplicationPeriod">—</span>
                     </div>
                     <div class="sl-info-item">
                         <span class="sl-info-label">Available Slots:</span>
-                        <span class="sl-info-value">150</span>
+                        <span class="sl-info-value" id="slAvailableSlots">—</span>
+                    </div>
+                    <div class="sl-info-item">
+                        <span class="sl-info-label">Committee:</span>
+                        <span class="sl-info-value" id="slCommittee">—</span>
                     </div>
                 </div>
 
                 <div class="sl-section">
-                    <h4 class="sl-section-title">Eligibility Requirements</h4>
-                    <ul class="sl-list">
-                        <li>Must be a registered Kabataan member of Barangay Santa Cruz</li>
-                        <li>Must be 15–30 years old at the time of registration</li>
-                        <li>Must be physically fit to participate in sports activities</li>
-                        <li>Must submit all required documents before the deadline</li>
-                    </ul>
-                </div>
-
-                <div class="sl-section">
-                    <h4 class="sl-section-title">Terms and Conditions</h4>
-                    <ul class="sl-list">
-                        <li>Participants must follow SK and barangay sports rules and schedules</li>
-                        <li>Good sportsmanship and discipline are required at all times</li>
-                        <li>False information may result in disqualification from the program</li>
-                    </ul>
+                    <h4 class="sl-section-title">Announcement</h4>
+                    <p class="sl-program-description" id="slAnnouncement">—</p>
                 </div>
             </div>
         </div>
@@ -227,5 +217,9 @@
             </div>
         </div>
     </aside>
+    <script>
+        window.__scheduleProgramId = @json($scheduleProgramId);
+        window.__kkFieldLabels = @json($kkFieldLabels);
+    </script>
 </body>
 </html>

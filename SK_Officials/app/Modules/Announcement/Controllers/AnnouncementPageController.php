@@ -4,6 +4,7 @@ namespace App\Modules\Announcement\Controllers;
 
 use App\Models\Barangay;
 use App\Modules\Announcement\Services\BarangayProfileService;
+use App\Services\BarangayLogoUrlService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
@@ -23,6 +24,7 @@ class AnnouncementPageController extends Controller
         $name = $brgy?->name ?? 'Your Barangay';
         $color = '#f5c518';
         $barangayProfiles = $this->barangayProfileService->listForTenant((int) $user->tenant_id);
+        $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
 
         return view('Announcement::announcement', compact(
             'slug',
@@ -30,6 +32,7 @@ class AnnouncementPageController extends Controller
             'color',
             'user',
             'barangayProfiles',
+            'barangayLogoUrl',
         ));
     }
 }

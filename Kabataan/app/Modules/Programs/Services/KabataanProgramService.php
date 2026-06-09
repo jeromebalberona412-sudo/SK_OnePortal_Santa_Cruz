@@ -428,6 +428,7 @@ class KabataanProgramService
             'id' => $program->id,
             'program_type' => $program->program_type,
             'program_name' => $program->program_name,
+            'program_letter' => $program->program_letter,
             'committee' => $program->committee,
             'participation_quantity' => $program->participation_quantity,
             'available_slots' => $availableSlots,

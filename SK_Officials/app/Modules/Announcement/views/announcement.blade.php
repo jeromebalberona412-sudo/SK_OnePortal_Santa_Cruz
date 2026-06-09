@@ -30,7 +30,7 @@
             {{-- SK Officials Info Card (with compose embedded) --}}
             <div class="sk-fed-card">
                 <div class="sk-fed-card-banner">
-                    <img src="{{ asset('images/logo.png') }}" alt="SK Officials Logo" class="sk-fed-card-logo">
+                    <img src="{{ $barangayLogoUrl ?? asset('images/logo.png') }}" alt="SK Barangay {{ $name }} logo" class="sk-fed-card-logo">
                     <div class="sk-fed-card-info">
                         <h2 class="sk-fed-card-name">SK Barangay {{ $name }}</h2>
                         <p class="sk-fed-card-sub">SK Officials Portal · Santa Cruz, Laguna</p>
@@ -47,11 +47,11 @@
 
             {{-- Filter Tabs --}}
             <div class="feed-filter-bar">
-                <button class="feed-tab active" data-filter="all" onclick="setFeedFilter(this,'all')">All</button>
-                <button class="feed-tab" data-filter="announcement" onclick="setFeedFilter(this,'announcement')">Announcements</button>
-                <button class="feed-tab" data-filter="event" onclick="setFeedFilter(this,'event')">Events</button>
-                <button class="feed-tab" data-filter="activity" onclick="setFeedFilter(this,'activity')">Activities</button>
-                <button class="feed-tab" data-filter="program" onclick="setFeedFilter(this,'program')">Programs</button>
+                <button type="button" class="feed-tab active" data-filter="all">All</button>
+                <button type="button" class="feed-tab" data-filter="announcement">Announcements</button>
+                <button type="button" class="feed-tab" data-filter="event">Events</button>
+                <button type="button" class="feed-tab" data-filter="activity">Activities</button>
+                <button type="button" class="feed-tab" data-filter="program">Programs</button>
             </div>
 
             <div id="feed-posts"></div>
@@ -64,49 +64,12 @@
             </div>
         </div>
 
-        {{-- RIGHT: Programs Sidebar --}}
+        {{-- RIGHT: Barangay Profiles Sidebar --}}
         <aside class="programs-sidebar" id="programsSidebar">
             <div class="sidebar-card">
-                <h2 class="sidebar-title">Programs in Your Barangay</h2>
-                <p class="sidebar-subtitle">Available programs for SK officials</p>
-                <div class="program-categories">
-                    <div class="program-category" onclick="openProgramModal('education')">
-                        <div class="category-icon education"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/><path d="M3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/></svg></div>
-                        <div class="category-content"><h3>Education</h3><p>1 active program</p></div>
-                        <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="program-category" onclick="openProgramModal('anti-drugs')">
-                        <div class="category-icon anti-drugs"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/></svg></div>
-                        <div class="category-content"><h3>Anti-Drugs</h3><p>0 active programs</p></div>
-                        <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="program-category" onclick="openProgramModal('sports')">
-                        <div class="category-icon sports"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg></div>
-                        <div class="category-content"><h3>Sports Development</h3><p>0 active programs</p></div>
-                        <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="program-category" onclick="openProgramModal('health')">
-                        <div class="category-icon health"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg></div>
-                        <div class="category-content"><h3>Health</h3><p>0 active programs</p></div>
-                        <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="program-category" onclick="openProgramModal('disaster')">
-                        <div class="category-icon disaster"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/></svg></div>
-                        <div class="category-content"><h3>Disaster Preparedness</h3><p>0 active programs</p></div>
-                        <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="program-category" onclick="openProgramModal('others')">
-                        <div class="category-icon others"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg></div>
-                        <div class="category-content"><h3>Others</h3><p>0 active programs</p></div>
-                        <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar-card" style="margin-top:16px;">
                 <h2 class="sidebar-title">Barangay SK Profiles</h2>
                 <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
-                <div class="brgy-link-list">
+                <div class="brgy-link-list" id="brgyLinkList">
                     @forelse($barangayProfiles as $brgy)
                     <a href="{{ route('sk-officials.barangay-profile', ['slug' => $brgy['slug']]) }}" class="brgy-link-item">
                         <div class="brgy-link-dot">
@@ -132,15 +95,19 @@
 </main>
 
 <div class="programs-drawer-backdrop" id="programsDrawerBackdrop"></div>
-<button class="programs-fab" id="programsFab" aria-label="View Programs"><i class="fas fa-th-list"></i></button>
+<button class="programs-fab" id="programsFab" aria-label="View Barangay Profiles"><i class="fas fa-users"></i></button>
 
 {{-- Compose Modal --}}
-<div id="composeModal" class="program-modal">
+<div id="composeModal" class="program-modal compose-modal">
     <div class="modal-overlay" onclick="closeComposeModal()"></div>
-    <div class="modal-container" style="max-width:560px;">
+    <div class="modal-container compose-modal-container" id="composeModalContainer">
         <div class="modal-header">
             <h2 id="compose-modal-title">Create Post</h2>
-            <button class="modal-close" onclick="closeComposeModal()"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+            <div class="compose-modal-window-actions">
+                <button type="button" class="compose-window-btn" onclick="toggleComposeFullscreen()" title="Full screen">⛶</button>
+                <button type="button" class="compose-window-btn" onclick="toggleComposeFullscreen()" title="Restore down">⧉</button>
+                <button class="modal-close" onclick="closeComposeModal()"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+            </div>
         </div>
         <div class="modal-body">
             <input type="hidden" id="edit-post-id" value="">
@@ -154,55 +121,47 @@
                     <option value="program">Youth Program</option>
                 </select>
             </div>
-            <textarea class="compose-textarea" id="compose-content" placeholder="Write something..." rows="4"></textarea>
+            <textarea class="compose-textarea" id="compose-content" placeholder="What's on your mind?" rows="6" maxlength="10000"></textarea>
+            <div class="compose-char-row">
+                <span id="compose-char-count" class="compose-char-count">0 / 10000</span>
+            </div>
             <div class="compose-attach-row">
                 <label class="compose-attach-btn" for="compose-image-input"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg> Photo</label>
-                <input type="file" id="compose-image-input" accept="image/*" style="display:none;" onchange="previewImage(this)">
+                <input type="file" id="compose-image-input" accept="image/*" multiple style="display:none;" onchange="previewImages(this)">
                 <label class="compose-attach-btn" onclick="toggleLinkInput()"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/></svg> Link</label>
             </div>
-            <div id="compose-image-preview" style="display:none;margin-top:10px;position:relative;">
-                <img id="compose-preview-img" src="" alt="Preview" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover;">
-                <button onclick="removeImagePreview()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border:none;border-radius:50%;width:28px;height:28px;color:#fff;cursor:pointer;">✕</button>
-            </div>
+            <p id="compose-images-meta" class="compose-images-meta"></p>
+            <div id="compose-images-preview" class="compose-images-preview"></div>
             <div id="compose-link-input-wrap" style="display:none;margin-top:10px;">
                 <input type="url" id="compose-link-input" class="compose-link-field" placeholder="Paste a link (https://...)">
             </div>
         </div>
         <div class="modal-footer-btns">
             <button class="btn-secondary" onclick="closeComposeModal()">Cancel</button>
-            <button class="btn-primary" onclick="submitPost()"><svg viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Post</button>
+            <button class="btn-primary" id="compose-post-btn" onclick="submitPost()"><svg viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Post</button>
         </div>
     </div>
+</div>
+
+{{-- Image Lightbox --}}
+<div id="imageLightbox" class="image-lightbox" aria-hidden="true">
+    <button type="button" id="lightboxClose" class="lightbox-close" aria-label="Close">&times;</button>
+    <div class="lightbox-toolbar">
+        <button type="button" id="lightboxZoomOut" class="lightbox-tool-btn" aria-label="Zoom out">−</button>
+        <span id="lightboxZoomLevel" class="lightbox-zoom-level">100%</span>
+        <button type="button" id="lightboxZoomIn" class="lightbox-tool-btn" aria-label="Zoom in">+</button>
+        <button type="button" id="lightboxZoomReset" class="lightbox-tool-btn lightbox-reset-btn" aria-label="Reset zoom">Reset</button>
+    </div>
+    <button type="button" id="lightboxPrev" class="lightbox-nav lightbox-prev" aria-label="Previous">&#10094;</button>
+    <div class="lightbox-viewport" id="lightboxViewport">
+        <img id="lightboxImage" src="" alt="Full size photo" draggable="false">
+    </div>
+    <button type="button" id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="Next">&#10095;</button>
+    <div id="lightboxCounter" class="lightbox-counter"></div>
 </div>
 
 {{-- Education Program Modal --}}
-<div id="educationModal" class="program-modal">
-    <div class="modal-overlay"></div>
-    <div class="modal-container">
-        <div class="modal-header"><h2>Education Programs</h2><button class="modal-close" onclick="closeProgramModal('educationModal')"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button></div>
-        <div class="modal-body">
-            <div class="program-item">
-                <div class="program-header"><h3>🎓 Scholarship Assistance Program</h3><span class="program-status active">Active</span></div>
-                <p class="program-description">Financial assistance for deserving students pursuing higher education.</p>
-                <div class="program-meta"><span>📅 Deadline: March 31, 2026</span><span>👥 50 slots available</span></div>
-                <button class="apply-btn">Apply Now</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- No Program Modal --}}
-<div id="noProgramModal" class="program-modal">
-    <div class="modal-overlay"></div>
-    <div class="modal-container">
-        <div class="modal-header"><h2 id="noProgramModalTitle">Programs</h2><button class="modal-close" onclick="closeProgramModal('noProgramModal')"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button></div>
-        <div class="modal-body" style="text-align:center;padding:40px 20px;">
-            <i class="fas fa-inbox" style="font-size:48px;color:#ccc;display:block;margin-bottom:16px;"></i>
-            <h3 style="font-size:18px;color:#333;margin-bottom:8px;">No Programs Available</h3>
-            <p style="color:#999;font-size:14px;line-height:1.6;">There are currently no active programs in this category.</p>
-        </div>
-    </div>
-</div>
+{{-- removed program modals --}}
 
 @vite([
     'app/Modules/layout/js/header.js',
@@ -211,11 +170,11 @@
 ])
 
 <script>
-function openProgramModal(cat) {
-    if (cat === 'education') { document.getElementById('educationModal').classList.add('active'); }
-    else { var t={'anti-drugs':'Anti-Drugs Programs','sports':'Sports Development','health':'Health Programs','disaster':'Disaster Preparedness','others':'Other Programs'}; document.getElementById('noProgramModalTitle').textContent=t[cat]||'Programs'; document.getElementById('noProgramModal').classList.add('active'); }
-}
-function closeProgramModal(id) { document.getElementById(id).classList.remove('active'); }
+window.AnnConfig = {
+    defaultLogo: @json(asset('images/logo.png')),
+    barangayLogo: @json($barangayLogoUrl),
+    feedPollMs: 30000,
+};
 </script>
 
 {{-- Barangay Profile Preview Modal --}}
@@ -273,20 +232,25 @@ async function loadPreviewFeed() {
             container.innerHTML = '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">No posts yet.</div>';
             return;
         }
-        container.innerHTML = data.data.slice(0, 5).map(p => `
+        container.innerHTML = data.data.slice(0, 5).map(p => {
+            const fallbackLogo = window.AnnConfig?.barangayLogo || window.AnnConfig?.defaultLogo || '';
+            const logo = p.barangay_logo_url || fallbackLogo;
+            return `
             <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    ${logo ? `<img src="${logo}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">` : ''}
                     <span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#f5c51820;color:#b88600;border:1px solid #f5c51840;">${p.type}</span>
                     <span style="font-size:11px;color:#94a3b8;">${p.time}</span>
                 </div>
                 ${p.title ? `<p style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;">${p.title}</p>` : ''}
                 <p style="font-size:13px;color:#475569;line-height:1.5;">${p.body}</p>
-                ${p.image_url ? `<img src="${p.image_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:160px;object-fit:cover;">` : ''}
+                ${p.image_url || (p.images && p.images[0]) ? `<img src="${p.images?.[0] || p.image_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:160px;object-fit:cover;">` : ''}
                 <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#94a3b8;">
                     <span>👍 ${p.likes} likes</span>
                     <span>💬 ${p.comments?.length ?? 0} comments</span>
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     } catch(e) {
         container.innerHTML = '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Could not load posts.</div>';
     }

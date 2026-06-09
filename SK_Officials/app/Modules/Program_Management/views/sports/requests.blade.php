@@ -93,9 +93,9 @@
                 <thead>
                     <tr>
                         <th>NAME<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">Last, First, Middle</div></th>
-                        <th>SPORTS TYPE<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">Basketball, Volleyball, etc.</div></th>
+                        <th>PROGRAM</th>
                         <th>AGE</th>
-                        <th>REQUIREMENTS<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">Submitted Documents</div></th>
+                        <th>DOCUMENTS</th>
                         <th>DATE SUBMITTED</th>
                         <th>STATUS</th>
                         <th class="col-actions">ACTIONS</th>

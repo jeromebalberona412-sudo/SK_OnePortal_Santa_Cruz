@@ -1,19 +1,46 @@
 'use strict';
 
 const POSTS_PER_PAGE = 10;
-let currentFilter  = 'all';
-let currentPage    = 1;
-let lastPage       = 1;
-let editingPostId  = null;
-let pendingImageUrl = null;
-let pendingLinkUrl  = null;
-let currentUserId  = null;
+const MAX_BODY_CHARS = 10000;
+const MAX_IMAGES = 20;
 
-const SK_AVATAR = 'https://ui-avatars.com/api/?name=SK+Officials&background=2c2c3e&color=f5c518&size=80';
+let currentFilter = 'all';
+let currentPage = 1;
+let lastPage = 1;
+let editingPostId = null;
+let pendingFiles = [];
+let pendingLinkUrl = null;
+let currentUserId = null;
+let lightboxImages = [];
+let lightboxIndex = 0;
+let lightboxZoom = 1;
+const LIGHTBOX_ZOOM_MIN = 0.5;
+const LIGHTBOX_ZOOM_MAX = 4;
+const LIGHTBOX_ZOOM_STEP = 0.25;
+let feedPollTimer = null;
+let knownPostIds = new Set();
+let feedLoading = false;
+
+const SK_AVATAR = () => commentAvatarUrl({ author_name: 'You', barangay_logo_url: window.AnnConfig?.barangayLogo });
+const DEFAULT_LOGO = () => window.AnnConfig?.defaultLogo || '/images/logo.png';
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-// ── API helpers ──────────────────────────────────────────────────────────────
+function escapeHtml(text) {
+    return String(text ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function linkifyText(text) {
+    const escaped = escapeHtml(text);
+    return escaped.replace(
+        /(https?:\/\/[^\s<]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer" class="post-inline-link">$1</a>'
+    );
+}
 
 async function apiFetch(url, options = {}) {
     const { headers: extraHeaders, ...rest } = options;
@@ -21,57 +48,211 @@ async function apiFetch(url, options = {}) {
         ...rest,
         headers: {
             'X-CSRF-TOKEN': csrfToken(),
-            'Accept': 'application/json',
+            Accept: 'application/json',
             ...extraHeaders,
         },
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+        let message = 'Request failed.';
+        try {
+            const err = await res.json();
+            message = err.message || message;
+        } catch (_) { /* ignore */ }
+        throw new Error(message);
+    }
     return res.json();
 }
 
-// ── Feed ─────────────────────────────────────────────────────────────────────
-
 async function loadFeed(reset = true) {
-    if (reset) { currentPage = 1; document.getElementById('feed-posts').innerHTML = ''; }
+    if (feedLoading) return;
+    feedLoading = true;
 
-    const params = new URLSearchParams({ page: currentPage, filter: currentFilter });
-    const data   = await apiFetch(`/api/announcements?${params}`);
+    const container = document.getElementById('feed-posts');
+    if (!container) {
+        feedLoading = false;
+        return;
+    }
 
-    currentUserId = data.user_id;
-    lastPage      = data.last_page;
+    try {
+        if (reset) {
+            currentPage = 1;
+            container.innerHTML = '';
+            knownPostIds.clear();
+        }
 
-    data.data.forEach(p => appendPost(p));
+        const params = new URLSearchParams({ page: currentPage, filter: currentFilter });
+        const data = await apiFetch(`/api/announcements?${params}`);
 
-    const btn = document.getElementById('load-more-btn');
-    if (btn) btn.style.display = currentPage >= lastPage ? 'none' : 'inline-flex';
+        currentUserId = data.user_id;
+        lastPage = data.last_page;
+
+        (data.data || []).forEach((p) => upsertPost(p, reset ? 'append' : 'append'));
+
+        const btn = document.getElementById('load-more-btn');
+        if (btn) btn.style.display = currentPage >= lastPage ? 'none' : 'inline-flex';
+    } finally {
+        feedLoading = false;
+        setFilterTabsDisabled(false);
+    }
 }
 
-function loadMorePosts() { currentPage++; loadFeed(false); }
+function postExistsInDom(postId) {
+    return document.querySelector(`.post-card[data-post-id="${postId}"]`) !== null;
+}
+
+function upsertPost(p, mode = 'append') {
+    const id = Number(p.id);
+    if (!id || knownPostIds.has(id) || postExistsInDom(id)) {
+        return;
+    }
+
+    knownPostIds.add(id);
+    const container = document.getElementById('feed-posts');
+    const el = document.createElement('article');
+    el.className = 'post-card';
+    el.dataset.postId = String(id);
+    el.innerHTML = buildPost(p);
+    bindPostImageClicks(el, p);
+
+    if (mode === 'prepend') {
+        container.prepend(el);
+    } else {
+        container.appendChild(el);
+    }
+}
+
+async function pollFeedUpdates() {
+    if (document.hidden || feedLoading || document.getElementById('composeModal')?.classList.contains('active')) {
+        return;
+    }
+
+    try {
+        const params = new URLSearchParams({ page: 1, filter: currentFilter });
+        const data = await apiFetch(`/api/announcements?${params}`);
+        const fresh = (data.data || []).filter((p) => {
+            const id = Number(p.id);
+            return id && !knownPostIds.has(id) && !postExistsInDom(id);
+        });
+
+        if (!fresh.length) return;
+
+        fresh.reverse().forEach((p) => {
+            upsertPost(p, 'prepend');
+            const el = document.querySelector(`.post-card[data-post-id="${p.id}"]`);
+            if (el) el.classList.add('post-card-new');
+        });
+
+        setTimeout(() => {
+            document.querySelectorAll('.post-card-new').forEach((el) => el.classList.remove('post-card-new'));
+        }, 1200);
+    } catch (_) { /* silent poll failure */ }
+}
+
+function startFeedPolling() {
+    const interval = window.AnnConfig?.feedPollMs || 30000;
+    if (feedPollTimer) clearInterval(feedPollTimer);
+    feedPollTimer = setInterval(pollFeedUpdates, interval);
+}
+
+function postAvatarUrl(p) {
+    if (p.barangay_logo_url) return p.barangay_logo_url;
+    if (p.is_federation_wide) return DEFAULT_LOGO();
+    const name = p.barangay_name || 'SK';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2c2c3e&color=f5c518&size=80`;
+}
+
+function commentAvatarUrl(c) {
+    if (c.user_type === 'sk_official' && c.barangay_logo_url) return c.barangay_logo_url;
+    const name = c.author_name || 'SK';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2c2c3e&color=f5c518&size=80`;
+}
+
+function buildImageGrid(images, postId) {
+    if (!images?.length) return '';
+
+    const unique = [...new Set(images.filter(Boolean))];
+    const count = unique.length;
+    let gridClass = 'post-media-grid';
+    let slots = [];
+
+    if (count === 1) {
+        gridClass += ' grid-1';
+        slots = [{ index: 0 }];
+    } else if (count === 2) {
+        gridClass += ' grid-2 fit-contain';
+        slots = [{ index: 0 }, { index: 1 }];
+    } else if (count === 3) {
+        gridClass += ' grid-3 fit-contain';
+        slots = [{ index: 0 }, { index: 1 }, { index: 2 }];
+    } else if (count === 4) {
+        gridClass += ' grid-4 fit-contain';
+        slots = [{ index: 0 }, { index: 1 }, { index: 2 }, { index: 3 }];
+    } else {
+        gridClass += ' grid-4-plus fit-contain';
+        slots = [
+            { index: 0 },
+            { index: 1 },
+            { index: 2 },
+            { index: 3, overlay: `+${count - 3}`, moreOnly: true },
+        ];
+    }
+
+    const tiles = slots.map(({ index, overlay, moreOnly }) => {
+        const overlayHtml = overlay
+            ? `<span class="post-media-more">${escapeHtml(overlay)}</span>`
+            : '';
+        const tileClass = moreOnly ? 'post-media-tile post-media-more-tile' : 'post-media-tile';
+        const imgHtml = moreOnly
+            ? `<img src="${escapeHtml(unique[index])}" alt="" loading="lazy" aria-hidden="true">`
+            : `<img src="${escapeHtml(unique[index])}" alt="Post image ${index + 1}" loading="lazy">`;
+
+        return `<button type="button" class="${tileClass}" data-post-id="${postId}" data-index="${index}" aria-label="View photo ${index + 1}">
+            ${imgHtml}${overlayHtml}
+        </button>`;
+    }).join('');
+
+    return `<div class="${gridClass}" data-all-images='${escapeHtml(JSON.stringify(unique))}'>${tiles}</div>`;
+}
+
+function loadMorePosts() {
+    currentPage++;
+    loadFeed(false);
+}
 
 function setFeedFilter(btn, filter) {
+    if (feedLoading || (filter === currentFilter && btn.classList.contains('active'))) {
+        return;
+    }
     currentFilter = filter;
-    document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.feed-tab').forEach((t) => t.classList.remove('active'));
     btn.classList.add('active');
+    setFilterTabsDisabled(true);
     loadFeed(true);
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
+function setFilterTabsDisabled(disabled) {
+    document.querySelectorAll('.feed-tab').forEach((tab) => {
+        tab.disabled = disabled;
+        tab.classList.toggle('is-loading', disabled);
+    });
+}
 
-function appendPost(p) {
-    const container = document.getElementById('feed-posts');
-    const el = document.createElement('article');
-    el.className   = 'post-card';
-    el.dataset.postId = p.id;
-    el.innerHTML   = buildPost(p);
-    container.appendChild(el);
+function bindFeedFilterTabs() {
+    document.querySelectorAll('.feed-tab').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            setFeedFilter(btn, btn.dataset.filter || 'all');
+        });
+    });
 }
 
 function buildPost(p) {
-    const avatar    = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.barangay_name ?? 'SK')}&background=2c2c3e&color=f5c518&size=80`;
-    const mediaHtml = p.image_url
-        ? `<div class="post-image"><img src="${p.image_url}" alt="Post image" loading="lazy"></div>` : '';
-    const linkHtml  = p.link_url
-        ? `<a href="${p.link_url}" target="_blank" rel="noopener" class="post-link-preview">${p.link_url}</a>` : '';
+    const avatar = postAvatarUrl(p);
+    const images = [...new Set((p.images?.length ? p.images : (p.image_url ? [p.image_url] : [])).filter(Boolean))];
+    const mediaHtml = buildImageGrid(images, p.id);
+    const linkHtml = p.link_url
+        ? `<a href="${escapeHtml(p.link_url)}" target="_blank" rel="noopener" class="post-link-preview">${escapeHtml(p.link_url)}</a>`
+        : '';
     const optionsHtml = p.owned
         ? `<div style="position:relative;">
             <button class="post-options-btn" onclick="togglePostOptions(${p.id},event)">
@@ -83,32 +264,32 @@ function buildPost(p) {
             </div>
            </div>` : '';
 
-    const commentsHtml = (p.comments ?? []).map(c =>
+    const commentsHtml = (p.comments ?? []).map((c) =>
         `<div class="comment-item">
-           <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.author_name)}&background=667eea&color=fff" alt="${c.author_name}">
+           <img src="${escapeHtml(commentAvatarUrl(c))}" alt="${escapeHtml(c.author_name)}" class="comment-avatar">
            <div class="comment-content">
-             <p class="comment-author">${c.author_name}</p>
-             <p class="comment-text">${c.body}</p>
-             <span class="comment-time">${c.time}</span>
+             <p class="comment-author">${escapeHtml(c.author_name)}</p>
+             <p class="comment-text">${escapeHtml(c.body)}</p>
+             <span class="comment-time">${escapeHtml(c.time)}</span>
            </div>
          </div>`
     ).join('');
 
     return `
       <div class="post-header">
-        <img src="${avatar}" alt="${p.barangay_name}" class="post-avatar">
+        <img src="${avatar}" alt="${escapeHtml(p.barangay_name)}" class="post-avatar">
         <div class="post-info">
-          <h3 class="post-author">${p.author_name ?? ('SK Brgy. ' + (p.barangay_name ?? ''))}</h3>
+          <h3 class="post-author">${escapeHtml(p.author_name ?? ('SK Brgy. ' + (p.barangay_name ?? '')))}</h3>
           <p class="post-meta">
-            <span class="post-type ${p.type}">${p.type}</span>
-            <span class="post-time">${p.time ?? ''}</span>
+            <span class="post-type ${p.type}">${escapeHtml(p.type)}</span>
+            <span class="post-time">${escapeHtml(p.time ?? '')}</span>
           </p>
         </div>
         ${optionsHtml}
       </div>
       <div class="post-content">
-        ${p.title ? `<h2 class="post-title">${p.title}</h2>` : ''}
-        <p class="post-text">${p.body}</p>
+        ${p.title ? `<h2 class="post-title">${escapeHtml(p.title)}</h2>` : ''}
+        <p class="post-text">${linkifyText(p.body)}</p>
         ${mediaHtml}${linkHtml}
       </div>
       <div class="post-actions">
@@ -124,7 +305,7 @@ function buildPost(p) {
       <div class="comments-section" id="comments-${p.id}" style="display:none;">
         <div id="comments-list-${p.id}">${commentsHtml}</div>
         <div class="comment-input-wrapper">
-          <img src="${SK_AVATAR}" alt="You">
+          <img src="${escapeHtml(SK_AVATAR())}" alt="You" class="comment-avatar">
           <input type="text" class="comment-input" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')submitComment(${p.id},this)">
           <button class="send-comment-btn" onclick="submitComment(${p.id},this.previousElementSibling)">
             <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
@@ -133,7 +314,99 @@ function buildPost(p) {
       </div>`;
 }
 
-// ── Interactions ─────────────────────────────────────────────────────────────
+function bindPostImageClicks(postEl, post) {
+    const grid = postEl.querySelector('.post-media-grid');
+    if (!grid) return;
+
+    let images = [];
+    try {
+        images = JSON.parse(grid.dataset.allImages || '[]');
+    } catch (_) {
+        images = [];
+    }
+    if (!images.length) {
+        images = post.images?.length ? post.images : (post.image_url ? [post.image_url] : []);
+        images = [...new Set(images.filter(Boolean))];
+    }
+
+    grid.querySelectorAll('.post-media-tile').forEach((tile) => {
+        tile.addEventListener('click', () => {
+            openLightbox(images, parseInt(tile.dataset.index, 10) || 0);
+        });
+    });
+}
+
+function openLightbox(images, startIndex = 0) {
+    lightboxImages = images;
+    lightboxIndex = startIndex;
+    lightboxZoom = 1;
+    const lb = document.getElementById('imageLightbox');
+    if (!lb) return;
+    lb.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderLightboxImage();
+    applyLightboxZoom();
+}
+
+function closeLightbox() {
+    document.getElementById('imageLightbox')?.classList.remove('active');
+    document.body.style.overflow = '';
+    lightboxZoom = 1;
+    applyLightboxZoom();
+}
+
+function applyLightboxZoom() {
+    const img = document.getElementById('lightboxImage');
+    const label = document.getElementById('lightboxZoomLevel');
+    if (img) {
+        img.style.transform = `scale(${lightboxZoom})`;
+    }
+    if (label) {
+        label.textContent = `${Math.round(lightboxZoom * 100)}%`;
+    }
+}
+
+function lightboxZoomIn() {
+    lightboxZoom = Math.min(LIGHTBOX_ZOOM_MAX, +(lightboxZoom + LIGHTBOX_ZOOM_STEP).toFixed(2));
+    applyLightboxZoom();
+}
+
+function lightboxZoomOut() {
+    lightboxZoom = Math.max(LIGHTBOX_ZOOM_MIN, +(lightboxZoom - LIGHTBOX_ZOOM_STEP).toFixed(2));
+    applyLightboxZoom();
+}
+
+function lightboxZoomReset() {
+    lightboxZoom = 1;
+    applyLightboxZoom();
+    const viewport = document.getElementById('lightboxViewport');
+    if (viewport) {
+        viewport.scrollLeft = 0;
+        viewport.scrollTop = 0;
+    }
+}
+
+function renderLightboxImage() {
+    const img = document.getElementById('lightboxImage');
+    const counter = document.getElementById('lightboxCounter');
+    if (!img || !lightboxImages.length) return;
+    img.src = lightboxImages[lightboxIndex];
+    lightboxZoom = 1;
+    applyLightboxZoom();
+    if (counter) counter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+}
+
+function lightboxPrev() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    renderLightboxImage();
+}
+
+function lightboxNext() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    renderLightboxImage();
+}
 
 async function toggleLike(id, btn) {
     const data = await apiFetch(`/api/announcements/${id}/react`, { method: 'POST' });
@@ -160,137 +433,210 @@ async function submitComment(id, input) {
     if (list) {
         list.insertAdjacentHTML('beforeend',
             `<div class="comment-item">
-               <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author_name)}&background=2c2c3e&color=f5c518" alt="${comment.author_name}">
+               <img src="${escapeHtml(commentAvatarUrl(comment))}" alt="${escapeHtml(comment.author_name)}" class="comment-avatar">
                <div class="comment-content">
-                 <p class="comment-author">${comment.author_name}</p>
-                 <p class="comment-text">${comment.body}</p>
-                 <span class="comment-time">${comment.time}</span>
+                 <p class="comment-author">${escapeHtml(comment.author_name)}</p>
+                 <p class="comment-text">${escapeHtml(comment.body)}</p>
+                 <span class="comment-time">${escapeHtml(comment.time)}</span>
                </div>
              </div>`
         );
     }
     const countEl = document.getElementById(`comment-count-${id}`);
     if (countEl) {
-        const cur = parseInt(countEl.textContent.match(/\d+/)?.[0] ?? '0');
+        const cur = parseInt(countEl.textContent.match(/\d+/)?.[0] ?? '0', 10);
         countEl.textContent = `Comment (${cur + 1})`;
     }
 }
 
-// ── Compose / Edit ───────────────────────────────────────────────────────────
-
-function openComposeModal(type) {
-    editingPostId = null; pendingImageUrl = null; pendingLinkUrl = null;
-    document.getElementById('compose-modal-title').textContent = 'Create Post';
+function resetComposeForm() {
+    editingPostId = null;
+    pendingFiles = [];
+    pendingLinkUrl = null;
     document.getElementById('edit-post-id').value = '';
     document.getElementById('compose-content').value = '';
-    document.getElementById('compose-image-preview').style.display = 'none';
+    document.getElementById('compose-char-count').textContent = `0 / ${MAX_BODY_CHARS}`;
+    document.getElementById('compose-images-preview').innerHTML = '';
     document.getElementById('compose-link-input-wrap').style.display = 'none';
     document.getElementById('compose-link-input').value = '';
+    document.getElementById('compose-image-input').value = '';
+    setPostButtonLoading(false);
+}
+
+function openComposeModal(type) {
+    resetComposeForm();
+    document.getElementById('compose-modal-title').textContent = 'Create Post';
     if (type) {
         const map = { announcement: 'announcement', event: 'event', photo: 'activity' };
         document.getElementById('compose-type').value = map[type] ?? 'update';
     }
-    document.getElementById('composeModal').classList.add('active');
+    const modal = document.getElementById('composeModal');
+    modal.classList.add('active');
+    modal.classList.remove('compose-maximized');
 }
 
 function closeComposeModal() {
-    document.getElementById('composeModal').classList.remove('active');
-    editingPostId = null; pendingImageUrl = null; pendingLinkUrl = null;
+    document.getElementById('composeModal').classList.remove('active', 'compose-maximized');
+    resetComposeForm();
+}
+
+function toggleComposeFullscreen() {
+    document.getElementById('composeModal').classList.toggle('compose-maximized');
 }
 
 async function editPost(id) {
-    // Fetch fresh data from the feed container
-    const card = document.querySelector(`[data-post-id="${id}"]`);
+    const card = document.querySelector(`.post-card[data-post-id="${id}"]`);
     if (!card) return;
     editingPostId = id;
     document.getElementById('compose-modal-title').textContent = 'Edit Post';
     document.getElementById('edit-post-id').value = id;
-    document.getElementById('compose-content').value = card.querySelector('.post-text')?.textContent ?? '';
+    const text = card.querySelector('.post-text')?.textContent ?? '';
+    document.getElementById('compose-content').value = text;
+    updateCharCount();
     document.getElementById('composeModal').classList.add('active');
-    document.querySelectorAll('.post-options-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
 }
 
 async function deletePost(id) {
     if (!confirm('Delete this post?')) return;
     await apiFetch(`/api/announcements/${id}`, { method: 'DELETE' });
-    document.querySelector(`[data-post-id="${id}"]`)?.remove();
-    document.querySelectorAll('.post-options-menu.open').forEach(m => m.classList.remove('open'));
+    knownPostIds.delete(Number(id));
+    document.querySelector(`.post-card[data-post-id="${id}"]`)?.remove();
+    document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
+}
+
+function setPostButtonLoading(loading) {
+    const btn = document.getElementById('compose-post-btn');
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.classList.toggle('is-loading', loading);
+    btn.innerHTML = loading
+        ? '<span class="btn-spinner"></span> Posting…'
+        : '<svg viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Post';
 }
 
 async function submitPost() {
-    const body  = document.getElementById('compose-content').value.trim();
+    const bodyEl = document.getElementById('compose-content');
+    const body = bodyEl.value.trim();
     if (!body) { alert('Please write something.'); return; }
-    const type  = document.getElementById('compose-type').value;
-    const title = '';
-    const link  = document.getElementById('compose-link-input').value.trim() || null;
+    if (body.length > MAX_BODY_CHARS) {
+        alert(`Post text must be ${MAX_BODY_CHARS} characters or less.`);
+        return;
+    }
 
-    const payload = { type, title, body, image_url: pendingImageUrl, link_url: link };
+    const type = document.getElementById('compose-type').value;
+    const link = document.getElementById('compose-link-input').value.trim() || null;
+
+    setPostButtonLoading(true);
 
     try {
         if (editingPostId) {
             const updated = await apiFetch(`/api/announcements/${editingPostId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                body: JSON.stringify({ type, title: '', body, link_url: link }),
             });
-            const card = document.querySelector(`[data-post-id="${editingPostId}"]`);
-            if (card) card.innerHTML = buildPost(updated);
+            const card = document.querySelector(`.post-card[data-post-id="${editingPostId}"]`);
+            if (card) {
+                card.innerHTML = buildPost(updated);
+                bindPostImageClicks(card, updated);
+            }
         } else {
-            const created = await apiFetch('/api/announcements', {
+            const fd = new FormData();
+            fd.append('type', type);
+            fd.append('body', body);
+            if (link) fd.append('link_url', link);
+            pendingFiles.forEach((file) => fd.append('images[]', file));
+
+            const res = await fetch('/api/announcements', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken(),
+                    Accept: 'application/json',
+                },
+                body: fd,
             });
-            const container = document.getElementById('feed-posts');
-            const el = document.createElement('article');
-            el.className = 'post-card';
-            el.dataset.postId = created.id;
-            el.innerHTML = buildPost(created);
-            container.prepend(el);
+            const created = await res.json();
+            if (!res.ok) throw new Error(created.message || 'Failed to create post.');
+
+            knownPostIds.add(Number(created.id));
+            upsertPost(created, 'prepend');
         }
         closeComposeModal();
     } catch (e) {
-        alert('Failed to save post. Please try again.\n' + e.message);
+        alert('Failed to save post. Please try again.\n' + (e.message || ''));
+    } finally {
+        setPostButtonLoading(false);
     }
 }
 
-// ── Image upload ─────────────────────────────────────────────────────────────
-
-function previewImage(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById('compose-preview-img').src = e.target.result;
-        document.getElementById('compose-image-preview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-
-    // Disable Post button until upload completes
-    const postBtn = document.querySelector('.modal-footer-btns .btn-primary');
-    if (postBtn) { postBtn.disabled = true; postBtn.textContent = 'Uploading…'; }
-
-    const fd = new FormData();
-    fd.append('image', file);
-    fd.append('_token', csrfToken());
-    fetch('/api/announcements/upload-image', { method: 'POST', body: fd })
-        .then(r => r.json())
-        .then(d => {
-            if (d.url) {
-                pendingImageUrl = d.url;
-                document.getElementById('compose-preview-img').src = d.url;
-            }
-        })
-        .catch(() => {})
-        .finally(() => {
-            if (postBtn) { postBtn.disabled = false; postBtn.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Post'; }
-        });
+function updateCharCount() {
+    const el = document.getElementById('compose-content');
+    const counter = document.getElementById('compose-char-count');
+    if (!el || !counter) return;
+    const len = el.value.length;
+    counter.textContent = `${len} / ${MAX_BODY_CHARS}`;
+    counter.classList.toggle('over-limit', len > MAX_BODY_CHARS);
 }
 
-function removeImagePreview() {
-    pendingImageUrl = null;
-    document.getElementById('compose-image-preview').style.display = 'none';
-    document.getElementById('compose-image-input').value = '';
+function previewImages(input) {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+
+    const remaining = MAX_IMAGES - pendingFiles.length;
+    if (remaining <= 0) {
+        alert(`You can upload up to ${MAX_IMAGES} images per post.`);
+        input.value = '';
+        return;
+    }
+
+    const toAdd = files.slice(0, remaining);
+    if (files.length > remaining) {
+        alert(`Only ${remaining} more image(s) can be added (max ${MAX_IMAGES}).`);
+    }
+
+    toAdd.forEach((file) => {
+        pendingFiles.push(file);
+        const reader = new FileReader();
+        reader.onload = (e) => appendPreviewThumb(e.target.result, pendingFiles.length - 1);
+        reader.readAsDataURL(file);
+    });
+
+    input.value = '';
+    renderPreviewMeta();
+}
+
+function appendPreviewThumb(src, index) {
+    const wrap = document.getElementById('compose-images-preview');
+    const item = document.createElement('div');
+    item.className = 'compose-preview-item';
+    item.dataset.index = String(index);
+    item.innerHTML = `
+        <img src="${src}" alt="Preview">
+        <button type="button" class="compose-preview-remove" aria-label="Remove photo">&times;</button>`;
+    item.querySelector('.compose-preview-remove').addEventListener('click', () => removePendingImage(index));
+    wrap.appendChild(item);
+}
+
+function removePendingImage(index) {
+    pendingFiles.splice(index, 1);
+    rerenderPreviewThumbs();
+}
+
+function rerenderPreviewThumbs() {
+    const wrap = document.getElementById('compose-images-preview');
+    wrap.innerHTML = '';
+    pendingFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => appendPreviewThumb(e.target.result, index);
+        reader.readAsDataURL(file);
+    });
+    renderPreviewMeta();
+}
+
+function renderPreviewMeta() {
+    const meta = document.getElementById('compose-images-meta');
+    if (meta) meta.textContent = pendingFiles.length ? `${pendingFiles.length} / ${MAX_IMAGES} photos selected (uploads on Post)` : '';
 }
 
 function toggleLinkInput() {
@@ -300,54 +646,95 @@ function toggleLinkInput() {
 
 function togglePostOptions(id, e) {
     e.stopPropagation();
-    const menu   = document.getElementById(`options-menu-${id}`);
+    const menu = document.getElementById(`options-menu-${id}`);
     const isOpen = menu?.classList.contains('open');
-    document.querySelectorAll('.post-options-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
     if (!isOpen) menu?.classList.add('open');
 }
 
-// ── Sidebar / UI helpers (unchanged) ─────────────────────────────────────────
-
-function toggleNotifPopover(e) { e.stopPropagation(); const pop = document.getElementById('notifPopover'); const dd = document.getElementById('profileDropdown'); dd?.classList.remove('show'); document.querySelector('.profile-btn')?.classList.remove('open'); pop?.classList.toggle('show'); }
-function toggleProfileDropdown(e) { e.stopPropagation(); const dd = document.getElementById('profileDropdown'); const pop = document.getElementById('notifPopover'); const btn = document.querySelector('.profile-btn'); pop?.classList.remove('show'); dd?.classList.toggle('show'); btn?.classList.toggle('open'); }
-function toggleSidebar() { const isMobile = window.innerWidth <= 1024; if (isMobile) { document.body.classList.toggle('sidebar-open'); } else { document.body.classList.toggle('sidebar-collapsed'); localStorage.setItem('sidebarCollapsed', document.body.classList.contains('sidebar-collapsed')); } }
+function toggleNotifPopover(e) { e.stopPropagation(); document.getElementById('notifPopover')?.classList.toggle('show'); document.getElementById('profileDropdown')?.classList.remove('show'); }
+function toggleProfileDropdown(e) { e.stopPropagation(); document.getElementById('profileDropdown')?.classList.toggle('show'); document.getElementById('notifPopover')?.classList.remove('show'); }
+function toggleSidebar() {
+    const isMobile = window.innerWidth <= 1024;
+    if (isMobile) document.body.classList.toggle('sidebar-open');
+    else {
+        document.body.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebarCollapsed', document.body.classList.contains('sidebar-collapsed'));
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadFeed(true);
+    bindFeedFilterTabs();
+    loadFeed(true).then(() => startFeedPolling());
+
+    document.getElementById('compose-content')?.addEventListener('input', updateCharCount);
+    updateCharCount();
+
     if (window.innerWidth > 1024 && localStorage.getItem('sidebarCollapsed') === 'true') {
         document.body.classList.add('sidebar-collapsed');
     }
+
     document.addEventListener('click', () => {
-        document.querySelectorAll('.post-options-menu.open').forEach(m => m.classList.remove('open'));
+        document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
         document.getElementById('notifPopover')?.classList.remove('show');
         document.getElementById('profileDropdown')?.classList.remove('show');
-        document.querySelector('.profile-btn')?.classList.remove('open');
     });
-    const fab      = document.getElementById('programsFab');
-    const sidebar  = document.getElementById('programsSidebar');
+
+    document.getElementById('lightboxClose')?.addEventListener('click', closeLightbox);
+    document.getElementById('lightboxPrev')?.addEventListener('click', lightboxPrev);
+    document.getElementById('lightboxNext')?.addEventListener('click', lightboxNext);
+    document.getElementById('lightboxZoomIn')?.addEventListener('click', lightboxZoomIn);
+    document.getElementById('lightboxZoomOut')?.addEventListener('click', lightboxZoomOut);
+    document.getElementById('lightboxZoomReset')?.addEventListener('click', lightboxZoomReset);
+    document.getElementById('imageLightbox')?.addEventListener('click', (e) => {
+        if (e.target?.id === 'imageLightbox') closeLightbox();
+    });
+    document.getElementById('lightboxViewport')?.addEventListener('wheel', (e) => {
+        const lb = document.getElementById('imageLightbox');
+        if (!lb?.classList.contains('active')) return;
+        e.preventDefault();
+        if (e.deltaY < 0) lightboxZoomIn();
+        else lightboxZoomOut();
+    }, { passive: false });
+
+    document.addEventListener('keydown', (e) => {
+        const lb = document.getElementById('imageLightbox');
+        if (!lb?.classList.contains('active')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') lightboxPrev();
+        if (e.key === 'ArrowRight') lightboxNext();
+        if (e.key === '+' || e.key === '=') lightboxZoomIn();
+        if (e.key === '-') lightboxZoomOut();
+        if (e.key === '0') lightboxZoomReset();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) pollFeedUpdates();
+    });
+
+    const fab = document.getElementById('programsFab');
+    const sidebar = document.getElementById('programsSidebar');
     const backdrop = document.getElementById('programsDrawerBackdrop');
-    const openDrawer  = () => { sidebar?.classList.add('drawer-open'); backdrop?.classList.add('active'); document.body.style.overflow = 'hidden'; };
     const closeDrawer = () => { sidebar?.classList.remove('drawer-open'); backdrop?.classList.remove('active'); document.body.style.overflow = ''; };
-    fab?.addEventListener('click', e => { e.stopPropagation(); openDrawer(); });
+    fab?.addEventListener('click', (e) => { e.stopPropagation(); sidebar?.classList.add('drawer-open'); backdrop?.classList.add('active'); document.body.style.overflow = 'hidden'; });
     backdrop?.addEventListener('click', closeDrawer);
     window.addEventListener('resize', () => { if (window.innerWidth > 1100) closeDrawer(); });
 });
 
-// Expose functions needed by inline onclick attributes
-window.openComposeModal    = openComposeModal;
-window.closeComposeModal   = closeComposeModal;
-window.submitPost          = submitPost;
-window.previewImage        = previewImage;
-window.removeImagePreview  = removeImagePreview;
-window.toggleLinkInput     = toggleLinkInput;
-window.toggleLike          = toggleLike;
-window.toggleComments      = toggleComments;
-window.submitComment       = submitComment;
-window.togglePostOptions   = togglePostOptions;
-window.editPost            = editPost;
-window.deletePost          = deletePost;
-window.loadMorePosts       = loadMorePosts;
-window.setFeedFilter       = setFeedFilter;
-window.toggleNotifPopover  = toggleNotifPopover;
+window.openComposeModal = openComposeModal;
+window.closeComposeModal = closeComposeModal;
+window.toggleComposeFullscreen = toggleComposeFullscreen;
+window.submitPost = submitPost;
+window.previewImages = previewImages;
+window.toggleLinkInput = toggleLinkInput;
+window.toggleLike = toggleLike;
+window.toggleComments = toggleComments;
+window.submitComment = submitComment;
+window.togglePostOptions = togglePostOptions;
+window.editPost = editPost;
+window.deletePost = deletePost;
+window.loadMorePosts = loadMorePosts;
+window.setFeedFilter = setFeedFilter;
+window.toggleNotifPopover = toggleNotifPopover;
 window.toggleProfileDropdown = toggleProfileDropdown;
-window.toggleSidebar       = toggleSidebar;
+window.toggleSidebar = toggleSidebar;

@@ -7,17 +7,28 @@ use App\Models\Committee;
 use App\Models\ScheduleProgram;
 use App\Models\User;
 use App\Modules\Programs\Services\AbyipProgramCatalogService;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class ScheduleProgramService
 {
-    private const EDUCATION_PROGRAM_LETTER = 'A';
+    public const LETTER_EDUCATION = 'A';
 
-    private const DEFAULT_PROGRAM_TYPE = 'Equitable Access to Quality Education';
+    public const LETTER_SPORTS = 'I';
 
-    private const DEFAULT_COMMITTEE = 'Education Committee';
+    /** @var array<string, array{default_type: string, default_committee: string, committee_like: string}> */
+    private const LETTER_CONFIG = [
+        self::LETTER_EDUCATION => [
+            'default_type' => 'Equitable Access to Quality Education',
+            'default_committee' => 'Education Committee',
+            'committee_like' => '%education%',
+        ],
+        self::LETTER_SPORTS => [
+            'default_type' => 'Sports Development',
+            'default_committee' => 'Sports Committee',
+            'committee_like' => '%sport%',
+        ],
+    ];
 
     /** @var list<string> */
     private const ALLOWED_KK_FIELDS = [
@@ -33,18 +44,42 @@ class ScheduleProgramService
     }
 
     /**
-     * @return array{program_type: string, committee: string, program_name: string}
+     * @return array{program_type: string, committee: string, program_name: string, program_letter: string}
      */
     public function resolveEducationProgramMeta(User $user): array
     {
-        $programType = self::DEFAULT_PROGRAM_TYPE;
+        return $this->resolveProgramMeta($user, self::LETTER_EDUCATION);
+    }
+
+    /**
+     * @return array{program_type: string, committee: string, program_name: string, program_letter: string}
+     */
+    public function resolveSportsProgramMeta(User $user): array
+    {
+        return $this->resolveProgramMeta($user, self::LETTER_SPORTS);
+    }
+
+    /**
+     * @return array{program_type: string, committee: string, program_name: string, program_letter: string}
+     */
+    public function resolveProgramMeta(User $user, string $letter): array
+    {
+        $letter = strtoupper(trim($letter));
+        if (! isset(self::LETTER_CONFIG[$letter])) {
+            throw ValidationException::withMessages([
+                'program_letter' => ['Unsupported program letter.'],
+            ]);
+        }
+
+        $config = self::LETTER_CONFIG[$letter];
+        $programType = $config['default_type'];
         $abyip = $this->catalogService->getLatestAbyip($user->barangay_id);
 
         if ($abyip !== null) {
             $program = Abyip::query()
                 ->where('document_id', $abyip->id)
                 ->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
-                ->where('code', self::EDUCATION_PROGRAM_LETTER)
+                ->where('code', $letter)
                 ->first();
 
             if ($program !== null && trim((string) $program->program_name) !== '') {
@@ -52,13 +87,13 @@ class ScheduleProgramService
             }
         }
 
-        $committee = self::DEFAULT_COMMITTEE;
+        $committee = $config['default_committee'];
         if ($user->barangay_id !== null) {
             $committeeRow = Committee::query()
                 ->whereHas('head', function ($query) use ($user) {
                     $query->where('barangay_id', $user->barangay_id);
                 })
-                ->whereRaw('LOWER(committee_name) LIKE ?', ['%education%'])
+                ->whereRaw('LOWER(committee_name) LIKE ?', [$config['committee_like']])
                 ->value('committee_name');
 
             if (is_string($committeeRow) && trim($committeeRow) !== '') {
@@ -70,24 +105,29 @@ class ScheduleProgramService
             'program_type' => $programType,
             'committee' => $committee,
             'program_name' => $programType,
+            'program_letter' => $letter,
         ];
     }
 
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function listForBarangay(User $user): Collection
+    public function listForBarangay(User $user, ?string $letter = null): Collection
     {
         if ($user->barangay_id === null) {
             return collect();
         }
 
-        return ScheduleProgram::query()
+        $query = ScheduleProgram::query()
             ->where('barangay_id', $user->barangay_id)
             ->orderByDesc('start_date')
-            ->orderByDesc('id')
-            ->get()
-            ->map(fn (ScheduleProgram $program) => $this->formatProgram($program));
+            ->orderByDesc('id');
+
+        if ($letter !== null && $letter !== '') {
+            $query->where('program_letter', strtoupper($letter));
+        }
+
+        return $query->get()->map(fn (ScheduleProgram $program) => $this->formatProgram($program));
     }
 
     /**
@@ -102,15 +142,16 @@ class ScheduleProgramService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public function store(User $user, array $data): array
+    public function store(User $user, array $data, string $letter = self::LETTER_EDUCATION): array
     {
         $validated = $this->validatePayload($data);
-        $meta = $this->resolveEducationProgramMeta($user);
+        $meta = $this->resolveProgramMeta($user, $letter);
 
         $program = ScheduleProgram::create([
             'tenant_id' => $user->tenant_id,
             'barangay_id' => $user->barangay_id,
             'created_by' => $user->id,
+            'program_letter' => $meta['program_letter'],
             'program_type' => $meta['program_type'],
             'committee' => $meta['committee'],
             'program_name' => $meta['program_name'],
@@ -130,13 +171,14 @@ class ScheduleProgramService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public function update(User $user, int $programId, array $data): array
+    public function update(User $user, int $programId, array $data, ?string $letter = null): array
     {
         $program = $this->findModel($user, $programId);
         $validated = $this->validatePayload($data);
-        $meta = $this->resolveEducationProgramMeta($user);
+        $meta = $this->resolveProgramMeta($user, $letter ?? (string) ($program->program_letter ?? self::LETTER_EDUCATION));
 
         $program->update([
+            'program_letter' => $meta['program_letter'],
             'program_type' => $meta['program_type'],
             'committee' => $meta['committee'],
             'program_name' => $meta['program_name'],
@@ -304,6 +346,7 @@ class ScheduleProgramService
     {
         return [
             'id' => $program->id,
+            'program_letter' => $program->program_letter,
             'program_name' => $program->program_name,
             'program_type' => $program->program_type,
             'committee' => $program->committee,
