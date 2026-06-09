@@ -20,6 +20,8 @@ export default defineConfig({
 
                 // Layout (shared header & footer)
                 'app/Modules/Layout/assets/css/kabataan-header.css',
+                'app/Modules/Layout/assets/css/kabataan-bootstrap.css',
+                'app/Modules/Layout/assets/css/kabataan-responsive.css',
                 'app/Modules/Layout/assets/css/kabataan-logout.css',
                 'app/Modules/Layout/assets/js/kabataan-header.js',
                 'app/Modules/Layout/assets/js/kabataan-logout.js',
@@ -52,6 +54,7 @@ export default defineConfig({
                 // Profile
                 'app/Modules/Profile/assets/css/profile.css',
                 'app/Modules/Profile/assets/js/profile.js',
+                'app/Modules/Profile/assets/js/profile-participation.js',
                 'app/Modules/Profile/assets/css/change-email.css',
                 'app/Modules/Profile/assets/js/change-email.js',
                 'app/Modules/Profile/assets/js/change-email-verify.js',

@@ -16,20 +16,83 @@ use Illuminate\Validation\ValidationException;
 class KabataanProgramSurveyService
 {
     /**
+     * @param  list<int>  $programIds
+     * @return array<int, array<string, mixed>>
+     */
+    public function summarizeOpenSurveysForPrograms(User $user, array $programIds): array
+    {
+        if ($programIds === []) {
+            return [];
+        }
+
+        try {
+            $surveys = $this->openSurveyQuery($user)
+                ->with('abyipProgram')
+                ->whereIn('abyip_program_id', $programIds)
+                ->get();
+
+            $map = [];
+            foreach ($surveys as $survey) {
+                $map[(int) $survey->abyip_program_id] = $this->formatSurveySummary($survey, $user);
+            }
+
+            return $map;
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listUserResponseDetails(User $user): array
+    {
+        try {
+            $registration = KabataanRegistration::query()
+                ->where('user_id', $user->id)
+                ->latest()
+                ->first();
+
+            if ($registration === null) {
+                return [];
+            }
+
+            return ProgramSurveyResponse::query()
+                ->with(['survey.abyipProgram', 'survey.questions', 'answers.question'])
+                ->where('registration_id', $registration->id)
+                ->whereHas('survey', function ($query) use ($user) {
+                    $this->applyUserScope($query, $user);
+                })
+                ->orderByDesc('submitted_at')
+                ->orderByDesc('id')
+                ->get()
+                ->map(fn (ProgramSurveyResponse $response) => $this->formatResponseDetail($response))
+                ->values()
+                ->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     public function summarizeOpenSurveyForProgram(User $user, int $abyipProgramId): ?array
     {
-        $survey = $this->openSurveyQuery($user)
-            ->with('abyipProgram')
-            ->where('abyip_program_id', $abyipProgramId)
-            ->first();
+        try {
+            $survey = $this->openSurveyQuery($user)
+                ->with('abyipProgram')
+                ->where('abyip_program_id', $abyipProgramId)
+                ->first();
 
-        if ($survey === null) {
+            if ($survey === null) {
+                return null;
+            }
+
+            return $this->formatSurveySummary($survey, $user);
+        } catch (\Throwable) {
             return null;
         }
-
-        return $this->formatSurveySummary($survey, $user);
     }
 
     /**

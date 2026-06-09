@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Profile\Services\EmailChangeService;
 use App\Modules\Profile\Services\PasswordChangeService;
+use App\Modules\Profile\Services\ProfileParticipationService;
 use App\Modules\Profile\Services\ProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,7 @@ class ProfileController extends Controller
         private readonly ProfileService $profileService,
         private readonly EmailChangeService $emailChangeService,
         private readonly PasswordChangeService $passwordChangeService,
+        private readonly ProfileParticipationService $participationService,
     ) {}
 
     public function index(Request $request): View|RedirectResponse
@@ -31,13 +33,7 @@ class ProfileController extends Controller
 
         $user = Auth::user();
         $display = $this->profileService->getDisplayData($user);
-
-        $programs = collect([
-            (object) ['id' => 1, 'name' => 'SK Scholarship Program', 'category' => 'Education', 'status' => 'pending', 'created_at' => '2026-03-10', 'description' => 'Education Assistance Program for deserving youth'],
-            (object) ['id' => 2, 'name' => 'Youth Leadership Training', 'category' => 'Leadership Development', 'status' => 'approved', 'created_at' => '2026-02-15', 'description' => 'Develop leadership skills for SK youth'],
-            (object) ['id' => 3, 'name' => 'Community Service Program', 'category' => 'Community Development', 'status' => 'evaluation', 'created_at' => '2026-01-20', 'description' => 'Volunteer program for community improvement'],
-            (object) ['id' => 4, 'name' => 'Sports Development Program', 'category' => 'Sports & Recreation', 'status' => 'completed', 'created_at' => '2025-12-05', 'description' => 'Sports training and development for youth athletes'],
-        ]);
+        $participation = $this->participationService->getParticipationData($user);
 
         return view('profile::profile', [
             'user' => $user,
@@ -46,11 +42,14 @@ class ProfileController extends Controller
             'barangayName' => $display['barangayName'],
             'barangayLogoUrl' => $display['barangayLogoUrl'],
             'fullName' => $display['fullName'],
-            'programs' => $programs,
-            'totalPrograms' => $programs->count(),
-            'approvedPrograms' => $programs->where('status', 'approved')->count(),
-            'evaluationPrograms' => $programs->where('status', 'evaluation')->count(),
-            'completedPrograms' => $programs->where('status', 'completed')->count(),
+            'programs' => collect($participation['programs']),
+            'totalPrograms' => $participation['summary']['total'],
+            'approvedPrograms' => $participation['summary']['approved'],
+            'evaluationPrograms' => $participation['summary']['pending'],
+            'completedPrograms' => $participation['summary']['completed'],
+            'calendarEvents' => $participation['calendar_events'],
+            'abyipPrograms' => $participation['abyip_programs'],
+            'participationDetails' => $participation['participation_details'],
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',

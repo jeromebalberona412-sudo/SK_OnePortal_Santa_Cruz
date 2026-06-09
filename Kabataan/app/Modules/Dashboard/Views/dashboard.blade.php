@@ -13,6 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     @vite([
+        'app/Modules/Layout/assets/css/kabataan-bootstrap.css',
+        'app/Modules/Layout/assets/css/kabataan-responsive.css',
         'app/Modules/Layout/assets/css/kabataan-header.css',
         'app/Modules/Layout/assets/css/kabataan-logout.css',
         'app/Modules/Layout/assets/js/kabataan-header.js',
@@ -67,16 +69,16 @@
                 <div class="feed-header">
                     <div>
                         <h1>SK Community Feed</h1>
-                        <p>See the latest posts, events, and programs from SK officials.</p>
+                        <p>Posts, events, and programs from your barangay SK.</p>
                     </div>
                 </div>
 
-                <div class="feed-filter-bar" style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0;">
-                    <button class="feed-tab active" onclick="setFeedFilter(this,'all')">All</button>
-                    <button class="feed-tab" onclick="setFeedFilter(this,'announcement')">Announcements</button>
-                    <button class="feed-tab" onclick="setFeedFilter(this,'event')">Events</button>
-                    <button class="feed-tab" onclick="setFeedFilter(this,'activity')">Activities</button>
-                    <button class="feed-tab" onclick="setFeedFilter(this,'program')">Programs</button>
+                <div class="feed-filter-bar">
+                    <button type="button" class="feed-tab active" data-feed-filter="all">All</button>
+                    <button type="button" class="feed-tab" data-feed-filter="announcement">Announcements</button>
+                    <button type="button" class="feed-tab" data-feed-filter="event">Events</button>
+                    <button type="button" class="feed-tab" data-feed-filter="activity">Activities</button>
+                    <button type="button" class="feed-tab" data-feed-filter="program">Programs</button>
                 </div>
 
                 <div id="feed-posts"></div>
@@ -786,7 +788,12 @@
     <script>
     // ── Community Feed ────────────────────────────────────────────────────────
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-    let feedPage = 1, feedLastPage = 1, feedFilter = 'all';
+    let feedPage = 1;
+    let feedLastPage = 1;
+    let feedFilter = 'all';
+    let feedLoading = false;
+    let feedRequestToken = 0;
+    const renderedPostIds = new Set();
 
     async function apiFeed(url, opts = {}) {
         const { headers: extraHeaders, ...rest } = opts;
@@ -800,43 +807,79 @@
     }
 
     async function loadFeed(reset = true) {
-        if (reset) { feedPage = 1; document.getElementById('feed-posts').innerHTML = ''; }
-        const params = new URLSearchParams({ page: feedPage, filter: feedFilter });
-        const data   = await apiFeed(`/api/feed?${params}`).catch(e => { console.error('Feed error:', e); return null; });
-        if (!data) return;
-        feedLastPage = data.last_page;
-        const items = data.data ?? [];
-        if (reset && items.length === 0) {
-            document.getElementById('feed-posts').innerHTML =
-                '<div class="post-card" style="text-align:center;color:#64748b;padding:32px;">No posts yet. Announcements, events, and activities from your barangay will appear here.</div>';
-            const btn = document.getElementById('load-more-btn');
-            if (btn) btn.style.display = 'none';
-            return;
+        if (feedLoading) return;
+        feedLoading = true;
+
+        const requestToken = ++feedRequestToken;
+        if (reset) {
+            feedPage = 1;
+            renderedPostIds.clear();
+            document.getElementById('feed-posts').innerHTML = '';
         }
-        items.forEach(p => {
-            const el = document.createElement('article');
-            el.className = 'post-card';
-            el.dataset.postId = p.id;
-            el.innerHTML = buildFeedPost(p);
-            document.getElementById('feed-posts').appendChild(el);
-        });
-        const btn = document.getElementById('load-more-btn');
-        if (btn) btn.style.display = feedPage >= feedLastPage ? 'none' : 'inline-flex';
+
+        const params = new URLSearchParams({ page: feedPage, filter: feedFilter });
+
+        try {
+            const data = await apiFeed(`/api/feed?${params}`);
+            if (requestToken !== feedRequestToken) return;
+            if (!data) return;
+
+            feedLastPage = data.last_page;
+            const items = data.data ?? [];
+            const container = document.getElementById('feed-posts');
+
+            if (reset && items.length === 0) {
+                container.innerHTML =
+                    '<div class="post-card" style="text-align:center;color:#64748b;padding:32px;">No posts yet. Announcements, events, and activities from your barangay will appear here.</div>';
+                const btn = document.getElementById('load-more-btn');
+                if (btn) btn.style.display = 'none';
+                return;
+            }
+
+            items.forEach(p => {
+                if (renderedPostIds.has(String(p.id))) return;
+                renderedPostIds.add(String(p.id));
+                const el = document.createElement('article');
+                el.className = 'post-card';
+                el.dataset.postId = p.id;
+                el.innerHTML = buildFeedPost(p);
+                container.appendChild(el);
+            });
+
+            const btn = document.getElementById('load-more-btn');
+            if (btn) btn.style.display = feedPage >= feedLastPage ? 'none' : 'inline-flex';
+        } catch (error) {
+            console.error('Feed error:', error);
+        } finally {
+            if (requestToken === feedRequestToken) {
+                feedLoading = false;
+            }
+        }
     }
 
-    function loadMorePosts() { feedPage++; loadFeed(false); }
+    function loadMorePosts() {
+        if (feedLoading || feedPage >= feedLastPage) return;
+        feedPage++;
+        loadFeed(false);
+    }
 
     function setFeedFilter(btn, filter) {
+        if (feedFilter === filter && btn.classList.contains('active')) return;
         feedFilter = filter;
         document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
         loadFeed(true);
     }
 
+    document.querySelectorAll('.feed-tab[data-feed-filter]').forEach(btn => {
+        btn.addEventListener('click', () => setFeedFilter(btn, btn.dataset.feedFilter || 'all'));
+    });
+
     function buildFeedPost(p) {
+        const escape = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent('SK ' + (p.barangay_name ?? ''))}&background=0450a8&color=fff`;
-        const media  = p.image_url ? `<div class="post-image"><img src="${p.image_url}" loading="lazy"></div>` : '';
-        const link   = p.link_url  ? `<a href="${p.link_url}" target="_blank" rel="noopener" class="post-link-preview">${p.link_url}</a>` : '';
+        const media  = p.image_url ? `<div class="post-image"><img src="${escape(p.image_url)}" loading="lazy" alt=""></div>` : '';
+        const link   = p.link_url  ? `<a href="${escape(p.link_url)}" target="_blank" rel="noopener" class="post-link-preview">${escape(p.link_url)}</a>` : '';
         const comments = (p.comments ?? []).map(c =>
             `<div class="comment-item">
                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.author_name)}&background=667eea&color=fff" alt="${c.author_name}">

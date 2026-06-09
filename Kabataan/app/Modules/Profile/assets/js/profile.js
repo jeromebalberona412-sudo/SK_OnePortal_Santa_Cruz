@@ -210,9 +210,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// View Program Details Function
-function viewProgramDetails(programId) {
-    console.log('Viewing program:', programId);
-    alert('Program details will be available when the backend is implemented!');
-}
+// View Program Details Function — implemented in profile.blade.php via __participationDetails
 

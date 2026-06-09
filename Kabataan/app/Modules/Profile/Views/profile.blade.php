@@ -10,6 +10,8 @@
     <meta http-equiv="Expires" content="0">
     <title>My Profile - SK OnePortal</title>
     @vite([
+        'app/Modules/Layout/assets/css/kabataan-bootstrap.css',
+        'app/Modules/Layout/assets/css/kabataan-responsive.css',
         'app/Modules/Layout/assets/css/kabataan-header.css',
         'app/Modules/Layout/assets/css/kabataan-logout.css',
         'app/Modules/Layout/assets/js/kabataan-header.js',
@@ -18,6 +20,7 @@
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
         'app/Modules/Profile/assets/js/profile.js',
+        'app/Modules/Profile/assets/js/profile-participation.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
@@ -26,11 +29,6 @@
         'app/Modules/Shared/assets/js/loading.js',
     ])
     <script>
-        function viewProgramDetails(programId) {
-            console.log('Viewing program:', programId);
-            alert('Program details will be available when the backend is implemented!');
-        }
-
         function openScheduleModal() {
             const modal = document.getElementById('scheduleModal');
             if (modal) {
@@ -175,7 +173,7 @@
                                         </svg>
                                     </div>
                                     <div class="stat-info">
-                                        <p class="stat-label">Evaluation</p>
+                                        <p class="stat-label">Pending Review</p>
                                         <p class="stat-value">{{ $evaluationPrograms ?? 0 }}</p>
                                     </div>
                                 </div>
@@ -271,13 +269,6 @@
                                     </svg>
                                     Approved
                                 </button>
-                                <button class="tab-btn" data-filter="evaluation">
-                                    <svg viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Evaluation
-                                </button>
                                 <button class="tab-btn" data-filter="completed">
                                     <svg viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -300,11 +291,18 @@
                                     <div class="program-details">
                                         <h3>{{ $program->name }}</h3>
                                         <p class="program-category">{{ $program->category ?? 'General Program' }}</p>
+                                        @if(!empty($program->answers_preview))
+                                            <p class="program-answer-preview">{{ $program->answers_preview }}</p>
+                                        @endif
                                         <p class="program-date">
                                             <svg viewBox="0 0 20 20" fill="currentColor">
                                                 <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
                                             </svg>
-                                            Applied: {{ \Carbon\Carbon::parse($program->created_at)->format('M d, Y') }}
+                                            @if(($program->source ?? '') === 'survey')
+                                                Responded: {{ \Carbon\Carbon::parse($program->created_at)->format('M d, Y') }}
+                                            @else
+                                                Applied: {{ \Carbon\Carbon::parse($program->created_at)->format('M d, Y') }}
+                                            @endif
                                         </p>
                                         <span class="status-badge {{ $program->status }}">
                                             @if($program->status === 'pending')
@@ -336,7 +334,7 @@
                                             {{ ucfirst($program->status) }}
                                         </span>
                                     </div>
-                                    <button class="view-details-btn-small" onclick="viewProgramDetails({{ $program->id }})">
+                                    <button type="button" class="view-details-btn-small" onclick="viewProgramDetails(@json($program->id))">
                                         <svg viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
                                         </svg>
@@ -428,18 +426,8 @@
                         'General Program'       => ['bg' => '#e0f2fe', 'text' => '#0450a8', 'dot' => '#0450a8'],
                     ];
 
-                    // Build program date map for JS
-                    $programDateMap = [];
-                    foreach ($programs ?? [] as $program) {
-                        $programDate = \Carbon\Carbon::parse($program->created_at)->addDays(7);
-                        $key = $programDate->format('Y-m-d');
-                        if (!isset($programDateMap[$key])) $programDateMap[$key] = [];
-                        $programDateMap[$key][] = [
-                            'name'     => $program->name,
-                            'category' => $program->category ?? 'General Program',
-                            'status'   => $program->status,
-                        ];
-                    }
+                    // Build program date map for JS from real calendar events
+                    $programDateMap = $calendarEvents ?? [];
                 @endphp
 
                 {{-- Legend --}}
@@ -480,6 +468,23 @@
                     </h3>
                     <div id="upcomingList"></div>
                 </div>
+
+                @if(!empty($abyipPrograms))
+                <div class="upcoming-programs-section abyip-programs-section">
+                    <h3 class="upcoming-title">Youth Programs (ABYIP)</h3>
+                    <div class="abyip-programs-grid">
+                        @foreach($abyipPrograms as $abyipProgram)
+                            <div class="abyip-program-chip">
+                                <span class="abyip-program-emoji">{{ $abyipProgram['emoji'] ?? '📋' }}</span>
+                                <div>
+                                    <p class="abyip-program-name">{{ $abyipProgram['title'] ?? 'Program' }}</p>
+                                    <p class="abyip-program-meta">{{ $abyipProgram['short_label'] ?? 'Youth Program' }}</p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
 
                 {{-- Floating Popover --}}
                 <div id="calPopover" class="cal-popover" style="display:none;"></div>
@@ -1064,264 +1069,10 @@
     </style>
 
     <script>
-    // Program details data
-    const programsData = {
-        1: {
-            name: 'SK Scholarship Program',
-            category: 'Education',
-            status: 'pending',
-            committee: 'Committee on Education and Training',
-            participants: '50 Students',
-            startDate: 'March 10, 2026',
-            endDate: 'December 15, 2026',
-            venue: 'Barangay Hall Conference Room',
-            description: 'Education Assistance Program for deserving youth. This scholarship program provides financial support for tuition fees, school supplies, and other educational expenses. Priority is given to honor students and those from low-income families.',
-            terms: [
-                'Must be a resident of Santa Cruz, Laguna aged 15-30',
-                'Must be currently enrolled or planning to enroll in college',
-                'Must maintain a general weighted average of 85% or higher',
-                'Must submit complete documentary requirements',
-                'Must attend orientation and scholarship briefing',
-                'Willing to render community service hours'
-            ]
-        },
-        2: {
-            name: 'Youth Leadership Training',
-            category: 'Leadership Development',
-            status: 'approved',
-            committee: 'Committee on Youth Development',
-            participants: '40 Youth Leaders',
-            startDate: 'February 15, 2026',
-            endDate: 'May 30, 2026',
-            venue: 'Municipal Youth Development Office',
-            description: 'Develop leadership skills for SK youth through comprehensive training modules covering public speaking, project management, team building, and community organizing. Participants will receive certification upon completion.',
-            terms: [
-                'Must be a resident of Santa Cruz, Laguna aged 15-30',
-                'Must attend all training sessions and workshops',
-                'Complete all assigned projects and assessments',
-                'Participate actively in group activities',
-                'Apply learned skills in community service projects',
-                'Maintain good standing throughout the program'
-            ]
-        },
-        3: {
-            name: 'Community Service Program',
-            category: 'Community Development',
-            status: 'evaluation',
-            committee: 'Committee on Community Affairs',
-            participants: '60 Volunteers',
-            startDate: 'January 20, 2026',
-            endDate: 'April 30, 2026',
-            venue: 'Various Community Sites',
-            description: 'Volunteer program for community improvement focusing on environmental cleanup, feeding programs, and assistance to vulnerable sectors. Participants will gain hands-on experience in community development work.',
-            terms: [
-                'Must be a resident of Santa Cruz, Laguna aged 15-30',
-                'Must commit to minimum 40 hours of volunteer work',
-                'Must attend orientation and safety briefing',
-                'Follow all safety protocols and guidelines',
-                'Maintain professional conduct during activities',
-                'Submit activity reports and documentation'
-            ]
-        },
-        4: {
-            name: 'Sports Development Program',
-            category: 'Sports & Recreation',
-            status: 'completed',
-            committee: 'Committee on Sports and Recreation',
-            participants: '80 Youth Athletes',
-            startDate: 'December 5, 2025',
-            endDate: 'March 15, 2026',
-            venue: 'Barangay Sports Complex',
-            description: 'Sports training and development for youth athletes featuring basketball, volleyball, and athletics. Professional coaches provide training and participants compete in inter-barangay tournaments.',
-            terms: [
-                'Must be a resident of Santa Cruz, Laguna aged 15-30',
-                'Must be physically fit and provide medical clearance',
-                'Must attend all training sessions',
-                'Maintain good sportsmanship and discipline',
-                'Commit to represent barangay in competitions',
-                'Follow all safety protocols'
-            ]
-        }
-    };
+    window.__participationDetails = @json($participationDetails ?? []);
+    </script>
 
-    function viewProgramDetails(programId) {
-        const program = programsData[programId];
-        if (!program) {
-            alert('Program details not found!');
-            return;
-        }
-
-        // Update modal title
-        document.getElementById('programModalTitle').textContent = program.category + ' Program';
-
-        // Get status colors
-        const statusColors = {
-            pending: { bg: '#fff7ed', text: '#c2410c', label: 'Pending Review' },
-            approved: { bg: '#eff6ff', text: '#1d4ed8', label: 'Approved' },
-            evaluation: { bg: '#fef3c7', text: '#b45309', label: 'Under Evaluation' },
-            completed: { bg: '#f0fdf4', text: '#15803d', label: 'Completed' }
-        };
-
-        const categoryColors = {
-            'Education': '#3b82f6',
-            'Leadership Development': '#8b5cf6',
-            'Community Development': '#22c55e',
-            'Sports & Recreation': '#0ea5e9'
-        };
-
-        const statusColor = statusColors[program.status] || statusColors.pending;
-        const headerColor = categoryColors[program.category] || '#0450a8';
-
-        // Build terms list
-        let termsHtml = '';
-        program.terms.forEach(term => {
-            termsHtml += `<li>${term}</li>`;
-        });
-
-        // Build modal content
-        const content = `
-            <div class="program-card-header" style="background: linear-gradient(135deg, ${headerColor} 0%, ${headerColor}dd 100%);">
-                <div class="program-title-row">
-                    <div>
-                        <span class="program-category-tag">${getCategoryIcon(program.category)} ${program.category}</span>
-                        <h3 class="program-card-title">${program.name}</h3>
-                    </div>
-                    <span class="program-status-badge" style="background: ${statusColor.bg}; color: ${statusColor.text};">
-                        <span class="status-dot" style="background: ${statusColor.text};"></span>
-                        ${statusColor.label}
-                    </span>
-                </div>
-            </div>
-            <div class="program-details-grid">
-                <div class="detail-card">
-                    <div class="detail-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-                    </div>
-                    <div class="detail-content">
-                        <span class="detail-label">Committee Handled By</span>
-                        <span class="detail-value">${program.committee}</span>
-                    </div>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="detail-content">
-                        <span class="detail-label">Program Status</span>
-                        <span class="detail-value">${statusColor.label}</span>
-                    </div>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-                    </div>
-                    <div class="detail-content">
-                        <span class="detail-label">Participant Quantity</span>
-                        <span class="detail-value">${program.participants}</span>
-                    </div>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="detail-content">
-                        <span class="detail-label">Starting Date</span>
-                        <span class="detail-value">${program.startDate}</span>
-                    </div>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="detail-content">
-                        <span class="detail-label">End Date</span>
-                        <span class="detail-value">${program.endDate}</span>
-                    </div>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-icon" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div class="detail-content">
-                        <span class="detail-label">Venue</span>
-                        <span class="detail-value">${program.venue}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="program-description-section">
-                <h4 class="section-heading">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-                    Description
-                </h4>
-                <p class="description-text">${program.description}</p>
-            </div>
-            <div class="terms-section">
-                <button class="terms-toggle" onclick="toggleProgramTerms(event)" id="termsToggleProgram" type="button">
-                    <div class="terms-toggle-header">
-                        <h4 class="section-heading" style="margin: 0;">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
-                            Terms & Conditions
-                        </h4>
-                        <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                    </div>
-                </button>
-                <div class="terms-content" id="termsContentProgram">
-                    <ul class="terms-list">
-                        ${termsHtml}
-                    </ul>
-                </div>
-            </div>
-        `;
-
-        document.getElementById('programDetailsContent').innerHTML = content;
-        document.getElementById('programDetailsModal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-
-    function getCategoryIcon(category) {
-        const icons = {
-            'Education': '📚',
-            'Leadership Development': '👥',
-            'Community Development': '🏘️',
-            'Sports & Recreation': '⚽'
-        };
-        return icons[category] || '📋';
-    }
-
-    function closeProgramDetailsModal() {
-        document.getElementById('programDetailsModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-
-    function toggleProgramTerms(event) {
-        event.stopPropagation();
-        const content = document.getElementById('termsContentProgram');
-        const toggle = document.getElementById('termsToggleProgram');
-        const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
-        
-        if (isExpanded) {
-            content.style.maxHeight = '0';
-            toggle.classList.remove('active');
-        } else {
-            content.style.maxHeight = content.scrollHeight + 'px';
-            toggle.classList.add('active');
-        }
-    }
-
-    // Close modal when clicking outside
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal-overlay')) {
-            closeProgramDetailsModal();
-        }
-    });
-
-    // Close modal on ESC key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeProgramDetailsModal();
-        }
-    });
-
+    <script>
     window.addEventListener('unload', function () {});
 
     function resetKkPreviewModalState() {

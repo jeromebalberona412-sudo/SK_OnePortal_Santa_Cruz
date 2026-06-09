@@ -92,7 +92,7 @@ class KabataanProgramService
 
         $abyipPrograms = [];
         if ($document !== null) {
-            $abyipPrograms = Abyip::query()
+            $programModels = Abyip::query()
                 ->where('document_id', $document->id)
                 ->where(function ($query) {
                     $query->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
@@ -101,8 +101,19 @@ class KabataanProgramService
                 ->with(['children' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')])
                 ->orderBy('sort_order')
                 ->orderBy('id')
-                ->get()
-                ->map(fn (Abyip $program) => $this->formatAbyipProgram($program, $user))
+                ->get();
+
+            $surveyMap = $this->surveyService->summarizeOpenSurveysForPrograms(
+                $user,
+                $programModels->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            );
+
+            $abyipPrograms = $programModels
+                ->map(fn (Abyip $program) => $this->formatAbyipProgram(
+                    $program,
+                    $user,
+                    $surveyMap[(int) $program->id] ?? null,
+                ))
                 ->values()
                 ->all();
         }
@@ -150,14 +161,14 @@ class KabataanProgramService
     /**
      * @return list<array<string, mixed>>
      */
-    public function listUserApplications(User $user): array
+    public function listUserApplications(User $user, bool $withAnswers = false): array
     {
         return ProgramApplication::query()
             ->with(['scheduleProgram'])
             ->where('kabataan_id', $user->id)
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn (ProgramApplication $app) => $this->formatUserApplication($app, false))
+            ->map(fn (ProgramApplication $app) => $this->formatUserApplication($app, $withAnswers, $withAnswers ? $user : null))
             ->values()
             ->all();
     }
@@ -343,7 +354,7 @@ class KabataanProgramService
     /**
      * @return array<string, mixed>
      */
-    private function formatAbyipProgram(Abyip $program, User $user): array
+    private function formatAbyipProgram(Abyip $program, User $user, ?array $survey = null): array
     {
         $letter = strtoupper(trim((string) ($program->program_letter ?? $program->code ?? '')));
         $meta = self::LETTER_META[$letter] ?? [
@@ -375,7 +386,9 @@ class KabataanProgramService
             ->where('program_type', trim((string) $program->program_name))
             ->count();
 
-        $survey = $this->surveyService->summarizeOpenSurveyForProgram($user, (int) $program->id);
+        if ($survey === null) {
+            $survey = $this->surveyService->summarizeOpenSurveyForProgram($user, (int) $program->id);
+        }
 
         if ($meta['type'] === 'education') {
             $activeCount = $scheduleCount;
