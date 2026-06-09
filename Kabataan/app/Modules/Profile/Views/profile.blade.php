@@ -82,13 +82,19 @@
                 </div>
                 <div class="profile-info-section">
                     <div class="profile-avatar-wrapper">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($fullName ?? $user->name) }}&size=150&background=667eea&color=fff" alt="Profile" class="profile-avatar" id="profileAvatar">
-                        <button class="change-photo-btn" id="changePhotoBtn" type="button">
+                        <img src="{{ $profileImageUrl }}" alt="Profile" class="profile-avatar" id="profileAvatar">
+                        <button
+                            class="change-photo-btn{{ $canChangeProfileImage ? '' : ' is-disabled' }}"
+                            id="changePhotoBtn"
+                            type="button"
+                            title="{{ $canChangeProfileImage ? 'Change profile picture' : 'Profile picture update locked' }}"
+                            @if(!$canChangeProfileImage) disabled @endif
+                        >
                             <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
                             </svg>
                         </button>
-                        <input type="file" id="photoUpload" accept="image/*" style="display: none;">
+                        <input type="file" id="photoUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;" @if(!$canChangeProfileImage) disabled @endif>
                     </div>
                     <div class="profile-header-info">
                         <h1 class="profile-name">{{ $fullName ?? strtoupper($user->name) }}</h1>
@@ -203,6 +209,55 @@
                             </h2>
                         </div>
                         <div class="card-body">
+                            <div
+                                id="profileImageUploadRoot"
+                                class="profile-image-settings"
+                                data-upload-url="{{ route('profile.upload-picture') }}"
+                                data-can-change="{{ $canChangeProfileImage ? '1' : '0' }}"
+                                data-next-change="{{ $profileImageNextChangeDisplay ?? '' }}"
+                            >
+                                <div class="profile-image-settings__header">
+                                    <div>
+                                        <h3>Current Profile Picture</h3>
+                                        <p>Your profile photo appears on your profile and header across Kabataan.</p>
+                                    </div>
+                                </div>
+
+                                <div class="profile-image-settings__preview">
+                                    <img src="{{ $profileImageUrl }}" alt="Current profile picture" id="profileImagePreview" class="profile-image-settings__avatar">
+                                </div>
+
+                                @if(!$canChangeProfileImage && $profileImageNextChangeDisplay)
+                                    <div class="profile-image-lock-notice" id="profileImageLockNotice">
+                                        Next profile picture update available on: <strong>{{ $profileImageNextChangeDisplay }}</strong>
+                                    </div>
+                                @else
+                                    <div class="profile-image-lock-notice is-hidden" id="profileImageLockNotice"></div>
+                                @endif
+
+                                <div class="profile-image-upload-zone{{ $canChangeProfileImage ? '' : ' is-disabled' }}" id="profileImageDropZone">
+                                    <input type="file" id="profileImageFileInput" accept="image/jpeg,image/jpg,image/png,image/webp" hidden @if(!$canChangeProfileImage) disabled @endif>
+                                    <div class="profile-image-upload-zone__icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <p class="profile-image-upload-zone__title">Upload New Profile Picture</p>
+                                    <p class="profile-image-upload-zone__hint">Drag and drop an image here, or click to browse</p>
+                                    <p class="profile-image-upload-zone__meta">JPG, JPEG, PNG, WEBP up to 10MB</p>
+                                    <button type="button" class="btn-setting-action profile-image-upload-btn" id="profileImageBrowseBtn" @if(!$canChangeProfileImage) disabled @endif>
+                                        Choose Image
+                                    </button>
+                                </div>
+
+                                <div class="profile-image-progress is-hidden" id="profileImageProgress">
+                                    <div class="profile-image-progress__bar"><span id="profileImageProgressFill"></span></div>
+                                    <p id="profileImageProgressText">Uploading profile picture...</p>
+                                </div>
+
+                                <p class="profile-image-feedback is-hidden" id="profileImageFeedback" role="alert"></p>
+                            </div>
+
+                            <div class="setting-divider"></div>
+
                             <!-- Email Address Section -->
                             <div class="account-setting-item">
                                 <div class="setting-info">

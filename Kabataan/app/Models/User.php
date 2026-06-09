@@ -36,6 +36,10 @@ class User extends Authenticatable
         'password_change_token_expires_at',
         'password_change_last_sent_at',
         'must_change_password',
+        'profile_image_url',
+        'profile_image_public_id',
+        'profile_image_uploaded_at',
+        'profile_image_change_available_at',
     ];
 
     /**
@@ -64,6 +68,8 @@ class User extends Authenticatable
             'password_change_token_expires_at' => 'datetime',
             'password_change_last_sent_at' => 'datetime',
             'must_change_password' => 'boolean',
+            'profile_image_uploaded_at' => 'datetime',
+            'profile_image_change_available_at' => 'datetime',
         ];
     }
 }

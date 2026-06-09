@@ -2,7 +2,9 @@
     $headerUser = $user ?? auth()->user();
     $userName = $headerUser->name ?? 'Youth User';
     $userEmail = $headerUser->email ?? 'youth@skportal.com';
-    $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=667eea&color=fff';
+    $avatarUrl = $headerUser
+        ? app(\App\Modules\Profile\Services\ProfileImageService::class)->resolveDisplayUrl($headerUser)
+        : 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=667eea&color=fff';
     $showSearch = $showSearch ?? true;
     $pageBadge = $pageBadge ?? null;
 @endphp

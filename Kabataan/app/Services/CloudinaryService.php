@@ -143,6 +143,35 @@ class CloudinaryService
         return $url . $separator . 'cb=' . $token;
     }
 
+    /**
+     * @return array{public_id: string, url: string, version: int|null}
+     */
+    public function uploadProfileImage(UploadedFile $file, string $publicId): array
+    {
+        $this->ensureConfigured();
+
+        $preset = (string) config('services.cloudinary.profile_upload_preset', 'kabataan_profile_images');
+
+        $result = $this->cloudinary->uploadApi()->upload(
+            $file->getRealPath(),
+            [
+                'upload_preset' => $preset,
+                'public_id'     => $publicId,
+                'overwrite'     => true,
+                'invalidate'    => true,
+                'resource_type' => 'image',
+            ]
+        );
+
+        $version = isset($result['version']) ? (int) $result['version'] : null;
+
+        return [
+            'public_id' => $result['public_id'],
+            'url'       => $this->deliverUrl($result['public_id'], $version),
+            'version'   => $version,
+        ];
+    }
+
     private function ensureConfigured(): void
     {
         if (!$this->isConfigured()) {

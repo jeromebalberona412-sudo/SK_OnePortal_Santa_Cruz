@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Profile\Services\EmailChangeService;
 use App\Modules\Profile\Services\PasswordChangeService;
+use App\Modules\Profile\Services\ProfileImageService;
 use App\Modules\Profile\Services\ProfileParticipationService;
 use App\Modules\Profile\Services\ProfileService;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +24,7 @@ class ProfileController extends Controller
         private readonly EmailChangeService $emailChangeService,
         private readonly PasswordChangeService $passwordChangeService,
         private readonly ProfileParticipationService $participationService,
+        private readonly ProfileImageService $profileImageService,
     ) {}
 
     public function index(Request $request): View|RedirectResponse
@@ -34,14 +36,18 @@ class ProfileController extends Controller
         $user = Auth::user();
         $display = $this->profileService->getDisplayData($user);
         $participation = $this->participationService->getParticipationData($user);
+        $freshUser = $user->fresh();
 
         return view('profile::profile', [
-            'user' => $user,
+            'user' => $freshUser,
             'profile' => $display,
             'kabataanRegistration' => $display['registration'],
             'barangayName' => $display['barangayName'],
             'barangayLogoUrl' => $display['barangayLogoUrl'],
             'fullName' => $display['fullName'],
+            'profileImageUrl' => $this->profileImageService->resolveDisplayUrl($freshUser, $display['fullName']),
+            'canChangeProfileImage' => $this->profileImageService->canChangeProfileImage($freshUser),
+            'profileImageNextChangeDisplay' => $this->profileImageService->nextChangeDisplayDate($freshUser),
             'programs' => collect($participation['programs']),
             'totalPrograms' => $participation['summary']['total'],
             'approvedPrograms' => $participation['summary']['approved'],
@@ -380,31 +386,40 @@ class ProfileController extends Controller
 
     public function uploadProfilePicture(Request $request): JsonResponse
     {
-        if (! Auth::check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
         $request->validate([
-            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'profile_picture' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
         ]);
 
-        $user = Auth::user();
-
         try {
-            $file = $request->file('profile_picture');
-            $filename = 'profile_'.$user->id.'_'.time().'.'.$file->getClientOriginalExtension();
-            $path = $file->storeAs('profile-pictures', $filename, 'public');
-
-            session(['user_profile_picture' => '/storage/'.$path]);
+            $result = $this->profileImageService->upload($user, $request->file('profile_picture'));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Profile picture uploaded successfully',
-                'picture_url' => '/storage/'.$path,
+                'message' => 'Profile picture uploaded successfully.',
+                'picture_url' => $result['picture_url'],
+                'next_change_available_at' => $result['next_change_available_at'],
+                'next_change_display' => $result['next_change_display'],
+                'can_change' => $result['can_change'],
             ]);
-        } catch (\Exception $e) {
+        } catch (ValidationException $exception) {
+            $message = collect($exception->errors())->flatten()->first()
+                ?? 'Unable to upload profile picture.';
+
             return response()->json([
-                'error' => 'Failed to upload profile picture: '.$e->getMessage(),
+                'success' => false,
+                'message' => $message,
+                'errors' => $exception->errors(),
+            ], 422);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload profile picture. Please try again.',
             ], 500);
         }
     }
