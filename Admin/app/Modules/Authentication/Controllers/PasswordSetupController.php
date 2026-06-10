@@ -3,6 +3,7 @@
 namespace App\Modules\Authentication\Controllers;
 
 use App\Modules\Authentication\Rules\StrongPassword;
+use App\Modules\Authentication\Services\LoginEmailVerificationService;
 use App\Modules\Authentication\Services\PasswordSetupService;
 use App\Modules\Shared\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ class PasswordSetupController extends Controller
 {
     public function __construct(
         protected PasswordSetupService $passwordSetupService,
+        protected LoginEmailVerificationService $loginEmailVerificationService,
     ) {}
 
     public function show(Request $request)
@@ -41,7 +43,15 @@ class PasswordSetupController extends Controller
             'password' => ['required', 'string', 'confirmed', new StrongPassword],
         ]);
 
-        $this->passwordSetupService->completeSetup($request, $validated);
+        $user = $this->passwordSetupService->completeSetup($request, $validated);
+
+        if ($user->isAdmin()) {
+            $this->loginEmailVerificationService->initiate($user);
+
+            return redirect()
+                ->route('verification.notice')
+                ->with('status', 'verification-link-sent');
+        }
 
         return redirect()
             ->route('dashboard')

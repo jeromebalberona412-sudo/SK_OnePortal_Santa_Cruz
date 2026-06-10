@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Modules\Shared\Middleware\SecurityHeaders::class);
         $middleware->alias([
             'ensure.password.setup' => \App\Modules\Authentication\Middleware\EnsurePasswordSetup::class,
+            'ensure.email.verified' => \App\Modules\Authentication\Middleware\EnsureEmailVerified::class,
             'role' => \App\Modules\Shared\Middleware\EnsureRole::class,
         ]);
     })

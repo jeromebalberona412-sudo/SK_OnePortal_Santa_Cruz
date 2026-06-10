@@ -66,6 +66,12 @@
                         </div>
                     @endif
 
+                    @if (session('status') === 'email-verified')
+                        <div class="login-alert login-alert--success" role="alert">
+                            Email verified. Please sign in to continue.
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('login') }}" novalidate>
                         @csrf
 

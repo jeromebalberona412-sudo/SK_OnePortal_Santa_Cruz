@@ -5,6 +5,7 @@ namespace App\Modules\Authentication\Controllers;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Authentication\Rules\StrongPassword;
 use App\Modules\Authentication\Services\AuthenticationService;
+use App\Modules\Authentication\Services\LoginEmailVerificationService;
 use App\Modules\Authentication\Services\PasswordResetService;
 use App\Modules\Authentication\Services\PasswordSetupService;
 use App\Modules\Shared\Controllers\Controller;
@@ -19,6 +20,7 @@ class AuthController extends Controller
         protected AuthenticationService $authenticationService,
         protected PasswordSetupService $passwordSetupService,
         protected PasswordResetService $passwordResetService,
+        protected LoginEmailVerificationService $loginEmailVerificationService,
     ) {}
 
     public function showLogin()
@@ -66,6 +68,22 @@ class AuthController extends Controller
             return redirect()
                 ->route('setup-password')
                 ->with('status', 'password-setup-required');
+        }
+
+        if ($user->isAdmin()) {
+            $this->loginEmailVerificationService->initiate($user);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('verification.notice'),
+                    'message' => 'Please verify your email to continue.',
+                ]);
+            }
+
+            return redirect()
+                ->route('verification.notice')
+                ->with('status', 'verification-link-sent');
         }
 
         if ($request->expectsJson()) {
@@ -135,19 +153,4 @@ class AuthController extends Controller
             ->with('status', 'password-changed');
     }
 
-    public function showVerifyEmail()
-    {
-        return view('authentication::verify-email');
-    }
-
-    public function sendVerificationEmail(Request $request)
-    {
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard'));
-        }
-
-        $request->user()->sendEmailVerificationNotification();
-
-        return back()->with('status', 'verification-link-sent');
-    }
 }

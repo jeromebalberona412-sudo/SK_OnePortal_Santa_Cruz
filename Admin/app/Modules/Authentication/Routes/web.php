@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Modules\Authentication\Controllers\AuthController;
+use App\Modules\Authentication\Controllers\EmailVerificationController;
 use App\Modules\Authentication\Controllers\PasswordSetupController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +32,9 @@ Route::middleware('guest')->group(function () {
 
 });
 
+Route::get('/email/verify/{id}/{token}', [EmailVerificationController::class, 'verify'])
+    ->name('verification.verify');
+
 /*
 |--------------------------------------------------------------------------
 | Password Setup (guest with token or authenticated first-login)
@@ -56,5 +60,14 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/setup-password/resend', [PasswordSetupController::class, 'resend'])
         ->name('setup-password.resend');
+
+    Route::get('/verify-email', [EmailVerificationController::class, 'show'])
+        ->name('verification.notice');
+
+    Route::get('/verify-email/status', [EmailVerificationController::class, 'status'])
+        ->name('verification.status');
+
+    Route::post('/verify-email/resend', [EmailVerificationController::class, 'resend'])
+        ->name('verification.send');
 
 });
