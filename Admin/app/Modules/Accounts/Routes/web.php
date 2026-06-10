@@ -3,7 +3,7 @@
 use App\Modules\Accounts\Controllers\AdminAccountController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'ensure2fa', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'ensure.password.setup', 'role:admin'])->group(function () {
     Route::get('/manage-account', [AdminAccountController::class, 'indexFederation'])->name('accounts.manage');
 
     Route::get('/accounts/federation', [AdminAccountController::class, 'indexFederation'])->name('accounts.federation.index');

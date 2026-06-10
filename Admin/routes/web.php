@@ -8,6 +8,5 @@ Route::get('/', function () {
 });
 
 // Note: Module routes are loaded by their respective service providers:
-// - Authentication module: /login, /logout, /user/two-factor-*
+// - Authentication module: /login, /logout, /setup-password, /forgot-password
 // - Profile module: /profile (primary), /dashboard (backward compatibility)
-// - Fortify automatically registers: POST /login, GET & POST /two-factor-challenge

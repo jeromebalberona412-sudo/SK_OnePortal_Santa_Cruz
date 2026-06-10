@@ -13,7 +13,7 @@ class ArchiveManagementServiceProvider extends ServiceProvider
     {
         $this->loadViewsFrom(__DIR__ . '/../views', 'archive-management');
 
-        Route::middleware(['web', 'auth', 'ensure2fa', 'role:admin'])
+        Route::middleware(['web', 'auth', 'ensure.password.setup', 'role:admin'])
             ->group(__DIR__ . '/../routes/web.php');
     }
 }

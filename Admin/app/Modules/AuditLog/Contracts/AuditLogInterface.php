@@ -25,6 +25,16 @@ interface AuditLogInterface
     public function logLoginSuccess(User $user): void;
 
     /**
+     * Log first login requiring password setup.
+     */
+    public function logFirstLogin(User $user): void;
+
+    /**
+     * Log completed administrator password setup.
+     */
+    public function logPasswordSetup(User $user): void;
+
+    /**
      * Log failed login attempt.
      *
      * @param string $email

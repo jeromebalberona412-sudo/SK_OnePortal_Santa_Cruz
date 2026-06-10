@@ -17,17 +17,10 @@ class FortifyServiceProvider extends ServiceProvider
             return view('authentication::login');
         });
 
-        Fortify::twoFactorChallengeView(function () {
-            return view('authentication::two-factor-challenge');
-        });
-
         Fortify::authenticateUsing(function (Request $request) {
             $authService = app(AuthenticationService::class);
-            return $authService->authenticate($request);
-        });
 
-        Fortify::confirmPasswordView(function () {
-            return view('authentication::confirm-password');
+            return $authService->authenticate($request);
         });
     }
 }

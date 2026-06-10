@@ -4,5 +4,5 @@ use Illuminate\Support\Facades\Route;
 use App\Modules\Dashboard\Controllers\DashboardController;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'ensure2fa'])
+    ->middleware(['auth', 'ensure.password.setup'])
     ->name('dashboard');

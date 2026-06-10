@@ -2,6 +2,7 @@
 
 namespace App\Modules\Authentication\Services;
 
+use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Shared\Models\User;
 use App\Modules\Authentication\Models\LoginAttempt;
 use Carbon\Carbon;
@@ -11,7 +12,9 @@ use Throwable;
 class LoginSecurityService
 {
     const MAX_ATTEMPTS = 5;
+
     const LOCKOUT_DURATION = 15;
+
     const LOCKOUT_RESET_THRESHOLD = 3;
 
     public function checkAccountLockout(string $email, string $ip): ?Carbon
@@ -20,6 +23,7 @@ class LoginSecurityService
         if ($user && $user->lockout_until && $user->lockout_until->isFuture()) {
             return $user->lockout_until;
         }
+
         return null;
     }
 
@@ -40,7 +44,7 @@ class LoginSecurityService
         }
     }
 
-    public function evaluateLockout(?User $user, string $email, string $ip): bool
+    public function evaluateLockout(?User $user, string $email, string $ip, ?AuditLogInterface $auditService = null): bool
     {
         try {
             $emailAttempts = LoginAttempt::recentByEmail($email, self::LOCKOUT_DURATION)->count();
@@ -49,6 +53,7 @@ class LoginSecurityService
             Log::channel('security')->warning('Failed to evaluate lockout state', [
                 'email' => $email, 'ip_address' => $ip, 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
 
@@ -61,12 +66,15 @@ class LoginSecurityService
                 ]);
                 $this->logEmailEvent('account_locked', [
                     'to' => $email, 'subject' => 'Account Locked - Security Alert',
-                    'lockout_duration' => self::LOCKOUT_DURATION . ' minutes',
+                    'lockout_duration' => self::LOCKOUT_DURATION.' minutes',
                     'lockout_until' => $user->lockout_until,
                 ]);
+                $auditService?->logAccountLocked($user);
+
                 return true;
             }
         }
+
         return false;
     }
 

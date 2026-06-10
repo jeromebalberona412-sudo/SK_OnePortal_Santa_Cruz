@@ -12,12 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Laravel\Fortify\TwoFactorAuthenticatable;
-
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, SoftDeletes;
+
+    public const ROLE_SUPER_ADMIN = 'SUPER_ADMIN';
 
     public const ROLE_ADMIN = 'admin';
     public const ROLE_SK_FED = 'sk_fed';
@@ -103,13 +104,27 @@ class User extends Authenticatable
             return false;
         }
 
-        return in_array($this->role, $roles, true);
+        if (in_array($this->role, $roles, true)) {
+            return true;
+        }
+
+        if ($this->role === self::ROLE_SUPER_ADMIN && in_array(self::ROLE_ADMIN, $roles, true)) {
+            return true;
+        }
+
+        return false;
     }
 
     public function isAdmin(): bool
     {
         return $this->hasTableColumn('role')
-            && $this->role === self::ROLE_ADMIN;
+            && in_array($this->role, [self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN], true);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasTableColumn('role')
+            && $this->role === self::ROLE_SUPER_ADMIN;
     }
 
     /**
@@ -173,6 +188,42 @@ class User extends Authenticatable
         }
 
         return $this->lockout_count >= 3;
+    }
+
+    /**
+     * Persist must_change_password using a PostgreSQL-safe boolean write.
+     */
+    public function setMustChangePassword(bool $value): void
+    {
+        if (! $this->hasTableColumn('must_change_password')) {
+            return;
+        }
+
+        $storedValue = $this->booleanValueForDatabase($value);
+
+        static::query()
+            ->whereKey($this->getKey())
+            ->update(['must_change_password' => $storedValue]);
+
+        $this->setAttribute('must_change_password', $value);
+        $this->syncOriginalAttribute('must_change_password');
+    }
+
+    public function clearMustChangePassword(): void
+    {
+        $this->setMustChangePassword(false);
+    }
+
+    /**
+     * @return bool|\Illuminate\Contracts\Database\Query\Expression
+     */
+    protected function booleanValueForDatabase(bool $value): bool|\Illuminate\Database\Query\Expression
+    {
+        if (config('database.default') === 'pgsql') {
+            return DB::raw($value ? 'true' : 'false');
+        }
+
+        return $value;
     }
 
     /**

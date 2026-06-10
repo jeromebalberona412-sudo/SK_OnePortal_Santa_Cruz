@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use App\Modules\Authentication\Services\LoginSecurityService;
 use App\Modules\Authentication\Services\AuthenticationService;
+use App\Modules\Authentication\Services\PasswordSetupService;
+use App\Modules\Authentication\Services\PasswordResetService;
 
 class AuthenticationServiceProvider extends ServiceProvider
 {
@@ -13,6 +15,8 @@ class AuthenticationServiceProvider extends ServiceProvider
     {
         $this->app->singleton(LoginSecurityService::class);
         $this->app->singleton(AuthenticationService::class);
+        $this->app->singleton(PasswordSetupService::class);
+        $this->app->singleton(PasswordResetService::class);
     }
 
     public function boot(): void

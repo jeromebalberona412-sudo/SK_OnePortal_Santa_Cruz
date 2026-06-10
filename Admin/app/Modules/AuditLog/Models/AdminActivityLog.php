@@ -97,6 +97,8 @@ class AdminActivityLog extends Model
      */
     const EVENT_LOGIN_SUCCESS = 'login_success';
     const EVENT_LOGIN_FAILED = 'login_failed';
+    const EVENT_FIRST_LOGIN = 'first_login';
+    const EVENT_PASSWORD_SETUP = 'password_setup';
     const EVENT_ACCOUNT_LOCKED = 'account_locked';
     const EVENT_2FA_CHALLENGE_FAILED = 'two_factor_challenge_failed';
     const EVENT_2FA_CHALLENGE_PASSED = 'two_factor_challenge_passed';

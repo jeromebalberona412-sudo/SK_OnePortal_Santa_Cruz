@@ -66,6 +66,23 @@ class AuditLogService implements AuditLogInterface
     {
         $this->log(AdminActivityLog::EVENT_LOGIN_SUCCESS, $user, [
             'email' => $user->email,
+            'action' => 'login_success',
+        ]);
+    }
+
+    public function logFirstLogin(User $user): void
+    {
+        $this->log(AdminActivityLog::EVENT_FIRST_LOGIN, $user, [
+            'email' => $user->email,
+            'action' => 'first_login',
+        ]);
+    }
+
+    public function logPasswordSetup(User $user): void
+    {
+        $this->log(AdminActivityLog::EVENT_PASSWORD_SETUP, $user, [
+            'email' => $user->email,
+            'action' => 'password_setup',
         ]);
     }
 
@@ -79,6 +96,7 @@ class AuditLogService implements AuditLogInterface
     {
         $this->log(AdminActivityLog::EVENT_LOGIN_FAILED, null, [
             'email' => $email,
+            'action' => 'login_failed',
         ]);
     }
 
@@ -94,6 +112,7 @@ class AuditLogService implements AuditLogInterface
             'email' => $user->email,
             'lockout_count' => $user->lockout_count,
             'lockout_until' => $user->lockout_until?->toDateTimeString(),
+            'action' => 'account_locked',
         ]);
     }
 
@@ -160,6 +179,7 @@ class AuditLogService implements AuditLogInterface
     {
         $this->log(AdminActivityLog::EVENT_PASSWORD_CHANGED, $user, [
             'email' => $user->email,
+            'action' => 'password_changed',
         ]);
     }
 
@@ -173,6 +193,7 @@ class AuditLogService implements AuditLogInterface
     {
         $this->log(AdminActivityLog::EVENT_PASSWORD_RESET_REQUESTED, null, [
             'email' => $email,
+            'action' => 'password_reset_requested',
         ]);
     }
 

@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Modules\Profile\Controllers\ProfileController;
 
-Route::middleware(['auth', 'ensure2fa'])->group(function () {
+Route::middleware(['auth', 'ensure.password.setup'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])
         ->name('profile');
 

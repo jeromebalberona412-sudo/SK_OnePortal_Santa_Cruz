@@ -994,3 +994,32 @@ CREATE TABLE IF NOT EXISTS program_applications (
 
 CREATE UNIQUE INDEX IF NOT EXISTS program_applications_kabataan_program_unique
   ON program_applications (kabataan_id, program_id);
+
+-- ============================================================
+-- DEFAULT SYSTEM ADMINISTRATOR ACCOUNT
+-- ============================================================
+
+INSERT INTO public.users (
+    name,
+    email,
+    password,
+    role,
+    status,
+    must_change_password,
+    email_verified_at,
+    created_at,
+    updated_at
+)
+SELECT
+    'System Administrator',
+    'skoneportal@gmail.com',
+    '$2y$12$vurYtZcT/tlW4Sz0HyZgeOB9HBTDfllm6epcYO7EF8zvZsgO1o45a',
+    'SUPER_ADMIN',
+    'ACTIVE',
+    true,
+    NOW(),
+    NOW(),
+    NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM public.users WHERE email = 'skoneportal@gmail.com'
+);

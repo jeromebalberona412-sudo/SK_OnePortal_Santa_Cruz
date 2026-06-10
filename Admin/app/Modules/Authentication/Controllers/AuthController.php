@@ -2,197 +2,144 @@
 
 namespace App\Modules\Authentication\Controllers;
 
+use App\Modules\AuditLog\Contracts\AuditLogInterface;
+use App\Modules\Authentication\Rules\StrongPassword;
+use App\Modules\Authentication\Services\AuthenticationService;
+use App\Modules\Authentication\Services\PasswordResetService;
+use App\Modules\Authentication\Services\PasswordSetupService;
 use App\Modules\Shared\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    protected $auditService;
+    public function __construct(
+        protected AuditLogInterface $auditService,
+        protected AuthenticationService $authenticationService,
+        protected PasswordSetupService $passwordSetupService,
+        protected PasswordResetService $passwordResetService,
+    ) {}
 
-    public function __construct(AuditLogInterface $auditService)
-    {
-        $this->auditService = $auditService;
-    }
-
-    /**
-     * Show the login form
-     */
     public function showLogin()
     {
         return view('authentication::login');
     }
 
-    /**
-     * Handle login request
-     */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
-        $remember = $request->boolean('remember');
+        $user = $this->authenticationService->authenticate($request);
 
-        if (Auth::attempt($credentials, $remember)) {
-            $user = Auth::user();
-            
-            // Check if user has 2FA enabled
-            if ($user->two_factor_secret) {
-                // Store that user passed password check but needs 2FA
-                $request->session()->put([
-                    'login.id' => $user->id,
-                    'login.remember' => $remember,
-                    'login.time' => now(),
-                ]);
-                
-                // Logout temporarily until 2FA is verified
-                Auth::logout();
-                
-                // Handle AJAX request for 2FA
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => true,
-                        'redirect' => route('two-factor.login')
-                    ]);
-                }
-                
-                // Redirect to 2FA challenge
-                return redirect()->route('two-factor.login');
+        if ($user === null) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The provided credentials do not match our records.',
+                ], 422);
             }
-            
-            +
-            
-            // No 2FA, proceed with normal login
-            $request->session()->regenerate();
-            $this->auditService->logLoginSuccess($user);
-            $user->recordLogin($request->ip());
 
-            // Handle AJAX request for successful login
+            throw ValidationException::withMessages([
+                'email' => 'The provided credentials do not match our records.',
+            ]);
+        }
+
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        if ($user->must_change_password) {
+            $this->auditService->logFirstLogin($user);
+            $this->passwordSetupService->sendSetupLink($user);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'redirect' => route('dashboard'),
-                    'message' => 'Welcome back, ' . $user->name . '!'
+                    'redirect' => route('setup-password'),
+                    'message' => 'Please check your email to complete password setup.',
                 ]);
             }
 
-            return redirect()->intended(route('dashboard'))
-                ->with('success', 'Welcome back, ' . $user->name . '!');
+            return redirect()
+                ->route('setup-password')
+                ->with('status', 'password-setup-required');
         }
 
-        // Handle AJAX request for failed login
         if ($request->expectsJson()) {
             return response()->json([
-                'success' => false,
-                'message' => 'The provided credentials do not match our records.'
-            ], 422);
+                'success' => true,
+                'redirect' => route('dashboard'),
+                'message' => 'Welcome back, '.$user->name.'!',
+            ]);
         }
 
-        throw ValidationException::withMessages([
-            'email' => 'The provided credentials do not match our records.',
-        ]);
+        return redirect()
+            ->intended(route('dashboard'))
+            ->with('success', 'Welcome back, '.$user->name.'!');
     }
 
-    /**
-     * Handle logout
-     */
     public function logout(Request $request)
     {
         $user = $request->user();
         if ($user) {
             $this->auditService->logLogout($user);
         }
+
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/login')->with('message', 'You have been logged out successfully.');
     }
 
-    /**
-     * Show the forgot password form
-     */
     public function showForgotPassword()
     {
         return view('authentication::forgot-password');
     }
 
-    /**
-     * Send password reset link — redirects back with success status
-     */
     public function sendResetLink(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
-        ], [
-            'email.exists' => 'We cannot find a user with that email address.',
+            'email' => ['required', 'email'],
         ]);
 
-        // Send the actual Laravel password reset link email
-        \Illuminate\Support\Facades\Password::sendResetLink(
-            $request->only('email')
-        );
+        $this->passwordResetService->sendResetLink($request, $request->input('email'));
 
-        // Redirect back to the same page with a success status
         return back()
             ->with('status', 'reset-link-sent')
-            ->with('fp_email', $request->email);
+            ->with('fp_email', $request->input('email'));
     }
 
-    /**
-     * Show the OTP verification page — removed (no longer used)
-     */
-
-    /**
-     * Verify the 6-digit OTP — removed (no longer used)
-     */
-
-    /**
-     * Show the set new password page — removed (no longer used)
-     */
-
-    /**
-     * Set the new password after OTP verification — removed (no longer used)
-     */
-
-    /**
-     * Show the password reset form
-     */
     public function showResetPassword($token)
     {
-        // For now, just show a simple message (UI-only implementation)
-        return view('authentication::reset-password', ['token' => $token]);
+        return view('authentication::reset-password', [
+            'token' => $token,
+        ]);
     }
 
-    /**
-     * Handle password reset
-     */
     public function resetPassword(Request $request)
     {
-        $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|string|min:8|confirmed',
+        $validated = $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string', 'confirmed', new StrongPassword],
         ]);
 
-        // For now, just show a success message (UI-only implementation)
-        return redirect('/login')->with('status', 'Your password has been reset successfully.');
+        $this->passwordResetService->resetPassword($request, $validated);
+
+        return redirect()
+            ->route('dashboard')
+            ->with('success', 'Password successfully updated. Welcome to SK One Portal Administrator Dashboard.');
     }
 
-    /**
-     * Show the email verification notice
-     */
     public function showVerifyEmail()
     {
         return view('authentication::verify-email');
     }
 
-    /**
-     * Send email verification notification
-     */
     public function sendVerificationEmail(Request $request)
     {
         if ($request->user()->hasVerifiedEmail()) {

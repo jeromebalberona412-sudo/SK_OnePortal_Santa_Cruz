@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Modules\Shared\Middleware\ForceHttps::class);
         $middleware->append(\App\Modules\Shared\Middleware\SecurityHeaders::class);
         $middleware->alias([
-            'ensure2fa' => \App\Modules\Authentication\Middleware\EnsureTwoFactorEnabled::class,
+            'ensure.password.setup' => \App\Modules\Authentication\Middleware\EnsurePasswordSetup::class,
             'role' => \App\Modules\Shared\Middleware\EnsureRole::class,
         ]);
     })

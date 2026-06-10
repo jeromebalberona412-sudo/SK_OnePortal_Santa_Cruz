@@ -12,7 +12,6 @@
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/forgot-password.css',
-        'app/Modules/Authentication/assets/js/login.js',
         'app/Modules/Authentication/assets/js/forgot-password.js',
         'resources/js/theme.js',
     ])
@@ -26,7 +25,6 @@
 </head>
 <body class="login-page">
 
-    {{-- Loading overlay --}}
     <div id="signin-overlay" class="signin-overlay" aria-hidden="true" hidden>
         <div class="signin-overlay-inner">
             <div class="signin-spinner">
@@ -39,7 +37,6 @@
         </div>
     </div>
 
-    {{-- Theme toggle --}}
     <button data-theme-toggle class="theme-toggle-btn" aria-label="Switch to dark mode" title="Switch to dark mode">
         <span class="theme-icon-dark" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="currentColor" viewBox="0 0 16 16">
@@ -77,31 +74,28 @@
             <div class="login-form-container">
                 <div class="login-card-inner">
 
-                    @if (session('status'))
-                        {{-- ── Success state ── --}}
+                    @if (session('status') === 'reset-link-sent')
                         <div class="fp-success-wrap">
                             <p class="fp-success-title">Check Your Email</p>
                             <p class="fp-success-msg">
-                                We've sent a password reset link to<br>
-                                <strong>{{ session('fp_email') ?? 'your email address' }}</strong>.<br><br>
-                                Please check your inbox and click the link to reset your password.
+                                If the email address exists in our system, a password reset link has been sent.<br><br>
+                                Open the link in your email to set a new password. After that, you can sign in and access the admin dashboard.
                             </p>
 
-                            {{-- Resend box --}}
                             <div class="fp-resend-box">
                                 <div class="fp-timer-row" id="fpTimerRow">
                                     <span>Resend available in</span>
                                     <span class="fp-timer-badge" id="fpCountdown">1:00</span>
                                 </div>
 
+                                <form method="POST" action="{{ route('password.email') }}" id="fpResendForm" style="display:none;">
+                                    @csrf
+                                    <input type="hidden" name="email" value="{{ session('fp_email') }}">
+                                </form>
+
                                 <button type="button" class="fp-resend-btn" id="fpResendBtn">
                                     Resend Reset Link
                                 </button>
-
-                                <div class="fp-resend-sent" id="fpResendSent">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Reset link resent successfully.
-                                </div>
                             </div>
                         </div>
 
@@ -110,10 +104,9 @@
                         </div>
 
                     @else
-                        {{-- ── Default state: email form ── --}}
                         <div class="form-header">
                             <h2>Forgot Password?</h2>
-                            <p>Enter your registered email and we'll send you a reset link.</p>
+                            <p>Enter your registered admin email and we'll send you a reset link.</p>
                         </div>
 
                         @if ($errors->any())
@@ -141,125 +134,12 @@
                         <div class="form-footer">
                             <p>Remember your password? <a href="{{ route('login') }}">Back to Login</a></p>
                         </div>
-
                     @endif
 
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-    (function () {
-        // ── Email form: enable button when input has value ──
-        var btn     = document.getElementById('fpSubmitBtn');
-        var input   = document.getElementById('email');
-        var form    = document.getElementById('fpForm');
-        var overlay = document.getElementById('signin-overlay');
-        var cardInner = document.querySelector('.login-card-inner');
-
-        if (btn && input) {
-            function toggle() { btn.disabled = !input.value.trim(); }
-            toggle();
-            input.addEventListener('input', toggle);
-        }
-
-        if (form && overlay && cardInner) {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault(); // stop normal submit
-
-                var emailVal = input.value.trim();
-
-                // Show overlay
-                overlay.removeAttribute('hidden');
-                overlay.classList.add('is-visible');
-
-                // After 5 seconds: hide overlay, swap card to success state
-                setTimeout(function () {
-                    overlay.classList.remove('is-visible');
-                    overlay.setAttribute('hidden', '');
-
-                    cardInner.innerHTML =
-                        '<div class="fp-success-wrap">' +
-                            '<p class="fp-success-title">Check Your Email</p>' +
-                            '<p class="fp-success-msg">' +
-                                'We\'ve sent a password reset link to<br>' +
-                                '<strong>' + emailVal + '</strong>.<br><br>' +
-                                'Please check your inbox and click the link to reset your password.' +
-                            '</p>' +
-                            '<div class="fp-resend-box">' +
-                                '<div class="fp-timer-row" id="fpTimerRow">' +
-                                    '<span>Resend available in</span>' +
-                                    '<span class="fp-timer-badge" id="fpCountdown">1:00</span>' +
-                                '</div>' +
-                                '<button type="button" class="fp-resend-btn" id="fpResendBtn">Resend Reset Link</button>' +
-                                '<div class="fp-resend-sent" id="fpResendSent">' +
-                                    '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-                                    ' Reset link resent successfully.' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="form-footer"><p><a href="{{ route('login') }}">Back to Login</a></p></div>';
-
-                    // Start resend countdown
-                    startResend();
-
-                    // Now actually submit the form in the background
-                    form.submit();
-
-                }, 5000);
-            });
-        }
-
-        function startResend() {
-            var timerRow   = document.getElementById('fpTimerRow');
-            var countdown  = document.getElementById('fpCountdown');
-            var resendBtn  = document.getElementById('fpResendBtn');
-            var resendSent = document.getElementById('fpResendSent');
-
-            if (!timerRow || !countdown || !resendBtn) return;
-
-            var seconds = 60;
-            var tick;
-
-            function runTick() {
-                tick = setInterval(function () {
-                    seconds--;
-                    var m = Math.floor(seconds / 60);
-                    var s = seconds % 60;
-                    countdown.textContent = m + ':' + (s < 10 ? '0' : '') + s;
-                    if (seconds <= 10) countdown.classList.add('expiring');
-                    else countdown.classList.remove('expiring');
-                    if (seconds <= 0) {
-                        clearInterval(tick);
-                        timerRow.style.display = 'none';
-                        resendBtn.classList.add('visible');
-                    }
-                }, 1000);
-            }
-
-            runTick();
-
-            resendBtn.addEventListener('click', function () {
-                resendBtn.classList.remove('visible');
-                resendSent.classList.add('visible');
-                setTimeout(function () {
-                    resendSent.classList.remove('visible');
-                    seconds = 60;
-                    countdown.textContent = '1:00';
-                    countdown.classList.remove('expiring');
-                    timerRow.style.display = '';
-                    runTick();
-                }, 3000);
-            });
-        }
-
-        // ── If already on success state (server-rendered) ──
-        if (document.getElementById('fpTimerRow')) {
-            startResend();
-        }
-    })();
-    </script>
 
 </body>
 </html>

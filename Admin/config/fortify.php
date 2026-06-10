@@ -18,17 +18,11 @@ return [
     'features' => [
         // Registration disabled for admin-only application
         // Features::registration(),
-        // Password reset disabled (login-only requirement)
+        // Password reset handled by custom Authentication module
         // Features::resetPasswords(),
         // Email verification disabled
         // Features::emailVerification(),
-        // Password update disabled for now
         // Features::updateProfileInformation(),
         // Features::updatePasswords(),
-        // Two-Factor Authentication ENABLED
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => false,
-        ]),
     ],
 ];
