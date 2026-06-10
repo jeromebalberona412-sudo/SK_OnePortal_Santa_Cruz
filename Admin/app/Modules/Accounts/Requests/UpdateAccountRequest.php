@@ -21,6 +21,10 @@ class UpdateAccountRequest extends FormRequest
         if ($suffix === '' || $suffix === 'None') {
             $this->merge(['suffix' => null]);
         }
+
+        if ($this->filled('email')) {
+            $this->merge(['email' => strtolower(trim((string) $this->input('email')))]);
+        }
     }
 
     public function rules(): array
@@ -40,7 +44,12 @@ class UpdateAccountRequest extends FormRequest
             'date_of_birth' => [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'],
             'age' => ['nullable', 'integer', 'min:0', 'max:150'],
             'contact_number' => [$requiresDemographics ? 'required' : 'nullable', 'string', 'max:20'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($userId)->whereNull('deleted_at'),
+            ],
             'status' => ['required', Rule::in([
                 User::STATUS_ACTIVE,
                 User::STATUS_INACTIVE,
@@ -55,6 +64,18 @@ class UpdateAccountRequest extends FormRequest
             'term_start' => ['required', 'date'],
             'term_end' => ['required', 'date', 'after:term_start'],
             'term_status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'EXPIRED', 'REPLACED'])],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'email.unique' => 'This email is already taken.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
         ];
     }
 }

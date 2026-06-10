@@ -46,10 +46,6 @@ export default defineConfig({
                 'app/Modules/BarangayLogos/assets/css/barangay-logos.css',
                 'app/Modules/BarangayLogos/assets/js/barangay-logos.js',
 
-                // Manage Kabataan Module
-                'app/Modules/Manage_Kabataan/assets/css/manage_kabataan.css',
-                'app/Modules/Manage_Kabataan/assets/js/manage_kabataan.js',
-
                 // ── Archive Management Module (unified) ──────────────────────
                 // Deleted SK Federation & Officials (Consolidated)
                 'app/Modules/Archive_Management/assets/css/deleted-sk-federation.css',

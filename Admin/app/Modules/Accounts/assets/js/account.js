@@ -131,6 +131,11 @@ function setFormFieldValue(form, name, value) {
 }
 
 function showLoadingOverlay(message = 'Processing...') {
+    if (typeof window.showLoading === 'function') {
+        window.showLoading(message);
+        return;
+    }
+
     let overlay = document.getElementById('loadingOverlay');
     if (!overlay) {
         overlay = document.createElement('div');
@@ -146,6 +151,14 @@ function showLoadingOverlay(message = 'Processing...') {
 }
 
 function hideLoadingOverlay() {
+    if (typeof window.hideLoading === 'function') {
+        window.hideLoading();
+        if (!isAnyModalOpen()) {
+            unlockBodyScroll();
+        }
+        return;
+    }
+
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
         overlay.style.display = 'none';

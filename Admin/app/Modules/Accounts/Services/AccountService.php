@@ -10,6 +10,8 @@ use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -107,10 +109,29 @@ class AccountService
         });
 
         if ($shouldSendReset) {
-            $this->sendInitialResetLinkOrFail($user);
+            try {
+                $this->sendInitialResetLinkOrFail($user);
+            } catch (ValidationException $exception) {
+                $this->rollbackCreatedAccount($user);
+                throw $exception;
+            }
         }
 
         return $user;
+    }
+
+    private function rollbackCreatedAccount(User $user): void
+    {
+        DB::transaction(function () use ($user) {
+            $profile = $user->officialProfile;
+
+            if ($profile) {
+                $profile->terms()->delete();
+                $profile->delete();
+            }
+
+            $user->forceDelete();
+        });
     }
 
     public function updateAccount(User $account, array $data, User $admin): User
@@ -226,7 +247,7 @@ class AccountService
         return User::create([
             'tenant_id' => $admin->tenant_id,
             'name' => $fullName,
-            'email' => $data['email'],
+            'email' => strtolower(trim((string) $data['email'])),
             'password' => $password,
             'role' => User::ROLE_USER,
             'status' => $data['status'] ?? User::STATUS_PENDING_APPROVAL,
@@ -236,6 +257,8 @@ class AccountService
 
     private function sendInitialResetLink(User $user): void
     {
+        $user->refresh();
+
         $token = Password::createToken($user);
         [$label, $baseUrl] = $this->resolvePasswordSetupTarget($user);
 
@@ -243,7 +266,17 @@ class AccountService
             throw new \RuntimeException('Password setup email could not be sent because the target application URL is not configured.');
         }
 
-        $user->notify(new AccountResetPasswordNotification($token, $baseUrl, $label));
+        Notification::sendNow(
+            $user,
+            new AccountResetPasswordNotification($token, $baseUrl, $label)
+        );
+
+        Log::info('Password setup email sent.', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'role' => $user->role,
+            'target' => $baseUrl,
+        ]);
     }
 
     /**

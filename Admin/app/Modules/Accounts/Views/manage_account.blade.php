@@ -13,9 +13,19 @@
 
 @section('head')
     @vite(['app/Modules/Accounts/assets/css/account.css'])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 @endsection
 
 @section('content')
+<!-- Global loading overlay -->
+<div id="globalLoadingOverlay" aria-hidden="true">
+    <div class="gl-content">
+        <div class="gl-spinner"><div class="gl-spinner-circle"></div></div>
+        <p class="gl-message">Loading</p>
+        <p class="gl-sub">Please wait</p>
+    </div>
+</div>
+
 <!-- Include Header -->
 @include('layout::header')
 
@@ -256,5 +266,6 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Accounts/assets/js/account.js'])
 @endsection

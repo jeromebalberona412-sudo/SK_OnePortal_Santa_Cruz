@@ -4,10 +4,10 @@ namespace App\Modules\Dashboard\Services;
 
 use App\Modules\Accounts\Database\Seeders\BarangaySeeder;
 use App\Modules\Accounts\Models\Barangay;
-use App\Modules\Manage_Kabataan\Models\Kabataan;
 use App\Modules\Shared\Models\Tenant;
 use App\Modules\Shared\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DashboardService
@@ -46,7 +46,7 @@ class DashboardService
 
     private function getKabataanCount(int $tenantId): int
     {
-        if (! Schema::hasTable('kabataan')) {
+        if (! Schema::hasTable('kabataan_registrations')) {
             return 0;
         }
 
@@ -54,13 +54,13 @@ class DashboardService
             ->where('tenant_id', $tenantId)
             ->pluck('id');
 
-        $query = Kabataan::query();
+        $query = DB::table('kabataan_registrations');
 
         if ($barangayIds->isNotEmpty()) {
             $query->whereIn('barangay_id', $barangayIds);
         }
 
-        return $query->count();
+        return (int) $query->count();
     }
 
     /**

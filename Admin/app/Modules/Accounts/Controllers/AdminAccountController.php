@@ -212,6 +212,13 @@ class AdminAccountController extends Controller
                 'input' => $request->all(),
             ]);
 
+            if ($request->expectsJson()) {
+                return response([
+                    'success' => false,
+                    'message' => 'Failed to create account. Please try again.',
+                ], 500);
+            }
+
             return back()->with('error', 'Failed to create account. Please try again.');
         }
     }
