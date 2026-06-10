@@ -12,7 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
-        'app/Modules/Authentication/assets/css/forgot-password.css',
         'app/Modules/Profile/assets/css/profile-verify.css',
         'app/Modules/Profile/assets/js/change-password-verify.js',
         'resources/js/theme.js',
@@ -52,54 +51,56 @@
     <div class="login-container">
         <div class="logo-container">
             <div class="logo-glow-wrapper">
-                <img src="{{ asset('Images/image.png') }}" alt="OnePortal Logo" class="large-logo">
+                <img src="{{ asset('Images/image.png') }}" alt="SK OnePortal Admin Logo" class="large-logo">
             </div>
-            <h1 class="brand-title">OnePortal Admin</h1>
+            <h1 class="brand-title">SK OnePortal Admin</h1>
             <p class="brand-subtitle">Municipality of Santa Cruz, Laguna</p>
         </div>
 
         <div class="login-form-container login-form-container--verify">
             <div class="login-card-inner login-card-inner--verify" id="cpVerifySection"
                  data-status-url="{{ route('profile.change-password.verify.status', [], false) }}"
-                 data-email="{{ $user->email }}">
+                 data-email="{{ $user->email }}"
+                 data-resend-cooldown="{{ (int) $resendCooldown }}">
 
-                <div class="fp-success-wrap">
-                    <p class="fp-success-title" id="cpStatusTitle">Check Your Email</p>
-                    <p class="fp-success-msg" id="cpStatusSub">
+                <div class="form-header">
+                    <h2 id="cpStatusTitle">Check Your Email <span class="wave-emoji">✉️</span></h2>
+                    <p id="cpStatusSub">
                         A reset link was sent to <strong>{{ $user->email }}</strong>.
                         Open the email, click the link, then set your new password.
                     </p>
+                </div>
 
-                    <div class="cp-listening-badge" id="cpListeningBadge">
-                        <span class="cp-listening-dot"></span>
-                        Waiting for password change…
+                <div class="ev-listening-badge" id="cpListeningBadge">
+                    <span class="ev-listening-dot"></span>
+                    Waiting for password change…
+                </div>
+
+                @if ($errors->any())
+                    <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
+                @endif
+
+                @if (session('status'))
+                    <div class="login-alert login-alert--success" role="alert">{{ session('status') }}</div>
+                @endif
+
+                <div class="pv-status-pill" id="cpStatusBadge">Awaiting verification</div>
+
+                <div class="ev-resend-section">
+                    <div class="ev-timer-row" id="cpTimer" style="display:none;">
+                        <span>Resend available in</span>
+                        <span class="ev-timer-badge" id="cpTimerCount">1:00</span>
                     </div>
 
-                    @if ($errors->any())
-                        <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
-                    @endif
+                    <form action="{{ route('profile.change-password.resend') }}" method="POST" id="cpResendForm">
+                        @csrf
+                        <button type="submit" class="login-btn w-100 ev-resend-btn visible" id="cpResendBtn">Resend Reset Link</button>
+                    </form>
 
-                    <div class="cp-status-strip">
-                        <span class="cp-status-label">Status</span>
-                        <span class="ce-status-badge" id="cpStatusBadge">Awaiting verification</span>
-                    </div>
-
-                    <div class="fp-resend-box">
-                        <div class="fp-timer-row" id="cpTimer" @if($resendCooldown <= 0) style="display:none;" @endif>
-                            <span>Resend available in</span>
-                            <span class="fp-timer-badge" id="cpTimerCount">{{ $resendCooldown > 0 ? sprintf('%d:%02d', intdiv($resendCooldown, 60), $resendCooldown % 60) : '1:00' }}</span>
-                        </div>
-
-                        <form action="{{ route('profile.change-password.resend') }}" method="POST" id="cpResendForm">
-                            @csrf
-                            <button type="submit" class="fp-resend-btn" id="cpResendBtn">Resend Reset Link</button>
-                        </form>
-
-                        <form action="{{ route('profile.change-password.cancel') }}" method="POST" id="cpCancelForm">
-                            @csrf
-                            <button type="submit" class="fp-cancel-btn">Cancel Request</button>
-                        </form>
-                    </div>
+                    <form action="{{ route('profile.change-password.cancel') }}" method="POST" id="cpCancelForm">
+                        @csrf
+                        <button type="submit" class="pv-cancel-btn" id="cpCancelBtn">Cancel Request</button>
+                    </form>
                 </div>
 
                 <div class="form-footer">
@@ -108,8 +109,6 @@
             </div>
         </div>
     </div>
-
-    <script>window.cpResendCooldown = {{ (int) $resendCooldown }};</script>
 
 </body>
 </html>

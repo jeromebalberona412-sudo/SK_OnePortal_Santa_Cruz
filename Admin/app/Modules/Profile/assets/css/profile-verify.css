@@ -161,6 +161,74 @@
     text-underline-offset: 3px;
 }
 
+.profile-verify-page .form-footer a {
+    color: var(--op-blue, #1565c0);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: color 0.18s;
+}
+
+.profile-verify-page .form-footer a:hover {
+    color: var(--op-blue-dark, #083080);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.profile-verify-page .pv-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    margin: 0 auto 1.1rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #92400e;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1.5px solid rgba(245, 158, 11, 0.28);
+    border-radius: 999px;
+}
+
+.profile-verify-page .pv-status-pill.is-confirmed {
+    color: #166534;
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.28);
+}
+
+.profile-verify-page .pv-cancel-btn {
+    display: block;
+    width: 100%;
+    margin-top: 0.15rem;
+    padding: 0.8rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--op-gray-700, #374151);
+    background: var(--op-white, #fff);
+    border: 2px solid var(--op-gray-200, #e5e7eb);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.18s;
+}
+
+.profile-verify-page .pv-cancel-btn:hover {
+    color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+.profile-verify-page .pv-cancel-btn:active {
+    transform: translateY(1px);
+}
+
+.profile-verify-page .pv-cancel-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
 @media (max-width: 900px) {
     .profile-verify-page .login-form-container--verify {
         padding: 1.25rem 1rem 2rem !important;
