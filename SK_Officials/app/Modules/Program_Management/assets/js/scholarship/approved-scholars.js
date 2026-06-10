@@ -103,111 +103,88 @@ function slToggleModalMaximize(overlay, box, maxBtn, e) {
     if (overlay) overlay.classList.toggle('sl-overlay-maximized', isMax);
 }
 
-const SL_SCHOLARS = [
-    {
-        last_name: 'BAUTISTA', first_name: 'KRISTINE', middle_name: 'FLORES', suffix: '',
-        date_of_birth: '06/08/2005', gender: 'Female', age: 20,
-        contact_no: '09831234567', email: 'kristine.bautista@email.com',
-        address: '14 Quezon Blvd., Brgy. Calios, Santa Cruz, Laguna',
-        school_name: 'De La Salle University – Dasmariñas',
-        school_address: 'Brgy. Salitran, Dasmariñas, Cavite 4114',
-        year_level: '2nd Year',
-        program_strand: 'Bachelor of Science in Nursing (BSN)',
-        program_abbr: 'BSN',
-        purpose: 'Tuition Fees, Books / Equipments',
-        purpose_list: ['Tuition Fees', 'Books / Equipments'], purpose_others: '',
-        cor_certified: true, photo_id: true,
-        approved_at: 'Feb 10, 2025',
-        scholarship_year: '2025',
-        payment_status: 'Unclaimed'
-    },
-    {
-        last_name: 'DELA CRUZ', first_name: 'JOSE', middle_name: 'RAMOS', suffix: 'JR.',
-        date_of_birth: '11/20/2004', gender: 'Male', age: 21,
-        contact_no: '09721234567', email: 'jose.delacruz@email.com',
-        address: '88 Magsaysay St., Brgy. Calios, Santa Cruz, Laguna',
-        school_name: 'Laguna State Polytechnic University',
-        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
-        year_level: '3rd Year',
-        program_strand: 'Bachelor of Science in Information Technology (BSIT)',
-        program_abbr: 'BSIT',
-        purpose: 'Tuition Fees, Living Expenses',
-        purpose_list: ['Tuition Fees', 'Living Expenses'], purpose_others: '',
-        cor_certified: true, photo_id: true,
-        approved_at: 'Jan 25, 2025',
-        scholarship_year: '2026',
-        payment_status: 'Unclaimed'
-    },
-    {
-        last_name: 'LIM', first_name: 'ANGELA', middle_name: 'CRUZ', suffix: '',
-        date_of_birth: '04/22/2007', gender: 'Female', age: 18,
-        contact_no: '09051234567', email: 'angela.lim@email.com',
-        address: '5 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
-        school_name: 'Santa Cruz National High School',
-        school_address: 'Brgy. Poblacion, Santa Cruz, Laguna 4009',
-        year_level: 'Grade 12',
-        program_strand: 'Science, Technology, Engineering and Mathematics (STEM)',
-        program_abbr: 'STEM',
-        purpose: 'Books / Equipments',
-        purpose_list: ['Books / Equipments'], purpose_others: '',
-        cor_certified: false, photo_id: true,
-        approved_at: 'Mar 5, 2025',
-        scholarship_year: '2025',
-        payment_status: 'Unclaimed'
-    },
-    {
-        last_name: 'REYES', first_name: 'MARIA', middle_name: 'SANTOS', suffix: '',
-        date_of_birth: '03/14/2005', gender: 'Female', age: 20,
-        contact_no: '09171234567', email: 'maria.reyes@email.com',
-        address: '123 Sampaguita St., Brgy. Calios, Santa Cruz, Laguna',
-        school_name: 'Laguna State Polytechnic University',
-        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
-        year_level: '2nd Year',
-        program_strand: 'Bachelor of Secondary Education (BSED)',
-        program_abbr: 'BSED',
-        purpose: 'Tuition Fees, Books / Equipments',
-        purpose_list: ['Tuition Fees', 'Books / Equipments'], purpose_others: '',
-        cor_certified: true, photo_id: true,
-        approved_at: 'Jan 15, 2025',
-        scholarship_year: '2026',
-        payment_status: 'Claimed'
-    },
-    {
-        last_name: 'SANTOS', first_name: 'MARK', middle_name: 'VILLANUEVA', suffix: '',
-        date_of_birth: '09/15/2003', gender: 'Male', age: 22,
-        contact_no: '09941234567', email: 'mark.santos@email.com',
-        address: '22 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
-        school_name: 'University of the Philippines Los Baños',
-        school_address: 'Brgy. College, Los Baños, Laguna 4031',
-        year_level: '4th Year',
-        program_strand: 'Bachelor of Science in Computer Science (BSCS)',
-        program_abbr: 'BS Computer Science',
-        purpose: 'Tuition Fees, Living Expenses',
-        purpose_list: ['Tuition Fees', 'Living Expenses'], purpose_others: '',
-        cor_certified: true, photo_id: false,
-        approved_at: 'Feb 20, 2025',
-        scholarship_year: '2026',
-        payment_status: 'Claimed'
-    },
-];
+const PROGRAM_LETTER = 'A';
+let SL_SCHOLARS = [];
 
 let currentPage = 1;
 let perPage = 10;
 let activePaymentFilter = 'all';
 let filteredScholars = [];
 
-slEnsurePaymentStatuses();
-filteredScholars = [...SL_SCHOLARS];
+function slCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
 
-document.addEventListener('DOMContentLoaded', () => {
+async function slApiFetch(url, options = {}) {
+    const response = await fetch(url, {
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': slCsrfToken(),
+            ...(options.headers || {}),
+        },
+        ...options,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'Request failed.');
+    return data;
+}
+
+function mapApprovedScholar(app) {
+    const approvedAt = app.reviewed_at
+        ? new Date(app.reviewed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : (app.date_submitted || '-');
+    return {
+        id: app.id,
+        last_name: app.last_name,
+        first_name: app.first_name,
+        middle_name: app.middle_name,
+        suffix: app.suffix,
+        contact_no: app.contact_number,
+        email: app.email,
+        school_name: app.school_name,
+        year_level: app.year_level || app.grade_level,
+        program_strand: app.course,
+        purpose: app.purpose || '-',
+        approved_at: approvedAt,
+        payment_status: app.payment_status || 'Unclaimed',
+        sex: app.sex,
+        age: app.age,
+        barangay: app.barangay,
+    };
+}
+
+async function loadApprovedScholars() {
+    const data = await slApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}`);
+    SL_SCHOLARS = (data.data || [])
+        .filter((app) => app.status === 'approved')
+        .map(mapApprovedScholar);
+    slEnsurePaymentStatuses();
+    filteredScholars = [...SL_SCHOLARS];
     updateSummaryCards();
     renderScholarTable();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
     initializeExportButton();
     initializeModal();
     initializeFilters();
     initializePaymentFilterTabs();
     initializePagination();
     initializeEditModal();
+
+    (async () => {
+        try {
+            if (typeof window.showLoading === 'function') window.showLoading();
+            await loadApprovedScholars();
+        } catch (error) {
+            const tbody = document.getElementById('slTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="sl-empty">Unable to load approved scholars.</td></tr>';
+            alert(error.message || 'Failed to load approved scholars.');
+        } finally {
+            if (typeof window.hideLoading === 'function') window.hideLoading();
+        }
+    })();
 });
 
 function escapeSl(str) {
@@ -399,7 +376,7 @@ function closeRevokeModal() {
     slResetModalMaximize(revokeModal, revokeBox, revokeMaximize);
 }
 
-function confirmRevokeApproval() {
+async function confirmRevokeApproval() {
     const revokeIndexInput = document.getElementById('revokeScholarIndex');
     const revokeReasonInput = document.getElementById('revokeReason');
     const revokeOtherRadio = document.getElementById('slRevokeOtherRadio');
@@ -409,7 +386,6 @@ function confirmRevokeApproval() {
     const idx = parseInt(revokeIndexInput.value, 10);
     let reason = '';
 
-    // Get selected reason from radio buttons
     const selectedRadio = document.querySelector('input[name="revokeReason"]:checked');
     if (selectedRadio) {
         if (selectedRadio.value === 'other') {
@@ -429,26 +405,28 @@ function confirmRevokeApproval() {
     }
 
     const scholarToRevoke = filteredScholars[idx];
-    if (!scholarToRevoke) return;
+    if (!scholarToRevoke?.id) return;
 
-    // Find the scholar in the main SL_SCHOLARS array
-    const originalIndex = SL_SCHOLARS.indexOf(scholarToRevoke);
-    if (originalIndex === -1) return;
-
-    // Update the scholar's status to Rejected and add revocation reason
-    SL_SCHOLARS[originalIndex].status = 'Rejected';
-    SL_SCHOLARS[originalIndex].revocation_reason = reason;
-    SL_SCHOLARS[originalIndex].revoked_at = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-
-    // Save to localStorage
-    localStorage.setItem('sl_scholars', JSON.stringify(SL_SCHOLARS));
-
-    // Close modal and refresh table
-    closeRevokeModal();
-    applyFilters();
-
-    // Show success message
-    alert(`Scholar approval has been revoked. The record has been moved to Rejected Scholars.`);
+    try {
+        if (typeof window.showLoading === 'function') window.showLoading();
+        await slApiFetch(`/api/program-applications/${scholarToRevoke.id}/status?letter=${PROGRAM_LETTER}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                status: 'rejected',
+                rejection_reasons: [reason],
+                rejection_reason: reason,
+                letter: PROGRAM_LETTER,
+            }),
+        });
+        closeRevokeModal();
+        await loadApprovedScholars();
+        applyFilters();
+        alert('Scholar approval has been revoked. The record has been moved to Rejected Scholars.');
+    } catch (error) {
+        alert(error.message || 'Failed to revoke approval.');
+    } finally {
+        if (typeof window.hideLoading === 'function') window.hideLoading();
+    }
 }
 
 function exportToCsv(scholars) {

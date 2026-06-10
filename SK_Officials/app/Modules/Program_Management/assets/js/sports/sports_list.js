@@ -1,31 +1,105 @@
 // ── Sports List Page JavaScript ───────────────────────────────────────────
 
+const SPL_PROGRAM_LETTER = 'I';
+
 document.addEventListener('DOMContentLoaded', () => {
-    initSportsList();
+    (async () => {
+        try {
+            await initSportsList();
+        } catch (error) {
+            const tbody = document.getElementById('slTableBody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="9" class="spl-empty">Unable to load approved participants.</td></tr>';
+            }
+            alert(error.message || 'Failed to load approved participants.');
+        }
+    })();
 });
 
-function initSportsList() {
-    // Pull approved applications from localStorage (seeded by sports_requests.js)
-    // Fallback to sample data if nothing in storage yet
-    let allApplications = JSON.parse(localStorage.getItem('sports_applications') || '[]');
+function splCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
 
-    // If storage is empty, seed with sample approved data
-    if (allApplications.length === 0) {
-        allApplications = getSampleApprovedData();
-        localStorage.setItem('sports_applications', JSON.stringify(allApplications));
-    }
+async function splApiFetch(url, options = {}) {
+    const response = await fetch(url, {
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': splCsrfToken(),
+            ...(options.headers || {}),
+        },
+        ...options,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'Request failed.');
+    return data;
+}
 
-    // Only show Approved entries
-    let approvedList = allApplications.filter(a => a.status === 'Approved');
+function broadcastSportsEvent(type, applicationId) {
+    const payload = {
+        type,
+        applicationId: Number(applicationId),
+        at: Date.now(),
+    };
+    try {
+        sessionStorage.setItem('sports-app-event', JSON.stringify(payload));
+    } catch (_) { /* ignore */ }
+    window.dispatchEvent(new CustomEvent('sports-app-event', { detail: payload }));
+}
 
-    // If no approved yet, show all as sample approved for demo
-    if (approvedList.length === 0) {
-        approvedList = getSampleApprovedData();
-    }
+function listenSportsEvents(handler) {
+    window.addEventListener('storage', (event) => {
+        if (event.key !== 'sports-app-event' || !event.newValue) return;
+        try { handler(JSON.parse(event.newValue)); } catch (_) { /* ignore */ }
+    });
+    window.addEventListener('sports-app-event', (event) => {
+        if (event.detail) handler(event.detail);
+    });
+}
+
+function normalizePaymentStatus(value) {
+    const raw = String(value || '').toLowerCase();
+    if (raw === 'paid' || raw === 'claimed') return 'Paid';
+    return 'Unpaid';
+}
+
+function mapApprovedParticipant(app) {
+    const approvedAt = app.reviewed_at
+        ? new Date(app.reviewed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : (app.date_submitted || '—');
+
+    return {
+        id: app.id,
+        lastName: app.last_name || '',
+        firstName: app.first_name || '',
+        middleName: app.middle_name || '',
+        age: app.age,
+        contact: app.contact_number || '—',
+        email: app.email || '—',
+        sport: app.program_name || '—',
+        division: '—',
+        dateApplied: approvedAt,
+        paymentStatus: normalizePaymentStatus(app.payment_status),
+        status: 'Approved',
+        address: app.barangay || '—',
+        dateOfBirth: app.birthdate || '—',
+        raw: app,
+    };
+}
+
+async function reloadApprovedList() {
+    const data = await splApiFetch(`/api/program-applications?letter=${SPL_PROGRAM_LETTER}&status=approved`);
+    return (data.data || []).map(mapApprovedParticipant);
+}
+
+async function initSportsList() {
+    const tbody = document.getElementById('slTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="spl-empty">Loading participants…</td></tr>';
+
+    let approvedList = await reloadApprovedList();
 
     let filtered = [...approvedList];
 
-    const tbody         = document.getElementById('slTableBody');
     const searchInput   = document.getElementById('slSearchInput');
     const filterSport   = document.getElementById('slSportFilter');
     const filterPayment = document.getElementById('slPaymentFilter');
@@ -61,7 +135,7 @@ function initSportsList() {
             const name = formatName(a).toLowerCase();
             if (search && !name.includes(search) && !a.sport.toLowerCase().includes(search)) return false;
             if (sport && a.sport !== sport) return false;
-            if (payment && a.paymentStatus !== payment) return false;
+            if (payment && a.paymentStatus !== payment && !(payment === 'Not Paid' && a.paymentStatus === 'Unpaid')) return false;
             return true;
         });
 
@@ -101,6 +175,77 @@ function initSportsList() {
         if (maxBtn) { maxBtn.textContent = '□'; maxBtn.title = 'Maximize'; }
     }
 
+    // ── Edit Payment Modal ───────────────────────────────────────────────────
+    const editModal = document.getElementById('slEditModal');
+    const editBox = document.getElementById('slEditBox');
+    const editClose = document.getElementById('slEditClose');
+    const editCancel = document.getElementById('slEditCancel');
+    const editSave = document.getElementById('slEditSave');
+    const editMaximize = document.getElementById('slEditMaximize');
+    const editPaymentSelect = document.getElementById('slEditPaymentStatus');
+    const editParticipantId = document.getElementById('slEditParticipantId');
+    const editParticipantName = document.getElementById('slEditParticipantName');
+
+    function closeEditModal() {
+        if (editModal) editModal.style.display = 'none';
+        if (editBox) editBox.classList.remove('spl-modal-maximized');
+        if (editModal) editModal.classList.remove('spl-overlay-maximized');
+        if (editMaximize) { editMaximize.textContent = '□'; editMaximize.title = 'Maximize'; }
+    }
+
+    function openEditModal(participant) {
+        if (!participant || !editModal) return;
+        if (editParticipantId) editParticipantId.value = String(participant.id);
+        if (editParticipantName) editParticipantName.textContent = formatName(participant);
+        if (editPaymentSelect) editPaymentSelect.value = participant.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid';
+        editModal.style.display = 'flex';
+    }
+
+    if (editClose) editClose.addEventListener('click', closeEditModal);
+    if (editCancel) editCancel.addEventListener('click', closeEditModal);
+    if (editModal) editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+    if (editMaximize && editBox) {
+        editMaximize.addEventListener('click', () => {
+            editBox.classList.toggle('spl-modal-maximized');
+            const isMax = editBox.classList.contains('spl-modal-maximized');
+            editMaximize.textContent = isMax ? '⧉' : '□';
+            editMaximize.title = isMax ? 'Restore Down' : 'Maximize';
+            if (editModal) editModal.classList.toggle('spl-overlay-maximized', isMax);
+        });
+    }
+
+    if (editSave) {
+        editSave.addEventListener('click', async () => {
+            const id = Number(editParticipantId?.value);
+            const paymentStatus = editPaymentSelect?.value;
+            if (!id || !paymentStatus) return;
+
+            const defaultHtml = editSave.innerHTML;
+            editSave.disabled = true;
+            editSave.innerHTML = '<span class="schol-save-spinner"></span> Saving...';
+
+            try {
+                const result = await splApiFetch(`/api/program-applications/${id}/payment?letter=${SPL_PROGRAM_LETTER}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ payment_status: paymentStatus, letter: SPL_PROGRAM_LETTER }),
+                });
+                const updated = mapApprovedParticipant(result.data);
+                const idx = approvedList.findIndex((item) => Number(item.id) === id);
+                if (idx !== -1) approvedList[idx] = updated;
+                applyFilters();
+                updateStats(approvedList);
+                closeEditModal();
+                showToast('Payment status updated.');
+                broadcastSportsEvent('payment-updated', id);
+            } catch (error) {
+                showToast(error.message || 'Failed to update payment status.', 'error');
+            } finally {
+                editSave.disabled = false;
+                editSave.innerHTML = defaultHtml;
+            }
+        });
+    }
+
     // ── Delete Modal ─────────────────────────────────────────────────────────
     const deleteModal   = document.getElementById('slDeleteModal');
     const deleteName    = document.getElementById('slDeleteName');
@@ -125,22 +270,38 @@ function initSportsList() {
     if (deleteModal)  deleteModal.addEventListener('click', e => { if (e.target === deleteModal) closeDeleteModal(); });
 
     if (deleteConfirm) {
-        deleteConfirm.addEventListener('click', () => {
+        deleteConfirm.addEventListener('click', async () => {
             if (pendingDeleteIdx === null) return;
             const target = filtered[pendingDeleteIdx];
+            if (!target?.id) return;
 
-            // Remove from allApplications using ID
-            const targetId = target.id;
-            allApplications = allApplications.filter(a => a.id !== targetId);
-            localStorage.setItem('sports_applications', JSON.stringify(allApplications));
+            const defaultHtml = deleteConfirm.innerHTML;
+            deleteConfirm.disabled = true;
+            deleteConfirm.innerHTML = '<span class="schol-save-spinner"></span> Revoking...';
 
-            // Refresh lists
-            approvedList = allApplications.filter(a => a.status === 'Approved');
-            applyFilters();
-            updateStats(approvedList);
+            try {
+                await splApiFetch(`/api/program-applications/${target.id}/status?letter=${SPL_PROGRAM_LETTER}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        status: 'rejected',
+                        rejection_reasons: ['Revoked by SK Official'],
+                        rejection_reason: 'Revoked by SK Official',
+                        letter: SPL_PROGRAM_LETTER,
+                    }),
+                });
 
-            closeDeleteModal();
-            showToast('Participant revoked successfully.');
+                approvedList = approvedList.filter((item) => Number(item.id) !== Number(target.id));
+                applyFilters();
+                updateStats(approvedList);
+                closeDeleteModal();
+                showToast('Participant revoked and moved to Rejected Sports.');
+                broadcastSportsEvent('revoked', target.id);
+            } catch (error) {
+                showToast(error.message || 'Failed to revoke participant.', 'error');
+            } finally {
+                deleteConfirm.disabled = false;
+                deleteConfirm.innerHTML = defaultHtml;
+            }
         });
     }
 
@@ -201,9 +362,9 @@ function initSportsList() {
             const paymentStatus = a.paymentStatus || 'Not Paid';
             const paymentBadge = paymentStatus === 'Paid'
                 ? '<span class="spl-badge spl-badge-paid">PAID</span>'
-                : '<span class="spl-badge spl-badge-notpaid">NOT PAID</span>';
+                : '<span class="spl-badge spl-badge-notpaid">UNPAID</span>';
             return `
-            <tr>
+            <tr data-participant-id="${a.id}">
                 <td class="spl-td-name">${name}</td>
                 <td>${a.sport || '—'}</td>
                 <td>${a.division || '—'}</td>
@@ -212,9 +373,12 @@ function initSportsList() {
                 <td>${a.dateApplied || '—'}</td>
                 <td>${paymentBadge}</td>
                 <td><span class="spl-badge spl-badge-approved">APPROVED</span></td>
-                <td>
-                    <button class="spl-action-btn" data-action="view" data-idx="${globalIdx}">View</button>
-                    <button class="spl-action-btn spl-action-btn-delete" data-action="delete" data-idx="${globalIdx}">Revoke</button>
+                <td class="col-actions">
+                    <div class="prog-tbl-actions">
+                        <button type="button" class="prog-btn prog-btn-view" data-action="view" data-idx="${globalIdx}">View</button>
+                        <button type="button" class="prog-btn prog-btn-edit" data-action="edit" data-idx="${globalIdx}">Edit</button>
+                        <button type="button" class="prog-btn prog-btn-delete" data-action="delete" data-idx="${globalIdx}">Revoke</button>
+                    </div>
                 </td>
             </tr>`;
         }).join('');
@@ -228,6 +392,8 @@ function initSportsList() {
 
                 if (action === 'delete') {
                     openDeleteModal(idx);
+                } else if (action === 'edit') {
+                    openEditModal(filtered[idx]);
                 } else {
                     openViewModal(filtered[idx]);
                 }
@@ -343,7 +509,7 @@ function initSportsList() {
     // ── Update Stats ─────────────────────────────────────────────────────────
     function updateStats(list) {
         const total     = list.length;
-        const pending   = list.filter(a => !a.paymentStatus || a.paymentStatus === 'Not Paid').length;
+        const pending   = list.filter(a => !a.paymentStatus || a.paymentStatus === 'Unpaid' || a.paymentStatus === 'Not Paid').length;
         const confirmed = list.filter(a => a.paymentStatus === 'Paid').length;
         const cancelled = 0; // Cancelled handled separately if needed
 
@@ -387,7 +553,23 @@ function initSportsList() {
         return name.trim();
     }
 
-    // ── Toast ─────────────────────────────────────────────────────────────────
+    // ── Realtime sync (same tab + other tabs) ───────────────────────────────
+    listenSportsEvents((payload) => {
+        if (payload.type === 'approved') {
+            reloadApprovedList().then((items) => {
+                approvedList = items;
+                applyFilters();
+                updateStats(approvedList);
+            }).catch(() => {});
+            return;
+        }
+        if (payload.type === 'revoked') {
+            approvedList = approvedList.filter((item) => Number(item.id) !== Number(payload.applicationId));
+            applyFilters();
+            updateStats(approvedList);
+        }
+    });
+
     function showToast(msg, type) {
         // Reuse existing toast element on page or create one
         let toast = document.getElementById('slToast');

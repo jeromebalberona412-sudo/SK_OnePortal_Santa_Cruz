@@ -9,7 +9,6 @@ const KK_FIELD_LABELS = {
     first_name: 'First Name',
     middle_name: 'Middle Name',
     suffix: 'Suffix',
-    full_name: 'Full Name',
     birthday: 'Birthday',
     age: 'Age',
     sex: 'Sex',
@@ -168,16 +167,18 @@ function openModal(forEditId) {
 
     if (!modal) return;
 
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    modal.classList.remove('schol-modal-maximized');
-    if (modalBox) modalBox.classList.remove('schol-modal-maximized');
-    if (maximizeBtn) {
-        maximizeBtn.textContent = '□';
-        maximizeBtn.title = 'Maximize';
-    }
-
     if (!forEditId) {
+        const currentYear = new Date().getFullYear();
+        const hasProgramThisYear = schedulePrograms.some((program) => {
+            if (!program.start_date) return false;
+            return new Date(program.start_date).getFullYear() === currentYear;
+        });
+
+        if (hasProgramThisYear) {
+            showToast('A sports program already exists for this year. Edit the existing program instead.', 'error');
+            return;
+        }
+
         resetModalForm();
         if (modalTitle) {
             modalTitle.innerHTML = `
@@ -185,6 +186,15 @@ function openModal(forEditId) {
                 Create Sports Program
             `;
         }
+    }
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    modal.classList.remove('schol-modal-maximized');
+    if (modalBox) modalBox.classList.remove('schol-modal-maximized');
+    if (maximizeBtn) {
+        maximizeBtn.textContent = '□';
+        maximizeBtn.title = 'Maximize';
     }
 }
 
@@ -239,7 +249,7 @@ function renderFormsTable() {
                     <div class="prog-tbl-actions">
                         <button type="button" class="prog-btn prog-btn-view" data-form-view="${program.id}">View</button>
                         <button type="button" class="prog-btn prog-btn-edit" data-form-edit="${program.id}">Edit</button>
-                        <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${program.id}">Delete</button>
+                        <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${program.id}">Archive</button>
                     </div>
                 </td>
             </tr>
@@ -424,20 +434,20 @@ async function confirmDeleteProgram() {
     if (!pendingDeleteProgramId) return;
 
     const confirmBtn = document.getElementById('deleteProgramConfirm');
-    const defaultHtml = confirmBtn ? confirmBtn.innerHTML : 'Delete Program';
+    const defaultHtml = confirmBtn ? confirmBtn.innerHTML : 'Archive Program';
 
     if (confirmBtn) {
         confirmBtn.disabled = true;
-        confirmBtn.innerHTML = '<span class="schol-save-spinner"></span> Deleting...';
+        confirmBtn.innerHTML = '<span class="schol-save-spinner"></span> Archiving...';
     }
 
     try {
-        await apiFetch(`/api/schedule-programs/${pendingDeleteProgramId}`, { method: 'DELETE' });
+        await apiFetch(`/sports-programs/archive/${pendingDeleteProgramId}`, { method: 'POST' });
         closeDeleteProgramModal();
         await loadPrograms();
-        showToast('Program deleted successfully.', 'success');
+        showToast('Program moved to Archive. You can restore it within 30 days.', 'success');
     } catch (error) {
-        showToast(error.message || 'Failed to delete program.', 'error');
+        showToast(error.message || 'Failed to archive program.', 'error');
     } finally {
         if (confirmBtn) {
             confirmBtn.disabled = false;

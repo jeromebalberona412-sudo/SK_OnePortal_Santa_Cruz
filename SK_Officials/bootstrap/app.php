@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
         $schedule->command('announcements:purge-archived')->daily();
+        $schedule->command('sports-programs:purge-archived')->daily();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [

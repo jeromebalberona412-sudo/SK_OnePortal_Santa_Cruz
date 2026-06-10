@@ -224,10 +224,6 @@
                             <span>Suffix</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="full_name" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Full Name</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
                             <input type="checkbox" class="kk-profiling-field" value="birthday" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
                             <span>Birthday</span>
                         </label>

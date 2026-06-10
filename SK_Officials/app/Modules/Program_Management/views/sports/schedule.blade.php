@@ -24,7 +24,7 @@
 <div class="schol-page-container saf-page-wrap">
 
     @include('Program_Management::partials.program-page-top', [
-        'activeTab' => 'schedule',
+        'activeTab' => 'form',
         'pageTitle' => 'Sports Program Schedule',
         'pageSubtitle' => 'Create and schedule sports development programs for Kabataan members.',
         'programType' => 'sports',
@@ -103,7 +103,15 @@
                 </div>
             </div>
 
-            @include('Program_Management::partials.application-form-builder')
+            <div class="schol-schedule-card">
+                <h4 class="schol-schedule-title" style="margin-bottom:16px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Application Form Builder
+                </h4>
+                @include('GForm_Builder::partials.announcement-field')
+                @include('Program_Management::partials.kk-profiling-fields', ['programLabel' => 'sports program'])
+                @include('GForm_Builder::partials.custom-questions-builder', ['hint' => 'Add custom questions for sports applicants.'])
+            </div>
         </div>
         <div class="schol-modal-footer">
             <button type="button" class="schol-btn schol-btn-outline" id="btnCancelProgram">Cancel</button>
@@ -125,17 +133,17 @@
 <div class="schol-modal-overlay" id="deleteProgramModal" style="display:none;">
     <div class="schol-modal-box schol-modal-sm saf-delete-modal">
         <div class="schol-modal-header schol-modal-header-danger">
-            <h3>Delete Program</h3>
+            <h3>Archive Program</h3>
             <button type="button" class="schol-modal-close" id="deleteProgramClose">&times;</button>
         </div>
         <div class="schol-modal-body">
-            <p class="saf-delete-lead">Delete this program?</p>
-            <p class="saf-delete-detail">This will permanently remove the sports program and its schedule.</p>
+            <p class="saf-delete-lead">This sports program will be moved to Archive.</p>
+            <p class="saf-delete-detail">You can restore it within 30 days. After 30 days it will be permanently deleted.</p>
             <p class="saf-delete-name" id="deleteProgramName"></p>
         </div>
         <div class="schol-modal-footer">
             <button type="button" class="schol-btn schol-btn-outline" id="deleteProgramCancel">Cancel</button>
-            <button type="button" class="schol-btn schol-btn-danger" id="deleteProgramConfirm">Delete</button>
+            <button type="button" class="schol-btn schol-btn-danger" id="deleteProgramConfirm">Archive Program</button>
         </div>
     </div>
 </div>

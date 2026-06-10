@@ -52,9 +52,9 @@ export default defineConfig({
                 // Programs module assets
                 'app/Modules/Programs/assets/css/programs.css',
                 'app/Modules/Programs/assets/js/programs.js',
-                // Budget & Finance module assets
-                'app/Modules/BudgetFinance/assets/css/budget-finance.css',
-                'app/Modules/BudgetFinance/assets/js/budget-finance.js',
+                // Reports Management module assets
+                'app/Modules/Reports_Management/assets/css/reports-management.css',
+                'app/Modules/Reports_Management/assets/js/reports-management.js',
                 // Kabataan module assets
                 'app/Modules/Kabataan/assets/css/kabataan.css',
                 'app/Modules/Kabataan/assets/js/kabataan.js',
@@ -108,6 +108,8 @@ export default defineConfig({
                 'app/Modules/Program_Management/assets/js/sports/sports_requests.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_list.js',
                 'app/Modules/Program_Management/assets/js/sports/sports-schedule.js',
+                'app/Modules/Sports_Programs/assets/css/archived-sports-programs.css',
+                'app/Modules/Sports_Programs/assets/js/archived-sports-programs.js',
                 'app/Modules/Program_Management/assets/js/sports/sports-tabs.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_report.js',
                 // Shared Schedule Programs Assets

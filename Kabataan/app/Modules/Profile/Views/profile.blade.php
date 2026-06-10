@@ -770,14 +770,17 @@
     <!-- Program Details Modal -->
     <div id="programDetailsModal" class="program-modal" style="display: none;">
         <div class="modal-overlay"></div>
-        <div class="modal-container" style="max-width: 900px;">
+        <div class="modal-container" id="programDetailsModalBox" style="max-width: 900px;">
             <div class="modal-header">
                 <h2 id="programModalTitle">Program Details</h2>
-                <button class="modal-close" onclick="closeProgramDetailsModal()">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                    </svg>
-                </button>
+                <div class="modal-header-actions">
+                    <button type="button" class="modal-maximize-btn" id="programDetailsMaximize" title="Maximize">□</button>
+                    <button class="modal-close" onclick="closeProgramDetailsModal()">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             <div class="modal-body" style="padding: 32px; overflow-y: auto; max-height: calc(90vh - 80px); min-height: 400px;">
                 <div class="modern-program-card" id="programDetailsContent">
@@ -819,6 +822,86 @@
         overflow: hidden;
         animation: modalSlideIn 0.3s ease;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .program-modal.is-maximized .modal-container,
+    .program-modal .modal-container.is-maximized {
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    .program-modal .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .program-modal .modal-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .program-modal .modal-maximize-btn {
+        border: 1px solid #dadce0;
+        background: #fff;
+        color: #5f6368;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .participation-document-card {
+        display: flex;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #f8fafc;
+    }
+
+    .participation-document-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: #fee2e2;
+        color: #b91c1c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .participation-document-name {
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .participation-document-meta {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 4px;
+    }
+
+    .participation-document-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .participation-document-link {
+        color: #1a73e8;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
     }
     
     .modern-program-card {

@@ -151,14 +151,15 @@ class CloudinaryService
         $this->ensureConfigured();
 
         $preset = (string) config('services.cloudinary.profile_upload_preset', 'kabataan_profile_images');
+        $folder = (string) config('services.cloudinary.profile_folder', 'kabataan/profile-images');
 
         $result = $this->cloudinary->uploadApi()->upload(
             $file->getRealPath(),
             [
                 'upload_preset' => $preset,
+                'folder'        => $folder,
                 'public_id'     => $publicId,
-                'overwrite'     => true,
-                'invalidate'    => true,
+                'display_name'  => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
                 'resource_type' => 'image',
             ]
         );

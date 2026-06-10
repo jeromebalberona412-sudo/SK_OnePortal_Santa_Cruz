@@ -265,6 +265,40 @@
             </div>`;
     }
 
+    function isDocumentAnswer(answer) {
+        return answer && typeof answer === 'object' && !Array.isArray(answer)
+            && (answer.original_name || answer.preview_url || answer.download_url || answer.path);
+    }
+
+    function formatAnswerText(answer) {
+        if (answer === null || answer === undefined || answer === '') return '—';
+        if (isDocumentAnswer(answer)) return String(answer.original_name || 'Uploaded PDF');
+        if (Array.isArray(answer)) return answer.join(', ');
+        if (typeof answer === 'object') return answer.original_name ? String(answer.original_name) : '—';
+        return String(answer);
+    }
+
+    function renderDocumentCard(answer) {
+        const file = answer && typeof answer === 'object' ? answer : {};
+        const previewUrl = file.preview_url || file.download_url || '#';
+        const downloadUrl = file.download_url || previewUrl;
+        const fileName = file.original_name || 'Uploaded PDF';
+        const meta = [file.size_display, file.question_label].filter(Boolean).join(' • ');
+
+        return `
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
+                <div style="width:44px;height:44px;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">PDF</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:600;color:#111827;word-break:break-word;">${escapeHtml(fileName)}</div>
+                    ${meta ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${escapeHtml(meta)}</div>` : ''}
+                    <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+                        <a href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:#213F99;text-decoration:none;">Preview</a>
+                        <a href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:#213F99;text-decoration:none;">Download</a>
+                    </div>
+                </div>
+            </div>`;
+    }
+
     function renderFormAnswersSection(record, program) {
         const answers = resolveFormAnswers(record, program);
         const programName = program?.programName || 'Scholarship Application';
@@ -286,16 +320,19 @@
                     <p style="font-size:14px;margin:0;opacity:0.95;">Application Form Questions</p>
                 </div>
 
-                ${answers.map((item, idx) => `
+                ${answers.map((item, idx) => {
+                    const isFile = item.question_type === 'file' || isDocumentAnswer(item.answer);
+                    const answerHtml = isFile
+                        ? renderDocumentCard(item.answer)
+                        : `<div style="font-size:14px;color:#111827;line-height:1.6;padding:12px;background:#f9fafb;border-radius:6px;border-left:3px solid #673ab7;">${escapeHtml(formatAnswerText(item.answer))}</div>`;
+                    return `
                     <div style="background:white;border-radius:8px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                         <div style="font-size:15px;color:#202124;font-weight:500;margin-bottom:10px;">
                             ${idx + 1}. ${escapeHtml(item.question)}
                         </div>
-                        <div style="font-size:14px;color:#111827;line-height:1.6;padding:12px;background:#f9fafb;border-radius:6px;border-left:3px solid #673ab7;">
-                            ${escapeHtml(item.answer || '—')}
-                        </div>
-                    </div>
-                `).join('')}
+                        ${answerHtml}
+                    </div>`;
+                }).join('')}
             </div>`;
     }
 

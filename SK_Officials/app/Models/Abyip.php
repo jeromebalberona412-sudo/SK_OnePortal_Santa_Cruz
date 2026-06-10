@@ -21,6 +21,10 @@ class Abyip extends Model
 
     public const SOURCE_PDF = 'pdf';
 
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_APPROVED = 'approved';
+
     protected $table = 'abyip';
 
     protected $fillable = [
@@ -46,6 +50,11 @@ class Abyip extends Model
         'approved_by',
         'approved_position',
         'approved_by_user_id',
+        'status',
+        'prepared_by_name',
+        'prepared_by_position',
+        'approved_by_name',
+        'approved_by_position',
         'source_type',
         'document_html',
         'pdf_data',

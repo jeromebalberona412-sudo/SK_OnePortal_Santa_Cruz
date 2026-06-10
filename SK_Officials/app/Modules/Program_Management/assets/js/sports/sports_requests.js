@@ -3,6 +3,9 @@
  */
 document.addEventListener('DOMContentLoaded', () => {
     const PROGRAM_LETTER = 'I';
+    const ICON_MAX = '\u25A1';
+    const ICON_RESTORE = '\u29C9';
+
     const tbody = document.getElementById('sportsTableBody');
     const searchInput = document.getElementById('scholSearch');
     const statTotal = document.getElementById('statTotal');
@@ -11,19 +14,66 @@ document.addEventListener('DOMContentLoaded', () => {
     const statRejected = document.getElementById('statRejected');
     const viewModal = document.getElementById('viewModal');
     const viewModalBody = document.getElementById('viewModalBody');
+    const viewBox = document.getElementById('viewBox');
     const viewClose = document.getElementById('viewClose');
+    const viewMaximize = document.getElementById('viewMaximize');
     const btnApprove = document.getElementById('btnApprove');
     const btnReject = document.getElementById('btnReject');
     const rejectReasonModal = document.getElementById('rejectReasonModal');
     const rejectReasonClose = document.getElementById('rejectReasonClose');
     const rejectReasonCancel = document.getElementById('rejectReasonCancel');
     const rejectReasonConfirm = document.getElementById('rejectReasonConfirm');
+    const rejectOtherCheckbox = document.getElementById('rejectReasonOtherCheckbox');
+    const rejectOtherField = document.getElementById('rejectReasonOtherField');
     const rejectOtherReason = document.getElementById('rejectReasonOtherText');
     const sportsToast = document.getElementById('sportsToast');
     const sportsToastMsg = document.getElementById('sportsToastMsg');
 
     let applications = [];
+    let summary = { total: 0, pending: 0, approved: 0, rejected: 0 };
     let currentApplicationId = null;
+    let isReviewing = false;
+
+    function broadcastSportsEvent(type, applicationId) {
+        const payload = {
+            type,
+            applicationId: Number(applicationId),
+            at: Date.now(),
+        };
+        try {
+            sessionStorage.setItem('sports-app-event', JSON.stringify(payload));
+        } catch (_) { /* ignore */ }
+        window.dispatchEvent(new CustomEvent('sports-app-event', { detail: payload }));
+    }
+
+    function listenSportsEvents(handler) {
+        window.addEventListener('storage', (event) => {
+            if (event.key !== 'sports-app-event' || !event.newValue) return;
+            try { handler(JSON.parse(event.newValue)); } catch (_) { /* ignore */ }
+        });
+        window.addEventListener('sports-app-event', (event) => {
+            if (event.detail) handler(event.detail);
+        });
+    }
+
+    function bumpSummaryAfterReview(status) {
+        summary.pending = Math.max(0, (summary.pending ?? 0) - 1);
+        if (status === 'approved') summary.approved = (summary.approved ?? 0) + 1;
+        if (status === 'rejected') summary.rejected = (summary.rejected ?? 0) + 1;
+        renderStats(summary);
+    }
+
+    function removeApplicationFromTable(id) {
+        const row = tbody?.querySelector(`tr[data-app-id="${id}"]`);
+        if (row) {
+            row.style.transition = 'opacity 0.2s ease';
+            row.style.opacity = '0';
+        }
+        setTimeout(() => {
+            applications = applications.filter((app) => Number(app.id) !== Number(id));
+            renderTable();
+        }, row ? 180 : 0);
+    }
 
     function csrfToken() {
         return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -35,6 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    }
+
+    function setMaximizeButton(btn, isMax) {
+        if (!btn) return;
+        btn.textContent = isMax ? ICON_RESTORE : ICON_MAX;
+        btn.title = isMax ? 'Restore Down' : 'Maximize';
     }
 
     function showToast(message, type = 'success') {
@@ -59,6 +115,88 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.message || 'Request failed.');
         return data;
+    }
+
+    function normalizeDocuments(docs) {
+        if (!docs) return [];
+        if (Array.isArray(docs)) return docs;
+        if (typeof docs === 'object') return Object.values(docs);
+        return [];
+    }
+
+    function isDocumentAnswer(answer) {
+        return answer && typeof answer === 'object' && !Array.isArray(answer)
+            && (answer.original_name || answer.preview_url || answer.download_url || answer.path);
+    }
+
+    function formatAnswerText(answer) {
+        if (answer === null || answer === undefined || answer === '') return '—';
+        if (isDocumentAnswer(answer)) return String(answer.original_name || 'Uploaded PDF');
+        if (Array.isArray(answer)) return answer.join(', ');
+        if (typeof answer === 'object') return answer.original_name ? String(answer.original_name) : '—';
+        return String(answer);
+    }
+
+    function renderDocumentCard(answer) {
+        const file = answer && typeof answer === 'object' ? answer : {};
+        const previewUrl = file.preview_url || file.download_url || '#';
+        const downloadUrl = file.download_url || previewUrl;
+        const fileName = file.original_name || 'Uploaded PDF';
+        const meta = [file.size_display, file.question_label].filter(Boolean).join(' • ');
+
+        return `
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
+                <div style="width:44px;height:44px;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">PDF</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:600;color:#111827;word-break:break-word;">${escapeHtml(fileName)}</div>
+                    ${meta ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${escapeHtml(meta)}</div>` : ''}
+                    <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+                        <a href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:#213F99;text-decoration:none;">Preview</a>
+                        <a href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:#213F99;text-decoration:none;">Download</a>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function renderUploadedDocumentsSection(documents) {
+        const docs = normalizeDocuments(documents);
+        if (!docs.length) {
+            return '<span style="font-size:14px;color:#9ca3af;">No documents uploaded</span>';
+        }
+        return docs.map((doc) => renderDocumentCard(doc)).join('');
+    }
+
+    function renderFormAnswers(customAnswers) {
+        const answers = (customAnswers || []).map((item, index) => ({
+            question: item.question_label || item.label || `Question ${index + 1}`,
+            question_type: item.question_type || '',
+            answer: item.answer ?? '—',
+        }));
+
+        if (!answers.length) {
+            return '<p style="color:#94a3b8;">No custom answers submitted.</p>';
+        }
+
+        return answers.map((item, idx) => {
+            const isFile = item.question_type === 'file' || isDocumentAnswer(item.answer);
+            const answerHtml = isFile
+                ? renderDocumentCard(item.answer)
+                : `<div style="font-size:14px;color:#111827;line-height:1.6;padding:12px;background:#f9fafb;border-radius:6px;border-left:3px solid #213F99;">${escapeHtml(formatAnswerText(item.answer))}</div>`;
+            return `
+                <div style="margin-bottom:12px;padding:16px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
+                    <div style="font-weight:600;margin-bottom:8px;">${idx + 1}. ${escapeHtml(item.question)}</div>
+                    ${answerHtml}
+                </div>`;
+        }).join('');
+    }
+
+    function formatRequirementsCell(app) {
+        const labels = app.document_labels || [];
+        if (labels.length) {
+            return labels.map((label) => escapeHtml(label)).join(', ');
+        }
+        const count = app.documents_count ?? 0;
+        return count > 0 ? `${count} file(s)` : '0 file(s)';
     }
 
     function statusClass(status) {
@@ -90,20 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         tbody.innerHTML = rows.map((app) => `
-            <tr>
+            <tr data-app-id="${app.id}">
                 <td>${escapeHtml(app.full_name)}</td>
                 <td>${escapeHtml(app.program_name || '—')}</td>
                 <td>${escapeHtml(app.age ?? '—')}</td>
-                <td>${escapeHtml((app.required_documents?.length ?? 0) + ' file(s)')}</td>
+                <td>${formatRequirementsCell(app)}</td>
                 <td>${escapeHtml(app.date_submitted)}</td>
                 <td><span class="schol-pill ${statusClass(app.status)}">${escapeHtml(app.status_label)}</span></td>
                 <td class="col-actions">
                     <div class="prog-tbl-actions">
                         <button type="button" class="prog-btn prog-btn-view" data-view="${app.id}">View</button>
-                        ${app.status === 'pending' ? `
-                            <button type="button" class="prog-btn prog-btn-edit" data-approve="${app.id}">Approve</button>
-                            <button type="button" class="prog-btn prog-btn-delete" data-reject="${app.id}">Reject</button>
-                        ` : ''}
                     </div>
                 </td>
             </tr>
@@ -111,12 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tbody.querySelectorAll('[data-view]').forEach((btn) => {
             btn.addEventListener('click', () => openViewModal(btn.getAttribute('data-view')));
-        });
-        tbody.querySelectorAll('[data-approve]').forEach((btn) => {
-            btn.addEventListener('click', () => updateStatus(btn.getAttribute('data-approve'), 'approved'));
-        });
-        tbody.querySelectorAll('[data-reject]').forEach((btn) => {
-            btn.addEventListener('click', () => openRejectModal(btn.getAttribute('data-reject')));
         });
     }
 
@@ -127,25 +255,43 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statRejected) statRejected.textContent = String(summary.rejected ?? 0);
     }
 
-    async function loadApplications() {
-        const data = await apiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}`);
-        applications = Array.isArray(data.data) ? data.data : [];
-        renderStats(data.summary || {});
-        renderTable();
+    async function loadApplications(showOverlay = false) {
+        if (showOverlay && typeof window.showLoading === 'function') window.showLoading();
+        try {
+            const data = await apiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}&status=pending`);
+            applications = Array.isArray(data.data) ? data.data : [];
+            summary = data.summary || summary;
+            renderStats(summary);
+            renderTable();
+        } finally {
+            if (showOverlay && typeof window.hideLoading === 'function') window.hideLoading();
+        }
     }
 
-    async function openViewModal(id) {
-        currentApplicationId = id;
-        const data = await apiFetch(`/api/program-applications/${id}?letter=${PROGRAM_LETTER}`);
-        const app = data.data;
+    function setReviewButtonsLoading(loading) {
+        if (btnApprove) {
+            btnApprove.disabled = loading;
+            btnApprove.innerHTML = loading
+                ? '<span class="schol-save-spinner"></span> Approving...'
+                : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Approve`;
+        }
+        if (btnReject) btnReject.disabled = loading;
+        if (rejectReasonConfirm) {
+            rejectReasonConfirm.disabled = loading;
+            if (loading) {
+                rejectReasonConfirm.dataset.defaultHtml = rejectReasonConfirm.innerHTML;
+                rejectReasonConfirm.innerHTML = '<span class="schol-save-spinner"></span> Rejecting...';
+            } else {
+                rejectReasonConfirm.innerHTML = rejectReasonConfirm.dataset.defaultHtml || 'Confirm Rejection';
+            }
+        }
+    }
+
+    function renderViewModalContent(app) {
         if (!viewModalBody || !app) return;
 
-        const answers = (app.custom_answers || []).map((item, index) => `
-            <div style="margin-bottom:12px;padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
-                <div style="font-weight:600;margin-bottom:4px;">${index + 1}. ${escapeHtml(item.question_label || item.label || 'Question')}</div>
-                <div style="color:#475569;">${escapeHtml(Array.isArray(item.answer) ? item.answer.join(', ') : (item.answer ?? '—'))}</div>
-            </div>
-        `).join('');
+        const docsHtml = renderUploadedDocumentsSection(app.required_documents);
+        const answersHtml = renderFormAnswers(app.custom_answers);
 
         viewModalBody.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
@@ -156,23 +302,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><strong>Email</strong><br>${escapeHtml(app.email || '—')}</div>
                 <div><strong>Status</strong><br>${escapeHtml(app.status_label)}</div>
             </div>
+            <h4 style="margin:0 0 12px;">Uploaded Documents</h4>
+            <div style="margin-bottom:20px;">${docsHtml}</div>
             <h4 style="margin:0 0 12px;">Application Answers</h4>
-            ${answers || '<p style="color:#94a3b8;">No custom answers submitted.</p>'}
+            ${answersHtml}
         `;
 
-        if (viewModal) viewModal.style.display = 'flex';
-        if (btnApprove) btnApprove.style.display = app.status === 'pending' ? 'inline-flex' : 'none';
-        if (btnReject) btnReject.style.display = app.status === 'pending' ? 'inline-flex' : 'none';
+        const isPending = app.status === 'pending';
+        if (btnApprove) btnApprove.style.display = isPending ? 'inline-flex' : 'none';
+        if (btnReject) btnReject.style.display = isPending ? 'inline-flex' : 'none';
+    }
+
+    async function openViewModal(id) {
+        currentApplicationId = id;
+        if (!viewModal || !viewModalBody) return;
+
+        viewModalBody.innerHTML = '<p style="padding:24px;color:#6b7280;">Loading application details...</p>';
+        viewModal.style.display = 'flex';
+        if (btnApprove) btnApprove.style.display = 'none';
+        if (btnReject) btnReject.style.display = 'none';
+
+        try {
+            const data = await apiFetch(`/api/program-applications/${id}?letter=${PROGRAM_LETTER}`);
+            renderViewModalContent(data.data);
+        } catch (error) {
+            closeViewModal();
+            showToast(error.message || 'Failed to load application.', 'error');
+        }
     }
 
     function closeViewModal() {
         currentApplicationId = null;
-        if (viewModal) viewModal.style.display = 'none';
+        if (viewModal) {
+            viewModal.style.display = 'none';
+            viewModal.classList.remove('schol-modal-maximized');
+        }
+        if (viewBox) viewBox.classList.remove('schol-modal-maximized');
+        setMaximizeButton(viewMaximize, false);
     }
 
     function openRejectModal(id) {
         currentApplicationId = id;
         if (rejectOtherReason) rejectOtherReason.value = '';
+        if (rejectOtherField) rejectOtherField.style.display = 'none';
         document.querySelectorAll('.reject-reason-checkbox, #rejectReasonOtherCheckbox').forEach((input) => { input.checked = false; });
         if (rejectReasonModal) rejectReasonModal.style.display = 'flex';
     }
@@ -182,21 +354,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function updateStatus(id, status, rejectionReasons = null, rejectionReason = null) {
-        await apiFetch(`/api/program-applications/${id}/status?letter=${PROGRAM_LETTER}`, {
-            method: 'PUT',
-            body: JSON.stringify({ status, rejection_reasons: rejectionReasons, rejection_reason: rejectionReason, letter: PROGRAM_LETTER }),
-        });
-        showToast(status === 'approved' ? 'Application approved.' : 'Application rejected.');
-        closeViewModal();
-        closeRejectModal();
-        await loadApplications();
+        if (isReviewing) return;
+        isReviewing = true;
+        setReviewButtonsLoading(true);
+
+        try {
+            await apiFetch(`/api/program-applications/${id}/status?letter=${PROGRAM_LETTER}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    status,
+                    rejection_reasons: rejectionReasons,
+                    rejection_reason: rejectionReason,
+                    letter: PROGRAM_LETTER,
+                }),
+            });
+            showToast(status === 'approved' ? 'Application approved and moved to Approved Participants.' : 'Application rejected and moved to Rejected Sports.');
+            closeViewModal();
+            closeRejectModal();
+            bumpSummaryAfterReview(status);
+            removeApplicationFromTable(id);
+            broadcastSportsEvent(status === 'approved' ? 'approved' : 'rejected', id);
+        } finally {
+            isReviewing = false;
+            setReviewButtonsLoading(false);
+        }
     }
 
     if (searchInput) searchInput.addEventListener('input', renderTable);
     if (viewClose) viewClose.addEventListener('click', closeViewModal);
     if (viewModal) viewModal.addEventListener('click', (e) => { if (e.target === viewModal) closeViewModal(); });
-    if (btnApprove) btnApprove.addEventListener('click', () => currentApplicationId && updateStatus(currentApplicationId, 'approved'));
-    if (btnReject) btnReject.addEventListener('click', () => currentApplicationId && openRejectModal(currentApplicationId));
+
+    if (viewMaximize && viewBox) {
+        viewMaximize.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isMax = !viewBox.classList.contains('schol-modal-maximized');
+            viewModal.classList.toggle('schol-modal-maximized', isMax);
+            viewBox.classList.toggle('schol-modal-maximized', isMax);
+            setMaximizeButton(viewMaximize, isMax);
+        });
+    }
+
+    if (rejectOtherCheckbox && rejectOtherField) {
+        rejectOtherCheckbox.addEventListener('change', () => {
+            rejectOtherField.style.display = rejectOtherCheckbox.checked ? 'block' : 'none';
+            if (!rejectOtherCheckbox.checked && rejectOtherReason) rejectOtherReason.value = '';
+        });
+    }
+
+    if (btnApprove) {
+        btnApprove.addEventListener('click', async () => {
+            if (!currentApplicationId || isReviewing) return;
+            try {
+                await updateStatus(currentApplicationId, 'approved');
+            } catch (error) {
+                showToast(error.message || 'Failed to approve application.', 'error');
+            }
+        });
+    }
+
+    if (btnReject) {
+        btnReject.addEventListener('click', () => {
+            if (!currentApplicationId) return;
+            openRejectModal(currentApplicationId);
+        });
+    }
+
     if (rejectReasonClose) rejectReasonClose.addEventListener('click', closeRejectModal);
     if (rejectReasonCancel) rejectReasonCancel.addEventListener('click', closeRejectModal);
     if (rejectReasonConfirm) {
@@ -212,20 +434,22 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 await updateStatus(currentApplicationId, 'rejected', reasons, other || reasons[0]);
             } catch (error) {
-                showToast(error.message, 'error');
+                showToast(error.message || 'Failed to reject application.', 'error');
             }
         });
     }
 
+    listenSportsEvents((payload) => {
+        if (payload.type === 'restored') loadApplications(false).catch(() => {});
+    });
+
     (async () => {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="saf-table-empty">Loading applications…</td></tr>';
         try {
-            if (typeof window.showLoading === 'function') window.showLoading();
-            await loadApplications();
+            await loadApplications(false);
         } catch (error) {
             showToast(error.message || 'Failed to load applications.', 'error');
             if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="saf-table-empty">Unable to load applications.</td></tr>';
-        } finally {
-            if (typeof window.hideLoading === 'function') window.hideLoading();
         }
     })();
 });

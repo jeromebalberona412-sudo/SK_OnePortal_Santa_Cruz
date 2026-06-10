@@ -140,34 +140,7 @@
             <span class="stat-card-label">Active Programs</span>
         </div>
 
-        <!-- 7. Total Budget -->
-        <div class="stat-card stat-card-yellow" data-href="{{ route('budget-finance') }}" title="View budget and finance">
-            <div class="stat-card-top">
-                <span class="stat-card-value" id="statBudget">₱0.00</span>
-                <div class="stat-card-icon stat-icon-yellow stat-icon-peso" aria-hidden="true">₱</div>
-            </div>
-            <span class="stat-card-label">Total Budget Allocation</span>
-        </div>
-
-        <!-- 8. Remaining Budget -->
-        <div class="stat-card stat-card-green" data-href="{{ route('budget-finance') }}" title="View budget and finance">
-            <div class="stat-card-top">
-                <span class="stat-card-value" id="statRemaining">₱0.00</span>
-                <div class="stat-card-icon stat-icon-green stat-icon-peso" aria-hidden="true">₱</div>
-            </div>
-            <span class="stat-card-label">Remaining Budget Balance</span>
-        </div>
-
-        <!-- 9. Total Expenses -->
-        <div class="stat-card stat-card-red" data-href="{{ route('budget-finance') }}" title="View budget and finance">
-            <div class="stat-card-top">
-                <span class="stat-card-value" id="statExpenses">₱0.00</span>
-                <div class="stat-card-icon stat-icon-red stat-icon-peso" aria-hidden="true">₱</div>
-            </div>
-            <span class="stat-card-label">Total Expenses Incurred</span>
-        </div>
-
-        <!-- 10. Deleted Kabataan -->
+        <!-- 7. Deleted Kabataan -->
         <div class="stat-card stat-card-slate" data-href="{{ route('deleted-kabataan') }}" title="View deleted Kabataan records">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statDeletedKabataan">0</span>
@@ -313,14 +286,14 @@
                 Programs Management
             </a>
             <!-- 🟡 Finance -->
-            <a href="{{ route('budget-finance') }}" class="qa-btn qa-yellow">
+            <a href="{{ route('reports-management') }}" class="qa-btn qa-yellow">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 7V5a2 2 0 0 0-4 0v2"></path>
-                    <line x1="12" y1="12" x2="12" y2="16"></line>
-                    <line x1="10" y1="14" x2="14" y2="14"></line>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14,2 14,8 20,8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
                 </svg>
-                Budget &amp; Finance
+                Reports Management
             </a>
             <!-- 🔴 Archive / Danger -->
             <a href="{{ route('deleted-kabataan') }}" class="qa-btn qa-red">
@@ -392,41 +365,43 @@
         </div>
 
         <div class="dash-section-card">
-            <div class="dash-section-header">
+            <div class="dash-section-header dash-section-header--wrap">
                 <div>
                     <h2 class="dash-section-title">Monthly KK Requests</h2>
                     <p class="dash-section-sub">Approved vs Rejected over time</p>
                 </div>
-                <span class="dash-chart-badge">Line Chart</span>
+                <div class="dash-chart-header-actions">
+                    <span class="dash-chart-badge">Line Chart</span>
+                    <div class="line-chart-select-group">
+                        <label for="kkChartGranularity" class="dash-filter-label">View</label>
+                        <select id="kkChartGranularity" class="dash-filter-select">
+                            <option value="monthly" selected>Monthly</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
+                    <div class="line-chart-select-group" id="kkChartMonthWrap" hidden>
+                        <label for="kkChartMonth" class="dash-filter-label">Month</label>
+                        <select id="kkChartMonth" class="dash-filter-select">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="chart-canvas-wrap">
                 <canvas id="chartMonthlyRequests"></canvas>
             </div>
-            <div class="line-chart-filter-row line-chart-controls">
-                <div class="line-chart-select-group">
-                    <label for="kkChartGranularity" class="dash-filter-label">View</label>
-                    <select id="kkChartGranularity" class="dash-filter-select">
-                        <option value="monthly" selected>Monthly</option>
-                        <option value="weekly">Weekly</option>
-                    </select>
-                </div>
-                <div class="line-chart-select-group" id="kkChartMonthWrap" hidden>
-                    <label for="kkChartMonth" class="dash-filter-label">Month</label>
-                    <select id="kkChartMonth" class="dash-filter-select">
-                        <option value="1">January</option>
-                        <option value="2">February</option>
-                        <option value="3">March</option>
-                        <option value="4">April</option>
-                        <option value="5">May</option>
-                        <option value="6">June</option>
-                        <option value="7">July</option>
-                        <option value="8">August</option>
-                        <option value="9">September</option>
-                        <option value="10">October</option>
-                        <option value="11">November</option>
-                        <option value="12">December</option>
-                    </select>
-                </div>
+            <div class="line-chart-filter-row">
                 <label class="line-chart-checkbox">
                     <input type="checkbox" id="filterApproved" checked>
                     <span class="line-chart-checkbox-box" style="background:#22c55e;"></span>
@@ -464,18 +439,27 @@
             <div class="pie-legend-row" id="genderLegend"></div>
         </div>
 
-        <div class="dash-section-card">
+        <div class="dash-section-card" id="employmentStatusCard">
             <div class="dash-section-header">
                 <div>
-                    <h2 class="dash-section-title">Budget Allocation</h2>
-                    <p class="dash-section-sub">Per program breakdown</p>
+                    <h2 class="dash-section-title">Employment Status Distribution</h2>
+                    <p class="dash-section-sub">Current employment profile of registered Kabataan</p>
                 </div>
                 <span class="dash-chart-badge">Donut</span>
             </div>
-            <div class="chart-canvas-wrap chart-canvas-wrap--pie">
-                <canvas id="chartBudgetDonut"></canvas>
+            <div id="employmentChartSkeleton" class="dash-chart-skeleton" aria-hidden="false">
+                <div class="dash-skeleton-bar" style="width:72%"></div>
+                <div class="dash-skeleton-bar" style="width:55%"></div>
+                <div class="dash-skeleton-bar" style="width:40%"></div>
+                <div class="dash-skeleton-bar" style="width:28%"></div>
+                <div class="dash-skeleton-bar" style="width:18%"></div>
             </div>
-            <div class="donut-legend" id="donutLegend"></div>
+            <div class="chart-canvas-wrap chart-canvas-wrap--pie" id="employmentChartWrap" hidden>
+                <canvas id="chartEmploymentStatus"></canvas>
+            </div>
+            <div class="donut-legend" id="employmentLegend"></div>
+            <p class="dash-empty-msg d-none" id="employmentChartEmpty">No employment data available.</p>
+            <p class="dash-employment-total" id="employmentTotalCount"></p>
         </div>
 
     </div>

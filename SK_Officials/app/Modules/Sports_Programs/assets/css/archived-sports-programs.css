@@ -1,0 +1,319 @@
+/* ── Archived Sports Programs Module ── */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f1f5;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.main-content {
+    margin-left: 280px;
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
+    transition: margin-left 0.28s ease;
+    padding: 20px 22px;
+    width: calc(100% - 280px);
+    overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        margin-top: 60px;
+        padding: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+        margin-top: 55px;
+    }
+}
+
+@media (min-width: 769px) {
+    .main-content.sidebar-collapsed {
+        margin-left: 80px;
+        width: calc(100% - 80px);
+    }
+}
+
+.asp-page-wrap {
+    width: 100%;
+    max-width: 100%;
+}
+
+.page-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.page-subtitle {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 4px;
+    max-width: 640px;
+    line-height: 1.5;
+}
+
+.page-header-right {
+    flex-shrink: 0;
+}
+
+.module-stats-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 10px;
+    margin-bottom: 18px;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    flex: 1 1 0;
+    min-width: 100px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+    border: 1.5px solid #e5e7eb;
+}
+
+.stat-card-orange { border-color: #facc15; }
+.stat-card-blue { border-color: #3b82f6; }
+
+.stat-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.stat-card-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111827;
+    line-height: 1.1;
+}
+
+.stat-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-card-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.stat-icon-orange { background: #fef9c3; }
+.stat-icon-orange svg { stroke: #ca8a04; }
+.stat-icon-blue { background: #dbeafe; }
+.stat-icon-blue svg { stroke: #2563eb; }
+
+.stat-card-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    line-height: 1.3;
+    margin-top: 8px;
+}
+
+.asp-stat-warning {
+    border-color: #fbbf24 !important;
+    background: #fffbeb;
+}
+
+.asp-stats-row {
+    margin-bottom: 20px;
+}
+
+.filter-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #111827;
+    background: #fff;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: #2c2c3e;
+    box-shadow: 0 0 0 3px rgba(44, 44, 62, 0.12);
+}
+
+.asp-toolbar-row {
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+
+.asp-search-wrap {
+    width: 100%;
+    max-width: 360px;
+}
+
+.asp-search-wrap .filter-input {
+    width: 100%;
+}
+
+.section-heading-row {
+    margin-bottom: 12px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.page-content-section .table-card {
+    margin-bottom: 0;
+}
+
+.asp-table td:first-child {
+    text-align: left;
+}
+
+.asp-table .prog-tbl-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.asp-badge-archived {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #fee2e2;
+    color: #991b1b;
+    margin-top: 4px;
+}
+
+.asp-days-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.asp-days-badge.is-urgent {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.asp-modal-name {
+    font-weight: 700;
+    color: #111827;
+    margin-top: 8px;
+}
+
+.asp-btn-restore,
+.asp-btn-delete {
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.asp-btn-restore {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.asp-btn-restore:hover {
+    background: #bbf7d0;
+}
+
+.asp-btn-delete {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.asp-btn-delete:hover:not(:disabled) {
+    background: #fecaca;
+}
+
+.asp-btn-delete:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sports-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    padding: 12px 18px;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+}
+
+@media (max-width: 768px) {
+    .asp-page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .asp-search-wrap {
+        max-width: none;
+    }
+
+    .asp-table .prog-tbl-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .asp-btn-restore,
+    .asp-btn-delete {
+        width: 100%;
+    }
+}

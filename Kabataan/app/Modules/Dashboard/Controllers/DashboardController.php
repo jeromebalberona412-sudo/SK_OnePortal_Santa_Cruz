@@ -5,14 +5,17 @@ namespace App\Modules\Dashboard\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
+use App\Modules\Dashboard\Services\BarangaySkProfileService;
 use App\Modules\Programs\Services\KabataanProgramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function __construct(private readonly KabataanProgramService $programService)
-    {
+    public function __construct(
+        private readonly KabataanProgramService $programService,
+        private readonly BarangaySkProfileService $barangaySkProfileService,
+    ) {
     }
 
     public function index(Request $request)
@@ -33,9 +36,15 @@ class DashboardController extends Controller
 
         $barangayName = $registration?->barangay?->name ?? 'Santa Cruz';
 
+        $tenantId = (int) ($user->tenant_id ?? $registration?->barangay?->tenant_id ?? 0);
+        $barangayProfiles = $tenantId > 0
+            ? $this->barangaySkProfileService->listForTenant($tenantId)
+            : [];
+
         return view('dashboard::dashboard', [
             'user'                => $user,
             'barangayName'        => $barangayName,
+            'barangayProfiles'    => $barangayProfiles,
             'programsPayload'     => $this->programService->getDashboardPayload($user),
             'showKkUpdateModal'   => (bool) ($registration && session()->pull('show_kk_profiling_update', false)),
             'kkUpdateBarangay'    => $registration ? $barangayName : null,
@@ -56,51 +65,29 @@ class DashboardController extends Controller
 
         $user = Auth::user();
 
-        $barangays = [
-            'alipit'         => 'Alipit',
-            'bagumbayan'     => 'Bagumbayan',
-            'bubukal'        => 'Bubukal',
-            'duhat'          => 'Duhat',
-            'gatid'          => 'Gatid',
-            'labuin'         => 'Labuin',
-            'pagsawitan'     => 'Pagsawitan',
-            'san-jose'       => 'San Jose',
-            'santisima-cruz' => 'Santisima Cruz',
-        ];
+        $registration = KabataanRegistration::with('barangay')->where('user_id', $user->id)->latest()->first();
+        $tenantId = (int) ($user->tenant_id ?? $registration?->barangay?->tenant_id ?? 0);
+        $barangay = $this->barangaySkProfileService->findBySlug($slug, $tenantId > 0 ? $tenantId : null);
 
-        $name = $barangays[$slug] ?? ucfirst(str_replace('-', ' ', $slug));
+        if ($barangay === null) {
+            abort(404);
+        }
 
-        $colors = [
-            'alipit'         => '#4CAF50',
-            'bagumbayan'     => '#2196F3',
-            'bubukal'        => '#9C27B0',
-            'duhat'          => '#FF9800',
-            'gatid'          => '#009688',
-            'labuin'         => '#f44336',
-            'pagsawitan'     => '#673AB7',
-            'san-jose'       => '#0450a8',
-            'santisima-cruz' => '#FF5722',
-        ];
-
-        $officers = [
-            'chairman'   => '[SK Chairman]',
-            'vice'       => '[Vice Chairman]',
-            'secretary'  => '[Secretary]',
-            'treasurer'  => '[Treasurer]',
-            'auditor'    => '[Auditor]',
-            'pro'        => '[PRO]',
-            'councilors' => ['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]'],
-        ];
-
-        $posts = [];
+        $profile = $this->barangaySkProfileService->buildProfile($barangay);
 
         return view('dashboard::barangay', [
-            'user'     => $user,
-            'slug'     => $slug,
-            'name'     => $name,
-            'color'    => $colors[$slug] ?? '#667eea',
-            'officers' => $officers,
-            'posts'    => $posts,
+            'user'          => $user,
+            'slug'          => $profile['slug'],
+            'name'          => $profile['name'],
+            'color'         => $profile['color'],
+            'logo_url'      => $profile['logo_url'],
+            'initials'      => $profile['initials'],
+            'location'      => $profile['location'],
+            'term_label'    => $profile['term_label'],
+            'post_count'    => $profile['post_count'],
+            'officer_count' => $profile['officer_count'],
+            'officials'     => $profile['officials'],
+            'posts'         => $profile['posts'],
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma'        => 'no-cache',

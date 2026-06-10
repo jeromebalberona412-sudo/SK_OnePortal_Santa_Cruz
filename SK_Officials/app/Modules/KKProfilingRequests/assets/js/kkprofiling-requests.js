@@ -1,3 +1,10 @@
+function broadcastKkProfileEvent() {
+    try {
+        sessionStorage.setItem('kk-profile-event', JSON.stringify({ at: Date.now() }));
+    } catch (_) { /* ignore */ }
+    window.dispatchEvent(new CustomEvent('kk-profile-event'));
+}
+
 function formatRespondentDisplay(seq, fullNumber) {
     if (seq !== null && seq !== undefined && seq !== '') {
         const n = parseInt(seq, 10);
@@ -754,6 +761,7 @@ function initializeKKProfilingRequestsUI() {
                         ? `KK Profiling approved! Respondent #${displayNo} assigned.`
                         : (res.message || 'KK Profiling approved successfully.');
                     showToast(toastMsg, 'success');
+                    broadcastKkProfileEvent();
                     loadData();
                 } else {
                     showToast(res.message || 'Failed to approve.', 'error');

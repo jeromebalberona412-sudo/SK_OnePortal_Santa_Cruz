@@ -23,6 +23,12 @@ class ScheduleProgram extends Model
         'start_date',
         'end_date',
         'status',
+        'is_archived',
+        'archived_at',
+        'archived_by',
+        'deleted_reason',
+        'restored_at',
+        'restored_by',
         'announcement',
         'kk_profiling_fields',
         'custom_questions',
@@ -34,9 +40,25 @@ class ScheduleProgram extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'participation_quantity' => 'integer',
+            'is_archived' => 'boolean',
+            'archived_at' => 'datetime',
+            'restored_at' => 'datetime',
             'kk_profiling_fields' => 'array',
             'custom_questions' => 'array',
         ];
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where(function ($builder) {
+            $builder->whereRaw('"is_archived" = false')
+                ->orWhereNull('is_archived');
+        });
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereRaw('"is_archived" = true');
     }
 
     public function barangay(): BelongsTo

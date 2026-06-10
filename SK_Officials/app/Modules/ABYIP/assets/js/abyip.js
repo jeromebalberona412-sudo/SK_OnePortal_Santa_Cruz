@@ -51,12 +51,25 @@ function mapRecordFromApi(record) {
         id: record.id,
         title: record.title,
         dateCreated: record.date_created,
+        status: record.status || 'pending',
         documentHtml: record.document_html || '',
         pdfData: record.pdf_data || null,
         isPdf: record.source_type === 'pdf',
         isImported: record.source_type === 'word',
         calendarYear: record.calendar_year,
     };
+}
+
+function formatStatusBadge(status) {
+    const normalized = String(status || 'pending').toLowerCase();
+    const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    const className = normalized === 'approved'
+        ? 'status-badge status-approved'
+        : normalized === 'rejected'
+          ? 'status-badge status-rejected'
+          : 'status-badge status-pending';
+
+    return '<span class="' + className + '">' + escapeHtml(label) + '</span>';
 }
 
 function formatCurrency(amount) {
@@ -251,14 +264,14 @@ function renderRecordsTable() {
 
     if (abyipRecords.length === 0) {
         tbody.innerHTML =
-            '<tr><td colspan="4" class="abyip-records-empty">No ABYIP records yet. Upload a Word or PDF document to get started.</td></tr>';
+            '<tr><td colspan="5" class="abyip-records-empty">No ABYIP records yet. Upload a Word or PDF document to get started.</td></tr>';
         return;
     }
 
     const filtered = getFilteredRecords();
     if (filtered.length === 0) {
         tbody.innerHTML =
-            '<tr><td colspan="4" class="abyip-records-empty">No records match your search.</td></tr>';
+            '<tr><td colspan="5" class="abyip-records-empty">No records match your search.</td></tr>';
         return;
     }
 
@@ -276,6 +289,9 @@ function renderRecordsTable() {
                 '</td>' +
                 '<td class="abyip-records-time">' +
                 formatTimeCreated12(record.dateCreated) +
+                '</td>' +
+                '<td class="abyip-records-status">' +
+                formatStatusBadge(record.status) +
                 '</td>' +
                 '<td class="abyip-records-actions">' +
                 '<div class="action-buttons-cell">' +
@@ -1412,6 +1428,88 @@ function buildStructuredTagRow(tag, fields) {
     }).join('|');
 }
 
+function appendAbyipFooterMetadata(lines) {
+    let grandTotal = '';
+
+    for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i];
+        if (/^TOTAL\b/i.test(line) && !line.startsWith('@')) {
+            const amounts = line.match(/[\d,]+\.\d{2}/g);
+            if (amounts && amounts.length) {
+                grandTotal = amounts[amounts.length - 1];
+                break;
+            }
+        }
+    }
+
+    if (grandTotal) {
+        lines.push('@ABYIP_GRAND_TOTAL@' + grandTotal);
+    }
+
+    const preparedIdx = lines.findIndex(function (line) {
+        return /Prepared\s+by/i.test(line);
+    });
+
+    if (preparedIdx < 0) {
+        return;
+    }
+
+    const blockLines = lines.slice(preparedIdx, Math.min(preparedIdx + 8, lines.length));
+    const blockText = blockLines.join('\n');
+    const names = [];
+    const nameRegex = /HON\.?\s*([A-Z][A-Za-z.\s]+?)(?=\s+HON\.|\s+SK\s+Chair|\s+Barangay\s+Chair|\n|$)/gi;
+    let nameMatch;
+
+    while ((nameMatch = nameRegex.exec(blockText)) !== null) {
+        names.push(('HON. ' + nameMatch[1].trim()).replace(/\s+/g, ' '));
+    }
+
+    if (names.length < 2) {
+        blockLines.forEach(function (blockLine) {
+            if (!/HON\./i.test(blockLine)) {
+                return;
+            }
+
+            blockLine.split(/\s{2,}|\t/).forEach(function (part) {
+                part = part.trim();
+                if (part && /HON\./i.test(part) && names.indexOf(part) < 0) {
+                    names.push(part.replace(/\s+/g, ' '));
+                }
+            });
+        });
+    }
+
+    let preparedPos = '';
+    let approvedPos = '';
+
+    blockLines.forEach(function (blockLine) {
+        if (/SK\s+Chair(?:person|man)?/i.test(blockLine)) {
+            preparedPos = 'SK Chairperson';
+        }
+        if (/Barangay\s+Chair(?:man|person)?/i.test(blockLine)) {
+            approvedPos = 'Barangay Chairman';
+        }
+    });
+
+    const fields = {};
+    if (names[0]) {
+        fields.PREPARED_NAME = names[0];
+    }
+    if (preparedPos) {
+        fields.PREPARED_POS = preparedPos;
+    }
+    if (names[1]) {
+        fields.APPROVED_NAME = names[1];
+    }
+    if (approvedPos) {
+        fields.APPROVED_POS = approvedPos;
+    }
+
+    if (Object.keys(fields).length) {
+        lines.push(buildStructuredTagRow('@ABYIP_SIGNATURE@', fields));
+    }
+}
+
 async function extractPdfTextForPrograms(pdfDoc) {
     resetAbyipColumnBounds();
     const lines = [];
@@ -1527,7 +1625,13 @@ async function extractPdfTextForPrograms(pdfDoc) {
             flushYouthBlock(youthBlock, lines);
             youthBlock = null;
             inYouthSection = false;
-            if (!/Prepared\s+by/i.test(fullLine) && !/Approved\s+by/i.test(fullLine)) {
+            if (/^TOTAL\b/i.test(fullLine)) {
+                const totalAmounts = fullLine.match(/[\d,]+\.\d{2}/g);
+                if (totalAmounts && totalAmounts.length) {
+                    lines.push('@ABYIP_GRAND_TOTAL@' + totalAmounts[totalAmounts.length - 1]);
+                }
+                lines.push(fullLine);
+            } else if (!/Prepared\s+by/i.test(fullLine) && !/Approved\s+by/i.test(fullLine)) {
                 lines.push(fullLine);
             }
             return;
@@ -1581,6 +1685,7 @@ async function extractPdfTextForPrograms(pdfDoc) {
 
     flushGeneralBlock(generalBlock, lines);
     flushYouthBlock(youthBlock, lines);
+    appendAbyipFooterMetadata(lines);
 
     return lines.join('\n');
 }

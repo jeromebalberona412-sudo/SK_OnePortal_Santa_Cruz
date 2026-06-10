@@ -33,11 +33,39 @@ function rspFormatName(r) {
     return parts.join(', ');
 }
 
+function broadcastSportsEvent(type, applicationId) {
+    const payload = {
+        type,
+        applicationId: Number(applicationId),
+        at: Date.now(),
+    };
+    try {
+        sessionStorage.setItem('sports-app-event', JSON.stringify(payload));
+    } catch (_) { /* ignore */ }
+    window.dispatchEvent(new CustomEvent('sports-app-event', { detail: payload }));
+}
+
+function listenSportsEvents(handler) {
+    window.addEventListener('storage', (event) => {
+        if (event.key !== 'sports-app-event' || !event.newValue) return;
+        try { handler(JSON.parse(event.newValue)); } catch (_) { /* ignore */ }
+    });
+    window.addEventListener('sports-app-event', (event) => {
+        if (event.detail) handler(event.detail);
+    });
+}
+
 function initRejectedSports() {
     bindSearch();
     bindFilterTabs();
     bindRestoreModal();
     bindViewModal();
+
+    listenSportsEvents((payload) => {
+        if (payload.type === 'rejected' || payload.type === 'revoked') {
+            loadData(true);
+        }
+    });
 
     if (window.SkArchive) {
         SkArchive.mountShowArchiveFilter((termId) => {
@@ -51,10 +79,10 @@ function initRejectedSports() {
     loadData();
 }
 
-async function loadData() {
+async function loadData(silent = false) {
     if (rspIsLoading) return;
     rspIsLoading = true;
-    setTableLoading(true);
+    if (!silent) setTableLoading(true);
 
     const params = new URLSearchParams();
     if (rspSearchQuery) params.set('search', rspSearchQuery);
@@ -305,6 +333,7 @@ function bindRestoreModal() {
                 setTimeout(() => { banner.style.display = 'none'; }, 4000);
             }
 
+            broadcastSportsEvent('restored', rspPendingRestoreId);
             loadData();
         } catch (err) {
             alert(err.message || 'Restore failed.');
@@ -321,19 +350,67 @@ function bindRestoreModal() {
     });
 }
 
-function openViewModal(id) {
-    const record = rspAllRecords.find((r) => r.id === id);
-    if (!record) return;
+function isDocumentAnswer(answer) {
+    return answer && typeof answer === 'object' && !Array.isArray(answer)
+        && (answer.original_name || answer.preview_url || answer.download_url || answer.path);
+}
 
-    const body = document.getElementById('rspViewModalBody');
-    const answers = (record.custom_answers || []).map((item, index) => `
-        <div style="margin-bottom:12px;padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
-            <div style="font-weight:600;margin-bottom:4px;">${index + 1}. ${escapeHtml(item.question_label || item.label || 'Question')}</div>
-            <div style="color:#475569;">${escapeHtml(Array.isArray(item.answer) ? item.answer.join(', ') : (item.answer ?? '—'))}</div>
-        </div>
-    `).join('');
+function formatAnswerText(answer) {
+    if (answer === null || answer === undefined || answer === '') return '—';
+    if (isDocumentAnswer(answer)) return String(answer.original_name || 'Uploaded PDF');
+    if (Array.isArray(answer)) return answer.join(', ');
+    if (typeof answer === 'object') return answer.original_name ? String(answer.original_name) : '—';
+    return String(answer);
+}
 
-    body.innerHTML = `
+function renderDocumentCard(answer) {
+    const file = answer && typeof answer === 'object' ? answer : {};
+    const previewUrl = file.preview_url || file.download_url || '#';
+    const downloadUrl = file.download_url || previewUrl;
+    const fileName = file.original_name || 'Uploaded PDF';
+    const meta = [file.size_display, file.question_label].filter(Boolean).join(' • ');
+
+    return `
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;">
+            <div style="width:44px;height:44px;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">PDF</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#111827;word-break:break-word;">${escapeHtml(fileName)}</div>
+                ${meta ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${escapeHtml(meta)}</div>` : ''}
+                <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+                    <a href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:#213F99;text-decoration:none;">Preview</a>
+                    <a href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:#213F99;text-decoration:none;">Download</a>
+                </div>
+            </div>
+        </div>`;
+}
+
+function renderFormAnswers(customAnswers) {
+    const answers = customAnswers || [];
+    if (!answers.length) return '';
+
+    return answers.map((item, index) => {
+        const isFile = item.question_type === 'file' || isDocumentAnswer(item.answer);
+        const answerHtml = isFile
+            ? renderDocumentCard(item.answer)
+            : `<div style="color:#475569;">${escapeHtml(formatAnswerText(item.answer))}</div>`;
+        return `
+            <div style="margin-bottom:12px;padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
+                <div style="font-weight:600;margin-bottom:4px;">${index + 1}. ${escapeHtml(item.question_label || item.label || 'Question')}</div>
+                ${answerHtml}
+            </div>`;
+    }).join('');
+}
+
+function renderRejectedViewContent(record, app) {
+    const docs = Array.isArray(app?.required_documents)
+        ? app.required_documents
+        : (app?.required_documents ? Object.values(app.required_documents) : []);
+    const docsHtml = docs.length
+        ? docs.map((doc) => renderDocumentCard(doc)).join('')
+        : '<span style="color:#9ca3af;">No documents uploaded</span>';
+    const answersHtml = renderFormAnswers(app?.custom_answers || record.custom_answers);
+
+    return `
         <div class="kk-rejection-details-section">
             <div class="kk-rejection-details-title">Rejection Details</div>
             <div class="kk-rejection-details-grid">
@@ -357,9 +434,38 @@ function openViewModal(id) {
             <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Age / Sex</div><div style="font-weight:600;color:#111827;">${escapeHtml([record.age, record.sex].filter(Boolean).join(' · ') || '—')}</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Date Applied</div><div style="font-weight:600;color:#111827;">${escapeHtml(record.date_submitted || '—')}</div></div>
         </div>
-        ${answers ? `<div style="margin-top:18px;">${answers}</div>` : ''}`;
+        <div style="margin-top:18px;">
+            <div style="font-weight:700;margin-bottom:10px;">Uploaded Documents</div>
+            ${docsHtml}
+        </div>
+        ${answersHtml ? `<div style="margin-top:18px;"><div style="font-weight:700;margin-bottom:10px;">Form Answers</div>${answersHtml}</div>` : ''}`;
+}
 
-    document.getElementById('rspViewModal').style.display = 'flex';
+async function openViewModal(id) {
+    const record = rspAllRecords.find((r) => r.id === id);
+    if (!record) return;
+
+    const body = document.getElementById('rspViewModalBody');
+    const modal = document.getElementById('rspViewModal');
+    if (!body || !modal) return;
+
+    body.innerHTML = '<p style="padding:16px;color:#6b7280;">Loading application details...</p>';
+    modal.style.display = 'flex';
+
+    try {
+        const res = await fetch(`/api/program-applications/${id}?letter=I`, {
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || 'Failed to load application.');
+        body.innerHTML = renderRejectedViewContent(record, data.data);
+    } catch (error) {
+        body.innerHTML = renderRejectedViewContent(record, null);
+        body.insertAdjacentHTML('afterbegin', `<p style="color:#b91c1c;margin-bottom:12px;">${escapeHtml(error.message || 'Could not load full details.')}</p>`);
+    }
 }
 
 function bindViewModal() {
@@ -368,18 +474,29 @@ function bindViewModal() {
     const toggle = document.getElementById('rspViewModalToggle');
     const box = document.getElementById('rspViewModalBox');
 
-    close?.addEventListener('click', () => {
-        if (modal) modal.style.display = 'none';
-        if (box) box.classList.remove('maximized');
-    });
+    const closeModal = () => {
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('view-modal-maximized');
+        }
+        if (box) box.classList.remove('view-modal-maximized');
+        if (toggle) toggle.textContent = '□';
+    };
 
-    toggle?.addEventListener('click', () => box?.classList.toggle('maximized'));
+    close?.addEventListener('click', closeModal);
+
+    if (toggle && box) {
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isMax = !box.classList.contains('view-modal-maximized');
+            modal?.classList.toggle('view-modal-maximized', isMax);
+            box.classList.toggle('view-modal-maximized', isMax);
+            toggle.textContent = isMax ? '⧉' : '□';
+        });
+    }
 
     modal?.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-            box?.classList.remove('maximized');
-        }
+        if (e.target === modal) closeModal();
     });
 }
 

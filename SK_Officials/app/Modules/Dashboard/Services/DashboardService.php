@@ -5,6 +5,7 @@ namespace App\Modules\Dashboard\Services;
 use App\Models\Abyip;
 use App\Models\CalendarNote;
 use App\Models\KabataanRegistration;
+use App\Models\KkSurveyResponse;
 use App\Models\RejectedKkProfiling;
 use App\Models\SkOfficialActivity;
 use App\Models\User;
@@ -36,12 +37,11 @@ class DashboardService
 
         $abyip = $this->resolveAbyipDocument($barangayId, $year);
         $kkStats = $this->kkProfileStats($barangayId);
-        $budgetStats = $this->budgetStats($abyip);
 
         return [
             'year' => $year,
             'user_name' => $this->resolveUserDisplayName($user),
-            'stats' => array_merge($kkStats, $budgetStats, [
+            'stats' => array_merge($kkStats, [
                 'active_programs' => $this->activeProgramCount($abyip),
                 'deleted_kabataan' => $this->deletedKabataanCount($barangayId),
                 'rejected_items' => $kkStats['rejected'],
@@ -74,11 +74,10 @@ class DashboardService
                     'rejected' => array_fill(0, 12, 0),
                 ],
                 'gender_distribution' => ['labels' => ['Male', 'Female'], 'values' => [0, 0]],
-                'budget_programs' => ['labels' => [], 'values' => []],
+                'employment_status_distribution' => ['items' => [], 'total' => 0],
             ];
         }
 
-        $abyip = $this->resolveAbyipDocument($barangayId, $year);
         $activeFormData = $this->activeRegistrationsFormData($barangayId);
         $purok = $this->purokDistributionFromRecords($activeFormData);
         $kkChart = $granularity === 'weekly' && $month !== null
@@ -90,7 +89,73 @@ class DashboardService
             'purok_counts' => $purok['counts'],
             'kk_requests_chart' => $kkChart,
             'gender_distribution' => $this->genderDistributionFromRecords($activeFormData),
-            'budget_programs' => $this->budgetProgramBreakdown($abyip),
+            'employment_status_distribution' => $this->employmentStatusDistribution($barangayId),
+        ];
+    }
+
+    /**
+     * Aggregate employment (work_status) counts for approved KK profiles in the barangay.
+     *
+     * @return array{items: list<array{status: string, count: int}>, total: int}
+     */
+    public function employmentStatusDistribution(int $barangayId): array
+    {
+        $approvedRegistrationIds = KabataanRegistration::forBarangay($barangayId)
+            ->where('status', 'active')
+            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->pluck('id');
+
+        if ($approvedRegistrationIds->isEmpty()) {
+            return ['items' => [], 'total' => 0];
+        }
+
+        $surveyCounts = KkSurveyResponse::query()
+            ->where('barangay_id', $barangayId)
+            ->whereIn('kabataan_registration_id', $approvedRegistrationIds)
+            ->whereNotNull('work_status')
+            ->where('work_status', '!=', '')
+            ->selectRaw('TRIM(work_status) AS status, COUNT(*) AS total')
+            ->groupByRaw('TRIM(work_status)')
+            ->orderByDesc('total')
+            ->get();
+
+        if ($surveyCounts->isNotEmpty()) {
+            $items = $surveyCounts->map(fn ($row) => [
+                'status' => (string) $row->status,
+                'count' => (int) $row->total,
+            ])->values()->all();
+
+            return [
+                'items' => $items,
+                'total' => array_sum(array_column($items, 'count')),
+            ];
+        }
+
+        $records = KabataanRegistration::forBarangay($barangayId)
+            ->where('status', 'active')
+            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->get(['form_data']);
+
+        $counts = [];
+
+        foreach ($records as $record) {
+            $status = $this->formValue($record->form_data ?? [], 'work_status');
+            if ($status === '' || $status === '—') {
+                continue;
+            }
+            $counts[$status] = ($counts[$status] ?? 0) + 1;
+        }
+
+        arsort($counts);
+
+        $items = [];
+        foreach ($counts as $status => $count) {
+            $items[] = ['status' => $status, 'count' => $count];
+        }
+
+        return [
+            'items' => $items,
+            'total' => array_sum($counts),
         ];
     }
 
@@ -140,9 +205,6 @@ class DashboardService
                 'approved' => 0,
                 'rejected' => 0,
                 'active_programs' => 0,
-                'budget' => 0,
-                'expenses' => 0,
-                'remaining' => 0,
                 'deleted_kabataan' => 0,
                 'rejected_items' => 0,
             ],
@@ -155,7 +217,7 @@ class DashboardService
                 'rejected' => array_fill(0, 12, 0),
             ],
             'gender_distribution' => ['labels' => ['Male', 'Female'], 'values' => [0, 0]],
-            'budget_programs' => ['labels' => [], 'values' => []],
+            'employment_status_distribution' => ['items' => [], 'total' => 0],
             'officials' => [],
             'upcoming_events' => [],
             'today_reminder' => null,

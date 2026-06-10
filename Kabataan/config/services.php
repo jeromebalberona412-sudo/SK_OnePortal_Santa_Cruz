@@ -36,6 +36,7 @@ return [
         'api_secret' => env('CLOUDINARY_API_SECRET'),
         'folder'     => env('CLOUDINARY_FOLDER', 'sk_oneportal/kabataan_posts'),
         'profile_upload_preset' => env('CLOUDINARY_PROFILE_UPLOAD_PRESET', 'kabataan_profile_images'),
+        'profile_folder'        => env('CLOUDINARY_PROFILE_FOLDER', 'kabataan/profile-images'),
     ],
 
     'slack' => [

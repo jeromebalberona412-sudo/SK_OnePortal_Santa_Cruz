@@ -45,9 +45,14 @@ class ProgramController extends Controller
     public function listApplications(Request $request): JsonResponse
     {
         $user = Auth::user();
+        $letter = $request->query('letter');
 
         return response()->json([
-            'applications' => $this->programService->listUserApplications($user),
+            'applications' => $this->programService->listUserApplications(
+                $user,
+                false,
+                is_string($letter) ? $letter : null,
+            ),
         ]);
     }
 
@@ -93,7 +98,7 @@ class ProgramController extends Controller
     public function cancelApplication(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
-            'cancel_reason' => ['required', 'string', 'min:3', 'max:1000'],
+            'cancel_reason' => ['required', 'string', 'min:3', 'max:500'],
         ]);
 
         $user = Auth::user();

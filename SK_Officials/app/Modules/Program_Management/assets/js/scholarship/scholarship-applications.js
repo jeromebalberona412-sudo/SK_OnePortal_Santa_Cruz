@@ -1,218 +1,136 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
     initScholarshipRequests();
 });
 
-// ── Sample Data ────────────────────────────────────────────────────────────
-const SAMPLE_DATA = [
-    {
-        id: 1001,
-        last_name: 'REYES', first_name: 'MARIA', middle_name: 'SANTOS',
-        date_of_birth: '2005-03-14', gender: 'Female', age: 20,
-        contact_no: '09171234567',
-        address: '123 Sampaguita St., Brgy. Calios, Santa Cruz, Laguna',
-        email: 'maria.reyes@email.com',
-        school_name: 'Laguna State Polytechnic University',
-        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
-        year_level: '2nd Year',
-        program_strand: 'Bachelor of Secondary Education (BSED)',
-        purpose: 'Tuition Fees, Books / Equipments',
-        purpose_list: ['Tuition Fees', 'Books / Equipments'],
-        purpose_others: '',
-        cor_certified: false, photo_id: false,
-        status: 'Pending',
-        submitted_at: 'Jan 10, 2025',
-        submitted_time: '08:32 AM',
-        approved_at: 'Jan 15, 2025',
-        result: 'Passed',
-    },
-    {
-        id: 1002,
-        last_name: 'CRUZ', first_name: 'JUAN', middle_name: 'DELA',
-        date_of_birth: '2004-07-22', gender: 'Male', age: 21,
-        contact_no: '09281234567',
-        address: '45 Rizal Ave., Brgy. Calios, Santa Cruz, Laguna',
-        email: 'juan.cruz@email.com',
-        school_name: 'University of the Philippines Los Baños',
-        school_address: 'College, Los Baños, Laguna 4031',
-        year_level: '3rd Year',
-        program_strand: 'Bachelor of Science in Agriculture (BS Agriculture)',
-        purpose: 'Tuition Fees, Living Expenses',
-        purpose_list: ['Tuition Fees', 'Living Expenses'],
-        purpose_others: '',
-        cor_certified: false, photo_id: false,
-        status: 'Pending',
-        submitted_at: 'Feb 3, 2025',
-        submitted_time: '09:15 AM',
-    },
-    {
-        id: 1003,
-        last_name: 'GARCIA', first_name: 'ANA', middle_name: 'LIM',
-        date_of_birth: '2006-11-05', gender: 'Female', age: 18,
-        contact_no: '09391234567',
-        address: '78 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
-        email: 'ana.garcia@email.com',
-        school_name: 'Santa Cruz National High School',
-        school_address: 'Poblacion, Santa Cruz, Laguna 4009',
-        year_level: 'Grade 12',
-        program_strand: 'Science, Technology, Engineering and Mathematics (STEM)',
-        purpose: 'Books / Equipments',
-        purpose_list: ['Books / Equipments'],
-        purpose_others: '',
-        cor_certified: false, photo_id: false,
-        status: 'Pending',
-        submitted_at: 'Feb 15, 2025',
-        submitted_time: '10:45 AM',
-    },
-    {
-        id: 1004,
-        last_name: 'MENDOZA', first_name: 'CARLO', middle_name: 'BAUTISTA',
-        date_of_birth: '2003-05-18', gender: 'Male', age: 22,
-        contact_no: '09501234567',
-        address: '12 Bonifacio Rd., Brgy. Calios, Santa Cruz, Laguna',
-        email: 'carlo.mendoza@email.com',
-        school_name: 'Laguna College of Business and Arts',
-        school_address: 'National Highway, Calamba City, Laguna 4027',
-        year_level: '4th Year',
-        program_strand: 'Bachelor of Science in Business Administration (BSBA)',
-        purpose: 'Tuition Fees, Living Expenses, Others (Transportation)',
-        purpose_list: ['Tuition Fees', 'Living Expenses', 'Others'],
-        purpose_others: 'Transportation',
-        cor_certified: false, photo_id: false,
-        status: 'Pending',
-        submitted_at: 'Mar 1, 2025',
-        submitted_time: '02:10 PM',
-    },
-    {
-        id: 1005,
-        last_name: 'TORRES', first_name: 'LIZA', middle_name: 'VILLANUEVA',
-        date_of_birth: '2007-09-30', gender: 'Female', age: 17,
-        contact_no: '09611234567',
-        address: '56 Aguinaldo St., Brgy. Calios, Santa Cruz, Laguna',
-        email: 'liza.torres@email.com',
-        school_name: 'Calios Elementary School',
-        school_address: 'Brgy. Calios, Santa Cruz, Laguna 4009',
-        year_level: 'Grade 10',
-        program_strand: '',
-        purpose: 'Books / Equipments, Living Expenses',
-        purpose_list: ['Books / Equipments', 'Living Expenses'],
-        purpose_others: '',
-        cor_certified: false, photo_id: false,
-        status: 'Pending',
-        submitted_at: 'Apr 5, 2025',
-        submitted_time: '03:55 PM',
-    },
-    {
-        id: 1006,
-        last_name: 'DELA CRUZ', first_name: 'JOSE', middle_name: 'RAMOS',
-        date_of_birth: '2004-11-20', gender: 'Male', age: 21,
-        contact_no: '09721234567',
-        address: '88 Magsaysay St., Brgy. Calios, Santa Cruz, Laguna',
-        email: 'jose.delacruz@email.com',
-        school_name: 'Laguna State Polytechnic University',
-        school_address: 'Brgy. Siniloan, Siniloan, Laguna 4019',
-        year_level: '3rd Year',
-        program_strand: 'Bachelor of Science in Information Technology (BSIT)',
-        purpose: 'Tuition Fees, Living Expenses',
-        purpose_list: ['Tuition Fees', 'Living Expenses'],
-        purpose_others: '',
-        cor_certified: false, photo_id: false,
-        status: 'Pending',
-        submitted_at: 'Jan 20, 2025',
-        submitted_time: '07:50 AM',
-        approved_at: 'Jan 25, 2025',
-        result: 'Passed',
-    },
-    {
-        id: 1007,
-        last_name: 'BAUTISTA', first_name: 'KRISTINE', middle_name: 'FLORES',
-        date_of_birth: '2005-06-08', gender: 'Female', age: 20,
-        contact_no: '09831234567',
-        address: '14 Quezon Blvd., Brgy. Calios, Santa Cruz, Laguna',
-        email: 'kristine.bautista@email.com',
-        school_name: 'De La Salle University – Dasmariñas',
-        school_address: 'DBB Road, City of Dasmariñas, Cavite 4114',
-        year_level: '2nd Year',
-        program_strand: 'Bachelor of Science in Nursing (BSN)',
-        purpose: 'Tuition Fees, Books / Equipments',
-        purpose_list: ['Tuition Fees', 'Books / Equipments'],
-        purpose_others: '',
-        cor_certified: false, photo_id: false,
-        status: 'Pending',
-        submitted_at: 'Feb 5, 2025',
-        submitted_time: '11:20 AM',
-        approved_at: 'Feb 10, 2025',
-        result: 'Passed',
-    },
-    {
-        id: 1008,
-        last_name: 'VILLANUEVA', first_name: 'PATRICK', middle_name: 'SANTOS',
-        date_of_birth: '2004-03-12', gender: 'Male', age: 21,
-        contact_no: '09941234567',
-        address: '33 Mabini St., Brgy. Calios, Santa Cruz, Laguna',
-        email: 'patrick.villanueva@email.com',
-        school_name: 'Laguna University',
-        school_address: 'Brgy. Bubukal, Santa Cruz, Laguna 4009',
-        year_level: '2nd Year',
-        program_strand: 'Bachelor of Science in Information and Communications Technology (BSICT)',
-        purpose: 'Tuition Fees, Books / Equipments',
-        purpose_list: ['Tuition Fees', 'Books / Equipments'],
-        purpose_others: '',
-        cor_certified: false, photo_id: false,
-        status: 'Pending',
-        submitted_at: 'Jan 8, 2025',
-        submitted_time: '08:05 AM',
-        gpa: '1.85',
-        employed: false,
-        household_dependents: 5,
-        form_answers: [
-            {
-                question: 'Why do you need this scholarship assistance?',
-                answer: 'I need assistance to pay tuition and purchase books for my ICT program. My family income is limited and I want to finish my degree on time.',
-            },
-            {
-                question: 'What is your current GPA or general average?',
-                answer: '1.85 (Good Standing)',
-            },
-            {
-                question: 'Are you currently employed or receiving other income?',
-                answer: 'No',
-            },
-            {
-                question: 'Purpose of assistance (select all that apply)',
-                answer: 'Tuition Fees, Books / Equipments',
-            },
-            {
-                question: 'How many dependents are in your household?',
-                answer: '5',
-            },
-        ],
-    },
-];
+const PROGRAM_LETTER = 'A';
+const SCHOL_EMPTY = '-';
+const SCHOL_ICON_MAX = '\u25A1';
+const SCHOL_ICON_RESTORE = '\u29C9';
+
+function scholSetMaximizeButton(btn, isMax) {
+    if (!btn) return;
+    btn.textContent = isMax ? SCHOL_ICON_RESTORE : SCHOL_ICON_MAX;
+    btn.title = isMax ? 'Restore Down' : 'Maximize';
+}
+
+function scholCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
+
+async function scholApiFetch(url, options = {}) {
+    const response = await fetch(url, {
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': scholCsrfToken(),
+            ...(options.headers || {}),
+        },
+        ...options,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'Request failed.');
+    return data;
+}
+
+function mapApiStatus(status) {
+    const map = {
+        pending: 'Pending',
+        approved: 'Approved',
+        rejected: 'Rejected',
+        cancelled: 'Cancelled',
+    };
+    return map[status] || String(status || 'Pending');
+}
+
+function mapApiRecord(app) {
+    return {
+        id: app.id,
+        last_name: app.last_name,
+        first_name: app.first_name,
+        middle_name: app.middle_name,
+        suffix: app.suffix,
+        school_name: app.school_name,
+        school_address: app.school_address,
+        year_level: app.year_level || app.grade_level,
+        program_strand: app.course,
+        purpose: app.purpose,
+        status: mapApiStatus(app.status),
+        submitted_at: app.date_submitted,
+        submitted_time: app.submitted_time,
+        contact_no: app.contact_number,
+        email: app.email,
+        kk_profile_data: app.kk_profile_data || {},
+        form_answers: app.form_answers || [],
+        cor_certified: Boolean(app.cor_certified),
+        photo_id: Boolean(app.photo_id),
+        documents_count: app.documents_count ?? 0,
+        document_labels: app.document_labels || [],
+        approved_at: app.reviewed_at
+            ? new Date(app.reviewed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+            : undefined,
+    };
+}
+
+function normalizeDocuments(docs) {
+    if (!docs) return [];
+    if (Array.isArray(docs)) return docs;
+    if (typeof docs === 'object') return Object.values(docs);
+    return [];
+}
+
+function mapDetailRecord(app) {
+    const base = mapApiRecord(app);
+    const docs = normalizeDocuments(app.required_documents);
+    return {
+        ...base,
+        gender: app.sex,
+        date_of_birth: app.birthdate,
+        age: app.age,
+        address: app.purok || app.barangay,
+        program_strand: app.course || base.program_strand,
+        cor_certified: docs.some((doc) => /cor|certified/i.test(String(doc.question_label || doc.label || doc.original_name || doc.name || ''))),
+        photo_id: docs.some((doc) => /id|photo/i.test(String(doc.question_label || doc.label || doc.original_name || doc.name || ''))),
+        uploaded_documents: docs,
+        form_answers: (app.custom_answers || []).map((item, index) => ({
+            question: item.question_label || item.label || `Question ${index + 1}`,
+            question_type: item.question_type || '',
+            answer: item.answer ?? SCHOL_EMPTY,
+        })),
+        kk_profile_data: app.kk_profile_data || base.kk_profile_data || {},
+    };
+}
+
+function scholEscapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function formatRequirementsCell(record) {
+    const labels = record.document_labels || [];
+    if (labels.length) {
+        return labels.map((label) => `<span>${scholEscapeHtml(label)}</span>`).join('');
+    }
+    const count = record.documents_count ?? 0;
+    if (count > 0) {
+        return `<span>${count} PDF${count === 1 ? '' : 's'} uploaded</span>`;
+    }
+    return `<span style="color:#9ca3af;">No documents</span>`;
+}
+
 
 function initScholarshipRequests() {
     if (window.ScholarshipViewShared) {
         window.ScholarshipViewShared.seedScholarshipProgramIfNeeded();
     }
 
-    // Seed sample data if localStorage is empty
-    if (!localStorage.getItem('scholarship_requests_seeded_v7')) {
-        localStorage.setItem('scholarship_requests', JSON.stringify(SAMPLE_DATA));
-        localStorage.setItem('scholarship_requests_seeded_v7', '1');
-    }
-
-    let records = JSON.parse(localStorage.getItem('scholarship_requests') || '[]');
-    const patrickSample = SAMPLE_DATA.find(s => s.id === 1008);
-    if (patrickSample) {
-        records = records.map(r => {
-            if (r.id === 1008 && (!r.form_answers || !r.form_answers.length)) {
-                return { ...r, ...patrickSample };
-            }
-            return r;
-        });
-        localStorage.setItem('scholarship_requests', JSON.stringify(records));
-    }
+    let records = [];
+    let apiSummary = { total: 0, pending: 0, approved: 0, rejected: 0 };
     let deleteTargetId = null;
     let viewTargetId = null;
+    let rejectTargetId = null;
 
     const tbody = document.getElementById('scholTableBody');
     const searchInput = document.getElementById('scholSearch');
@@ -332,6 +250,7 @@ function initScholarshipRequests() {
     }
 
     function closeRejectReasonModal() {
+        rejectTargetId = null;
         if (rejectReasonModal) rejectReasonModal.style.display = 'none';
     }
 
@@ -344,7 +263,7 @@ function initScholarshipRequests() {
         });
     }
 
-    // ── Make Form modal ─────────────────────────────────────────────────────
+    // â”€â”€ Make Form modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (makeFormBtn) makeFormBtn.addEventListener('click', () => {
         makeFormModal.style.display = 'flex';
     });
@@ -355,7 +274,7 @@ function initScholarshipRequests() {
             const mBox = document.getElementById('makeFormBox');
             if (mBox) mBox.classList.remove('schol-modal-maximized');
             const mMaxBtn = document.getElementById('makeFormMaximize');
-            if (mMaxBtn) mMaxBtn.textContent = '□';
+            if (mMaxBtn) scholSetMaximizeButton(mMaxBtn, false);
         });
     });
     if (makeFormModal) makeFormModal.addEventListener('click', e => { if (e.target === makeFormModal) makeFormModal.style.display = 'none'; });
@@ -369,11 +288,11 @@ function initScholarshipRequests() {
             const isMax = !makeFormBox.classList.contains('schol-modal-maximized');
             makeFormModal.classList.toggle('schol-modal-maximized', isMax);
             makeFormBox.classList.toggle('schol-modal-maximized', isMax);
-            makeFormMaxBtn.textContent = isMax ? '⧉' : '□';
+            scholSetMaximizeButton(makeFormMaxBtn, isMax);
         });
     }
 
-    // ── Display scheduled application info ──────────────────────────────────
+    // â”€â”€ Display scheduled application info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function convert24to12(time24) {
         const [hours, minutes] = time24.split(':');
         const hour = parseInt(hours, 10);
@@ -508,7 +427,7 @@ function initScholarshipRequests() {
             const isMax = !scheduleListBox.classList.contains('schol-modal-maximized');
             scheduleListModal.classList.toggle('schol-modal-maximized', isMax);
             scheduleListBox.classList.toggle('schol-modal-maximized', isMax);
-            scheduleListMaximize.textContent = isMax ? '⧉' : '□';
+            scholSetMaximizeButton(scheduleListMaximize, isMax);
         });
     }
 
@@ -647,7 +566,7 @@ function initScholarshipRequests() {
             scheduleListModal.style.display = 'none';
             scheduleListModal.classList.remove('schol-modal-maximized');
             if (scheduleListBox) scheduleListBox.classList.remove('schol-modal-maximized');
-            if (scheduleListMaximize) scheduleListMaximize.textContent = '□';
+            if (scheduleListMaximize) scholSetMaximizeButton(scheduleListMaximize, false);
         });
     });
 
@@ -657,7 +576,7 @@ function initScholarshipRequests() {
                 scheduleListModal.style.display = 'none';
                 scheduleListModal.classList.remove('schol-modal-maximized');
                 if (scheduleListBox) scheduleListBox.classList.remove('schol-modal-maximized');
-                if (scheduleListMaximize) scheduleListMaximize.textContent = '□';
+                if (scheduleListMaximize) scholSetMaximizeButton(scheduleListMaximize, false);
             }
         });
     }
@@ -665,7 +584,7 @@ function initScholarshipRequests() {
     // Display schedule on page load
     displayScheduledInfo();
 
-    // ── Save Schedule ────────────────────────────────────────────────────────
+    // â”€â”€ Save Schedule â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const btnSaveSchedule = document.getElementById('btnSaveSchedule');
     if (btnSaveSchedule) {
         btnSaveSchedule.addEventListener('click', () => {
@@ -714,7 +633,7 @@ function initScholarshipRequests() {
         });
     }
 
-    // ── Render ──────────────────────────────────────────────────────────────
+    // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function render() {
         // Sort by submitted date+time ascending (earliest first)
         const parseSubmitted = r => {
@@ -831,18 +750,17 @@ function initScholarshipRequests() {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="schol-fullname-cell"><span class="schol-fullname">${formatApplicantName(r)}</span></td>
-                    <td style="text-align:center;font-size:12px;">${r.school_name || '—'}</td>
-                    <td style="text-align:center;">${r.year_level || '—'}</td>
-                    <td style="text-align:center;font-size:12px;">${r.purpose || '—'}</td>
+                    <td style="text-align:center;font-size:12px;">${r.school_name || SCHOL_EMPTY}</td>
+                    <td style="text-align:center;">${r.year_level || SCHOL_EMPTY}</td>
+                    <td style="text-align:center;font-size:12px;">${r.purpose || SCHOL_EMPTY}</td>
                     <td style="text-align:center;font-size:10px;">
                         <div style="display:flex;flex-direction:column;gap:3px;align-items:center;line-height:1.3;">
-                            <span>COR – CERTIFIED TRUE COPY</span>
-                            <span>PHOTO COPY OF ID (FRONT AND BACK)</span>
+                            ${formatRequirementsCell(r)}
                         </div>
                     </td>
                     <td style="text-align:center;"><span class="schol-pill ${statusCls}">${r.status}</span></td>
-                    <td style="text-align:center;">${r.submitted_at || '—'}</td>
-                    <td style="text-align:center;font-size:12px;color:#6b7280;">${r.submitted_time || '—'}</td>
+                    <td style="text-align:center;">${r.submitted_at || SCHOL_EMPTY}</td>
+                    <td style="text-align:center;font-size:12px;color:#6b7280;">${r.submitted_time || SCHOL_EMPTY}</td>
                     <td style="text-align:center;">
                         <div class="schol-tbl-actions prog-tbl-actions">
                             <button class="schol-tbl-btn schol-tbl-btn-view prog-btn prog-btn-view" data-action="view" data-id="${r.id}">View</button>
@@ -857,15 +775,37 @@ function initScholarshipRequests() {
     }
 
     function updateStats() {
-        document.getElementById('statTotal').textContent = records.length;
-        document.getElementById('statPending').textContent = records.filter(r => r.status === 'Pending').length;
-        document.getElementById('statApproved').textContent = records.filter(r => r.status === 'Approved').length;
-        document.getElementById('statRejected').textContent = records.filter(r => r.status === 'Rejected').length;
+        const totalEl = document.getElementById('statTotal');
+        const pendingEl = document.getElementById('statPending');
+        const approvedEl = document.getElementById('statApproved');
+        const rejectedEl = document.getElementById('statRejected');
+        if (totalEl) totalEl.textContent = String(apiSummary.total ?? records.length);
+        if (pendingEl) pendingEl.textContent = String(apiSummary.pending ?? records.filter(r => r.status === 'Pending').length);
+        if (approvedEl) approvedEl.textContent = String(apiSummary.approved ?? records.filter(r => r.status === 'Approved').length);
+        if (rejectedEl) rejectedEl.textContent = String(apiSummary.rejected ?? records.filter(r => r.status === 'Rejected').length);
     }
 
-    function save() { localStorage.setItem('scholarship_requests', JSON.stringify(records)); }
+    async function loadRecords() {
+        const data = await scholApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}`);
+        records = (data.data || []).map(mapApiRecord);
+        apiSummary = data.summary || {};
+        render();
+    }
 
-    // ── Table click ─────────────────────────────────────────────────────────
+    async function updateApplicationStatus(id, status, rejectionReasons = null, rejectionReason = null) {
+        await scholApiFetch(`/api/program-applications/${id}/status?letter=${PROGRAM_LETTER}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                status,
+                rejection_reasons: rejectionReasons,
+                rejection_reason: rejectionReason,
+                letter: PROGRAM_LETTER,
+            }),
+        });
+        await loadRecords();
+    }
+
+    // â”€â”€ Table click â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     tbody.addEventListener('click', e => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
@@ -874,8 +814,21 @@ function initScholarshipRequests() {
         const record = records.find(r => r.id === id);
         if (!record) return;
 
-        if (action === 'view') { viewTargetId = id; openViewModal(record); }
+        if (action === 'view') { openViewModalFromApi(record); }
     });
+
+    async function openViewModalFromApi(record) {
+        viewTargetId = record.id;
+        try {
+            if (typeof window.showLoading === 'function') window.showLoading();
+            const data = await scholApiFetch(`/api/program-applications/${record.id}?letter=${PROGRAM_LETTER}`);
+            if (data.data) openViewModal(mapDetailRecord(data.data));
+        } catch (error) {
+            showScholToast(error.message || 'Failed to load application details.', 'error');
+        } finally {
+            if (typeof window.hideLoading === 'function') window.hideLoading();
+        }
+    }
 
     function formatApplicantName(r) {
         if (window.ScholarshipViewShared?.formatScholarshipFullName) {
@@ -885,34 +838,56 @@ function initScholarshipRequests() {
         const fn = (r.first_name || '').toUpperCase();
         const mn = (r.middle_name || '').toUpperCase();
         const parts = [fn, mn].filter(Boolean);
-        return parts.length ? `${ln},${parts.join(',')}` : ln || '—';
+        return parts.length ? `${ln},${parts.join(',')}` : ln || SCHOL_EMPTY;
     }
 
     function getApplicantInitials(r) {
         return ((r.first_name?.[0] || '') + (r.last_name?.[0] || '')).toUpperCase();
     }
 
-    // ── View modal — Scholarship application PDF-style details ───────────
+    function renderUploadedDocumentsSection(documents) {
+        const docs = normalizeDocuments(documents);
+        if (!docs.length) {
+            return '<span style="font-size:14px;color:#9ca3af;">No documents uploaded</span>';
+        }
+        return docs.map((doc) => {
+            const previewUrl = doc.preview_url || doc.download_url || '#';
+            const downloadUrl = doc.download_url || previewUrl;
+            const fileName = doc.original_name || doc.question_label || 'Uploaded PDF';
+            const meta = [doc.size_display, doc.question_label].filter(Boolean).join(' • ');
+            return `
+                <div style="display:flex;gap:14px;align-items:flex-start;padding:14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;">
+                    <div style="width:44px;height:44px;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">PDF</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:14px;font-weight:600;color:#111827;word-break:break-word;">${scholEscapeHtml(fileName)}</div>
+                        ${meta ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${scholEscapeHtml(meta)}</div>` : ''}
+                        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+                            <a href="${scholEscapeHtml(previewUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:#213F99;text-decoration:none;">Preview</a>
+                            <a href="${scholEscapeHtml(downloadUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:#213F99;text-decoration:none;">Download</a>
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
     function openViewModal(r) {
         const statusCls = r.status === 'Approved' ? 'schol-pill-approved'
             : r.status === 'Rejected' ? 'schol-pill-rejected'
                 : 'schol-pill-pending';
 
-        const reqList = [];
-        if (r.cor_certified) reqList.push('COR – Certified True Copy');
-        if (r.photo_id) reqList.push('Photo Copy of ID');
-        const purposeText = r.purpose || (Array.isArray(r.purpose_list) ? r.purpose_list.join(', ') : '—');
+        const purposeText = r.purpose || (Array.isArray(r.purpose_list) ? r.purpose_list.join(', ') : SCHOL_EMPTY);
         const fullName = formatApplicantName(r);
         const initials = getApplicantInitials(r);
         const SV = window.ScholarshipViewShared;
         const esc = (s) => (SV ? SV.escapeHtml(s) : String(s ?? ''));
+        const uploadedDocsHtml = renderUploadedDocumentsSection(r.uploaded_documents);
         const program = SV ? SV.loadScholarshipProgram() : null;
         const programHtml = SV ? SV.renderProgramInformationSection(program) : '';
         const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
 
         // KK Profile Data Section
         const kkProfileData = r.kk_profile_data || {};
-        const kkProfilingFields = program?.kkProfilingFields || [];
+        const kkProfilingFields = (program?.kkProfilingFields || []).filter((field) => field !== 'full_name');
         const hasKKProfileData = kkProfilingFields.length > 0 && Object.keys(kkProfileData).length > 0;
 
         const kkProfileHtml = hasKKProfileData ? `
@@ -930,7 +905,6 @@ function initScholarshipRequests() {
                             first_name: 'First Name',
                             middle_name: 'Middle Name',
                             suffix: 'Suffix',
-                            full_name: 'Full Name',
                             birthday: 'Birthday',
                             age: 'Age',
                             sex: 'Sex',
@@ -957,7 +931,7 @@ function initScholarshipRequests() {
                         const value = kkProfileData[field];
                         if (!value) return '';
                         return `
-                            <div style="${field === 'home_address' || field === 'full_name' ? 'grid-column:1/-1;' : ''}">
+                            <div style="${field === 'home_address' ? 'grid-column:1/-1;' : ''}">
                                 <label style="font-size:13px;font-weight:600;color:#0369a1;margin-bottom:6px;display:block;">${fieldLabels[field] || field}</label>
                                 <div style="font-size:15px;color:#111827;padding:10px 14px;background:#fff;border-radius:6px;border:1px solid #bae6fd;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(value)}</div>
                             </div>
@@ -999,14 +973,9 @@ function initScholarshipRequests() {
                             <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${purposeText || 'Not specified'}</div>
                         </div>
                         <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Submitted Requirements</label>
+                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Submitted Documents</label>
                             <div style="background:#f9fafb;border-radius:8px;padding:16px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                                ${reqList.length > 0 ? reqList.map(req => `
-                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                        <span style="font-size:14px;color:#111827;">${req}</span>
-                                    </div>
-                                `).join('') : '<span style="font-size:14px;color:#9ca3af;">No requirements submitted</span>'}
+                                ${uploadedDocsHtml}
                             </div>
                         </div>
                     </div>
@@ -1046,6 +1015,8 @@ function initScholarshipRequests() {
             </div>
         `;
         viewModal.style.display = 'flex';
+        if (approveBtn) approveBtn.style.display = r.status === 'Pending' ? 'inline-flex' : 'none';
+        if (rejectBtn) rejectBtn.style.display = r.status === 'Pending' ? 'inline-flex' : 'none';
     }
 
     function closeViewModal() {
@@ -1055,7 +1026,7 @@ function initScholarshipRequests() {
         const vBox = document.getElementById('scholViewBox');
         if (vBox) vBox.classList.remove('schol-modal-maximized');
         const maxBtn = document.getElementById('scholViewMaximize');
-        if (maxBtn) maxBtn.textContent = '□';
+        if (maxBtn) scholSetMaximizeButton(maxBtn, false);
     }
     [viewClose].forEach(btn => { if (btn) btn.addEventListener('click', closeViewModal); });
     viewModal.addEventListener('click', e => { if (e.target === viewModal) closeViewModal(); });
@@ -1069,36 +1040,32 @@ function initScholarshipRequests() {
             const isMax = !scholViewBox.classList.contains('schol-modal-maximized');
             viewModal.classList.toggle('schol-modal-maximized', isMax);
             scholViewBox.classList.toggle('schol-modal-maximized', isMax);
-            scholViewMaxBtn.textContent = isMax ? '⧉' : '□';
+            scholSetMaximizeButton(scholViewMaxBtn, isMax);
         });
     }
 
     // Approve / Reject
     if (approveBtn) {
-        approveBtn.addEventListener('click', () => {
+        approveBtn.addEventListener('click', async () => {
             if (!viewTargetId) return;
-            const idx = records.findIndex(r => r.id === viewTargetId);
-            if (idx === -1) return;
-
-            const record = records[idx];
-            const name = `${record.first_name} ${record.last_name}`;
-
-            // Approve the application
-            records[idx].status = 'Approved';
-            if (!records[idx].approved_at) records[idx].approved_at = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-            save();
-            render();
-            closeViewModal();
-            showScholToast(`✓ Application of ${name} has been approved successfully!`);
+            const record = records.find(r => r.id === viewTargetId);
+            const name = record ? `${record.first_name} ${record.last_name}` : 'Applicant';
+            try {
+                if (typeof window.showLoading === 'function') window.showLoading();
+                await updateApplicationStatus(viewTargetId, 'approved');
+                closeViewModal();
+                showScholToast(`Application of ${name} has been approved successfully!`);
+            } catch (error) {
+                showScholToast(error.message || 'Failed to approve application.', 'error');
+            } finally {
+                if (typeof window.hideLoading === 'function') window.hideLoading();
+            }
         });
     }
     if (rejectBtn) {
         rejectBtn.addEventListener('click', () => {
             if (!viewTargetId) return;
-            const idx = records.findIndex(r => r.id === viewTargetId);
-            if (idx !== -1) {
-                save();
-            }
+            rejectTargetId = viewTargetId;
             closeViewModal();
             openRejectReasonModal();
         });
@@ -1106,32 +1073,40 @@ function initScholarshipRequests() {
 
     // Confirm Rejection with Reasons
     if (rejectReasonConfirm) {
-        rejectReasonConfirm.addEventListener('click', () => {
+        rejectReasonConfirm.addEventListener('click', async () => {
             const selectedReasons = [];
             document.querySelectorAll('.reject-reason-checkbox:checked').forEach(cb => {
                 selectedReasons.push(cb.value);
             });
+            const otherReason = rejectReasonOtherInput?.value?.trim();
+            if (rejectReasonOther?.checked && otherReason) selectedReasons.push(otherReason);
 
             if (selectedReasons.length === 0) {
                 showScholToast('Please select at least one rejection reason.', 'error');
                 return;
             }
 
-            const idx = records.findIndex(r => r.id === viewTargetId);
-            const name = idx !== -1 ? `${records[idx].first_name} ${records[idx].last_name}` : 'Applicant';
-            if (idx !== -1) {
-                records[idx].status = 'Rejected';
-                records[idx].rejection_reasons = selectedReasons;
-                records[idx].rejected_at = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                save();
-                render();
+            if (!rejectTargetId) {
+                showScholToast('Unable to reject application. Please open the application and try again.', 'error');
+                return;
             }
-            closeRejectReasonModal();
-            showScholToast(`Application of ${name} has been rejected.`, 'error');
+
+            const record = records.find(r => r.id === rejectTargetId);
+            const name = record ? `${record.first_name} ${record.last_name}` : 'Applicant';
+            try {
+                if (typeof window.showLoading === 'function') window.showLoading();
+                await updateApplicationStatus(rejectTargetId, 'rejected', selectedReasons, otherReason || selectedReasons[0]);
+                closeRejectReasonModal();
+                showScholToast(`Application of ${name} has been rejected.`, 'error');
+            } catch (error) {
+                showScholToast(error.message || 'Failed to reject application.', 'error');
+            } finally {
+                if (typeof window.hideLoading === 'function') window.hideLoading();
+            }
         });
     }
 
-    // ── Delete modal ─────────────────────────────────────────────────────────
+    // â”€â”€ Delete modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [deleteClose, deleteCancel].forEach(btn => {
         if (btn) btn.addEventListener('click', () => { deleteModal.style.display = 'none'; deleteTargetId = null; });
     });
@@ -1139,14 +1114,14 @@ function initScholarshipRequests() {
     if (deleteConfirm) {
         deleteConfirm.addEventListener('click', () => {
             records = records.filter(r => r.id !== deleteTargetId);
-            save(); render();
+            render();
             deleteModal.style.display = 'none';
             deleteTargetId = null;
-            showScholToast('Application deleted.');
+            showScholToast('Application removed from view.');
         });
     }
 
-    // ── Filters ──────────────────────────────────────────────────────────────
+    // â”€â”€ Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const filterDropdown = document.getElementById('scholFilter');
     if (filterDropdown) filterDropdown.addEventListener('change', () => { filterType = filterDropdown.value; render(); });
     if (searchInput) searchInput.addEventListener('input', () => { filterSearch = searchInput.value.trim(); render(); });
@@ -1164,7 +1139,17 @@ function initScholarshipRequests() {
     setTimeToDropdowns('schedOpenTime', '8:00 AM');
     setTimeToDropdowns('schedCloseTime', '5:00 PM');
 
-    render();
+    (async () => {
+        try {
+            if (typeof window.showLoading === 'function') window.showLoading();
+            await loadRecords();
+        } catch (error) {
+            showScholToast(error.message || 'Failed to load scholarship applications.', 'error');
+            if (tbody) tbody.innerHTML = '<tr class="schol-empty-row"><td colspan="8">Unable to load applications.</td></tr>';
+        } finally {
+            if (typeof window.hideLoading === 'function') window.hideLoading();
+        }
+    })();
 }
 
 function showScholToast(msg, type = 'success') {

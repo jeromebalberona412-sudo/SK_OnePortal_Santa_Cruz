@@ -435,6 +435,19 @@ html, body {
     margin-bottom: 16px;
 }
 
+.dash-section-header--wrap {
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.dash-chart-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
 .dash-section-title {
     font-size: 15px;
     font-weight: 800;
@@ -590,6 +603,117 @@ html, body {
 
 .chart-canvas-wrap--pie {
     height: 220px;
+}
+
+.chart-canvas-wrap--employment {
+    min-height: 220px;
+    height: 260px;
+}
+
+.dash-chart-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0 12px;
+}
+
+.dash-skeleton-bar {
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: dashSkeletonPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes dashSkeletonPulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.dash-employment-total {
+    margin: 12px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid #f3f4f6;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.dash-brgy-link-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.dash-brgy-link-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.dash-brgy-link-item:hover {
+    background: #eef1fb;
+    border-color: #c7d2fe;
+}
+
+.dash-brgy-link-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #1a1d25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dash-brgy-link-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.dash-brgy-link-initials {
+    font-size: 12px;
+    font-weight: 800;
+    color: #f5c518;
+}
+
+.dash-brgy-link-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dash-brgy-link-name {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1d25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-brgy-link-sub {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.dash-brgy-link-chevron {
+    width: 14px;
+    height: 14px;
+    color: #bbb;
+    flex-shrink: 0;
 }
 
 /* ── Line chart checkbox filter row (below x-axis) ──────── */
@@ -1226,4 +1350,13 @@ html, body {
     .dash-year-select { font-size: 11px; }
 
     .dash-modal-box { max-width: 100%; border-radius: 14px; }
+
+    .dash-chart-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .dash-brgy-link-list {
+        grid-template-columns: 1fr;
+    }
 }

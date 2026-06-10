@@ -7,4 +7,5 @@ return [
     App\Modules\Authentication\Providers\AuthenticationServiceProvider::class,
     App\Modules\Profile\Providers\ProfileServiceProvider::class,
     App\Modules\HelpCenter\Providers\HelpCenterServiceProvider::class,
+    App\Modules\Reports_Management\ReportsManagementServiceProvider::class,
 ];

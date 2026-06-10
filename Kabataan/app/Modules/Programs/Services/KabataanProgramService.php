@@ -4,6 +4,7 @@ namespace App\Modules\Programs\Services;
 
 use App\Models\Abyip;
 use App\Models\KabataanRegistration;
+use App\Models\KkSurveyResponse;
 use App\Models\ProgramApplication;
 use App\Models\ScheduleProgram;
 use App\Models\User;
@@ -161,11 +162,20 @@ class KabataanProgramService
     /**
      * @return list<array<string, mixed>>
      */
-    public function listUserApplications(User $user, bool $withAnswers = false): array
+    public function listUserApplications(User $user, bool $withAnswers = false, ?string $letter = null): array
     {
-        return ProgramApplication::query()
+        $query = ProgramApplication::query()
             ->with(['scheduleProgram'])
-            ->where('kabataan_id', $user->id)
+            ->where('kabataan_id', $user->id);
+
+        if ($letter !== null && trim($letter) !== '') {
+            $letter = strtoupper(trim($letter));
+            $query->whereHas('scheduleProgram', function ($builder) use ($letter) {
+                $builder->where('program_letter', $letter);
+            });
+        }
+
+        return $query
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (ProgramApplication $app) => $this->formatUserApplication($app, $withAnswers, $withAnswers ? $user : null))
@@ -223,6 +233,12 @@ class KabataanProgramService
             ]);
         }
 
+        if (mb_strlen($reason) > 500) {
+            throw ValidationException::withMessages([
+                'cancel_reason' => ['Cancel reason must not exceed 500 characters.'],
+            ]);
+        }
+
         $application->update([
             'status' => ProgramApplication::STATUS_CANCELLED,
             'cancel_reason' => $reason,
@@ -266,7 +282,9 @@ class KabataanProgramService
         $registration = KabataanRegistration::query()
             ->with('barangay')
             ->where('user_id', $user->id)
-            ->latest()
+            ->orderByRaw("CASE WHEN status = 'approved' THEN 0 ELSE 1 END")
+            ->orderByDesc('submitted_at')
+            ->orderByDesc('id')
             ->first();
 
         if ($registration === null) {
@@ -471,6 +489,7 @@ class KabataanProgramService
         $payload = [
             'id' => $application->id,
             'schedule_program_id' => $application->program_id,
+            'program_letter' => $scheduleProgram?->program_letter,
             'program_name' => $scheduleProgram?->program_name ?? 'Program',
             'program_type' => $scheduleProgram?->program_type,
             'committee' => $scheduleProgram?->committee,
@@ -562,10 +581,45 @@ class KabataanProgramService
         $registration = KabataanRegistration::query()
             ->with('barangay')
             ->where('user_id', $user->id)
-            ->latest()
+            ->orderByRaw("CASE WHEN status = 'approved' THEN 0 ELSE 1 END")
+            ->orderByDesc('submitted_at')
+            ->orderByDesc('id')
             ->first();
 
         $formData = $registration?->form_data ?? [];
+
+        $survey = $registration
+            ? KkSurveyResponse::query()->where('kabataan_registration_id', $registration->id)->first()
+            : null;
+
+        if ($survey !== null) {
+            $formData = array_merge($formData, array_filter([
+                'last_name' => $survey->last_name,
+                'first_name' => $survey->first_name,
+                'middle_name' => $survey->middle_name,
+                'suffix' => $survey->suffix,
+                'birthday' => $survey->birthdate?->format('Y-m-d'),
+                'date_of_birth' => $survey->birthdate?->format('Y-m-d'),
+                'age' => $survey->age,
+                'sex' => $survey->sex_assigned_at_birth,
+                'gender' => $survey->sex_assigned_at_birth,
+                'civil_status' => $survey->civil_status,
+                'contact_number' => $survey->contact_number,
+                'email' => $survey->email,
+                'region' => $survey->region,
+                'province' => $survey->province,
+                'city' => $survey->municipality,
+                'city_municipality' => $survey->municipality,
+                'barangay' => $survey->barangay,
+                'purok_zone' => $survey->purok_zone,
+                'youth_classification' => $survey->youth_classification,
+                'youth_age_group' => $survey->youth_age_group,
+                'education' => $survey->educational_background,
+                'work_status' => $survey->work_status,
+                'sk_voter' => $survey->registered_sk_voter ? 'Yes' : 'No',
+                'sk_voted' => $survey->voted_last_sk ? 'Yes' : 'No',
+            ], fn ($value) => $value !== null && trim((string) $value) !== ''));
+        }
 
         $fullName = trim(implode(' ', array_filter([
             $registration?->first_name ?? ($formData['first_name'] ?? ''),
@@ -737,6 +791,40 @@ class KabataanProgramService
     private function buildApplicationProfileData(User $user, KabataanRegistration $registration): array
     {
         $formData = $registration->form_data ?? [];
+
+        $survey = KkSurveyResponse::query()
+            ->where('kabataan_registration_id', $registration->id)
+            ->first();
+
+        if ($survey !== null) {
+            $formData = array_merge($formData, array_filter([
+                'last_name' => $survey->last_name,
+                'first_name' => $survey->first_name,
+                'middle_name' => $survey->middle_name,
+                'suffix' => $survey->suffix,
+                'birthday' => $survey->birthdate?->format('Y-m-d'),
+                'date_of_birth' => $survey->birthdate?->format('Y-m-d'),
+                'age' => $survey->age,
+                'sex' => $survey->sex_assigned_at_birth,
+                'gender' => $survey->sex_assigned_at_birth,
+                'civil_status' => $survey->civil_status,
+                'contact_number' => $survey->contact_number,
+                'email' => $survey->email,
+                'region' => $survey->region,
+                'province' => $survey->province,
+                'city' => $survey->municipality,
+                'city_municipality' => $survey->municipality,
+                'barangay' => $survey->barangay,
+                'purok_zone' => $survey->purok_zone,
+                'youth_classification' => $survey->youth_classification,
+                'youth_age_group' => $survey->youth_age_group,
+                'education' => $survey->educational_background,
+                'work_status' => $survey->work_status,
+                'sk_voter' => $survey->registered_sk_voter ? 'Yes' : 'No',
+                'sk_voted' => $survey->voted_last_sk ? 'Yes' : 'No',
+            ], fn ($value) => $value !== null && trim((string) $value) !== ''));
+        }
+
         $birthdate = $this->parseBirthdate($formData['birthday'] ?? ($formData['date_of_birth'] ?? null));
 
         if ($birthdate === null) {

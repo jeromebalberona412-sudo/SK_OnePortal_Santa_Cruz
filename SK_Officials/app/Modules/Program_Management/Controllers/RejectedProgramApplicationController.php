@@ -4,6 +4,7 @@ namespace App\Modules\Program_Management\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProgramApplication;
+use App\Models\User;
 use App\Modules\Program_Management\Services\ProgramApplicationReviewService;
 use App\Services\RejectedProgramApplicationService;
 use App\Services\SkOfficialActivityService;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 abstract class RejectedProgramApplicationController extends Controller
 {
@@ -58,6 +60,8 @@ abstract class RejectedProgramApplicationController extends Controller
         if (! $user || ! $user->barangay_id) {
             return response()->json(['data' => [], 'stats' => $this->emptyStats()]);
         }
+
+        $this->syncMissingRejectedRecords($user);
 
         $modelClass = $this->rejectedService->modelForLetter($this->letter);
 
@@ -109,7 +113,7 @@ abstract class RejectedProgramApplicationController extends Controller
         ]);
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
         $user = Auth::user();
 
@@ -117,19 +121,20 @@ abstract class RejectedProgramApplicationController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401);
         }
 
-        $modelClass = $this->rejectedService->modelForLetter($this->letter);
-
-        $rejectedRow = $modelClass::forBarangay($user->barangay_id)
-            ->active()
-            ->where('program_application_id', $id)
-            ->first();
-
-        if ($rejectedRow === null) {
-            return response()->json(['success' => false, 'message' => 'Rejected record not found.'], 404);
+        try {
+            $applicationId = $this->parseApplicationId($id);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($exception->errors())->flatten()->first(),
+            ], 422);
         }
 
+        $modelClass = $this->rejectedService->modelForLetter($this->letter);
+
         $application = ProgramApplication::withTrashed()
-            ->whereKey($id)
+            ->with(['scheduleProgram'])
+            ->whereKey($applicationId)
             ->whereHas('scheduleProgram', function ($query) use ($user) {
                 $query->where('barangay_id', $user->barangay_id)
                     ->where('program_letter', $this->letter);
@@ -138,6 +143,19 @@ abstract class RejectedProgramApplicationController extends Controller
 
         if ($application === null) {
             return response()->json(['success' => false, 'message' => 'Application not found.'], 404);
+        }
+
+        if ($application->status !== ProgramApplication::STATUS_REJECTED) {
+            return response()->json(['success' => false, 'message' => 'Only rejected applications can be restored.'], 422);
+        }
+
+        $rejectedRow = $modelClass::forBarangay($user->barangay_id)
+            ->active()
+            ->where('program_application_id', $applicationId)
+            ->first();
+
+        if ($rejectedRow === null) {
+            $this->rejectedService->recordRejection($application, $user, $this->letter);
         }
 
         if ($application->trashed()) {
@@ -166,7 +184,7 @@ abstract class RejectedProgramApplicationController extends Controller
             $user,
             "{$label}.restore",
             "Restored rejected {$label} application: {$fullName}",
-            ['application_id' => $id]
+            ['application_id' => $applicationId]
         );
 
         return response()->json([
@@ -174,6 +192,47 @@ abstract class RejectedProgramApplicationController extends Controller
             'message' => 'Application restored to pending requests.',
             'full_name' => $fullName !== '' ? $fullName : 'Applicant',
         ]);
+    }
+
+    protected function syncMissingRejectedRecords(User $user): void
+    {
+        $modelClass = $this->rejectedService->modelForLetter($this->letter);
+
+        $trackedIds = $modelClass::forBarangay($user->barangay_id)
+            ->active()
+            ->pluck('program_application_id')
+            ->all();
+
+        $missingApplications = ProgramApplication::query()
+            ->with(['scheduleProgram'])
+            ->where('status', ProgramApplication::STATUS_REJECTED)
+            ->whereHas('scheduleProgram', function ($query) use ($user) {
+                $query->where('barangay_id', $user->barangay_id)
+                    ->where('program_letter', $this->letter);
+            })
+            ->when($trackedIds !== [], fn ($query) => $query->whereNotIn('id', $trackedIds))
+            ->get();
+
+        foreach ($missingApplications as $application) {
+            $reviewer = $application->reviewed_by
+                ? User::query()->find($application->reviewed_by)
+                : $user;
+
+            if ($reviewer !== null) {
+                $this->rejectedService->recordRejection($application, $reviewer, $this->letter);
+            }
+        }
+    }
+
+    protected function parseApplicationId(string $id): int
+    {
+        if (filter_var($id, FILTER_VALIDATE_INT) === false || (int) $id <= 0) {
+            throw ValidationException::withMessages([
+                'application_id' => ['Invalid application id.'],
+            ]);
+        }
+
+        return (int) $id;
     }
 
     /**

@@ -118,10 +118,6 @@ Route::middleware([
         Route::put('/{programId}/duration', [\App\Modules\Programs\Controllers\ProgramController::class, 'updateDuration'])->name('api.programs.update-duration');
     });
 
-    Route::get('/budget-finance', function () {
-        return view('BudgetFinance::budget-finance');
-    })->name('budget-finance');
-
     Route::get('/kk-profiling-requests', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
     Route::get('/kk-profiling-requests/data', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'data'])->name('kk-profiling-requests.data');
     Route::post('/kk-profiling-requests/{id}/approve', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'approve'])->name('kk-profiling-requests.approve');
@@ -190,6 +186,20 @@ Route::middleware([
         return view('Program_Management::sports.schedule');
     })->name('sports-application-form');
 
+    Route::get('/sports-programs/archived', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'index'])
+        ->name('sports-programs.archived');
+    Route::get('/sports-programs/archived/data', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'data'])
+        ->name('sports-programs.archived.data');
+    Route::post('/sports-programs/archive/{id}', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'archive'])
+        ->whereNumber('id')
+        ->name('sports-programs.archive');
+    Route::post('/sports-programs/restore/{id}', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'restore'])
+        ->whereNumber('id')
+        ->name('sports-programs.restore');
+    Route::delete('/sports-programs/delete/{id}', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'destroy'])
+        ->whereNumber('id')
+        ->name('sports-programs.delete');
+
     Route::prefix('api/schedule-programs')->group(function () {
         Route::get('/meta', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'meta'])->name('api.schedule-programs.meta');
         Route::get('/', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'index'])->name('api.schedule-programs.index');
@@ -201,8 +211,10 @@ Route::middleware([
 
     Route::prefix('api/program-applications')->group(function () {
         Route::get('/', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'index'])->name('api.program-applications.index');
-        Route::get('/{id}', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'show'])->name('api.program-applications.show');
-        Route::put('/{id}/status', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'updateStatus'])->name('api.program-applications.update-status');
+        Route::get('/{id}/documents/{questionId}', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'showDocument'])->whereNumber('id')->name('api.program-applications.document');
+        Route::get('/{id}', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'show'])->whereNumber('id')->name('api.program-applications.show');
+        Route::put('/{id}/status', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'updateStatus'])->whereNumber('id')->name('api.program-applications.update-status');
+        Route::put('/{id}/payment', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'updatePaymentStatus'])->whereNumber('id')->name('api.program-applications.update-payment');
     });
 
     Route::prefix('api/program-surveys/{committee}')->group(function () {
@@ -235,13 +247,13 @@ Route::middleware([
 
     Route::get('/rejected-scholars', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'index'])->name('rejected-scholars');
     Route::get('/rejected-scholars/data', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'data'])->name('rejected-scholars.data');
-    Route::post('/rejected-scholars/{id}/restore', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'restore'])->name('rejected-scholars.restore');
+    Route::post('/rejected-scholars/{id}/restore', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'restore'])->whereNumber('id')->name('rejected-scholars.restore');
 
     Route::redirect('/rejected-scholarship', '/rejected-scholars');
 
     Route::get('/rejected-sports', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'index'])->name('rejected-sports');
     Route::get('/rejected-sports/data', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'data'])->name('rejected-sports.data');
-    Route::post('/rejected-sports/{id}/restore', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'restore'])->name('rejected-sports.restore');
+    Route::post('/rejected-sports/{id}/restore', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'restore'])->whereNumber('id')->name('rejected-sports.restore');
 
     // ── Approved Scholars (pure front-end, no DB) ──
     Route::get('/approved-scholars', function () {

@@ -115,7 +115,7 @@
                 </li>
 
                 <!-- ── Planning & Development (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('abyip.*', 'committees', 'programs', 'budget-finance', 'schedule-programs', '*.survey.*') ? 'open' : '' }}" id="planningDevDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('abyip.*', 'committees', 'programs', 'reports-management', 'schedule-programs', 'schedule-programs.sports-application-form', 'sports-application-form', 'sports-programs.archived', '*.survey.*') ? 'open' : '' }}" id="planningDevDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="planningDevToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -151,10 +151,10 @@
                             </a>
                         </li>
 
-                        <!-- Budget & Finance -->
+                        <!-- Reports Management -->
                         <li class="nav-subitem">
-                            <a href="{{ route('budget-finance') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('budget-finance') ? 'active' : '' }}">
-                                <span>Budget &amp; Finance</span>
+                            <a href="{{ route('reports-management') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('reports-management') ? 'active' : '' }}">
+                                <span>Reports Management</span>
                             </a>
                         </li>
 
@@ -165,11 +165,18 @@
                             </a>
                         </li>
 
+                        <!-- Sports Programs -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('schedule-programs.sports-application-form') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-programs.sports-application-form', 'sports-application-form') ? 'active' : '' }}">
+                                <span>Sports Programs</span>
+                            </a>
+                        </li>
+
                     </ul>
                 </li>
 
                 <!-- ── Archived (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports', 'announcements.archive') ? 'open' : '' }}" id="archivedDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports', 'announcements.archive', 'sports-programs.archived') ? 'open' : '' }}" id="archivedDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="archivedToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="21 8 21 21 3 21 3 8"></polyline>
@@ -208,6 +215,18 @@
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                 </svg>
                                 <span>Deleted Kabataan</span>
+                            </a>
+                        </li>
+
+                        <!-- Archived Sports Programs -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('sports-programs.archived') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('sports-programs.archived') ? 'active' : '' }}">
+                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                                    <path d="M2 12h20"></path>
+                                </svg>
+                                <span>Archived Sports Programs</span>
                             </a>
                         </li>
 

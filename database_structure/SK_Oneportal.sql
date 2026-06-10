@@ -866,6 +866,11 @@ create table public.abyip (
   approved_by character varying(255) null,
   approved_position character varying(255) null,
   approved_by_user_id bigint null,
+  status character varying(30) null,
+  prepared_by_name character varying(255) null,
+  prepared_by_position character varying(255) null,
+  approved_by_name character varying(255) null,
+  approved_by_position character varying(255) null,
   source_type character varying(20) not null default 'word'::character varying,
   document_html text null,
   pdf_data text null,
@@ -953,10 +958,17 @@ CREATE TABLE IF NOT EXISTS schedule_programs (
   program_type VARCHAR(255) NOT NULL,
   committee VARCHAR(255) NOT NULL,
   program_name VARCHAR(255) NOT NULL,
+  program_letter VARCHAR(1) NULL,
   participation_quantity INTEGER NULL,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'open',
+  is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+  archived_at TIMESTAMP NULL,
+  archived_by BIGINT NULL,
+  deleted_reason TEXT NULL,
+  restored_at TIMESTAMP NULL,
+  restored_by BIGINT NULL,
   announcement TEXT NULL,
   kk_profiling_fields JSON NULL,
   custom_questions JSON NULL,
@@ -965,11 +977,16 @@ CREATE TABLE IF NOT EXISTS schedule_programs (
   CONSTRAINT schedule_programs_pkey PRIMARY KEY (id),
   CONSTRAINT schedule_programs_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE SET NULL,
   CONSTRAINT schedule_programs_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
-  CONSTRAINT schedule_programs_created_by_foreign FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+  CONSTRAINT schedule_programs_created_by_foreign FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
+  CONSTRAINT schedule_programs_archived_by_foreign FOREIGN KEY (archived_by) REFERENCES users (id) ON DELETE SET NULL,
+  CONSTRAINT schedule_programs_restored_by_foreign FOREIGN KEY (restored_by) REFERENCES users (id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS schedule_programs_barangay_id_status_index ON schedule_programs (barangay_id, status);
 CREATE INDEX IF NOT EXISTS schedule_programs_barangay_id_dates_index ON schedule_programs (barangay_id, start_date, end_date);
+CREATE INDEX IF NOT EXISTS schedule_programs_barangay_id_program_letter_index ON schedule_programs (barangay_id, program_letter);
+CREATE INDEX IF NOT EXISTS schedule_programs_barangay_letter_archived_index ON schedule_programs (barangay_id, program_letter, is_archived);
+CREATE INDEX IF NOT EXISTS schedule_programs_archived_at_index ON schedule_programs (is_archived, archived_at);
 
 CREATE TABLE IF NOT EXISTS program_applications (
   id BIGSERIAL NOT NULL,
@@ -1014,8 +1031,93 @@ CREATE TABLE IF NOT EXISTS program_applications (
 CREATE UNIQUE INDEX IF NOT EXISTS program_applications_kabataan_program_unique
   ON program_applications (kabataan_id, program_id);
 
+CREATE TABLE IF NOT EXISTS rejected_scholarships (
+  id BIGSERIAL NOT NULL,
+  program_application_id BIGINT NOT NULL,
+  tenant_id BIGINT NULL,
+  barangay_id BIGINT NOT NULL,
+  rejected_by_user_id BIGINT NULL,
+  rejection_reason TEXT NULL,
+  rejection_reasons JSON NULL,
+  rejected_at TIMESTAMP NOT NULL,
+  restored_at TIMESTAMP NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT rejected_scholarships_pkey PRIMARY KEY (id),
+  CONSTRAINT rejected_scholarships_program_application_id_unique UNIQUE (program_application_id),
+  CONSTRAINT rejected_scholarships_program_application_id_foreign FOREIGN KEY (program_application_id) REFERENCES program_applications (id) ON DELETE CASCADE,
+  CONSTRAINT rejected_scholarships_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE SET NULL,
+  CONSTRAINT rejected_scholarships_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+  CONSTRAINT rejected_scholarships_rejected_by_user_id_foreign FOREIGN KEY (rejected_by_user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS rejected_scholarships_barangay_id_rejected_at_index ON rejected_scholarships (barangay_id, rejected_at);
+CREATE INDEX IF NOT EXISTS rejected_scholarships_barangay_id_restored_at_index ON rejected_scholarships (barangay_id, restored_at);
+
+CREATE TABLE IF NOT EXISTS rejected_sports (
+  id BIGSERIAL NOT NULL,
+  program_application_id BIGINT NOT NULL,
+  tenant_id BIGINT NULL,
+  barangay_id BIGINT NOT NULL,
+  rejected_by_user_id BIGINT NULL,
+  rejection_reason TEXT NULL,
+  rejection_reasons JSON NULL,
+  rejected_at TIMESTAMP NOT NULL,
+  restored_at TIMESTAMP NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT rejected_sports_pkey PRIMARY KEY (id),
+  CONSTRAINT rejected_sports_program_application_id_unique UNIQUE (program_application_id),
+  CONSTRAINT rejected_sports_program_application_id_foreign FOREIGN KEY (program_application_id) REFERENCES program_applications (id) ON DELETE CASCADE,
+  CONSTRAINT rejected_sports_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE SET NULL,
+  CONSTRAINT rejected_sports_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+  CONSTRAINT rejected_sports_rejected_by_user_id_foreign FOREIGN KEY (rejected_by_user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS rejected_sports_barangay_id_rejected_at_index ON rejected_sports (barangay_id, rejected_at);
+CREATE INDEX IF NOT EXISTS rejected_sports_barangay_id_restored_at_index ON rejected_sports (barangay_id, restored_at);
+
+CREATE OR REPLACE FUNCTION generate_respondent_number(
+  p_tenant_id BIGINT,
+  p_barangay_id BIGINT
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  current_year TEXT;
+  next_seq INTEGER;
+  barangay_prefix TEXT;
+BEGIN
+  current_year := EXTRACT(YEAR FROM CURRENT_DATE)::TEXT;
+
+  SELECT UPPER(LEFT(REGEXP_REPLACE(name, '[^a-zA-Z0-9]', '', 'g'), 8))
+  INTO barangay_prefix
+  FROM barangays
+  WHERE id = p_barangay_id;
+
+  IF barangay_prefix IS NULL OR barangay_prefix = '' THEN
+    barangay_prefix := 'BRGY';
+  END IF;
+
+  SELECT COALESCE(MAX(respondent_sequence), 0) + 1
+  INTO next_seq
+  FROM kabataan_registrations
+  WHERE tenant_id = p_tenant_id
+    AND barangay_id = p_barangay_id
+    AND EXTRACT(YEAR FROM COALESCE(submitted_at, created_at)) = EXTRACT(YEAR FROM CURRENT_DATE);
+
+  RETURN barangay_prefix || '-' || current_year || '-' || LPAD(next_seq::TEXT, 4, '0');
+END;
+$$;
+
+-- Kabataan profile image columns (Cloudinary: kabataan/profile-images)
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_url TEXT NULL;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_public_id VARCHAR(255) NULL;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_uploaded_at TIMESTAMP NULL;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_change_available_at TIMESTAMP NULL;
+
 -- ============================================================
-<<<<<<< Updated upstream
 -- DEFAULT SYSTEM ADMINISTRATOR ACCOUNT
 -- ============================================================
 
@@ -1043,8 +1145,3 @@ SELECT
 WHERE NOT EXISTS (
     SELECT 1 FROM public.users WHERE email = 'skoneportal@gmail.com'
 );
-=======
--- INCREMENTAL PATCHES (apply when DB predates full dump)
--- See: database_structure/migrations/2026_06_11_000001_sync_sk_oneportal_schema.sql
--- ============================================================
->>>>>>> Stashed changes

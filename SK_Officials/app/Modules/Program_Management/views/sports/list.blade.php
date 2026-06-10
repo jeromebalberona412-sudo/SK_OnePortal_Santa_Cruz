@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Approved Participants - SK Officials Portal</title>
     @include('layout::favicon')
     @vite([
@@ -194,6 +195,33 @@
             </div>
         </div>
         <div class="spl-modal-body" id="slViewBody"></div>
+    </div>
+</div>
+
+<!-- ── Edit Payment Status Modal ── -->
+<div class="spl-modal-overlay" id="slEditModal" style="display:none;">
+    <div class="spl-modal-box" id="slEditBox" style="max-width:480px;">
+        <div class="spl-modal-header">
+            <h3>Edit Payment Status</h3>
+            <div style="display:flex;align-items:center;gap:4px;">
+                <button type="button" class="spl-modal-close" id="slEditMaximize" title="Maximize" style="font-size:15px;padding:2px 8px;">□</button>
+                <button type="button" class="spl-modal-close" id="slEditClose" title="Close">&times;</button>
+            </div>
+        </div>
+        <div class="spl-modal-body" style="padding:24px;background:#fff;">
+            <input type="hidden" id="slEditParticipantId">
+            <p id="slEditParticipantName" style="font-size:14px;font-weight:600;color:#111827;margin-bottom:16px;"></p>
+            <label for="slEditPaymentStatus" style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;">Payment Status</label>
+            <select id="slEditPaymentStatus" class="spl-filter-input" style="width:100%;max-width:none;">
+                <option value="Paid">Paid</option>
+                <option value="Unpaid">Unpaid</option>
+            </select>
+            <p style="font-size:12px;color:#6b7280;margin-top:8px;">Update whether the participant has already paid or is still unpaid.</p>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #f1f5f9;background:#fff;border-radius:0 0 14px 14px;">
+            <button type="button" id="slEditCancel" class="spl-action-btn" style="background:#fff;border:1.5px solid #d1d5db;color:#374151;">Cancel</button>
+            <button type="button" id="slEditSave" class="spl-action-btn" style="background:#22c55e;color:#fff;border:none;">Save Changes</button>
+        </div>
     </div>
 </div>
 

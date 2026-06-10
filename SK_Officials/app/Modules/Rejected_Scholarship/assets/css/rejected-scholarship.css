@@ -12,17 +12,37 @@ body {
 
 /* ── Layout ── */
 .main-content {
-    margin-left: 280px;
+    margin-left: 260px;
     margin-top: 70px;
     min-height: calc(100vh - 70px);
-    transition: margin-left 0.3s ease;
-    padding: 20px;
+    transition: margin-left 0.28s ease;
+    padding: 20px 22px;
+    width: calc(100% - 260px);
+    overflow-x: hidden;
 }
 
-@media (max-width: 1024px) { .main-content { margin-left: 260px; padding: 16px; } }
-@media (max-width: 768px)  { .main-content { margin-left: 0; margin-top: 60px; padding: 14px; } }
-@media (max-width: 480px)  { .main-content { padding: 10px; margin-top: 55px; } }
-@media (min-width: 769px)  { .main-content.sidebar-collapsed { margin-left: 80px; } }
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        margin-top: 60px;
+        padding: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+        margin-top: 55px;
+    }
+}
+
+@media (min-width: 769px) {
+    .main-content.sidebar-collapsed {
+        margin-left: 80px;
+        width: calc(100% - 80px);
+    }
+}
 
 .rs-toolbar-row {
     justify-content: flex-end;

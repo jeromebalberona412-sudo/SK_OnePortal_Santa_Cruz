@@ -139,8 +139,21 @@ class ProfileParticipationService
         }
 
         $first = $answers[0]['answer'] ?? null;
+        $questionType = (string) ($answers[0]['question_type'] ?? '');
+
+        if ($questionType === 'file' && is_array($first)) {
+            return trim((string) ($first['original_name'] ?? 'Document uploaded'));
+        }
+
         if (is_array($first)) {
-            $first = implode(', ', $first);
+            if (isset($first['original_name'])) {
+                return trim((string) $first['original_name']);
+            }
+
+            $first = implode(', ', array_map(
+                fn ($value) => is_scalar($value) ? (string) $value : '',
+                $first
+            ));
         }
 
         return trim((string) ($first ?? 'Submitted'));

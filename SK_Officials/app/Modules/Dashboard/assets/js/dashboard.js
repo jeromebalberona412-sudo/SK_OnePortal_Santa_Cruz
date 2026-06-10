@@ -12,7 +12,8 @@ let kkChartMonth = new Date().getMonth() + 1;
 let chartBar = null;
 let chartLine = null;
 let chartPie = null;
-let chartDonut = null;
+let chartEmployment = null;
+let chartsLoading = false;
 
 function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -57,23 +58,34 @@ function applyChartDefaults() {
     Chart.defaults.plugins.tooltip.cornerRadius = 8;
 }
 
-function formatCurrency(value) {
-    const amount = Number(value || 0);
-    return '₱' + amount.toLocaleString('en-PH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-}
-
 document.addEventListener('DOMContentLoaded', function () {
     applyChartDefaults();
     initYearFilter();
     initKkChartFilters();
     initModals();
     initStatCardLinks();
+    listenKkProfileEvents(function () {
+        loadDashboardCharts();
+        refreshSummaryStats();
+    });
+
     loadDashboard();
     window.setInterval(refreshLiveSections, 45000);
+    window.setInterval(function () {
+        loadDashboardCharts();
+        refreshSummaryStats();
+    }, 45000);
 });
+
+function listenKkProfileEvents(handler) {
+    window.addEventListener('storage', function (event) {
+        if (event.key !== 'kk-profile-event' || !event.newValue) return;
+        handler();
+    });
+    window.addEventListener('kk-profile-event', function () {
+        handler();
+    });
+}
 
 function initYearFilter() {
     const sel = document.getElementById('yearSelect');
@@ -114,7 +126,7 @@ function initKkChartFilters() {
             if (monthWrap) {
                 monthWrap.hidden = kkChartGranularity !== 'weekly';
             }
-            loadDashboard();
+            loadDashboardCharts();
         });
     }
 
@@ -122,7 +134,7 @@ function initKkChartFilters() {
         monthSel.value = String(kkChartMonth);
         monthSel.addEventListener('change', function () {
             kkChartMonth = Number(monthSel.value);
-            loadDashboard();
+            loadDashboardCharts();
         });
     }
 }
@@ -150,20 +162,44 @@ async function loadDashboard() {
 
         populateYearOptions(dashboardData.available_years || [selectedYear]);
         renderSummary(dashboardData);
-
-        apiFetch('/api/dashboard/stats?' + params + '&charts=1')
-            .then(function (chartsResponse) {
-                const chartData = chartsResponse.data;
-                if (!chartData) return;
-                dashboardData = Object.assign({}, dashboardData, chartData);
-                renderCharts(chartData);
-            })
-            .catch(function (error) {
-                console.error('Dashboard charts load failed:', error);
-            });
+        loadDashboardCharts();
     } catch (error) {
         console.error('Dashboard load failed:', error);
         renderEmptyState();
+    }
+}
+
+async function loadDashboardCharts() {
+    if (chartsLoading) return;
+    chartsLoading = true;
+    setEmploymentChartLoading(true);
+
+    try {
+        const params = buildDashboardParams().toString();
+        const chartsResponse = await apiFetch('/api/dashboard/stats?' + params + '&charts=1');
+        const chartData = chartsResponse.data;
+        if (!chartData) return;
+
+        dashboardData = Object.assign({}, dashboardData || {}, chartData);
+        renderCharts(chartData);
+    } catch (error) {
+        console.error('Dashboard charts load failed:', error);
+        renderEmploymentChart({ items: [], total: 0 });
+    } finally {
+        chartsLoading = false;
+    }
+}
+
+async function refreshSummaryStats() {
+    try {
+        const response = await apiFetch('/api/dashboard/stats?' + buildDashboardParams().toString() + '&summary=1');
+        const data = response.data;
+        if (!data) return;
+
+        dashboardData = Object.assign({}, dashboardData || {}, data);
+        renderStats(data.stats || {});
+    } catch (_) {
+        // Keep current stats on transient failures.
     }
 }
 
@@ -218,7 +254,7 @@ function renderCharts(data) {
     renderBarChart(data);
     renderLineChart(data.kk_requests_chart || {});
     renderPieChart(data.gender_distribution || { labels: ['Male', 'Female'], values: [0, 0] });
-    renderDonutChart(data.budget_programs || { labels: [], values: [] });
+    renderEmploymentChart(data.employment_status_distribution || { items: [], total: 0 });
 }
 
 function renderAll(data) {
@@ -235,7 +271,7 @@ function renderEmptyState() {
     renderBarChart({ purok_labels: [], purok_counts: [] });
     renderLineChart({ labels: [], approved: [], pending: [], rejected: [] });
     renderPieChart({ labels: ['Male', 'Female'], values: [0, 0] });
-    renderDonutChart({ labels: [], values: [] });
+    renderEmploymentChart({ items: [], total: 0 });
 }
 
 function renderStats(stats) {
@@ -246,10 +282,6 @@ function renderStats(stats) {
     setCount('statActivePrograms', stats.active_programs || 0);
     setCount('statDeletedKabataan', stats.deleted_kabataan || 0);
     setCount('statRejectedItems', stats.rejected_items || 0);
-
-    setText('statBudget', formatCurrency(stats.budget || 0));
-    setText('statExpenses', formatCurrency(stats.expenses || 0));
-    setText('statRemaining', formatCurrency(stats.remaining || 0));
 }
 
 function setCount(id, target) {
@@ -583,23 +615,60 @@ function renderPieChart(genderDist) {
     }
 }
 
-function renderDonutChart(budgetPrograms) {
-    const ctx = document.getElementById('chartBudgetDonut');
+function setEmploymentChartLoading(loading) {
+    const skeleton = document.getElementById('employmentChartSkeleton');
+    const wrap = document.getElementById('employmentChartWrap');
+    const empty = document.getElementById('employmentChartEmpty');
+    const total = document.getElementById('employmentTotalCount');
+    const legend = document.getElementById('employmentLegend');
+
+    if (skeleton) skeleton.hidden = !loading;
+    if (loading) {
+        if (wrap) wrap.hidden = true;
+        if (empty) empty.classList.add('d-none');
+        if (total) total.textContent = '';
+        if (legend) legend.innerHTML = '';
+    }
+}
+
+function renderEmploymentChart(distribution) {
+    const ctx = document.getElementById('chartEmploymentStatus');
+    const wrap = document.getElementById('employmentChartWrap');
+    const empty = document.getElementById('employmentChartEmpty');
+    const totalEl = document.getElementById('employmentTotalCount');
+    const legend = document.getElementById('employmentLegend');
+    const items = distribution.items || [];
+    const total = Number(distribution.total || 0);
+
+    setEmploymentChartLoading(false);
+
     if (!ctx) return;
-    if (chartDonut) {
-        chartDonut.destroy();
-        chartDonut = null;
+
+    if (chartEmployment) {
+        chartEmployment.destroy();
+        chartEmployment = null;
     }
 
-    const colors = ['#3b82f6', '#22c55e', '#ef4444', '#14b8a6', '#f97316', '#a855f7', '#ec4899', '#6366f1', '#0ea5e9', '#84cc16'];
-    const labels = budgetPrograms.labels || [];
-    const values = budgetPrograms.values || [];
-    const total = values.reduce(function (sum, value) {
-        return sum + Number(value || 0);
-    }, 0);
+    if (!items.length) {
+        if (wrap) wrap.hidden = true;
+        if (legend) legend.innerHTML = '';
+        if (empty) empty.classList.remove('d-none');
+        if (totalEl) totalEl.textContent = '';
+        return;
+    }
+
+    if (wrap) wrap.hidden = false;
+    if (empty) empty.classList.add('d-none');
+    if (totalEl) {
+        totalEl.textContent = 'Total Youth Counted: ' + total.toLocaleString();
+    }
+
+    const labels = items.map(function (item) { return item.status; });
+    const values = items.map(function (item) { return Number(item.count || 0); });
+    const colors = ['#3b82f6', '#22c55e', '#f4c20d', '#ef4444', '#a855f7', '#14b8a6', '#f97316', '#6366f1'];
 
     const donutLabelsPlugin = {
-        id: 'donutLabels',
+        id: 'employmentDonutLabels',
         afterDraw: function (chart) {
             const context = chart.ctx;
             chart.data.datasets.forEach(function (dataset, datasetIndex) {
@@ -625,14 +694,16 @@ function renderDonutChart(budgetPrograms) {
         },
     };
 
-    chartDonut = new Chart(ctx, {
+    chartEmployment = new Chart(ctx, {
         type: 'doughnut',
         plugins: [donutLabelsPlugin],
         data: {
             labels: labels,
             datasets: [{
                 data: values,
-                backgroundColor: colors,
+                backgroundColor: labels.map(function (_label, index) {
+                    return colors[index % colors.length];
+                }),
                 borderWidth: 2,
                 borderColor: '#fff',
                 hoverOffset: 6,
@@ -648,7 +719,7 @@ function renderDonutChart(budgetPrograms) {
                     callbacks: {
                         label: function (context) {
                             const pct = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : '0.0';
-                            return ' ₱' + Number(context.parsed).toLocaleString() + ' (' + pct + '%)';
+                            return ' ' + context.label + ': ' + context.parsed + ' (' + pct + '%)';
                         },
                     },
                 },
@@ -656,20 +727,14 @@ function renderDonutChart(budgetPrograms) {
         },
     });
 
-    const legend = document.getElementById('donutLegend');
-    if (!legend) return;
-
-    if (!labels.length) {
-        legend.innerHTML = '<p class="dash-empty-msg mb-0">No ABYIP program budget data yet.</p>';
-        return;
+    if (legend) {
+        legend.innerHTML = labels.map(function (label, index) {
+            return '<div class="donut-legend-item">' +
+                '<div class="donut-legend-box" style="background:' + colors[index % colors.length] + ';"></div>' +
+                '<span class="donut-legend-label">' + esc(label) + ' (' + values[index].toLocaleString() + ')</span>' +
+                '</div>';
+        }).join('');
     }
-
-    legend.innerHTML = labels.map(function (label, index) {
-        return '<div class="donut-legend-item">' +
-            '<div class="donut-legend-box" style="background:' + colors[index % colors.length] + ';"></div>' +
-            '<span class="donut-legend-label">' + esc(label) + '</span>' +
-            '</div>';
-    }).join('');
 }
 
 function initModals() {

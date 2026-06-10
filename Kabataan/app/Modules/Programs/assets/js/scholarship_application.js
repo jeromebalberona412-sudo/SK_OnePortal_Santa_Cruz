@@ -63,7 +63,7 @@ function loadKKProfileData() {
         const value = kkProfile[field];
         if (value === undefined || value === null || String(value).trim() === '') return;
         const label = kkFieldLabels[field] || field.replace(/_/g, ' ');
-        const isFullWidth = field === 'full_name' || field === 'home_address';
+        const isFullWidth = field === 'home_address';
         fieldsHtml += `
             <div class="gf-kk-field ${isFullWidth ? 'full-width' : ''}">
                 <span class="gf-kk-field-label">${escapeHtml(label)}</span>

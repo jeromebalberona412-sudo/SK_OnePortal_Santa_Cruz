@@ -120,6 +120,21 @@
             width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0;
+            overflow: hidden;
+        }
+        .officer-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .post-avatar-lg {
+            width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: #fff;
+        }
+        .post-avatar-lg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .post-image-wrap img {
+            width: 100%; max-height: 320px; object-fit: cover;
+            border-radius: 10px; margin-top: 12px;
+        }
+        .brgy-empty-state {
+            text-align: center; padding: 28px 16px; color: #94a3b8; font-size: 13px;
         }
         .officer-details { flex: 1; }
         .officer-name  { font-size: 14px; font-weight: 700; color: #1a1d25; }
@@ -188,8 +203,12 @@
                 </div>
                 <div class="profile-info-section">
                     <div class="profile-avatar-wrapper">
-                        <div style="width:150px;height:150px;border-radius:50%;background:{{ $color }};border:5px solid white;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:900;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
-                            {{ strtoupper(substr($name, 0, 2)) }}
+                        <div style="width:150px;height:150px;border-radius:50%;background:{{ $color }};border:5px solid white;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:900;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);overflow:hidden;">
+                            @if(!empty($logo_url))
+                                <img src="{{ $logo_url }}" alt="Brgy. {{ $name }} logo" style="width:100%;height:100%;object-fit:cover;">
+                            @else
+                                {{ strtoupper(substr($name, 0, 2)) }}
+                            @endif
                         </div>
                     </div>
                     <div class="profile-header-info">
@@ -200,12 +219,12 @@
                         <h1 class="profile-name">SK Barangay {{ $name }}</h1>
                         <p class="profile-location">
                             <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-                            Barangay {{ $name }}, Santa Cruz, Laguna
+                            {{ $location ?? ('Barangay ' . $name . ', Santa Cruz, Laguna') }}
                         </p>
                         <div class="brgy-stat-row">
-                            <div class="brgy-stat-item"><strong>{{ count($posts) }}</strong><span>Posts</span></div>
-                            <div class="brgy-stat-item"><strong>{{ count($officers['councilors']) + 5 }}</strong><span>Officers</span></div>
-                            <div class="brgy-stat-item"><strong>2023–2026</strong><span>SK Term</span></div>
+                            <div class="brgy-stat-item"><strong>{{ $post_count ?? 0 }}</strong><span>Posts</span></div>
+                            <div class="brgy-stat-item"><strong>{{ $officer_count ?? 0 }}</strong><span>Officers</span></div>
+                            <div class="brgy-stat-item"><strong>{{ $term_label ?? '—' }}</strong><span>SK Term</span></div>
                         </div>
                     </div>
                 </div>
@@ -226,92 +245,24 @@
                             </h2>
                         </div>
                         <div class="card-body">
-                            @php
-                            $officerList = [
-                                ['name' => $officers['chairman'],  'role' => 'SK Chairman',              'opacity' => '1'],
-                                ['name' => $officers['vice'],      'role' => 'Vice Chairman',             'opacity' => '0.85'],
-                                ['name' => $officers['secretary'], 'role' => 'Secretary',                 'opacity' => '0.8'],
-                                ['name' => $officers['treasurer'], 'role' => 'Treasurer',                 'opacity' => '0.8'],
-                                ['name' => $officers['auditor'],   'role' => 'Auditor',                   'opacity' => '0.8'],
-                                ['name' => $officers['pro'],       'role' => 'Public Relations Officer',  'opacity' => '0.8'],
-                            ];
-                            @endphp
                             <div class="officer-list">
-                                @foreach ($officerList as $o)
-                                <div class="officer-item">
-                                    <div class="officer-avatar" style="background:{{ $color }};opacity:{{ $o['opacity'] }};">
-                                        {{ strtoupper(substr(trim($o['name'], '[]'), 0, 2)) }}
-                                    </div>
-                                    <div class="officer-details">
-                                        <p class="officer-name">{{ $o['name'] }}</p>
-                                        <p class="officer-role">{{ $o['role'] }}</p>
-                                    </div>
+                            @forelse ($officials as $official)
+                            <div class="officer-item">
+                                <div class="officer-avatar" style="background:{{ $color }};">
+                                    @if(!empty($official['logo_url']))
+                                        <img src="{{ $official['logo_url'] }}" alt="{{ $official['name'] }}">
+                                    @else
+                                        {{ $official['initials'] }}
+                                    @endif
                                 </div>
-                                @endforeach
-                            </div>
-
-                            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#999;margin:16px 0 8px;">SK Councilors</p>
-                            <div class="councilor-grid">
-                                @foreach ($officers['councilors'] as $c)
-                                <div class="councilor-chip">
-                                    <div class="councilor-dot" style="background:{{ $color }};">
-                                        {{ strtoupper(substr(trim($c, '[]'), 0, 2)) }}
-                                    </div>
-                                    <span class="councilor-name">{{ $c }}</span>
+                                <div class="officer-details">
+                                    <p class="officer-name">{{ $official['name'] }}</p>
+                                    <p class="officer-role">{{ $official['role'] }}</p>
                                 </div>
-                                @endforeach
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- Barangay Info --}}
-                    <div class="info-card">
-                        <div class="card-header">
-                            <h2>
-                                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-                                Barangay Information
-                            </h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="info-row">
-                                <div class="info-item"><label>Barangay</label><p>{{ $name }}</p></div>
-                                <div class="info-item"><label>Municipality</label><p>Santa Cruz</p></div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-item"><label>Province</label><p>Laguna</p></div>
-                                <div class="info-item"><label>Region</label><p>Region IV-A (CALABARZON)</p></div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-item"><label>SK Term</label><p>2023 – 2026</p></div>
-                                <div class="info-item"><label>Total Officers</label><p>{{ count($officers['councilors']) + 5 }}</p></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Contact Info --}}
-                    <div class="info-card">
-                        <div class="card-header">
-                            <h2>
-                                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
-                                Contact Information
-                            </h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="contact-row">
-                                <div class="contact-icon"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg></div>
-                                <div><p class="contact-label">Phone</p><p class="contact-value">[SK Contact Number]</p></div>
-                            </div>
-                            <div class="contact-row">
-                                <div class="contact-icon"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg></div>
-                                <div><p class="contact-label">Email</p><p class="contact-value">[SK Email Address]</p></div>
-                            </div>
-                            <div class="contact-row">
-                                <div class="contact-icon"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg></div>
-                                <div><p class="contact-label">Office Address</p><p class="contact-value">Barangay {{ $name }} Hall, Santa Cruz, Laguna</p></div>
-                            </div>
-                            <div class="contact-row">
-                                <div class="contact-icon"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg></div>
-                                <div><p class="contact-label">Office Hours</p><p class="contact-value">Monday – Friday, 8:00 AM – 5:00 PM</p></div>
+                            @empty
+                            <div class="brgy-empty-state">No SK officials found for this barangay.</div>
+                            @endforelse
                             </div>
                         </div>
                     </div>
@@ -336,44 +287,67 @@
                             </div>
 
                             <div id="brgyFeed" style="display:flex;flex-direction:column;gap:16px;">
-                                @foreach ($posts as $post)
+                                @forelse ($posts as $post)
                                 <article class="post-card" data-post-type="{{ $post['type_class'] }}" style="box-shadow:none;border:1px solid #e8eef5;padding:18px;">
                                     <div class="post-header">
-                                        <div style="width:44px;height:44px;border-radius:50%;background:{{ $color }};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;">
-                                            {{ strtoupper(substr($name, 0, 2)) }}
+                                        <div class="post-avatar-lg" style="background:{{ $color }};">
+                                            @if(!empty($post['logo_url']))
+                                                <img src="{{ $post['logo_url'] }}" alt="SK Brgy. {{ $name }}">
+                                            @else
+                                                {{ $initials ?? strtoupper(substr($name, 0, 2)) }}
+                                            @endif
                                         </div>
                                         <div class="post-info">
-                                            <h3 class="post-author">{{ $post['author'] }}</h3>
+                                            <h3 class="post-author">SK Brgy. {{ $name }}</h3>
                                             <p class="post-meta">
-                                                <span class="post-type {{ $post['type_class'] }}">{{ $post['type'] }}</span>
+                                                <span class="post-type {{ $post['type_class'] }}">{{ $post['type_label'] ?? $post['type'] }}</span>
                                                 <span class="post-time">{{ $post['posted_at'] }}</span>
                                             </p>
                                         </div>
                                     </div>
                                     <div class="post-content">
-                                        <h2 class="post-title">{{ $post['title'] }}</h2>
-                                        <p class="post-text">{{ $post['text'] }}</p>
-                                        <div class="post-details">
-                                            <div class="detail-item">
-                                                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
-                                                <span>{{ $post['date'] }} | {{ $post['time'] }}</span>
+                                        @if(!empty($post['title']))
+                                            <h2 class="post-title">{{ $post['title'] }}</h2>
+                                        @endif
+                                        @if(!empty($post['text']))
+                                            <p class="post-text">{{ $post['text'] }}</p>
+                                        @endif
+                                        @if(!empty($post['image_url']))
+                                            <div class="post-image-wrap">
+                                                <img src="{{ $post['image_url'] }}" alt="" loading="lazy">
                                             </div>
-                                            <div class="detail-item">
-                                                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-                                                <span>{{ $post['venue'] }}</span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-                                                <span>{{ $post['audience'] }}</span>
-                                            </div>
-                                        </div>
+                                        @endif
                                     </div>
                                     <div class="post-actions">
-                                        <button class="action-btn"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg><span>Like</span></button>
-                                        <button class="action-btn"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg><span>Comment</span></button>
+                                        <button class="action-btn" type="button" disabled style="opacity:0.7;cursor:default;">
+                                            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>
+                                            <span>Like ({{ $post['likes'] ?? 0 }})</span>
+                                        </button>
+                                        <button class="action-btn comment-btn" type="button" onclick="toggleBrgyComments({{ $post['id'] }})">
+                                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
+                                            <span>Comment ({{ $post['comment_count'] ?? count($post['comments'] ?? []) }})</span>
+                                        </button>
                                     </div>
+                                    @if(!empty($post['comments']))
+                                    <div class="comments-section" id="brgy-comments-{{ $post['id'] }}" style="display:none;">
+                                        @foreach ($post['comments'] as $comment)
+                                        <div class="comment-item">
+                                            <img src="{{ $comment['avatar_url'] }}" alt="{{ $comment['author_name'] }}">
+                                            <div class="comment-content">
+                                                <p class="comment-author">{{ $comment['author_name'] }}</p>
+                                                <p class="comment-text">{{ $comment['body'] }}</p>
+                                                @if(!empty($comment['time']))
+                                                    <span class="comment-time">{{ $comment['time'] }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    @endif
                                 </article>
-                                @endforeach
+                                @empty
+                                <div class="brgy-empty-state">No posts yet from this barangay.</div>
+                                @endforelse
                             </div>
                         </div>
                     </div>
@@ -412,6 +386,13 @@
         logoutBtn?.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('active'); });
         confirmBtn?.addEventListener('click', () => logoutForm.submit());
         modal?.querySelector('.modal-overlay')?.addEventListener('click', () => modal.classList.remove('active'));
+
+        window.toggleBrgyComments = function (id) {
+            const section = document.getElementById(`brgy-comments-${id}`);
+            if (section) {
+                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+            }
+        };
 
         // Feed tab filter
         document.querySelectorAll('.feed-tab').forEach((tab) => {

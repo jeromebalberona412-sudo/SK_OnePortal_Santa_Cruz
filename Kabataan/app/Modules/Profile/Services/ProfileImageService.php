@@ -89,7 +89,7 @@ class ProfileImageService
         }
 
         $oldPublicId = $user->profile_image_public_id;
-        $publicId    = 'kabataan_user_' . $user->id . '_' . Str::lower(Str::random(10));
+        $publicId    = 'user_' . $user->id;
 
         $result = $this->cloudinary->uploadProfileImage($file, $publicId);
 

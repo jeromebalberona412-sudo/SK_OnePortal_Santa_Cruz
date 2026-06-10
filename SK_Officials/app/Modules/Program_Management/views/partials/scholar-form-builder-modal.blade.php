@@ -71,8 +71,20 @@
                     <div class="spfb-kk-field-group">
                         <h4 class="spfb-kk-group-title">Personal Information</h4>
                         <label class="spfb-checkbox-item">
-                            <input type="checkbox" name="kk_profile_fields" value="full_name" class="spfb-checkbox kk-profiling-field">
-                            <span class="spfb-checkbox-label">Full Name</span>
+                            <input type="checkbox" name="kk_profile_fields" value="last_name" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Last Name</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="first_name" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">First Name</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="middle_name" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Middle Name</span>
+                        </label>
+                        <label class="spfb-checkbox-item">
+                            <input type="checkbox" name="kk_profile_fields" value="suffix" class="spfb-checkbox kk-profiling-field">
+                            <span class="spfb-checkbox-label">Suffix</span>
                         </label>
                         <label class="spfb-checkbox-item">
                             <input type="checkbox" name="kk_profile_fields" value="birthday" class="spfb-checkbox kk-profiling-field">

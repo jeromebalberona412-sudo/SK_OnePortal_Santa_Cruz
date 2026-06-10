@@ -1114,6 +1114,7 @@ html {
 }
 
 .status-pending,
+.status-badge.status-pending,
 .abyip-row-status.abyip-st-pending {
     background-color: #fff3cd;
     color: #856404;

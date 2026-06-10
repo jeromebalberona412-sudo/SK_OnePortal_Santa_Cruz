@@ -8,7 +8,6 @@ const KK_FIELD_LABELS = {
     first_name: 'First Name',
     middle_name: 'Middle Name',
     suffix: 'Suffix',
-    full_name: 'Full Name',
     birthday: 'Birthday',
     age: 'Age',
     sex: 'Sex',
@@ -182,6 +181,13 @@ function openModal(forEditId) {
     }
 
     if (!forEditId) {
+        if (schedulePrograms.length > 0) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+            showToast('A scholarship program already exists. Edit the existing program instead.', 'error');
+            return;
+        }
+
         resetModalForm();
         if (modalTitle) {
             modalTitle.innerHTML = `

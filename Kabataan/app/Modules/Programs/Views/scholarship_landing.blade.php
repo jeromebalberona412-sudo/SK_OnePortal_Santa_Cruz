@@ -250,12 +250,7 @@
                     <p id="applicationViewMeta" class="sl-view-modal-meta"></p>
                 </div>
                 <div class="sl-view-modal-header-actions">
-                    <button type="button" class="sl-view-modal-icon-btn" id="applicationViewFullscreen" title="Fullscreen" aria-label="Fullscreen">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-                    </button>
-                    <button type="button" class="sl-view-modal-icon-btn" id="applicationViewRestore" title="Restore down" aria-label="Restore down" hidden>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>
-                    </button>
+                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationViewMaximize" title="Maximize" aria-label="Maximize">□</button>
                     <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationViewClose" aria-label="Close">×</button>
                 </div>
             </div>
@@ -268,18 +263,33 @@
                     <h3 class="sl-view-section-title">Application Answers</h3>
                     <div id="applicationViewAnswers" class="sl-view-answers"></div>
                 </section>
-                <div id="applicationViewCancelSection" class="sl-view-cancel-section" hidden>
-                    <h3>Cancel Application</h3>
-                    <p class="sl-view-cancel-note">Provide a reason if you want to cancel and submit again later.</p>
-                    <label class="sl-view-cancel-label" for="applicationCancelReason">Cancel Reason</label>
-                    <textarea id="applicationCancelReason" class="sl-view-cancel-input" rows="4" maxlength="1000" placeholder="Type your reason for cancelling this application..."></textarea>
-                    <p id="applicationCancelError" class="sl-view-cancel-error" hidden></p>
-                    <button type="button" class="sl-btn-action sl-btn-cancel" id="applicationCancelBtn">Cancel Application</button>
-                </div>
                 <div id="applicationViewCancelledInfo" class="sl-view-cancelled-info" hidden>
                     <h3>Cancellation Reason</h3>
                     <p id="applicationViewCancelledReason"></p>
                 </div>
+            </div>
+            <button type="button" class="sl-view-cancel-fab" id="applicationCancelFab" hidden>Cancel Application</button>
+        </div>
+    </div>
+
+    <div id="applicationCancelModal" class="sl-cancel-modal" hidden>
+        <div class="sl-cancel-modal-overlay"></div>
+        <div class="sl-cancel-modal-box" id="applicationCancelModalBox">
+            <div class="sl-cancel-modal-header">
+                <h3>Cancel Application</h3>
+                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationCancelMaximize" title="Maximize">□</button>
+                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationCancelClose" aria-label="Close">×</button>
+            </div>
+            <div class="sl-cancel-modal-body">
+                <p class="sl-view-cancel-note">Provide a reason if you want to cancel and submit again later.</p>
+                <label class="sl-view-cancel-label" for="applicationCancelReason">Cancel Reason</label>
+                <textarea id="applicationCancelReason" class="sl-view-cancel-input" rows="4" maxlength="500" placeholder="Type your reason for cancelling this application..."></textarea>
+                <p id="applicationCancelCharCount" class="sl-view-cancel-char-count">0 / 500 characters</p>
+                <p id="applicationCancelError" class="sl-view-cancel-error" hidden></p>
+            </div>
+            <div class="sl-cancel-modal-footer">
+                <button type="button" class="sl-btn-action sl-btn-secondary" id="applicationCancelDismissBtn">Keep Application</button>
+                <button type="button" class="sl-btn-action sl-btn-cancel" id="applicationCancelBtn">Confirm Cancel</button>
             </div>
         </div>
     </div>

@@ -862,6 +862,8 @@ body.youth-dashboard {
     border: 1px solid transparent;
     transition: background 0.15s, border-color 0.15s;
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
 }
 
 .brgy-profile-item:hover { background: #eff6ff; border-color: #bfdbfe; }
@@ -870,6 +872,22 @@ body.youth-dashboard {
     width: 36px; height: 36px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 800; color: white; flex-shrink: 0;
+    background: #1a1d25;
+    overflow: hidden;
+}
+
+.brgy-avatar-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.brgy-profiles-empty {
+    font-size: 13px;
+    color: #94a3b8;
+    text-align: center;
+    padding: 16px 8px;
 }
 
 .brgy-info { flex: 1; min-width: 0; }

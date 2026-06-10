@@ -8,6 +8,7 @@ use App\Models\ScheduleProgram;
 use App\Models\User;
 use App\Modules\Programs\Services\AbyipProgramCatalogService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class ScheduleProgramService
@@ -32,7 +33,7 @@ class ScheduleProgramService
 
     /** @var list<string> */
     private const ALLOWED_KK_FIELDS = [
-        'last_name', 'first_name', 'middle_name', 'suffix', 'full_name',
+        'last_name', 'first_name', 'middle_name', 'suffix',
         'birthday', 'age', 'sex', 'civil_status', 'contact_number', 'email',
         'region', 'province', 'city', 'barangay', 'purok_zone',
         'youth_classification', 'youth_age_group', 'education', 'current_school',
@@ -120,11 +121,21 @@ class ScheduleProgramService
 
         $query = ScheduleProgram::query()
             ->where('barangay_id', $user->barangay_id)
+            ->active()
             ->orderByDesc('start_date')
             ->orderByDesc('id');
 
         if ($letter !== null && $letter !== '') {
-            $query->where('program_letter', strtoupper($letter));
+            $letter = strtoupper($letter);
+
+            if (Schema::hasColumn('schedule_programs', 'program_letter')) {
+                $query->where('program_letter', $letter);
+            } else {
+                $config = self::LETTER_CONFIG[$letter] ?? null;
+                if ($config !== null) {
+                    $query->whereRaw('LOWER(committee) LIKE ?', [$config['committee_like']]);
+                }
+            }
         }
 
         return $query->get()->map(fn (ScheduleProgram $program) => $this->formatProgram($program));
@@ -146,6 +157,35 @@ class ScheduleProgramService
     {
         $validated = $this->validatePayload($data);
         $meta = $this->resolveProgramMeta($user, $letter);
+
+        if ($user->barangay_id !== null) {
+            $existsQuery = ScheduleProgram::query()
+                ->where('barangay_id', $user->barangay_id)
+                ->active();
+
+            if (Schema::hasColumn('schedule_programs', 'program_letter')) {
+                $existsQuery->where('program_letter', $meta['program_letter']);
+            } elseif ($letter === self::LETTER_SPORTS) {
+                $existsQuery->whereRaw('LOWER(committee) LIKE ?', ['%sport%']);
+            } else {
+                $existsQuery->whereRaw('LOWER(committee) LIKE ?', ['%education%']);
+            }
+
+            if ($letter === self::LETTER_SPORTS && ! empty($validated['start_date'])) {
+                $year = (int) date('Y', strtotime((string) $validated['start_date']));
+                $existsQuery->whereYear('start_date', $year);
+            }
+
+            if ($existsQuery->exists()) {
+                $message = $letter === self::LETTER_SPORTS
+                    ? 'A sports program already exists for this year. Edit the existing program instead of creating a new one.'
+                    : 'A program already exists for this barangay. Edit the existing program instead of creating a new one.';
+
+                throw ValidationException::withMessages([
+                    'program' => [$message],
+                ]);
+            }
+        }
 
         $program = ScheduleProgram::create([
             'tenant_id' => $user->tenant_id,
@@ -204,6 +244,7 @@ class ScheduleProgramService
         $program = ScheduleProgram::query()
             ->where('id', $programId)
             ->where('barangay_id', $user->barangay_id)
+            ->active()
             ->first();
 
         if ($program === null) {
@@ -342,6 +383,11 @@ class ScheduleProgramService
     /**
      * @return array<string, mixed>
      */
+    public function formatProgramPublic(ScheduleProgram $program): array
+    {
+        return $this->formatProgram($program);
+    }
+
     protected function formatProgram(ScheduleProgram $program): array
     {
         return [
@@ -364,6 +410,8 @@ class ScheduleProgramService
             'customQuestions' => $program->custom_questions ?? [],
             'created_at' => $program->created_at?->toIso8601String(),
             'updated_at' => $program->updated_at?->toIso8601String(),
+            'is_archived' => (bool) ($program->is_archived ?? false),
+            'archived_at' => $program->archived_at?->toIso8601String(),
         ];
     }
 }

@@ -217,6 +217,59 @@
             </div>
         </div>
     </aside>
+    <div id="applicationViewModal" class="sl-view-modal" hidden>
+        <div class="sl-view-modal-overlay"></div>
+        <div class="sl-view-modal-container" id="applicationViewContainer">
+            <div class="sl-view-modal-header">
+                <div class="sl-view-modal-header-main">
+                    <h2 id="applicationViewTitle">Application Details</h2>
+                    <p id="applicationViewMeta" class="sl-view-modal-meta"></p>
+                </div>
+                <div class="sl-view-modal-header-actions">
+                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationViewMaximize" title="Maximize" aria-label="Maximize">□</button>
+                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationViewClose" aria-label="Close">×</button>
+                </div>
+            </div>
+            <div class="sl-view-modal-body">
+                <section class="sl-view-section">
+                    <h3 class="sl-view-section-title">Personal Information</h3>
+                    <div id="applicationViewPersonalInfo" class="sl-view-personal-grid"></div>
+                </section>
+                <section class="sl-view-section">
+                    <h3 class="sl-view-section-title">Application Answers</h3>
+                    <div id="applicationViewAnswers" class="sl-view-answers"></div>
+                </section>
+                <div id="applicationViewCancelledInfo" class="sl-view-cancelled-info" hidden>
+                    <h3>Cancellation Reason</h3>
+                    <p id="applicationViewCancelledReason"></p>
+                </div>
+            </div>
+            <button type="button" class="sl-view-cancel-fab" id="applicationCancelFab" hidden>Cancel Application</button>
+        </div>
+    </div>
+
+    <div id="applicationCancelModal" class="sl-cancel-modal" hidden>
+        <div class="sl-cancel-modal-overlay"></div>
+        <div class="sl-cancel-modal-box" id="applicationCancelModalBox">
+            <div class="sl-cancel-modal-header">
+                <h3>Cancel Application</h3>
+                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationCancelMaximize" title="Maximize">□</button>
+                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationCancelClose" aria-label="Close">×</button>
+            </div>
+            <div class="sl-cancel-modal-body">
+                <p class="sl-view-cancel-note">Provide a reason if you want to cancel and submit again later.</p>
+                <label class="sl-view-cancel-label" for="applicationCancelReason">Cancel Reason</label>
+                <textarea id="applicationCancelReason" class="sl-view-cancel-input" rows="4" maxlength="500" placeholder="Type your reason for cancelling this application..."></textarea>
+                <p id="applicationCancelCharCount" class="sl-view-cancel-char-count">0 / 500 characters</p>
+                <p id="applicationCancelError" class="sl-view-cancel-error" hidden></p>
+            </div>
+            <div class="sl-cancel-modal-footer">
+                <button type="button" class="sl-btn-action sl-btn-secondary" id="applicationCancelDismissBtn">Keep Application</button>
+                <button type="button" class="sl-btn-action sl-btn-cancel" id="applicationCancelBtn">Confirm Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.__scheduleProgramId = @json($scheduleProgramId);
         window.__kkFieldLabels = @json($kkFieldLabels);

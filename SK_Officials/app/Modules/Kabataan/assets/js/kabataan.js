@@ -1,3 +1,10 @@
+function broadcastKkProfileEvent() {
+    try {
+        sessionStorage.setItem('kk-profile-event', JSON.stringify({ at: Date.now() }));
+    } catch (_) { /* ignore */ }
+    window.dispatchEvent(new CustomEvent('kk-profile-event'));
+}
+
 function showKabataanToast(message, type) {
     const existing = document.querySelector('.app-toast');
     if (existing) existing.remove();
@@ -37,7 +44,6 @@ function initializeKabataanUI() {
     const purokFilter = document.getElementById('kabataanPurok / SitioFilter');
     const educationFilter = document.getElementById('kabataanEducationFilter');
 
-    const addBtn = document.getElementById('addKabataanBtn');
     const modal = document.getElementById('kabataanModal');
     const modalBox = modal ? modal.querySelector('.kabataan-modal-box') : null;
     const modalTitle = document.getElementById('kabataanModalTitle');
@@ -455,11 +461,6 @@ function initializeKabataanUI() {
             showAddPanels(false, false, true);
             setFormData(k);
             setModalReadonly(false);
-        } else {
-            modalTitle.textContent = 'Add Kabataan';
-            showAddPanels(true, false, true);
-            clearForm();
-            setModalReadonly(false);
         }
 
         modal.style.display = 'flex';
@@ -474,8 +475,6 @@ function initializeKabataanUI() {
         if (modalBox) modalBox.classList.remove('modal-maximized');
         if (toggleBtn) toggleBtn.textContent = '□';
     }
-
-    if (addBtn) addBtn.addEventListener('click', () => openModal('add', null));
 
     // Pagination event listeners
     const prevBtn = document.getElementById('kabataanPrevBtn');
@@ -682,8 +681,9 @@ function initializeKabataanUI() {
             const payload = buildApiPayload(d);
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             const isEdit = editingIndex !== null && kabataan[editingIndex]?.id;
-            const url = isEdit ? `/kabataan/${kabataan[editingIndex].id}` : '/kabataan';
-            const method = isEdit ? 'PUT' : 'POST';
+            if (!isEdit) return;
+            const url = `/kabataan/${kabataan[editingIndex].id}`;
+            const method = 'PUT';
 
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
@@ -701,6 +701,7 @@ function initializeKabataanUI() {
             .then(r => r.json())
             .then(res => {
                 if (!res.success) throw new Error(res.message || 'Save failed');
+                broadcastKkProfileEvent();
                 closeModal();
                 loadData();
             })

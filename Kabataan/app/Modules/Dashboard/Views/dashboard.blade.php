@@ -96,41 +96,7 @@
                     <h2 class="sidebar-title">Barangay SK Profiles</h2>
                     <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
                     <div class="barangay-profiles-list">
-                        @php
-                        $brgyList = [
-                            ['name'=>'Alipit',        'chairman'=>'[SK Chairman]','color'=>'#4CAF50','programs'=>2,'events'=>3,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                            ['name'=>'Bagumbayan',    'chairman'=>'[SK Chairman]','color'=>'#2196F3','programs'=>1,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                            ['name'=>'Bubukal',       'chairman'=>'[SK Chairman]','color'=>'#9C27B0','programs'=>0,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                            ['name'=>'Duhat',         'chairman'=>'[SK Chairman]','color'=>'#FF9800','programs'=>1,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                            ['name'=>'Gatid',         'chairman'=>'[SK Chairman]','color'=>'#009688','programs'=>1,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                            ['name'=>'Labuin',        'chairman'=>'[SK Chairman]','color'=>'#f44336','programs'=>2,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                            ['name'=>'Pagsawitan',    'chairman'=>'[SK Chairman]','color'=>'#673AB7','programs'=>1,'events'=>3,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                            ['name'=>'San Jose',      'chairman'=>'[SK Chairman]','color'=>'#0450a8','programs'=>0,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                            ['name'=>'Santisima Cruz','chairman'=>'[SK Chairman]','color'=>'#FF5722','programs'=>2,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                        ];
-                        @endphp
-                        @foreach ($brgyList as $brgy)
-                        <div class="brgy-profile-item"
-                            data-brgy-name="{{ $brgy['name'] }}"
-                            data-brgy-chairman="{{ $brgy['chairman'] }}"
-                            data-brgy-members="{{ implode('|', $brgy['members']) }}"
-                            data-brgy-color="{{ $brgy['color'] }}"
-                            data-brgy-programs="{{ $brgy['programs'] }}"
-                            data-brgy-events="{{ $brgy['events'] }}"
-                            style="cursor:pointer;"
-                        >
-                            <div class="brgy-avatar" style="background:{{ $brgy['color'] }};">
-                                {{ strtoupper(substr($brgy['name'], 0, 2)) }}
-                            </div>
-                            <div class="brgy-info">
-                                <p class="brgy-name">Brgy. {{ $brgy['name'] }}</p>
-                                <p class="brgy-chair">{{ $brgy['chairman'] }}</p>
-                            </div>
-                            <svg style="width:16px;height:16px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                        @endforeach
+                        @include('dashboard::partials.barangay-profiles-list', ['barangayProfiles' => $barangayProfiles ?? []])
                     </div>
                 </div>
             </aside>
@@ -156,41 +122,7 @@
             <h2 class="sidebar-title">Barangay SK Profiles</h2>
             <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
             <div class="barangay-profiles-list">
-                @php
-                $brgyList = [
-                    ['name'=>'Alipit',        'chairman'=>'[SK Chairman]','color'=>'#4CAF50','programs'=>2,'events'=>3,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                    ['name'=>'Bagumbayan',    'chairman'=>'[SK Chairman]','color'=>'#2196F3','programs'=>1,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                    ['name'=>'Bubukal',       'chairman'=>'[SK Chairman]','color'=>'#9C27B0','programs'=>0,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                    ['name'=>'Duhat',         'chairman'=>'[SK Chairman]','color'=>'#FF9800','programs'=>1,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                    ['name'=>'Gatid',         'chairman'=>'[SK Chairman]','color'=>'#009688','programs'=>1,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                    ['name'=>'Labuin',        'chairman'=>'[SK Chairman]','color'=>'#f44336','programs'=>2,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                    ['name'=>'Pagsawitan',    'chairman'=>'[SK Chairman]','color'=>'#673AB7','programs'=>1,'events'=>3,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                    ['name'=>'San Jose',      'chairman'=>'[SK Chairman]','color'=>'#0450a8','programs'=>0,'events'=>2,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                    ['name'=>'Santisima Cruz','chairman'=>'[SK Chairman]','color'=>'#FF5722','programs'=>2,'events'=>1,'members'=>['[Councilor 1]','[Councilor 2]','[Councilor 3]','[Councilor 4]','[Councilor 5]','[Councilor 6]','[Councilor 7]']],
-                ];
-                @endphp
-                @foreach ($brgyList as $brgy)
-                <div class="brgy-profile-item"
-                    data-brgy-name="{{ $brgy['name'] }}"
-                    data-brgy-chairman="{{ $brgy['chairman'] }}"
-                    data-brgy-members="{{ implode('|', $brgy['members']) }}"
-                    data-brgy-color="{{ $brgy['color'] }}"
-                    data-brgy-programs="{{ $brgy['programs'] }}"
-                    data-brgy-events="{{ $brgy['events'] }}"
-                    style="cursor:pointer;"
-                >
-                    <div class="brgy-avatar" style="background:{{ $brgy['color'] }};">
-                        {{ strtoupper(substr($brgy['name'], 0, 2)) }}
-                    </div>
-                    <div class="brgy-info">
-                        <p class="brgy-name">Brgy. {{ $brgy['name'] }}</p>
-                        <p class="brgy-chair">{{ $brgy['chairman'] }}</p>
-                    </div>
-                    <svg style="width:16px;height:16px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                @endforeach
+                @include('dashboard::partials.barangay-profiles-list', ['barangayProfiles' => $barangayProfiles ?? []])
             </div>
         </div>
     </aside>

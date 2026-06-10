@@ -74,7 +74,6 @@
         </div>
 
         <section class="page-filters-section">
-            <!-- ── Action Bar: Search + Add Kabataan ── -->
             <div class="table-action-bar">
                 <div class="abyip-search-inline">
                     <label for="kabataanSearch" class="abyip-sr-only">Search kabataan records</label>
@@ -85,7 +84,6 @@
                         <input type="text" id="kabataanSearch" class="abyip-filter-search-inline" placeholder="Search kabataan..." autocomplete="off">
                     </div>
                 </div>
-                <button type="button" class="btn primary-btn" id="addKabataanBtn">Add Kabataan</button>
             </div>
             <div class="filters-row">
                 <div class="filter-item">

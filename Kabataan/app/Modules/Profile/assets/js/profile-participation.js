@@ -6,11 +6,80 @@ function escapeParticipationHtml(value) {
         .replace(/"/g, '&quot;');
 }
 
-function formatParticipationAnswer(answer) {
+function isDocumentAnswer(answer) {
+    return answer && typeof answer === 'object' && !Array.isArray(answer)
+        && (answer.original_name || answer.preview_url || answer.download_url || answer.path);
+}
+
+function formatParticipationAnswer(answer, questionType) {
     if (answer === null || answer === undefined || answer === '') return '—';
+    if (questionType === 'file' || isDocumentAnswer(answer)) {
+        return String(answer.original_name || 'Uploaded document');
+    }
     if (Array.isArray(answer)) return answer.join(', ');
-    if (typeof answer === 'object') return JSON.stringify(answer);
+    if (typeof answer === 'object') {
+        if (answer.original_name) return String(answer.original_name);
+        return '—';
+    }
     return String(answer);
+}
+
+function renderParticipationDocumentCard(answer, label) {
+    const file = answer && typeof answer === 'object' ? answer : {};
+    const previewUrl = file.preview_url || file.download_url || '#';
+    const downloadUrl = file.download_url || previewUrl;
+    const fileName = file.original_name || 'Uploaded PDF';
+    const meta = [file.size_display, file.uploaded_at_display].filter(Boolean).join(' • ');
+
+    return `
+        <div class="participation-document-card">
+            <div class="participation-document-icon" aria-hidden="true">PDF</div>
+            <div class="participation-document-body">
+                <div class="participation-document-name">${escapeParticipationHtml(fileName)}</div>
+                ${meta ? `<div class="participation-document-meta">${escapeParticipationHtml(meta)}</div>` : ''}
+                <div class="participation-document-actions">
+                    <a href="${escapeParticipationHtml(previewUrl)}" target="_blank" rel="noopener" class="participation-document-link">Preview</a>
+                    <a href="${escapeParticipationHtml(downloadUrl)}" target="_blank" rel="noopener" class="participation-document-link">Download</a>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderParticipationAnswerItem(item, index) {
+    const label = item.question_label || item.label || 'Question';
+    const questionType = item.question_type || '';
+    const answer = item.answer;
+
+    if (questionType === 'file' || isDocumentAnswer(answer)) {
+        return `
+            <div class="participation-answer-item participation-answer-item--file">
+                <div class="participation-answer-q">${index + 1}. ${escapeParticipationHtml(label)}</div>
+                ${renderParticipationDocumentCard(answer, label)}
+            </div>
+        `;
+    }
+
+    return `
+        <div class="participation-answer-item">
+            <div class="participation-answer-q">${index + 1}. ${escapeParticipationHtml(label)}</div>
+            <div class="participation-answer-a">${escapeParticipationHtml(formatParticipationAnswer(answer, questionType))}</div>
+        </div>
+    `;
+}
+
+function setProgramDetailsModalMaximized(isMaximized) {
+    const modal = document.getElementById('programDetailsModal');
+    const box = document.getElementById('programDetailsModalBox');
+    const maxBtn = document.getElementById('programDetailsMaximize');
+    if (!modal || !box) return;
+
+    box.classList.toggle('is-maximized', isMaximized);
+    modal.classList.toggle('is-maximized', isMaximized);
+    if (maxBtn) {
+        maxBtn.textContent = isMaximized ? '⧉' : '□';
+        maxBtn.title = isMaximized ? 'Restore Down' : 'Maximize';
+    }
 }
 
 window.viewProgramDetails = function viewProgramDetails(programKey) {
@@ -32,6 +101,7 @@ window.viewProgramDetails = function viewProgramDetails(programKey) {
     if (!modalTitle || !modalContent || !modal) return;
 
     modalTitle.textContent = title;
+    setProgramDetailsModalMaximized(false);
 
     const answers = detail.answers || [];
     let answersHtml = '';
@@ -41,12 +111,7 @@ window.viewProgramDetails = function viewProgramDetails(programKey) {
             <div class="program-description-section">
                 <h4 class="section-heading">Your Responses</h4>
                 <div class="participation-answers-list">
-                    ${answers.map((item, index) => `
-                        <div class="participation-answer-item">
-                            <div class="participation-answer-q">${index + 1}. ${escapeParticipationHtml(item.question_label || item.label || 'Question')}</div>
-                            <div class="participation-answer-a">${escapeParticipationHtml(formatParticipationAnswer(item.answer))}</div>
-                        </div>
-                    `).join('')}
+                    ${answers.map((item, index) => renderParticipationAnswerItem(item, index)).join('')}
                 </div>
             </div>`;
     } else {
@@ -96,9 +161,22 @@ window.viewProgramDetails = function viewProgramDetails(programKey) {
 window.closeProgramDetailsModal = function closeProgramDetailsModal() {
     const modal = document.getElementById('programDetailsModal');
     if (!modal) return;
+    setProgramDetailsModalMaximized(false);
     modal.style.display = 'none';
     document.body.style.overflow = 'auto';
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+    const maxBtn = document.getElementById('programDetailsMaximize');
+    if (maxBtn) {
+        maxBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const box = document.getElementById('programDetailsModalBox');
+            const isMaximized = box?.classList.contains('is-maximized');
+            setProgramDetailsModalMaximized(!isMaximized);
+        });
+    }
+});
 
 document.addEventListener('click', (event) => {
     if (event.target.classList.contains('modal-overlay')) {

@@ -304,17 +304,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close drawer when a barangay profile is clicked
     document.querySelectorAll('#programsDrawerSidebar .brgy-profile-item').forEach(item => {
         item.addEventListener('click', () => {
+            if (typeof showLoading === 'function') {
+                showLoading('Loading');
+            }
             closeDrawer();
         });
     });
 
-    // ── Barangay Profile — navigate to page ──────────────────────────────────
-    document.querySelectorAll('.brgy-profile-item').forEach((item) => {
+    document.querySelectorAll('.barangay-sidebar-right .brgy-profile-item').forEach((item) => {
         item.addEventListener('click', () => {
-            const name = item.dataset.brgyName;
-            const slug = name.toLowerCase().replace(/\s+/g, '-');
-            showLoading('Loading');
-            window.location.href = `/barangay/${slug}`;
+            if (typeof showLoading === 'function') {
+                showLoading('Loading');
+            }
         });
     });
 });

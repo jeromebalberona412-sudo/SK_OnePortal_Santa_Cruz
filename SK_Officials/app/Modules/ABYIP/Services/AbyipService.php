@@ -142,6 +142,11 @@ class AbyipService
                 'approved_by' => $parsed['approved_by'],
                 'approved_position' => $parsed['approved_position'],
                 'approved_by_user_id' => $signatureUserIds['approved_by_user_id'],
+                'status' => Abyip::STATUS_PENDING,
+                'prepared_by_name' => $parsed['prepared_by_name'] ?? $parsed['prepared_by'],
+                'prepared_by_position' => $parsed['prepared_by_position'],
+                'approved_by_name' => $parsed['approved_by_name'] ?? $parsed['approved_by'],
+                'approved_by_position' => $parsed['approved_by_position'],
                 'source_type' => $sourceType,
                 'document_html' => $data['document_html'] ?? null,
                 'pdf_data' => $data['pdf_data'] ?? null,
@@ -244,15 +249,18 @@ class AbyipService
             'barangay_estimated_budget' => $document->barangay_estimated_budget,
             'sk_fund_percentage' => $document->sk_fund_percentage,
             'sk_fund_amount' => $document->sk_fund_amount,
+            'status' => $document->status ?? Abyip::STATUS_PENDING,
             'total_expenditure' => $document->total_budget,
             'total_budget' => $document->total_budget,
-            'prepared_by_name' => $document->prepared_by,
+            'prepared_by_name' => $document->prepared_by_name ?? $document->prepared_by,
             'prepared_by' => $document->prepared_by,
             'prepared_position' => $document->prepared_position,
+            'prepared_by_position' => $document->prepared_by_position ?? $document->prepared_position,
             'prepared_by_user_id' => $document->prepared_by_user_id,
-            'approved_by_name' => $document->approved_by,
+            'approved_by_name' => $document->approved_by_name ?? $document->approved_by,
             'approved_by' => $document->approved_by,
             'approved_position' => $document->approved_position,
+            'approved_by_position' => $document->approved_by_position ?? $document->approved_position,
             'approved_by_user_id' => $document->approved_by_user_id,
             'programs' => $programs,
             'line_items' => [],
@@ -479,7 +487,20 @@ class AbyipService
                     $parsed[$key] = $value;
                 }
             }
+
+            foreach ($this->parseAbyipSignatureTagsFromText($extractedText) as $key => $value) {
+                if ($value !== null && $value !== '') {
+                    $parsed[$key] = $value;
+                }
+            }
+
+            $grandTotal = $this->parseAbyipGrandTotalFromText($extractedText);
+            if ($grandTotal !== null) {
+                $parsed['total_budget'] = $grandTotal;
+            }
         }
+
+        $parsed = $this->normalizeSignatureFields($parsed);
 
         $parsed['line_items'] = array_values(array_filter(
             $parsed['line_items'] ?? [],
@@ -607,8 +628,12 @@ class AbyipService
             'total_budget' => null,
             'prepared_by' => null,
             'prepared_position' => null,
+            'prepared_by_name' => null,
+            'prepared_by_position' => null,
             'approved_by' => null,
             'approved_position' => null,
+            'approved_by_name' => null,
+            'approved_by_position' => null,
             'line_items' => [],
             'sk_youth_development_and_empowerment_programs' => [],
         ];
@@ -646,6 +671,110 @@ class AbyipService
         }
 
         return $result;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function parseAbyipSignatureTagsFromText(string $text): array
+    {
+        $result = [
+            'prepared_by_name' => null,
+            'prepared_by_position' => null,
+            'approved_by_name' => null,
+            'approved_by_position' => null,
+        ];
+
+        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+            if (! str_starts_with(trim($line), '@ABYIP_SIGNATURE@')) {
+                continue;
+            }
+
+            $fields = $this->parseStructuredTagFields($line, '@ABYIP_SIGNATURE@');
+
+            if (! empty($fields['PREPARED_NAME'])) {
+                $result['prepared_by_name'] = $this->formatHonoraryName($fields['PREPARED_NAME']);
+            }
+
+            if (! empty($fields['PREPARED_POS'])) {
+                $result['prepared_by_position'] = trim($fields['PREPARED_POS']);
+            }
+
+            if (! empty($fields['APPROVED_NAME'])) {
+                $result['approved_by_name'] = $this->formatHonoraryName($fields['APPROVED_NAME']);
+            }
+
+            if (! empty($fields['APPROVED_POS'])) {
+                $result['approved_by_position'] = trim($fields['APPROVED_POS']);
+            }
+        }
+
+        return $result;
+    }
+
+    protected function parseAbyipGrandTotalFromText(string $text): ?string
+    {
+        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+            $trimmed = trim($line);
+
+            if (preg_match('/^@ABYIP_GRAND_TOTAL@([\d,]+(?:\.\d{2})?)/', $trimmed, $match)) {
+                return $this->parseAmount($match[1]);
+            }
+        }
+
+        $totals = [];
+
+        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+            $trimmed = trim($line);
+
+            if (! preg_match('/^TOTAL\b/i', $trimmed)) {
+                continue;
+            }
+
+            if (preg_match_all('/([\d,]+\.\d{2})/', $trimmed, $matches)) {
+                $totals[] = $this->parseAmount(end($matches[1]));
+            }
+        }
+
+        if ($totals !== []) {
+            return end($totals);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $parsed
+     * @return array<string, mixed>
+     */
+    protected function normalizeSignatureFields(array $parsed): array
+    {
+        $preparedName = $parsed['prepared_by_name'] ?? $parsed['prepared_by'] ?? null;
+        $preparedPosition = $parsed['prepared_by_position'] ?? $parsed['prepared_position'] ?? null;
+        $approvedName = $parsed['approved_by_name'] ?? $parsed['approved_by'] ?? null;
+        $approvedPosition = $parsed['approved_by_position'] ?? $parsed['approved_position'] ?? null;
+
+        if ($preparedName !== null) {
+            $parsed['prepared_by'] = $preparedName;
+            $parsed['prepared_by_name'] = $preparedName;
+        }
+
+        if ($preparedPosition !== null) {
+            $parsed['prepared_position'] = $preparedPosition;
+            $parsed['prepared_by_position'] = $preparedPosition;
+        }
+
+        if ($approvedName !== null) {
+            $parsed['approved_by'] = $approvedName;
+            $parsed['approved_by_name'] = $approvedName;
+        }
+
+        if ($approvedPosition !== null) {
+            $parsed['approved_position'] = $approvedPosition;
+            $parsed['approved_by_position'] = $approvedPosition;
+        }
+
+        return $parsed;
     }
 
     /**
@@ -755,9 +884,11 @@ class AbyipService
         }
 
         $metadata = array_merge($metadata, $this->parseSignatureBlockFromText($text));
+        $metadata = array_merge($metadata, $this->normalizeSignatureFields($metadata));
 
-        if (preg_match('/\bTotal\s+([\d,]+(?:\.\d{2})?)\b/i', $normalized, $match)) {
-            $metadata['total_budget'] = $this->parseAmount($match[1]);
+        $grandTotal = $this->parseAbyipGrandTotalFromText($text);
+        if ($grandTotal !== null) {
+            $metadata['total_budget'] = $grandTotal;
         }
 
         return $metadata;
@@ -785,35 +916,62 @@ class AbyipService
             preg_split('/\R/u', $text) ?: []
         )));
 
+        $signatureStart = null;
+
         foreach ($lines as $index => $line) {
-            if (! preg_match('/Prepared\s+by/i', $line)) {
-                continue;
+            if (preg_match('/Prepared\s+by/i', $line)) {
+                $signatureStart = $index;
+                break;
             }
+        }
 
-            $nameLine = $lines[$index + 1] ?? '';
-            $positionLine = $lines[$index + 2] ?? '';
+        if ($signatureStart !== null) {
+            $block = array_slice($lines, $signatureStart, 6);
+            $blockText = implode("\n", $block);
+            $names = [];
 
-            if (preg_match_all('/HON\.?\s*([A-Z][A-Za-z.\s]+?)(?=\s+HON\.|\s+SK\s+Chair|\s+Barangay|$)/i', $nameLine, $matches)) {
-                $names = array_map('trim', $matches[1]);
-                if (isset($names[0])) {
-                    $result['prepared_by'] = $this->formatHonoraryName($names[0]);
+            if (preg_match_all('/HON\.?\s*([A-Z][A-Za-z.\s]+?)(?=\s+HON\.|\s+SK\s+Chair|\s+Barangay\s+Chair|\R|$)/i', $blockText, $matches)) {
+                foreach ($matches[1] as $name) {
+                    $names[] = $this->formatHonoraryName($name);
                 }
-                if (isset($names[1])) {
-                    $result['approved_by'] = $this->formatHonoraryName($names[1]);
+            }
+
+            if (count($names) < 2) {
+                foreach ($block as $blockLine) {
+                    if (! preg_match('/HON\./i', $blockLine)) {
+                        continue;
+                    }
+
+                    $parts = preg_split('/\s{2,}|\t/u', $blockLine) ?: [];
+                    foreach ($parts as $part) {
+                        $part = trim($part);
+                        if ($part !== '' && preg_match('/HON\./i', $part)) {
+                            $formatted = $this->formatHonoraryName($part);
+                            if (! in_array($formatted, $names, true)) {
+                                $names[] = $formatted;
+                            }
+                        }
+                    }
                 }
-            } elseif (preg_match('/HON\.?\s*([A-Z][A-Za-z.\s]+)/i', $nameLine, $match)) {
-                $result['prepared_by'] = $this->formatHonoraryName($match[1]);
             }
 
-            if (preg_match('/SK\s+Chair(?:person|man)?/i', $positionLine, $match)) {
-                $result['prepared_position'] = stripos($match[0], 'person') !== false ? 'SK Chairperson' : 'SK Chairperson';
+            if (isset($names[0])) {
+                $result['prepared_by'] = $names[0];
             }
 
-            if (preg_match('/Barangay\s+Chair(?:man|person)?/i', $positionLine)) {
-                $result['approved_position'] = 'Barangay Chairman';
+            if (isset($names[1])) {
+                $result['approved_by'] = $names[1];
             }
 
-            break;
+            foreach ($block as $blockLine) {
+                if (preg_match('/SK\s+Chair(?:person|man)?/i', $blockLine)) {
+                    $result['prepared_position'] = 'SK Chairperson';
+                }
+
+                if (preg_match('/Barangay\s+Chair(?:man|person)?/i', $blockLine)) {
+                    $result['approved_position'] = 'Barangay Chairman';
+                }
+            }
         }
 
         if ($result['prepared_by'] === null && preg_match('/HON\.?\s*KARIM\s*Z\.?\s*NEQUINTO/i', $text, $match)) {
@@ -2580,10 +2738,16 @@ class AbyipService
     protected function parseTextTableRow(string $line): ?array
     {
         if (preg_match('/^TOTAL\b/i', $line)) {
+            $amount = null;
+
+            if (preg_match_all('/([\d,]+\.\d{2})/', $line, $matches)) {
+                $amount = $this->parseAmount(end($matches[1]));
+            }
+
             return [
                 'row_type' => 'total',
-                'ppa_name' => $line,
-                'budget_total' => $this->parseAmount($line),
+                'ppa_name' => 'TOTAL',
+                'budget_total' => $amount,
             ];
         }
 
@@ -2792,13 +2956,15 @@ class AbyipService
 
     protected function extractTotalFromRows(array $lineItems): ?string
     {
+        $lastTotal = null;
+
         foreach ($lineItems as $item) {
-            if (($item['row_type'] ?? '') === 'total') {
-                return $item['budget_total'] ?? null;
+            if (($item['row_type'] ?? '') === 'total' && ! empty($item['budget_total'])) {
+                $lastTotal = $item['budget_total'];
             }
         }
 
-        return null;
+        return $lastTotal;
     }
 
     protected function resolveRowType(string $class, string $label, int $cellCount): string
