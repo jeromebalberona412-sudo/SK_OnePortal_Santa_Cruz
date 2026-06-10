@@ -87,8 +87,7 @@ class KabataanProgramService
      */
     public function getDashboardPayload(User $user): array
     {
-        $barangayId = $user->barangay_id;
-        $tenantId = $user->tenant_id;
+        $barangayId = $this->resolveUserBarangayId($user);
         $document = $this->getLatestAbyipDocument($barangayId);
 
         $abyipPrograms = [];
@@ -104,17 +103,22 @@ class KabataanProgramService
                 ->orderBy('id')
                 ->get();
 
-            $surveyMap = $this->surveyService->summarizeOpenSurveysForPrograms(
-                $user,
-                $programModels->pluck('id')->map(fn ($id) => (int) $id)->all(),
-            );
+            $programIds = $programModels->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+            $openSurveyMap = $this->surveyService->summarizeOpenSurveysForPrograms($user, $programIds);
+            $latestSurveyMap = $this->surveyService->summarizeLatestSurveysForPrograms($user, $programIds);
 
             $abyipPrograms = $programModels
-                ->map(fn (Abyip $program) => $this->formatAbyipProgram(
-                    $program,
-                    $user,
-                    $surveyMap[(int) $program->id] ?? null,
-                ))
+                ->map(function (Abyip $program) use ($user, $openSurveyMap, $latestSurveyMap) {
+                    $programId = (int) $program->id;
+
+                    return $this->formatAbyipProgram(
+                        $program,
+                        $user,
+                        $openSurveyMap[$programId] ?? null,
+                        $latestSurveyMap[$programId] ?? null,
+                    );
+                })
                 ->values()
                 ->all();
         }
@@ -343,9 +347,12 @@ class KabataanProgramService
 
     private function scheduleProgramsQuery(User $user)
     {
+        $tenantId = $this->resolveUserTenantId($user);
+        $barangayId = $this->resolveUserBarangayId($user);
+
         return ScheduleProgram::query()
-            ->when($user->tenant_id, fn ($q, $tenantId) => $q->where('tenant_id', $tenantId))
-            ->when($user->barangay_id, fn ($q, $barangayId) => $q->where('barangay_id', $barangayId))
+            ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->when($barangayId !== null, fn ($q) => $q->where('barangay_id', $barangayId))
             ->where('status', ScheduleProgram::STATUS_OPEN)
             ->orderByDesc('start_date')
             ->orderByDesc('id');
@@ -372,8 +379,12 @@ class KabataanProgramService
     /**
      * @return array<string, mixed>
      */
-    private function formatAbyipProgram(Abyip $program, User $user, ?array $survey = null): array
-    {
+    private function formatAbyipProgram(
+        Abyip $program,
+        User $user,
+        ?array $openSurvey = null,
+        ?array $latestSurvey = null,
+    ): array {
         $letter = strtoupper(trim((string) ($program->program_letter ?? $program->code ?? '')));
         $meta = self::LETTER_META[$letter] ?? [
             'category_key' => 'others',
@@ -397,23 +408,31 @@ class KabataanProgramService
             $description = 'No activities listed.';
         }
 
+        $tenantId = $this->resolveUserTenantId($user);
+        $barangayId = $this->resolveUserBarangayId($user);
+
         $scheduleCount = ScheduleProgram::query()
-            ->when($user->tenant_id, fn ($q, $tenantId) => $q->where('tenant_id', $tenantId))
-            ->when($user->barangay_id, fn ($q, $barangayId) => $q->where('barangay_id', $barangayId))
+            ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->when($barangayId !== null, fn ($q) => $q->where('barangay_id', $barangayId))
             ->where('status', ScheduleProgram::STATUS_OPEN)
             ->where('program_type', trim((string) $program->program_name))
             ->count();
 
-        if ($survey === null) {
-            $survey = $this->surveyService->summarizeOpenSurveyForProgram($user, (int) $program->id);
+        if ($openSurvey === null) {
+            $openSurvey = $this->surveyService->summarizeOpenSurveyForProgram($user, (int) $program->id);
         }
 
-        if ($meta['type'] === 'education') {
-            $activeCount = $scheduleCount;
-        } elseif ($meta['type'] === 'sports') {
+        if ($latestSurvey === null && $openSurvey !== null) {
+            $latestSurvey = $openSurvey;
+        }
+
+        $hasSurvey = $latestSurvey !== null;
+        $surveyForDisplay = $openSurvey ?? $latestSurvey;
+
+        if ($meta['type'] === 'education' || $meta['type'] === 'sports') {
             $activeCount = $scheduleCount;
         } else {
-            $activeCount = $survey !== null ? 1 : 0;
+            $activeCount = $hasSurvey ? 1 : 0;
         }
 
         return [
@@ -429,8 +448,40 @@ class KabataanProgramService
             'short_label' => $meta['short_label'],
             'active_count' => $activeCount,
             'schedule_count' => $scheduleCount,
-            'survey' => $survey,
+            'has_survey' => $hasSurvey,
+            'survey' => $surveyForDisplay,
         ];
+    }
+
+    private function resolveUserBarangayId(User $user): ?int
+    {
+        if ($user->barangay_id !== null) {
+            return (int) $user->barangay_id;
+        }
+
+        $barangayId = KabataanRegistration::query()
+            ->where('user_id', $user->id)
+            ->latest()
+            ->value('barangay_id');
+
+        return $barangayId !== null ? (int) $barangayId : null;
+    }
+
+    private function resolveUserTenantId(User $user): ?int
+    {
+        if ($user->tenant_id !== null) {
+            return (int) $user->tenant_id;
+        }
+
+        $registration = KabataanRegistration::query()
+            ->with('barangay')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        $tenantId = $registration?->barangay?->tenant_id;
+
+        return $tenantId !== null ? (int) $tenantId : null;
     }
 
     /**

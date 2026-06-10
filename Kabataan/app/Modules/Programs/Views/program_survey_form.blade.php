@@ -38,7 +38,12 @@
             <div class="gf-banner">
                 <div class="gf-banner-content">
                     <h1 class="gf-title">{{ $survey['program_name'] ?? 'Program Survey' }}</h1>
-                    <p class="gf-description">{{ $survey['announcement'] ?? '' }}</p>
+                    @if(!empty($survey['announcement']))
+                        <p class="gf-description">{{ $survey['announcement'] }}</p>
+                    @endif
+                    @if(!empty($survey['instructions']))
+                        <p class="gf-description" style="margin-top:8px;">{{ $survey['instructions'] }}</p>
+                    @endif
                 </div>
             </div>
             <div class="gf-info-bar">

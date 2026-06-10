@@ -145,8 +145,9 @@ class ProgramSurveyService
      */
     public function store(User $user, string $committeeKey, array $data): array
     {
-        $validated = $this->validatePayload($data, false);
         $context = $this->resolveCommitteeContext($user, $committeeKey);
+        $data = $this->applyDefaultProgramId($context, $data);
+        $validated = $this->validatePayload($data, false);
         $program = $this->resolveProgramFromContext($context, (int) $validated['abyip_program_id']);
 
         $this->assertRequiredUserContext($user);
@@ -193,8 +194,9 @@ class ProgramSurveyService
     public function update(User $user, string $committeeKey, int $surveyId, array $data): array
     {
         $survey = $this->findModel($user, $committeeKey, $surveyId);
-        $validated = $this->validatePayload($data, true);
         $context = $this->resolveCommitteeContext($user, $committeeKey);
+        $data = $this->applyDefaultProgramId($context, $data, (int) $survey->abyip_program_id);
+        $validated = $this->validatePayload($data, true);
         $program = $this->resolveProgramFromContext($context, (int) $validated['abyip_program_id']);
 
         $openYear = (int) Carbon::parse($validated['open_date'])->format('Y');
@@ -303,6 +305,35 @@ class ProgramSurveyService
         }
 
         return $survey;
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyDefaultProgramId(array $context, array $data, ?int $fallbackProgramId = null): array
+    {
+        $programId = (int) ($data['abyip_program_id'] ?? $data['abyipProgramId'] ?? 0);
+
+        if ($programId <= 0 && $fallbackProgramId !== null) {
+            $programId = $fallbackProgramId;
+        }
+
+        if ($programId <= 0) {
+            $programs = collect($context['programs'] ?? []);
+            if ($programs->count() === 1) {
+                $programId = (int) ($programs->first()['id'] ?? 0);
+            } elseif ($programs->count() > 1) {
+                $programId = (int) ($programs->first()['id'] ?? 0);
+            }
+        }
+
+        if ($programId > 0) {
+            $data['abyip_program_id'] = $programId;
+        }
+
+        return $data;
     }
 
     /**
@@ -416,11 +447,6 @@ class ProgramSurveyService
         }
 
         $programId = (int) ($data['abyip_program_id'] ?? $data['abyipProgramId'] ?? 0);
-        if ($programId <= 0) {
-            throw ValidationException::withMessages([
-                'abyip_program_id' => 'Program activity is required.',
-            ]);
-        }
 
         $status = strtolower(trim((string) ($data['status'] ?? 'scheduled')));
         if (! in_array($status, self::ALLOWED_STATUSES, true)) {
@@ -465,6 +491,12 @@ class ProgramSurveyService
             ];
         }
 
+        if ($programId <= 0) {
+            throw ValidationException::withMessages([
+                'abyip_program_id' => 'No ABYIP program detected for this committee. Upload ABYIP first.',
+            ]);
+        }
+
         return [
             'abyip_program_id' => $programId,
             'announcement' => $announcement,
@@ -478,19 +510,25 @@ class ProgramSurveyService
 
     private function resolveStatus(string $requestedStatus, string $openDate, string $closeDate): string
     {
+        $requestedStatus = strtolower(trim($requestedStatus));
         $now = Carbon::now()->startOfDay();
         $open = Carbon::parse($openDate)->startOfDay();
         $close = Carbon::parse($closeDate)->endOfDay();
+
+        if ($requestedStatus === 'closed' || $now->gt($close)) {
+            return 'closed';
+        }
+
+        // Honor explicit Open from SK Officials even before the scheduled open date.
+        if ($requestedStatus === 'open') {
+            return 'open';
+        }
 
         if ($now->lt($open)) {
             return 'scheduled';
         }
 
-        if ($now->lte($close)) {
-            return 'open';
-        }
-
-        return 'closed';
+        return 'open';
     }
 
     /**

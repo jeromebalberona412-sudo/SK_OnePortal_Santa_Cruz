@@ -1077,6 +1077,84 @@ CREATE TABLE IF NOT EXISTS rejected_sports (
 CREATE INDEX IF NOT EXISTS rejected_sports_barangay_id_rejected_at_index ON rejected_sports (barangay_id, rejected_at);
 CREATE INDEX IF NOT EXISTS rejected_sports_barangay_id_restored_at_index ON rejected_sports (barangay_id, restored_at);
 
+-- Program surveys (SK Officials create; Kabataan responds)
+CREATE TABLE IF NOT EXISTS program_surveys (
+  id BIGSERIAL NOT NULL,
+  tenant_id BIGINT NOT NULL,
+  barangay_id BIGINT NOT NULL,
+  abyip_id BIGINT NOT NULL,
+  abyip_program_id BIGINT NOT NULL,
+  announcement TEXT NOT NULL,
+  instructions TEXT NOT NULL,
+  open_date DATE NOT NULL,
+  close_date DATE NOT NULL,
+  status VARCHAR(30) NOT NULL,
+  created_by BIGINT NOT NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT program_surveys_pkey PRIMARY KEY (id),
+  CONSTRAINT program_surveys_tenant_id_foreign FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
+  CONSTRAINT program_surveys_barangay_id_foreign FOREIGN KEY (barangay_id) REFERENCES barangays (id) ON DELETE CASCADE,
+  CONSTRAINT program_surveys_abyip_id_foreign FOREIGN KEY (abyip_id) REFERENCES abyip (id) ON DELETE CASCADE,
+  CONSTRAINT program_surveys_abyip_program_id_foreign FOREIGN KEY (abyip_program_id) REFERENCES abyip (id) ON DELETE CASCADE,
+  CONSTRAINT program_surveys_created_by_foreign FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS program_surveys_barangay_id_status_index
+  ON program_surveys (barangay_id, status);
+CREATE INDEX IF NOT EXISTS program_surveys_barangay_id_abyip_program_id_index
+  ON program_surveys (barangay_id, abyip_program_id);
+CREATE INDEX IF NOT EXISTS program_surveys_barangay_id_open_date_close_date_index
+  ON program_surveys (barangay_id, open_date, close_date);
+
+CREATE UNIQUE INDEX IF NOT EXISTS program_surveys_barangay_program_year_unique
+  ON program_surveys (barangay_id, abyip_program_id, (EXTRACT(YEAR FROM open_date)));
+
+CREATE TABLE IF NOT EXISTS program_survey_questions (
+  id BIGSERIAL NOT NULL,
+  survey_id BIGINT NOT NULL,
+  question_label TEXT NOT NULL,
+  input_type VARCHAR(50) NOT NULL,
+  is_required BOOLEAN NOT NULL DEFAULT TRUE,
+  options JSON NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT program_survey_questions_pkey PRIMARY KEY (id),
+  CONSTRAINT program_survey_questions_survey_id_foreign FOREIGN KEY (survey_id) REFERENCES program_surveys (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS program_survey_questions_survey_id_sort_order_index
+  ON program_survey_questions (survey_id, sort_order);
+
+CREATE TABLE IF NOT EXISTS program_survey_responses (
+  id BIGSERIAL NOT NULL,
+  survey_id BIGINT NOT NULL,
+  registration_id BIGINT NOT NULL,
+  submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT program_survey_responses_pkey PRIMARY KEY (id),
+  CONSTRAINT program_survey_responses_survey_id_foreign FOREIGN KEY (survey_id) REFERENCES program_surveys (id) ON DELETE CASCADE,
+  CONSTRAINT program_survey_responses_registration_id_foreign FOREIGN KEY (registration_id) REFERENCES kabataan_registrations (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS program_survey_responses_survey_id_submitted_at_index
+  ON program_survey_responses (survey_id, submitted_at);
+
+CREATE TABLE IF NOT EXISTS program_survey_response_answers (
+  id BIGSERIAL NOT NULL,
+  response_id BIGINT NOT NULL,
+  question_id BIGINT NOT NULL,
+  answer TEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT program_survey_response_answers_pkey PRIMARY KEY (id),
+  CONSTRAINT program_survey_response_answers_response_id_foreign FOREIGN KEY (response_id) REFERENCES program_survey_responses (id) ON DELETE CASCADE,
+  CONSTRAINT program_survey_response_answers_question_id_foreign FOREIGN KEY (question_id) REFERENCES program_survey_questions (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS program_survey_response_answers_response_id_question_id_index
+  ON program_survey_response_answers (response_id, question_id);
+
 CREATE OR REPLACE FUNCTION generate_respondent_number(
   p_tenant_id BIGINT,
   p_barangay_id BIGINT

@@ -187,36 +187,39 @@ function countResponsesForSurvey(surveyId) {
     return responses.filter(r => String(r.surveyId || r.survey_id) === String(surveyId)).length;
 }
 
-function populateProgramSelect(selectedId) {
-    const activityEl = document.getElementById('surveyActivity');
-    const hintEl = document.getElementById('surveyProgramHint');
-    if (!activityEl) return;
-
+function getAutoProgram(selectedId = null) {
     const programs = committeeContext.programs || [];
+    if (!programs.length) return null;
 
-    if (!programs.length) {
-        activityEl.innerHTML = '<option value="">No ABYIP program available</option>';
-        activityEl.disabled = true;
+    if (selectedId) {
+        const matched = programs.find((program) => String(program.id) === String(selectedId));
+        if (matched) return matched;
+    }
+
+    return programs[0];
+}
+
+function renderAutoProgram(selectedId = null) {
+    const hiddenEl = document.getElementById('surveyActivity');
+    const nameEl = document.getElementById('surveyProgramName');
+    const hintEl = document.getElementById('surveyProgramHint');
+    if (!hiddenEl || !nameEl) return;
+
+    const program = getAutoProgram(selectedId);
+
+    if (!program) {
+        hiddenEl.value = '';
+        nameEl.textContent = 'No ABYIP program available';
         if (hintEl) {
             hintEl.textContent = 'Upload ABYIP for your barangay before creating a survey.';
         }
         return;
     }
 
-    activityEl.disabled = false;
-    activityEl.innerHTML = programs.map(program => (
-        `<option value="${program.id}">${escapeHtml(program.program_name)}</option>`
-    )).join('');
-
-    if (selectedId) {
-        activityEl.value = String(selectedId);
-    }
-
+    hiddenEl.value = String(program.id);
+    nameEl.textContent = program.program_name;
     if (hintEl) {
-        const selected = programs.find(p => String(p.id) === String(activityEl.value));
-        hintEl.textContent = selected
-            ? `Survey title: ${selected.program_name}`
-            : 'Survey title uses the selected ABYIP program name automatically.';
+        hintEl.textContent = `Survey is linked to: ${program.program_name}`;
     }
 }
 
@@ -242,10 +245,6 @@ function bindFormsTab() {
         });
     }
 
-    document.getElementById('surveyActivity')?.addEventListener('change', () => {
-        populateProgramSelect(document.getElementById('surveyActivity')?.value);
-    });
-
     const today = new Date().toISOString().split('T')[0];
     const openDateInput = document.getElementById('surveyOpenDate');
     const closeDateInput = document.getElementById('surveyCloseDate');
@@ -255,7 +254,7 @@ function bindFormsTab() {
 
 function openSurveyModal(survey) {
     editingSurveyId = survey?.id || null;
-    populateProgramSelect(survey?.abyip_program_id || survey?.abyipProgramId);
+    renderAutoProgram(survey?.abyip_program_id || survey?.abyipProgramId);
 
     document.getElementById('surveyFormModalTitle').textContent = survey ? 'Edit Survey Form' : 'Create Survey Form';
     document.getElementById('surveyDescription').value = survey?.announcement || survey?.description || '';
@@ -288,7 +287,7 @@ function closeSurveyModal() {
 async function saveSurveyForm() {
     const programId = document.getElementById('surveyActivity')?.value || '';
     if (!programId) {
-        showToast('Select a program activity from ABYIP.', 'error');
+        showToast('No ABYIP program detected for this committee. Upload ABYIP first.', 'error');
         return;
     }
 

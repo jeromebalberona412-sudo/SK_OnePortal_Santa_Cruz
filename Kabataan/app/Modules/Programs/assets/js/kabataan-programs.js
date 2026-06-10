@@ -87,18 +87,23 @@
         return response.json();
     }
 
-    function programCountLabel(count) {
-        const n = Number(count) || 0;
-        if (n === 0) return 'No active programs';
-        if (n === 1) return '1 active program';
-        return `${n} active programs`;
+    function programCountLabel(program) {
+        if (program.type === 'education' || program.type === 'sports') {
+            const n = Number(program.schedule_count) || 0;
+            if (n === 0) return 'Barangay program';
+            if (n === 1) return '1 active schedule';
+            return `${n} active schedules`;
+        }
+
+        if (program.survey?.can_respond) return 'Survey open';
+        if (program.survey?.has_responded) return 'Survey submitted';
+        if (program.has_survey || program.survey) return 'Survey available';
+        return 'Barangay program';
     }
 
     function renderSidebarItem(program) {
         const iconClass = ICON_CLASS[program.category_key] || 'others';
         const svgPath = CATEGORY_SVGS[program.category_key] || CATEGORY_SVGS.others;
-        const count = program.type === 'education' ? program.schedule_count : program.active_count;
-
         return `
             <div class="program-category" data-category="${escapeHtml(program.category_key)}" data-letter="${escapeHtml(program.letter)}" style="cursor:pointer;">
                 <div class="category-icon ${iconClass}">
@@ -106,7 +111,7 @@
                 </div>
                 <div class="category-content">
                     <h3>${escapeHtml(program.title)}</h3>
-                    <p>${programCountLabel(count)}</p>
+                    <p>${programCountLabel(program)}</p>
                 </div>
                 <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
@@ -126,7 +131,7 @@
         const programs = programsData?.abyip_programs || [];
         const html = programs.length
             ? programs.map(renderSidebarItem).join('')
-            : '<p style="text-align:center;color:#64748b;padding:16px;font-size:14px;">No ABYIP programs available for your barangay yet.</p>';
+            : '<p style="text-align:center;color:#64748b;padding:16px;font-size:14px;">No ABYIP programs uploaded for your barangay yet.</p>';
 
         containers.forEach((container) => {
             container.innerHTML = html;
@@ -204,15 +209,24 @@
     function renderSurveyProgramCard(program, emptyNote, gradient) {
         const headerGradient = gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         const survey = program.survey;
-        const hasOpenSurvey = Boolean(survey?.is_open);
+        const canRespond = Boolean(survey?.can_respond);
+        const hasOpenSurvey = Boolean(survey?.is_open || canRespond);
         const hasResponded = Boolean(survey?.has_responded);
         const activities = (program.activities || [])
             .map((activity) => `<li>${escapeHtml(activity)}</li>`)
             .join('');
 
         let actionLabel = 'Survey Not Open';
-        if (hasResponded) actionLabel = 'Already Submitted';
-        else if (hasOpenSurvey) actionLabel = 'Apply Now';
+        let statusLabel = 'Barangay Program';
+        if (hasResponded) {
+            actionLabel = 'Already Submitted';
+            statusLabel = 'Submitted';
+        } else if (canRespond) {
+            actionLabel = 'Apply Now';
+            statusLabel = 'Survey Open';
+        } else if (survey) {
+            statusLabel = survey.status === 'closed' ? 'Survey Closed' : 'Survey Scheduled';
+        }
 
         return `
             <div class="modern-program-card">
@@ -222,7 +236,7 @@
                             <span class="program-category-tag">${escapeHtml(program.emoji)} ${escapeHtml(program.short_label)}</span>
                             <h3 class="program-card-title">${escapeHtml(program.title)}</h3>
                         </div>
-                        <span class="program-status-badge status-active"><span class="status-dot"></span>${hasOpenSurvey ? 'Survey Open' : 'ABYIP Program'}</span>
+                        <span class="program-status-badge status-active"><span class="status-dot"></span>${escapeHtml(statusLabel)}</span>
                     </div>
                 </div>
                 <div class="program-description-section">
@@ -239,9 +253,14 @@
                         <h4 class="section-heading">Announcement</h4>
                         <p class="description-text">${escapeHtml(survey.announcement || '—')}</p>
                     </div>
-                ` : `<p class="description-text" style="margin-top:16px;color:#64748b;">${escapeHtml(emptyNote || 'No open survey from SK Officials yet.')}</p>`}
+                    ${survey.instructions ? `
+                    <div class="program-description-section">
+                        <h4 class="section-heading">Instructions</h4>
+                        <p class="description-text">${escapeHtml(survey.instructions)}</p>
+                    </div>` : ''}
+                ` : `<p class="description-text" style="margin-top:16px;color:#64748b;">${escapeHtml(emptyNote || 'No survey from SK Officials yet.')}</p>`}
                 <div class="program-action">
-                    <button type="button" class="apply-now-button ${hasOpenSurvey && !hasResponded ? 'enabled' : ''}" data-apply-survey="${program.id}" ${!hasOpenSurvey || hasResponded ? 'disabled' : ''}>
+                    <button type="button" class="apply-now-button ${canRespond ? 'enabled' : ''}" data-apply-survey="${program.id}" ${!canRespond ? 'disabled' : ''}>
                         ${actionLabel}
                     </button>
                 </div>
@@ -478,7 +497,7 @@
 
         (programsData?.abyip_programs || []).forEach((program) => {
             if (program.type === 'education' || program.type === 'sports') return;
-            if (!program.survey?.is_open || program.survey?.has_responded) return;
+            if (!program.survey?.can_respond) return;
 
             const btnId = buttonMap[program.category_key] || buttonMap[program.modal_key];
             const btn = btnId ? document.getElementById(btnId) : null;

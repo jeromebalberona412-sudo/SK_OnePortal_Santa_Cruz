@@ -9,9 +9,10 @@
         </div>
         <div class="schol-modal-body">
             <div class="schol-form-group">
-                <label class="schol-label" for="surveyActivity">Program Activity <span class="required">*</span></label>
-                <select id="surveyActivity" class="schol-input" required></select>
-                <p class="schol-field-hint" id="surveyProgramHint">Survey title uses the selected ABYIP program name automatically.</p>
+                <label class="schol-label">Program Activity</label>
+                <div id="surveyProgramName" class="schol-input" style="background:#f8fafc;cursor:default;">Detecting program…</div>
+                <input type="hidden" id="surveyActivity" value="">
+                <p class="schol-field-hint" id="surveyProgramHint">Program is auto-detected from this committee's ABYIP entry.</p>
             </div>
             <div class="schol-form-group">
                 <label class="schol-label" for="surveyDescription">Instructions for Kabataan</label>

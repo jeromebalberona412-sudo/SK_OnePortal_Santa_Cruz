@@ -273,10 +273,11 @@ class ProgramController extends Controller
     public function showSurveyByProgram(Request $request, int $abyipProgramId): JsonResponse
     {
         $user = Auth::user();
-        $survey = $this->surveyService->getOpenSurveyByProgram($user, $abyipProgramId);
+        $survey = $this->surveyService->getOpenSurveyByProgram($user, $abyipProgramId)
+            ?? $this->surveyService->getLatestSurveyByProgram($user, $abyipProgramId);
 
         if ($survey === null) {
-            return response()->json(['message' => 'No open survey for this program.'], 404);
+            return response()->json(['message' => 'No survey found for this program.'], 404);
         }
 
         return response()->json(['survey' => $survey]);

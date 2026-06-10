@@ -70,8 +70,8 @@
         const statusBadge = document.getElementById('pslSurveyStatusBadge');
 
         if (!survey) {
-            if (nameEl) nameEl.textContent = 'No open survey';
-            if (instructionsEl) instructionsEl.textContent = 'There is no open survey for this program in your barangay right now.';
+            if (nameEl) nameEl.textContent = 'No survey available';
+            if (instructionsEl) instructionsEl.textContent = 'SK Officials has not created a survey for this program in your barangay yet.';
             if (periodEl) periodEl.textContent = '—';
             if (announcementEl) announcementEl.textContent = '—';
             if (statusBadge) {
@@ -87,8 +87,9 @@
         if (periodEl) periodEl.textContent = `${survey.open_date_display || '—'} - ${survey.close_date_display || '—'}`;
         if (announcementEl) announcementEl.textContent = survey.announcement || '—';
         if (statusBadge) {
-            statusBadge.textContent = survey.is_open ? 'Open' : 'Closed';
-            statusBadge.className = `sl-status-badge ${survey.is_open ? 'sl-status-open' : 'sl-status-closed'}`;
+            const badgeOpen = Boolean(survey.can_respond || survey.is_open);
+            statusBadge.textContent = badgeOpen ? 'Open' : (survey.status === 'scheduled' ? 'Scheduled' : 'Closed');
+            statusBadge.className = `sl-status-badge ${badgeOpen ? 'sl-status-open' : 'sl-status-closed'}`;
         }
 
         updateStartButton(survey);
@@ -97,13 +98,21 @@
     function updateStartButton(survey) {
         if (!startBtn) return;
 
-        if (!survey || !survey.can_respond) {
+        if (!survey) {
             startBtn.disabled = true;
             startBtn.style.opacity = '0.5';
             startBtn.style.cursor = 'not-allowed';
-            startBtn.querySelector('span').textContent = survey?.has_responded
+            startBtn.querySelector('span').textContent = 'Survey Not Available';
+            return;
+        }
+
+        if (!survey.can_respond) {
+            startBtn.disabled = true;
+            startBtn.style.opacity = '0.5';
+            startBtn.style.cursor = 'not-allowed';
+            startBtn.querySelector('span').textContent = survey.has_responded
                 ? 'Already Submitted'
-                : 'Survey Not Available';
+                : 'Survey Not Open';
             return;
         }
 

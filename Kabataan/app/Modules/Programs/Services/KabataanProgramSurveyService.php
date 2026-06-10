@@ -43,6 +43,40 @@ class KabataanProgramSurveyService
     }
 
     /**
+     * Latest survey per program (any status) — used to list programs after SK Officials creates a survey.
+     *
+     * @param  list<int>  $programIds
+     * @return array<int, array<string, mixed>>
+     */
+    public function summarizeLatestSurveysForPrograms(User $user, array $programIds): array
+    {
+        if ($programIds === []) {
+            return [];
+        }
+
+        try {
+            $surveys = $this->scopedSurveyQuery($user)
+                ->with('abyipProgram')
+                ->whereIn('abyip_program_id', $programIds)
+                ->orderByDesc('open_date')
+                ->orderByDesc('id')
+                ->get();
+
+            $map = [];
+            foreach ($surveys as $survey) {
+                $programId = (int) $survey->abyip_program_id;
+                if (! isset($map[$programId])) {
+                    $map[$programId] = $this->formatSurveySummary($survey, $user);
+                }
+            }
+
+            return $map;
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function listUserResponseDetails(User $user): array
@@ -126,6 +160,29 @@ class KabataanProgramSurveyService
         }
 
         return $this->formatSurveyDetail($survey, $user);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getLatestSurveyByProgram(User $user, int $abyipProgramId): ?array
+    {
+        try {
+            $survey = $this->scopedSurveyQuery($user)
+                ->where('abyip_program_id', $abyipProgramId)
+                ->with(['abyipProgram', 'questions'])
+                ->orderByDesc('open_date')
+                ->orderByDesc('id')
+                ->first();
+
+            if ($survey === null) {
+                return null;
+            }
+
+            return $this->formatSurveyDetail($survey, $user);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**
@@ -236,10 +293,17 @@ class KabataanProgramSurveyService
 
     private function openSurveyQuery(User $user)
     {
+        $today = Carbon::today()->toDateString();
+
         return $this->scopedSurveyQuery($user)
-            ->whereIn('status', ['open', 'scheduled'])
-            ->whereDate('open_date', '<=', now())
-            ->whereDate('close_date', '>=', now());
+            ->whereDate('close_date', '>=', $today)
+            ->where(function ($query) use ($today) {
+                $query->where('status', 'open')
+                    ->orWhere(function ($inner) use ($today) {
+                        $inner->where('status', 'scheduled')
+                            ->whereDate('open_date', '<=', $today);
+                    });
+            });
     }
 
     private function scopedSurveyQuery(User $user)
@@ -253,22 +317,68 @@ class KabataanProgramSurveyService
 
     private function applyUserScope($query, User $user): void
     {
-        if ($user->tenant_id !== null) {
-            $query->where('tenant_id', $user->tenant_id);
+        $tenantId = $this->resolveUserTenantId($user);
+        $barangayId = $this->resolveUserBarangayId($user);
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
         }
 
-        if ($user->barangay_id !== null) {
-            $query->where('barangay_id', $user->barangay_id);
+        if ($barangayId !== null) {
+            $query->where('barangay_id', $barangayId);
         }
+    }
+
+    private function resolveUserBarangayId(User $user): ?int
+    {
+        if ($user->barangay_id !== null) {
+            return (int) $user->barangay_id;
+        }
+
+        $barangayId = KabataanRegistration::query()
+            ->where('user_id', $user->id)
+            ->latest()
+            ->value('barangay_id');
+
+        return $barangayId !== null ? (int) $barangayId : null;
+    }
+
+    private function resolveUserTenantId(User $user): ?int
+    {
+        if ($user->tenant_id !== null) {
+            return (int) $user->tenant_id;
+        }
+
+        $registration = KabataanRegistration::query()
+            ->with('barangay')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        $tenantId = $registration?->barangay?->tenant_id;
+
+        return $tenantId !== null ? (int) $tenantId : null;
     }
 
     private function isSurveyCurrentlyOpen(ProgramSurvey $survey): bool
     {
         $today = Carbon::today();
+        $status = strtolower(trim((string) $survey->status));
 
-        return $today->gte($survey->open_date)
-            && $today->lte($survey->close_date)
-            && in_array($survey->status, ['open', 'scheduled'], true);
+        if ($today->gt($survey->close_date)) {
+            return false;
+        }
+
+        // SK Officials explicitly set status to Open — allow responses until close date.
+        if ($status === 'open') {
+            return true;
+        }
+
+        if ($status === 'scheduled') {
+            return $today->gte($survey->open_date);
+        }
+
+        return false;
     }
 
     private function requireRegistration(User $user): KabataanRegistration
