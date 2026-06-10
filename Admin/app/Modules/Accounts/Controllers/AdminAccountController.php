@@ -205,6 +205,28 @@ class AdminAccountController extends Controller
                 'input' => $request->all(),
             ]);
             throw $e;
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('AdminAccountController@store: Database error creating account.', [
+                'message' => $e->getMessage(),
+                'input' => $request->all(),
+            ]);
+
+            $message = 'Failed to create account. Please try again.';
+
+            if (str_contains($e->getMessage(), 'official_profiles_position_check')) {
+                $message = 'The selected position is not allowed. Please choose a valid SK Federation position.';
+            } elseif (str_contains($e->getMessage(), 'users_email_unique')) {
+                $message = 'This email is already taken.';
+            }
+
+            if ($request->expectsJson()) {
+                return response([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return back()->with('error', $message);
         } catch (\Exception $e) {
             Log::error('AdminAccountController@store: Error creating account.', [
                 'message' => $e->getMessage(),

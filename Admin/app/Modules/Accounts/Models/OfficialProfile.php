@@ -68,6 +68,20 @@ class OfficialProfile extends Model
             : array_merge(self::OFFICIAL_POSITIONS, ['Chairman', 'Councilor', 'Auditor', 'PIO']);
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public static function allowedPositions(): array
+    {
+        return array_values(array_unique([
+            ...self::FEDERATION_POSITIONS,
+            ...self::OFFICIAL_POSITIONS,
+            'Chairman',
+            'Councilor',
+            'Auditor',
+        ]));
+    }
+
     protected $fillable = [
         'tenant_id',
         'user_id',
