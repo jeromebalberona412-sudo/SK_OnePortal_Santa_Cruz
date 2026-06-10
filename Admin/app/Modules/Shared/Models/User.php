@@ -80,6 +80,11 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'must_change_password' => 'boolean',
             'deleted_at' => 'datetime',
+            'password_change_last_sent_at' => 'datetime',
+            'password_change_token_expires_at' => 'datetime',
+            'email_change_token_expires_at' => 'datetime',
+            'email_change_verified_at' => 'datetime',
+            'email_change_last_sent_at' => 'datetime',
         ];
     }
 

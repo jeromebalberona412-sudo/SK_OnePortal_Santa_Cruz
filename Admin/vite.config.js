@@ -14,8 +14,11 @@ export default defineConfig({
                 // Profile Module
                 'app/Modules/Profile/assets/css/profile.css',
                 'app/Modules/Profile/assets/css/change-email.css',
+                'app/Modules/Profile/assets/css/profile-verify.css',
                 'app/Modules/Profile/assets/js/profile.js',
                 'app/Modules/Profile/assets/js/change-email.js',
+                'app/Modules/Profile/assets/js/change-email-verify.js',
+                'app/Modules/Profile/assets/js/change-password-verify.js',
 
                 // Layout Module
                 'app/Modules/Layout/assets/css/sidebar.css',

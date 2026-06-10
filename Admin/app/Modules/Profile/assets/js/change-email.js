@@ -1,153 +1,67 @@
-/* ============================================================
-   Change Email — Admin Profile
-   UI-driven multi-step flow
-   ============================================================ */
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('ceForm');
+    const submitBtn = document.getElementById('ceSubmitBtn');
+    const btnText = document.getElementById('ceBtnText');
+    const overlay = document.getElementById('signin-overlay');
 
-(function () {
-    'use strict';
+    if (!form) return;
 
-    /* ── helpers ── */
-    function ceShow(id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.style.display = 'block';
-        el.classList.remove('ce-fade-in');
-        void el.offsetWidth; // reflow
-        el.classList.add('ce-fade-in');
+    function setFieldError(inputId, errorId, msg) {
+        const input = document.getElementById(inputId);
+        const err = document.getElementById(errorId);
+        if (input) input.classList.add('is-invalid');
+        if (err) {
+            err.textContent = msg;
+            err.style.display = 'block';
+        }
     }
 
-    function ceHide(id) {
-        var el = document.getElementById(id);
-        if (el) el.style.display = 'none';
+    function clearFieldError(inputId, errorId) {
+        const input = document.getElementById(inputId);
+        const err = document.getElementById(errorId);
+        if (input) input.classList.remove('is-invalid');
+        if (err) {
+            err.textContent = '';
+            err.style.display = 'none';
+        }
     }
 
-    function isValidEmail(val) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-    }
+    form.addEventListener('submit', function (e) {
+        const currentEmail = document.getElementById('ceCurrentEmail')?.value.trim() || '';
+        const newEmail = document.getElementById('ceNewEmail')?.value.trim() || '';
+        const password = document.getElementById('cePassword')?.value || '';
 
-    /* ── Step 1 → 2: Send verification ── */
-    window.ceSendVerification = function () {
-        var newEmail  = (document.getElementById('ce-new-email')  || {}).value || '';
-        var password  = (document.getElementById('ce-password')   || {}).value || '';
-        var emailErr  = document.getElementById('ce-email-err');
-        var pwErr     = document.getElementById('ce-pw-err');
-        var btn       = document.getElementById('ce-send-btn');
+        let valid = true;
 
-        newEmail = newEmail.trim();
+        clearFieldError('ceNewEmail', 'ceNewEmailError');
+        clearFieldError('cePassword', 'cePasswordError');
 
-        if (emailErr) emailErr.style.display = 'none';
-        if (pwErr)    pwErr.style.display    = 'none';
-
-        var hasError = false;
-
-        if (!newEmail || !isValidEmail(newEmail)) {
-            if (emailErr) emailErr.style.display = 'block';
-            hasError = true;
+        if (!newEmail) {
+            setFieldError('ceNewEmail', 'ceNewEmailError', 'New email address is required.');
+            valid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+            setFieldError('ceNewEmail', 'ceNewEmailError', 'Please enter a valid email address.');
+            valid = false;
+        } else if (newEmail.toLowerCase() === currentEmail.toLowerCase()) {
+            setFieldError('ceNewEmail', 'ceNewEmailError', 'New email must be different from current email.');
+            valid = false;
         }
 
         if (!password) {
-            if (pwErr) pwErr.style.display = 'block';
-            hasError = true;
+            setFieldError('cePassword', 'cePasswordError', 'Current password is required.');
+            valid = false;
         }
 
-        if (hasError) return;
-
-        if (btn) {
-            btn.disabled    = true;
-            btn.textContent = 'Sending…';
+        if (!valid) {
+            e.preventDefault();
+            return;
         }
 
-        setTimeout(function () {
-            var pendingDisplay    = document.getElementById('ce-pending-email-display');
-            var pendingNewDisplay = document.getElementById('ce-pending-new-display');
-            if (pendingDisplay)    pendingDisplay.textContent    = newEmail;
-            if (pendingNewDisplay) pendingNewDisplay.textContent = newEmail;
-
-            ceHide('ce-step1');
-            ceShow('ce-step2');
-
-            // Start the 60s resend cooldown immediately
-            ceStartCooldown();
-
-            if (btn) {
-                btn.disabled    = false;
-                btn.textContent = 'Send Verification Link';
-            }
-        }, 900);
-    };
-
-    /* ── 60-second resend cooldown ── */
-    var ceCountdownTimer = null;
-
-    function ceStartCooldown() {
-        var resendBtn  = document.getElementById('ce-resend-btn');
-        var timerEl    = document.getElementById('ce-resend-timer');
-        var countEl    = document.getElementById('ce-timer-count');
-        var resendMsg  = document.getElementById('ce-resend-msg');
-
-        if (resendMsg)  resendMsg.style.display  = 'none';
-        if (timerEl)    timerEl.style.display    = 'block';
-        if (resendBtn)  { resendBtn.disabled = true; }
-
-        var secs = 60;
-        if (countEl) countEl.textContent = secs;
-
-        if (ceCountdownTimer) clearInterval(ceCountdownTimer);
-
-        ceCountdownTimer = setInterval(function () {
-            secs--;
-            if (countEl) countEl.textContent = secs;
-
-            if (secs <= 0) {
-                clearInterval(ceCountdownTimer);
-                ceCountdownTimer = null;
-                if (timerEl)   timerEl.style.display  = 'none';
-                if (resendBtn) { resendBtn.disabled = false; }
-            }
-        }, 1000);
-    }
-
-    /* ── Resend verification ── */
-    window.ceResend = function () {
-        var btn       = document.getElementById('ce-resend-btn');
-        var resendMsg = document.getElementById('ce-resend-msg');
-
-        if (!btn || btn.disabled) return;
-
-        btn.disabled    = true;
-        btn.textContent = 'Sending…';
-
-        setTimeout(function () {
-            btn.textContent = 'Resend Verification';
-
-            if (resendMsg) {
-                resendMsg.style.display = 'block';
-                setTimeout(function () {
-                    resendMsg.style.display = 'none';
-                }, 3000);
-            }
-
-            // Restart cooldown
-            ceStartCooldown();
-        }, 800);
-    };
-
-    /* ── Cancel request ── */
-    window.ceCancel = function () {
-        ceHide('ce-step2');
-        ceShow('ce-step1');
-
-        // Clear inputs
-        var newEmailInput = document.getElementById('ce-new-email');
-        var passwordInput = document.getElementById('ce-password');
-        if (newEmailInput) newEmailInput.value = '';
-        if (passwordInput) passwordInput.value = '';
-    };
-
-    /* ── Simulate confirm (for demo — normally triggered by email link) ── */
-    window.ceConfirm = function () {
-        ceHide('ce-step2');
-        ceShow('ce-step3');
-    };
-
-})();
+        if (submitBtn) submitBtn.disabled = true;
+        if (btnText) btnText.textContent = 'Sending…';
+        if (overlay) {
+            overlay.removeAttribute('hidden');
+            overlay.classList.add('is-visible');
+        }
+    });
+});

@@ -84,8 +84,8 @@
                         </p>
                     @else
                         <div class="form-header">
-                            <h2>Create New Password</h2>
-                            <p>Create a strong new password for your admin account. Minimum 12 characters with uppercase, lowercase, number, and special character.</p>
+                            <h2>Set New Password</h2>
+                            <p>Enter and confirm your new password below. After saving, you will be signed out on all devices and redirected to the login page.</p>
                         </div>
 
                         @if ($errors->any())
@@ -106,7 +106,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="password">New Password</label>
+                                <label for="password">Set New Password</label>
                                 <div class="password-input-container">
                                     <input type="password" id="password" name="password"
                                         class="form-control login-input @error('password') is-invalid @enderror"
@@ -120,7 +120,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="password_confirmation">Confirm Password</label>
+                                <label for="password_confirmation">Confirm New Password</label>
                                 <div class="password-input-container">
                                     <input type="password" id="password_confirmation" name="password_confirmation"
                                         class="form-control login-input"
@@ -132,7 +132,7 @@
                                 </div>
                             </div>
 
-                            <button type="submit" class="login-btn">Reset Password</button>
+                            <button type="submit" class="login-btn">Save New Password</button>
                         </form>
 
                         <div class="form-footer">

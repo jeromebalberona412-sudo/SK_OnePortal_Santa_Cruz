@@ -60,6 +60,12 @@
                         <p>Sign in to SK OnePortal Admin</p>
                     </div>
 
+                    @if (session('status') === 'password-changed')
+                        <div class="login-alert login-alert--success" role="alert">
+                            Password changed successfully. Please sign in with your new password.
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('login') }}" novalidate>
                         @csrf
 

@@ -73,71 +73,40 @@
 
             <div class="login-form-container">
                 <div class="login-card-inner">
+                    <div class="form-header">
+                        <h2>Change Password</h2>
+                        <p>Enter your registered email and we'll send you a reset link.</p>
+                    </div>
 
                     @if (session('status'))
-                        <div class="fp-success-wrap">
-                            <p class="fp-success-title">Check Your Email</p>
-                            <p class="fp-success-msg">
-                                We've sent a password reset link to<br>
-                                <strong>{{ session('fp_email') ?? auth()->user()->email ?? 'your email address' }}</strong>.<br><br>
-                                Please check your inbox and click the link to reset your password.
-                            </p>
-
-                            <div class="fp-resend-box">
-                                <div class="fp-timer-row" id="fpTimerRow">
-                                    <span>Resend available in</span>
-                                    <span class="fp-timer-badge" id="fpCountdown">1:00</span>
-                                </div>
-
-                                <button type="button" class="fp-resend-btn" id="fpResendBtn">
-                                    Resend Reset Link
-                                </button>
-
-                                <div class="fp-resend-sent" id="fpResendSent">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Reset link resent successfully.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-footer">
-                            <p><a href="{{ route('profile') }}">← Back to Profile</a></p>
-                        </div>
-
-                    @else
-                        <div class="form-header">
-                            <h2>Change Password</h2>
-                            <p>Enter your registered email and we'll send you a reset link.</p>
-                        </div>
-
-                        @if ($errors->any())
-                            <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
-                        @endif
-
-                        <form method="POST" action="{{ route('profile.change-password.send') }}" novalidate id="fpForm">
-                            @csrf
-                            <div class="form-group">
-                                <label for="email">Email Address</label>
-                                <input type="email" id="email" name="email"
-                                    class="form-control @error('email') is-invalid @enderror"
-                                    value="{{ old('email', auth()->user()->email ?? '') }}"
-                                    placeholder="Enter your registered email"
-                                    required autofocus autocomplete="email">
-                                @error('email')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <button type="submit" class="login-btn" id="fpSubmitBtn">
-                                Send Reset Link
-                            </button>
-                        </form>
-
-                        <div class="form-footer">
-                            <p><a href="{{ route('profile') }}">← Back to Profile</a></p>
-                        </div>
-
+                        <div class="login-alert login-alert--success" role="alert">{{ session('status') }}</div>
                     @endif
 
+                    @if ($errors->any())
+                        <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
+                    @endif
+
+                    <form method="POST" action="{{ route('profile.change-password.send') }}" novalidate id="fpForm">
+                        @csrf
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email"
+                                class="form-control @error('email') is-invalid @enderror"
+                                value="{{ old('email', $user->email ?? '') }}"
+                                placeholder="Enter your registered email"
+                                required autofocus autocomplete="email">
+                            @error('email')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <button type="submit" class="login-btn" id="fpSubmitBtn">
+                            Send Reset Link
+                        </button>
+                    </form>
+
+                    <div class="form-footer">
+                        <p><a href="{{ route('profile') }}">← Back to Profile</a></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -161,53 +130,6 @@
                 overlay.removeAttribute('hidden');
                 overlay.classList.add('is-visible');
             });
-        }
-
-        function startResend() {
-            var timerRow   = document.getElementById('fpTimerRow');
-            var countdown  = document.getElementById('fpCountdown');
-            var resendBtn  = document.getElementById('fpResendBtn');
-            var resendSent = document.getElementById('fpResendSent');
-
-            if (!timerRow || !countdown || !resendBtn) return;
-
-            var seconds = 60;
-            var tick;
-
-            function runTick() {
-                tick = setInterval(function () {
-                    seconds--;
-                    var m = Math.floor(seconds / 60);
-                    var s = seconds % 60;
-                    countdown.textContent = m + ':' + (s < 10 ? '0' : '') + s;
-                    if (seconds <= 10) countdown.classList.add('expiring');
-                    else countdown.classList.remove('expiring');
-                    if (seconds <= 0) {
-                        clearInterval(tick);
-                        timerRow.style.display = 'none';
-                        resendBtn.classList.add('visible');
-                    }
-                }, 1000);
-            }
-
-            runTick();
-
-            resendBtn.addEventListener('click', function () {
-                resendBtn.classList.remove('visible');
-                resendSent.classList.add('visible');
-                setTimeout(function () {
-                    resendSent.classList.remove('visible');
-                    seconds = 60;
-                    countdown.textContent = '1:00';
-                    countdown.classList.remove('expiring');
-                    timerRow.style.display = '';
-                    runTick();
-                }, 3000);
-            });
-        }
-
-        if (document.getElementById('fpTimerRow')) {
-            startResend();
         }
     })();
     </script>

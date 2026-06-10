@@ -5,6 +5,7 @@ namespace App\Modules\Authentication\Services;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Authentication\Notifications\AdminPasswordResetNotification;
 use App\Modules\Authentication\Support\PasswordHelper;
+use App\Modules\Profile\Support\ProfilePasswordChangeState;
 use App\Modules\Shared\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Passwords\PasswordBroker;
@@ -84,15 +85,21 @@ class PasswordResetService
 
         $this->auditService->logPasswordChanged($user);
 
+        $isProfilePasswordChange = ProfilePasswordChangeState::isPending($user->id)
+            || $user->password_change_last_sent_at !== null;
+
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        Auth::guard('web')->login($user);
-        $request->session()->regenerate();
+        if ($isProfilePasswordChange) {
+            ProfilePasswordChangeState::clearPending($user->id);
+            ProfilePasswordChangeState::markConfirmed($user->id);
 
-        $user->recordLogin($request->ip());
-        $this->auditService->logLoginSuccess($user);
+            $user->forceFill([
+                'password_change_last_sent_at' => null,
+            ])->save();
+        }
 
         return $user;
     }

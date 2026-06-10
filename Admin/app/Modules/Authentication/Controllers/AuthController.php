@@ -131,8 +131,8 @@ class AuthController extends Controller
         $this->passwordResetService->resetPassword($request, $validated);
 
         return redirect()
-            ->route('dashboard')
-            ->with('success', 'Password successfully updated. Welcome to SK One Portal Administrator Dashboard.');
+            ->route('login')
+            ->with('status', 'password-changed');
     }
 
     public function showVerifyEmail()

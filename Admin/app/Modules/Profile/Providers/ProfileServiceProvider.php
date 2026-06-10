@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Route;
 
 class ProfileServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->singleton(\App\Modules\Profile\Services\PasswordChangeService::class);
+        $this->app->singleton(\App\Modules\Profile\Services\EmailChangeService::class);
+    }
 
     public function boot(): void
     {

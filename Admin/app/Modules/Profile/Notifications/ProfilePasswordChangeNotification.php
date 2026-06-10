@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Modules\Authentication\Notifications;
+namespace App\Modules\Profile\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AdminPasswordResetNotification extends Notification
+class ProfilePasswordChangeNotification extends Notification
 {
     use Queueable;
 
@@ -30,9 +30,9 @@ class AdminPasswordResetNotification extends Notification
         $expiry = (int) config('auth.passwords.'.config('auth.defaults.passwords', 'users').'.expire', 60);
 
         return (new MailMessage)
-            ->subject('Reset Your OnePortal Admin Password')
+            ->subject('Set Your New OnePortal Admin Password')
             ->greeting('Hello!')
-            ->line('You requested a password reset for your OnePortal Admin account.')
+            ->line('You requested to change the password on your OnePortal Admin account.')
             ->line('Email: '.$notifiable->email)
             ->action('Set New Password', $resetUrl)
             ->line('Click the button above to open the password form. Enter your new password and confirm it to finish.')
