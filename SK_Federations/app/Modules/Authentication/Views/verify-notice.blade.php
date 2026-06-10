@@ -53,7 +53,7 @@
                                 type="email"
                                 name="email"
                                 class="form-control @error('email') is-invalid @enderror"
-                                value="{{ old('email', $email) }}"
+                                value="{{ old('email', $email ?? auth()->user()?->email ?? '') }}"
                                 required
                                 placeholder="Enter your email"
                             >
@@ -65,7 +65,7 @@
                     </form>
 
                     <div class="form-footer">
-                        <a href="{{ route('login', [], false) }}">Back to login</a>
+                        <a href="{{ route('skfed.verification.cancel', [], false) }}">Back to login</a>
                     </div>
                 </div>
             </div>

@@ -64,10 +64,6 @@ create table public.users (
   online_status character varying(20) not null default 'offline'::character varying,
   active_device character varying(255) null,
   last_ip character varying(45) null,
-  otp_code character varying(255) null,
-  otp_expires_at timestamp without time zone null,
-  otp_attempts smallint not null default 0,
-  otp_last_sent_at timestamp without time zone null,
   pending_email character varying(255) null,
   email_change_token character varying(255) null,
   email_change_token_expires_at timestamp without time zone null,
@@ -196,13 +192,17 @@ create table public.official_profiles (
       ("position")::text = any (
         (
           array[
-            'Chairman'::character varying,
-            'Councilor'::character varying,
-            'Kagawad'::character varying,
-            'Treasurer'::character varying,
+            'President'::character varying,
+            'Vice President'::character varying,
             'Secretary'::character varying,
-            'Auditor'::character varying,
-            'PIO'::character varying
+            'Treasurer'::character varying,
+            'PIO'::character varying,
+            'Sergeant at Arms'::character varying,
+            'Chairperson'::character varying,
+            'Chairman'::character varying,
+            'Kagawad'::character varying,
+            'Councilor'::character varying,
+            'Auditor'::character varying
           ]
         )::text[]
       )
@@ -302,6 +302,7 @@ create table public.barangay_logos (
   tenant_id bigint not null,
   uploaded_by bigint not null,
   cloudinary_public_id character varying(255) not null,
+  cloudinary_version character varying(32) null,
   url character varying(255) not null,
   created_at timestamp without time zone null,
   updated_at timestamp without time zone null,
@@ -321,6 +322,7 @@ create table public.sk_fed_trusted_devices (
   id bigserial not null,
   user_id bigint not null,
   fingerprint character varying(128) not null,
+  device_token_hash character varying(64) null,
   ip_address character varying(45) null,
   user_agent text null,
   last_used_at timestamp without time zone null,
@@ -334,6 +336,7 @@ create table public.sk_fed_trusted_devices (
 ) TABLESPACE pg_default;
 
 create index IF not exists sk_fed_trusted_device_exp_idx on public.sk_fed_trusted_devices using btree (user_id, expires_at) TABLESPACE pg_default;
+create index IF not exists sk_fed_trusted_device_token_idx on public.sk_fed_trusted_devices using btree (user_id, device_token_hash) TABLESPACE pg_default;
 
 create table public.sk_fed_login_attempts (
   id bigserial not null,
@@ -511,7 +514,7 @@ create index IF not exists sk_official_verified_device_verified_at_idx on public
 
 -- Announcements (created by SK Officials, visible to Kabataan via community feed)
 -- Note: barangay_id is nullable to support federation-wide posts (is_federation_wide = true)
--- Note: image_url and link_url are TEXT (widened from varchar by SK_Federations migration)
+-- Note: images live in announcement_images (legacy image_url removed)
 create table public.announcements (
   id bigserial not null,
   user_id bigint not null,
@@ -519,9 +522,11 @@ create table public.announcements (
   type character varying(20) not null default 'announcement'::character varying,
   title character varying(255) null,
   body text not null,
-  image_url text null,
   link_url text null,
   is_federation_wide boolean not null default false,
+  is_archived boolean not null default false,
+  archived_at timestamp without time zone null,
+  deleted_at timestamp without time zone null,
   created_at timestamp without time zone null,
   updated_at timestamp without time zone null,
   constraint announcements_pkey primary key (id),
@@ -541,6 +546,20 @@ create table public.announcements (
 ) TABLESPACE pg_default;
 
 create index IF not exists announcements_barangay_id_created_at_index on public.announcements using btree (barangay_id, created_at) TABLESPACE pg_default;
+create index IF not exists announcements_barangay_archive_idx on public.announcements using btree (barangay_id, is_archived, archived_at) TABLESPACE pg_default;
+
+create table public.announcement_images (
+  id bigserial not null,
+  announcement_id bigint not null,
+  image_url text not null,
+  public_id character varying(255) null,
+  sort_order smallint not null default 0,
+  created_at timestamp without time zone null,
+  constraint announcement_images_pkey primary key (id),
+  constraint announcement_images_announcement_id_foreign foreign KEY (announcement_id) references announcements (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists announcement_images_announcement_id_sort_order_index on public.announcement_images using btree (announcement_id, sort_order) TABLESPACE pg_default;
 
 -- Polymorphic reactions on announcements (user_type: 'sk_official' | 'kabataan')
 create table public.announcement_reactions (
@@ -996,6 +1015,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS program_applications_kabataan_program_unique
   ON program_applications (kabataan_id, program_id);
 
 -- ============================================================
+<<<<<<< Updated upstream
 -- DEFAULT SYSTEM ADMINISTRATOR ACCOUNT
 -- ============================================================
 
@@ -1023,3 +1043,8 @@ SELECT
 WHERE NOT EXISTS (
     SELECT 1 FROM public.users WHERE email = 'skoneportal@gmail.com'
 );
+=======
+-- INCREMENTAL PATCHES (apply when DB predates full dump)
+-- See: database_structure/migrations/2026_06_11_000001_sync_sk_oneportal_schema.sql
+-- ============================================================
+>>>>>>> Stashed changes

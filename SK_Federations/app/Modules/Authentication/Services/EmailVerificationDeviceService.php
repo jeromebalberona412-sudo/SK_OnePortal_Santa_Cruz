@@ -8,7 +8,22 @@ use Illuminate\Http\Request;
 
 class EmailVerificationDeviceService
 {
+    public const RESEND_COOLDOWN_SECONDS = 60;
+
     public function __construct(protected DeviceFingerprintService $fingerprintService) {}
+
+    public function resendCooldownRemaining(array $pending): int
+    {
+        $lastSent = (string) ($pending['resend_last_sent_at'] ?? '');
+
+        if ($lastSent === '') {
+            return 0;
+        }
+
+        $elapsed = (int) \Illuminate\Support\Carbon::parse($lastSent)->diffInSeconds(now());
+
+        return max(0, self::RESEND_COOLDOWN_SECONDS - $elapsed);
+    }
 
     public function fingerprintFromRequest(Request $request): string
     {

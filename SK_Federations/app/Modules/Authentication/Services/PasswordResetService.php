@@ -49,20 +49,20 @@ class PasswordResetService
             resourceId: $user?->getKey() ?? $emailHash,
         );
 
-        if ($user === null) {
-            return;
-        }
+        if ($user === null || ! $isResettable) {
+            if ($user !== null) {
+                $this->logResetFailure(
+                    request: $request,
+                    user: $user,
+                    normalizedEmail: $normalizedEmail,
+                    reason: 'blocked_scope',
+                    outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+                );
+            }
 
-        if (! $isResettable) {
-            $this->logResetFailure(
-                request: $request,
-                user: $user,
-                normalizedEmail: $normalizedEmail,
-                reason: 'blocked_scope',
-                outcome: AuthAuditLogService::OUTCOME_BLOCKED,
-            );
-
-            return;
+            throw ValidationException::withMessages([
+                'email' => ['We could not find an account associated with this email address.'],
+            ]);
         }
 
         $status = $this->broker()->sendResetLink(

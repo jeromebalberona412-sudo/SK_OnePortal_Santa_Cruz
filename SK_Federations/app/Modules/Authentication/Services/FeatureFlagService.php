@@ -18,4 +18,9 @@ class FeatureFlagService
 
         return (bool) $flag->enabled;
     }
+
+    public function deviceVerificationEnabled(): bool
+    {
+        return $this->enabled('features.device_verification');
+    }
 }

@@ -18,7 +18,7 @@ class SkFedResetPasswordNotification extends ResetPassword
             ->subject('Reset Your SK Federation Password')
             ->greeting('Hello!')
             ->line('We received a request to reset the password for your SK Federation account.')
-            ->action('Create New Password', $resetUrl)
+            ->action('Set New Password', $resetUrl)
             ->line('This password reset link will expire in '.config('auth.passwords.'.config('auth.defaults.passwords').'.expire').' minutes.')
             ->line('If you did not request a password reset, no further action is required.');
     }

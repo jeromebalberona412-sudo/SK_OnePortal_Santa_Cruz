@@ -27,8 +27,12 @@
         })();
     </script>
 
+    @php
+        $emailSent = session('password_reset_sent') || session('status');
+        $resetEmail = old('email', session('password_reset_email', ''));
+    @endphp
+
     <div class="login-page">
-        {{-- Background --}}
         <div class="bg-wrapper">
             <div class="bg-image"></div>
             <div class="gradient-overlay"></div>
@@ -40,61 +44,76 @@
         </div>
 
         <div class="login-container">
-            {{-- LEFT: Logo --}}
             <div class="logo-container">
                 <div class="collab-logo-wrapper">
                     <div class="logo-glow-wrapper logo-left">
-                        <img src="{{ url('/modules/authentication/images/skoneportal_logo.webp') }}"
-                             alt="SK OnePortal Logo"
-                             class="collab-logo">
+                        <img src="{{ url('/modules/authentication/images/skoneportal_logo.webp') }}" alt="SK OnePortal Logo" class="collab-logo">
                     </div>
                     <div class="logo-glow-wrapper logo-right">
-                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}"
-                             alt="SK Federations Logo"
-                             class="collab-logo">
+                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="collab-logo">
                     </div>
                 </div>
                 <h1 class="brand-title">SK OnePortal</h1>
                 <p class="brand-subtitle">SK Federation Portal – Santa Cruz, Laguna</p>
             </div>
 
-            {{-- RIGHT: Content Card --}}
             <div class="login-form-container">
                 <div class="login-card-inner">
                     <div class="form-header">
-                        <h2>Reset Your Password</h2>
-                        <p>Enter your email address and we'll send you a link to reset your password.</p>
+                        @if ($emailSent)
+                            <h2>Check Your Email</h2>
+                            <p>We sent a password reset link to <strong>{{ $resetEmail }}</strong>.</p>
+                        @else
+                            <h2>Forgot Password? 🔑</h2>
+                            <p>Enter your email address and we'll send you a link to reset your password.</p>
+                        @endif
                     </div>
 
-                    @if (session('status'))
-                        <div class="alert alert-info" role="alert" style="margin-bottom: 20px; border-radius: 12px;">
-                            {{ session('status') }}
+                    @if ($emailSent)
+                        <div class="alert alert-info fp-success-alert" role="alert" style="margin-bottom: 20px; border-radius: 12px;">
+                            {{ session('status', 'A password reset link has been sent to your email address.') }}
                         </div>
                     @endif
 
-                    <form id="forgot-password-form" class="login-form" method="POST" action="{{ route('password.email', [], false) }}" data-turnstile-enabled="{{ config('services.turnstile.enabled', true) ? '1' : '0' }}" novalidate>
-                        @csrf
-                        <div class="form-group">
-                            <label for="email">Email Address</label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                class="form-control"
-                                required
-                                placeholder="Enter your email"
-                                maxlength="100"
-                                autocomplete="email"
-                                value="{{ old('email') }}"
-                            >
-                            <div class="invalid-feedback" id="email-error" @if (! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
+                    @if ($errors->any() && ! $emailSent)
+                        <div class="alert alert-danger" role="alert" style="margin-bottom: 20px; border-radius: 12px;">
+                            {{ $errors->first() }}
                         </div>
+                    @endif
+
+                    <form id="forgotPasswordForm" class="login-form" method="POST" action="{{ route('password.email', [], false) }}" data-turnstile-enabled="{{ app(\App\Modules\Authentication\Services\TurnstileService::class)->isConfigured() ? '1' : '0' }}" data-email-sent="{{ $emailSent ? '1' : '0' }}" novalidate>
+                        @csrf
+
+                        @if ($emailSent)
+                            <input type="hidden" name="email" id="email" value="{{ $resetEmail }}">
+                        @else
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    class="form-control @error('email') is-invalid @enderror"
+                                    required
+                                    placeholder="Enter your email"
+                                    maxlength="100"
+                                    autocomplete="email"
+                                    value="{{ old('email') }}"
+                                    autofocus
+                                >
+                                <div class="invalid-feedback" id="email-error" @if(! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
+                            </div>
+                        @endif
 
                         @include('authentication::components.turnstile')
 
-                        <button type="submit" class="login-btn btn btn-primary w-100">
-                            Send Reset Link
+                        <button type="submit" class="login-btn btn btn-primary w-100" id="submitBtn">
+                            <span id="fpBtnText">{{ $emailSent ? 'Resend Reset Link' : 'Send Reset Link' }}</span>
                         </button>
+
+                        <p class="fp-cooldown-notice" id="fpCooldownNotice" hidden style="text-align: center; margin-top: 12px; font-size: 0.9rem; color: #64748b;">
+                            You can resend the link in <strong id="fpCooldownCount">60</strong>s.
+                        </p>
                     </form>
 
                     <div class="form-footer">
@@ -112,73 +131,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-    <script>
-        const forgotPasswordForm = document.getElementById('forgot-password-form');
-        const turnstileEnabled = forgotPasswordForm.dataset.turnstileEnabled === '1';
-        const forgotPasswordEmail = document.getElementById('email');
-        const forgotPasswordError = document.getElementById('email-error');
-
-        forgotPasswordForm.addEventListener('submit', function(e) {
-            const email = forgotPasswordEmail.value.trim();
-            const turnstileTokenField = document.querySelector('input[name="cf-turnstile-response"]');
-            const turnstileError = document.getElementById('turnstile-error');
-
-            // Reset error state
-            forgotPasswordEmail.classList.remove('is-invalid');
-            forgotPasswordError.hidden = true;
-
-            if (turnstileError) {
-                turnstileError.style.display = 'none';
-            }
-
-            // Validate email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-            if (!email) {
-                e.preventDefault();
-                forgotPasswordEmail.classList.add('is-invalid');
-                forgotPasswordError.textContent = 'Please enter your email address.';
-                forgotPasswordError.hidden = false;
-                return;
-            }
-
-            if (!emailRegex.test(email)) {
-                e.preventDefault();
-                forgotPasswordEmail.classList.add('is-invalid');
-                forgotPasswordError.textContent = 'Please enter a valid email address.';
-                forgotPasswordError.hidden = false;
-                return;
-            }
-
-            if (turnstileEnabled && (!turnstileTokenField || !turnstileTokenField.value)) {
-                e.preventDefault();
-
-                if (turnstileError) {
-                    turnstileError.textContent = 'Bot verification failed.';
-                    turnstileError.style.display = 'block';
-                }
-
-                return;
-            }
-
-            // Show loading
-            LoadingScreen.show('Sending Reset Link', 'Please wait...');
-        });
-
-        // Remove error on input
-        forgotPasswordEmail.addEventListener('input', function() {
-            this.classList.remove('is-invalid');
-            forgotPasswordError.hidden = true;
-        });
-
-        // Show loading on back to login
-        document.querySelector('.form-footer a').addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Loading', 'Redirecting to login...');
-            setTimeout(() => {
-                window.location.href = this.href;
-            }, 300);
-        });
-    </script>
+    <script src="{{ url('/modules/authentication/js/forgot-password.js') }}"></script>
 </body>
 </html>

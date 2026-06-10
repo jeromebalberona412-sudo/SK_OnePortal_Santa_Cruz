@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Reset Password</title>
+    <title>Set New Password</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -62,8 +62,8 @@
             <div class="login-form-container">
                 <div class="login-card-inner">
                     <div class="form-header">
-                        <h2 class="nowrap">Reset Password 🔐</h2>
-                        <p>Create a new secure password</p>
+                        <h2 class="nowrap">Set New Password 🔐</h2>
+                        <p>Create a new secure password for your account</p>
                     </div>
 
                     @if ($errors->has('email') || $errors->has('reset'))
@@ -153,7 +153,7 @@
                         </div>
 
                         <button type="submit" class="login-btn btn btn-primary w-100">
-                            Reset Password
+                            Set New Password
                         </button>
                     </form>
 

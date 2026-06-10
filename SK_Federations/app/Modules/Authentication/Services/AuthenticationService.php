@@ -3,34 +3,34 @@
 namespace App\Modules\Authentication\Services;
 
 use App\Modules\Authentication\Notifications\NewLocationLoginNotification;
-use App\Modules\Authentication\Notifications\SessionTakeoverOtpNotification;
 use App\Modules\Shared\Models\User;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class AuthenticationService
 {
-    public const TAKEOVER_PENDING_SESSION_KEY = 'sk_fed_takeover_pending';
-
     public function __construct(
         protected TenantContextService $tenantContextService,
-        protected FeatureFlagService $featureFlagService,
         protected LoginSecurityService $loginSecurityService,
-        protected EmailVerificationDeviceService $emailVerificationDeviceService,
-        protected TrustedDeviceService $trustedDeviceService,
         protected SuspiciousLoginService $suspiciousLoginService,
         protected AuthAuditLogService $auditLogService,
+        protected FeatureFlagService $featureFlagService,
+        protected EmailVerificationDeviceService $emailVerificationDeviceService,
+        protected TrustedDeviceService $trustedDeviceService,
+        protected DeviceFingerprintService $deviceFingerprintService,
     ) {}
 
     public function authenticate(Request $request): ?User
     {
-        $email = (string) $request->input('email');
-        $password = (string) $request->input('password');
+        $email = Str::lower(trim((string) $request->input('email', '')));
+        $password = (string) $request->input('password', '');
 
         $user = User::query()->where('email', $email)->first();
 
@@ -41,7 +41,7 @@ class AuthenticationService
                 event: 'login_failed',
                 user: $user,
                 request: $request,
-                metadata: ['reason' => 'invalid_credentials'],
+                metadata: ['reason' => $user === null ? 'unknown_email' : 'bad_password', 'email' => $email],
                 outcome: AuthAuditLogService::OUTCOME_FAILED,
                 resourceType: 'authentication',
                 resourceId: $user?->getKey(),
@@ -58,14 +58,13 @@ class AuthenticationService
                 request: $request,
                 outcome: AuthAuditLogService::OUTCOME_BLOCKED,
                 resourceType: 'authentication',
-                resourceId: $user?->getKey(),
+                resourceId: $user->getKey(),
             );
 
             return null;
         }
 
         $tenantId = $this->tenantContextService->tenantId();
-        $deviceFingerprint = $this->emailVerificationDeviceService->fingerprintFromRequest($request);
 
         if (
             ! $user->hasRole((string) config('sk_fed_auth.required_role', User::ROLE_SK_FED))
@@ -79,11 +78,14 @@ class AuthenticationService
                 request: $request,
                 outcome: AuthAuditLogService::OUTCOME_BLOCKED,
                 resourceType: 'authentication',
-                resourceId: $user?->getKey(),
+                resourceId: $user->getKey(),
             );
 
             return null;
         }
+
+        $rememberDevice = $request->boolean('remember');
+        $isTrustedDevice = $this->trustedDeviceService->isTrusted($user, $request);
 
         if (! $user->hasVerifiedEmail()) {
             $this->startEmailVerificationWait(
@@ -91,90 +93,69 @@ class AuthenticationService
                 email: $email,
                 request: $request,
                 reason: 'email_unverified',
-                message: 'A verification email has been sent. Complete verification to continue.'
+                message: 'A verification email has been sent. Complete verification to continue.',
+                rememberDevice: $rememberDevice,
             );
 
             return null;
         }
 
-        if ($this->emailVerificationDeviceService->requiresReverification($user, $deviceFingerprint)) {
+        if ($this->shouldRequireEmailVerification($user, $request, $isTrustedDevice)) {
             $this->startEmailVerificationWait(
                 user: $user,
                 email: $email,
                 request: $request,
                 reason: 'email_device_changed',
-                message: 'New device detected. Email verification is required again for security.'
+                message: 'New device detected. Email verification is required again for security.',
+                rememberDevice: $rememberDevice,
             );
 
             return null;
         }
 
-        if ($this->hasActiveSessionConflict($user, $request)) {
-            $this->startTakeoverWait($user, $email, $request);
+        $this->resolveActiveSessionConflict($user, $request);
 
-            return null;
+        if ($isTrustedDevice) {
+            $this->trustedDeviceService->refreshRememberCookieIfPresent($user, $request);
+        } elseif ($rememberDevice) {
+            $this->trustedDeviceService->rememberDevice($user, $request);
         }
-
-        if (
-            $this->featureFlagService->enabled('features.device_verification')
-            && ! $this->trustedDeviceService->isTrusted($user, $request)
-        ) {
-            $this->trustedDeviceService->trust($user, $request);
-            $this->auditLogService->log(
-                event: 'login_trusted_device_registered',
-                user: $user,
-                request: $request,
-                metadata: ['fingerprint' => $deviceFingerprint],
-                outcome: AuthAuditLogService::OUTCOME_SUCCESS,
-                resourceType: 'trusted_device',
-                resourceId: $deviceFingerprint,
-            );
-        }
-
-        $suspicious = ['is_suspicious' => false, 'signals' => []];
 
         if ($this->featureFlagService->enabled('features.suspicious_login_detection')) {
             $suspicious = $this->suspiciousLoginService->detect($user, (string) $request->ip());
+
+            if (($suspicious['is_suspicious'] ?? false) && $this->featureFlagService->enabled('features.login_alert_notifications')) {
+                try {
+                    $user->notify(new NewLocationLoginNotification(
+                        ipAddress: (string) $request->ip(),
+                        userAgent: $request->userAgent(),
+                        signals: $suspicious['signals'] ?? [],
+                    ));
+                } catch (\Throwable $exception) {
+                    Log::warning('Failed to queue login alert notification.', [
+                        'user_id' => $user->getKey(),
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            }
         }
 
-        if (($suspicious['is_suspicious'] ?? false) && $this->featureFlagService->enabled('features.login_alert_notifications')) {
-            $user->notify(new NewLocationLoginNotification(
-                ipAddress: (string) $request->ip(),
-                userAgent: $request->userAgent(),
-                signals: $suspicious['signals'] ?? [],
-            ));
-        }
-
-        $this->trustedDeviceService->touch($user, $request);
-        $this->loginSecurityService->clearAfterSuccess($user);
         $this->loginSecurityService->recordAttempt($user, $email, true, $request, ['reason' => 'success']);
+        $this->loginSecurityService->clearAfterSuccess($user);
+        $user->recordLogin((string) $request->ip());
+        $this->emailVerificationDeviceService->upsertCurrentDevice($user, $request);
+
         $this->auditLogService->log(
             event: 'login_success',
             user: $user,
             request: $request,
-            metadata: ['suspicious' => $suspicious],
+            metadata: [],
             outcome: AuthAuditLogService::OUTCOME_SUCCESS,
             resourceType: 'authentication',
             resourceId: $user->getKey(),
         );
-        $user->recordLogin((string) $request->ip());
-        $this->emailVerificationDeviceService->upsertCurrentDevice($user, $request);
-        $user->forceFill([
-            'active_device' => $this->userAgent($request),
-            'last_ip' => (string) $request->ip(),
-        ])->save();
 
         return $user;
-    }
-
-    public function claimCurrentSession(User $user, Request $request): void
-    {
-        $user->forceFill([
-            'active_session_id' => $request->session()->getId(),
-            'last_seen' => now(),
-            'active_device' => $this->userAgent($request),
-            'last_ip' => (string) $request->ip(),
-        ])->save();
     }
 
     /**
@@ -182,35 +163,111 @@ class AuthenticationService
      */
     public function completeEmailVerificationLogin(User $user, Request $request, array $pending): void
     {
-        Auth::login($user);
-        $request->session()->regenerate();
+        Auth::login($user, true);
+
+        $this->loginSecurityService->recordAttempt($user, (string) $user->email, true, $request, ['reason' => 'email_verification_completed']);
+        $this->loginSecurityService->clearAfterSuccess($user);
+        $user->recordLogin((string) $request->ip());
 
         $this->claimCurrentSession($user, $request);
         $this->emailVerificationDeviceService->markVerifiedDeviceFromPending($user, $pending);
 
-        $this->loginSecurityService->clearAfterSuccess($user);
-        $this->loginSecurityService->recordAttempt(
-            $user,
-            (string) $user->email,
-            true,
-            $request,
-            ['reason' => 'email_verification_completed']
-        );
+        try {
+            $this->trustedDeviceService->trust($user, $request);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        if (! empty($pending['remember_device'])) {
+            try {
+                $this->trustedDeviceService->rememberDevice(
+                    $user,
+                    $request,
+                    (string) ($pending['fingerprint'] ?? ''),
+                );
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
 
         $this->auditLogService->log(
-            event: 'login_success_email_verified',
+            event: 'login_success',
             user: $user,
             request: $request,
             metadata: [
-                'verification_flow' => 'email_link',
-                'requires_fresh_verification' => (bool) ($pending['requires_fresh_verification'] ?? false),
+                'via' => 'email_verification',
+                'remember_device' => ! empty($pending['remember_device']),
             ],
             outcome: AuthAuditLogService::OUTCOME_SUCCESS,
             resourceType: 'authentication',
             resourceId: $user->getKey(),
         );
+    }
 
-        $user->recordLogin((string) $request->ip());
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    public function verificationSessionKey(array $pending): string
+    {
+        return sha1((string) ($pending['started_at'] ?? '').'|'.(string) ($pending['email'] ?? ''));
+    }
+
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    public function storeVerificationWatch(array $pending): void
+    {
+        $sessionKey = $this->verificationSessionKey($pending);
+        $expiresAt = Carbon::parse((string) ($pending['expires_at'] ?? now()->addHour()->toIso8601String()));
+
+        Cache::put(
+            $this->verificationWatchCacheKey($sessionKey),
+            $pending,
+            $expiresAt,
+        );
+
+        Cache::put(
+            $this->verificationWatchUserCacheKey((int) ($pending['user_id'] ?? 0)),
+            $pending,
+            $expiresAt,
+        );
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function retrieveVerificationWatch(string $sessionKey): ?array
+    {
+        if ($sessionKey === '') {
+            return null;
+        }
+
+        $pending = Cache::get($this->verificationWatchCacheKey($sessionKey));
+
+        return is_array($pending) ? $pending : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function retrieveVerificationWatchByUserId(int $userId): ?array
+    {
+        if ($userId <= 0) {
+            return null;
+        }
+
+        $pending = Cache::get($this->verificationWatchUserCacheKey($userId));
+
+        return is_array($pending) ? $pending : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    public function clearVerificationWatch(array $pending): void
+    {
+        Cache::forget($this->verificationWatchCacheKey($this->verificationSessionKey($pending)));
+        Cache::forget($this->verificationWatchUserCacheKey((int) ($pending['user_id'] ?? 0)));
     }
 
     public function recordHeartbeat(Request $request): void
@@ -219,7 +276,7 @@ class AuthenticationService
         $user = $request->user();
 
         if ($user === null) {
-            throw new AuthenticationException;
+            return;
         }
 
         $currentSessionId = $request->session()->getId();
@@ -232,218 +289,40 @@ class AuthenticationService
         }
 
         if ($activeSessionId !== $currentSessionId) {
-            throw new AuthenticationException;
-        }
-
-        $user->forceFill([
-            'last_seen' => now(),
-            'last_ip' => (string) $request->ip(),
-        ])->save();
-    }
-
-    public function showTakeoverWaitData(Request $request): array|RedirectResponse
-    {
-        $pending = $request->session()->get(self::TAKEOVER_PENDING_SESSION_KEY);
-
-        if (! is_array($pending)) {
-            return redirect()->route('login')->withErrors([
-                'auth' => 'No secure takeover session is currently pending.',
-            ]);
-        }
-
-        $expiresAt = Carbon::parse((string) ($pending['expires_at'] ?? now()->toIso8601String()));
-
-        if ($expiresAt->isPast()) {
-            $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
-
-            return redirect()->route('login')->withErrors([
-                'auth' => 'Secure takeover session expired. Please sign in again.',
-            ]);
-        }
-
-        $user = User::query()->find((int) ($pending['user_id'] ?? 0));
-        $cooldownSeconds = $this->resendCooldownSecondsRemaining($user);
-
-        return [
-            'email' => (string) ($pending['email'] ?? ''),
-            'resendLocked' => $cooldownSeconds > 0,
-            'cooldownSeconds' => $cooldownSeconds,
-        ];
-    }
-
-    public function sendTakeoverOtp(Request $request): RedirectResponse
-    {
-        $pending = $request->session()->get(self::TAKEOVER_PENDING_SESSION_KEY);
-
-        if (! is_array($pending)) {
-            return redirect()->route('login')->withErrors([
-                'auth' => 'No secure takeover session is currently pending.',
-            ]);
-        }
-
-        $user = User::query()->find((int) ($pending['user_id'] ?? 0));
-
-        if ($user === null || $user->email !== ($pending['email'] ?? null)) {
-            $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
-
-            return redirect()->route('login')->withErrors([
-                'auth' => 'Secure takeover session is no longer valid.',
-            ]);
-        }
-
-        $cooldownSeconds = $this->resendCooldownSecondsRemaining($user);
-
-        if ($cooldownSeconds > 0) {
-            return redirect()->route('skfed.takeover.wait')->withErrors([
-                'auth' => "Please wait {$cooldownSeconds} seconds before requesting another code.",
-            ]);
-        }
-
-        $otpCode = $this->generateOtpCode();
-        $expiresAt = now()->addMinutes((int) config('sk_fed_auth.single_session.otp_expiration_minutes', 5));
-
-        $user->forceFill([
-            'otp_code' => Hash::make($otpCode),
-            'otp_expires_at' => $expiresAt,
-            'otp_attempts' => 0,
-            'otp_last_sent_at' => now(),
-        ])->save();
-
-        $user->notify(new SessionTakeoverOtpNotification($otpCode));
-        $this->auditLogService->log(
-            event: 'session_takeover_otp_sent',
-            user: $user,
-            request: $request,
-            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
-            resourceType: 'session_takeover',
-            resourceId: $user->getKey(),
-        );
-
-        return redirect()->route('skfed.takeover.wait')->with('status', 'Verification code sent to your email.');
-    }
-
-    public function verifyTakeoverOtp(Request $request, string $otpCode): RedirectResponse
-    {
-        $pending = $request->session()->get(self::TAKEOVER_PENDING_SESSION_KEY);
-
-        if (! is_array($pending)) {
-            return redirect()->route('login')->withErrors([
-                'auth' => 'No secure takeover session is currently pending.',
-            ]);
-        }
-
-        $userId = (int) ($pending['user_id'] ?? 0);
-        $takeoverApproved = false;
-
-        DB::transaction(function () use ($userId, $otpCode, $request, &$takeoverApproved): void {
-            $user = User::query()->lockForUpdate()->find($userId);
-
-            if ($user === null) {
-                return;
-            }
-
-            $maxAttempts = (int) config('sk_fed_auth.single_session.otp_max_attempts', 5);
-
-            if ((int) ($user->otp_attempts ?? 0) >= $maxAttempts) {
-                return;
-            }
-
-            if ($user->otp_expires_at === null || $user->otp_expires_at->isPast() || empty($user->otp_code)) {
-                return;
-            }
-
-            if (! Hash::check($otpCode, (string) $user->otp_code)) {
-                $user->forceFill([
-                    'otp_attempts' => ((int) ($user->otp_attempts ?? 0)) + 1,
-                ])->save();
-
-                $this->auditLogService->log(
-                    event: 'session_takeover_otp_invalid',
-                    user: $user,
-                    request: $request,
-                    metadata: [
-                        'otp_attempts' => (int) ($user->otp_attempts ?? 0),
-                        'max_attempts' => $maxAttempts,
-                    ],
-                    outcome: AuthAuditLogService::OUTCOME_FAILED,
-                    resourceType: 'session_takeover',
-                    resourceId: $user->getKey(),
-                );
-
-                return;
-            }
-
-            $this->deleteSessionById((string) ($user->active_session_id ?? ''));
-
-            $user->forceFill([
-                'active_session_id' => null,
-                'last_seen' => null,
-                'otp_code' => null,
-                'otp_expires_at' => null,
-                'otp_attempts' => 0,
-                'otp_last_sent_at' => null,
-            ])->save();
-
-            $takeoverApproved = true;
-        });
-
-        if (! $takeoverApproved) {
-            return redirect()->route('skfed.takeover.wait')->withErrors([
-                'auth' => 'Invalid or expired verification code. Request a new one and try again.',
-            ]);
-        }
-
-        $user = User::query()->find($userId);
-
-        if ($user === null) {
-            $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
-
-            return redirect()->route('login')->withErrors([
-                'auth' => 'Unable to complete secure takeover.',
-            ]);
-        }
-
-        Auth::login($user);
-        $request->session()->regenerate();
-        $this->claimCurrentSession($user, $request);
-        $this->loginSecurityService->clearAfterSuccess($user);
-        $this->auditLogService->log(
-            event: 'session_takeover_approved',
-            user: $user,
-            request: $request,
-            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
-            resourceType: 'session_takeover',
-            resourceId: $user->getKey(),
-        );
-        $request->session()->forget(self::TAKEOVER_PENDING_SESSION_KEY);
-
-        return redirect()->route('dashboard');
-    }
-
-    public function clearSessionOwnershipOnLogout(User $user, Request $request): void
-    {
-        $this->auditLogService->log(
-            event: 'logout',
-            user: $user,
-            request: $request,
-            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
-            resourceType: 'session',
-            resourceId: $request->session()->getId(),
-        );
-
-        $currentSessionId = $request->session()->getId();
-        $this->deleteSessionById($currentSessionId);
-
-        if ((string) ($user->active_session_id ?? '') !== (string) $currentSessionId) {
             return;
         }
 
-        $user->forceFill([
-            'active_session_id' => null,
-            'last_seen' => null,
-            'active_device' => null,
-            'last_ip' => null,
-        ])->save();
+        if ($this->hasColumn('users', 'last_seen')) {
+            $user->forceFill([
+                'last_seen' => now(),
+                'last_ip' => (string) $request->ip(),
+            ])->save();
+        }
+    }
+
+    public function claimCurrentSession(User $user, Request $request): void
+    {
+        if (! $this->hasColumn('users', 'active_session_id')) {
+            return;
+        }
+
+        $updates = [
+            'active_session_id' => $request->session()->getId(),
+        ];
+
+        if ($this->hasColumn('users', 'last_seen')) {
+            $updates['last_seen'] = now();
+        }
+
+        if ($this->hasColumn('users', 'active_device')) {
+            $updates['active_device'] = $this->userAgent($request);
+        }
+
+        if ($this->hasColumn('users', 'last_ip')) {
+            $updates['last_ip'] = (string) $request->ip();
+        }
+
+        $user->forceFill($updates)->save();
     }
 
     public function isSessionActive(User $user): bool
@@ -469,60 +348,153 @@ class AuthenticationService
             ->exists();
     }
 
-    protected function hasActiveSessionConflict(User $user, Request $request): bool
+    public function clearSessionOwnershipOnLogout(User $user, Request $request): void
     {
-        $activeSessionId = (string) ($user->active_session_id ?? '');
-
-        if ($activeSessionId === '') {
-            return false;
-        }
-
-        if ($activeSessionId === $request->session()->getId()) {
-            return false;
-        }
-
-        if ($this->isSessionActive($user)) {
-            return true;
-        }
-
-        $this->deleteSessionById($activeSessionId);
-        $user->forceFill([
-            'active_session_id' => null,
-            'last_seen' => null,
-            'active_device' => null,
-            'last_ip' => null,
-        ])->save();
-
-        return false;
-    }
-
-    protected function startTakeoverWait(User $user, string $email, Request $request): void
-    {
-        $waitMinutes = (int) config('sk_fed_auth.verification.wait_minutes', 15);
-
-        $request->session()->put(self::TAKEOVER_PENDING_SESSION_KEY, [
-            'user_id' => $user->getKey(),
-            'email' => $user->email,
-            'started_at' => now()->toIso8601String(),
-            'expires_at' => now()->addMinutes($waitMinutes)->toIso8601String(),
-            'ip' => (string) $request->ip(),
-            'user_agent' => $this->userAgent($request),
-        ]);
-
-        $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => 'single_session_conflict']);
         $this->auditLogService->log(
-            event: 'login_blocked_single_session_conflict',
+            event: 'logout',
             user: $user,
             request: $request,
-            outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
+            resourceType: 'session',
+            resourceId: $request->session()->getId(),
+        );
+
+        if ($this->hasColumn('users', 'active_session_id')) {
+            $currentSessionId = $request->session()->getId();
+
+            if ((string) $user->active_session_id === $currentSessionId) {
+                $user->forceFill(['active_session_id' => null])->save();
+            }
+        }
+    }
+
+    protected function resolveActiveSessionConflict(User $user, Request $request): void
+    {
+        if (! $this->hasColumn('users', 'active_session_id')) {
+            return;
+        }
+
+        $activeSessionId = (string) ($user->active_session_id ?? '');
+
+        if ($activeSessionId === '' || $activeSessionId === $request->session()->getId()) {
+            return;
+        }
+
+        if (! $this->isSessionActive($user)) {
+            $this->clearStaleSessionOwnership($user);
+
+            return;
+        }
+
+        $this->invalidatePreviousSession($user);
+        $this->clearStaleSessionOwnership($user);
+
+        $this->auditLogService->log(
+            event: 'login_replaced_active_session',
+            user: $user,
+            request: $request,
+            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
             resourceType: 'authentication',
             resourceId: $user->getKey(),
             metadata: [
-                'active_session_id' => $user->active_session_id,
+                'previous_session_id' => $activeSessionId,
             ],
         );
-        $request->session()->flash('status', 'Account currently active on another device. Verify ownership to continue.');
-        $request->session()->flash('takeover_wait', true);
+    }
+
+    protected function clearStaleSessionOwnership(User $user): void
+    {
+        $updates = ['active_session_id' => null];
+
+        if ($this->hasColumn('users', 'last_seen')) {
+            $updates['last_seen'] = null;
+        }
+
+        if ($this->hasColumn('users', 'active_device')) {
+            $updates['active_device'] = null;
+        }
+
+        if ($this->hasColumn('users', 'last_ip')) {
+            $updates['last_ip'] = null;
+        }
+
+        $user->forceFill($updates)->save();
+    }
+
+    protected function invalidatePreviousSession(User $user): void
+    {
+        if (! $this->hasColumn('users', 'active_session_id')) {
+            return;
+        }
+
+        $previousSessionId = (string) ($user->active_session_id ?? '');
+
+        if ($previousSessionId === '' || ! Schema::hasTable('sessions')) {
+            return;
+        }
+
+        try {
+            DB::table('sessions')->where('id', $previousSessionId)->delete();
+        } catch (\Throwable) {
+            // Best effort
+        }
+    }
+
+    protected function shouldRequireEmailVerification(User $user, Request $request, bool $isTrustedDevice): bool
+    {
+        if ($isTrustedDevice) {
+            return false;
+        }
+
+        return $this->featureFlagService->deviceVerificationEnabled();
+    }
+
+    /**
+     * Rehydrate a verification wait session without sending another email.
+     *
+     * @return array<string, mixed>
+     */
+    public function restoreVerificationPending(
+        User $user,
+        Request $request,
+        ?bool $requiresFreshVerification = null,
+    ): array {
+        $existing = $request->session()->get('sk_fed_email_verification_pending');
+
+        if (is_array($existing) && (int) ($existing['user_id'] ?? 0) === (int) $user->getKey()) {
+            $this->storeVerificationWatch($existing);
+
+            return $existing;
+        }
+
+        $cached = $this->retrieveVerificationWatchByUserId((int) $user->getKey());
+
+        if (is_array($cached)) {
+            $request->session()->put('sk_fed_email_verification_pending', $cached);
+
+            return $cached;
+        }
+
+        $waitMinutes = (int) config('sk_fed_auth.verification.wait_minutes', 15);
+        $sentAt = Carbon::now();
+
+        $pending = [
+            'user_id' => $user->getKey(),
+            'email' => $user->email,
+            'started_at' => $sentAt->toIso8601String(),
+            'expires_at' => $sentAt->copy()->addMinutes($waitMinutes)->toIso8601String(),
+            'fingerprint' => $this->deviceFingerprintService->fingerprint($request),
+            'ip' => (string) $request->ip(),
+            'user_agent' => $this->userAgent($request),
+            'requires_fresh_verification' => $requiresFreshVerification ?? ! $user->hasVerifiedEmail(),
+            'verified_at_snapshot' => $user->email_verified_at?->toIso8601String(),
+            'remember_device' => false,
+        ];
+
+        $request->session()->put('sk_fed_email_verification_pending', $pending);
+        $this->storeVerificationWatch($pending);
+
+        return $pending;
     }
 
     protected function startEmailVerificationWait(
@@ -531,21 +503,26 @@ class AuthenticationService
         Request $request,
         string $reason,
         string $message,
+        bool $rememberDevice = false,
     ): void {
         $waitMinutes = (int) config('sk_fed_auth.verification.wait_minutes', 15);
-        $requiresFreshVerification = $reason === 'email_device_changed';
+        $sentAt = Carbon::now();
 
-        $request->session()->put('sk_fed_email_verification_pending', [
+        $pending = [
             'user_id' => $user->getKey(),
             'email' => $user->email,
-            'started_at' => Carbon::now()->toIso8601String(),
-            'expires_at' => now()->addMinutes($waitMinutes)->toIso8601String(),
-            'fingerprint' => $this->emailVerificationDeviceService->fingerprintFromRequest($request),
+            'started_at' => $sentAt->toIso8601String(),
+            'expires_at' => $sentAt->copy()->addMinutes($waitMinutes)->toIso8601String(),
+            'fingerprint' => $this->deviceFingerprintService->fingerprint($request),
             'ip' => (string) $request->ip(),
-            'user_agent' => (string) ($request->userAgent() ?? ''),
-            'requires_fresh_verification' => $requiresFreshVerification,
+            'user_agent' => $this->userAgent($request),
+            'requires_fresh_verification' => $reason === 'email_device_changed',
             'verified_at_snapshot' => $user->email_verified_at?->toIso8601String(),
-        ]);
+            'remember_device' => $rememberDevice,
+        ];
+
+        $request->session()->put('sk_fed_email_verification_pending', $pending);
+        $this->storeVerificationWatch($pending);
 
         $user->sendEmailVerificationNotification();
         $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => $reason]);
@@ -564,21 +541,14 @@ class AuthenticationService
         $request->session()->flash('verification_wait', true);
     }
 
-    protected function generateOtpCode(): string
+    protected function verificationWatchUserCacheKey(int $userId): string
     {
-        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        return 'sk_fed_verify_user:'.$userId;
     }
 
-    protected function resendCooldownSecondsRemaining(?User $user): int
+    protected function verificationWatchCacheKey(string $sessionKey): string
     {
-        if ($user === null || $user->otp_last_sent_at === null) {
-            return 0;
-        }
-
-        $cooldownSeconds = (int) config('sk_fed_auth.single_session.otp_resend_cooldown_seconds', 60);
-        $availableAt = $user->otp_last_sent_at->copy()->addSeconds($cooldownSeconds);
-
-        return max(0, now()->diffInSeconds($availableAt, false));
+        return 'sk_fed_verify_watch:'.$sessionKey;
     }
 
     protected function userAgent(Request $request): string
@@ -586,12 +556,12 @@ class AuthenticationService
         return substr((string) ($request->userAgent() ?? 'unknown'), 0, 255);
     }
 
-    protected function deleteSessionById(string $sessionId): void
+    protected function hasColumn(string $table, string $column): bool
     {
-        if ($sessionId === '' || (string) config('session.driver') !== 'database') {
-            return;
+        try {
+            return Schema::hasColumn($table, $column);
+        } catch (\Throwable) {
+            return false;
         }
-
-        DB::table('sessions')->where('id', $sessionId)->delete();
     }
 }

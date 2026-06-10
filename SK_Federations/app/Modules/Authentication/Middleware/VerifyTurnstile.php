@@ -15,7 +15,7 @@ class VerifyTurnstile
 
     public function handle(Request $request, Closure $next): mixed
     {
-        if (! (bool) config('services.turnstile.enabled', true)) {
+        if (! $this->turnstileService->isConfigured()) {
             return $next($request);
         }
 

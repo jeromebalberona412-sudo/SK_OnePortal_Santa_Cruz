@@ -2,12 +2,14 @@
 
 namespace App\Modules\Authentication\Middleware;
 
+use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\FeatureFlagService;
 use App\Modules\Authentication\Services\TrustedDeviceService;
 use App\Modules\Shared\Models\User;
 use Closure;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureTrustedDevice
@@ -17,31 +19,47 @@ class EnsureTrustedDevice
         protected TrustedDeviceService $trustedDeviceService,
     ) {}
 
-    public function handle(Request $request, Closure $next): Response|RedirectResponse
+    public function handle(Request $request, Closure $next): Response
     {
+        if (! $this->deviceVerificationEnabled()) {
+            return $next($request);
+        }
+
         /** @var User|null $user */
         $user = $request->user();
 
         if ($user === null) {
-            return redirect()->route('login');
-        }
-
-        if (! $this->featureFlagService->enabled('features.device_verification')) {
             return $next($request);
         }
 
-        if (! (bool) config('sk_fed_auth.trusted_device.enforce_every_request', true)) {
+        if ($request->routeIs(
+            'verification.notice',
+            'skfed.verification.wait',
+            'skfed.verification.wait.status',
+            'skfed.verification.resend',
+            'skfed.verification.verify',
+            'skfed.verification.success',
+            'skfed.verification.cancel',
+        )) {
             return $next($request);
         }
 
         if ($this->trustedDeviceService->isTrusted($user, $request)) {
-            $this->trustedDeviceService->touch($user, $request);
-
             return $next($request);
         }
 
-        $this->trustedDeviceService->trust($user, $request);
+        app(AuthenticationService::class)->restoreVerificationPending($user, $request, true);
 
-        return $next($request);
+        Auth::logout();
+
+        return redirect()
+            ->route('skfed.verification.wait')
+            ->with('status', 'We sent a verification link to your email. Please verify to continue on this device.');
+    }
+
+    protected function deviceVerificationEnabled(): bool
+    {
+        return $this->featureFlagService->deviceVerificationEnabled()
+            || Schema::hasTable('sk_fed_trusted_devices');
     }
 }

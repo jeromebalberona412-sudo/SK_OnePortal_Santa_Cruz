@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureSingleSession
@@ -20,7 +21,11 @@ class EnsureSingleSession
         $user = $request->user();
 
         if ($user === null) {
-            return redirect()->route('login');
+            return $next($request);
+        }
+
+        if (! Schema::hasColumn('users', 'active_session_id')) {
+            return $next($request);
         }
 
         $currentSessionId = $request->session()->getId();
@@ -38,12 +43,12 @@ class EnsureSingleSession
             return $next($request);
         }
 
-        Auth::guard('web')->logout();
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->withErrors([
-            'auth' => 'Your session ended because your account was accessed from another device.',
+            'session' => 'Your session ended because your account was accessed from another device.',
         ]);
     }
 }

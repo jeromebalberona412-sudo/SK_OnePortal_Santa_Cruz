@@ -66,7 +66,7 @@
                         <p>Sign in to your account</p>
                     </div>
 
-                    <form method="POST" action="{{ route('login', [], false) }}" class="login-form" novalidate>
+                    <form method="POST" action="{{ route('login', [], false) }}" class="login-form" id="loginForm" novalidate>
                         @csrf
                         <div class="form-group">
                             <label for="email">
@@ -137,8 +137,8 @@
                             <a href="{{ url('/forgot-password') }}" class="forgot-password">Forgot Password?</a>
                         </div>
 
-                        <button type="submit" class="login-btn btn btn-primary w-100">
-                            Sign In
+                        <button type="submit" class="login-btn btn btn-primary w-100" id="loginBtn">
+                            <span id="loginBtnText">Sign In</span>
                         </button>
                     </form>
 
@@ -151,11 +151,27 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-    <script src="{{ url('/modules/authentication/js/script.js') }}"></script>
     <script>
-        const loginForm = document.querySelector('.login-form');
+        (function () {
+        const loginForm = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginBtnText = document.getElementById('loginBtnText');
+        const pwToggleBtn = document.getElementById('pwToggleBtn');
+
+        if (!loginForm || !emailInput || !passwordInput) {
+            return;
+        }
+
+        if (pwToggleBtn) {
+            pwToggleBtn.addEventListener('click', function () {
+                const show = passwordInput.type === 'password';
+                passwordInput.type = show ? 'text' : 'password';
+                pwToggleBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                pwToggleBtn.classList.toggle('pw-visible', show);
+            });
+        }
 
         function validateEmail(email) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -211,7 +227,17 @@
             }
 
             if (!isValid) { e.preventDefault(); return false; }
-            LoadingScreen.show('Signing In', 'Verifying your credentials...');
+
+            if (loginBtn) {
+                loginBtn.disabled = true;
+            }
+            if (loginBtnText) {
+                loginBtnText.textContent = 'Signing In...';
+            }
+
+            if (typeof LoadingScreen !== 'undefined') {
+                LoadingScreen.show('Signing In', 'Verifying your credentials...');
+            }
         });
 
         document.querySelector('.forgot-password').addEventListener('click', function(e) {
@@ -225,24 +251,37 @@
                 el.setAttribute('data-server-error', 'true');
             });
 
-            // Password visibility toggle
-            var btn   = document.getElementById('pwToggleBtn');
-            var input = document.getElementById('password');
-            if (btn && input) {
-                btn.addEventListener('click', function () {
-                    var show = input.type === 'password';
-                    input.type = show ? 'text' : 'password';
-                    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-                    btn.classList.toggle('pw-visible', show);
-                });
+            const rememberCheckbox = document.getElementById('remember');
+            const REMEMBER_EMAIL_KEY = 'sk_fed_remember_email';
+            const REMEMBER_FLAG_KEY = 'sk_fed_remember_enabled';
+
+            if (localStorage.getItem(REMEMBER_FLAG_KEY) === '1') {
+                const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY) || '';
+                if (savedEmail && emailInput && !emailInput.value) {
+                    emailInput.value = savedEmail;
+                }
+                if (rememberCheckbox) {
+                    rememberCheckbox.checked = true;
+                }
             }
+
+            loginForm.addEventListener('submit', function() {
+                if (!rememberCheckbox) {
+                    return;
+                }
+                if (rememberCheckbox.checked) {
+                    localStorage.setItem(REMEMBER_FLAG_KEY, '1');
+                    localStorage.setItem(REMEMBER_EMAIL_KEY, emailInput.value.trim());
+                } else {
+                    localStorage.removeItem(REMEMBER_FLAG_KEY);
+                    localStorage.removeItem(REMEMBER_EMAIL_KEY);
+                }
+            }, { capture: true });
         });
+        })();
     </script>
 </body>
 @if (session('verification_wait') && session()->has('sk_fed_email_verification_pending'))
     <script>window.location.replace("{{ route('skfed.verification.wait', [], false) }}");</script>
-@endif
-@if (session('takeover_wait') && session()->has('sk_fed_takeover_pending'))
-    <script>window.location.replace("{{ route('skfed.takeover.wait', [], false) }}");</script>
 @endif
 </html>

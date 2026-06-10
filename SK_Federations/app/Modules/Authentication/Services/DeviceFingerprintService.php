@@ -8,6 +8,11 @@ class DeviceFingerprintService
 {
     public function fromRequest(Request $request): string
     {
+        return $this->fingerprint($request);
+    }
+
+    public function fingerprint(Request $request): string
+    {
         $userAgent = strtolower(trim((string) ($request->userAgent() ?? 'unknown')));
         $subnet = $this->subnet((string) $request->ip());
         $sessionContext = sprintf('%s|%s', config('session.cookie'), config('app.name'));

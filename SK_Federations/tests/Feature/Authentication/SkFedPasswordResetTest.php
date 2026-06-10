@@ -4,7 +4,6 @@ use App\Modules\Authentication\Models\FeatureFlag;
 use App\Modules\Authentication\Notifications\SkFedResetPasswordNotification;
 use App\Modules\Authentication\Services\TurnstileService;
 use App\Modules\Shared\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -17,7 +16,7 @@ use function Pest\Laravel\from;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
 
-uses(RefreshDatabase::class);
+// Do not use RefreshDatabase here: production DB was wiped when SQLite was unavailable.
 
 beforeEach(function () {
     config()->set('services.turnstile.enabled', true);
@@ -73,7 +72,7 @@ it('does not send a password reset link for an out-of-scope user', function () {
     post(route('password.email', [], false), [
         'email' => $user->email,
         'cf-turnstile-response' => 'valid-token',
-    ])->assertSessionHas('status', 'A password reset link has been sent');
+    ])->assertSessionHasErrors('email');
 
     Notification::assertNotSentTo($user, SkFedResetPasswordNotification::class);
     expect(DB::table('password_reset_tokens')->where('email', $user->email)->exists())->toBeFalse();
@@ -186,6 +185,7 @@ it('rejects forgot password submission when turnstile verification fails', funct
     config()->set('services.turnstile.enabled', true);
 
     $mock = \Mockery::mock(TurnstileService::class);
+    $mock->shouldReceive('isConfigured')->andReturnTrue();
     $mock->shouldReceive('verify')->once()->andReturnFalse();
     app()->instance(TurnstileService::class, $mock);
 

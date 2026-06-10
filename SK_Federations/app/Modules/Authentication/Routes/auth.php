@@ -26,32 +26,35 @@ Route::get('/modules/authentication/{type}/{file}', function ($type, $file) {
     return response()->file($path, ['Content-Type' => $mimeType]);
 })->where('type', 'css|js|images')->where('file', '.*');
 
+Route::get('/email/verify/wait', [AuthController::class, 'showVerificationWait'])->name('skfed.verification.wait');
+Route::get('/email/verify/wait-status', [AuthController::class, 'checkVerificationStatus'])->name('skfed.verification.wait.status');
+Route::post('/email/verify/resend', [AuthController::class, 'resendVerification'])->name('skfed.verification.resend');
+Route::get('/email/verify/cancel', [AuthController::class, 'cancelVerificationWait'])->name('skfed.verification.cancel');
+Route::get('/email/verify-link/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('skfed.verification.verify');
+Route::get('/email/verified-success', [AuthController::class, 'showVerificationSuccess'])->name('skfed.verification.success');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::get('/email/verify/wait', [AuthController::class, 'showVerificationWait'])->name('skfed.verification.wait');
-    Route::get('/email/verify/wait-status', [AuthController::class, 'checkVerificationStatus'])->name('skfed.verification.wait.status');
     Route::get('/email/verify/notice', [AuthController::class, 'showVerifyNotice'])->name('skfed.verification.notice');
-    Route::post('/email/verify/resend', [AuthController::class, 'resendVerification'])->name('skfed.verification.resend');
-    Route::get('/email/verify-link/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('skfed.verification.verify');
-    Route::get('/email/verified-success', [AuthController::class, 'showVerificationSuccess'])->name('skfed.verification.success');
-
-    Route::get('/session/takeover/wait', [AuthController::class, 'showTakeoverWait'])->name('skfed.takeover.wait');
-    Route::post('/session/takeover/send-otp', [AuthController::class, 'sendTakeoverOtp'])->name('skfed.takeover.send');
-    Route::post('/session/takeover/verify-otp', [AuthController::class, 'verifyTakeoverOtp'])->name('skfed.takeover.verify');
 
     // Forgot Password Routes
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])
         ->middleware(['turnstile', 'throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email'])
         ->name('password.email');
-    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])
+    Route::get('/set-new-password/{token}', [AuthController::class, 'showResetPassword'])
         ->middleware(['throttle:skfed-password-reset-form'])
         ->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+    Route::post('/set-new-password', [AuthController::class, 'resetPassword'])
         ->middleware(['throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email'])
         ->name('password.update');
+    Route::get('/reset-password/{token}', function (string $token) {
+        return redirect()->route('password.reset', array_merge(['token' => $token], request()->query()));
+    });
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+        ->middleware(['throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email']);
     Route::get('/password-reset-success', [AuthController::class, 'showPasswordResetSuccess'])->name('password.reset.success');
 });
 
