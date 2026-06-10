@@ -48,9 +48,7 @@ class PasswordSetupController extends Controller
         if ($user->isAdmin()) {
             $this->loginEmailVerificationService->initiate($user);
 
-            return redirect()
-                ->route('verification.notice')
-                ->with('status', 'verification-link-sent');
+            return redirect()->route('verification.notice');
         }
 
         return redirect()

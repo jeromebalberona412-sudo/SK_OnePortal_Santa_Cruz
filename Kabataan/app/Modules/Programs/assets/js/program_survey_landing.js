@@ -14,6 +14,7 @@
     const viewAnswers = document.getElementById('pslViewAnswers');
 
     let currentSurvey = null;
+    let surveyHistory = [];
 
     function getCsrfToken() {
         return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -106,19 +107,25 @@
             return;
         }
 
+        if (survey.has_responded) {
+            startBtn.disabled = false;
+            startBtn.style.opacity = '';
+            startBtn.style.cursor = 'pointer';
+            startBtn.querySelector('span').textContent = 'View My Response';
+            return;
+        }
+
         if (!survey.can_respond) {
             startBtn.disabled = true;
             startBtn.style.opacity = '0.5';
             startBtn.style.cursor = 'not-allowed';
-            startBtn.querySelector('span').textContent = survey.has_responded
-                ? 'Already Submitted'
-                : 'Survey Not Open';
+            startBtn.querySelector('span').textContent = 'Survey Not Open';
             return;
         }
 
         startBtn.disabled = false;
         startBtn.style.opacity = '';
-        startBtn.style.cursor = '';
+        startBtn.style.cursor = 'pointer';
         startBtn.querySelector('span').textContent = 'Start Survey';
     }
 
@@ -191,8 +198,27 @@
         document.body.style.overflow = '';
     }
 
+    function scrollToHistory() {
+        const historyCard = document.querySelector('.sl-card-history');
+        if (historyCard) {
+            historyCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
     function handleStartSurvey() {
-        if (!currentSurvey?.id || !currentSurvey.can_respond) return;
+        if (!currentSurvey?.id) return;
+
+        if (currentSurvey.has_responded) {
+            const latestResponse = surveyHistory[0];
+            if (latestResponse?.id) {
+                openResponseView(latestResponse.id);
+                return;
+            }
+            scrollToHistory();
+            return;
+        }
+
+        if (!currentSurvey.can_respond) return;
         window.location.href = `/programs/survey/form?survey=${encodeURIComponent(currentSurvey.id)}`;
     }
 
@@ -202,6 +228,7 @@
             fetchHistory(),
         ]);
 
+        surveyHistory = history;
         renderSurveyInfo(survey);
         renderHistory(history);
     }

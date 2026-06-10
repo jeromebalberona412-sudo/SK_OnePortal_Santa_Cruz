@@ -12,7 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
-        'app/Modules/Authentication/assets/css/forgot-password.css',
         'app/Modules/Profile/assets/css/profile-verify.css',
         'app/Modules/Authentication/assets/js/verify-email.js',
         'resources/js/theme.js',
@@ -61,54 +60,51 @@
         <div class="login-form-container login-form-container--verify">
             <div class="login-card-inner login-card-inner--verify" id="evVerifySection"
                  data-status-url="{{ route('verification.status', [], false) }}"
-                 data-email="{{ $user->email }}">
+                 data-email="{{ $user->email }}"
+                 data-resend-cooldown="{{ (int) $resendCooldown }}">
 
-                <div class="fp-success-wrap">
-                    <p class="fp-success-title" id="evStatusTitle">Verify Your Email</p>
-                    <p class="fp-success-msg" id="evStatusSub">
+                <div class="form-header">
+                    <h2 id="evStatusTitle">Verify Your Email <span class="wave-emoji">✉️</span></h2>
+                    <p id="evStatusSub">
                         We sent a verification link to <strong>{{ $user->email }}</strong>.
                         Open your inbox, click the link, and you will be redirected to the dashboard automatically.
                     </p>
+                </div>
 
-                    <div class="cp-listening-badge" id="evListeningBadge">
-                        <span class="cp-listening-dot"></span>
-                        Waiting for email verification…
+                <div class="ev-listening-badge" id="evListeningBadge">
+                    <span class="ev-listening-dot"></span>
+                    Waiting for email verification…
+                </div>
+
+                @if ($errors->any())
+                    <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
+                @endif
+
+                @if (session('status') === 'verification-link-sent')
+                    <div class="login-alert login-alert--success" role="alert">Verification email sent.</div>
+                @endif
+
+                <div class="ev-resend-section">
+                    <div class="ev-timer-row" id="evTimer" style="display:none;">
+                        <span>Resend available in</span>
+                        <span class="ev-timer-badge" id="evTimerCount">1:00</span>
                     </div>
 
-                    @if ($errors->any())
-                        <div class="login-alert login-alert--danger" role="alert">{{ $errors->first() }}</div>
-                    @endif
-
-                    @if (session('status') === 'verification-link-sent')
-                        <div class="login-alert login-alert--success" role="alert">Verification email sent.</div>
-                    @endif
-
-                    <div class="fp-resend-box">
-                        <div class="fp-timer-row" id="evTimer" @if($resendCooldown <= 0) style="display:none;" @endif>
-                            <span>Resend available in</span>
-                            <span class="fp-timer-badge" id="evTimerCount">{{ $resendCooldown > 0 ? sprintf('%d:%02d', intdiv($resendCooldown, 60), $resendCooldown % 60) : '1:00' }}</span>
-                        </div>
-
-                        <form action="{{ route('verification.send') }}" method="POST" id="evResendForm">
-                            @csrf
-                            <button type="submit" class="fp-resend-btn" id="evResendBtn">Resend Verification Email</button>
-                        </form>
-                    </div>
+                    <form action="{{ route('verification.send') }}" method="POST" id="evResendForm">
+                        @csrf
+                        <button type="submit" class="login-btn w-100 ev-resend-btn visible" id="evResendBtn">Resend Verification Email</button>
+                    </form>
                 </div>
 
                 <div class="form-footer">
                     <form method="POST" action="{{ route('logout') }}" style="display:inline;">
                         @csrf
-                        <button type="submit" style="background:none;border:none;padding:0;color:var(--op-blue,#1565c0);font-weight:600;font-size:0.84rem;cursor:pointer;font-family:inherit;">
-                            Sign out
-                        </button>
+                        <button type="submit" class="ev-back-login">Back to login</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
-    <script>window.evResendCooldown = {{ (int) $resendCooldown }};</script>
 
 </body>
 </html>

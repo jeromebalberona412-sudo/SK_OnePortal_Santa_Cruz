@@ -18,6 +18,8 @@ class LoginEmailVerificationService
 
     private const SENT_CACHE_PREFIX = 'admin_login_verify_sent:';
 
+    private const RESEND_COOLDOWN_CACHE_PREFIX = 'admin_login_verify_resend_cooldown:';
+
     public function initiate(User $user): void
     {
         User::query()
@@ -47,6 +49,8 @@ class LoginEmailVerificationService
         );
 
         $user->notify(new AdminLoginVerificationNotification($plainToken));
+
+        $this->markResendCooldown($user);
     }
 
     public function resend(User $user): void
@@ -65,6 +69,15 @@ class LoginEmailVerificationService
         }
 
         $this->send($user);
+    }
+
+    private function markResendCooldown(User $user): void
+    {
+        Cache::put(
+            self::RESEND_COOLDOWN_CACHE_PREFIX.$user->id,
+            now()->timestamp,
+            now()->addMinutes(2),
+        );
     }
 
     public function confirm(int $userId, string $plainToken): User
@@ -96,13 +109,13 @@ class LoginEmailVerificationService
 
     public function resendCooldownRemaining(User $user): int
     {
-        $sentAt = Cache::get(self::SENT_CACHE_PREFIX.$user->id);
+        $resentAt = Cache::get(self::RESEND_COOLDOWN_CACHE_PREFIX.$user->id);
 
-        if ($sentAt === null) {
+        if ($resentAt === null) {
             return 0;
         }
 
-        $elapsed = now()->timestamp - (int) $sentAt;
+        $elapsed = now()->timestamp - (int) $resentAt;
 
         return max(0, self::RESEND_COOLDOWN_SECONDS - $elapsed);
     }

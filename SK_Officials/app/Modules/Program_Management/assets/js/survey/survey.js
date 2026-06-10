@@ -202,7 +202,6 @@ function getAutoProgram(selectedId = null) {
 function renderAutoProgram(selectedId = null) {
     const hiddenEl = document.getElementById('surveyActivity');
     const nameEl = document.getElementById('surveyProgramName');
-    const hintEl = document.getElementById('surveyProgramHint');
     if (!hiddenEl || !nameEl) return;
 
     const program = getAutoProgram(selectedId);
@@ -210,17 +209,11 @@ function renderAutoProgram(selectedId = null) {
     if (!program) {
         hiddenEl.value = '';
         nameEl.textContent = 'No ABYIP program available';
-        if (hintEl) {
-            hintEl.textContent = 'Upload ABYIP for your barangay before creating a survey.';
-        }
         return;
     }
 
     hiddenEl.value = String(program.id);
     nameEl.textContent = program.program_name;
-    if (hintEl) {
-        hintEl.textContent = `Survey is linked to: ${program.program_name}`;
-    }
 }
 
 // ── Forms Tab ─────────────────────────────────────────────────────────────
@@ -951,7 +944,7 @@ function initChartsForQuestion(q, survey, responseRows, idx) {
     if (totalCount === 0) return;
 
     const colors = ['#213F99', '#4f6fd6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
-    const chartHeight = Math.max(220, labels.length * 36);
+    const chartHeight = Math.max(260, labels.length * 48);
 
     const barCanvas = document.getElementById(`chartBar_${chartKey}`);
     const barWrap = barCanvas?.closest('.analytics-chart-canvas-wrap');
@@ -966,30 +959,29 @@ function initChartsForQuestion(q, survey, responseRows, idx) {
                     data: counts,
                     backgroundColor: colors.slice(0, labels.length),
                     borderRadius: 6,
-                    maxBarThickness: 28,
+                    maxBarThickness: 48,
                 }],
             },
             options: {
-                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: (ctx) => `${ctx.parsed.x} response${ctx.parsed.x === 1 ? '' : 's'}`,
+                            label: (ctx) => `${ctx.parsed.y} response${ctx.parsed.y === 1 ? '' : 's'}`,
                         },
                     },
                 },
                 scales: {
                     x: {
+                        ticks: { autoSkip: false, font: { size: 12 } },
+                        grid: { display: false },
+                    },
+                    y: {
                         beginAtZero: true,
                         ticks: { stepSize: 1, precision: 0 },
                         grid: { color: '#eef2f7' },
-                    },
-                    y: {
-                        ticks: { autoSkip: false, font: { size: 12 } },
-                        grid: { display: false },
                     },
                 },
             },

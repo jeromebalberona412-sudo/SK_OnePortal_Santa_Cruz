@@ -12,7 +12,6 @@
                 <label class="schol-label">Program Activity</label>
                 <div id="surveyProgramName" class="schol-input" style="background:#f8fafc;cursor:default;">Detecting program…</div>
                 <input type="hidden" id="surveyActivity" value="">
-                <p class="schol-field-hint" id="surveyProgramHint">Program is auto-detected from this committee's ABYIP entry.</p>
             </div>
             <div class="schol-form-group">
                 <label class="schol-label" for="surveyDescription">Instructions for Kabataan</label>

@@ -81,9 +81,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            return redirect()
-                ->route('verification.notice')
-                ->with('status', 'verification-link-sent');
+            return redirect()->route('verification.notice');
         }
 
         if ($request->expectsJson()) {

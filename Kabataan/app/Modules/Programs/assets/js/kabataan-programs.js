@@ -219,7 +219,7 @@
         let actionLabel = 'Survey Not Open';
         let statusLabel = 'Barangay Program';
         if (hasResponded) {
-            actionLabel = 'Already Submitted';
+            actionLabel = 'View Response';
             statusLabel = 'Submitted';
         } else if (canRespond) {
             actionLabel = 'Apply Now';
@@ -260,7 +260,7 @@
                     </div>` : ''}
                 ` : `<p class="description-text" style="margin-top:16px;color:#64748b;">${escapeHtml(emptyNote || 'No survey from SK Officials yet.')}</p>`}
                 <div class="program-action">
-                    <button type="button" class="apply-now-button ${canRespond ? 'enabled' : ''}" data-apply-survey="${program.id}" ${!canRespond ? 'disabled' : ''}>
+                    <button type="button" class="apply-now-button ${canRespond || hasResponded ? 'enabled' : ''}" data-apply-survey="${program.id}" data-has-responded="${hasResponded ? '1' : '0'}" ${!canRespond && !hasResponded ? 'disabled' : ''}>
                         ${actionLabel}
                     </button>
                 </div>
@@ -497,7 +497,8 @@
 
         (programsData?.abyip_programs || []).forEach((program) => {
             if (program.type === 'education' || program.type === 'sports') return;
-            if (!program.survey?.can_respond) return;
+            const survey = program.survey || {};
+            if (!survey.can_respond && !survey.has_responded) return;
 
             const btnId = buttonMap[program.category_key] || buttonMap[program.modal_key];
             const btn = btnId ? document.getElementById(btnId) : null;

@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const verifySection = document.getElementById('evVerifySection');
     const statusUrl = verifySection?.dataset.statusUrl || '';
     const accountEmail = verifySection?.dataset.email || 'default';
-    const cooldownKey = `op_admin_login_verify_resend_${accountEmail}`;
+    const cooldownKey = `op_admin_verify_resend_${accountEmail}`;
+    const serverCooldown = Number.parseInt(verifySection?.dataset.resendCooldown || '0', 10);
 
     const timerElement = document.getElementById('evTimer');
     const timerCountElement = document.getElementById('evTimerCount');
@@ -18,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let timerInterval = null;
     let verificationHandled = false;
-    const serverCooldown = Number(window.evResendCooldown || 0);
 
     function showPageLoading(message) {
         if (!overlay) return;
@@ -33,7 +33,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setResendCooldownExpiry(seconds) {
-        localStorage.setItem(cooldownKey, String(Date.now() + Math.max(1, seconds || COOLDOWN_SECONDS) * 1000));
+        localStorage.setItem(
+            cooldownKey,
+            String(Date.now() + Math.max(1, seconds || COOLDOWN_SECONDS) * 1000),
+        );
     }
 
     function getRemainingSeconds() {
@@ -42,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return Math.max(0, Math.ceil((expiry - Date.now()) / 1000));
         }
 
-        return serverCooldown > 0 ? serverCooldown : 0;
+        return 0;
     }
 
     function formatCountdown(seconds) {
@@ -62,12 +65,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (resendBtn) {
             resendBtn.disabled = false;
             resendBtn.classList.add('visible');
+            resendBtn.textContent = 'Resend Verification Email';
         }
         clearResendCooldown();
     }
 
     function startTimer(seconds) {
-        let remaining = Math.max(0, seconds);
+        const remaining = Math.max(0, seconds);
         if (remaining <= 0) {
             timerExpired();
             return;
@@ -83,31 +87,45 @@ document.addEventListener('DOMContentLoaded', function () {
         if (timerInterval) clearInterval(timerInterval);
 
         timerInterval = setInterval(function () {
-            remaining = getRemainingSeconds();
-            if (remaining <= 0) {
+            const currentRemaining = getRemainingSeconds();
+            if (currentRemaining <= 0) {
                 clearInterval(timerInterval);
                 timerInterval = null;
                 timerExpired();
             } else {
-                updateTimerDisplay(remaining);
+                updateTimerDisplay(currentRemaining);
             }
         }, 1000);
     }
 
-    function bootstrapTimer() {
-        let remaining = getRemainingSeconds();
-        if (remaining <= 0 && serverCooldown > 0) {
-            remaining = serverCooldown;
-            setResendCooldownExpiry(remaining);
-        }
+    function syncTimerFromServer(seconds) {
+        const remaining = Math.max(0, Number.parseInt(String(seconds || 0), 10));
         if (remaining > 0) {
-            if (!localStorage.getItem(cooldownKey)) {
-                setResendCooldownExpiry(remaining);
-            }
+            setResendCooldownExpiry(remaining);
             startTimer(remaining);
-        } else {
+            return;
+        }
+
+        if (!timerInterval) {
             timerExpired();
         }
+    }
+
+    function bootstrapTimer() {
+        const localRemaining = getRemainingSeconds();
+
+        if (serverCooldown > 0) {
+            setResendCooldownExpiry(serverCooldown);
+            startTimer(serverCooldown);
+            return;
+        }
+
+        if (localRemaining > 0) {
+            startTimer(localRemaining);
+            return;
+        }
+
+        timerExpired();
     }
 
     function markVerifiedUI(message) {
@@ -115,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (statusTitle) statusTitle.textContent = 'Email Verified!';
         if (statusSub) statusSub.textContent = message || 'Redirecting to dashboard...';
         if (listeningBadge) {
-            listeningBadge.innerHTML = '<span class="cp-listening-dot"></span> Email verified';
+            listeningBadge.innerHTML = '<span class="ev-listening-dot"></span> Email verified';
         }
     }
 
@@ -152,10 +170,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const payload = await response.json();
 
             if (payload.state === 'pending') {
-                if (payload.resend_cooldown > 0 && getRemainingSeconds() <= 0) {
-                    setResendCooldownExpiry(payload.resend_cooldown);
-                    startTimer(payload.resend_cooldown);
+                if (payload.resend_cooldown > 0) {
+                    const currentRemaining = getRemainingSeconds();
+                    if (currentRemaining <= 0 || Math.abs(currentRemaining - payload.resend_cooldown) > 2) {
+                        syncTimerFromServer(payload.resend_cooldown);
+                    }
+                } else if (!timerInterval) {
+                    timerExpired();
                 }
+
                 setTimeout(checkVerificationStatus, POLL_INTERVAL_MS);
                 return;
             }
@@ -181,9 +204,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 resendBtn.classList.remove('visible');
                 resendBtn.textContent = 'Sending…';
             }
-            setResendCooldownExpiry(COOLDOWN_SECONDS);
-            if (timerElement) timerElement.style.display = 'flex';
-            startTimer(COOLDOWN_SECONDS);
             showPageLoading('Sending verification email...');
         });
     }
