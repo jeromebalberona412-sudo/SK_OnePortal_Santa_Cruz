@@ -1,5 +1,5 @@
 Database = SK_Oneportal
-Last Updated = 2026-06-08
+Last Updated = 2026-06-11
 
 -- ============================================================
 -- CORE / SHARED TABLES
@@ -603,35 +603,6 @@ create table public.kk_profiling_schedules (
 create index IF not exists kk_profiling_schedules_barangay_id_status_index on public.kk_profiling_schedules using btree (barangay_id, status) TABLESPACE pg_default;
 create index IF not exists kk_profiling_schedules_date_start_date_expiry_index on public.kk_profiling_schedules using btree (date_start, date_expiry) TABLESPACE pg_default;
 
--- Archive of kabataan records moved out of active profiling
-create table public.previous_kabataan (
-  id bigserial not null,
-  kabataan_registration_id bigint null,
-  tenant_id bigint not null,
-  barangay_id bigint not null,
-  moved_by_user_id bigint null,
-  last_name character varying(100) not null,
-  first_name character varying(100) not null,
-  middle_name character varying(100) null,
-  suffix character varying(10) null,
-  email character varying(150) null,
-  contact_number character varying(15) null,
-  form_data json not null,
-  profiling_year smallint not null,
-  moved_at timestamp without time zone null,
-  created_at timestamp without time zone null,
-  updated_at timestamp without time zone null,
-  constraint previous_kabataan_pkey primary key (id),
-  constraint previous_kabataan_kabataan_registration_id_foreign foreign KEY (kabataan_registration_id) references kabataan_registrations (id) on delete set null,
-  constraint previous_kabataan_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete CASCADE,
-  constraint previous_kabataan_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
-  constraint previous_kabataan_moved_by_user_id_foreign foreign KEY (moved_by_user_id) references users (id) on delete set null
-) TABLESPACE pg_default;
-
-create index IF not exists previous_kabataan_tenant_id_barangay_id_index on public.previous_kabataan using btree (tenant_id, barangay_id) TABLESPACE pg_default;
-create index IF not exists previous_kabataan_profiling_year_index on public.previous_kabataan using btree (profiling_year) TABLESPACE pg_default;
-
-
 -- ============================================================
 -- KABATAAN APP TABLES (Added: 2026-05-02)
 -- ============================================================
@@ -690,7 +661,34 @@ create index IF not exists kabataan_registrations_deleted_at_index on public.kab
 create unique index IF not exists kabataan_registrations_unique_respondent on public.kabataan_registrations using btree (tenant_id, barangay_id, respondent_number) TABLESPACE pg_default
 where (respondent_number is not null);
 
-///
+-- Archive of kabataan records moved out of active profiling
+create table public.previous_kabataan (
+  id bigserial not null,
+  kabataan_registration_id bigint null,
+  tenant_id bigint not null,
+  barangay_id bigint not null,
+  moved_by_user_id bigint null,
+  last_name character varying(100) not null,
+  first_name character varying(100) not null,
+  middle_name character varying(100) null,
+  suffix character varying(10) null,
+  email character varying(150) null,
+  contact_number character varying(15) null,
+  form_data json not null,
+  profiling_year smallint not null,
+  moved_at timestamp without time zone null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint previous_kabataan_pkey primary key (id),
+  constraint previous_kabataan_kabataan_registration_id_foreign foreign KEY (kabataan_registration_id) references kabataan_registrations (id) on delete set null,
+  constraint previous_kabataan_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete CASCADE,
+  constraint previous_kabataan_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
+  constraint previous_kabataan_moved_by_user_id_foreign foreign KEY (moved_by_user_id) references users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists previous_kabataan_tenant_id_barangay_id_index on public.previous_kabataan using btree (tenant_id, barangay_id) TABLESPACE pg_default;
+create index IF not exists previous_kabataan_profiling_year_index on public.previous_kabataan using btree (profiling_year) TABLESPACE pg_default;
+
 -- Kabataan account settings (change email / change password verification)
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS pending_email VARCHAR(255) NULL,
