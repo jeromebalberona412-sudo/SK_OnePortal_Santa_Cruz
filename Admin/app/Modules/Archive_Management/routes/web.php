@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Archive_Management\Controllers\DeletedArchiveController;
+use App\Modules\Archive_Management\Controllers\TermRecordsArchiveController;
 use Illuminate\Support\Facades\Route;
 
 // ── Archive Management Dashboard ──────────────────────────────────────────────
@@ -13,9 +14,15 @@ Route::get('/manage-archive/sk-federation-records', function () {
     return view('archive-management::SK_Federation_Records');
 })->name('archived.sk-federation-records');
 
+Route::get('/manage-archive/sk-federation-records/data', [TermRecordsArchiveController::class, 'federationData'])
+    ->name('archived.sk-federation-records.data');
+
 Route::get('/manage-archive/sk-officials-records', function () {
     return view('archive-management::SK_Officials_Records');
 })->name('archived.sk-officials-records');
+
+Route::get('/manage-archive/sk-officials-records/data', [TermRecordsArchiveController::class, 'officialsData'])
+    ->name('archived.sk-officials-records.data');
 
 // ── Deleted SK Federation & Officials ─────────────────────────────────────────
 Route::get('/archived/deleted-sk-federation', [DeletedArchiveController::class, 'federationIndex'])

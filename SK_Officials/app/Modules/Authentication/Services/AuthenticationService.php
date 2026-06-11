@@ -154,7 +154,9 @@ class AuthenticationService
      */
     public function completeEmailVerificationLogin(User $user, Request $request, array $pending): void
     {
-        Auth::login($user, true);
+        $rememberDevice = ! empty($pending['remember_device']);
+
+        Auth::login($user, $rememberDevice);
 
         $this->loginSecurityService->recordAttempt($user, (string) $user->email, true, $request);
         $this->loginSecurityService->clearAfterSuccess($user);
@@ -162,16 +164,18 @@ class AuthenticationService
 
         $this->claimCurrentSession($user, $request);
 
-        if (! empty($pending['remember_device'])) {
-            try {
+        try {
+            $this->trustedDeviceService->trust($user, $request);
+
+            if ($rememberDevice) {
                 $this->trustedDeviceService->rememberDevice(
                     $user,
                     $request,
                     (string) ($pending['fingerprint'] ?? ''),
                 );
-            } catch (\Throwable $exception) {
-                report($exception);
             }
+        } catch (\Throwable $exception) {
+            report($exception);
         }
 
         $this->auditLogService->log(
@@ -325,6 +329,10 @@ class AuthenticationService
             return false;
         }
 
+        if (! $this->activeSessionExists((string) $user->active_session_id)) {
+            return false;
+        }
+
         $timeoutSeconds = (int) config('sk_official_auth.single_session.heartbeat_timeout_seconds', 120);
 
         if ($user->last_seen->copy()->addSeconds($timeoutSeconds)->isPast()) {
@@ -340,6 +348,20 @@ class AuthenticationService
             ->where('user_id', $user->getKey())
             ->where('last_activity', '>=', now()->subSeconds($timeoutSeconds)->timestamp)
             ->exists();
+    }
+
+    public function activeSessionExists(string $sessionId): bool
+    {
+        if ($sessionId === '' || ! Schema::hasTable('sessions')) {
+            return false;
+        }
+
+        return DB::table('sessions')->where('id', $sessionId)->exists();
+    }
+
+    public function shouldReclaimSessionForSameDevice(User $user, Request $request): bool
+    {
+        return $this->trustedDeviceService->isTrusted($user->fresh(), $request);
     }
 
     /**

@@ -1,0 +1,89 @@
+SK ONEPORTAL — SYSTEM FLOW (FOUR PORTALS)
+Municipality of Santa Cruz, Laguna
+Last updated: 2026-06-11
+
+This document describes the end-to-end process of the four SK OnePortal applications: Admin, SK Federation, SK Officials, and Kabataan. All portals share one PostgreSQL database (SK_Oneportal) and are separated by tenant, role, and module boundaries.
+
+────────────────────────────────────────────────────────────
+1. ADMIN PORTAL
+────────────────────────────────────────────────────────────
+
+The Admin portal is the central governance system for the municipality. Only users with the admin role can access it. After login, the admin must verify email through a one-time link before reaching the dashboard. Email verification uses a 60-second resend cooldown; the timer persists across page refresh and only enables the resend button when it reaches zero.
+
+Admin responsibilities include account provisioning, audit logging, barangay logo management, and archive management. When the admin creates an SK Official or SK Federation account, the system stores the user in the users table, creates an official_profiles row, and opens an official_terms row marked ACTIVE. A password setup email is sent; the account remains pending until the official completes first login and password change.
+
+Deleted accounts (soft delete via users.deleted_at) appear under Archived → Deleted SK Officials / Deleted SK Federation. These records can be restored back to active status. This is different from completed-term archives.
+
+When an SK Official or SK Federation term ends, is replaced, or is extended, the previous term snapshot is copied into archived_sk_official_records or archived_sk_federation_records. These tables store a read-only historical copy: name, position, barangay (for officials), contact, email, term dates, and archive timestamp. The Admin Archive Management module lists these completed-term records for reporting and reference. No login is granted from archived records alone.
+
+Admin also monitors system activity through audit logs, manages municipal branding assets, and oversees cross-portal data integrity. All admin actions that change accounts or archives are logged for accountability.
+
+────────────────────────────────────────────────────────────
+2. SK FEDERATION PORTAL
+────────────────────────────────────────────────────────────
+
+The SK Federation portal serves municipal-level federation officers (role: sk_fed). Federation users are created by Admin, receive a setup email, and must set their password on first access. Federation officers coordinate programs and policies across all barangays in Santa Cruz.
+
+Login flow: credentials are validated, role is checked, and device trust is evaluated. If the email is not yet verified, or if the device is new and device verification is enabled, the user is redirected to the email verification wait page instead of the dashboard. When the user checks "Remember me," the device is registered as trusted (sk_official_trusted_devices table and remember-device cookie). Trusted devices skip repeat email verification on future logins from the same browser until the trust expires (default 30 days).
+
+After successful login, federation users access dashboards, announcements, reports, and coordination tools for barangay SK chapters. Session uses single-session enforcement with heartbeat: only one active browser session is primary, but the same trusted device can reclaim a stale session instead of being incorrectly logged out.
+
+When a federation officer's term ends, Admin archives the term into archived_sk_federation_records. The account may remain active for a new term or be deactivated separately through the deleted-accounts archive.
+
+Password reset: user requests a link on Forgot Password. After sending, the email field is hidden and the submitted address is displayed automatically. Resend is available after a 60-second cooldown.
+
+────────────────────────────────────────────────────────────
+3. SK OFFICIALS PORTAL
+────────────────────────────────────────────────────────────
+
+The SK Officials portal serves barangay-level SK officers (role: sk_official). Each official is tied to a barangay_id and manages local youth programs: ABYIP, sports, scholarships, surveys, announcements, KK profiling review, calendar, and reports for their barangay.
+
+Account lifecycle matches federation: Admin creates account → password setup email → first login → must change password → dashboard access. Login security includes rate limiting, lockout after failed attempts, suspicious login detection, and optional email re-verification on new devices.
+
+Remember-me / trusted device behavior: first login on a new device requires email verification even if the email was verified before. After the user verifies and had "Remember me" checked, the device is trusted and future logins from that device skip verification until trust expires. Session expiry logs the user out normally; on the next login from the same trusted device, verification is not required again.
+
+Single-session rule: if the same account logs in elsewhere, the older session may end. Same-device false logouts are reduced by reclaiming the session when the device is trusted or when the previous session row no longer exists.
+
+Program management flow: officials upload or maintain ABYIP programs per barangay, schedule activities, manage sports and scholarship applications (approve/reject, documents, payments), create program surveys tied to ABYIP activities, and view survey analytics. Survey responses from Kabataan youth are stored in program_surveys tables.
+
+When an official's term completes, Admin archives the record into archived_sk_official_records. If the account is deactivated (deleted), it moves to Deleted SK Officials archive instead.
+
+Forgot password flow matches federation: after reset link is sent, the email address is shown and the input field is removed; resend uses hidden email and cooldown timer.
+
+────────────────────────────────────────────────────────────
+4. KABATAAN PORTAL
+────────────────────────────────────────────────────────────
+
+The Kabataan portal is the public youth-facing application (role: user / kabataan registrants). Youth register per barangay, complete KK profiling, and access programs, sports, scholarships, barangay SK profiles, and dashboards.
+
+Registration flow: youth signs up with barangay and personal details, verifies email, and completes KK profiling questionnaire. Registrations are stored in kabataan_registrations. SK Officials review and approve/reject profiling requests. Approved youth gain full portal access.
+
+Programs: youth see ABYIP programs for their barangay in the sidebar. Sports and education programs have dedicated landing and application flows. Other ABYIP categories link to program surveys when available.
+
+Program survey flow: if a survey is open and the youth has not yet responded, they can start the survey form. If already submitted, the button remains active but redirects to the survey landing page where they can view their previous response; re-submission is blocked. Survey answers are stored per user per survey.
+
+Sports and scholarship: separate application pipelines with document upload, status tracking (pending, approved, rejected), and landing pages per program type.
+
+Barangay SK profile: youth can view their barangay's SK officers, logos, posts, and engagement stats on a public-style profile page fed from officials' data.
+
+When youth age out or are moved out of active profiling, records may be archived to previous_kabataan for historical reference, similar in concept to SK term archives.
+
+────────────────────────────────────────────────────────────
+CROSS-PORTAL DATA FLOW SUMMARY
+────────────────────────────────────────────────────────────
+
+Admin creates accounts → Officials/Federation set passwords → manage barangay/municipal programs → Kabataan registers and applies → Officials review and approve → data flows back to dashboards and archives.
+
+Shared tables: users, official_profiles, official_terms, barangays, tenants, kabataan_registrations, program/sports/scholarship tables, archived_sk_official_records, archived_sk_federation_records, previous_kabataan, deleted user soft-deletes.
+
+Authentication summary:
+- Admin: email verify on each login session initiation; 60s resend cooldown.
+- SK Officials / Federation: email verify on first device; trusted device + remember me skips repeat verification; single session with heartbeat; password reset with persisted email display.
+- Kabataan: standard youth registration and email verification per module.
+
+Archive summary:
+- Deleted accounts = soft-deleted users (restorable).
+- SK Officials/Federation Records = completed term snapshots (read-only history).
+- Previous Kabataan = moved-out youth profiling history.
+
+End of document.

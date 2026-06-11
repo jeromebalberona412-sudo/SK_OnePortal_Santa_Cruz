@@ -4,144 +4,13 @@ document.addEventListener('DOMContentLoaded', function () {
     initArchivedSkOfficials();
 });
 
-// ── Sample data (completed terms only) ───────────────────────────────────────
-const aroffRecords = [
-    {
-        id: 'aroff-001',
-        firstName: 'Carlos',
-        middleName: 'Bautista',
-        lastName: 'Mendoza',
-        suffix: '',
-        position: 'SK Chairman',
-        barangay: 'Bubukal',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09171112233',
-        email: 'carlos.mendoza@example.com',
-        dateOfBirth: 'Apr 10, 1999',
-        age: 27,
-        termStart: 'Jan 1, 2023',
-        termEnd: 'Dec 31, 2025',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'aroff-002',
-        firstName: 'Liza',
-        middleName: 'Ramos',
-        lastName: 'Torres',
-        suffix: '',
-        position: 'SK Kagawad',
-        barangay: 'Calios',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09282223344',
-        email: 'liza.torres@example.com',
-        dateOfBirth: 'Jul 22, 2000',
-        age: 26,
-        termStart: 'Jan 1, 2023',
-        termEnd: 'Dec 31, 2025',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'aroff-003',
-        firstName: 'Roberto',
-        middleName: 'Flores',
-        lastName: 'Villanueva',
-        suffix: 'III',
-        position: 'SK Secretary',
-        barangay: 'Dingin',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09393334455',
-        email: 'roberto.villanueva@example.com',
-        dateOfBirth: 'Nov 3, 1998',
-        age: 28,
-        termStart: 'Jan 1, 2024',
-        termEnd: 'Dec 31, 2026',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'aroff-004',
-        firstName: 'Patricia',
-        middleName: 'Navarro',
-        lastName: 'Castillo',
-        suffix: '',
-        position: 'SK Treasurer',
-        barangay: 'Labuin',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09504445566',
-        email: 'patricia.castillo@example.com',
-        dateOfBirth: 'Feb 14, 2001',
-        age: 25,
-        termStart: 'Jan 1, 2024',
-        termEnd: 'Dec 31, 2026',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'aroff-005',
-        firstName: 'Miguel',
-        middleName: 'Santos',
-        lastName: 'Reyes',
-        suffix: 'Jr.',
-        position: 'SK Auditor',
-        barangay: 'Pagsawitan',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09615556677',
-        email: 'miguel.reyes@example.com',
-        dateOfBirth: 'Mar 5, 1999',
-        age: 27,
-        termStart: 'Jan 1, 2025',
-        termEnd: 'Dec 31, 2027',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'aroff-006',
-        firstName: 'Sofia',
-        middleName: 'Cruz',
-        lastName: 'Garcia',
-        suffix: '',
-        position: 'SK PRO',
-        barangay: 'Poblacion',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09726667788',
-        email: 'sofia.garcia@example.com',
-        dateOfBirth: 'Aug 12, 2000',
-        age: 26,
-        termStart: 'Jan 1, 2025',
-        termEnd: 'Dec 31, 2027',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'aroff-007',
-        firstName: 'Daniel',
-        middleName: 'Lopez',
-        lastName: 'Martinez',
-        suffix: '',
-        position: 'SK Kagawad',
-        barangay: 'Santisima Cruz',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09837778899',
-        email: 'daniel.martinez@example.com',
-        dateOfBirth: 'Dec 20, 2001',
-        age: 25,
-        termStart: 'Jan 1, 2026',
-        termEnd: 'Dec 31, 2028',
-        termStatus: 'Completed Term',
-    },
-];
+const AROFF_API = {
+    data: '/manage-archive/sk-officials-records/data',
+};
 
-let aroffFiltered = [...aroffRecords];
+let aroffRecords = [];
+let aroffFiltered = [];
+let aroffIsLoading = false;
 let aroffCurrentPage = 1;
 const aroffPerPage = 10;
 let aroffSearchQ = '';
@@ -150,10 +19,41 @@ let aroffTermFilter = 'all';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initArchivedSkOfficials() {
-    renderAroffStats();
-    applyAroffFilters();
     bindAroffSearch();
     bindAroffViewModal();
+    loadAroffRecords();
+}
+
+async function loadAroffRecords() {
+    if (aroffIsLoading) return;
+    aroffIsLoading = true;
+
+    const params = new URLSearchParams({
+        search: aroffSearchQ,
+        year: aroffYearFilter,
+        term: aroffTermFilter,
+    });
+
+    try {
+        const response = await fetch(`${AROFF_API.data}?${params.toString()}`, {
+            headers: { Accept: 'application/json' },
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error('Failed to load archived records.');
+
+        aroffRecords = payload.data || [];
+        aroffFiltered = [...aroffRecords];
+        renderAroffStats(payload.stats || {});
+        aroffCurrentPage = 1;
+        renderAroffTable();
+    } catch (error) {
+        aroffRecords = [];
+        aroffFiltered = [];
+        renderAroffStats({ total: 0, positions: 0, barangays: 0 });
+        renderAroffTable();
+    } finally {
+        aroffIsLoading = false;
+    }
 }
 
 // ── Apply filters (search, year, and term) ────────────────────────────────────
@@ -200,13 +100,13 @@ function applyAroffFilters() {
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
-function renderAroffStats() {
+function renderAroffStats(stats = null) {
     const row = document.getElementById('aroffStatsRow');
     if (!row) return;
 
-    const total = aroffRecords.length;
-    const positions = [...new Set(aroffRecords.map(r => r.position))].length;
-    const barangays = [...new Set(aroffRecords.map(r => r.barangay))].length;
+    const total = stats?.total ?? aroffRecords.length;
+    const positions = stats?.positions ?? [...new Set(aroffRecords.map(r => r.position))].length;
+    const barangays = stats?.barangays ?? [...new Set(aroffRecords.map(r => r.barangay))].length;
 
     row.innerHTML = `
         <div class="aroff-stat-card aroff-stat-card-teal">

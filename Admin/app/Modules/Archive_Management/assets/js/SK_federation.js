@@ -4,144 +4,13 @@ document.addEventListener('DOMContentLoaded', function () {
     initArchivedSkFederation();
 });
 
-// ── Sample data (completed terms only) ───────────────────────────────────────
-const arfedRecords = [
-    {
-        id: 'arfed-001',
-        firstName: 'Maria',
-        middleName: 'Santos',
-        lastName: 'Reyes',
-        suffix: '',
-        position: 'Chairperson',
-        barangay: 'Poblacion I',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09171234567',
-        email: 'maria.reyes@example.com',
-        dateOfBirth: 'Mar 15, 1998',
-        age: 28,
-        termStart: 'Jan 1, 2023',
-        termEnd: 'Dec 31, 2025',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'arfed-002',
-        firstName: 'Juan',
-        middleName: 'Cruz',
-        lastName: 'Dela Cruz',
-        suffix: 'Jr.',
-        position: 'Secretary',
-        barangay: 'Poblacion II',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09281234567',
-        email: 'juan.delacruz@example.com',
-        dateOfBirth: 'Jun 20, 1997',
-        age: 29,
-        termStart: 'Jan 1, 2023',
-        termEnd: 'Dec 31, 2025',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'arfed-003',
-        firstName: 'Ana',
-        middleName: 'Lim',
-        lastName: 'Garcia',
-        suffix: '',
-        position: 'Treasurer',
-        barangay: 'Poblacion III',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09391234567',
-        email: 'ana.garcia@example.com',
-        dateOfBirth: 'Sep 5, 1999',
-        age: 27,
-        termStart: 'Jan 1, 2024',
-        termEnd: 'Dec 31, 2026',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'arfed-004',
-        firstName: 'Roberto',
-        middleName: 'Flores',
-        lastName: 'Villanueva',
-        suffix: 'III',
-        position: 'Vice Chairperson',
-        barangay: 'Poblacion IV',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09401234567',
-        email: 'roberto.villanueva@example.com',
-        dateOfBirth: 'Nov 3, 1998',
-        age: 28,
-        termStart: 'Jan 1, 2024',
-        termEnd: 'Dec 31, 2026',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'arfed-005',
-        firstName: 'Patricia',
-        middleName: 'Navarro',
-        lastName: 'Castillo',
-        suffix: '',
-        position: 'Auditor',
-        barangay: 'Poblacion V',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09511234567',
-        email: 'patricia.castillo@example.com',
-        dateOfBirth: 'Feb 14, 2001',
-        age: 25,
-        termStart: 'Jan 1, 2025',
-        termEnd: 'Dec 31, 2027',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'arfed-006',
-        firstName: 'Carlos',
-        middleName: 'Bautista',
-        lastName: 'Mendoza',
-        suffix: '',
-        position: 'PRO',
-        barangay: 'Poblacion VI',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09621234567',
-        email: 'carlos.mendoza@example.com',
-        dateOfBirth: 'Apr 10, 1999',
-        age: 27,
-        termStart: 'Jan 1, 2025',
-        termEnd: 'Dec 31, 2027',
-        termStatus: 'Completed Term',
-    },
-    {
-        id: 'arfed-007',
-        firstName: 'Liza',
-        middleName: 'Ramos',
-        lastName: 'Torres',
-        suffix: '',
-        position: 'Kagawad',
-        barangay: 'Poblacion VII',
-        municipality: 'Santa Cruz',
-        province: 'Laguna',
-        region: 'IV-A CALABARZON',
-        contactNumber: '09731234567',
-        email: 'liza.torres@example.com',
-        dateOfBirth: 'Jul 22, 2000',
-        age: 26,
-        termStart: 'Jan 1, 2026',
-        termEnd: 'Dec 31, 2028',
-        termStatus: 'Completed Term',
-    },
-];
+const ARFED_API = {
+    data: '/manage-archive/sk-federation-records/data',
+};
 
-let arfedFiltered = [...arfedRecords];
+let arfedRecords = [];
+let arfedFiltered = [];
+let arfedIsLoading = false;
 let arfedCurrentPage = 1;
 const arfedPerPage = 10;
 let arfedSearchQ = '';
@@ -150,10 +19,41 @@ let arfedTermFilter = 'all';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initArchivedSkFederation() {
-    renderArfedStats();
-    applyArfedFilters();
     bindArfedSearch();
     bindArfedViewModal();
+    loadArfedRecords();
+}
+
+async function loadArfedRecords() {
+    if (arfedIsLoading) return;
+    arfedIsLoading = true;
+
+    const params = new URLSearchParams({
+        search: arfedSearchQ,
+        year: arfedYearFilter,
+        term: arfedTermFilter,
+    });
+
+    try {
+        const response = await fetch(`${ARFED_API.data}?${params.toString()}`, {
+            headers: { Accept: 'application/json' },
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error('Failed to load archived records.');
+
+        arfedRecords = payload.data || [];
+        arfedFiltered = [...arfedRecords];
+        renderArfedStats(payload.stats || {});
+        arfedCurrentPage = 1;
+        renderArfedTable();
+    } catch (error) {
+        arfedRecords = [];
+        arfedFiltered = [];
+        renderArfedStats({ total: 0, positions: 0, barangays: 0 });
+        renderArfedTable();
+    } finally {
+        arfedIsLoading = false;
+    }
 }
 
 // ── Apply filters (search, year, and term) ────────────────────────────────────
@@ -200,12 +100,12 @@ function applyArfedFilters() {
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
-function renderArfedStats() {
+function renderArfedStats(stats = null) {
     const row = document.getElementById('arfedStatsRow');
     if (!row) return;
 
-    const total = arfedRecords.length;
-    const positions = [...new Set(arfedRecords.map(r => r.position))].length;
+    const total = stats?.total ?? arfedRecords.length;
+    const positions = stats?.positions ?? [...new Set(arfedRecords.map(r => r.position))].length;
     const terms = [...new Set(arfedRecords.map(r => r.termStart + '–' + r.termEnd))].length;
 
     row.innerHTML = `

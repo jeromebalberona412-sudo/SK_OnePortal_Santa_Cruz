@@ -5,6 +5,7 @@ namespace App\Modules\Accounts\Services;
 use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Models\OfficialTerm;
+use App\Modules\Archive_Management\Services\TermRecordsArchiveService;
 use App\Modules\Accounts\Notifications\AccountResetPasswordNotification;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Shared\Models\User;
@@ -18,8 +19,10 @@ use Illuminate\Validation\ValidationException;
 
 class AccountService
 {
-    public function __construct(private readonly AuditLogInterface $auditLog)
-    {
+    public function __construct(
+        private readonly AuditLogInterface $auditLog,
+        private readonly TermRecordsArchiveService $termRecordsArchiveService,
+    ) {
     }
 
     /**
@@ -176,6 +179,14 @@ class AccountService
 
             if ($hasNewTermRange) {
                 if ($normalizedData['term_status'] === OfficialTerm::STATUS_ACTIVE) {
+                    $activeTerms = $profile->terms()
+                        ->where('status', OfficialTerm::STATUS_ACTIVE)
+                        ->get();
+
+                    foreach ($activeTerms as $activeTerm) {
+                        $this->termRecordsArchiveService->archiveCompletedTerm($activeTerm, $admin);
+                    }
+
                     $profile->terms()
                         ->where('status', OfficialTerm::STATUS_ACTIVE)
                         ->update(['status' => OfficialTerm::STATUS_INACTIVE]);
@@ -188,10 +199,23 @@ class AccountService
                 ]);
             } elseif ($latestTerm->status !== $normalizedData['term_status']) {
                 if ($normalizedData['term_status'] === OfficialTerm::STATUS_ACTIVE) {
+                    $activeTerms = $profile->terms()
+                        ->where('id', '!=', $latestTerm->id)
+                        ->where('status', OfficialTerm::STATUS_ACTIVE)
+                        ->get();
+
+                    foreach ($activeTerms as $activeTerm) {
+                        $this->termRecordsArchiveService->archiveCompletedTerm($activeTerm, $admin);
+                    }
+
                     $profile->terms()
                         ->where('id', '!=', $latestTerm->id)
                         ->where('status', OfficialTerm::STATUS_ACTIVE)
                         ->update(['status' => OfficialTerm::STATUS_INACTIVE]);
+                }
+
+                if (in_array($normalizedData['term_status'], [OfficialTerm::STATUS_INACTIVE, OfficialTerm::STATUS_EXPIRED, OfficialTerm::STATUS_REPLACED], true)) {
+                    $this->termRecordsArchiveService->archiveCompletedTerm($latestTerm->fresh(), $admin);
                 }
 
                 $latestTerm->update([
@@ -434,6 +458,14 @@ class AccountService
         $this->assertSameTenant($profile->tenant_id, $admin->tenant_id, 'Target profile is outside your tenant scope.');
 
         return DB::transaction(function () use ($profile, $data, $admin) {
+            $activeTerms = $profile->terms()
+                ->where('status', OfficialTerm::STATUS_ACTIVE)
+                ->get();
+
+            foreach ($activeTerms as $activeTerm) {
+                $this->termRecordsArchiveService->archiveCompletedTerm($activeTerm, $admin);
+            }
+
             $profile->terms()
                 ->where('status', OfficialTerm::STATUS_ACTIVE)
                 ->update(['status' => OfficialTerm::STATUS_INACTIVE]);

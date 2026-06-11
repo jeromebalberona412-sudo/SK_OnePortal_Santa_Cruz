@@ -8,6 +8,7 @@ use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\PasswordResetService;
 use App\Modules\Authentication\Services\TenantContextService;
+use App\Modules\Authentication\Services\TrustedDeviceService;
 use App\Modules\Profile\Services\PasswordChangeService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
@@ -336,11 +337,7 @@ class AuthController extends Controller
 
         event(new Verified($user));
 
-        $pending = $request->session()->get('sk_official_email_verification_pending');
-
-        if (! is_array($pending) || (int) ($pending['user_id'] ?? 0) !== (int) $user->getKey()) {
-            $pending = ['remember_device' => false];
-        }
+        $pending = $this->resolveVerificationPendingForUser($request, $user);
 
         $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
         $this->clearVerificationSession($request, is_array($pending) ? $pending : null);
@@ -386,7 +383,13 @@ class AuthController extends Controller
             return back()->withErrors($exception->errors())->withInput();
         }
 
-        return back()->with('status', 'A password reset link has been sent to your email address.');
+        $email = (string) $validated['email'];
+
+        $request->session()->put('forgot_password_email', $email);
+
+        return back()
+            ->withInput(['email' => $email])
+            ->with('status', 'A password reset link has been sent to your email address.');
     }
 
     public function showResetPassword(Request $request, string $token): View|RedirectResponse
@@ -526,6 +529,32 @@ class AuthController extends Controller
     /**
      * @param  array<string, mixed>|null  $pending
      */
+    /**
+     * @return array<string, mixed>
+     */
+    protected function resolveVerificationPendingForUser(Request $request, User $user): array
+    {
+        $pending = $request->session()->get('sk_official_email_verification_pending');
+
+        if (is_array($pending) && (int) ($pending['user_id'] ?? 0) === (int) $user->getKey()) {
+            return $pending;
+        }
+
+        $cached = $this->authenticationService->retrieveVerificationWatchByUserId((int) $user->getKey());
+
+        if (is_array($cached) && (int) ($cached['user_id'] ?? 0) === (int) $user->getKey()) {
+            return $cached;
+        }
+
+        $rememberCookie = (string) $request->cookie(TrustedDeviceService::REMEMBER_COOKIE_NAME, '');
+
+        return [
+            'user_id' => $user->getKey(),
+            'email' => $user->email,
+            'remember_device' => $rememberCookie !== '',
+        ];
+    }
+
     protected function clearVerificationSession(Request $request, ?array $pending = null): void
     {
         $pending ??= $request->session()->get('sk_official_email_verification_pending');

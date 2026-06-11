@@ -18,8 +18,7 @@
 </head>
 <body class="sk-login-page">
     @include('loading')
-    
-    <!-- Animated Background -->
+
     <div class="sk-bg-wrapper">
         <div class="sk-bg-image"></div>
         <div class="sk-gradient-overlay"></div>
@@ -31,7 +30,6 @@
     </div>
 
     <main class="sk-login-container">
-        <!-- Left Side - Logo & Branding -->
         <div class="sk-branding-section">
             <div class="branding-content">
                 <div class="collab-logo-wrapper">
@@ -51,28 +49,20 @@
             </div>
         </div>
 
-        <!-- Right Side - Card -->
         <div class="sk-login-section">
             <div class="sk-login-card">
+                @php
+                    $sentEmail = session('forgot_password_email', old('email'));
+                    $linkSent = session('status') || filled($sentEmail);
+                @endphp
 
-                <div id="fpStep1">
+                <div id="fpStep1" @if($linkSent) hidden @endif>
                     <div class="card-header">
                         <h2 class="card-title">Forgot Password? 🔑</h2>
                         <p class="card-subtitle">Enter the email address associated with your account and we'll send you a link to reset your password.</p>
                     </div>
 
-                    <!-- Server-side success (e.g. after page reload) -->
-                    @if (session('status'))
-                        <div class="sk-alert sk-alert-success">
-                            <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    <!-- Server-side / JS-driven error alert (step 1) -->
-                    @if ($errors->any())
+                    @if ($errors->any() && ! $linkSent)
                         <div class="sk-alert sk-alert-error">
                             <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -81,7 +71,6 @@
                         </div>
                     @endif
 
-                    <!-- Forgot Password Form -->
                     <form class="sk-login-form" id="forgotPasswordForm" method="POST" action="{{ route('password.email') }}" novalidate>
                         @csrf
 
@@ -110,19 +99,56 @@
                         <button type="submit" class="sk-submit-btn" id="submitBtn">
                             <span id="fpBtnText">Send Reset Link</span>
                         </button>
+                    </form>
+                </div>
 
-                        <!-- Cooldown notice — shown only while timer is active -->
+                <div id="fpStep2" @if(! $linkSent) hidden @endif>
+                    <div class="card-header">
+                        <h2 class="card-title">Check Your Email ✉️</h2>
+                        <p class="card-subtitle">
+                            A password reset link was sent to
+                            <strong id="fpSentEmail">{{ $sentEmail }}</strong>.
+                            Open your inbox and follow the link to set a new password.
+                        </p>
+                    </div>
+
+                    @if (session('status'))
+                        <div class="sk-alert sk-alert-success">
+                            <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
+                    @if ($errors->any())
+                        <div class="sk-alert sk-alert-error">
+                            <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ $errors->first() }}
+                        </div>
+                    @endif
+
+                    <form class="sk-login-form" id="fpResendForm" method="POST" action="{{ route('password.email') }}" novalidate>
+                        @csrf
+                        <input type="hidden" name="email" id="fpHiddenEmail" value="{{ $sentEmail }}">
+
+                        <button type="submit" class="sk-submit-btn" id="fpResendBtn">
+                            <span id="fpResendBtnText">Resend Reset Link</span>
+                        </button>
+
                         <p class="fp-cooldown-notice" id="fpCooldownNotice" hidden>
                             You can resend the link in <strong id="fpCooldownCount">60</strong>s.
                         </p>
                     </form>
+                </div>
 
-                    <div class="youth-register-section">
-                        <p class="register-text">
-                            Remember your password?
-                            <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Login</a>
-                        </p>
-                    </div>
+                <div class="youth-register-section">
+                    <p class="register-text">
+                        Remember your password?
+                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Login</a>
+                    </p>
                 </div>
             </div>
         </div>

@@ -4,16 +4,19 @@
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('forgotPasswordForm');
+    const resendForm = document.getElementById('fpResendForm');
     const emailInput = document.getElementById('email');
     const emailError = document.getElementById('email-error');
     const submitBtn = document.getElementById('submitBtn');
     const fpBtnText = document.getElementById('fpBtnText');
+    const resendBtn = document.getElementById('fpResendBtn');
+    const fpResendBtnText = document.getElementById('fpResendBtnText');
     const cooldownNotice = document.getElementById('fpCooldownNotice');
     const cooldownCount = document.getElementById('fpCooldownCount');
-
-    if (!form) {
-        return;
-    }
+    const step1 = document.getElementById('fpStep1');
+    const step2 = document.getElementById('fpStep2');
+    const hiddenEmail = document.getElementById('fpHiddenEmail');
+    const sentEmailEl = document.getElementById('fpSentEmail');
 
     const COOLDOWN_DURATION = 60;
     const COOLDOWN_KEY = 'fp_cooldown_until';
@@ -31,9 +34,14 @@ document.addEventListener('DOMContentLoaded', function () {
         errorEl.hidden = true;
     }
 
+    function getCooldownKey() {
+        const email = hiddenEmail?.value || emailInput?.value || '';
+        return `${COOLDOWN_KEY}_${email.trim().toLowerCase()}`;
+    }
+
     function startCooldown() {
         const until = Date.now() + COOLDOWN_DURATION * 1000;
-        localStorage.setItem(COOLDOWN_KEY, String(until));
+        localStorage.setItem(getCooldownKey(), String(until));
         runCooldownTick(until);
     }
 
@@ -45,22 +53,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (remaining <= 0) {
                 clearInterval(cooldownInterval);
-                localStorage.removeItem(COOLDOWN_KEY);
-                submitBtn.disabled = false;
-                fpBtnText.textContent = 'Send Reset Link';
-                if (cooldownNotice) {
-                    cooldownNotice.hidden = true;
-                }
+                localStorage.removeItem(getCooldownKey());
+                if (submitBtn) submitBtn.disabled = false;
+                if (resendBtn) resendBtn.disabled = false;
+                if (fpBtnText) fpBtnText.textContent = 'Send Reset Link';
+                if (fpResendBtnText) fpResendBtnText.textContent = 'Resend Reset Link';
+                if (cooldownNotice) cooldownNotice.hidden = true;
                 return;
             }
 
-            submitBtn.disabled = true;
-            fpBtnText.textContent = 'Send Reset Link';
+            if (submitBtn) submitBtn.disabled = true;
+            if (resendBtn) resendBtn.disabled = true;
+            if (fpBtnText) fpBtnText.textContent = 'Send Reset Link';
+            if (fpResendBtnText) fpResendBtnText.textContent = 'Resend Reset Link';
             if (cooldownNotice) {
                 cooldownNotice.hidden = false;
-                if (cooldownCount) {
-                    cooldownCount.textContent = remaining;
-                }
+                if (cooldownCount) cooldownCount.textContent = remaining;
             }
         }
 
@@ -69,14 +77,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function resumeCooldownIfActive() {
-        const stored = localStorage.getItem(COOLDOWN_KEY);
-        if (!stored) {
-            return false;
-        }
+        const stored = localStorage.getItem(getCooldownKey());
+        if (!stored) return false;
 
         const until = parseInt(stored, 10);
         if (Number.isNaN(until) || Date.now() >= until) {
-            localStorage.removeItem(COOLDOWN_KEY);
+            localStorage.removeItem(getCooldownKey());
             return false;
         }
 
@@ -84,9 +90,16 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
-    const successAlert = document.querySelector('.sk-alert-success');
+    function showSentStep(email) {
+        if (step1) step1.hidden = true;
+        if (step2) step2.hidden = false;
+        if (hiddenEmail && email) hiddenEmail.value = email;
+        if (sentEmailEl && email) sentEmailEl.textContent = email;
+    }
 
-    if (successAlert) {
+    const isSentStep = step2 && !step2.hidden;
+
+    if (isSentStep) {
         startCooldown();
     } else {
         resumeCooldownIfActive();
@@ -98,36 +111,53 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    emailInput.addEventListener('input', function () {
-        this.classList.remove('is-invalid');
-        emailError.hidden = true;
-    });
+    if (emailInput && emailError) {
+        emailInput.addEventListener('input', function () {
+            if (emailError.getAttribute('data-server-error') === 'true') return;
+            this.classList.remove('is-invalid');
+            emailError.hidden = true;
+        });
+    }
 
-    form.addEventListener('submit', function (e) {
-        const email = emailInput.value.trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (form && emailInput && emailError && submitBtn) {
+        form.addEventListener('submit', function (e) {
+            const email = emailInput.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        emailInput.classList.remove('is-invalid');
-        emailError.hidden = true;
+            emailInput.classList.remove('is-invalid');
+            emailError.hidden = true;
 
-        if (!email) {
-            e.preventDefault();
-            setInputError(emailInput, emailError, 'Please enter your email address.');
-            return;
-        }
+            if (!email) {
+                e.preventDefault();
+                setInputError(emailInput, emailError, 'Please enter your email address.');
+                return;
+            }
 
-        if (!emailRegex.test(email)) {
-            e.preventDefault();
-            setInputError(emailInput, emailError, 'Please enter a valid email address.');
-            return;
-        }
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                setInputError(emailInput, emailError, 'Please enter a valid email address.');
+                return;
+            }
 
-        if (submitBtn.disabled) {
-            e.preventDefault();
-            return;
-        }
+            if (submitBtn.disabled) {
+                e.preventDefault();
+                return;
+            }
 
-        submitBtn.disabled = true;
-        fpBtnText.textContent = 'Sending...';
-    });
+            submitBtn.disabled = true;
+            if (fpBtnText) fpBtnText.textContent = 'Sending...';
+        });
+    }
+
+    if (resendForm && resendBtn) {
+        resendForm.addEventListener('submit', function (e) {
+            if (resendBtn.disabled) {
+                e.preventDefault();
+                return;
+            }
+
+            resendBtn.disabled = true;
+            if (fpResendBtnText) fpResendBtnText.textContent = 'Sending...';
+        });
+    }
 });

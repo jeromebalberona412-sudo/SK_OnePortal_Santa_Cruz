@@ -37,7 +37,11 @@ class EnsureSingleSession
             return $next($request);
         }
 
-        if (! $this->authenticationService->isSessionActive($user)) {
+        if (
+            ! $this->authenticationService->activeSessionExists($activeSessionId)
+            || ! $this->authenticationService->isSessionActive($user)
+            || $this->authenticationService->shouldReclaimSessionForSameDevice($user, $request)
+        ) {
             $this->authenticationService->claimCurrentSession($user, $request);
 
             return $next($request);

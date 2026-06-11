@@ -255,6 +255,81 @@ create index IF not exists official_terms_status_index on public.official_terms 
 create unique index IF not exists official_terms_one_active_per_profile_idx on public.official_terms using btree (official_profile_id) TABLESPACE pg_default
 where ((status)::text = 'ACTIVE'::text);
 
+-- Completed-term archive snapshots (SK Officials)
+create table public.archived_sk_official_records (
+  id bigserial not null,
+  user_id bigint null,
+  official_profile_id bigint null,
+  official_term_id bigint null,
+  tenant_id bigint not null,
+  barangay_id bigint null,
+  first_name character varying(255) not null,
+  last_name character varying(255) not null,
+  middle_name character varying(100) null,
+  suffix character varying(20) null,
+  sex character varying(10) null,
+  date_of_birth date null,
+  age smallint null,
+  contact_number character varying(20) null,
+  position character varying(255) not null,
+  municipality character varying(255) not null default 'Santa Cruz'::character varying,
+  province character varying(255) not null default 'Laguna'::character varying,
+  region character varying(255) not null default 'IV-A CALABARZON'::character varying,
+  email character varying(255) null,
+  term_start date not null,
+  term_end date not null,
+  term_status character varying(30) not null,
+  archived_at timestamp without time zone not null,
+  archived_by bigint null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint archived_sk_official_records_pkey primary key (id),
+  constraint archived_sk_official_records_user_id_foreign foreign KEY (user_id) references users (id) on delete set null,
+  constraint archived_sk_official_records_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete CASCADE,
+  constraint archived_sk_official_records_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete set null,
+  constraint archived_sk_official_records_archived_by_foreign foreign KEY (archived_by) references users (id) on delete set null,
+  constraint archived_sk_official_records_official_term_id_unique unique (official_term_id)
+) TABLESPACE pg_default;
+
+create index IF not exists archived_sk_official_records_tenant_term_end_idx on public.archived_sk_official_records using btree (tenant_id, term_end) TABLESPACE pg_default;
+create index IF not exists archived_sk_official_records_barangay_term_idx on public.archived_sk_official_records using btree (barangay_id, term_start, term_end) TABLESPACE pg_default;
+
+-- Completed-term archive snapshots (SK Federation)
+create table public.archived_sk_federation_records (
+  id bigserial not null,
+  user_id bigint null,
+  official_profile_id bigint null,
+  official_term_id bigint null,
+  tenant_id bigint not null,
+  first_name character varying(255) not null,
+  last_name character varying(255) not null,
+  middle_name character varying(100) null,
+  suffix character varying(20) null,
+  sex character varying(10) null,
+  date_of_birth date null,
+  age smallint null,
+  contact_number character varying(20) null,
+  position character varying(255) not null,
+  municipality character varying(255) not null default 'Santa Cruz'::character varying,
+  province character varying(255) not null default 'Laguna'::character varying,
+  region character varying(255) not null default 'IV-A CALABARZON'::character varying,
+  email character varying(255) null,
+  term_start date not null,
+  term_end date not null,
+  term_status character varying(30) not null,
+  archived_at timestamp without time zone not null,
+  archived_by bigint null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint archived_sk_federation_records_pkey primary key (id),
+  constraint archived_sk_federation_records_user_id_foreign foreign KEY (user_id) references users (id) on delete set null,
+  constraint archived_sk_federation_records_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete CASCADE,
+  constraint archived_sk_federation_records_archived_by_foreign foreign KEY (archived_by) references users (id) on delete set null,
+  constraint archived_sk_federation_records_official_term_id_unique unique (official_term_id)
+) TABLESPACE pg_default;
+
+create index IF not exists archived_sk_federation_records_tenant_term_end_idx on public.archived_sk_federation_records using btree (tenant_id, term_end) TABLESPACE pg_default;
+
 create table public.login_attempts (
   id bigserial not null,
   email character varying(255) not null,
