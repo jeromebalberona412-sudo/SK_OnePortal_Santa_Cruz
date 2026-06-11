@@ -13,32 +13,22 @@ function renderAuditRows(events = dashboardAuditEvents) {
     if (!rows.length) {
         body.innerHTML = `
             <tr>
-                <td colspan="7" class="audit-empty-cell">No recent audit activity yet.</td>
+                <td colspan="6" class="audit-empty-cell">No recent audit activity yet.</td>
             </tr>
         `;
         return;
     }
 
-    body.innerHTML = rows.map((event) => {
-        const outcomeClassByState = {
-            success: 'audit-outcome--success',
-            warning: 'audit-outcome--warning',
-            failure: 'audit-outcome--failure',
-        };
-        const outcomeClass = outcomeClassByState[event.outcome] || 'audit-outcome--warning';
-
-        return `
+    body.innerHTML = rows.map((event) => `
             <tr>
                 <td>${event.date || '-'}</td>
                 <td>${event.time || '-'}</td>
-                <td>${event.actor || 'System'}</td>
+                <td class="audit-cell-email">${event.email || event.actor || '-'}</td>
                 <td>${event.event || '-'}</td>
-                <td><span class="audit-outcome ${outcomeClass}">${String(event.outcome || 'success').toUpperCase()}</span></td>
                 <td>${event.ipAddress || '-'}</td>
                 <td>${event.device || 'Unknown'}</td>
             </tr>
-        `;
-    }).join('');
+        `).join('');
 }
 
 window.refreshDashboardAuditTable = function refreshDashboardAuditTable(events) {

@@ -8,6 +8,7 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .barangay-distribution-panel .panel__header {
@@ -17,9 +18,7 @@
 .barangay-table-wrap {
     flex: 1;
     min-height: 0;
-    max-height: 340px;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
     border: 1px solid #dbe3ef;
     border-radius: 12px;
     background: #ffffff;
@@ -28,28 +27,10 @@
 .table-compact,
 .barangay-distribution-table {
     width: 100%;
-    min-width: 520px;
     border-collapse: collapse;
-    table-layout: auto;
-    font-size: 0.82rem;
+    table-layout: fixed;
+    font-size: clamp(0.68rem, 0.75vw, 0.82rem);
     box-sizing: border-box;
-}
-
-.barangay-distribution-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-}
-
-.table-compact th,
-.table-compact td,
-.barangay-distribution-table th,
-.barangay-distribution-table td {
-    padding: 0.72rem 0.85rem;
-    border-bottom: 1px solid #e8eef5;
-    text-align: left;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
 }
 
 .barangay-distribution-table thead th {
@@ -60,6 +41,31 @@
     font-size: 0.68rem;
     font-weight: 700;
     border-bottom: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 0.72rem 0.75rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.barangay-distribution-table thead th:last-child {
+    border-right: none;
+}
+
+.table-compact th,
+.table-compact td,
+.barangay-distribution-table th,
+.barangay-distribution-table td {
+    padding: 0.72rem 0.75rem;
+    border-bottom: 1px solid #e8eef5;
+    border-right: 1px solid #edf2f7;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+    word-break: break-word;
+}
+
+.barangay-distribution-table tbody td:last-child,
+.barangay-distribution-table thead th:last-child {
+    border-right: none;
 }
 
 .barangay-distribution-table tbody tr:hover {
@@ -72,13 +78,10 @@
     padding: 1.25rem;
 }
 
-@media (max-width: 768px) {
-    .barangay-table-wrap {
-        max-height: 300px;
-    }
-
-    .barangay-distribution-table {
-        min-width: 480px;
-        font-size: 0.76rem;
+@media (max-width: 1100px) {
+    .barangay-distribution-table thead th,
+    .barangay-distribution-table tbody td {
+        padding: 0.55rem 0.6rem;
+        font-size: 0.74rem;
     }
 }

@@ -11,14 +11,13 @@
     </header>
 
     <div class="audit-table-wrap">
-        <table id="auditActivityTable" class="audit-activity-table" aria-label="Recent audit activity">
+        <table id="auditActivityTable" class="audit-activity-table table table-sm mb-0" aria-label="Recent audit activity">
             <thead>
                 <tr>
                     <th>Date</th>
                     <th>Time</th>
-                    <th>Account</th>
+                    <th>Email</th>
                     <th>Activity</th>
-                    <th>Status</th>
                     <th>IP Address</th>
                     <th>Device</th>
                 </tr>

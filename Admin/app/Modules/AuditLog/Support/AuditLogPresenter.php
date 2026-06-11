@@ -177,11 +177,12 @@ class AuditLogPresenter
     private static function parseBrowserName(string $agent): string
     {
         return match (true) {
+            str_contains($agent, 'brave') => 'Brave',
             str_contains($agent, 'edg/') => 'Microsoft Edge',
-            str_contains($agent, 'chrome/') && ! str_contains($agent, 'edg/') => 'Google Chrome',
-            str_contains($agent, 'firefox/') => 'Mozilla Firefox',
-            str_contains($agent, 'safari/') && ! str_contains($agent, 'chrome/') => 'Safari',
             str_contains($agent, 'opr/') || str_contains($agent, 'opera') => 'Opera',
+            str_contains($agent, 'firefox/') => 'Mozilla Firefox',
+            str_contains($agent, 'chrome/') && ! str_contains($agent, 'edg/') => 'Google Chrome',
+            str_contains($agent, 'safari/') && ! str_contains($agent, 'chrome/') => 'Safari',
             default => 'Unknown Browser',
         };
     }

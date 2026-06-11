@@ -46,16 +46,19 @@
 		<canvas id="kkProfilingMonthlyChart" aria-label="KK Profiling chart"></canvas>
 	</div>
 	<div class="kk-chart-filter-row">
-		<label class="kk-chart-filter-check">
+		<label class="kk-chart-filter-check kk-chart-filter-check--approved">
 			<input type="checkbox" id="filterKkApproved" checked>
+			<span class="kk-chart-filter-dot kk-chart-filter-dot--approved" aria-hidden="true"></span>
 			<span>Approved</span>
 		</label>
-		<label class="kk-chart-filter-check">
+		<label class="kk-chart-filter-check kk-chart-filter-check--pending">
 			<input type="checkbox" id="filterKkPending" checked>
+			<span class="kk-chart-filter-dot kk-chart-filter-dot--pending" aria-hidden="true"></span>
 			<span>Pending</span>
 		</label>
-		<label class="kk-chart-filter-check">
+		<label class="kk-chart-filter-check kk-chart-filter-check--rejected">
 			<input type="checkbox" id="filterKkRejected" checked>
+			<span class="kk-chart-filter-dot kk-chart-filter-dot--rejected" aria-hidden="true"></span>
 			<span>Rejected</span>
 		</label>
 	</div>

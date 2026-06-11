@@ -1,0 +1,231 @@
+@import '../../../Dashboard/assets/css/statcard.css';
+
+.mk-page {
+    min-width: 0;
+}
+
+.mk-page-header {
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.mk-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.mk-filter-select {
+    min-width: 180px;
+    max-width: 240px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1.5px solid #e5e7eb;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.mk-search-input {
+    min-width: 220px;
+    max-width: 320px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1.5px solid #e5e7eb;
+    font-size: 13px;
+}
+
+.mk-stats-grid {
+    margin-bottom: 1.25rem;
+}
+
+.mk-table-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    padding: 18px 20px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.mk-table-header {
+    margin-bottom: 14px;
+}
+
+.mk-table-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.mk-table-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.mk-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #dbe3ef;
+    border-radius: 12px;
+}
+
+.mk-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.82rem;
+}
+
+.mk-table thead th {
+    background: linear-gradient(180deg, #1565c0 0%, #0d47a1 100%);
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.75rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.18);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.mk-table thead th:last-child {
+    border-right: none;
+}
+
+.mk-table tbody td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #edf2f7;
+    border-right: 1px solid #edf2f7;
+    color: #334155;
+    vertical-align: middle;
+    word-break: break-word;
+}
+
+.mk-table tbody td:last-child {
+    border-right: none;
+}
+
+.mk-table tbody tr:hover {
+    background: #f8fbff;
+}
+
+.mk-col-actions {
+    width: 90px;
+}
+
+.mk-view-btn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.mk-view-btn:hover {
+    background: #dbeafe;
+}
+
+.mk-cell-name {
+    font-weight: 600;
+}
+
+.mk-cell-email {
+    font-weight: 500;
+}
+
+.mk-empty-cell {
+    text-align: center;
+    color: #64748b;
+    padding: 1.25rem;
+}
+
+.mk-modal[hidden] {
+    display: none !important;
+}
+
+.mk-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.mk-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.mk-modal-dialog {
+    position: relative;
+    width: min(960px, 96vw);
+    max-height: 92vh;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mk-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.mk-modal-header h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.mk-modal-header p {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.mk-modal-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mk-modal-body {
+    overflow: auto;
+    max-height: calc(92vh - 72px);
+}
+
+@media (max-width: 768px) {
+    .mk-header-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .mk-filter-select,
+    .mk-search-input {
+        width: 100%;
+        max-width: none;
+    }
+}

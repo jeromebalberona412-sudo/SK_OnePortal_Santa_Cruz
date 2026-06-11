@@ -14,5 +14,6 @@ App\Modules\Profile\Providers\ProfileServiceProvider::class,
 App\Modules\Accounts\Providers\AccountsServiceProvider::class,
 App\Modules\BarangayLogos\Providers\BarangayLogosServiceProvider::class,
 App\Modules\Archive_Management\Providers\ArchiveManagementServiceProvider::class,
+App\Modules\Manage_Kabataan\Providers\ManageKabataanServiceProvider::class,
 
 ];

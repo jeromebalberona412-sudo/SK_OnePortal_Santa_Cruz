@@ -10,12 +10,12 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (error) {
         routes = {};
     }
+
     const state = {
         page: 1,
         perPage: 15,
         rows: [],
         meta: { total: 0, from: 0, to: 0, last_page: 1 },
-        loading: false,
         debounceTimer: null,
     };
 
@@ -23,19 +23,16 @@ document.addEventListener('DOMContentLoaded', function () {
         search: document.getElementById('auditSearch'),
         dateFrom: document.getElementById('auditDateFrom'),
         dateTo: document.getElementById('auditDateTo'),
-        user: document.getElementById('auditUser'),
         role: document.getElementById('auditRole'),
         barangay: document.getElementById('auditBarangay'),
         eventType: document.getElementById('auditEventType'),
         perPage: document.getElementById('auditPerPage'),
         tableBody: document.getElementById('auditLogsTableBody'),
         tableSubtitle: document.getElementById('auditTableSubtitle'),
-        loading: document.getElementById('auditLoadingState'),
         prevBtn: document.getElementById('auditPrevBtn'),
         nextBtn: document.getElementById('auditNextBtn'),
         pageNumbers: document.getElementById('auditPageNumbers'),
         pageInfo: document.getElementById('auditPageInfo'),
-        exportCsvBtn: document.getElementById('exportCsvBtn'),
         modal: document.getElementById('auditDetailsModal'),
         modalSubtitle: document.getElementById('auditModalSubtitle'),
         detailGrid: document.getElementById('auditDetailGrid'),
@@ -51,7 +48,6 @@ document.addEventListener('DOMContentLoaded', function () {
             search: els.search?.value.trim() || '',
             date_from: els.dateFrom?.value || '',
             date_to: els.dateTo?.value || '',
-            user_id: els.user?.value || '',
             role: els.role?.value || '',
             barangay_id: els.barangay?.value || '',
             event_type: els.eventType?.value || '',
@@ -68,13 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         return params.toString();
-    }
-
-    function setLoading(isLoading) {
-        state.loading = isLoading;
-        if (els.loading) {
-            els.loading.hidden = !isLoading;
-        }
     }
 
     function escapeHtml(value) {
@@ -97,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (!rows.length) {
-            els.tableBody.innerHTML = '';
+            els.tableBody.innerHTML = '<tr><td colspan="7" class="audit-empty-row">No matching audit logs found.</td></tr>';
             return;
         }
 
@@ -106,12 +95,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <tr>
                     <td class="cell-primary">${escapeHtml(row.created_date)}</td>
                     <td>${escapeHtml(row.created_time)}</td>
-                    <td>${escapeHtml(row.user_email || '-')}</td>
+                    <td class="audit-cell-email">${escapeHtml(row.user_email || '-')}</td>
                     <td>${escapeHtml(row.role)}</td>
                     <td>${escapeHtml(row.event_type)}</td>
-                    <td>${escapeHtml(row.device_type || 'Unknown')}</td>
-                    <td>${escapeHtml(row.device_browser || 'Unknown')}</td>
-                    <td>${escapeHtml(row.device_os || 'Unknown')}</td>
                     <td>${escapeHtml(row.ip_address)}</td>
                     <td>
                         <button type="button" class="audit-details-btn" data-row-index="${index}">View</button>
@@ -188,8 +174,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        setLoading(true);
-
         try {
             const response = await fetch(`${routes.data}?${buildQuery(getFilters())}`, {
                 headers: {
@@ -211,8 +195,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (els.tableSubtitle) {
                 els.tableSubtitle.textContent = 'Unable to load audit logs. Please try again.';
             }
-        } finally {
-            setLoading(false);
+            if (els.tableBody) {
+                els.tableBody.innerHTML = '';
+            }
         }
     }
 
@@ -250,9 +235,6 @@ document.addEventListener('DOMContentLoaded', function () {
             ['Email', row.user_email || '-'],
             ['Role', row.role],
             ['Event Type', row.event_type],
-            ['Device', row.device_type || 'Unknown'],
-            ['Browser', row.device_browser || 'Unknown'],
-            ['Operating System', row.device_os || 'Unknown'],
             ['IP Address', row.ip_address],
         ];
 
@@ -288,17 +270,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.style.overflow = '';
     }
 
-    function exportLogs() {
-        if (!routes.exportCsv) {
-            return;
-        }
-
-        const filters = getFilters();
-        delete filters.page;
-        delete filters.per_page;
-        window.location.href = `${routes.exportCsv}?${buildQuery(filters)}`;
-    }
-
     els.perPage?.addEventListener('change', function () {
         state.perPage = Number(els.perPage.value || 15);
         state.page = 1;
@@ -316,7 +287,6 @@ document.addEventListener('DOMContentLoaded', function () {
     [
         els.dateFrom,
         els.dateTo,
-        els.user,
         els.role,
         els.barangay,
         els.eventType,
@@ -359,10 +329,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const index = Number(button.dataset.rowIndex);
         openDetailsModal(state.rows[index]);
-    });
-
-    els.exportCsvBtn?.addEventListener('click', function () {
-        exportLogs();
     });
 
     document.querySelectorAll('[data-close-modal]').forEach(function (element) {

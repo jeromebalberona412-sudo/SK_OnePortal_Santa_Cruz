@@ -356,6 +356,47 @@ function applyContactNumberInput(input) {
     input.addEventListener('blur', () => _validateContactNumber(input));
 }
 
+function clampDateInputYear(input) {
+    if (!input || input.type !== 'date') {
+        return;
+    }
+
+    input.addEventListener('input', () => {
+        const value = input.value;
+        if (!value) {
+            return;
+        }
+
+        const match = /^(\d+)-(\d{2})-(\d{2})$/.exec(value);
+        if (!match) {
+            input.value = '';
+            return;
+        }
+
+        const year = match[1];
+        if (year.length !== 4) {
+            input.value = '';
+        }
+    });
+}
+
+function applyFutureOnlyDateConstraints(form) {
+    const today = new Date().toISOString().slice(0, 10);
+    form.querySelectorAll('input[type="date"]').forEach((input) => {
+        if (input.name === 'date_of_birth') {
+            input.max = today;
+            return;
+        }
+
+        if (isTermField(input)) {
+            return;
+        }
+
+        input.min = today;
+        clampDateInputYear(input);
+    });
+}
+
 function applyTermDateConstraints(form) {
     const startInput = form.querySelector('[name="term_start"]');
     const endInput = form.querySelector('[name="term_end"]');
@@ -365,6 +406,8 @@ function applyTermDateConstraints(form) {
 
     const yearStart = getCurrentYearStartDate();
     startInput.min = yearStart;
+    clampDateInputYear(startInput);
+    clampDateInputYear(endInput);
 
     const syncEndConstraints = () => {
         const startVal = startInput.value;
@@ -417,6 +460,7 @@ function wireCreateAccountForm(form) {
     form.querySelectorAll('[name="first_name"], [name="last_name"], [name="middle_name"]').forEach(applyUppercaseNameInput);
     applyContactNumberInput(form.querySelector('[name="contact_number"]'));
     applyTermDateConstraints(form);
+    applyFutureOnlyDateConstraints(form);
     initCreateAccountFormDefaults(form);
 
     form.querySelectorAll('[required]').forEach((el) => {

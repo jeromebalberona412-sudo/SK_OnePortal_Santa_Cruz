@@ -135,7 +135,7 @@ class AuditLogQueryService
                 'event' => $row['summary'],
                 'outcome' => $outcome,
                 'ipAddress' => $row['ip_address'],
-                'device' => $row['browser'] ?? 'Unknown',
+                'device' => $row['device_type'] ?? 'Unknown',
             ];
         });
     }

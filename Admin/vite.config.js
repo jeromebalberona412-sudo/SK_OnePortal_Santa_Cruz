@@ -62,6 +62,11 @@ export default defineConfig({
                 'app/Modules/Archive_Management/assets/js/SK_federation.js',
                 'app/Modules/Archive_Management/assets/css/SK_officials.css',
                 'app/Modules/Archive_Management/assets/js/SK_officials.js',
+
+                // Manage Kabataan Module
+                'app/Modules/Manage_Kabataan/assets/css/manage-kabataan.css',
+                'app/Modules/Manage_Kabataan/assets/css/kk-questionnaire-view.css',
+                'app/Modules/Manage_Kabataan/assets/js/manage-kabataan.js',
             ],
             refresh: true,
         }),

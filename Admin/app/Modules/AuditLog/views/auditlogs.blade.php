@@ -19,18 +19,12 @@
     ];
 @endphp
 
-<div id="mainContent" class="gov-dashboard auditlog-shell">
+<div id="mainContent" class="gov-dashboard auditlog-shell container-fluid">
 <div id="auditLogApp" data-audit-routes='@json($routes)'>
     <div class="dash-page-header">
         <div class="dash-page-header-left">
             <h1 class="dash-page-title">Audit Logs</h1>
             <p class="dash-page-welcome">Centralized activity trail across Admin, Federation, Officials, and Kabataan portals</p>
-        </div>
-        <div class="audit-header-actions">
-            <button type="button" class="audit-btn audit-btn-primary" id="exportCsvBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export CSV
-            </button>
         </div>
     </div>
 
@@ -45,7 +39,7 @@
                 <div class="audit-filters-grid">
                     <div class="audit-filter-field audit-filter-field--search">
                         <label for="auditSearch">Search</label>
-                        <input type="search" id="auditSearch" class="audit-input" placeholder="Search user, action, entity, IP…">
+                        <input type="search" id="auditSearch" class="audit-input" placeholder="Search email, action, entity, IP…">
                     </div>
                     <div class="audit-filter-field">
                         <label for="auditDateFrom">Date From</label>
@@ -54,15 +48,6 @@
                     <div class="audit-filter-field">
                         <label for="auditDateTo">Date To</label>
                         <input type="date" id="auditDateTo" class="audit-input">
-                    </div>
-                    <div class="audit-filter-field">
-                        <label for="auditUser">User</label>
-                        <select id="auditUser" class="audit-input">
-                            <option value="">All Users</option>
-                            @foreach ($filterOptions['users'] as $userOption)
-                                <option value="{{ $userOption['id'] }}">{{ $userOption['name'] }}</option>
-                            @endforeach
-                        </select>
                     </div>
                     <div class="audit-filter-field">
                         <label for="auditRole">Role</label>
@@ -98,7 +83,7 @@
                 <div class="audit-table-header">
                     <div>
                         <h2 class="audit-table-title">Activity Records</h2>
-                        <p class="audit-table-subtitle" id="auditTableSubtitle">Loading audit logs…</p>
+                        <p class="audit-table-subtitle" id="auditTableSubtitle">Showing audit logs</p>
                     </div>
                     <div class="audit-per-page">
                         <label for="auditPerPage">Rows</label>
@@ -112,12 +97,7 @@
                 </div>
 
                 <div class="audit-table-wrap" id="auditTableWrap">
-                    <div class="audit-loading" id="auditLoadingState">
-                        <span class="audit-spinner" aria-hidden="true"></span>
-                        <span>Loading audit logs…</span>
-                    </div>
-
-                    <div class="table-responsive">
+                    <div class="table-responsive audit-table-responsive">
                         <table class="audit-table" id="auditLogsTable">
                             <thead>
                                 <tr>
@@ -126,9 +106,6 @@
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Event Type</th>
-                                    <th>Device</th>
-                                    <th>Browser</th>
-                                    <th>Operating System</th>
                                     <th>IP Address</th>
                                     <th class="audit-col-actions">View</th>
                                 </tr>
@@ -136,7 +113,6 @@
                             <tbody id="auditLogsTableBody"></tbody>
                         </table>
                     </div>
-
                 </div>
 
                 <div class="audit-pagination" id="auditPagination">

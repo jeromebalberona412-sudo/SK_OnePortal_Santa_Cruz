@@ -224,14 +224,22 @@
     to { transform: rotate(360deg); }
 }
 
-.table-responsive {
-    overflow-x: auto;
+.audit-table-responsive {
+    overflow-x: hidden;
+}
+
+.audit-table-wrap {
+    overflow: hidden;
 }
 
 .audit-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.88rem;
+}
+
+.audit-table {
+    table-layout: fixed;
 }
 
 .audit-table thead th {
@@ -244,14 +252,30 @@
     text-align: left;
     padding: 12px 14px;
     border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid rgba(255, 255, 255, 0.18);
     white-space: nowrap;
+}
+
+.audit-table thead th:last-child {
+    border-right: none;
 }
 
 .audit-table tbody td {
     padding: 14px;
     border-bottom: 1px solid #f1f5f9;
+    border-right: 1px solid #edf2f7;
     color: #334155;
     vertical-align: top;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.audit-table tbody td:last-child {
+    border-right: none;
+}
+
+.audit-table .audit-cell-email {
+    font-weight: 500;
 }
 
 .audit-table tbody tr:hover {

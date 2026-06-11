@@ -94,6 +94,37 @@
     accent-color: #3b82f6;
 }
 
+.kk-chart-filter-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.kk-chart-filter-dot--approved {
+    background: #22c55e;
+}
+
+.kk-chart-filter-dot--pending {
+    background: #f59e0b;
+}
+
+.kk-chart-filter-dot--rejected {
+    background: #ef4444;
+}
+
+.kk-chart-filter-check--approved input[type="checkbox"] {
+    accent-color: #22c55e;
+}
+
+.kk-chart-filter-check--pending input[type="checkbox"] {
+    accent-color: #f59e0b;
+}
+
+.kk-chart-filter-check--rejected input[type="checkbox"] {
+    accent-color: #ef4444;
+}
+
 :root.dark .kk-chart-filter-row {
     border-top-color: #334155;
 }

@@ -105,6 +105,16 @@
             </div>
 
 
+            <a href="{{ route('manage-kabataan.index') }}" class="menu-item nav-link manage-kabataan-btn {{ request()->routeIs('manage-kabataan.*') ? 'active' : '' }}" data-nav-key="manage-kabataan" data-tooltip="Kabataan" aria-label="Kabataan">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>Kabataan</span>
+            </a>
+
             <a href="{{ route('barangay-logos.index') }}" class="menu-item nav-link barangay-logos-btn" data-nav-key="barangay-logos" data-tooltip="SK Barangay Logos" aria-label="SK Barangay Logos">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
