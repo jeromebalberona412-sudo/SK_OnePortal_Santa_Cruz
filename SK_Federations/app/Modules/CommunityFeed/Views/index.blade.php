@@ -105,6 +105,9 @@
             <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link">
                 <i class="fas fa-home"></i><span>Dashboard</span>
             </a>
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
+                <i class="fas fa-calendar-alt"></i><span>Calendar</span>
+            </a>
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item active" data-tooltip="SK Community Feed">
                 <i class="fas fa-rss"></i><span>SK Community Feed</span>

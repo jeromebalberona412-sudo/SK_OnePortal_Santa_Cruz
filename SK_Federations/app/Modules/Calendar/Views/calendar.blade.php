@@ -1,18 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('partials.favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Kabataan Profile - SK Federation</title>
+    <title>Calendar - SK Federations</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url('/modules/kabataan-monitoring/css/kabataan-monitoring.css') }}">
+    <link rel="stylesheet" href="{{ url('/modules/calendar/css/calendar.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
@@ -55,10 +52,10 @@
                         <div class="dd-name">{{ $user->name ?? 'User' }}</div>
                         <div class="dd-email">{{ $user->email ?? '' }}</div>
                     </div>
-                    <a href="{{ route('profile') }}" class="dd-item" id="nav-profile-link">
+                    <a href="{{ route('profile') }}" class="dd-item">
                         <i class="fas fa-user"></i> Profile
                     </a>
-                    <a href="{{ route('password.request') }}" class="dd-item" id="nav-change-pw-link">
+                    <a href="{{ route('password.request') }}" class="dd-item">
                         <i class="fas fa-lock"></i> Change Password
                     </a>
                     <div class="dd-divider"></div>
@@ -70,23 +67,10 @@
         </div>
     </nav>
 
-    <div class="notif-popover" id="notifPopover">
-        <div class="notif-popover-header">
-            <h4>Notifications</h4>
-            <button class="notif-mark-all">Mark all as read</button>
-        </div>
-        <div class="notif-list">
-            <div class="notif-empty">
-                <i class="fas fa-bell-slash" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.3;"></i>
-                No notifications yet
-            </div>
-        </div>
-    </div>
-
     <div class="sidebar-overlay"></div>
 
     <aside class="sidebar">
-        <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link">
+        <a href="{{ route('profile') }}" class="sidebar-profile">
             <img src="{{ $avatar }}" alt="Profile" class="sidebar-avatar">
             <div class="sidebar-user-info">
                 <div class="s-name">{{ $user->name ?? 'User' }}</div>
@@ -95,10 +79,10 @@
         </a>
         <nav class="sidebar-nav">
             <div class="menu-section-label">Main</div>
-            <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link">
+            <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard">
                 <i class="fas fa-home"></i><span>Dashboard</span>
             </a>
-            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
+            <a href="{{ route('calendar') }}" class="menu-item active" data-tooltip="Calendar">
                 <i class="fas fa-calendar-alt"></i><span>Calendar</span>
             </a>
             <div class="menu-section-label">Modules</div>
@@ -111,55 +95,52 @@
             <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports">
                 <i class="fas fa-chart-bar"></i><span>Reports</span>
             </a>
-            <a href="{{ route('kabataan-monitoring') }}" class="menu-item active" data-tooltip="Kabataan Monitoring">
+            <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
             </a>
+            <a href="javascript:void(0);" class="menu-item" onclick="document.getElementById('archiveSubmenu').style.display = document.getElementById('archiveSubmenu').style.display === 'block' ? 'none' : 'block'; document.getElementById('archiveChevron').style.transform = document.getElementById('archiveSubmenu').style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)'; return false;" data-tooltip="Archive">
+                <i class="fas fa-archive"></i><span>Archive</span>
+                <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;"></i>
+            </a>
+            <div id="archiveSubmenu" style="display:none;padding-left:20px;border-left:2px solid #e2e8f0;margin-left:10px;">
+                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-trash"></i><span>Deleted Reports</span>
+                </a>
+                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-box"></i><span>Archived Reports</span>
+                </a>
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-divider"></div>
+            <div class="menu-divider"></div>
             <div class="menu-divider"></div>
         </nav>
     </aside>
 
-    <main class="main-content km-main" data-detail-base="{{ url('/kabataan-monitoring') }}" data-kabataan-slug="{{ $kabataan }}">
-        <div class="km-container">
-            <section class="km-profile-hero" id="km-profile-hero"></section>
-
-            <section class="km-detail-grid" id="km-detail-grid" hidden>
-                <article class="km-panel">
-                    <div class="km-panel-head">
-                        <h2>Participation Metrics</h2>
-                    </div>
-                    <div class="km-metric-grid" id="km-metric-grid"></div>
-                </article>
-
-                <article class="km-panel">
-                    <div class="km-panel-head">
-                        <h2>Current Programs</h2>
-                    </div>
-                    <div class="km-list" id="km-program-list"></div>
-                </article>
-
-                <article class="km-panel">
-                    <div class="km-panel-head">
-                        <h2>Monitoring Recommendations</h2>
-                    </div>
-                    <ul class="km-reco-list" id="km-reco-list"></ul>
-                </article>
-
-                <article class="km-panel">
-                    <div class="km-panel-head">
-                        <h2>Intervention Timeline</h2>
-                    </div>
-                    <div class="km-timeline" id="km-timeline"></div>
-                </article>
+    <main class="main-content">
+        <div class="calendar-page-container">
+            <section class="calendar-header-section">
+                <div class="calendar-header-left">
+                    <h1 class="calendar-title">Calendar</h1>
+                    <p class="calendar-subtitle">View and annotate your monthly schedule.</p>
+                </div>
+                <div class="calendar-header-right">
+                    <span id="calendarMonthLabel" class="calendar-current-date"></span>
+                    <button type="button" id="calendarPrevBtn" class="calendar-nav-btn" aria-label="Previous">&laquo; Prev</button>
+                    <button type="button" id="calendarNextBtn" class="calendar-nav-btn" aria-label="Next">Next &raquo;</button>
+                    <button type="button" id="calendarJumpBtn" class="calendar-jump-btn" aria-label="Jump to date">Jump to date</button>
+                </div>
             </section>
 
-            <section class="km-panel km-not-found" id="km-not-found" hidden>
-                <div class="km-panel-head">
-                    <h2>Profile Not Found</h2>
-                    <p>The requested kabataan profile is not available in this prototype dataset.</p>
+            <section class="calendar-main-section">
+                <div class="calendar-legend">
+                    <span class="legend-item"><span class="legend-dot has-notes"></span>Day with notes</span>
+                    <span class="legend-item"><span class="legend-dot today"></span>Today</span>
                 </div>
-                <a class="km-btn" href="{{ route('kabataan-monitoring') }}">
-                    <i class="fas fa-arrow-left"></i> Back to Kabataan Monitoring
-                </a>
+
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Days will be rendered by calendar.js -->
+                </div>
             </section>
         </div>
     </main>
@@ -168,29 +149,10 @@
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
-    <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}"></script>
+    <script src="{{ url('/modules/calendar/js/calendar.js') }}"></script>
     <script>
         window.logoutRoute = "{{ route('logout') }}";
-        window.loginRoute = "{{ route('login') }}";
-        window.kmPageMode = 'show';
-
-        document.getElementById('sidebar-profile-link')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Loading Profile', 'Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-
-        document.getElementById('nav-profile-link')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Loading Profile', 'Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-
-        document.getElementById('nav-change-pw-link')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Loading', 'Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
+        window.loginRoute  = "{{ route('login') }}";
     </script>
 </body>
 </html>

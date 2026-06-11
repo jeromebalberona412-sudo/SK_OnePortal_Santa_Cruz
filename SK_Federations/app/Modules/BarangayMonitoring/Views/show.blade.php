@@ -39,10 +39,6 @@
                 <span class="brand-name">SK Federations</span>
             </div>
         </div>
-        <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="navbarSearchInput" placeholder="Search..." aria-label="Search" onkeyup="performSearch(event)">
-        </div>
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
                 <i class="fas fa-bell"></i>
@@ -102,6 +98,9 @@
             <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link">
                 <i class="fas fa-home"></i><span>Dashboard</span>
             </a>
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
+                <i class="fas fa-calendar-alt"></i><span>Calendar</span>
+            </a>
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed">
                 <i class="fas fa-rss"></i><span>SK Community Feed</span>
@@ -115,6 +114,18 @@
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
                 <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
             </a>
+            <a href="javascript:void(0);" class="menu-item" onclick="document.getElementById('archiveSubmenu').style.display = document.getElementById('archiveSubmenu').style.display === 'block' ? 'none' : 'block'; document.getElementById('archiveChevron').style.transform = document.getElementById('archiveSubmenu').style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)'; return false;" data-tooltip="Archive">
+                <i class="fas fa-archive"></i><span>Archive</span>
+                <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;"></i>
+            </a>
+            <div id="archiveSubmenu" style="display:none;padding-left:20px;border-left:2px solid #e2e8f0;margin-left:10px;">
+                <a href="#" onclick="window.location.href='{{ route('archive') }}'; return false;" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-trash"></i><span>Deleted Reports</span>
+                </a>
+                <a href="#" onclick="window.location.href='{{ route('archive') }}'; return false;" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-box"></i><span>Archived Reports</span>
+                </a>
+            </div>
             <div class="menu-divider"></div>
         </nav>
     </aside>
@@ -218,17 +229,23 @@
             </div>
 
             {{-- Summary Cards (Desktop) --}}
-            <div id="summaryCardsDesktop" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
-                {{-- Total Kabataan --}}
+            <div id="summaryCardsDesktop" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
+                {{-- Total Kabataan Register --}}
                 <div style="background:linear-gradient(135deg,#213F99 0%,#1a2f7a 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(33,63,153,.15);">
-                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-users" style="margin-right:6px;"></i>Total Kabataan</p>
+                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-users" style="margin-right:6px;"></i>Total Kabataan Register</p>
                     <p style="font-size:28px;font-weight:800;line-height:1;">{{ number_format($barangayData['program_stats']['total_youth_population'] ?? 0) }}</p>
                 </div>
 
-                {{-- Total Programs --}}
+                {{-- Total Program Created --}}
                 <div style="background:linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.15);">
-                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-tasks" style="margin-right:6px;"></i>Total Programs</p>
+                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-tasks" style="margin-right:6px;"></i>Total Program Created</p>
                     <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['program_stats']['total_programs_created'] ?? 0 }}</p>
+                </div>
+
+                {{-- Ongoing Programs --}}
+                <div style="background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(59,130,246,.15);">
+                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-spinner" style="margin-right:6px;"></i>Ongoing Programs</p>
+                    <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['program_stats']['total_ongoing'] ?? 0 }}</p>
                 </div>
 
                 {{-- Compliant Rate --}}
@@ -243,10 +260,28 @@
                     <p style="font-size:28px;font-weight:800;line-height:1;">{{ 100 - ($barangayData['compliance_score'] ?? 0) }}%</p>
                 </div>
 
-                {{-- Performance Rate --}}
+                {{-- Participation Rate --}}
+                <div style="background:linear-gradient(135deg,#06b6d4 0%,#0891b2 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(6,182,212,.15);">
+                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-user-check" style="margin-right:6px;"></i>Participation Rate</p>
+                    <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['performance_summary']['attendance_rate'] ?? 0 }}%</p>
+                </div>
+
+                {{-- Annual Budget Utilization --}}
+                <div style="background:linear-gradient(135deg,#ec4899 0%,#db2777 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(236,72,153,.15);">
+                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-chart-pie" style="margin-right:6px;"></i>Annual Budget Utilization</p>
+                    <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['abyip']['budget_utilization'] ?? 0 }}%</p>
+                </div>
+
+                {{-- ABYIP Project Count --}}
+                <div style="background:linear-gradient(135deg,#eab308 0%,#ca8a04 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(234,179,8,.15);">
+                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-clipboard-list" style="margin-right:6px;"></i>ABYIP Project Count</p>
+                    <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['abyip']['project_count'] ?? 0 }}</p>
+                </div>
+
+                {{-- Remaining Balance --}}
                 <div style="background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(245,158,11,.15);">
-                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-star" style="margin-right:6px;"></i>Performance Rate</p>
-                    <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['program_stats']['overall_performance'] ?? 'N/A' }}</p>
+                    <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-wallet" style="margin-right:6px;"></i>Remaining Balance</p>
+                    <p style="font-size:28px;font-weight:800;line-height:1;">₱{{ number_format($barangayData['abyip']['remaining_balance'] ?? 0, 2) }}</p>
                 </div>
             </div>
 
@@ -347,44 +382,22 @@
                     <p style="font-size:14px;color:#64748b;">Annual Budget and Work Plan - Summary and Reports</p>
                 </div>
 
-                {{-- Mobile Dropdown for ABYIP Summary Cards --}}
-                <div id="abyipSummaryDropdownMobile" style="display:none;margin-bottom:20px;">
-                    <button onclick="toggleAbyipSummaryDropdown()" style="width:100%;padding:12px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;font-size:14px;font-weight:600;color:#213F99;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
-                        <span><i class="fas fa-chart-bar" style="margin-right:6px;"></i>Summary Cards</span>
-                        <i class="fas fa-chevron-down" id="abyipSummaryDropdownIcon"></i>
-                    </button>
-                    <div id="abyipSummaryDropdownContent" style="display:none;margin-top:8px;"></div>
-                </div>
-
-                {{-- ABYIP Summary Cards (Desktop) --}}
-                <div id="abyipSummaryCardsDesktop" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
-                    {{-- Annual Budget Utilization Rate --}}
-                    <div style="background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(59,130,246,.15);">
-                        <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-chart-pie" style="margin-right:6px;"></i>Annual Budget Utilization</p>
-                        <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['abyip']['budget_utilization'] ?? '0' }}%</p>
-                    </div>
-
-                    {{-- Remaining Balance --}}
-                    <div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.15);">
-                        <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-wallet" style="margin-right:6px;"></i>Remaining Balance</p>
-                        <p style="font-size:28px;font-weight:800;line-height:1;">₱{{ number_format($barangayData['abyip']['remaining_balance'] ?? 0, 2) }}</p>
-                    </div>
-
-                    {{-- Project Count --}}
-                    <div style="background:linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.15);">
-                        <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-tasks" style="margin-right:6px;"></i>Project Count</p>
-                        <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['abyip']['project_count'] ?? 0 }}</p>
-                    </div>
-                </div>
-
-                {{-- ABYIP Summary Cards (Mobile) --}}
-                <div id="abyipSummaryCardsMobile" style="display:none;"></div>
-
                 {{-- ABYIP Reports Table --}}
                 <section class="bm-card" style="margin-bottom:18px;">
-                    <div class="bm-card-head" style="display:flex;align-items:center;justify-content:space-between;">
+                    <div class="bm-card-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                         <h3><i class="fas fa-file-invoice-dollar" style="color:#213F99;margin-right:6px;"></i>Submitted ABYIP Reports</h3>
-                        <div style="display:flex;gap:8px;">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <div style="position:relative;">
+                                <i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;"></i>
+                                <input type="text" id="abyipSearchInput" onkeyup="searchAbyipReports()" placeholder="Search reports..." style="padding:6px 10px 6px 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;width:200px;">
+                            </div>
+                            <select id="abyipFilterYear" onchange="filterAbyipByYear()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;">
+                                <option value="all">All Years</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
                             <select id="abyipFilterRecent" onchange="filterAbyipRecent()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;">
                                 <option value="all">All Reports</option>
                                 <option value="recent">Recently Submitted</option>
@@ -395,11 +408,11 @@
                         <table class="bm-table" id="abyipTable">
                             <thead>
                                 <tr>
-                                    <th><span class="bm-th-text">Report Name</span></th>
-                                    <th><span class="bm-th-text">Date Submitted</span></th>
-                                    <th><span class="bm-th-text">Submitted By</span></th>
-                                    <th><span class="bm-th-text">Report</span></th>
+                                    <th><span class="bm-th-text">Title</span></th>
+                                    <th><span class="bm-th-text">Date Created</span></th>
+                                    <th><span class="bm-th-text">Time Created</span></th>
                                     <th><span class="bm-th-text">Status</span></th>
+                                    <th><span class="bm-th-text">Report</span></th>
                                     <th><span class="bm-th-text">Actions</span></th>
                                 </tr>
                             </thead>
@@ -407,8 +420,15 @@
                                 @forelse($barangayData['abyip']['reports'] ?? [] as $report)
                                 <tr data-date="{{ strtotime($report['date_submitted'] ?? '') }}" data-report-id="{{ $report['id'] ?? '' }}" data-report-name="{{ $report['name'] ?? '' }}" data-barangay="{{ $barangayData['name'] ?? '' }}" data-type="abyip">
                                     <td style="font-weight:600;color:#0d1b4b;">{{ $report['name'] ?? 'N/A' }}</td>
-                                    <td style="font-size:13px;color:#64748b;">{{ $report['date_submitted'] ?? 'N/A' }}</td>
-                                    <td style="font-size:13px;color:#64748b;">{{ $report['submitted_by'] ?? 'N/A' }}</td>
+                                    <td style="font-size:13px;color:#64748b;">{{ date('M d, Y', strtotime($report['date_submitted'] ?? 'now')) }}</td>
+                                    <td style="font-size:13px;color:#64748b;">{{ date('h:i A', strtotime($report['date_submitted'] ?? 'now')) }}</td>
+                                    <td>
+                                        <select onchange="updateReportStatus(this, '{{ $report['id'] ?? '' }}', 'abyip', '{{ $barangayData['name'] ?? '' }}')" style="padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569;background:#fff;cursor:pointer;">
+                                            <option value="pending" {{ ($report['status'] ?? 'pending') === 'pending' ? 'selected' : '' }}>Pending</option>
+                                            <option value="approved" {{ ($report['status'] ?? '') === 'approved' ? 'selected' : '' }}>Approved</option>
+                                            <option value="rejected" {{ ($report['status'] ?? '') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                        </select>
+                                    </td>
                                     <td>
                                         @if(!empty($report['file']))
                                         <a href="{{ $report['file'] }}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#213F99;text-decoration:none;background:#eff3ff;padding:4px 10px;border-radius:6px;">
@@ -419,21 +439,22 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <select onchange="updateReportStatus(this, '{{ $report['id'] ?? '' }}', 'abyip', '{{ $barangayData['name'] ?? '' }}')" style="padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569;background:#fff;cursor:pointer;">
-                                            <option value="pending" {{ ($report['status'] ?? 'pending') === 'pending' ? 'selected' : '' }}>Pending</option>
-                                            <option value="complied" {{ ($report['status'] ?? '') === 'complied' ? 'selected' : '' }}>Complied</option>
-                                            <option value="rejected" {{ ($report['status'] ?? '') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <button onclick="printReport('{{ $report['name'] ?? '' }}')" style="padding:4px 10px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;font-size:11px;color:#213F99;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
-                                            <i class="fas fa-print"></i> Print
-                                        </button>
+                                        <div style="display:flex;gap:4px;">
+                                            <button onclick="editReport('{{ $report['id'] ?? '' }}', 'abyip')" title="Edit Status" style="padding:4px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;font-size:11px;color:#213F99;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="deleteReport('{{ $report['id'] ?? '' }}', 'abyip')" title="Delete" style="padding:4px 8px;border:1px solid #fee2e2;background:#fff;border-radius:6px;font-size:11px;color:#dc2626;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <button onclick="archiveReport('{{ $report['id'] ?? '' }}', 'abyip')" title="Archive" style="padding:4px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;font-size:11px;color:#64748b;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+                                                <i class="fas fa-archive"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">No ABYIP reports submitted yet</td>
+                                    <td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">No ABYIP reports submitted yet</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -463,56 +484,22 @@
                     <p style="font-size:14px;color:#64748b;">Summary of program performance and achievements</p>
                 </div>
 
-                {{-- Mobile Dropdown for Accomplishment Summary Cards --}}
-                <div id="accomplishmentSummaryDropdownMobile" style="display:none;margin-bottom:20px;">
-                    <button onclick="toggleAccomplishmentSummaryDropdown()" style="width:100%;padding:12px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;font-size:14px;font-weight:600;color:#213F99;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
-                        <span><i class="fas fa-chart-bar" style="margin-right:6px;"></i>Summary Cards</span>
-                        <i class="fas fa-chevron-down" id="accomplishmentSummaryDropdownIcon"></i>
-                    </button>
-                    <div id="accomplishmentSummaryDropdownContent" style="display:none;margin-top:8px;"></div>
-                </div>
-
-                {{-- Accomplishment Summary Cards (Desktop) --}}
-                <div id="accomplishmentSummaryCardsDesktop" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;">
-                    {{-- Total Programs --}}
-                    <div style="background:linear-gradient(135deg,#213F99 0%,#1a2f7a 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(33,63,153,.15);">
-                        <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-tasks" style="margin-right:6px;"></i>Total Programs</p>
-                        <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['program_stats']['total_programs_created'] ?? 0 }}</p>
-                    </div>
-
-                    {{-- Ongoing Programs --}}
-                    <div style="background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(245,158,11,.15);">
-                        <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-spinner" style="margin-right:6px;"></i>Ongoing Programs</p>
-                        <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['program_stats']['total_ongoing'] ?? 0 }}</p>
-                    </div>
-
-                    {{-- Participation Rate --}}
-                    <div style="background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(59,130,246,.15);">
-                        <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-user-check" style="margin-right:6px;"></i>Participation Rate</p>
-                        <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['performance_summary']['attendance_rate'] ?? 0 }}%</p>
-                    </div>
-
-                    {{-- Attendance Rate --}}
-                    <div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.15);">
-                        <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-calendar-check" style="margin-right:6px;"></i>Attendance Rate</p>
-                        <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['performance_summary']['attendance_rate'] ?? 0 }}%</p>
-                    </div>
-
-                    {{-- Evaluation Rate --}}
-                    <div style="background:linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%);border-radius:12px;padding:20px;color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.15);">
-                        <p style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:8px;"><i class="fas fa-star" style="margin-right:6px;"></i>Evaluation Rate</p>
-                        <p style="font-size:28px;font-weight:800;line-height:1;">{{ $barangayData['performance_summary']['completion_rate'] ?? 0 }}%</p>
-                    </div>
-                </div>
-
-                {{-- Accomplishment Summary Cards (Mobile) --}}
-                <div id="accomplishmentSummaryCardsMobile" style="display:none;"></div>
-
                 {{-- Programs Report Table --}}
                 <section class="bm-card" style="margin-bottom:18px;">
-                    <div class="bm-card-head" style="display:flex;align-items:center;justify-content:space-between;">
+                    <div class="bm-card-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                         <h3><i class="fas fa-chart-bar" style="color:#213F99;margin-right:6px;"></i>Programs Report</h3>
-                        <div style="display:flex;gap:8px;">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <div style="position:relative;">
+                                <i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;"></i>
+                                <input type="text" id="programSearchInput" onkeyup="searchPrograms()" placeholder="Search programs..." style="padding:6px 10px 6px 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;width:200px;">
+                            </div>
+                            <select id="programFilterYear" onchange="filterProgramByYear()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;">
+                                <option value="all">All Years</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
                             <select id="programFilterRecent" onchange="filterProgramRecent()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;">
                                 <option value="all">All Programs</option>
                                 <option value="recent">Recently Added</option>
@@ -523,13 +510,12 @@
                         <table class="bm-table" id="accomplishmentTable">
                             <thead>
                                 <tr>
-                                    <th><span class="bm-th-text">Program Name</span></th>
-                                    <th><span class="bm-th-text">Date</span></th>
-                                    <th><span class="bm-th-text">Registered</span></th>
-                                    <th><span class="bm-th-text">Attendance</span></th>
-                                    <th><span class="bm-th-text">Evaluation</span></th>
-                                    <th><span class="bm-th-text">Report</span></th>
-                                    <th><span class="bm-th-text">View Detail</span></th>
+                                    <th><span class="bm-th-text">Program Title</span></th>
+                                    <th><span class="bm-th-text">Date Created</span></th>
+                                    <th><span class="bm-th-text">Description</span></th>
+                                    <th><span class="bm-th-text">Committee</span></th>
+                                    <th><span class="bm-th-text">Duration</span></th>
+                                    <th><span class="bm-th-text">Status</span></th>
                                     <th><span class="bm-th-text">Actions</span></th>
                                 </tr>
                             </thead>
@@ -537,39 +523,40 @@
                                 @forelse($barangayData['program_list'] ?? [] as $prog)
                                 <tr data-date="{{ strtotime($prog['timeline'] ?? '') }}" data-sector="{{ $prog['sector'] ?? 'N/A' }}" data-description="{{ $prog['description'] ?? 'N/A' }}">
                                     <td style="font-weight:600;color:#0d1b4b;">{{ $prog['title'] ?? 'N/A' }}</td>
+                                    <td style="font-size:13px;color:#64748b;">{{ date('M d, Y', strtotime($prog['start_date'] ?? 'now')) }}</td>
+                                    <td style="font-size:13px;color:#64748b;max-width:250px;">{{ Str::limit($prog['description'] ?? 'No description', 50) }}</td>
+                                    <td style="font-size:13px;color:#64748b;">{{ $prog['sector'] ?? 'N/A' }}</td>
                                     <td style="font-size:13px;color:#64748b;">{{ $prog['timeline'] ?? 'N/A' }}</td>
-                                    <td style="text-align:center;font-weight:600;">{{ $prog['participants'] ?? 0 }}</td>
-                                    <td style="text-align:center;">
-                                        <span style="background:#dbeafe;color:#1d4ed8;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">{{ rand(70, 95) }}%</span>
-                                    </td>
-                                    <td style="text-align:center;">
-                                        <span style="background:#dcfce7;color:#15803d;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">{{ rand(75, 98) }}%</span>
-                                    </td>
                                     <td>
-                                        @if(!empty($prog['reports']))
-                                            @foreach($prog['reports'] as $report)
-                                            <a href="#" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#213F99;text-decoration:none;background:#eff3ff;padding:4px 8px;border-radius:6px;">
-                                                <i class="fas fa-file-pdf"></i> View
-                                            </a>
-                                            @endforeach
+                                        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;
+                                        @if(($prog['status'] ?? '') === 'Completed')
+                                            background:#dcfce7;color:#15803d;
+                                        @elseif(($prog['status'] ?? '') === 'Ongoing')
+                                            background:#dbeafe;color:#1d4ed8;
                                         @else
-                                            <span style="font-size:11px;color:#94a3b8;">No report</span>
+                                            background:#fef3c7;color:#b45309;
                                         @endif
+                                        ">
+                                            {{ $prog['status'] ?? 'Planned' }}
+                                        </span>
                                     </td>
                                     <td>
-                                        <button onclick="viewProgramDetail('{{ $prog['title'] ?? '' }}')" style="padding:4px 10px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;font-size:11px;color:#213F99;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button onclick="printProgram('{{ $prog['title'] ?? '' }}')" style="padding:4px 10px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;font-size:11px;color:#213F99;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
-                                            <i class="fas fa-print"></i> Print
-                                        </button>
+                                        <div style="display:flex;gap:4px;">
+                                            <button onclick="viewProgramMore('{{ $prog['title'] ?? '' }}')" title="View More" style="padding:4px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;font-size:11px;color:#213F99;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button onclick="deleteProgram('{{ $prog['title'] ?? '' }}')" title="Delete" style="padding:4px 8px;border:1px solid #fee2e2;background:#fff;border-radius:6px;font-size:11px;color:#dc2626;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <button onclick="archiveProgram('{{ $prog['title'] ?? '' }}')" title="Archive" style="padding:4px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;font-size:11px;color:#64748b;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+                                                <i class="fas fa-archive"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" style="text-align:center;padding:20px;color:#94a3b8;">No programs found</td>
+                                    <td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">No programs found</td>
                                 </tr>
                                 @endforelse
                             </tbody>

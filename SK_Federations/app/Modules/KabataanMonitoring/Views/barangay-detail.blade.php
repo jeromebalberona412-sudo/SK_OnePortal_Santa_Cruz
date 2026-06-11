@@ -11,8 +11,8 @@
     <title>{{ $barangay }} - Kabataan Monitoring - SK Federation</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url('/modules/kabataan-monitoring/css/kabataan-monitoring.css') }}">
+    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ url('/modules/kabataan-monitoring/css/kabataan-monitoring.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
@@ -38,10 +38,6 @@
                 <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed Logo" class="brand-logo">
                 <span class="brand-name">SK Federations</span>
             </div>
-        </div>
-        <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input id="km-search" type="text" placeholder="Search name, barangay, or focus area..." aria-label="Search kabataan">
         </div>
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
@@ -94,11 +90,24 @@
         <nav class="sidebar-nav">
             <div class="menu-section-label">Main</div>
             <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar"><i class="fas fa-calendar-alt"></i><span>Calendar</span></a>
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed"><i class="fas fa-rss"></i><span>SK Community Feed</span></a>
             <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring"><i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span></a>
             <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
             <a href="{{ route('kabataan-monitoring') }}" class="menu-item active" data-tooltip="Kabataan Monitoring"><i class="fas fa-users"></i><span>Kabataan Monitoring</span></a>
+            <a href="javascript:void(0);" class="menu-item" onclick="document.getElementById('archiveSubmenu').style.display = document.getElementById('archiveSubmenu').style.display === 'block' ? 'none' : 'block'; document.getElementById('archiveChevron').style.transform = document.getElementById('archiveSubmenu').style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)'; return false;" data-tooltip="Archive">
+                <i class="fas fa-archive"></i><span>Archive</span>
+                <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;"></i>
+            </a>
+            <div id="archiveSubmenu" style="display:none;padding-left:20px;border-left:2px solid #e2e8f0;margin-left:10px;">
+                <a href="#" onclick="window.location.href='{{ route('archive') }}'; return false;" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-trash"></i><span>Deleted Reports</span>
+                </a>
+                <a href="#" onclick="window.location.href='{{ route('archive') }}'; return false;" class="menu-item" style="font-size:13px;">
+                    <i class="fas fa-box"></i><span>Archived Reports</span>
+                </a>
+            </div>
             <div class="menu-divider"></div>
         </nav>
     </aside>
@@ -168,14 +177,34 @@
                         </button>
                     </div>
                 </div>
-                <div class="km-filter-row">
-                    <div class="km-chip-row" id="km-status-filter">
-                        <button type="button" class="km-chip active" data-status="all">All</button>
-                        <button type="button" class="km-chip" data-status="active">Active</button>
-                        <button type="button" class="km-chip" data-status="moderate">Moderate</button>
-                        <button type="button" class="km-chip" data-status="inactive">Inactive</button>
+                
+                {{-- Filters Row --}}
+                <div class="km-filter-row" style="padding:14px 24px;border-top:1px solid #f1f5f9;">
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;flex:1;">
+                        {{-- Year Filter --}}
+                        <select id="km-brgy-year-filter" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:140px;">
+                            <option value="all">All Years</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                        
+                        {{-- Time Period Filter --}}
+                        <select id="km-period-filter" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:140px;">
+                            <option value="all">All</option>
+                            <option value="recent">Recent</option>
+                            <option value="month">This Month</option>
+                        </select>
+                        
+                        {{-- Search Box --}}
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="text" id="km-brgy-search" placeholder="Search by name, barangay..." style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:250px;">
+                            <button class="km-search-btn" onclick="performBarangaySearch()" style="padding:8px 16px;background:linear-gradient(135deg,#213F99,#d0242b);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
                     </div>
-                    <div class="km-result-count" id="km-result-count"></div>
                 </div>
             </section>
 
@@ -403,7 +432,7 @@
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
-    <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}"></script>
+    <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}?v={{ time() }}"></script>
     <script>
         window.logoutRoute = "{{ route('logout') }}";
         window.loginRoute  = "{{ route('login') }}";

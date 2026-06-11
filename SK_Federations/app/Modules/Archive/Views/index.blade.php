@@ -36,10 +36,6 @@
                 <span class="brand-name">SK Federations</span>
             </div>
         </div>
-        <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="archiveSearchInput" placeholder="Search..." onkeyup="performArchiveSearch()" aria-label="Search archive">
-        </div>
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
                 <i class="fas fa-bell"></i>
@@ -86,6 +82,9 @@
             <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard">
                 <i class="fas fa-home"></i><span>Dashboard</span>
             </a>
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
+                <i class="fas fa-calendar-alt"></i><span>Calendar</span>
+            </a>
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed">
                 <i class="fas fa-rss"></i><span>SK Community Feed</span>
@@ -125,13 +124,22 @@
 
             {{-- Deleted Reports Tab --}}
             <div id="section-deleted" style="display:block;">
-                {{-- Filters --}}
-                <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-                    <select id="deletedStatusFilter" onchange="filterDeletedReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
-                        <option value="all">All Status</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                    <select id="deletedBarangayFilter" onchange="filterDeletedReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                
+                {{-- Report Type Tabs --}}
+                <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #e2e8f0;">
+                    <button onclick="switchDeletedReportTab('abyip')" id="deleted-tab-abyip" style="padding:10px 20px;border:none;background:none;font-size:14px;font-weight:600;color:#213F99;border-bottom:2px solid #213F99;margin-bottom:-2px;cursor:pointer;">
+                        <i class="fas fa-file-invoice-dollar"></i> ABYIP Report
+                    </button>
+                    <button onclick="switchDeletedReportTab('accomplishment')" id="deleted-tab-accomplishment" style="padding:10px 20px;border:none;background:none;font-size:14px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;">
+                        <i class="fas fa-trophy"></i> Accomplishment Report
+                    </button>
+                </div>
+
+                {{-- ABYIP Reports Content --}}
+                <div id="deleted-abyip-content" style="display:block;">
+                    {{-- Filters --}}
+                <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+                    <select id="deletedAbyipBarangayFilter" onchange="filterDeletedAbyipReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
                         <option value="all">All Barangays</option>
                         <option value="Alipit">Alipit</option>
                         <option value="Bagumbayan">Bagumbayan</option>
@@ -160,17 +168,24 @@
                         <option value="Santo Angel Norte">Santo Angel Norte</option>
                         <option value="Santo Angel Sur">Santo Angel Sur</option>
                     </select>
-                    <select id="deletedTypeFilter" onchange="filterDeletedReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
-                        <option value="all">All Types</option>
-                        <option value="abyip">ABYIP</option>
-                        <option value="accomplishment">Accomplishment</option>
+                    <select id="deletedAbyipYearFilter" onchange="filterDeletedAbyipReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                        <option value="all">All Years</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
                     </select>
-                    <select id="deletedTimeFilter" onchange="filterDeletedReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                    <select id="deletedAbyipTimeFilter" onchange="filterDeletedAbyipReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
                         <option value="all">All Time</option>
-                        <option value="7days">Last 7 Days</option>
-                        <option value="14days">Last 14 Days</option>
-                        <option value="30days">Last 30 Days</option>
+                        <option value="recent">Recent</option>
+                        <option value="thismonth">This Month</option>
                     </select>
+                    <div style="display:flex;gap:8px;flex:1;max-width:400px;">
+                        <input type="text" id="deletedAbyipSearchInput" placeholder="Search reports..." style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;" onkeypress="if(event.key==='Enter') filterDeletedAbyipReports()">
+                        <button onclick="filterDeletedAbyipReports()" style="padding:8px 16px;background:#213F99;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#1a3280'" onmouseout="this.style.background='#213F99'">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Deleted Reports Table --}}
@@ -179,17 +194,17 @@
                         <table style="width:100%;border-collapse:collapse;">
                             <thead>
                                 <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Report Name</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Type</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Barangay</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Submitted</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Report (PDF)</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Title</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Deleted</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Created</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Time Created</th>
                                     <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Status</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Days Left</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Report</th>
                                     <th style="padding:12px 16px;text-align:center;font-size:12px;font-weight:700;color:#0d1b4b;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="deletedReportsTable">
+                            <tbody id="deletedAbyipReportsTable">
+                                <tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">No deleted ABYIP reports</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -209,17 +224,13 @@
                         </button>
                     </div>
                 </div>
-            </div>
+                </div>
 
-            {{-- Archived Reports Tab --}}
-            <div id="section-archived" style="display:none;">
-                {{-- Filters --}}
-                <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-                    <select id="archivedStatusFilter" onchange="filterArchivedReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
-                        <option value="all">All Status</option>
-                        <option value="compliant">Compliant</option>
-                    </select>
-                    <select id="archivedBarangayFilter" onchange="filterArchivedReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                {{-- Accomplishment Reports Content --}}
+                <div id="deleted-accomplishment-content" style="display:none;">
+                    {{-- Filters --}}
+                <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+                    <select id="deletedAccomplishmentBarangayFilter" onchange="filterDeletedAccomplishmentReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
                         <option value="all">All Barangays</option>
                         <option value="Alipit">Alipit</option>
                         <option value="Bagumbayan">Bagumbayan</option>
@@ -248,17 +259,115 @@
                         <option value="Santo Angel Norte">Santo Angel Norte</option>
                         <option value="Santo Angel Sur">Santo Angel Sur</option>
                     </select>
-                    <select id="archivedTypeFilter" onchange="filterArchivedReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
-                        <option value="all">All Types</option>
-                        <option value="abyip">ABYIP</option>
-                        <option value="accomplishment">Accomplishment</option>
+                    <select id="deletedAccomplishmentYearFilter" onchange="filterDeletedAccomplishmentReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                        <option value="all">All Years</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
                     </select>
-                    <select id="archivedTimeFilter" onchange="filterArchivedReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                    <select id="deletedAccomplishmentTimeFilter" onchange="filterDeletedAccomplishmentReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
                         <option value="all">All Time</option>
-                        <option value="3months">Last 3 Months</option>
-                        <option value="6months">Last 6 Months</option>
-                        <option value="1year">Last Year</option>
+                        <option value="recent">Recent</option>
+                        <option value="thismonth">This Month</option>
                     </select>
+                    <div style="display:flex;gap:8px;flex:1;max-width:400px;">
+                        <input type="text" id="deletedAccomplishmentSearchInput" placeholder="Search reports..." style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;" onkeypress="if(event.key==='Enter') filterDeletedAccomplishmentReports()">
+                        <button onclick="filterDeletedAccomplishmentReports()" style="padding:8px 16px;background:#213F99;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#1a3280'" onmouseout="this.style.background='#213F99'">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+                    {{-- Accomplishment Table --}}
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Program Title</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Deleted</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Created</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Description</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Committee</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Duration</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Status</th>
+                                        <th style="padding:12px 16px;text-align:center;font-size:12px;font-weight:700;color:#0d1b4b;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deletedAccomplishmentTable">
+                                    <tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8;">No deleted accomplishment reports</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- Archived Reports Tab --}}
+            <div id="section-archived" style="display:none;">
+                
+                {{-- Report Type Tabs --}}
+                <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #e2e8f0;">
+                    <button onclick="switchArchivedReportTab('abyip')" id="archived-tab-abyip" style="padding:10px 20px;border:none;background:none;font-size:14px;font-weight:600;color:#213F99;border-bottom:2px solid #213F99;margin-bottom:-2px;cursor:pointer;">
+                        <i class="fas fa-file-invoice-dollar"></i> ABYIP Report
+                    </button>
+                    <button onclick="switchArchivedReportTab('accomplishment')" id="archived-tab-accomplishment" style="padding:10px 20px;border:none;background:none;font-size:14px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;">
+                        <i class="fas fa-trophy"></i> Accomplishment Report
+                    </button>
+                </div>
+
+                {{-- ABYIP Reports Content --}}
+                <div id="archived-abyip-content" style="display:block;">
+                    {{-- Filters --}}
+                <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+                    <select id="archivedAbyipBarangayFilter" onchange="filterArchivedAbyipReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                        <option value="all">All Barangays</option>
+                        <option value="Alipit">Alipit</option>
+                        <option value="Bagumbayan">Bagumbayan</option>
+                        <option value="Bubukal">Bubukal</option>
+                        <option value="Calios">Calios</option>
+                        <option value="Duhat">Duhat</option>
+                        <option value="Gatid">Gatid</option>
+                        <option value="Jasaan">Jasaan</option>
+                        <option value="Labuin">Labuin</option>
+                        <option value="Malinao">Malinao</option>
+                        <option value="Oogong">Oogong</option>
+                        <option value="Pagsawitan">Pagsawitan</option>
+                        <option value="Palasan">Palasan</option>
+                        <option value="Patimbao">Patimbao</option>
+                        <option value="Poblacion I">Poblacion I</option>
+                        <option value="Poblacion II">Poblacion II</option>
+                        <option value="Poblacion III">Poblacion III</option>
+                        <option value="Poblacion IV">Poblacion IV</option>
+                        <option value="Poblacion V">Poblacion V</option>
+                        <option value="San Jose">San Jose</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="San Pablo Norte">San Pablo Norte</option>
+                        <option value="San Pablo Sur">San Pablo Sur</option>
+                        <option value="Santisima Cruz">Santisima Cruz</option>
+                        <option value="Santo Angel Central">Santo Angel Central</option>
+                        <option value="Santo Angel Norte">Santo Angel Norte</option>
+                        <option value="Santo Angel Sur">Santo Angel Sur</option>
+                    </select>
+                    <select id="archivedAbyipYearFilter" onchange="filterArchivedAbyipReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                        <option value="all">All Years</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                    <select id="archivedAbyipTimeFilter" onchange="filterArchivedAbyipReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                        <option value="all">All Time</option>
+                        <option value="recent">Recent</option>
+                        <option value="thismonth">This Month</option>
+                    </select>
+                    <div style="display:flex;gap:8px;flex:1;max-width:400px;">
+                        <input type="text" id="archivedAbyipSearchInput" placeholder="Search reports..." style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;" onkeypress="if(event.key==='Enter') filterArchivedAbyipReports()">
+                        <button onclick="filterArchivedAbyipReports()" style="padding:8px 16px;background:#213F99;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#1a3280'" onmouseout="this.style.background='#213F99'">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Archived Reports Table --}}
@@ -267,17 +376,17 @@
                         <table style="width:100%;border-collapse:collapse;">
                             <thead>
                                 <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Report Name</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Type</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Barangay</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Submitted</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Report (PDF)</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Title</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Archive</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Created</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Time Created</th>
                                     <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Status</th>
-                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Archived By</th>
+                                    <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Report</th>
                                     <th style="padding:12px 16px;text-align:center;font-size:12px;font-weight:700;color:#0d1b4b;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="archivedReportsTable">
+                            <tbody id="archivedAbyipReportsTable">
+                                <tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">No archived ABYIP reports</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -297,6 +406,84 @@
                         </button>
                     </div>
                 </div>
+                </div>
+
+                {{-- Accomplishment Reports Content --}}
+                <div id="archived-accomplishment-content" style="display:none;">
+                    {{-- Filters --}}
+                <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+                    <select id="archivedAccomplishmentBarangayFilter" onchange="filterArchivedAccomplishmentReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                        <option value="all">All Barangays</option>
+                        <option value="Alipit">Alipit</option>
+                        <option value="Bagumbayan">Bagumbayan</option>
+                        <option value="Bubukal">Bubukal</option>
+                        <option value="Calios">Calios</option>
+                        <option value="Duhat">Duhat</option>
+                        <option value="Gatid">Gatid</option>
+                        <option value="Jasaan">Jasaan</option>
+                        <option value="Labuin">Labuin</option>
+                        <option value="Malinao">Malinao</option>
+                        <option value="Oogong">Oogong</option>
+                        <option value="Pagsawitan">Pagsawitan</option>
+                        <option value="Palasan">Palasan</option>
+                        <option value="Patimbao">Patimbao</option>
+                        <option value="Poblacion I">Poblacion I</option>
+                        <option value="Poblacion II">Poblacion II</option>
+                        <option value="Poblacion III">Poblacion III</option>
+                        <option value="Poblacion IV">Poblacion IV</option>
+                        <option value="Poblacion V">Poblacion V</option>
+                        <option value="San Jose">San Jose</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="San Pablo Norte">San Pablo Norte</option>
+                        <option value="San Pablo Sur">San Pablo Sur</option>
+                        <option value="Santisima Cruz">Santisima Cruz</option>
+                        <option value="Santo Angel Central">Santo Angel Central</option>
+                        <option value="Santo Angel Norte">Santo Angel Norte</option>
+                        <option value="Santo Angel Sur">Santo Angel Sur</option>
+                    </select>
+                    <select id="archivedAccomplishmentYearFilter" onchange="filterArchivedAccomplishmentReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                        <option value="all">All Years</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                    <select id="archivedAccomplishmentTimeFilter" onchange="filterArchivedAccomplishmentReports()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#475569;background:#fff;cursor:pointer;">
+                        <option value="all">All Time</option>
+                        <option value="recent">Recent</option>
+                        <option value="thismonth">This Month</option>
+                    </select>
+                    <div style="display:flex;gap:8px;flex:1;max-width:400px;">
+                        <input type="text" id="archivedAccomplishmentSearchInput" placeholder="Search reports..." style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;" onkeypress="if(event.key==='Enter') filterArchivedAccomplishmentReports()">
+                        <button onclick="filterArchivedAccomplishmentReports()" style="padding:8px 16px;background:#213F99;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#1a3280'" onmouseout="this.style.background='#213F99'">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+                    {{-- Accomplishment Table --}}
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Program Title</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Archive</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Date Created</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Description</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Committee</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Duration</th>
+                                        <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#0d1b4b;">Status</th>
+                                        <th style="padding:12px 16px;text-align:center;font-size:12px;font-weight:700;color:#0d1b4b;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="archivedAccomplishmentTable">
+                                    <tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8;">No archived accomplishment reports</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>
@@ -322,6 +509,24 @@
             document.getElementById('section-archived').style.display = tab === 'archived' ? 'block' : 'none';
             document.getElementById('archivePageTitle').textContent = tab === 'deleted' ? 'Delete Reports' : 'Archive Reports';
             document.getElementById('archivePageDescription').textContent = tab === 'deleted' ? 'Reports deleted within the last 30 days. After 30 days, they will be permanently deleted.' : 'Long-term saved reports for historical reference and compliance records.';
+        }
+
+        function switchDeletedReportTab(tab) {
+            document.getElementById('deleted-abyip-content').style.display = tab === 'abyip' ? 'block' : 'none';
+            document.getElementById('deleted-accomplishment-content').style.display = tab === 'accomplishment' ? 'block' : 'none';
+            document.getElementById('deleted-tab-abyip').style.color = tab === 'abyip' ? '#213F99' : '#64748b';
+            document.getElementById('deleted-tab-abyip').style.borderBottomColor = tab === 'abyip' ? '#213F99' : 'transparent';
+            document.getElementById('deleted-tab-accomplishment').style.color = tab === 'accomplishment' ? '#213F99' : '#64748b';
+            document.getElementById('deleted-tab-accomplishment').style.borderBottomColor = tab === 'accomplishment' ? '#213F99' : 'transparent';
+        }
+
+        function switchArchivedReportTab(tab) {
+            document.getElementById('archived-abyip-content').style.display = tab === 'abyip' ? 'block' : 'none';
+            document.getElementById('archived-accomplishment-content').style.display = tab === 'accomplishment' ? 'block' : 'none';
+            document.getElementById('archived-tab-abyip').style.color = tab === 'abyip' ? '#213F99' : '#64748b';
+            document.getElementById('archived-tab-abyip').style.borderBottomColor = tab === 'abyip' ? '#213F99' : 'transparent';
+            document.getElementById('archived-tab-accomplishment').style.color = tab === 'accomplishment' ? '#213F99' : '#64748b';
+            document.getElementById('archived-tab-accomplishment').style.borderBottomColor = tab === 'accomplishment' ? '#213F99' : 'transparent';
         }
 
         function filterDeletedReports() {

@@ -39,10 +39,6 @@
                 <span class="brand-name">SK Federations</span>
             </div>
         </div>
-        <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" placeholder="Search..." aria-label="Search">
-        </div>
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
                 <i class="fas fa-bell"></i>
@@ -104,6 +100,9 @@
             <a href="{{ route('dashboard') }}" class="menu-item active" data-tooltip="Dashboard">
                 <i class="fas fa-home"></i><span>Dashboard</span>
             </a>
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
+                <i class="fas fa-calendar-alt"></i><span>Calendar</span>
+            </a>
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed" id="sidebar-community-feed-link">
                 <i class="fas fa-rss"></i><span>SK Community Feed</span>
@@ -143,97 +142,146 @@
         </div>
 
         {{-- ── STAT CARDS ── --}}
-        <div class="stats-grid stats-grid-6">
-            <a href="#" class="stat-card stat-card-link" data-section="kabataan-monitoring">
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:16px;margin-bottom:24px;">
+            <a href="{{ route('kabataan-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
                 <div class="stat-icon blue"><i class="fas fa-users"></i></div>
                 <div class="stat-info">
-                    <div class="stat-value">1,248</div>
+                    <div class="stat-value">0</div>
                     <div class="stat-label">Total Kabataan Registered</div>
                 </div>
             </a>
-            <a href="#" class="stat-card stat-card-link" data-section="program-monitoring">
+            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
                 <div class="stat-icon indigo"><i class="fas fa-calendar-alt"></i></div>
                 <div class="stat-info">
-                    <div class="stat-value">34</div>
+                    <div class="stat-value">0</div>
                     <div class="stat-label">Total Programs This Year</div>
                 </div>
             </a>
-            <a href="#" class="stat-card stat-card-link" data-section="program-monitoring">
+            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
                 <div class="stat-icon green"><i class="fas fa-play-circle"></i></div>
                 <div class="stat-info">
-                    <div class="stat-value">12</div>
+                    <div class="stat-value">0</div>
                     <div class="stat-label">Active Programs</div>
                 </div>
             </a>
-            <a href="#" class="stat-card stat-card-link" data-section="program-monitoring">
+            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
                 <div class="stat-icon teal"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-info">
-                    <div class="stat-value">22</div>
+                    <div class="stat-value">0</div>
                     <div class="stat-label">Completed Programs</div>
                 </div>
             </a>
-            <a href="#" class="stat-card stat-card-link" data-section="kabataan-stats">
-                <div class="stat-icon yellow"><i class="fas fa-user-check"></i></div>
+            <a href="{{ route('archive') }}" class="stat-card stat-card-link stat-card-clickable">
+                <div class="stat-icon purple"><i class="fas fa-archive"></i></div>
                 <div class="stat-info">
-                    <div class="stat-value">3,540</div>
-                    <div class="stat-label">Total Participants</div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Archived Reports</div>
                 </div>
             </a>
-            <a href="#" class="stat-card stat-card-link" data-section="barangay-monitoring">
-                <div class="stat-icon red"><i class="fas fa-map-marker-alt"></i></div>
+            <a href="{{ route('archive') }}" class="stat-card stat-card-link stat-card-clickable">
+                <div class="stat-icon red"><i class="fas fa-trash-alt"></i></div>
                 <div class="stat-info">
-                    <div class="stat-value">26</div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Deleted Reports</div>
+                </div>
+            </a>
+            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
+                <div class="stat-icon orange"><i class="fas fa-map-marker-alt"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">0</div>
                     <div class="stat-label">Barangays Reporting</div>
                 </div>
             </a>
         </div>
+        
+        <style>
+            @media (max-width: 1400px) {
+                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
+                    grid-template-columns: repeat(4, 1fr) !important;
+                }
+            }
+            @media (max-width: 992px) {
+                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
+                    grid-template-columns: repeat(3, 1fr) !important;
+                }
+            }
+            @media (max-width: 768px) {
+                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                }
+            }
+            @media (max-width: 480px) {
+                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
+                    grid-template-columns: 1fr !important;
+                }
+            }
+        </style>
+        
+        <script>
+            // Add loading screen to stat card clicks
+            document.querySelectorAll('.stat-card-clickable').forEach(function(card) {
+                card.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const label = this.querySelector('.stat-label').textContent.trim();
+                    LoadingScreen.show('Loading ' + label, 'Please wait...');
+                    setTimeout(() => { window.location.href = this.href; }, 300);
+                });
+            });
+        </script>
 
-        {{-- ── ROW: Upcoming Events + Calendar ── --}}
-        <div class="dash-row" style="align-items:stretch;">
-            {{-- Upcoming Programs --}}
-            <div class="content-card dash-col-6" style="display:flex;flex-direction:column;">
-                <div class="card-header">
-                    <h3><i class="fas fa-calendar-week" style="color:#213F99;margin-right:8px;"></i>Upcoming Events</h3>
-                    <button onclick="clearAllCalEvents()" style="background:none;border:none;color:#94a3b8;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color 0.15s;" title="Clear all events" onmouseover="this.style.color='#d0242b'" onmouseout="this.style.color='#94a3b8'">
-                        <i class="fas fa-trash-alt"></i> Clear all
-                    </button>
-                </div>
-                <div class="card-body" style="padding:0;flex:1;overflow-y:auto;">
-                    <div class="upcoming-list" id="upcoming-list"></div>
-                    <div class="pagination-bar" id="upcoming-pagination"></div>
-                </div>
-            </div>
-
-            {{-- Calendar --}}
-            <div class="content-card dash-col-6" style="display:flex;flex-direction:column;">
-                <div class="card-header">
-                    <h3><i class="fas fa-calendar-alt" style="color:#213F99;margin-right:8px;"></i>My Schedule</h3>
-                    <button class="btn-add-event" onclick="openAddEventModal()">
-                        <i class="fas fa-plus"></i> Add
-                    </button>
-                </div>
-                <div class="card-body" style="padding:12px 16px;flex:1;">
-                    <div class="cal-nav">
-                        <button class="cal-nav-btn" id="cal-prev" onclick="calChangeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-                        <span class="cal-month-label" id="cal-month-label"></span>
-                        <button class="cal-nav-btn" id="cal-next" onclick="calChangeMonth(1)"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                    <div class="cal-grid" id="cal-grid"></div>
-                </div>
-            </div>
-        </div>
-
-        {{-- ── Recent Program Activities (full width) ── --}}
+        {{-- ── QUICK ACTIONS ── --}}
         <div class="content-card" style="margin-bottom:24px;">
             <div class="card-header">
-                <h3><i class="fas fa-history" style="color:#213F99;margin-right:8px;"></i>Recent Program Activities</h3>
-                <span class="card-badge">Live</span>
+                <h3><i class="fas fa-bolt" style="color:#213F99;margin-right:8px;"></i>Quick Actions</h3>
             </div>
-            <div class="card-body" style="padding:0;">
-                <div class="activity-list" id="activity-list"></div>
-                <div class="pagination-bar" id="activity-pagination"></div>
+            <div class="card-body" style="padding:20px;overflow-x:auto;">
+                <div style="display:flex;gap:12px;flex-wrap:wrap;min-width:fit-content;">
+                    <a href="{{ route('profile') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#8b5cf6;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(139,92,246,0.3);">
+                        <i class="fas fa-user"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="{{ route('barangay-monitoring') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(37,99,235,0.3);">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Barangay Monitoring</span>
+                    </a>
+                    <a href="{{ route('kabataan-monitoring') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#0ea5e9;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(14,165,233,0.3);">
+                        <i class="fas fa-users"></i>
+                        <span>Kabataan Monitoring</span>
+                    </a>
+                    <a href="{{ route('reports') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#06b6d4;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(6,182,212,0.3);">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Reports</span>
+                    </a>
+                    <a href="{{ route('community-feed') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(16,185,129,0.3);">
+                        <i class="fas fa-rss"></i>
+                        <span>SK Community Feed</span>
+                    </a>
+                    <a href="{{ route('archive') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#f59e0b;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(245,158,11,0.3);">
+                        <i class="fas fa-archive"></i>
+                        <span>Archive</span>
+                    </a>
+                </div>
             </div>
         </div>
+        
+        <style>
+            .qa-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                opacity: 0.9;
+            }
+            
+            @media (max-width: 768px) {
+                .card-body > div[style*="display:flex"] {
+                    flex-wrap: nowrap !important;
+                    overflow-x: auto !important;
+                    padding-bottom: 8px;
+                }
+                .qa-btn {
+                    flex-shrink: 0;
+                }
+            }
+        </style>
 
         {{-- ── ROW: Charts ── --}}
         <div class="dash-row chart-row">
@@ -285,11 +333,11 @@
                 <div class="card-body">
                     <div class="kab-stats-summary">
                         <div class="kab-stat-mini blue">
-                            <div class="kab-stat-mini-value">3,450</div>
+                            <div class="kab-stat-mini-value">0</div>
                             <div class="kab-stat-mini-label">Total Kabataan Registered</div>
                         </div>
                         <div class="kab-stat-mini green">
-                            <div class="kab-stat-mini-value">1,250</div>
+                            <div class="kab-stat-mini-value">0</div>
                             <div class="kab-stat-mini-label">Active Participants</div>
                         </div>
                     </div>
@@ -309,69 +357,6 @@
         </div>
 
     </main>
-
-    {{-- ── CALENDAR EVENT MODAL ── --}}
-    <div class="modal" id="calEventModal">
-        <div class="modal-content" style="max-width:480px;">
-            <div class="modal-header">
-                <h3 id="cal-modal-title">Add Event</h3>
-                <button class="modal-close-btn" onclick="closeCalEventModal()"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Event Title <span style="color:#d0242b;">*</span></label>
-                    <input type="text" id="cal-event-title" class="form-input" placeholder="e.g. SK Meeting, Program Launch..." maxlength="100">
-                    <div class="cal-field-error" id="err-title"></div>
-                </div>
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Date <span style="color:#d0242b;">*</span></label>
-                    <input type="date" id="cal-event-date" class="form-input">
-                    <div class="cal-field-error" id="err-date"></div>
-                </div>
-                <div style="display:flex;gap:12px;margin-bottom:16px;">
-                    <div class="form-group" style="flex:1;">
-                        <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Start Time</label>
-                        <input type="time" id="cal-event-start" class="form-input" min="07:00" max="22:00">
-                        <div class="cal-field-error" id="err-start"></div>
-                    </div>
-                    <div class="form-group" style="flex:1;">
-                        <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">End Time</label>
-                        <input type="time" id="cal-event-end" class="form-input" min="07:00" max="22:00">
-                        <div class="cal-field-error" id="err-end"></div>
-                    </div>
-                </div>
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Type</label>
-                    <select id="cal-event-type" class="form-input">
-                        <option value="event">📅 Event</option>
-                        <option value="task">✅ Task</option>
-                        <option value="meeting">🤝 Meeting</option>
-                        <option value="deadline">⚠️ Deadline</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Location</label>
-                    <input type="text" id="cal-event-location" class="form-input" placeholder="e.g. Barangay Hall, Municipal Hall..." maxlength="150">
-                </div>
-                <div class="form-group" id="cal-status-group" style="margin-bottom:16px;display:none;">
-                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Status</label>
-                    <select id="cal-event-status" class="form-input">
-                        <option value="upcoming">🔵 Upcoming</option>
-                        <option value="done">✅ Done</option>
-                        <option value="cancelled">❌ Cancelled</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:6px;">Notes</label>
-                    <textarea id="cal-event-notes" class="form-input" rows="2" placeholder="Optional notes..." maxlength="300" style="resize:vertical;"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeCalEventModal()">Cancel</button>
-                <button class="btn-primary" onclick="saveCalEvent()">Save Event</button>
-            </div>
-        </div>
-    </div>
 
     @include('dashboard::logout-modal')
 
@@ -407,7 +392,7 @@
             type: 'doughnut',
             data: {
                 labels: ['Education','Anti-Drugs','Agriculture','Disaster Preparedness','Sports Development','Gender & Development','Health','Others'],
-                datasets: [{ data: [6,5,4,4,7,3,5,6], backgroundColor: palette, borderWidth: 2, borderColor: '#fff' }]
+                datasets: [{ data: [0,0,0,0,0,0,0,0], backgroundColor: palette, borderWidth: 2, borderColor: '#fff' }]
             },
             options: {
                 responsive: true,
@@ -417,34 +402,7 @@
         });
 
         // ── Programs by Barangay — paginated chart ──
-        const brgyChartData = [
-            { name:'Alipit',                active:2, completed:1 },
-            { name:'Bagumbayan',            active:1, completed:1 },
-            { name:'Bubukal',               active:2, completed:1 },
-            { name:'Calios',                active:1, completed:1 },
-            { name:'Duhat',                 active:0, completed:1 },
-            { name:'Gatid',                 active:1, completed:2 },
-            { name:'Jasaan',                active:1, completed:1 },
-            { name:'Labuin',                active:2, completed:1 },
-            { name:'Malinao',               active:1, completed:1 },
-            { name:'Oogong',                active:0, completed:1 },
-            { name:'Pagsawitan',            active:1, completed:2 },
-            { name:'Palasan',               active:1, completed:1 },
-            { name:'Patimbao',              active:1, completed:1 },
-            { name:'Brgy. I (Poblacion)',   active:3, completed:1 },
-            { name:'Brgy. II (Poblacion)',  active:2, completed:2 },
-            { name:'Brgy. III (Poblacion)', active:2, completed:1 },
-            { name:'Brgy. IV (Poblacion)',  active:1, completed:2 },
-            { name:'Brgy. V (Poblacion)',   active:1, completed:1 },
-            { name:'San Jose',              active:1, completed:1 },
-            { name:'San Juan',              active:2, completed:1 },
-            { name:'San Pablo Norte',       active:1, completed:1 },
-            { name:'San Pablo Sur',         active:1, completed:1 },
-            { name:'Santisima Cruz',        active:0, completed:1 },
-            { name:'Santo Angel Central',   active:2, completed:1 },
-            { name:'Santo Angel Norte',     active:1, completed:1 },
-            { name:'Santo Angel Sur',       active:1, completed:0 },
-        ];
+        const brgyChartData = [];
 
         const BRGY_PER_PAGE = 6;
         let brgyPage = 1;
@@ -495,12 +453,12 @@
         // ── Kabataan Monthly Participation Chart ──
         const monthlyData = {
             2025: {
-                Jan:[95,88], Feb:[102,96], Mar:[110,105], Apr:[98,92], May:[120,115],
-                Jun:[135,128], Jul:[148,140], Aug:[130,122], Sep:[142,138], Oct:[155,148], Nov:[138,130], Dec:[160,152]
+                Jan:[0,0], Feb:[0,0], Mar:[0,0], Apr:[0,0], May:[0,0],
+                Jun:[0,0], Jul:[0,0], Aug:[0,0], Sep:[0,0], Oct:[0,0], Nov:[0,0], Dec:[0,0]
             },
             2026: {
-                Jan:[120,110], Feb:[145,130], Mar:[160,150], Apr:[130,125], May:[175,165],
-                Jun:[190,180], Jul:[210,195], Aug:[185,170], Sep:[200,185], Oct:[220,210], Nov:[195,180], Dec:[230,215]
+                Jan:[0,0], Feb:[0,0], Mar:[0,0], Apr:[0,0], May:[0,0],
+                Jun:[0,0], Jul:[0,0], Aug:[0,0], Sep:[0,0], Oct:[0,0], Nov:[0,0], Dec:[0,0]
             }
         };
         const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -553,51 +511,7 @@
 
     <script>
         // ── PAGINATION DATA ──
-        const activities = [
-            { dot:'green',  title:'Livelihood Training — Brgy. I (Poblacion)',      meta:'Completed · 120 participants · Mar 14, 2026', tag:'Done',      tagColor:'green' },
-            { dot:'blue',   title:'Sports Fest 2026 — Municipal Level',              meta:'Ongoing · 340 participants · Mar 10–20, 2026', tag:'Active',   tagColor:'blue' },
-            { dot:'yellow', title:'Leadership Summit — Brgy. Labuin',               meta:'Upcoming · 80 slots · Mar 25, 2026',           tag:'Soon',     tagColor:'yellow' },
-            { dot:'green',  title:'Environmental Drive — Brgy. Bubukal',            meta:'Completed · 95 participants · Mar 8, 2026',    tag:'Done',     tagColor:'green' },
-            { dot:'red',    title:'Health & Wellness Seminar — Brgy. Gatid',        meta:'Cancelled · Mar 5, 2026',                      tag:'Cancelled',tagColor:'red' },
-            { dot:'blue',   title:'Anti-Drug Awareness — Brgy. San Juan',           meta:'Ongoing · 60 participants · Mar 12, 2026',     tag:'Active',   tagColor:'blue' },
-            { dot:'green',  title:'Disaster Preparedness Drill — Brgy. Alipit',     meta:'Completed · 200 participants · Mar 1, 2026',   tag:'Done',     tagColor:'green' },
-            { dot:'yellow', title:'Youth Congress Prep — Brgy. Malinao',            meta:'Upcoming · 150 slots · Mar 28, 2026',          tag:'Soon',     tagColor:'yellow' },
-            { dot:'green',  title:'Livelihood Seminar — Brgy. Calios',              meta:'Completed · 55 participants · Feb 28, 2026',   tag:'Done',     tagColor:'green' },
-            { dot:'blue',   title:'Gender & Dev. Forum — Brgy. Santo Angel Central',meta:'Ongoing · 40 participants · Mar 15, 2026',     tag:'Active',   tagColor:'blue' },
-            { dot:'green',  title:'Tree Planting — Brgy. Pagsawitan',               meta:'Completed · 80 participants · Feb 20, 2026',   tag:'Done',     tagColor:'green' },
-            { dot:'yellow', title:'SK Assembly — Brgy. II (Poblacion)',             meta:'Upcoming · 300 slots · Apr 5, 2026',           tag:'Soon',     tagColor:'yellow' },
-        ];
-
-        const upcomingPrograms = [];
-
-        const barangays = [
-            { name:'Alipit',                programs:3, reports:3, status:'compliant' },
-            { name:'Bagumbayan',            programs:2, reports:2, status:'compliant' },
-            { name:'Bubukal',               programs:3, reports:2, status:'partial' },
-            { name:'Calios',                programs:2, reports:2, status:'compliant' },
-            { name:'Duhat',                 programs:1, reports:0, status:'non-compliant' },
-            { name:'Gatid',                 programs:3, reports:3, status:'compliant' },
-            { name:'Jasaan',                programs:2, reports:1, status:'partial' },
-            { name:'Labuin',                programs:3, reports:3, status:'compliant' },
-            { name:'Malinao',               programs:2, reports:2, status:'compliant' },
-            { name:'Oogong',                programs:1, reports:0, status:'non-compliant' },
-            { name:'Pagsawitan',            programs:3, reports:2, status:'partial' },
-            { name:'Palasan',               programs:2, reports:2, status:'compliant' },
-            { name:'Patimbao',              programs:2, reports:1, status:'partial' },
-            { name:'Brgy. I (Poblacion)',   programs:4, reports:4, status:'compliant' },
-            { name:'Brgy. II (Poblacion)',  programs:4, reports:4, status:'compliant' },
-            { name:'Brgy. III (Poblacion)', programs:3, reports:3, status:'compliant' },
-            { name:'Brgy. IV (Poblacion)',  programs:3, reports:2, status:'partial' },
-            { name:'Brgy. V (Poblacion)',   programs:2, reports:2, status:'compliant' },
-            { name:'San Jose',              programs:2, reports:2, status:'compliant' },
-            { name:'San Juan',              programs:3, reports:3, status:'compliant' },
-            { name:'San Pablo Norte',       programs:2, reports:1, status:'partial' },
-            { name:'San Pablo Sur',         programs:2, reports:2, status:'compliant' },
-            { name:'Santisima Cruz',        programs:1, reports:0, status:'non-compliant' },
-            { name:'Santo Angel Central',   programs:3, reports:3, status:'compliant' },
-            { name:'Santo Angel Norte',     programs:2, reports:2, status:'compliant' },
-            { name:'Santo Angel Sur',       programs:1, reports:1, status:'compliant' },
-        ];
+        const barangays = [];
 
         // ── Generic paginator ──
         function makePaginator(data, perPage, renderFn, listId, paginationId) {
@@ -633,105 +547,6 @@
 
         window.paginators = {};
 
-        // Activity renderer
-        function renderActivities(items) {
-            return items.map(a => `
-                <div class="activity-item">
-                    <div class="activity-dot ${a.dot}"></div>
-                    <div class="activity-content">
-                        <p class="activity-title">${a.title}</p>
-                        <span class="activity-meta">${a.meta}</span>
-                    </div>
-                    <span class="activity-tag ${a.tagColor}">${a.tag}</span>
-                </div>`).join('');
-        }
-
-        // Upcoming renderer — handles both static programs and calendar events
-        function renderUpcoming(items) {
-            if (!items.length) {
-                return '<div style="padding:24px;text-align:center;color:#94a3b8;font-size:13px;"><i class="fas fa-calendar-check" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.4;"></i>No upcoming events.<br>Add one from the calendar.</div>';
-            }
-            var typeIcons = {event:'📅',task:'✅',meeting:'🤝',deadline:'⚠️'};
-            var statusBadge = {
-                upcoming:  '<span class="ev-badge ev-badge-upcoming">Upcoming</span>',
-                done:      '<span class="ev-badge ev-badge-done">Done</span>',
-                cancelled: '<span class="ev-badge ev-badge-cancelled">Cancelled</span>'
-            };
-            var rows = items.map(function(u) {
-                var icon = u.isCalEvent ? (typeIcons[u.type] || '📅') : '📋';
-                var isPast = u.status === 'done' || u.status === 'cancelled';
-                var status = u.isCalEvent ? (statusBadge[u.status] || statusBadge.upcoming) : '';
-                var editBtn = (u.isCalEvent && !isPast)
-                    ? '<button onclick="openEditEventModal(\'' + u.id + '\')" class="ev-action-btn" title="Edit"><i class="fas fa-pen"></i></button>'
-                    : (isPast ? '<span style="color:#cbd5e1;font-size:11px;">—</span>' : '');
-                var deleteBtn = u.isCalEvent
-                    ? '<button onclick="deleteCalEvent(\'' + u.id + '\')" class="ev-action-btn ev-action-del" title="Delete"><i class="fas fa-trash-alt"></i></button>'
-                    : '';
-                var opacity = isPast ? 'opacity:0.55;' : '';
-                var date = u.isCalEvent && u.fullDate ? u.fullDate : (u.day + ' ' + u.month);
-                var time = u.isCalEvent && u.time ? u.time : (u.sub || '—');
-                return '<tr style="' + opacity + '">' +
-                    '<td class="ev-td">' + u.title + '</td>' +
-                    '<td class="ev-td ev-td-sm">' + u.type.charAt(0).toUpperCase() + u.type.slice(1) + '</td>' +
-                    '<td class="ev-td ev-td-sm">' + date + '</td>' +
-                    '<td class="ev-td ev-td-sm">' + time + '</td>' +
-                    '<td class="ev-td ev-td-sm">' + (u.isCalEvent && u.location ? '<i class="fas fa-map-marker-alt" style="color:#94a3b8;margin-right:3px;font-size:10px;"></i>' + u.location : '—') + '</td>' +
-                    '<td class="ev-td ev-td-sm">' + status + '</td>' +
-                    '<td class="ev-td ev-td-action">' + editBtn + deleteBtn + '</td>' +
-                    '</tr>';
-            }).join('');
-            return '<div class="ev-table-wrap"><table class="ev-table"><thead><tr>' +
-                '<th class="ev-th">Name</th>' +
-                '<th class="ev-th ev-td-sm">Type</th>' +
-                '<th class="ev-th ev-td-sm">Date</th>' +
-                '<th class="ev-th ev-td-sm">Time</th>' +
-                '<th class="ev-th ev-td-sm">Location</th>' +
-                '<th class="ev-th ev-td-sm">Status</th>' +
-                '<th class="ev-th ev-td-action">Action</th>' +
-                '</tr></thead><tbody>' + rows + '</tbody></table></div>';
-        }
-
-        // Merge calendar events into upcoming list
-        function buildUpcomingList() {
-            const calEvents = JSON.parse(localStorage.getItem('skfed_calendar_events') || '[]');
-            const today = new Date(); today.setHours(0,0,0,0);
-            const monthAbbr = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-            const fullMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-            const calItems = calEvents
-                .filter(e => { const d = new Date(e.date + 'T00:00:00'); return d >= today; })
-                .sort((a,b) => a.date.localeCompare(b.date))
-                .map(e => {
-                    const d = new Date(e.date + 'T00:00:00');
-                    var fullDate = fullMonths[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-                    var time = e.start ? e.start + (e.end ? ' – ' + e.end : '') : '';
-                    return {
-                        id: e.id,
-                        day: String(d.getDate()).padStart(2,'0'),
-                        month: monthAbbr[d.getMonth()],
-                        title: e.title,
-                        fullDate: fullDate,
-                        time: time,
-                        location: e.location || '',
-                        type: e.type,
-                        status: e.status || 'upcoming',
-                        isCalEvent: true
-                    };
-                });
-            return [...calItems, ...upcomingPrograms];
-        }
-
-        window.refreshUpcomingList = function() {
-            paginators['upcoming-list'] = makePaginator(buildUpcomingList(), 10, renderUpcoming, 'upcoming-list', 'upcoming-pagination');
-            paginators['upcoming-list'].init();
-        };
-
-        window.clearAllCalEvents = function() {
-            if (!confirm('Remove all scheduled events?')) return;
-            localStorage.removeItem('skfed_calendar_events');
-            if (window.refreshUpcomingList) window.refreshUpcomingList();
-            if (typeof renderCalendar === 'function') renderCalendar();
-        };
-
         // Compliance renderer
         function renderCompliance(items) {
             return items.map(b => {
@@ -745,12 +560,7 @@
             }).join('');
         }
 
-        paginators['activity-list']   = makePaginator(activities,       10, renderActivities, 'activity-list',   'activity-pagination');
-        paginators['upcoming-list']   = makePaginator(buildUpcomingList(), 10, renderUpcoming,   'upcoming-list',   'upcoming-pagination');
-        paginators['compliance-list'] = makePaginator(barangays,        10, renderCompliance, 'compliance-list', 'compliance-pagination');
-
-        paginators['activity-list'].init();
-        paginators['upcoming-list'].init();
+        paginators['compliance-list'] = makePaginator(barangays, 10, renderCompliance, 'compliance-list', 'compliance-pagination');
         paginators['compliance-list'].init();
     </script>
 

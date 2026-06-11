@@ -42,11 +42,6 @@
             </div>
         </div>
 
-        <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" placeholder="Search..." aria-label="Search">
-        </div>
-
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
                 <i class="fas fa-bell"></i>
@@ -115,6 +110,11 @@
                 <span>Dashboard</span>
             </a>
 
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+
             <div class="menu-section-label">Modules</div>
 
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed" id="sidebar-community-feed-link">
@@ -177,12 +177,24 @@
 
                     <div class="info-grid">
                         <div class="info-item">
-                            <span class="info-label">Name</span>
-                            <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
+                            <span class="info-label">First Name</span>
+                            <span class="info-value">{{ $user->first_name ?? 'N/A' }}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Email</span>
-                            <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
+                            <span class="info-label">Middle Name</span>
+                            <span class="info-value">{{ $user->middle_name ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Name</span>
+                            <span class="info-value">{{ $user->last_name ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Suffix</span>
+                            <span class="info-value">{{ $user->suffix ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Sex</span>
+                            <span class="info-value">{{ $officialProfile->sex ?? 'N/A' }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Date of Birth</span>
@@ -196,19 +208,37 @@
                             <span class="info-label">Contact Number</span>
                             <span class="info-value">{{ $officialProfile->contact_number ?? 'N/A' }}</span>
                         </div>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top:32px;">Position Information</h3>
+
+                    <div class="info-grid">
                         <div class="info-item">
                             <span class="info-label">Position</span>
                             <span class="info-value">{{ $officialProfile->position ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="info-value">{{ $user->status ?? 'N/A' }}</span>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top:32px;">Address</h3>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Region</span>
+                            <span class="info-value">{{ $officialProfile->region ?? 'IV-A CALABARZON' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Province</span>
+                            <span class="info-value">{{ $officialProfile->province ?? 'Laguna' }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Municipality</span>
                             <span class="info-value">{{ $officialProfile->municipality ?? 'Santa Cruz' }}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Region</span>
-                            <span class="info-value">{{ $officialProfile->region ?? 'IV-A CALABARZON' }}</span>
-                        </div>
-                        <div class="info-item info-item-full">
                             <span class="info-label">Barangay</span>
                             <span class="info-value">
                                 @if ($selectedBarangayId)
@@ -217,6 +247,28 @@
                                     N/A
                                 @endif
                             </span>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top:32px;">Term Information</h3>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Term Start</span>
+                            <span class="info-value">{{ optional($officialProfile?->term_start)->format('F d, Y') ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Term End</span>
+                            <span class="info-value">{{ optional($officialProfile?->term_end)->format('F d, Y') ?? 'N/A' }}</span>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top:32px;">Account</h3>
+
+                    <div class="info-grid">
+                        <div class="info-item info-item-full">
+                            <span class="info-label">Email Address</span>
+                            <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
                         </div>
                     </div>
 

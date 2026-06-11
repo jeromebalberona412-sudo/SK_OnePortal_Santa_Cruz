@@ -30,24 +30,30 @@
 
                 <div class="form-divider"></div>
 
+                <!-- Personal Information -->
+                <h4 style="font-size:16px;font-weight:700;color:#0d1b4b;margin:24px 0 16px 0;display:flex;align-items:center;">
+                    <i class="fas fa-user" style="margin-right:8px;color:#213F99;"></i>
+                    Personal Information
+                </h4>
+
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="edit_last_name">Last Name <span style="color: #d0242b;">*</span></label>
-                        <input type="text" id="edit_last_name" name="last_name" class="form-control" value="{{ old('last_name', $user->last_name ?? '') }}" placeholder="e.g., Dela Cruz" required>
+                        <label for="edit_first_name">First Name <span style="color: #d0242b;">*</span></label>
+                        <input type="text" id="edit_first_name" name="first_name" class="form-control" value="{{ old('first_name', $user->first_name ?? '') }}" placeholder="First Name" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit_first_name">First Name <span style="color: #d0242b;">*</span></label>
-                        <input type="text" id="edit_first_name" name="first_name" class="form-control" value="{{ old('first_name', $user->first_name ?? '') }}" placeholder="e.g., Juan" required>
+                        <label for="edit_middle_name">Middle Name</label>
+                        <input type="text" id="edit_middle_name" name="middle_name" class="form-control" value="{{ old('middle_name', $user->middle_name ?? '') }}" placeholder="Middle Name" maxlength="100">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="edit_middle_initial">Middle Initial</label>
-                        <input type="text" id="edit_middle_initial" name="middle_initial" class="form-control" value="{{ old('middle_initial', $user->middle_initial ?? '') }}" placeholder="e.g., P">
+                        <label for="edit_last_name">Last Name <span style="color: #d0242b;">*</span></label>
+                        <input type="text" id="edit_last_name" name="last_name" class="form-control" value="{{ old('last_name', $user->last_name ?? '') }}" placeholder="Last Name" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit_suffix">Suffix (Optional)</label>
+                        <label for="edit_suffix">Suffix</label>
                         <select id="edit_suffix" name="suffix" class="form-control">
                             <option value="">Select Suffix</option>
                             <option value="Jr." {{ old('suffix', $user->suffix ?? '') === 'Jr.' ? 'selected' : '' }}>Jr.</option>
@@ -60,27 +66,39 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="edit_email">Email</label>
-                    <input type="email" id="edit_email" name="email" class="form-control" value="{{ old('email', $user->email) }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_sex">Sex <span style="color: #d0242b;">*</span></label>
+                        <select id="edit_sex" name="sex" class="form-control" required>
+                            <option value="">Select Sex</option>
+                            <option value="Male" {{ old('sex', $officialProfile->sex ?? '') === 'Male' ? 'selected' : '' }}>Male</option>
+                            <option value="Female" {{ old('sex', $officialProfile->sex ?? '') === 'Female' ? 'selected' : '' }}>Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_date_of_birth">Birthdate <span style="color: #d0242b;">*</span></label>
+                        <input type="date" id="edit_date_of_birth" name="date_of_birth" class="form-control" value="{{ old('date_of_birth', optional($officialProfile?->date_of_birth)->format('Y-m-d')) }}" required>
+                    </div>
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_date_of_birth">Date of Birth</label>
-                        <input type="date" id="edit_date_of_birth" name="date_of_birth" class="form-control" value="{{ old('date_of_birth', optional($officialProfile?->date_of_birth)->format('Y-m-d')) }}">
-                    </div>
                     <div class="form-group">
                         <label for="edit_age">Age</label>
-                        <input type="number" id="edit_age" name="age" class="form-control" value="{{ old('age', $officialProfile->age ?? '') }}" readonly>
+                        <input type="number" id="edit_age" name="age" class="form-control" value="{{ old('age', $officialProfile->age ?? '') }}" min="0" max="150" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_contact_number">Contact Number <span style="color: #d0242b;">*</span></label>
+                        <input type="text" id="edit_contact_number" name="contact_number" class="form-control" value="{{ old('contact_number', $officialProfile->contact_number ?? '') }}" maxlength="20" placeholder="Contact Number" required>
                     </div>
                 </div>
 
+                <!-- Position Information -->
+                <h4 style="font-size:16px;font-weight:700;color:#0d1b4b;margin:24px 0 16px 0;display:flex;align-items:center;">
+                    <i class="fas fa-briefcase" style="margin-right:8px;color:#213F99;"></i>
+                    Position Information
+                </h4>
+
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_contact_number">Contact Number <span style="color: #d0242b;">*</span></label>
-                        <input type="text" id="edit_contact_number" name="contact_number" class="form-control" value="{{ old('contact_number', $officialProfile->contact_number ?? '') }}" maxlength="11" pattern="[0-9]{11}" required>
-                    </div>
                     <div class="form-group">
                         <label for="edit_position">Position</label>
                         <select id="edit_position" name="position" class="form-control" disabled style="background-color: #f1f5f9; cursor: not-allowed;">
@@ -90,6 +108,27 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="edit_status">Status</label>
+                        <input type="text" id="edit_status" name="status" class="form-control" value="{{ old('status', $user->status ?? '') }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <h4 style="font-size:16px;font-weight:700;color:#0d1b4b;margin:24px 0 16px 0;display:flex;align-items:center;">
+                    <i class="fas fa-map-marker-alt" style="margin-right:8px;color:#213F99;"></i>
+                    Address
+                </h4>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_region">Region</label>
+                        <input type="text" id="edit_region" name="region" class="form-control" value="{{ old('region', $officialProfile->region ?? 'IV-A CALABARZON') }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_province">Province</label>
+                        <input type="text" id="edit_province" name="province" class="form-control" value="{{ old('province', $officialProfile->province ?? 'Laguna') }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
                 </div>
 
                 <div class="form-row">
@@ -98,19 +137,42 @@
                         <input type="text" id="edit_municipality" name="municipality" class="form-control" value="{{ old('municipality', $officialProfile->municipality ?? 'Santa Cruz') }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
                     </div>
                     <div class="form-group">
-                        <label for="edit_region">Region</label>
-                        <input type="text" id="edit_region" name="region" class="form-control" value="{{ old('region', $officialProfile->region ?? 'IV-A CALABARZON') }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                        <label for="edit_barangay_id">Barangay</label>
+                        <select id="edit_barangay_id" name="barangay_id" class="form-control" disabled style="background-color: #f1f5f9; cursor: not-allowed;">
+                            <option value="">Select Barangay</option>
+                            @foreach ($barangays as $barangay)
+                                <option value="{{ $barangay->id }}" {{ (string) $selectedBarangayId === (string) $barangay->id ? 'selected' : '' }}>{{ $barangay->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
+                <!-- Term Information -->
+                <h4 style="font-size:16px;font-weight:700;color:#0d1b4b;margin:24px 0 16px 0;display:flex;align-items:center;">
+                    <i class="fas fa-calendar-alt" style="margin-right:8px;color:#213F99;"></i>
+                    Term Information
+                </h4>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_term_start">Term Start</label>
+                        <input type="date" id="edit_term_start" name="term_start" class="form-control" value="{{ old('term_start', optional($officialProfile?->term_start)->format('Y-m-d')) }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_term_end">Term End</label>
+                        <input type="date" id="edit_term_end" name="term_end" class="form-control" value="{{ old('term_end', optional($officialProfile?->term_end)->format('Y-m-d')) }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <!-- Account -->
+                <h4 style="font-size:16px;font-weight:700;color:#0d1b4b;margin:24px 0 16px 0;display:flex;align-items:center;">
+                    <i class="fas fa-envelope" style="margin-right:8px;color:#213F99;"></i>
+                    Account
+                </h4>
+
                 <div class="form-group">
-                    <label for="edit_barangay_id">Barangay</label>
-                    <select id="edit_barangay_id" name="barangay_id" class="form-control" disabled style="background-color: #f1f5f9; cursor: not-allowed;">
-                        <option value="">Select Barangay</option>
-                        @foreach ($barangays as $barangay)
-                            <option value="{{ $barangay->id }}" {{ (string) $selectedBarangayId === (string) $barangay->id ? 'selected' : '' }}>{{ $barangay->name }}</option>
-                        @endforeach
-                    </select>
+                    <label for="edit_email">Email Address</label>
+                    <input type="email" id="edit_email" name="email" class="form-control" value="{{ old('email', $user->email) }}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
                 </div>
             </div>
 
