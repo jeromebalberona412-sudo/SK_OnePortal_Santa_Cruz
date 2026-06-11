@@ -1,0 +1,36 @@
+name: Deploy Admin to Hostinger
+
+on:
+  push:
+    branches:
+      - main # Dahil nakikita ko sa screenshot mo, "main" ang gamit mong default branch
+    paths:
+      - 'Admin/**' # Tatakbo lang ito kapag may binago ka sa loob ng Admin folder
+
+jobs:
+  deploy-admin:
+    name: 🚀 Deploy Admin Project
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v3
+
+    - name: 🛑 Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2' # Siguraduhing tugma sa PHP version ng Hostinger mo
+
+    - name: 🔨 Install Composer (Admin)
+      working-directory: ./Admin 
+      run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+    - name: 📦 Upload Admin to Hostinger via SSH rsync
+      uses: AEnterprise/rsync-deploy@v1.1.0
+      env:
+        DEPLOY_KEY: ${{ secrets.SSH_PASSWORD }}
+        ARGS: "-avz --delete"
+        SERVER: ${{ secrets.SSH_HOST }}
+        USER: ${{ secrets.SSH_USERNAME }}
+        PORT: ${{ secrets.SSH_PORT }}
+        FOLDER: "./Admin/" 
+        SERVER_DEST: "/home/u793353577/domains/blueviolet-lion-228360.hostingersite.com/public_html/Admin/"
