@@ -1,41 +1,38 @@
 name: Deploy Admin to Hostinger
 
 on:
-push:
-branches:
-- main
-paths:
-- 'Admin/**'
-workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Admin/**'
+  workflow_dispatch:
 
 jobs:
-deploy-admin:
-name: 🚀 Deploy Admin Project
-runs-on: ubuntu-latest
+  deploy-admin:
+    name: 🚀 Deploy Admin Project
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Checkout Repository
+        uses: actions/checkout@v4
 
-```
-steps:
-  - name: 🚚 Checkout Repository
-    uses: actions/checkout@v4
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
 
-  - name: 🐘 Setup PHP
-    uses: shivammathur/setup-php@v2
-    with:
-      php-version: '8.2'
+      - name: 📦 Install Composer Dependencies
+        working-directory: ./Admin
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-  - name: 📦 Install Composer Dependencies
-    working-directory: ./Admin
-    run: |
-      composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-  - name: 🚀 Deploy to Hostinger
-    uses: easingthemes/ssh-deploy@main
-    env:
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      REMOTE_HOST: ${{ secrets.SSH_HOST }}
-      REMOTE_USER: ${{ secrets.SSH_USERNAME }}
-      REMOTE_PORT: ${{ secrets.SSH_PORT }}
-      SOURCE: "Admin/"
-      TARGET: "/home/u793353577/domains/blueviolet-lion-228360.hostingersite.com/public_html/Admin/"
-      ARGS: "-rlgoDzvc --delete"
-```
+      - name: 🚀 Deploy to Hostinger
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USERNAME }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          SOURCE: "Admin/"
+          TARGET: "/home/u793353577/domains/blueviolet-lion-228360.hostingersite.com/public_html/Admin/"
+          ARGS: "-rlgoDzvc --delete"
