@@ -8,6 +8,7 @@ on:
       - 'Admin/**'
   workflow_dispatch:
 
+
 jobs:
   deploy-admin:
     name: 🚀 Deploy Admin Project
