@@ -6,7 +6,7 @@ on:
       - main # Dahil nakikita ko sa screenshot mo, "main" ang gamit mong default branch
     paths:
       - 'Admin/**' # Tatakbo lang ito kapag may binago ka sa loob ng Admin folder
-
+   workflow_dispatch:
 jobs:
   deploy-admin:
     name: 🚀 Deploy Admin Project
