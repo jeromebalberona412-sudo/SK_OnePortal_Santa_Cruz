@@ -4,6 +4,7 @@ namespace App\Modules\AuditLog\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
+use App\Modules\AuditLog\Services\AuditLogQueryService;
 use App\Modules\AuditLog\Services\AuditLogService;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,7 @@ class AuditLogServiceProvider extends ServiceProvider
     {
         $this->app->singleton(AuditLogInterface::class, AuditLogService::class);
         $this->app->singleton(AuditLogService::class);
+        $this->app->singleton(AuditLogQueryService::class);
     }
 
     public function boot(): void

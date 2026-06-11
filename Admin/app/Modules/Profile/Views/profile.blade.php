@@ -26,7 +26,7 @@
         }
         if ($initials === '') { $initials = 'AD'; }
         $createdAt = $user->created_at?->format('M d, Y') ?? '—';
-        $lastLogin = $user->last_login_at?->format('M d, Y h:i A') ?? '—';
+        $lastLogin = ($lastLoginAt ?? $user->last_login_at)?->timezone(config('app.timezone', 'Asia/Manila'))->format('M d, Y h:i A') ?? '—';
     @endphp
 
     <div class="profile-shell">
@@ -118,7 +118,7 @@
         </section>
 
     </div>{{-- /.profile-shell --}}
-</div>{{-- /#mainContent -->
+</div>{{-- /#mainContent --}}
 
 <script>
 function switchTab(tabName, e) {

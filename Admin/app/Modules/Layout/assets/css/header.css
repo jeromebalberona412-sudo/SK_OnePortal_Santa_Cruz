@@ -211,13 +211,7 @@ body.sidebar-collapsed .toggle-icon-collapse {
 
 .topbar-user-name,
 .nav-name {
-    font-size: 13px;
-    font-weight: 600;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #ffffff;
+    display: none;
 }
 
 .topbar-user-caret,

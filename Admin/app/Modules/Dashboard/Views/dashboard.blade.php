@@ -20,13 +20,17 @@
 	];
 
 	$bottomRowCards = [
-		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-federation'],
-		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-officials'],
-		['label' => 'SK Federation Records', 'metricKey' => 'skFederationRecords', 'tone' => 'red', 'icon' => 'federation', 'route' => 'archived.sk-federation-records'],
-		['label' => 'SK Officials Records', 'metricKey' => 'skOfficialsRecords', 'tone' => 'red', 'icon' => 'officials', 'route' => 'archived.sk-officials-records'],
+		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'value' => $accountMetrics['deletedSkFederation'], 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-federation'],
+		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'value' => $accountMetrics['deletedSkOfficials'], 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-officials'],
+		['label' => 'SK Federation Records', 'metricKey' => 'skFederationRecords', 'value' => $accountMetrics['skFederationRecords'], 'tone' => 'red', 'icon' => 'federation', 'route' => 'archived.sk-federation-records'],
+		['label' => 'SK Officials Records', 'metricKey' => 'skOfficialsRecords', 'value' => $accountMetrics['skOfficialsRecords'], 'tone' => 'red', 'icon' => 'officials', 'route' => 'archived.sk-officials-records'],
 	];
 @endphp
 
+<script>
+    window.__DASHBOARD_DATA_URL__ = @json(route('dashboard.data'));
+    window.__DASHBOARD_TERM_FILTERS__ = @json($termFilters ?? ['years' => [], 'terms' => []]);
+</script>
 <div id="mainContent" class="gov-dashboard dashboard-shell container-fluid" x-data="dashboardConsole()" aria-label="Dashboard content">
 	<!-- ══ Page Header ══════════════════════════════════════ -->
 	<div class="dash-page-header">
@@ -46,10 +50,7 @@
 					Year
 				</label>
 				<select id="yearSelect" class="dash-year-select">
-					<option value="2023">2023</option>
-					<option value="2024">2024</option>
-					<option value="2025">2025</option>
-					<option value="2026" selected>2026</option>
+					<option value="all">All Years</option>
 				</select>
 			</div>
 			<div class="dash-term-filter">
@@ -62,9 +63,6 @@
 				</label>
 				<select id="termSelect" class="dash-term-select">
 					<option value="all">All Terms</option>
-					<option value="2023-2026">2023 - 2026</option>
-					<option value="2024-2027">2024 - 2027</option>
-					<option value="2025-2028">2025 - 2028</option>
 				</select>
 			</div>
 		</div>
@@ -164,8 +162,8 @@
 	</section>
 
 	<section class="dash-panels-grid" aria-label="Operations panels">
-		@include('dashboard::components.audittable')
-		@include('dashboard::components.barangaydistribution')
+		@include('dashboard::components.audittable', ['recentAuditActivity' => $recentAuditActivity])
+		@include('dashboard::components.barangaydistribution', ['barangayDistribution' => $barangayDistribution])
 	</section>
 </div>
 @endsection

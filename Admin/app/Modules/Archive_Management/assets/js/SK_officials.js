@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', function () {
     initArchivedSkOfficials();
 });
 
+function formatRecordName(record) {
+    return [record.lastName, record.firstName, record.middleName, record.suffix]
+        .filter((part) => part && String(part).trim() !== '')
+        .join(', ');
+}
+
 const AROFF_API = {
     data: '/manage-archive/sk-officials-records/data',
 };
@@ -18,10 +24,27 @@ let aroffYearFilter = 'all';
 let aroffTermFilter = 'all';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+const AROFF_POLL_MS = 20000;
+
 function initArchivedSkOfficials() {
     bindAroffSearch();
     bindAroffViewModal();
     loadAroffRecords();
+    startAroffRealtimeRefresh();
+}
+
+function startAroffRealtimeRefresh() {
+    window.setInterval(() => {
+        if (!document.hidden) {
+            loadAroffRecords();
+        }
+    }, AROFF_POLL_MS);
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            loadAroffRecords();
+        }
+    });
 }
 
 async function loadAroffRecords() {
@@ -44,6 +67,7 @@ async function loadAroffRecords() {
         aroffRecords = payload.data || [];
         aroffFiltered = [...aroffRecords];
         renderAroffStats(payload.stats || {});
+        populateAroffFilters(payload.filters || {});
         aroffCurrentPage = 1;
         renderAroffTable();
     } catch (error) {
@@ -56,47 +80,35 @@ async function loadAroffRecords() {
     }
 }
 
-// ── Apply filters (search, year, and term) ────────────────────────────────────
-function applyAroffFilters() {
-    aroffFiltered = aroffRecords.filter(r => {
-        // Year filter - extract year from termStart (e.g., "Jan 1, 2019" -> 2019)
-        if (aroffYearFilter !== 'all') {
-            const termStartStr = r.termStart || '';
-            const yearMatch = termStartStr.match(/\d{4}/);
-            const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
+function populateAroffFilters(filters) {
+    const yearSelect = document.getElementById('aroffYearFilter');
+    const termSelect = document.getElementById('aroffTermFilter');
 
-            if (!recordYear || recordYear !== parseInt(aroffYearFilter, 10)) {
-                return false;
-            }
+    if (yearSelect && Array.isArray(filters.years)) {
+        const currentYear = yearSelect.value;
+        const yearOptions = ['<option value="all">All Years</option>']
+            .concat(filters.years.map((year) => `<option value="${year}">${year}</option>`));
+        yearSelect.innerHTML = yearOptions.join('');
+        if ([...yearSelect.options].some((option) => option.value === currentYear)) {
+            yearSelect.value = currentYear;
         }
+    }
 
-        // Term filter - check if record year falls within term range
-        if (aroffTermFilter !== 'all') {
-            const termStartStr = r.termStart || '';
-            const yearMatch = termStartStr.match(/\d{4}/);
-            const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
+    if (!termSelect || !Array.isArray(filters.terms)) {
+        return;
+    }
 
-            if (!recordYear) return false;
-
-            const [termStart, termEnd] = aroffTermFilter.split('-').map(y => parseInt(y, 10));
-            if (recordYear < termStart || recordYear > termEnd) {
-                return false;
-            }
-        }
-
-        // Search filter
-        if (aroffSearchQ) {
-            const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
-            const matches = fullName.includes(aroffSearchQ) ||
-                (r.position || '').toLowerCase().includes(aroffSearchQ) ||
-                (r.barangay || '').toLowerCase().includes(aroffSearchQ);
-            if (!matches) return false;
-        }
-
-        return true;
-    });
-    aroffCurrentPage = 1;
-    renderAroffTable();
+    const current = termSelect.value;
+    const options = ['<option value="all">All Terms</option>']
+        .concat(filters.terms.map((term) => {
+            const value = typeof term === 'string' ? term : term.value;
+            const label = typeof term === 'string' ? term.replace('-', ' - ') : term.label;
+            return `<option value="${value}">${label}</option>`;
+        }));
+    termSelect.innerHTML = options.join('');
+    if ([...termSelect.options].some((option) => option.value === current)) {
+        termSelect.value = current;
+    }
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
@@ -156,7 +168,7 @@ function renderAroffTable() {
     }
 
     tbody.innerHTML = page.map(r => {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const fullName = formatRecordName(r);
         const term = `${r.termStart} – ${r.termEnd}`;
         return `
         <tr>
@@ -166,7 +178,7 @@ function renderAroffTable() {
             <td style="text-align:center;"><span class="aroff-completed-badge">Completed Term</span></td>
             <td>
                 <div class="aroff-action-btns">
-                    <button class="aroff-btn-view" data-id="${r.id}" aria-label="View details for ${fullName}">View</button>
+                    <button type="button" class="aroff-btn-view" data-id="${r.id}" aria-label="View details for ${fullName}">View</button>
                 </div>
             </td>
         </tr>`;
@@ -204,32 +216,34 @@ function bindAroffSearch() {
     const input = document.getElementById('aroffSearch');
     const yearSelect = document.getElementById('aroffYearFilter');
     const termSelect = document.getElementById('aroffTermFilter');
+    let searchTimer = null;
 
     if (input) {
         input.addEventListener('input', function () {
-            aroffSearchQ = this.value.toLowerCase();
-            applyAroffFilters();
+            aroffSearchQ = this.value.trim();
+            window.clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(() => loadAroffRecords(), 300);
         });
     }
 
     if (yearSelect) {
         yearSelect.addEventListener('change', function () {
             aroffYearFilter = this.value;
-            applyAroffFilters();
+            loadAroffRecords();
         });
     }
 
     if (termSelect) {
         termSelect.addEventListener('change', function () {
             aroffTermFilter = this.value;
-            applyAroffFilters();
+            loadAroffRecords();
         });
     }
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────
 function openAroffViewModal(id) {
-    const r = aroffRecords.find(x => x.id === id);
+    const r = aroffRecords.find((x) => String(x.id) === String(id));
     if (!r) return;
 
     const body = document.getElementById('aroffViewBody');
@@ -245,7 +259,7 @@ function openAroffViewModal(id) {
                 <div class="aroff-view-info-grid">
                     <div class="aroff-view-field">
                         <span class="aroff-view-label">Full Name</span>
-                        <span class="aroff-view-value aroff-view-fullname">${r.firstName} ${r.middleName || ''} ${r.lastName}${r.suffix ? ' ' + r.suffix : ''}</span>
+                        <span class="aroff-view-value aroff-view-fullname">${formatRecordName(r)}</span>
                     </div>
                     <div class="aroff-view-field">
                         <span class="aroff-view-label">Email Address</span>

@@ -4,6 +4,7 @@ namespace App\Modules\Authentication\Services;
 
 use App\Modules\Authentication\Notifications\NewLocationLoginNotification;
 use App\Modules\Shared\Models\User;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -65,6 +66,25 @@ class AuthenticationService
         }
 
         $tenantId = $this->tenantContextService->tenantId();
+
+        if ($this->hasEndedTerm($user)) {
+            $this->auditLogService->log(
+                event: 'login_blocked_term_ended',
+                user: $user,
+                request: $request,
+                metadata: ['reason' => 'term_ended'],
+                outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+                resourceType: 'authentication',
+                resourceId: $user->getKey(),
+            );
+
+            throw new HttpResponseException(
+                redirect()->route('login')->with('access_denied', [
+                    'title' => 'Access Denied',
+                    'message' => 'Your SK federation term has already ended. Login access is no longer available for this account.',
+                ])
+            );
+        }
 
         if (
             ! $user->hasRole((string) config('sk_fed_auth.required_role', User::ROLE_SK_FED))
@@ -563,5 +583,30 @@ class AuthenticationService
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    protected function hasEndedTerm(User $user): bool
+    {
+        if (! Schema::hasTable('official_terms') || ! Schema::hasTable('official_profiles')) {
+            return false;
+        }
+
+        $termEnd = DB::table('official_terms')
+            ->join('official_profiles', 'official_profiles.id', '=', 'official_terms.official_profile_id')
+            ->where('official_profiles.user_id', $user->getKey())
+            ->where('official_terms.status', 'ACTIVE')
+            ->orderByDesc('official_terms.term_end')
+            ->value('official_terms.term_end');
+
+        if ($termEnd === null) {
+            $termEnd = DB::table('official_terms')
+                ->join('official_profiles', 'official_profiles.id', '=', 'official_terms.official_profile_id')
+                ->where('official_profiles.user_id', $user->getKey())
+                ->orderByDesc('official_terms.term_end')
+                ->value('official_terms.term_end');
+        }
+
+        return $termEnd !== null
+            && Carbon::parse((string) $termEnd)->lte(now()->startOfDay());
     }
 }

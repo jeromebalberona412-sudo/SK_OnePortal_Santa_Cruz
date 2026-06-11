@@ -19,7 +19,20 @@ class SkFedResetPasswordNotification extends ResetPassword
             ->greeting('Hello!')
             ->line('We received a request to reset the password for your SK Federation account.')
             ->action('Set New Password', $resetUrl)
-            ->line('This password reset link will expire in '.config('auth.passwords.'.config('auth.defaults.passwords').'.expire').' minutes.')
+            ->line('This password reset link will expire in '.$this->passwordExpiryLabel().'.')
             ->line('If you did not request a password reset, no further action is required.');
+    }
+
+    private function passwordExpiryLabel(): string
+    {
+        $minutes = (int) config('auth.passwords.'.config('auth.defaults.passwords', 'users').'.expire', 60);
+
+        if ($minutes >= 1440) {
+            $days = (int) round($minutes / 1440);
+
+            return $days.' day'.($days === 1 ? '' : 's');
+        }
+
+        return $minutes.' minute'.($minutes === 1 ? '' : 's');
     }
 }

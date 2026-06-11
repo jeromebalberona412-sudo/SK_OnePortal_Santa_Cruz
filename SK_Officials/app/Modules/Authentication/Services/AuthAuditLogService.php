@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AuthAuditLogService
 {
@@ -52,7 +53,15 @@ class AuthAuditLogService
                     'metadata'      => json_encode($entry['metadata']),
                     'occurred_at'   => now(),
                 ]);
+            }
 
+            if (Schema::hasTable('admin_activity_logs')) {
+                $this->writeCentralAuditLog($entry, $user);
+
+                return;
+            }
+
+            if (Schema::hasTable('auth_audit_logs')) {
                 return;
             }
         } catch (\Throwable) {
@@ -60,5 +69,33 @@ class AuthAuditLogService
         }
 
         Log::channel('daily')->info('[auth_audit]', $entry);
+    }
+
+    /**
+     * @param  array<string, mixed>  $entry
+     */
+    protected function writeCentralAuditLog(array $entry, ?User $user): void
+    {
+        $metadata = array_merge($entry['metadata'] ?? [], [
+            'outcome' => $entry['outcome'],
+            'portal' => 'sk_officials',
+            'module' => 'authentication',
+            'role' => $user?->role,
+            'email' => $user?->email,
+        ]);
+
+        DB::table('admin_activity_logs')->insert([
+            'id' => (string) Str::uuid(),
+            'tenant_id' => $user?->tenant_id,
+            'user_id' => $entry['user_id'],
+            'event_type' => $entry['event'],
+            'action' => $entry['event'],
+            'entity_type' => $entry['resource_type'],
+            'entity_id' => is_scalar($entry['resource_id']) ? (string) $entry['resource_id'] : null,
+            'ip_address' => $entry['ip_address'],
+            'user_agent' => $entry['user_agent'],
+            'metadata' => json_encode($metadata),
+            'created_at' => now(),
+        ]);
     }
 }

@@ -68,6 +68,14 @@
 
                     <form method="POST" action="{{ route('login', [], false) }}" class="login-form" id="loginForm" novalidate>
                         @csrf
+
+                        @if (session('access_denied'))
+                            <div class="alert alert-danger access-denied-alert" role="alert">
+                                <strong>{{ session('access_denied.title', 'Access Denied') }}</strong>
+                                <p style="margin:0.35rem 0 0;">{{ session('access_denied.message') }}</p>
+                            </div>
+                        @endif
+
                         <div class="form-group">
                             <label for="email">
                                 <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">

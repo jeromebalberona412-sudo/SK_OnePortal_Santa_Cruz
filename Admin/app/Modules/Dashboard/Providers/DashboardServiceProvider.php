@@ -12,7 +12,7 @@ class DashboardServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadRoutes();
-        $this->loadViewsFrom(__DIR__ . '/../Views', 'dashboard');
+        $this->loadViewsFrom(__DIR__ . '/../views', 'dashboard');
     }
 
     protected function loadRoutes(): void

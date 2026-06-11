@@ -4,61 +4,80 @@
 
 .audit-table-panel {
     min-height: 360px;
+    height: 100%;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.audit-table-panel .panel__header {
+    flex-shrink: 0;
 }
 
 .audit-table-wrap {
-    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+    max-height: 340px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
     border-radius: 12px;
     border: 1px solid rgba(21, 101, 192, 0.2);
-    background: #f8fafc;
+    background: #ffffff;
 }
 
-.audit-table-wrap .dataTables_wrapper {
-    padding: 0.35rem;
-}
-
-.audit-table-wrap .dataTables_paginate .paginate_button {
-    color: #1565c0 !important;
-}
-
-#auditActivityTable {
+.audit-activity-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 0.69rem;
+    min-width: 760px;
+    border-collapse: collapse;
+    table-layout: auto;
+    font-size: 0.78rem;
 }
 
-#auditActivityTable thead th {
-    background: #f1f5f9;
-    color: #475569;
+.audit-activity-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.audit-activity-table thead th {
+    background: linear-gradient(180deg, #1565c0 0%, #0d47a1 100%);
+    color: #ffffff;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.62rem;
-    border-bottom: 1px solid #e2e8f0;
+    letter-spacing: 0.05em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.75rem 0.85rem;
+    border-bottom: none;
+    white-space: nowrap;
+    text-align: left;
 }
 
-#auditActivityTable tbody tr {
+.audit-activity-table tbody tr {
     transition: background 140ms ease;
 }
 
-#auditActivityTable tbody tr:hover {
+.audit-activity-table tbody tr:hover {
     background: #f0f7ff;
 }
 
-#auditActivityTable tbody td {
-    color: #374151;
-    padding: 0.44rem 0.5rem;
-    border-bottom: 1px solid #f1f5f9;
+.audit-activity-table tbody td {
+    color: #334155;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid #e8eef5;
+    vertical-align: middle;
+    white-space: nowrap;
 }
 
-#auditActivityTable thead th:nth-child(4),
-#auditActivityTable tbody td:nth-child(4) {
-    width: 108px;
-    min-width: 108px;
+.audit-activity-table tbody td:nth-child(4) {
+    white-space: normal;
+    min-width: 140px;
+    max-width: 220px;
+}
+
+.audit-empty-cell {
     text-align: center;
-    white-space: nowrap;
-    word-break: normal;
+    padding: 1.25rem;
+    color: #64748b;
 }
 
 .audit-outcome {
@@ -67,16 +86,14 @@
     justify-content: center;
     min-width: 78px;
     border-radius: 9999px;
-    padding: 0.14rem 0.46rem;
-    font-size: 0.61rem;
+    padding: 0.18rem 0.5rem;
+    font-size: 0.65rem;
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     border: 1px solid transparent;
     white-space: nowrap;
-    word-break: normal;
-    overflow-wrap: normal;
 }
 
 .audit-outcome--success {
@@ -97,57 +114,18 @@
     background: rgba(220, 38, 38, 0.1);
 }
 
-.audit-action-link {
-    color: #1565c0;
-    text-decoration: none;
-    font-size: 0.65rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 7px;
-    padding: 0.16rem 0.4rem;
-    display: inline-block;
-    transition: all 0.2s ease;
-}
+@media (max-width: 768px) {
+    .audit-table-wrap {
+        max-height: 300px;
+    }
 
-.audit-action-link:hover {
-    color: #1e40af;
-    border-color: #bfdbfe;
-    background: #eff6ff;
-}
+    .audit-activity-table {
+        min-width: 680px;
+        font-size: 0.72rem;
+    }
 
-#auditActivityTable thead th,
-#auditActivityTable tbody td {
-    white-space: normal;
-    word-break: break-word;
-}
-
-/* Dark mode */
-:root.dark .audit-table-wrap {
-    background: #ffffff;
-    border-color: rgba(21, 101, 192, 0.2);
-}
-
-:root.dark #auditActivityTable thead th {
-    background: #f1f5f9;
-    color: #475569;
-    border-bottom-color: #e2e8f0;
-}
-
-:root.dark #auditActivityTable tbody tr:hover {
-    background: #f0f7ff;
-}
-
-:root.dark #auditActivityTable tbody td {
-    color: #374151;
-    border-bottom-color: #f1f5f9;
-}
-
-:root.dark .audit-action-link {
-    color: #1565c0;
-    border-color: #e2e8f0;
-}
-
-:root.dark .audit-action-link:hover {
-    color: #1e40af;
-    border-color: #bfdbfe;
-    background: #eff6ff;
+    .audit-activity-table thead th,
+    .audit-activity-table tbody td {
+        padding: 0.6rem 0.7rem;
+    }
 }

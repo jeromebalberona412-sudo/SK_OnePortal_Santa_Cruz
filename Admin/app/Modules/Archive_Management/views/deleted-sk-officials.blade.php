@@ -18,6 +18,7 @@
             <p class="dso-page-subtitle">Records removed from the SK Officials list.</p>
         </div>
         <div class="dso-header-right col-md-6">
+            <a href="{{ route('archived.sk-officials-records') }}" class="archive-goto-btn">Go to SK Officials Records</a>
             <select id="dsoYearFilter" class="dso-year-filter form-select">
                 <option value="all">All Years</option>
             </select>
@@ -55,7 +56,7 @@
             <table class="dso-table">
                 <thead>
                     <tr>
-                        <th>Full Name<div class="dso-col-hint">LN, FN, MN</div></th>
+                        <th>Full Name<div class="dso-col-hint">LN, FN, MN, Suffix</div></th>
                         <th>Position</th>
                         <th>Barangay</th>
                         <th>Municipality</th>

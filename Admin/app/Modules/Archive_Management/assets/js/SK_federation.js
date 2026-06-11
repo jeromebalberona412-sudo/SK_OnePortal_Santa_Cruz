@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', function () {
     initArchivedSkFederation();
 });
 
+function formatRecordName(record) {
+    return [record.lastName, record.firstName, record.middleName, record.suffix]
+        .filter((part) => part && String(part).trim() !== '')
+        .join(', ');
+}
+
 const ARFED_API = {
     data: '/manage-archive/sk-federation-records/data',
 };
@@ -18,10 +24,27 @@ let arfedYearFilter = 'all';
 let arfedTermFilter = 'all';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+const ARFED_POLL_MS = 20000;
+
 function initArchivedSkFederation() {
     bindArfedSearch();
     bindArfedViewModal();
     loadArfedRecords();
+    startArfedRealtimeRefresh();
+}
+
+function startArfedRealtimeRefresh() {
+    window.setInterval(() => {
+        if (!document.hidden) {
+            loadArfedRecords();
+        }
+    }, ARFED_POLL_MS);
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            loadArfedRecords();
+        }
+    });
 }
 
 async function loadArfedRecords() {
@@ -44,6 +67,7 @@ async function loadArfedRecords() {
         arfedRecords = payload.data || [];
         arfedFiltered = [...arfedRecords];
         renderArfedStats(payload.stats || {});
+        populateArfedFilters(payload.filters || {});
         arfedCurrentPage = 1;
         renderArfedTable();
     } catch (error) {
@@ -56,47 +80,35 @@ async function loadArfedRecords() {
     }
 }
 
-// ── Apply filters (search, year, and term) ────────────────────────────────────
-function applyArfedFilters() {
-    arfedFiltered = arfedRecords.filter(r => {
-        // Year filter - extract year from termStart (e.g., "Jan 1, 2019" -> 2019)
-        if (arfedYearFilter !== 'all') {
-            const termStartStr = r.termStart || '';
-            const yearMatch = termStartStr.match(/\d{4}/);
-            const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
+function populateArfedFilters(filters) {
+    const yearSelect = document.getElementById('arfedYearFilter');
+    const termSelect = document.getElementById('arfedTermFilter');
 
-            if (!recordYear || recordYear !== parseInt(arfedYearFilter, 10)) {
-                return false;
-            }
+    if (yearSelect && Array.isArray(filters.years)) {
+        const currentYear = yearSelect.value;
+        const yearOptions = ['<option value="all">All Years</option>']
+            .concat(filters.years.map((year) => `<option value="${year}">${year}</option>`));
+        yearSelect.innerHTML = yearOptions.join('');
+        if ([...yearSelect.options].some((option) => option.value === currentYear)) {
+            yearSelect.value = currentYear;
         }
+    }
 
-        // Term filter - check if record year falls within term range
-        if (arfedTermFilter !== 'all') {
-            const termStartStr = r.termStart || '';
-            const yearMatch = termStartStr.match(/\d{4}/);
-            const recordYear = yearMatch ? parseInt(yearMatch[0], 10) : null;
+    if (!termSelect || !Array.isArray(filters.terms)) {
+        return;
+    }
 
-            if (!recordYear) return false;
-
-            const [termStart, termEnd] = arfedTermFilter.split('-').map(y => parseInt(y, 10));
-            if (recordYear < termStart || recordYear > termEnd) {
-                return false;
-            }
-        }
-
-        // Search filter
-        if (arfedSearchQ) {
-            const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName}`.toLowerCase();
-            const matches = fullName.includes(arfedSearchQ) ||
-                (r.position || '').toLowerCase().includes(arfedSearchQ) ||
-                (r.barangay || '').toLowerCase().includes(arfedSearchQ);
-            if (!matches) return false;
-        }
-
-        return true;
-    });
-    arfedCurrentPage = 1;
-    renderArfedTable();
+    const current = termSelect.value;
+    const options = ['<option value="all">All Terms</option>']
+        .concat(filters.terms.map((term) => {
+            const value = typeof term === 'string' ? term : term.value;
+            const label = typeof term === 'string' ? term.replace('-', ' - ') : term.label;
+            return `<option value="${value}">${label}</option>`;
+        }));
+    termSelect.innerHTML = options.join('');
+    if ([...termSelect.options].some((option) => option.value === current)) {
+        termSelect.value = current;
+    }
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
@@ -156,7 +168,7 @@ function renderArfedTable() {
     }
 
     tbody.innerHTML = page.map(r => {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const fullName = formatRecordName(r);
         const term = `${r.termStart} – ${r.termEnd}`;
         return `
         <tr>
@@ -166,7 +178,7 @@ function renderArfedTable() {
             <td style="text-align:center;"><span class="arfed-completed-badge">Completed Term</span></td>
             <td>
                 <div class="arfed-action-btns">
-                    <button class="arfed-btn-view" data-id="${r.id}" aria-label="View details for ${fullName}">View</button>
+                    <button type="button" class="arfed-btn-view" data-id="${r.id}" aria-label="View details for ${fullName}">View</button>
                 </div>
             </td>
         </tr>`;
@@ -204,32 +216,34 @@ function bindArfedSearch() {
     const input = document.getElementById('arfedSearch');
     const yearSelect = document.getElementById('arfedYearFilter');
     const termSelect = document.getElementById('arfedTermFilter');
+    let searchTimer = null;
 
     if (input) {
         input.addEventListener('input', function () {
-            arfedSearchQ = this.value.toLowerCase();
-            applyArfedFilters();
+            arfedSearchQ = this.value.trim();
+            window.clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(() => loadArfedRecords(), 300);
         });
     }
 
     if (yearSelect) {
         yearSelect.addEventListener('change', function () {
             arfedYearFilter = this.value;
-            applyArfedFilters();
+            loadArfedRecords();
         });
     }
 
     if (termSelect) {
         termSelect.addEventListener('change', function () {
             arfedTermFilter = this.value;
-            applyArfedFilters();
+            loadArfedRecords();
         });
     }
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────
 function openArfedViewModal(id) {
-    const r = arfedRecords.find(x => x.id === id);
+    const r = arfedRecords.find((x) => String(x.id) === String(id));
     if (!r) return;
 
     const body = document.getElementById('arfedViewBody');
@@ -245,7 +259,7 @@ function openArfedViewModal(id) {
                 <div class="arfed-view-info-grid">
                     <div class="arfed-view-field">
                         <span class="arfed-view-label">Full Name</span>
-                        <span class="arfed-view-value arfed-view-fullname">${r.firstName} ${r.middleName || ''} ${r.lastName}${r.suffix ? ' ' + r.suffix : ''}</span>
+                        <span class="arfed-view-value arfed-view-fullname">${formatRecordName(r)}</span>
                     </div>
                     <div class="arfed-view-field">
                         <span class="arfed-view-label">Email Address</span>

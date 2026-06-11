@@ -6,6 +6,7 @@ use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Models\OfficialTerm;
 use App\Modules\Archive_Management\Models\ArchivedSkFederationRecord;
 use App\Modules\Archive_Management\Models\ArchivedSkOfficialRecord;
+use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Shared\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,11 @@ use Illuminate\Http\Request;
 
 class TermRecordsArchiveService
 {
+    public function __construct(
+        private readonly AuditLogInterface $auditLog,
+    ) {
+    }
+
     public function archiveCompletedTerm(OfficialTerm $term, ?User $archivedBy = null): ?Model
     {
         $term->loadMissing(['officialProfile.user.barangay']);
@@ -24,15 +30,31 @@ class TermRecordsArchiveService
             return null;
         }
 
-        if ($this->termAlreadyArchived($term, $user)) {
-            return null;
+        $payload = $this->buildSnapshotPayload($term, $profile, $user, $archivedBy);
+        $modelClass = $user->role === User::ROLE_SK_FED
+            ? ArchivedSkFederationRecord::class
+            : ArchivedSkOfficialRecord::class;
+
+        $record = $modelClass::query()->updateOrCreate(
+            ['official_term_id' => $term->id],
+            $payload,
+        );
+
+        if ($record !== null && $archivedBy !== null) {
+            $entityType = $user->role === User::ROLE_SK_FED ? 'sk_federation_record' : 'sk_official_record';
+
+            $this->auditLog->log('archive.record_archived', $archivedBy, [
+                'action' => $user->role === User::ROLE_SK_FED ? 'archive_federation_record' : 'archive_official_record',
+                'entity_type' => $entityType,
+                'entity_id' => (string) $record->getKey(),
+                'module' => 'archive_management',
+                'archived_user_id' => $user->id,
+                'barangay_id' => $user->barangay_id,
+                'barangay_name' => $user->barangay?->name,
+            ]);
         }
 
-        $payload = $this->buildSnapshotPayload($term, $profile, $user, $archivedBy);
-
-        return $user->role === User::ROLE_SK_FED
-            ? ArchivedSkFederationRecord::query()->create($payload)
-            : ArchivedSkOfficialRecord::query()->create($payload);
+        return $record;
     }
 
     /**
@@ -86,15 +108,29 @@ class TermRecordsArchiveService
         }
 
         if ($term = trim((string) $request->input('term', ''))) {
-            [$startYear, $endYear] = array_pad(explode('-', $term), 2, null);
-            if ($startYear && $endYear) {
-                $filtered->whereYear('term_start', (int) $startYear)
-                    ->whereYear('term_end', (int) $endYear);
+            if (str_contains($term, '|')) {
+                [$termStart, $termEnd] = array_pad(explode('|', $term, 2), 2, null);
+                if ($termStart && $termEnd) {
+                    $filtered->whereDate('term_start', $termStart)
+                        ->whereDate('term_end', $termEnd);
+                }
+            } else {
+                [$startYear, $endYear] = array_pad(explode('-', $term), 2, null);
+                if ($startYear && $endYear) {
+                    $filtered->whereYear('term_start', (int) $startYear)
+                        ->whereYear('term_end', (int) $endYear);
+                }
             }
         }
 
-        $records = $filtered->with($includeBarangay ? ['barangay'] : [])->get();
-        $all = $baseQuery->with($includeBarangay ? ['barangay'] : [])->get();
+        $records = $filtered->with($includeBarangay ? ['barangay'] : [])
+            ->get()
+            ->unique(fn (Model $record) => $record->official_term_id ?? 'record-'.$record->id)
+            ->values();
+        $all = $baseQuery->with($includeBarangay ? ['barangay'] : [])
+            ->get()
+            ->unique(fn (Model $record) => $record->official_term_id ?? 'record-'.$record->id)
+            ->values();
 
         return [
             'data' => $records->map(fn (Model $record) => $this->formatRecord($record, $includeBarangay))->values()->all(),
@@ -110,8 +146,14 @@ class TermRecordsArchiveService
                 'barangays' => $includeBarangay
                     ? $all->map(fn (Model $record) => $record->barangay?->name)->filter()->unique()->sort()->values()->all()
                     : [],
-                'terms' => $all->map(fn (Model $record) => $record->term_start->format('Y').'-'.$record->term_end->format('Y'))
-                    ->unique()->sort()->values()->all(),
+                'years' => $all->flatMap(fn (Model $record) => [
+                    $record->term_start->format('Y'),
+                    $record->term_end->format('Y'),
+                ])->unique()->sort()->values()->all(),
+                'terms' => $all->map(fn (Model $record) => [
+                    'value' => $record->term_start->format('Y-m-d').'|'.$record->term_end->format('Y-m-d'),
+                    'label' => $record->term_start->format('F j, Y').' to '.$record->term_end->format('F j, Y'),
+                ])->unique('value')->sortBy('value')->values()->all(),
             ],
         ];
     }
@@ -122,7 +164,9 @@ class TermRecordsArchiveService
             ? ArchivedSkFederationRecord::class
             : ArchivedSkOfficialRecord::class;
 
-        return $model::query()->where('official_term_id', $term->id)->exists();
+        return $model::query()
+            ->where('official_term_id', $term->id)
+            ->exists();
     }
 
     /**

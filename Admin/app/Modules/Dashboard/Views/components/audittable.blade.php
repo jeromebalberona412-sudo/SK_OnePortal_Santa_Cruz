@@ -1,3 +1,5 @@
+<script>window.__DASHBOARD_AUDIT__ = @json($recentAuditActivity ?? []);</script>
+
 <section class="gov-card panel audit-table-panel">
     <header class="panel__header">
         <div>
@@ -9,16 +11,16 @@
     </header>
 
     <div class="audit-table-wrap">
-        <table id="auditActivityTable" class="display compact" aria-label="Recent audit activity">
+        <table id="auditActivityTable" class="audit-activity-table" aria-label="Recent audit activity">
             <thead>
                 <tr>
+                    <th>Date</th>
                     <th>Time</th>
                     <th>Account</th>
                     <th>Activity</th>
                     <th>Status</th>
                     <th>IP Address</th>
-                    <th>Channel</th>
-                    <th>Inspect</th>
+                    <th>Device</th>
                 </tr>
             </thead>
             <tbody id="auditActivityBody"></tbody>

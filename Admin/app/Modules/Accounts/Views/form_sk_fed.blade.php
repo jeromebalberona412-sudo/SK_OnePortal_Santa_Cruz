@@ -40,17 +40,17 @@
                     <div class="form-grid">
                         <div class="form-group-light">
                             <label class="form-label-light required">First Name</label>
-                            <input type="text" id="first_name" name="first_name" class="form-input-light" placeholder="First Name" required>
+                            <input type="text" id="first_name" name="first_name" class="form-input-light input-uppercase" placeholder="FIRST NAME" required autocomplete="off" style="text-transform:uppercase;">
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
                             <label class="form-label-light">Middle Name</label>
-                            <input type="text" id="middle_name" name="middle_name" class="form-input-light" placeholder="Middle Name" maxlength="100">
+                            <input type="text" id="middle_name" name="middle_name" class="form-input-light input-uppercase" placeholder="MIDDLE NAME" maxlength="100" autocomplete="off" style="text-transform:uppercase;">
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
                             <label class="form-label-light required">Last Name</label>
-                            <input type="text" id="last_name" name="last_name" class="form-input-light" placeholder="Last Name" required>
+                            <input type="text" id="last_name" name="last_name" class="form-input-light input-uppercase" placeholder="LAST NAME" required autocomplete="off" style="text-transform:uppercase;">
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
@@ -88,7 +88,7 @@
                         </div>
                         <div class="form-group-light">
                             <label class="form-label-light required">Contact Number</label>
-                            <input type="text" id="contact_number" name="contact_number" class="form-input-light" placeholder="Contact Number" maxlength="20" required>
+                            <input type="tel" id="contact_number" name="contact_number" class="form-input-light" value="09" maxlength="11" inputmode="numeric" placeholder="09XXXXXXXXX" required>
                             <span class="form-error-light"></span>
                         </div>
                     </div>
@@ -116,8 +116,7 @@
                         <div class="form-group-light">
                             <label class="form-label-light required">Status</label>
                             <select id="status" name="status" class="form-input-light" required>
-                                <option value="" disabled selected>Select Status</option>
-                                <option value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}">Active</option>
+                                <option value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}" selected>Active</option>
                                 <option value="{{ \App\Modules\Shared\Models\User::STATUS_INACTIVE }}">Inactive</option>
                             </select>
                             <span class="form-error-light"></span>

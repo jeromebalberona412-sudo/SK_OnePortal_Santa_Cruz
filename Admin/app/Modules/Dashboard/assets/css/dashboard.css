@@ -876,49 +876,12 @@ body {
     max-width: 100%;
 }
 
-.audit-table-wrap {
-    overflow: hidden;
-    border-radius: 12px;
-    border: 1px solid rgba(21, 101, 192, 0.2);
-    background: #f8fafc;
-}
-
 .audit-table-wrap .dataTables_wrapper {
     padding: 0.35rem;
 }
 
 .audit-table-wrap .dataTables_paginate .paginate_button {
     color: #1565c0 !important;
-}
-
-#auditActivityTable {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 0.69rem;
-}
-
-#auditActivityTable thead th {
-    background: #f1f5f9;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.62rem;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-#auditActivityTable tbody tr {
-    transition: background 140ms ease;
-}
-
-#auditActivityTable tbody tr:hover {
-    background: #f0f7ff;
-}
-
-#auditActivityTable tbody td {
-    color: #374151;
-    padding: 0.44rem 0.5rem;
-    border-bottom: 1px solid #f1f5f9;
 }
 
 .audit-outcome {
@@ -937,15 +900,6 @@ body {
     white-space: nowrap;
     word-break: normal;
     overflow-wrap: normal;
-}
-
-#auditActivityTable thead th:nth-child(4),
-#auditActivityTable tbody td:nth-child(4) {
-    width: 108px;
-    min-width: 108px;
-    text-align: center;
-    white-space: nowrap;
-    word-break: normal;
 }
 
 .audit-outcome--success {
@@ -981,52 +935,6 @@ body {
     color: #1e40af;
     border-color: #bfdbfe;
     background: #eff6ff;
-}
-
-.table-scroll {
-    max-height: 340px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    background: #ffffff;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.table-compact {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.72rem;
-    box-sizing: border-box;
-}
-
-.table-compact th,
-.table-compact td {
-    padding: 0.5rem 0.55rem;
-    border-bottom: 1px solid #f1f5f9;
-    text-align: left;
-    white-space: normal;
-    word-break: break-word;
-    font-variant-numeric: tabular-nums;
-}
-
-#auditActivityTable thead th,
-#auditActivityTable tbody td {
-    white-space: normal;
-    word-break: break-word;
-}
-
-.table-compact thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: #ffffff;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.65rem;
-    border-bottom: 1px solid #e2e8f0;
 }
 
 .pill {
@@ -1382,6 +1290,12 @@ body {
     width: 100%;
     margin-bottom: 2rem;
     min-width: 0;
+    align-items: stretch;
+}
+
+.dash-panels-grid > .panel {
+    min-width: 0;
+    height: 100%;
 }
 
 @media (max-width: 1100px) {

@@ -24,7 +24,20 @@ class SkOfficialResetPasswordNotification extends ResetPassword
             ->greeting('Hello!')
             ->line('You are receiving this email because we received a password reset request for your SK Officials account.')
             ->action('Reset Password', $url)
-            ->line('This password reset link will expire in '.config('auth.passwords.'.config('fortify.passwords', config('auth.defaults.passwords', 'users')).'.expire', 60).' minutes.')
+            ->line('This password reset link will expire in '.$this->passwordExpiryLabel().'.')
             ->line('If you did not request a password reset, no further action is required.');
+    }
+
+    private function passwordExpiryLabel(): string
+    {
+        $minutes = (int) config('auth.passwords.'.config('fortify.passwords', config('auth.defaults.passwords', 'users')).'.expire', 60);
+
+        if ($minutes >= 1440) {
+            $days = (int) round($minutes / 1440);
+
+            return $days.' day'.($days === 1 ? '' : 's');
+        }
+
+        return $minutes.' minute'.($minutes === 1 ? '' : 's');
     }
 }

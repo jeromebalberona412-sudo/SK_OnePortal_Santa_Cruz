@@ -5,6 +5,8 @@ namespace App\Modules\Accounts\Controllers;
 use App\Modules\Accounts\Database\Seeders\BarangaySeeder;
 use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Accounts\Models\OfficialTerm;
+use App\Modules\Archive_Management\Services\ExpiredTermProcessorService;
 use App\Modules\Accounts\Requests\BatchStoreAccountsRequest;
 use App\Modules\Accounts\Requests\ExtendTermRequest;
 use App\Modules\Accounts\Requests\StoreAccountRequest;
@@ -23,8 +25,10 @@ use Illuminate\Support\Facades\Log;
 
 class AdminAccountController extends Controller
 {
-    public function __construct(private readonly AccountService $accountService)
-    {
+    public function __construct(
+        private readonly AccountService $accountService,
+        private readonly ExpiredTermProcessorService $expiredTermProcessor,
+    ) {
     }
 
     public function indexFederation(Request $request): View
@@ -33,11 +37,17 @@ class AdminAccountController extends Controller
 
         $tenantId = $this->resolveTenantId($request->user());
         $this->ensureTenantBarangays($tenantId);
+        $this->expiredTermProcessor->processForTenant($tenantId, $request->user());
 
         $query = User::query()
             ->with(['barangay', 'officialProfile.latestTerm'])
             ->where('tenant_id', $tenantId)
             ->where('role', User::ROLE_SK_FED)
+            ->whereHas('officialProfile.terms', function ($termQuery) {
+                $termQuery
+                    ->where('status', OfficialTerm::STATUS_ACTIVE)
+                    ->whereDate('term_end', '>=', now()->startOfDay());
+            })
             ->orderByDesc('created_at');
 
         if ($search = $request->string('search')->toString()) {
@@ -78,11 +88,17 @@ class AdminAccountController extends Controller
 
         $tenantId = $this->resolveTenantId($request->user());
         $this->ensureTenantBarangays($tenantId);
+        $this->expiredTermProcessor->processForTenant($tenantId, $request->user());
 
         $query = User::query()
             ->with(['barangay', 'officialProfile.latestTerm'])
             ->where('tenant_id', $tenantId)
             ->where('role', User::ROLE_SK_OFFICIAL)
+            ->whereHas('officialProfile.terms', function ($termQuery) {
+                $termQuery
+                    ->where('status', OfficialTerm::STATUS_ACTIVE)
+                    ->whereDate('term_end', '>=', now()->startOfDay());
+            })
             ->orderByDesc('created_at');
 
         if ($search = $request->string('search')->toString()) {

@@ -18,18 +18,12 @@
             <p class="arfed-page-subtitle">Completed term records — read-only historical archive.</p>
         </div>
         <div class="arfed-header-right col-md-6">
+            <a href="{{ route('archived.deleted-sk-federation') }}" class="archive-goto-btn">Go to Deleted SK Federation</a>
             <select id="arfedYearFilter" class="arfed-year-filter form-select">
                 <option value="all">All Years</option>
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
             </select>
             <select id="arfedTermFilter" class="arfed-term-filter form-select">
                 <option value="all">All Terms</option>
-                <option value="2023-2026">2023 - 2026</option>
-                <option value="2024-2027">2024 - 2027</option>
-                <option value="2025-2028">2025 - 2028</option>
             </select>
             <input type="text" id="arfedSearch" class="arfed-search-input form-control" placeholder="Search by name or position…">
         </div>
@@ -44,7 +38,7 @@
             <table class="arfed-table">
                 <thead>
                     <tr>
-                        <th>Full Name<div class="arfed-col-hint">FN, MN, LN, Suffix</div></th>
+                        <th>Full Name<div class="arfed-col-hint">LN, FN, MN, Suffix</div></th>
                         <th>Position</th>
                         <th>Term Served</th>
                         <th>Status</th>

@@ -189,6 +189,8 @@ function formatDate(dateString) {
 }
 
 // ── Inline validation helpers (light-theme forms) ─────────────
+const ACCOUNT_TERM_MAX_YEARS = 5;
+
 function _showErr(input, msg) {
     _clearErr(input);
     const span = document.createElement('span');
@@ -202,15 +204,224 @@ function _clearErr(input) {
     const ex = input.parentNode.querySelector('.validation-error');
     if (ex) ex.remove();
 }
+
+function getCurrentYearStartDate() {
+    return `${new Date().getFullYear()}-01-01`;
+}
+
+function addYearsToDateString(dateStr, years) {
+    const date = new Date(`${dateStr}T00:00:00`);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+    date.setFullYear(date.getFullYear() + years);
+    return date.toISOString().slice(0, 10);
+}
+
+function isNameField(input) {
+    return ['first_name', 'last_name', 'middle_name'].includes(input.name);
+}
+
+function isContactField(input) {
+    return input.name === 'contact_number';
+}
+
+function isTermField(input) {
+    return input.name === 'term_start' || input.name === 'term_end';
+}
+
+function _validateNameField(input) {
+    const val = (input.value || '').trim();
+    if (input.hasAttribute('required') && !val) {
+        _showErr(input, 'This field is required');
+        return false;
+    }
+    if (val && !/^[A-Z\s\-']+$/.test(val)) {
+        _showErr(input, 'Use uppercase letters only');
+        return false;
+    }
+    _clearErr(input);
+    if (val) input.classList.add('is-valid');
+    return true;
+}
+
+function _validateContactNumber(input) {
+    const val = (input.value || '').trim();
+    if (input.hasAttribute('required') && !val) {
+        _showErr(input, 'Contact number is required');
+        return false;
+    }
+    if (val && !/^09\d{9}$/.test(val)) {
+        _showErr(input, 'Contact number must be 11 digits starting with 09');
+        return false;
+    }
+    _clearErr(input);
+    if (val) input.classList.add('is-valid');
+    return true;
+}
+
+function validateTermRange(form) {
+    const startInput = form.querySelector('[name="term_start"]');
+    const endInput = form.querySelector('[name="term_end"]');
+    if (!startInput || !endInput) {
+        return true;
+    }
+
+    const start = startInput.value;
+    const end = endInput.value;
+    const yearStart = getCurrentYearStartDate();
+
+    if (startInput.hasAttribute('required') && !start) {
+        _showErr(startInput, 'Term start date is required');
+        return false;
+    }
+    if (endInput.hasAttribute('required') && !end) {
+        _showErr(endInput, 'Term end date is required');
+        return false;
+    }
+    if (start && start < yearStart) {
+        _showErr(startInput, 'Term start date cannot be before the current year');
+        return false;
+    }
+    if (start && end && end <= start) {
+        _showErr(endInput, 'Term end date must be after term start date');
+        return false;
+    }
+    if (start && end) {
+        const maxEnd = addYearsToDateString(start, ACCOUNT_TERM_MAX_YEARS);
+        if (maxEnd && end > maxEnd) {
+            _showErr(endInput, 'Term end date must be within 5 years of term start date');
+            return false;
+        }
+    }
+
+    _clearErr(startInput);
+    _clearErr(endInput);
+    if (start) startInput.classList.add('is-valid');
+    if (end) endInput.classList.add('is-valid');
+    return true;
+}
+
 function _validateField(input) {
     const val = input.value.trim();
+    if (isNameField(input)) {
+        return _validateNameField(input);
+    }
+    if (isContactField(input)) {
+        return _validateContactNumber(input);
+    }
+    if (isTermField(input)) {
+        return validateTermRange(input.closest('form'));
+    }
     if (input.hasAttribute('required') && !val) { _showErr(input, 'This field is required'); return false; }
     if (input.type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { _showErr(input, 'Enter a valid email address'); return false; }
-    if ((input.id === 'official_contact_number' || input.id === 'contact_number') && val && val.length < 10) { _showErr(input, 'Contact number must be at least 10 digits'); return false; }
     if (input.tagName === 'SELECT' && input.hasAttribute('required') && (!val || val === '')) { _showErr(input, 'Please select an option'); return false; }
     _clearErr(input);
     if (val) input.classList.add('is-valid');
     return true;
+}
+
+function applyUppercaseNameInput(input) {
+    if (!input) return;
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/[^a-zA-Z\s\-']/g, '').toUpperCase();
+        if (input.classList.contains('is-invalid')) {
+            _validateNameField(input);
+        }
+    });
+    input.addEventListener('blur', () => _validateNameField(input));
+}
+
+function applyContactNumberInput(input) {
+    if (!input) return;
+    const prefix = '09';
+
+    input.addEventListener('focus', () => {
+        if (!input.value.startsWith(prefix)) {
+            input.value = prefix;
+        }
+    });
+
+    input.addEventListener('input', () => {
+        let digits = input.value.replace(/\D/g, '');
+        if (!digits.startsWith('09')) {
+            digits = `${prefix}${digits.replace(/^0+/, '')}`;
+        }
+        input.value = digits.slice(0, 11);
+        if (input.classList.contains('is-invalid')) {
+            _validateContactNumber(input);
+        }
+    });
+
+    input.addEventListener('blur', () => _validateContactNumber(input));
+}
+
+function applyTermDateConstraints(form) {
+    const startInput = form.querySelector('[name="term_start"]');
+    const endInput = form.querySelector('[name="term_end"]');
+    if (!startInput || !endInput) {
+        return;
+    }
+
+    const yearStart = getCurrentYearStartDate();
+    startInput.min = yearStart;
+
+    const syncEndConstraints = () => {
+        const startVal = startInput.value;
+        if (startVal) {
+            endInput.min = startVal;
+            endInput.max = addYearsToDateString(startVal, ACCOUNT_TERM_MAX_YEARS);
+        } else {
+            endInput.min = yearStart;
+            endInput.removeAttribute('max');
+        }
+
+        if (endInput.value && startVal && endInput.value < startVal) {
+            endInput.value = '';
+        }
+        if (endInput.value && endInput.max && endInput.value > endInput.max) {
+            endInput.value = endInput.max;
+        }
+
+        validateTermRange(form);
+    };
+
+    startInput.addEventListener('change', syncEndConstraints);
+    startInput.addEventListener('input', syncEndConstraints);
+    endInput.addEventListener('change', () => validateTermRange(form));
+    endInput.addEventListener('blur', () => validateTermRange(form));
+    syncEndConstraints();
+}
+
+function initCreateAccountFormDefaults(form) {
+    if (!form) {
+        return;
+    }
+
+    const status = form.querySelector('[name="status"]');
+    if (status) {
+        status.value = 'ACTIVE';
+    }
+
+    const contact = form.querySelector('[name="contact_number"]');
+    if (contact && (!contact.value || contact.value.length < 2)) {
+        contact.value = '09';
+    }
+}
+
+function wireCreateAccountForm(form) {
+    if (!form) {
+        return;
+    }
+
+    form.querySelectorAll('[name="first_name"], [name="last_name"], [name="middle_name"]').forEach(applyUppercaseNameInput);
+    applyContactNumberInput(form.querySelector('[name="contact_number"]'));
+    applyTermDateConstraints(form);
+    initCreateAccountFormDefaults(form);
+
+    form.querySelectorAll('[required]').forEach((el) => {
+        el.addEventListener('blur', () => _validateField(el));
+    });
 }
 
 // ── Add SK Officials modal ────────────────────────────────────
@@ -235,7 +446,10 @@ window.toggleAddOfficialsSize = function () {
     }
 };
 
-window.openAddSkOfficialsModal = function () { toggleModal('addSkOfficialsModal', true); };
+window.openAddSkOfficialsModal = function () {
+    toggleModal('addSkOfficialsModal', true);
+    initCreateAccountFormDefaults(document.getElementById('addSkOfficialsForm'));
+};
 
 window.closeAddSkOfficialsModal = function () {
     addOfficialsIsMaximized = false;
@@ -352,6 +566,7 @@ window.toggleAddFedSize = function () {
 window.openAddAccountModal = function () {
     const ids = _getModalIds(getCurrentAccountType());
     toggleModal(ids.addModalId, true);
+    initCreateAccountFormDefaults(document.getElementById('addSkFedForm'));
 };
 
 window.closeAddAccountModal = function () {
@@ -569,10 +784,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Add SK Officials — backend submit ───────────────────
     const officialsForm = document.getElementById('addSkOfficialsForm');
     if (officialsForm) {
+        wireCreateAccountForm(officialsForm);
+
         officialsForm.addEventListener('submit', function (e) {
             e.preventDefault();
             let valid = true;
             officialsForm.querySelectorAll('[required]').forEach(el => { if (!_validateField(el)) valid = false; });
+            if (!validateTermRange(officialsForm)) valid = false;
             if (!valid) { const first = officialsForm.querySelector('.is-invalid'); if (first) first.focus(); return; }
 
             officialsForm.querySelectorAll('.validation-error').forEach(err => err.remove());
@@ -627,23 +845,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('An unexpected error occurred. Please try again.');
                 });
         });
-
-        // Text-only name fields
-        ['official_first_name', 'official_last_name', 'official_middle_name'].forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener('input', () => { el.value = el.value.replace(/[^a-zA-Z\s\-']/g, ''); if (el.classList.contains('is-invalid')) _validateField(el); });
-        });
-        // Numbers-only contact
-        const cEl = document.getElementById('official_contact_number');
-        if (cEl) cEl.addEventListener('input', () => { cEl.value = cEl.value.replace(/\D/g, ''); if (cEl.classList.contains('is-invalid')) _validateField(cEl); });
-        // Blur validation
-        officialsForm.querySelectorAll('[required]').forEach(el => el.addEventListener('blur', () => _validateField(el)));
     }
 
     // ── Add SK Federation — backend submit ────────────────────
     const fedForm = document.getElementById('addSkFedForm');
     if (fedForm) {
+        wireCreateAccountForm(fedForm);
+
         fedForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -652,6 +860,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fedForm.querySelectorAll('[required]').forEach(el => {
                 if (!_validateField(el)) valid = false;
             });
+            if (!validateTermRange(fedForm)) valid = false;
 
             if (!valid) {
                 const first = fedForm.querySelector('.is-invalid');
@@ -704,24 +913,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('An unexpected error occurred. Please try again.');
                 });
         });
-
-        // Text-only / numbers-only for fed add form
-        ['first_name', 'last_name', 'middle_name'].forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener('input', () => {
-                el.value = el.value.replace(/[^a-zA-Z\s\-']/g, '');
-                if (el.classList.contains('is-invalid')) _validateField(el);
-            });
-        });
-        const cFed = document.getElementById('contact_number');
-        if (cFed) cFed.addEventListener('input', () => {
-            cFed.value = cFed.value.replace(/\D/g, '');
-            if (cFed.classList.contains('is-invalid')) _validateField(cFed);
-        });
-
-        // Blur validation for all required fields
-        fedForm.querySelectorAll('[required]').forEach(el => el.addEventListener('blur', () => _validateField(el)));
     }
 
     // ── Edit forms — backend submit ─────────────────────────

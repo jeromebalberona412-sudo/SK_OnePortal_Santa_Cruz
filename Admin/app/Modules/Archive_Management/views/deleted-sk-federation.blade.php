@@ -18,6 +18,7 @@
             <p class="dsf-page-subtitle">Records removed from the SK Federation list.</p>
         </div>
         <div class="dsf-header-right col-md-6">
+            <a href="{{ route('archived.sk-federation-records') }}" class="archive-goto-btn">Go to SK Federation Records</a>
             <select id="dsfYearFilter" class="dsf-year-filter form-select">
                 <option value="all">All Years</option>
             </select>
@@ -52,7 +53,7 @@
             <table class="dsf-table">
                 <thead>
                     <tr>
-                        <th>Full Name<div class="dsf-col-hint">LN, FN, MN</div></th>
+                        <th>Full Name<div class="dsf-col-hint">LN, FN, MN, Suffix</div></th>
                         <th>Position</th>
                         <th>Barangay</th>
                         <th>Municipality</th>

@@ -2,143 +2,166 @@
 
 namespace App\Modules\AuditLog\Controllers;
 
+use App\Modules\AuditLog\Services\AuditLogQueryService;
 use App\Modules\Shared\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Modules\AuditLog\Models\SkFedAuthAuditLog;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AuditLogController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(
+        private readonly AuditLogQueryService $queryService,
+    ) {
+    }
+
+    public function index(Request $request): View
     {
-        $perPage = max(5, min(100, (int) $request->get('per_page', 7)));
-        $search = trim((string) $request->get('search', ''));
-        $event = trim((string) $request->get('event', ''));
-        $outcome = trim((string) $request->get('outcome', ''));
-        $dateFrom = trim((string) $request->get('date_from', ''));
-        $dateTo = trim((string) $request->get('date_to', ''));
-
-        $hasTenantColumn = Schema::hasColumn('sk_fed_auth_audit_logs', 'tenant_id');
-        $hasActorEmailColumn = Schema::hasColumn('sk_fed_auth_audit_logs', 'actor_email');
-        $hasOutcomeColumn = Schema::hasColumn('sk_fed_auth_audit_logs', 'outcome');
-        $hasResourceTypeColumn = Schema::hasColumn('sk_fed_auth_audit_logs', 'resource_type');
-        $hasResourceIdColumn = Schema::hasColumn('sk_fed_auth_audit_logs', 'resource_id');
-
         $tenantId = $request->user()?->tenant_id;
 
-        $applyTenantScope = function ($query) use ($hasTenantColumn, $tenantId) {
-            if (! $hasTenantColumn || $tenantId === null) {
+        return view('auditlogs::auditlogs', [
+            'filterOptions' => $this->queryService->filterOptions($tenantId),
+            'stats' => $this->queryService->stats($tenantId),
+            'routes' => [
+                'data' => route('auditlogs.data'),
+                'stats' => route('auditlogs.stats'),
+                'recent' => route('auditlogs.recent'),
+                'exportCsv' => route('auditlogs.export.csv'),
+                'exportExcel' => route('auditlogs.export.excel'),
+            ],
+        ]);
+    }
+
+    public function data(Request $request): JsonResponse
+    {
+        $tenantId = $request->user()?->tenant_id;
+        $perPage = max(5, min(100, (int) $request->integer('per_page', 15)));
+        $page = max(1, (int) $request->integer('page', 1));
+
+        $paginator = $this->queryService->paginate(
+            $this->extractFilters($request),
+            $tenantId,
+            $perPage,
+            $page,
+        );
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'from' => $paginator->firstItem() ?? 0,
+                'to' => $paginator->lastItem() ?? 0,
+            ],
+        ]);
+    }
+
+    public function stats(Request $request): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->queryService->stats($request->user()?->tenant_id),
+        ]);
+    }
+
+    public function recent(Request $request): JsonResponse
+    {
+        $limit = max(1, min(20, (int) $request->integer('limit', 10)));
+
+        return response()->json([
+            'data' => $this->queryService->recentActivity($request->user()?->tenant_id, $limit),
+        ]);
+    }
+
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        return $this->streamExport($request, 'csv');
+    }
+
+    public function exportExcel(Request $request): Response
+    {
+        $rows = $this->queryService->exportRows(
+            $this->extractFilters($request),
+            $request->user()?->tenant_id,
+        );
+
+        $html = view('auditlogs::export-excel', ['rows' => $rows])->render();
+
+        return response($html, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="audit-logs-'.now()->format('Y-m-d-His').'.xls"',
+            'Cache-Control' => 'max-age=0, no-cache, must-revalidate',
+            'Pragma' => 'public',
+        ]);
+    }
+
+    protected function streamExport(Request $request, string $format): StreamedResponse
+    {
+        $filters = $this->extractFilters($request);
+        $tenantId = $request->user()?->tenant_id;
+        $filename = 'audit-logs-'.now()->format('Y-m-d-His').'.csv';
+
+        return response()->streamDownload(function () use ($filters, $tenantId) {
+            $handle = fopen('php://output', 'w');
+
+            if ($handle === false) {
                 return;
             }
 
-            // Keep legacy rows with null tenant_id visible during phased rollout.
-            $query->where(function ($tenantQuery) use ($tenantId) {
-                $tenantQuery->where('tenant_id', $tenantId)
-                    ->orWhereNull('tenant_id');
-            });
-        };
+            fwrite($handle, "\xEF\xBB\xBF");
 
-        $logsQuery = SkFedAuthAuditLog::query()
-            ->with('user:id,email')
-            ->orderByDesc('created_at');
+            fputcsv($handle, [
+                'Date & Time',
+                'User',
+                'Role',
+                'Barangay',
+                'Event Type',
+                'Action',
+                'Entity Type',
+                'Entity ID',
+                'IP Address',
+            ]);
 
-        $applyTenantScope($logsQuery);
+            $this->queryService
+                ->exportRows($filters, $tenantId)
+                ->each(function (array $row) use ($handle) {
+                    fputcsv($handle, [
+                        $row['created_at'],
+                        $row['user_name'],
+                        $row['role'],
+                        $row['barangay'],
+                        $row['event_type'],
+                        $row['action'],
+                        $row['entity_type'],
+                        $row['entity_id'],
+                        $row['ip_address'],
+                    ]);
+                });
 
-        if ($search !== '') {
-            $logsQuery->where(function ($query) use (
-                $search,
-                $hasActorEmailColumn,
-                $hasOutcomeColumn,
-                $hasResourceTypeColumn,
-                $hasResourceIdColumn,
-            ) {
-                $query->where('event', 'like', "%{$search}%")
-                    ->orWhere('ip_address', 'like', "%{$search}%")
-                    ->orWhere('user_agent', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('email', 'like', "%{$search}%");
-                    });
-
-                if ($hasActorEmailColumn) {
-                    $query->orWhere('actor_email', 'like', "%{$search}%");
-                }
-
-                if ($hasOutcomeColumn) {
-                    $query->orWhere('outcome', 'like', "%{$search}%");
-                }
-
-                if ($hasResourceTypeColumn) {
-                    $query->orWhere('resource_type', 'like', "%{$search}%");
-                }
-
-                if ($hasResourceIdColumn) {
-                    $query->orWhere('resource_id', 'like', "%{$search}%");
-                }
-
-                if (ctype_digit($search)) {
-                    $query->orWhere('id', (int) $search)
-                        ->orWhere('user_id', (int) $search);
-                }
-            });
-        }
-
-        if ($event !== '') {
-            $logsQuery->where('event', $event);
-        }
-
-        if ($outcome !== '' && $hasOutcomeColumn) {
-            $logsQuery->where('outcome', $outcome);
-        }
-
-        if ($dateFrom !== '') {
-            $logsQuery->whereDate('created_at', '>=', $dateFrom);
-        }
-
-        if ($dateTo !== '') {
-            $logsQuery->whereDate('created_at', '<=', $dateTo);
-        }
-
-        $logs = $logsQuery->paginate($perPage)->withQueryString();
-
-        $eventsQuery = SkFedAuthAuditLog::query();
-        $applyTenantScope($eventsQuery);
-
-        $events = $eventsQuery
-            ->select('event')
-            ->distinct()
-            ->orderBy('event')
-            ->pluck('event');
-
-        $outcomes = collect();
-
-        if ($hasOutcomeColumn) {
-            $outcomesQuery = SkFedAuthAuditLog::query();
-            $applyTenantScope($outcomesQuery);
-
-            $outcomes = $outcomesQuery
-                ->select('outcome')
-                ->whereNotNull('outcome')
-                ->distinct()
-                ->orderBy('outcome')
-                ->pluck('outcome');
-
-            if ($outcomes->isEmpty()) {
-                $outcomes = collect(['success', 'failed', 'blocked']);
-            }
-        }
-
-        return view('auditlogs::auditlogs', [
-            'logs' => $logs,
-            'events' => $events,
-            'outcomes' => $outcomes,
-            'perPage' => $perPage,
-            'filters' => [
-                'search' => $search,
-                'event' => $event,
-                'outcome' => $outcome,
-                'date_from' => $dateFrom,
-                'date_to' => $dateTo,
-            ]
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function extractFilters(Request $request): array
+    {
+        return [
+            'search' => trim((string) $request->get('search', '')),
+            'date_from' => trim((string) $request->get('date_from', '')),
+            'date_to' => trim((string) $request->get('date_to', '')),
+            'user_id' => $request->get('user_id'),
+            'role' => trim((string) $request->get('role', '')),
+            'barangay_id' => $request->get('barangay_id'),
+            'event_type' => trim((string) $request->get('event_type', '')),
+            'action' => trim((string) $request->get('action', '')),
+            'module' => trim((string) $request->get('module', '')),
+        ];
     }
 }

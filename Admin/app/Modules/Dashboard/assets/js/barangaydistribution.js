@@ -1,19 +1,35 @@
-const barangayDistribution = [
-    { barangay: 'Aplaya', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 48 },
-    { barangay: 'Alipit', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 45 },
-    { barangay: 'Bagumbayan', skFederationAssigned: true, skOfficialsAssigned: 10, accountCount: 43 },
-    { barangay: 'Bubukal', skFederationAssigned: false, skOfficialsAssigned: 8, accountCount: 31 },
-    { barangay: 'Calios', skFederationAssigned: true, skOfficialsAssigned: 9, accountCount: 38 },
-    { barangay: 'Duhat', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 44 },
-    { barangay: 'Gatid', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 46 },
-    { barangay: 'Labuin', skFederationAssigned: false, skOfficialsAssigned: 0, accountCount: 19 },
-    { barangay: 'Malinao', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 47 },
-    { barangay: 'Poblacion 1', skFederationAssigned: true, skOfficialsAssigned: 11, accountCount: 41 },
-    { barangay: 'Poblacion 2', skFederationAssigned: true, skOfficialsAssigned: 12, accountCount: 42 },
-    { barangay: 'San Pablo Norte', skFederationAssigned: true, skOfficialsAssigned: 9, accountCount: 38 },
-];
+let barangayDistribution = Array.isArray(window.__BARANGAY_DISTRIBUTION__)
+    ? window.__BARANGAY_DISTRIBUTION__
+    : [];
 
 window.barangayDistribution = barangayDistribution;
+
+function overallGap(row) {
+    return (row.federationCount ?? 0) > 0 && (row.skOfficialsAssigned ?? 0) > 0;
+}
+
+function renderBarangayDistributionRows(rows = barangayDistribution) {
+    const tbody = document.getElementById('barangayDistributionBody');
+    if (!tbody) {
+        return;
+    }
+
+    const data = Array.isArray(rows) ? rows : [];
+
+    if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="barangay-empty-cell">No barangay data available.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = data.map((row) => `
+            <tr>
+                <td>${row.barangay || '-'}</td>
+                <td>${row.federationCount ?? 0}</td>
+                <td>${row.skOfficialsAssigned ?? 0}</td>
+                <td>${row.accountCount ?? 0}</td>
+            </tr>
+        `).join('');
+}
 
 window.dashboardConsole = function dashboardConsole() {
     return {
@@ -24,28 +40,33 @@ window.dashboardConsole = function dashboardConsole() {
         },
 
         federationLabel(row) {
-            return row.skFederationAssigned ? 'Assigned' : 'Missing';
+            return String(row.federationCount ?? 0);
         },
 
         overallGap(row) {
-            return row.skFederationAssigned && row.skOfficialsAssigned > 0;
+            return overallGap(row);
         },
     };
 };
 
+window.refreshBarangayDistribution = function refreshBarangayDistribution(rows) {
+    barangayDistribution = Array.isArray(rows) ? rows : [];
+    window.barangayDistribution = barangayDistribution;
+    renderBarangayDistributionRows(barangayDistribution);
+};
+
 window.exportBarangayDistribution = function exportBarangayDistribution() {
-    const headers = ['Barangay Name', 'Federation Assigned', 'Official Accounts', 'Total Accounts', 'Status'];
-    const rows = barangayDistribution.map(row => [
+    const headers = ['Barangay', 'Federation Assigned', 'Official Accounts', 'Total Accounts'];
+    const rows = barangayDistribution.map((row) => [
         row.barangay,
-        row.skFederationAssigned ? 'Assigned' : 'Missing',
-        row.skOfficialsAssigned,
-        row.accountCount,
-        row.skFederationAssigned && row.skOfficialsAssigned > 0 ? 'Healthy' : 'RED FLAG'
+        row.federationCount ?? 0,
+        row.skOfficialsAssigned ?? 0,
+        row.accountCount ?? 0,
     ]);
 
-    let csvContent = headers.join(',') + '\n';
-    rows.forEach(row => {
-        csvContent += row.join(',') + '\n';
+    let csvContent = `${headers.join(',')}\n`;
+    rows.forEach((row) => {
+        csvContent += `${row.map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')}\n`;
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -57,4 +78,11 @@ window.exportBarangayDistribution = function exportBarangayDistribution() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 };
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => renderBarangayDistributionRows());
+} else {
+    renderBarangayDistributionRows();
+}

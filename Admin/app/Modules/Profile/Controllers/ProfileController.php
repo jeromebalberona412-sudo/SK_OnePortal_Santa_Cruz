@@ -2,11 +2,13 @@
 
 namespace App\Modules\Profile\Controllers;
 
+use App\Modules\AuditLog\Models\AdminActivityLog;
 use App\Modules\Profile\Services\EmailChangeService;
 use App\Modules\Profile\Services\PasswordChangeService;
 use App\Modules\Profile\Support\ProfilePasswordChangeState;
 use App\Modules\Shared\Controllers\Controller;
 use App\Modules\Shared\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +26,27 @@ class ProfileController extends Controller
 
     public function index(Request $request): View
     {
-        return view('profile::profile', ['user' => $request->user()]);
+        $user = $request->user()->fresh();
+
+        return view('profile::profile', [
+            'user' => $user,
+            'lastLoginAt' => $this->resolveLastLoginAt($user),
+        ]);
+    }
+
+    private function resolveLastLoginAt(User $user): ?Carbon
+    {
+        if ($user->last_login_at !== null) {
+            return $user->last_login_at;
+        }
+
+        $latestLogin = AdminActivityLog::query()
+            ->where('user_id', $user->id)
+            ->where('event_type', AdminActivityLog::EVENT_LOGIN_SUCCESS)
+            ->orderByDesc('created_at')
+            ->value('created_at');
+
+        return $latestLogin ? Carbon::parse($latestLogin) : null;
     }
 
     public function showChangePassword(Request $request): View|RedirectResponse

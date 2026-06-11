@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', function () {
     initDeletedSkOfficials();
 });
 
+function formatRecordName(record) {
+    return [record.lastName, record.firstName, record.middleName, record.suffix]
+        .filter((part) => part && String(part).trim() !== '')
+        .join(', ');
+}
+
 const DSO_API = {
     data: '/archived/deleted-sk-officials/data',
     restore: (id) => `/archived/deleted-sk-officials/${id}/restore`,
@@ -21,6 +27,8 @@ let dsoActiveTerm = '';
 let dsoYearFilter = 'all';
 let dsoIsLoading = false;
 
+const DSO_POLL_MS = 20000;
+
 function initDeletedSkOfficials() {
     bindDsoSearch();
     bindDsoFilterTabs();
@@ -28,6 +36,21 @@ function initDeletedSkOfficials() {
     bindDsoRestoreModal();
     bindDsoViewModal();
     loadDsoRecords();
+    startDsoRealtimeRefresh();
+}
+
+function startDsoRealtimeRefresh() {
+    window.setInterval(() => {
+        if (!document.hidden) {
+            loadDsoRecords();
+        }
+    }, DSO_POLL_MS);
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            loadDsoRecords();
+        }
+    });
 }
 
 function getCsrfToken() {
@@ -203,7 +226,7 @@ function renderDsoTable() {
     }
 
     tbody.innerHTML = page.map((r) => {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const fullName = formatRecordName(r);
         return `
         <tr>
             <td class="dso-name-cell">${fullName}</td>
@@ -383,7 +406,7 @@ function openDsoRestoreModal(id) {
     if (!record) return;
     dsoPendingId = id;
     const nameEl = document.getElementById('dsoRestoreName');
-    if (nameEl) nameEl.textContent = `${record.lastName}, ${record.firstName}${record.middleName ? ' ' + record.middleName : ''}`;
+    if (nameEl) nameEl.textContent = formatRecordName(record);
     const modal = document.getElementById('dsoRestoreModal');
     if (modal) {
         modal.style.display = 'flex';

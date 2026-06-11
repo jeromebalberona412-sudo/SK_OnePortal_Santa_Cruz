@@ -106,5 +106,41 @@ class AdminActivityLog extends Model
     const EVENT_2FA_DISABLED = 'two_factor_disabled';
     const EVENT_PASSWORD_CHANGED = 'password_changed';
     const EVENT_PASSWORD_RESET_REQUESTED = 'password_reset_requested';
+    const EVENT_PASSWORD_RESET_COMPLETED = 'password_reset_completed';
+    const EVENT_EMAIL_VERIFIED = 'email_verified';
     const EVENT_LOGOUT = 'logout';
+    const EVENT_TRUSTED_DEVICE_REGISTERED = 'trusted_device_registered';
+    const EVENT_DEVICE_VERIFICATION_SUCCESS = 'device_verification_success';
+    const EVENT_SUSPICIOUS_LOGIN_DETECTED = 'suspicious_login_detected';
+
+    /**
+     * @return array<int, string>
+     */
+    public static function securityEventTypes(): array
+    {
+        return [
+            self::EVENT_LOGIN_FAILED,
+            self::EVENT_ACCOUNT_LOCKED,
+            self::EVENT_PASSWORD_CHANGED,
+            self::EVENT_PASSWORD_RESET_REQUESTED,
+            self::EVENT_PASSWORD_RESET_COMPLETED,
+            self::EVENT_TRUSTED_DEVICE_REGISTERED,
+            self::EVENT_DEVICE_VERIFICATION_SUCCESS,
+            self::EVENT_SUSPICIOUS_LOGIN_DETECTED,
+            self::EVENT_2FA_CHALLENGE_FAILED,
+        ];
+    }
+
+    public static function isSecurityEvent(?string $eventType): bool
+    {
+        if (! is_string($eventType) || $eventType === '') {
+            return false;
+        }
+
+        if (in_array($eventType, self::securityEventTypes(), true)) {
+            return true;
+        }
+
+        return str_starts_with($eventType, 'security.');
+    }
 }

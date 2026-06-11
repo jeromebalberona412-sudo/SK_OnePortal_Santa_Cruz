@@ -143,6 +143,27 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRole(self::ROLE_SK_OFFICIAL);
     }
 
+    public function hasEndedTerm(): bool
+    {
+        $this->loadMissing('officialProfile.terms');
+
+        $activeTerm = $this->officialProfile?->terms()
+            ->where('status', OfficialTerm::STATUS_ACTIVE)
+            ->orderByDesc('term_end')
+            ->first();
+
+        if ($activeTerm !== null) {
+            return $activeTerm->term_end->lte(now()->startOfDay());
+        }
+
+        $latestTerm = $this->officialProfile?->terms()
+            ->orderByDesc('term_end')
+            ->first();
+
+        return $latestTerm !== null
+            && $latestTerm->term_end->lte(now()->startOfDay());
+    }
+
     public function isLocked(): bool
     {
         if (! $this->hasTableColumn('lockout_until')) {

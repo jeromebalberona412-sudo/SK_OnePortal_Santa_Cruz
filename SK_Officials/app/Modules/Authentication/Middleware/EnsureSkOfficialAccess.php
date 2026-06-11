@@ -31,14 +31,14 @@ class EnsureSkOfficialAccess
             ]);
         }
 
-        // Check account status if the column exists
         if ($user->hasRole($requiredRole) && ! $user->isActiveOfficial()) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors([
-                'access' => 'Your account is not active. Please contact your administrator.',
+            return redirect()->route('login')->with('access_denied', [
+                'title' => 'Access Denied',
+                'message' => 'Your SK official term has already ended. Login access is no longer available for this account.',
             ]);
         }
 

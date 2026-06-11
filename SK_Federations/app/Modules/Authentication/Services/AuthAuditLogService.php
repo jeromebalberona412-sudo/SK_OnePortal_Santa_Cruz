@@ -5,7 +5,10 @@ namespace App\Modules\Authentication\Services;
 use App\Modules\Authentication\Models\AuthAuditLog;
 use App\Modules\Shared\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class AuthAuditLogService
 {
@@ -42,6 +45,18 @@ class AuthAuditLogService
             'created_at' => now(),
         ]);
 
+        if (Schema::hasTable('admin_activity_logs')) {
+            $this->writeCentralAuditLog(
+                $event,
+                $user,
+                $request,
+                array_merge($metadata, ['outcome' => $resolvedOutcome]),
+                $resourceType,
+                $resourceId,
+                $user?->tenant_id ?? $this->tenantContextService->tenantId(),
+            );
+        }
+
         Log::channel('sk_fed_auth_json')->info('sk_fed_auth_event', [
             'event' => $event,
             'user_id' => $user?->getKey(),
@@ -72,5 +87,39 @@ class AuthAuditLogService
         }
 
         return self::OUTCOME_SUCCESS;
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    protected function writeCentralAuditLog(
+        string $event,
+        ?User $user,
+        Request $request,
+        array $metadata,
+        ?string $resourceType,
+        mixed $resourceId,
+        ?int $tenantId,
+    ): void {
+        $metadata = array_merge($metadata, [
+            'portal' => 'sk_federation',
+            'module' => 'authentication',
+            'role' => $user?->role,
+            'email' => $user?->email,
+        ]);
+
+        DB::table('admin_activity_logs')->insert([
+            'id' => (string) Str::uuid(),
+            'tenant_id' => $tenantId,
+            'user_id' => $user?->getKey(),
+            'event_type' => $event,
+            'action' => $event,
+            'entity_type' => $resourceType,
+            'entity_id' => $resourceId === null ? null : (string) $resourceId,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'metadata' => json_encode($metadata),
+            'created_at' => now(),
+        ]);
     }
 }

@@ -7,6 +7,7 @@ use App\Modules\BarangayLogos\Models\BarangayLogo;
 use App\Modules\BarangayLogos\Requests\BarangayLogoRequest;
 use App\Modules\BarangayLogos\Services\CloudinaryService;
 use App\Services\BarangayLogoUrlService;
+use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Shared\Controllers\Controller;
 use App\Modules\Shared\Models\Tenant;
 use App\Modules\Shared\Models\User;
@@ -22,6 +23,7 @@ class BarangayLogoController extends Controller
     public function __construct(
         private readonly CloudinaryService $cloudinary,
         private readonly BarangayLogoUrlService $logoUrls,
+        private readonly AuditLogInterface $auditLog,
     ) {
     }
 
@@ -93,6 +95,15 @@ class BarangayLogoController extends Controller
                     'url'                  => $result['url'],
                 ]
             );
+
+            $this->auditLog->log('barangay_logos.'.($existing ? 'update' : 'upload'), $user, [
+                'action' => $existing ? 'update_barangay_logo' : 'upload_barangay_logo',
+                'entity_type' => 'barangay_logo',
+                'entity_id' => (string) $logo->id,
+                'module' => 'barangay_logos',
+                'barangay_id' => $barangayId,
+                'barangay_name' => $barangay->name,
+            ]);
 
             return response()->json([
                 'id'  => $logo->id,

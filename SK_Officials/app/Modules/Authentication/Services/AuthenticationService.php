@@ -2,8 +2,10 @@
 
 namespace App\Modules\Authentication\Services;
 
+use App\Models\OfficialTerm;
 use App\Models\User;
 use App\Services\SkOfficialPresenceService;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -60,6 +62,25 @@ class AuthenticationService
             );
 
             return null;
+        }
+
+        if ($this->hasEndedTerm($user)) {
+            $this->auditLogService->log(
+                event: 'login_blocked_term_ended',
+                user: $user,
+                request: $request,
+                metadata: ['reason' => 'term_ended'],
+                outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+                resourceType: 'auth',
+                resourceId: $user->getKey(),
+            );
+
+            throw new HttpResponseException(
+                redirect()->route('login')->with('access_denied', [
+                    'title' => 'Access Denied',
+                    'message' => 'Your SK official term has already ended. Login access is no longer available for this account.',
+                ])
+            );
         }
 
         // Role check
@@ -514,5 +535,26 @@ class AuthenticationService
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    protected function hasEndedTerm(User $user): bool
+    {
+        $user->loadMissing('officialProfile.terms');
+
+        $activeTerm = $user->officialProfile?->terms()
+            ->where('status', OfficialTerm::STATUS_ACTIVE)
+            ->orderByDesc('term_end')
+            ->first();
+
+        if ($activeTerm !== null) {
+            return $activeTerm->term_end->lte(now()->startOfDay());
+        }
+
+        $latestTerm = $user->officialProfile?->terms()
+            ->orderByDesc('term_end')
+            ->first();
+
+        return $latestTerm !== null
+            && $latestTerm->term_end->lte(now()->startOfDay());
     }
 }

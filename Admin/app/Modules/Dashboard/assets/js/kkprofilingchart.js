@@ -1,65 +1,10 @@
-const KK_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-const KK_BASE_APPROVED = [8, 12, 14, 11, 15, 18, 16, 14, 13, 12, 10, 13];
-const KK_BASE_REJECTED = [2, 3, 2, 4, 3, 2, 3, 2, 2, 1, 2, 2];
-
 let kkProfilingMonthlyChart = null;
 let kkProfilingCurrentData = null;
 let kkProfilingFiltersWired = false;
 let kkProfilingBarangayWired = false;
-
-function getMonthlyPending(approved, rejected) {
-    return approved.map((value, index) => {
-        return Math.max(0, Math.round((value + rejected[index]) * 0.18));
-    });
-}
-
-function buildSingleBarangaySample(barangayId) {
-    const seed = Number.parseInt(String(barangayId), 10) || 1;
-    const scale = 0.35 + ((seed * 7) % 10) / 10;
-    const offset = seed % 5;
-
-    return {
-        monthlyApproved: KK_BASE_APPROVED.map((value, index) => {
-            const bump = index % 3 === offset % 3 ? 1 : 0;
-            return Math.max(0, Math.round(value * scale) + bump);
-        }),
-        monthlyRejected: KK_BASE_REJECTED.map((value, index) => {
-            const bump = index % 4 === offset % 4 ? 1 : 0;
-            return Math.max(0, Math.round(value * scale * 0.8) + bump);
-        }),
-    };
-}
-
-function buildKkProfilingData(barangayId) {
-    if (barangayId === 'all') {
-        const barangays = window.__KK_BARANGAYS__ || [];
-
-        if (barangays.length === 0) {
-            return {
-                monthlyApproved: [...KK_BASE_APPROVED],
-                monthlyRejected: [...KK_BASE_REJECTED],
-            };
-        }
-
-        const monthlyApproved = Array(12).fill(0);
-        const monthlyRejected = Array(12).fill(0);
-
-        barangays.forEach((barangay) => {
-            const sample = buildSingleBarangaySample(barangay.id);
-            sample.monthlyApproved.forEach((value, index) => {
-                monthlyApproved[index] += value;
-            });
-            sample.monthlyRejected.forEach((value, index) => {
-                monthlyRejected[index] += value;
-            });
-        });
-
-        return { monthlyApproved, monthlyRejected };
-    }
-
-    return buildSingleBarangaySample(barangayId);
-}
+let kkProfilingPeriodWired = false;
+let kkProfilingMonthWired = false;
+let kkProfilingFetchTimer = null;
 
 function getSelectedBarangayName(barangayId) {
     if (barangayId === 'all') {
@@ -72,29 +17,108 @@ function getSelectedBarangayName(barangayId) {
     return match?.name || 'Barangay';
 }
 
-function applyKkProfilingChartData(rawData, barangayName) {
-    if (!kkProfilingMonthlyChart) {
+function getDashboardSelectedYear() {
+    const yearSelect = document.getElementById('yearSelect');
+    const selectedYear = yearSelect?.value;
+
+    if (selectedYear && selectedYear !== 'all') {
+        return selectedYear;
+    }
+
+    return String(new Date().getFullYear());
+}
+
+function getKkProfilingFilters() {
+    const barangayFilter = document.getElementById('kkProfilingBarangayFilter');
+    const periodFilter = document.getElementById('kkProfilingPeriodFilter');
+    const monthFilter = document.getElementById('kkProfilingMonthFilter');
+    const period = periodFilter?.value || 'monthly';
+    const now = new Date();
+
+    return {
+        barangay_id: barangayFilter?.value || 'all',
+        period,
+        year: getDashboardSelectedYear(),
+        month: period === 'weekly' ? String(monthFilter?.value || (now.getMonth() + 1)) : '',
+    };
+}
+
+async function fetchKkProfilingData() {
+    const endpoint = window.__KK_PROFILING_DATA_URL__;
+    if (!endpoint) {
+        return null;
+    }
+
+    const params = new URLSearchParams(getKkProfilingFilters());
+
+    try {
+        const response = await fetch(`${endpoint}?${params.toString()}`, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const payload = await response.json();
+        return payload.data || null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function updateKkProfilingSubtitle(data) {
+    const subtitle = document.getElementById('kkProfilingChartSubtitle');
+    if (!subtitle || !data) {
         return;
     }
 
-    const monthlyPending = getMonthlyPending(rawData.monthlyApproved, rawData.monthlyRejected);
+    if (data.period === 'weekly') {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthLabel = monthNames[(data.month || 1) - 1] || 'Selected month';
+        subtitle.textContent = `Weekly submissions for ${monthLabel} ${data.year} — approved, pending, and rejected`;
+        return;
+    }
+
+    subtitle.textContent = `Monthly submissions for ${data.year} — approved, pending, and rejected`;
+}
+
+function applyKkProfilingChartData(data, barangayName) {
+    if (!kkProfilingMonthlyChart || !data) {
+        return;
+    }
 
     kkProfilingCurrentData = {
         barangayName,
-        monthlyApproved: rawData.monthlyApproved,
-        monthlyRejected: rawData.monthlyRejected,
-        monthlyPending,
+        period: data.period,
+        year: data.year,
+        labels: data.labels || [],
+        monthlyApproved: data.approved || [],
+        monthlyRejected: data.rejected || [],
+        monthlyPending: data.pending || [],
     };
 
-    kkProfilingMonthlyChart.data.datasets[0].data = rawData.monthlyApproved;
-    kkProfilingMonthlyChart.data.datasets[1].data = rawData.monthlyRejected;
-    kkProfilingMonthlyChart.data.datasets[2].data = monthlyPending;
+    kkProfilingMonthlyChart.data.labels = kkProfilingCurrentData.labels;
+    kkProfilingMonthlyChart.data.datasets[0].data = kkProfilingCurrentData.monthlyApproved;
+    kkProfilingMonthlyChart.data.datasets[1].data = kkProfilingCurrentData.monthlyRejected;
+    kkProfilingMonthlyChart.data.datasets[2].data = kkProfilingCurrentData.monthlyPending;
     kkProfilingMonthlyChart.update();
+    updateKkProfilingSubtitle(data);
 }
 
-function refreshKkProfilingChartForBarangay(barangayId) {
-    const rawData = buildKkProfilingData(barangayId);
-    applyKkProfilingChartData(rawData, getSelectedBarangayName(barangayId));
+async function refreshKkProfilingChart() {
+    const barangayFilter = document.getElementById('kkProfilingBarangayFilter');
+    const barangayId = barangayFilter?.value || 'all';
+    const data = await fetchKkProfilingData();
+
+    if (!data) {
+        return;
+    }
+
+    applyKkProfilingChartData(data, getSelectedBarangayName(barangayId));
 }
 
 function initKkProfilingMonthlyChart() {
@@ -107,19 +131,14 @@ function initKkProfilingMonthlyChart() {
         kkProfilingMonthlyChart.destroy();
     }
 
-    const barangayFilter = document.getElementById('kkProfilingBarangayFilter');
-    const selectedBarangay = barangayFilter?.value || 'all';
-    const initialData = buildKkProfilingData(selectedBarangay);
-    const monthlyPending = getMonthlyPending(initialData.monthlyApproved, initialData.monthlyRejected);
-
     kkProfilingMonthlyChart = new window.Chart(canvas, {
         type: 'line',
         data: {
-            labels: KK_MONTHS,
+            labels: [],
             datasets: [
                 {
                     label: 'Approved',
-                    data: initialData.monthlyApproved,
+                    data: [],
                     borderColor: '#22c55e',
                     backgroundColor: 'rgba(34, 197, 94, 0.1)',
                     borderWidth: 2.5,
@@ -130,7 +149,7 @@ function initKkProfilingMonthlyChart() {
                 },
                 {
                     label: 'Rejected',
-                    data: initialData.monthlyRejected,
+                    data: [],
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239, 68, 68, 0.08)',
                     borderWidth: 2.5,
@@ -141,7 +160,7 @@ function initKkProfilingMonthlyChart() {
                 },
                 {
                     label: 'Pending',
-                    data: monthlyPending,
+                    data: [],
                     borderColor: '#f59e0b',
                     backgroundColor: 'rgba(245, 158, 11, 0.08)',
                     borderWidth: 2.5,
@@ -170,27 +189,41 @@ function initKkProfilingMonthlyChart() {
             scales: {
                 x: {
                     grid: { display: false },
-                    ticks: { font: { size: 11 }, color: '#6b7280' },
+                    ticks: {
+                        font: { size: 11 },
+                        color: '#6b7280',
+                        maxRotation: 45,
+                        minRotation: 0,
+                    },
                 },
                 y: {
                     beginAtZero: true,
                     grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                    ticks: { color: '#6b7280' },
+                    ticks: { color: '#6b7280', precision: 0 },
                 },
             },
         },
     });
 
-    kkProfilingCurrentData = {
-        barangayName: getSelectedBarangayName(selectedBarangay),
-        monthlyApproved: initialData.monthlyApproved,
-        monthlyRejected: initialData.monthlyRejected,
-        monthlyPending,
-    };
+    const monthFilter = document.getElementById('kkProfilingMonthFilter');
+    if (monthFilter) {
+        monthFilter.value = String(new Date().getMonth() + 1);
+    }
 
-    wireKkProfilingFilters();
     wireKkProfilingBarangayFilter();
+    wireKkProfilingPeriodFilter();
+    wireKkProfilingMonthFilter();
     wireKkProfilingExport();
+    wireKkProfilingDatasetFilters();
+    toggleKkProfilingMonthFilter();
+    refreshKkProfilingChart();
+}
+
+function scheduleKkProfilingRefresh() {
+    window.clearTimeout(kkProfilingFetchTimer);
+    kkProfilingFetchTimer = window.setTimeout(() => {
+        refreshKkProfilingChart();
+    }, 200);
 }
 
 function wireKkProfilingBarangayFilter() {
@@ -203,30 +236,52 @@ function wireKkProfilingBarangayFilter() {
         return;
     }
 
-    barangayFilter.addEventListener('change', () => {
-        refreshKkProfilingChartForBarangay(barangayFilter.value || 'all');
-    });
-
+    barangayFilter.addEventListener('change', scheduleKkProfilingRefresh);
     kkProfilingBarangayWired = true;
 }
 
-function wireKkProfilingExport() {
-    const exportBtn = document.getElementById('kkProfilingExportBtn');
-    if (!exportBtn || exportBtn.dataset.wired === 'true') {
+function wireKkProfilingPeriodFilter() {
+    if (kkProfilingPeriodWired) {
         return;
     }
 
-    exportBtn.addEventListener('click', () => {
-        window.exportKkProfilingChart();
+    const periodFilter = document.getElementById('kkProfilingPeriodFilter');
+    if (!periodFilter) {
+        return;
+    }
+
+    periodFilter.addEventListener('change', () => {
+        toggleKkProfilingMonthFilter();
+        scheduleKkProfilingRefresh();
     });
-    exportBtn.dataset.wired = 'true';
+    kkProfilingPeriodWired = true;
 }
 
-function wireKkProfilingFilters() {
-    if (kkProfilingFiltersWired) {
+function wireKkProfilingMonthFilter() {
+    if (kkProfilingMonthWired) {
         return;
     }
 
+    const monthFilter = document.getElementById('kkProfilingMonthFilter');
+    if (!monthFilter) {
+        return;
+    }
+
+    monthFilter.addEventListener('change', scheduleKkProfilingRefresh);
+    kkProfilingMonthWired = true;
+}
+
+function toggleKkProfilingMonthFilter() {
+    const periodFilter = document.getElementById('kkProfilingPeriodFilter');
+    const monthFilter = document.getElementById('kkProfilingMonthFilter');
+    if (!periodFilter || !monthFilter) {
+        return;
+    }
+
+    monthFilter.hidden = periodFilter.value !== 'weekly';
+}
+
+function wireKkProfilingDatasetFilters() {
     const cbApproved = document.getElementById('filterKkApproved');
     const cbRejected = document.getElementById('filterKkRejected');
     const cbPending = document.getElementById('filterKkPending');
@@ -254,11 +309,22 @@ function wireKkProfilingFilters() {
             return;
         }
 
-        checkbox.checked = true;
         checkbox.addEventListener('change', applyDatasetFilter);
     });
+}
 
-    kkProfilingFiltersWired = true;
+window.refreshKkProfilingChart = refreshKkProfilingChart;
+
+function wireKkProfilingExport() {
+    const exportBtn = document.getElementById('kkProfilingExportBtn');
+    if (!exportBtn || exportBtn.dataset.wired === 'true') {
+        return;
+    }
+
+    exportBtn.addEventListener('click', () => {
+        window.exportKkProfilingChart();
+    });
+    exportBtn.dataset.wired = 'true';
 }
 
 window.exportKkProfilingChart = function exportKkProfilingChart() {
@@ -266,17 +332,28 @@ window.exportKkProfilingChart = function exportKkProfilingChart() {
         return;
     }
 
-    const { barangayName, monthlyApproved, monthlyRejected, monthlyPending } = kkProfilingCurrentData;
-    const headers = ['Month', 'Barangay', 'Approved', 'Pending', 'Rejected'];
+    const {
+        barangayName,
+        period,
+        year,
+        labels,
+        monthlyApproved,
+        monthlyRejected,
+        monthlyPending,
+    } = kkProfilingCurrentData;
+
+    const periodLabel = period === 'weekly' ? 'Week' : 'Month';
+    const headers = [periodLabel, 'Barangay', 'Year', 'Approved', 'Pending', 'Rejected'];
     let csvContent = `${headers.join(',')}\n`;
 
-    KK_MONTHS.forEach((month, index) => {
+    labels.forEach((label, index) => {
         csvContent += [
-            month,
+            `"${label}"`,
             `"${barangayName}"`,
-            monthlyApproved[index],
-            monthlyPending[index],
-            monthlyRejected[index],
+            year,
+            monthlyApproved[index] ?? 0,
+            monthlyPending[index] ?? 0,
+            monthlyRejected[index] ?? 0,
         ].join(',');
         csvContent += '\n';
     });
@@ -287,7 +364,7 @@ window.exportKkProfilingChart = function exportKkProfilingChart() {
     const url = URL.createObjectURL(blob);
 
     link.setAttribute('href', url);
-    link.setAttribute('download', `kk_profiling_${slug || 'data'}.csv`);
+    link.setAttribute('download', `kk_profiling_${period}_${slug || 'data'}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();

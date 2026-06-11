@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', function () {
     initDeletedSkFederation();
 });
 
+function formatRecordName(record) {
+    return [record.lastName, record.firstName, record.middleName, record.suffix]
+        .filter((part) => part && String(part).trim() !== '')
+        .join(', ');
+}
+
 const DSF_API = {
     data: '/archived/deleted-sk-federation/data',
     restore: (id) => `/archived/deleted-sk-federation/${id}/restore`,
@@ -20,6 +26,8 @@ let dsfActiveTerm = '';
 let dsfYearFilter = 'all';
 let dsfIsLoading = false;
 
+const DSF_POLL_MS = 20000;
+
 function initDeletedSkFederation() {
     bindDsfSearch();
     bindDsfFilterTabs();
@@ -27,6 +35,21 @@ function initDeletedSkFederation() {
     bindDsfRestoreModal();
     bindDsfViewModal();
     loadDsfRecords();
+    startDsfRealtimeRefresh();
+}
+
+function startDsfRealtimeRefresh() {
+    window.setInterval(() => {
+        if (!document.hidden) {
+            loadDsfRecords();
+        }
+    }, DSF_POLL_MS);
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            loadDsfRecords();
+        }
+    });
 }
 
 function getCsrfToken() {
@@ -194,7 +217,7 @@ function renderDsfTable() {
     }
 
     tbody.innerHTML = page.map((r) => {
-        const fullName = `${r.lastName}, ${r.firstName}${r.middleName ? ' ' + r.middleName : ''}${r.suffix ? ' ' + r.suffix : ''}`;
+        const fullName = formatRecordName(r);
         const statusClass = r.accountStatus === 'ACTIVE' ? 'dsf-badge-green' : 'dsf-badge-gray';
         return `
         <tr>
@@ -375,7 +398,7 @@ function openDsfRestoreModal(id) {
     if (!record) return;
     dsfPendingId = id;
     const nameEl = document.getElementById('dsfRestoreName');
-    if (nameEl) nameEl.textContent = `${record.lastName}, ${record.firstName}${record.middleName ? ' ' + record.middleName : ''}`;
+    if (nameEl) nameEl.textContent = formatRecordName(record);
     const modal = document.getElementById('dsfRestoreModal');
     if (modal) {
         modal.style.display = 'flex';

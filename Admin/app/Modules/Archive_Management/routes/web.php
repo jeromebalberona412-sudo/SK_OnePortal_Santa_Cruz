@@ -17,12 +17,20 @@ Route::get('/manage-archive/sk-federation-records', function () {
 Route::get('/manage-archive/sk-federation-records/data', [TermRecordsArchiveController::class, 'federationData'])
     ->name('archived.sk-federation-records.data');
 
+Route::post('/manage-archive/sk-federation-records/{record}/restore', [TermRecordsArchiveController::class, 'restoreFederationRecord'])
+    ->whereNumber('record')
+    ->name('archived.sk-federation-records.restore');
+
 Route::get('/manage-archive/sk-officials-records', function () {
     return view('archive-management::SK_Officials_Records');
 })->name('archived.sk-officials-records');
 
 Route::get('/manage-archive/sk-officials-records/data', [TermRecordsArchiveController::class, 'officialsData'])
     ->name('archived.sk-officials-records.data');
+
+Route::post('/manage-archive/sk-officials-records/{record}/restore', [TermRecordsArchiveController::class, 'restoreOfficialRecord'])
+    ->whereNumber('record')
+    ->name('archived.sk-officials-records.restore');
 
 // ── Deleted SK Federation & Officials ─────────────────────────────────────────
 Route::get('/archived/deleted-sk-federation', [DeletedArchiveController::class, 'federationIndex'])

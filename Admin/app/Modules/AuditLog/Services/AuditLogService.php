@@ -5,6 +5,7 @@ namespace App\Modules\AuditLog\Services;
 use App\Modules\Shared\Models\User;
 use App\Modules\AuditLog\Models\AdminActivityLog;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
+use App\Modules\AuditLog\Support\AuditLogPresenter;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -22,6 +23,7 @@ class AuditLogService implements AuditLogInterface
     {
         $ipAddress = request()->ip() ?? 'unknown';
         $userAgent = request()->userAgent() ?? 'unknown';
+        $metadata = $this->enrichMetadata($eventType, $user, $metadata);
 
         try {
             $action = is_string($metadata['action'] ?? null) ? $metadata['action'] : null;
@@ -66,7 +68,8 @@ class AuditLogService implements AuditLogInterface
     {
         $this->log(AdminActivityLog::EVENT_LOGIN_SUCCESS, $user, [
             'email' => $user->email,
-            'action' => 'login_success',
+            'action' => 'login',
+            'module' => 'authentication',
         ]);
     }
 
@@ -207,6 +210,34 @@ class AuditLogService implements AuditLogInterface
     {
         $this->log(AdminActivityLog::EVENT_LOGOUT, $user, [
             'email' => $user->email,
+            'action' => 'logout',
+            'module' => 'authentication',
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     * @return array<string, mixed>
+     */
+    protected function enrichMetadata(string $eventType, ?User $user, array $metadata): array
+    {
+        if (! isset($metadata['module'])) {
+            $metadata['module'] = str_contains($eventType, '.')
+                ? explode('.', $eventType, 2)[0]
+                : (AdminActivityLog::isSecurityEvent($eventType) ? 'security' : 'general');
+        }
+
+        if ($user !== null) {
+            $metadata['role'] ??= $user->role;
+            $metadata['portal'] ??= AuditLogPresenter::portalFromRole($user->role);
+            $metadata['user_name'] ??= $user->name;
+            $metadata['barangay_id'] ??= $user->barangay_id;
+
+            if (! isset($metadata['barangay_name']) && $user->relationLoaded('barangay') && $user->barangay) {
+                $metadata['barangay_name'] = $user->barangay->name;
+            }
+        }
+
+        return $metadata;
     }
 }
