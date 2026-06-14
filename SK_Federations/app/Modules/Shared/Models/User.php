@@ -56,6 +56,16 @@ class User extends Authenticatable implements MustVerifyEmail
         'active_device',
         'last_ip',
         'barangay_id',
+        'pending_email',
+        'email_change_token',
+        'email_change_token_expires_at',
+        'email_change_verified_at',
+        'email_change_last_sent_at',
+        'pending_password',
+        'password_change_token',
+        'password_change_token_expires_at',
+        'password_change_last_sent_at',
+        'must_change_password',
     ];
 
     /**
@@ -81,6 +91,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'lockout_until' => 'datetime',
             'last_login_at' => 'datetime',
             'last_seen' => 'datetime',
+            'email_change_token_expires_at' => 'datetime',
+            'email_change_verified_at' => 'datetime',
+            'email_change_last_sent_at' => 'datetime',
+            'password_change_token_expires_at' => 'datetime',
+            'password_change_last_sent_at' => 'datetime',
+            'must_change_password' => 'boolean',
         ];
     }
 

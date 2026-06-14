@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Authentication\Controllers\AuthController;
+use App\Modules\Profile\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/modules/authentication/{type}/{file}', function ($type, $file) {
@@ -63,4 +64,14 @@ Route::middleware('auth')->get('/logout', [AuthController::class, 'logout'])->na
 
 Route::middleware(['auth', 'single.session'])->group(function () {
     Route::post('/heartbeat', [AuthController::class, 'heartbeat'])->name('skfed.heartbeat');
+});
+
+Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trusted.device', 'prevent.back'])->group(function () {
+    Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('password.change');
+    Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('change-password');
+    Route::post('/change-password', [AuthController::class, 'updatePassword'])->name('password.change.update');
+    Route::get('/change-password/verify', [ProfileController::class, 'showChangePasswordVerify'])->name('change-password.verify');
+    Route::get('/change-password/verify-status', [ProfileController::class, 'checkChangePasswordVerifyStatus'])->name('change-password.verify.status');
+    Route::post('/change-password/resend', [ProfileController::class, 'resendChangePassword'])->name('change-password.resend');
+    Route::post('/change-password/cancel', [ProfileController::class, 'cancelChangePassword'])->name('change-password.cancel');
 });

@@ -11,8 +11,13 @@ class ProfileServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
         $this->loadRoutes();
-        $this->loadViewsFrom(__DIR__ . '/../Views', 'profile');
+        $this->loadViewsFrom(__DIR__.'/../Views', 'profile');
+
+        $this->publishes([
+            __DIR__.'/../assets' => public_path('modules/profile'),
+        ], 'profile-assets');
     }
 
     protected function loadRoutes(): void

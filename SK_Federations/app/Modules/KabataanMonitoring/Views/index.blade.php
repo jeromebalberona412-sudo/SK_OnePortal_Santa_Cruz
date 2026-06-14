@@ -1,119 +1,21 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    @include('partials.favicon')
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Kabataan Monitoring - SK Federation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}?v={{ time() }}">
+@extends('layout::app')
+
+@section('title', 'Kabataan Monitoring - SK OnePortal')
+
+@push('main-class')
+    km-main
+@endpush
+
+@push('main-attributes')
+    data-detail-base="{{ url('/kabataan-monitoring') }}"
+@endpush
+
+@push('styles')
     <link rel="stylesheet" href="{{ url('/modules/kabataan-monitoring/css/kabataan-monitoring.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
-</head>
-<body>
-    <script>
-        (function() {
-            window.history.pushState(null, '', window.location.href);
-            window.onpopstate = function() { window.history.pushState(null, '', window.location.href); };
-        })();
-    </script>
+@endpush
 
-    @php
-        $avatar = 'https://ui-avatars.com/api/?name=' . urlencode((string) ($user->name ?? 'User')) . '&background=213F99&color=fff&size=120';
-        $formattedRole = $user->role ? ucwords(str_replace('_', ' ', (string) $user->role)) : 'SK Official';
-    @endphp
-
-    <nav class="navbar">
-        <div class="navbar-left">
-            <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
-                <i class="fas fa-bars toggle-icon-expand"></i>
-                <i class="fas fa-ellipsis-v toggle-icon-collapse"></i>
-            </button>
-            <div class="navbar-brand">
-                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed Logo" class="brand-logo">
-                <span class="brand-name">SK Federations</span>
-            </div>
-        </div>
-        <div class="navbar-right">
-            <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="notif-badge"></span>
-            </button>
-            <div class="profile-dropdown-wrapper">
-                <button class="profile-btn" onclick="toggleProfileDropdown(event)" aria-label="Profile menu">
-                    <img src="{{ $avatar }}" alt="Profile" class="nav-avatar">
-                    <span class="nav-name">{{ $user->name ?? 'User' }}</span>
-                    <i class="fas fa-chevron-down nav-chevron"></i>
-                </button>
-                <div class="profile-dropdown" id="profileDropdown">
-                    <div class="profile-dropdown-header">
-                        <div class="dd-name">{{ $user->name ?? 'User' }}</div>
-                        <div class="dd-email">{{ $user->email ?? '' }}</div>
-                    </div>
-                    <a href="{{ route('profile') }}" class="dd-item" id="nav-profile-link"><i class="fas fa-user"></i> Profile</a>
-                    <a href="{{ route('password.request') }}" class="dd-item" id="nav-change-pw-link"><i class="fas fa-lock"></i> Change Password</a>
-                    <div class="dd-divider"></div>
-                    <button class="dd-item danger" onclick="showLogoutModal()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="notif-popover" id="notifPopover">
-        <div class="notif-popover-header">
-            <h4>Notifications</h4>
-            <button class="notif-mark-all">Mark all as read</button>
-        </div>
-        <div class="notif-list">
-            <div class="notif-empty">
-                <i class="fas fa-bell-slash" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.3;"></i>
-                No notifications yet
-            </div>
-        </div>
-    </div>
-
-    <div class="sidebar-overlay"></div>
-
-    <aside class="sidebar">
-        <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link">
-            <img src="{{ $avatar }}" alt="Profile" class="sidebar-avatar">
-            <div class="sidebar-user-info">
-                <div class="s-name">{{ $user->name ?? 'User' }}</div>
-                <div class="s-role">{{ $formattedRole }}</div>
-            </div>
-        </a>
-        <nav class="sidebar-nav">
-            <div class="menu-section-label">Main</div>
-            <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
-            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar"><i class="fas fa-calendar-alt"></i><span>Calendar</span></a>
-            <div class="menu-section-label">Modules</div>
-            <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed"><i class="fas fa-rss"></i><span>SK Community Feed</span></a>
-            <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring"><i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span></a>
-            <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
-            <a href="{{ route('kabataan-monitoring') }}" class="menu-item active" data-tooltip="Kabataan Monitoring"><i class="fas fa-users"></i><span>Kabataan Monitoring</span></a>
-            <a href="javascript:void(0);" class="menu-item" onclick="document.getElementById('archiveSubmenu').style.display = document.getElementById('archiveSubmenu').style.display === 'block' ? 'none' : 'block'; document.getElementById('archiveChevron').style.transform = document.getElementById('archiveSubmenu').style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)'; return false;" data-tooltip="Archive">
-                <i class="fas fa-archive"></i><span>Archive</span>
-                <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;"></i>
-            </a>
-            <div id="archiveSubmenu" style="display:none;padding-left:20px;border-left:2px solid #e2e8f0;margin-left:10px;">
-                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
-                    <i class="fas fa-trash"></i><span>Deleted Reports</span>
-                </a>
-                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
-                    <i class="fas fa-box"></i><span>Archived Reports</span>
-                </a>
-            </div>
-            <div class="menu-divider"></div>
-        </nav>
-    </aside>
-
-    <main class="main-content km-main" data-detail-base="{{ url('/kabataan-monitoring') }}">
-        <div class="km-container">
+@section('content')
+<div class="km-container">
 
             <section class="km-hero">
                 <img src="{{ url('/modules/kabataan-monitoring/images/sk-fed-logo.png') }}" alt="SK Federation logo" class="km-hero-logo">
@@ -208,30 +110,9 @@
             <p id="km-empty" class="km-empty" hidden>No profiles match your current filters.</p>
 
         </div>
-    </main>
+@endsection
 
-    @include('dashboard::logout-modal')
-
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
-    <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
+@push('scripts')
+<script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}?v={{ time() }}"></script>
-    <script>
-        window.logoutRoute = "{{ route('logout') }}";
-        window.loginRoute  = "{{ route('login') }}";
-        window.kmPageMode  = 'index';
-
-        document.getElementById('sidebar-profile-link')?.addEventListener('click', function(e) {
-            e.preventDefault(); LoadingScreen.show('Loading Profile', 'Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-        document.getElementById('nav-profile-link')?.addEventListener('click', function(e) {
-            e.preventDefault(); LoadingScreen.show('Loading Profile', 'Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-        document.getElementById('nav-change-pw-link')?.addEventListener('click', function(e) {
-            e.preventDefault(); LoadingScreen.show('Loading', 'Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-    </script>
-</body>
-</html>
+@endpush

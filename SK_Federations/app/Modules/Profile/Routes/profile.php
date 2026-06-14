@@ -21,10 +21,14 @@ Route::get('/modules/profile/{type}/{file}', function ($type, $file) {
     return response()->file($path, ['Content-Type' => $mimeType]);
 })->where('type', 'css|js')->where('file', '.*');
 
-Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trusted.device', 'prevent.back'])
-    ->group(function () {
-        Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
-    });
+$profileMiddleware = ['auth', 'verified', 'single.session', 'sk_fed.access', 'trusted.device', 'prevent.back'];
 
+Route::middleware($profileMiddleware)->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+
+    Route::get('/change-email', [ProfileController::class, 'showChangeEmail'])->name('change-email');
+    Route::post('/change-email', [ProfileController::class, 'requestChangeEmail'])->name('change-email.request');
+    Route::get('/change-email/verify', [ProfileController::class, 'showChangeEmailVerify'])->name('change-email.verify');
+    Route::post('/change-email/resend', [ProfileController::class, 'resendChangeEmail'])->name('change-email.resend');
+    Route::post('/change-email/cancel', [ProfileController::class, 'cancelChangeEmail'])->name('change-email.cancel');
+});

@@ -6,6 +6,7 @@ use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\PasswordResetService;
 use App\Modules\Authentication\Services\TenantContextService;
+use App\Modules\Profile\Services\PasswordChangeService;
 use App\Modules\Shared\Controllers\Controller;
 use App\Modules\Shared\Models\User;
 use Illuminate\Auth\Events\Verified;
@@ -27,6 +28,7 @@ class AuthController extends Controller
         protected TenantContextService $tenantContextService,
         protected PasswordResetService $passwordResetService,
         protected EmailVerificationDeviceService $emailVerificationDeviceService,
+        protected PasswordChangeService $passwordChangeService,
     ) {}
 
     public function showLogin(): View
@@ -497,6 +499,46 @@ class AuthController extends Controller
     public function showPasswordResetSuccess(): View
     {
         return view('authentication::password-reset-success');
+    }
+
+    public function showChangePassword(Request $request): View|RedirectResponse
+    {
+        $user = $request->user()->fresh();
+
+        if ($this->passwordChangeService->hasPendingChange($user)) {
+            return redirect()->route('change-password.verify');
+        }
+
+        return view('profile::change-password');
+    }
+
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                'max:'.(int) config('sk_fed_auth.password_reset.password.max_length', 64),
+                PasswordRule::min((int) config('sk_fed_auth.password_reset.password.min_length', 12))
+                    ->letters()
+                    ->numbers()
+                    ->symbols(),
+            ],
+        ]);
+
+        try {
+            $this->passwordChangeService->requestChange($user, (string) $validated['password']);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors());
+        }
+
+        return redirect()
+            ->route('change-password.verify')
+            ->with('status', 'Verification link sent to your email address.');
     }
 
     /**

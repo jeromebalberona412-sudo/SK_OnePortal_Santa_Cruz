@@ -18,10 +18,16 @@ const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 // INITIALIZATION
 // ===========================
 
-document.addEventListener('DOMContentLoaded', () => {
+function bootCalendar() {
     initializeCalendar();
     attachEventListeners();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootCalendar);
+} else {
+    bootCalendar();
+}
 
 function initializeCalendar() {
     updateMonthLabel();

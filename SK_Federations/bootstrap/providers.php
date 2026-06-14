@@ -14,4 +14,5 @@ return [
     App\Modules\Barangay_ABYIP\Providers\BarangayAbyipServiceProvider::class,
     App\Modules\KabataanMonitoring\Providers\KabataanMonitoringServiceProvider::class,
     App\Modules\Archive\Providers\ArchiveServiceProvider::class,
+    App\Modules\Layout\Providers\LayoutServiceProvider::class,
 ];

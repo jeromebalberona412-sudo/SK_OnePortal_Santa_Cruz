@@ -1,180 +1,25 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    @include('partials.favicon')
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>SK Federation Profile</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url('/modules/community_feed/css/community-feed.css') }}">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
-    <style>
-        .skfp-main{padding:0;max-width:none;margin:0}
-        .skfp-header-card{background:#fff;border-radius:0;overflow:hidden;box-shadow:0 2px 12px rgba(33,63,153,.08);margin-bottom:0}
-        .skfp-cover{height:180px;background:linear-gradient(135deg,#0d1b4b 0%,#213F99 55%,#3a5fd9 100%);position:relative;overflow:hidden}
-        .skfp-cover::after{content:'';position:absolute;inset:0;background-image:url('/modules/authentication/images/Background.png');background-size:cover;background-position:center;background-repeat:no-repeat;opacity:.08;mix-blend-mode:luminosity}
-        .skfp-info-section{padding:0 28px 24px;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
-        .skfp-avatar-wrap{margin-top:-50px;flex-shrink:0;position:relative}
-        .skfp-avatar{width:100px;height:100px;border-radius:50%;border:4px solid #fff;box-shadow:0 4px 16px rgba(33,63,153,.2);object-fit:cover}
-        .skfp-avatar-edit{position:absolute;bottom:2px;right:2px;width:28px;height:28px;border-radius:50%;background:#213F99;border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:11px}
-        .skfp-meta{flex:1;padding-top:12px}
-        .skfp-name{font-size:22px;font-weight:800;color:#0d1b4b;margin-bottom:2px}
-        .skfp-sub{font-size:13px;color:#64748b;margin-bottom:10px}
-        .skfp-stats{display:flex;gap:20px;flex-wrap:wrap}
-        .skfp-stat strong{display:block;font-size:18px;font-weight:800;color:#213F99}
-        .skfp-stat span{font-size:11px;color:#94a3b8}
-        .skfp-actions{display:flex;gap:10px;align-items:center;padding-top:12px}
-        .skfp-btn-primary{padding:9px 20px;background:#213F99;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
-        .skfp-btn-primary:hover{background:#1a3280}
-        .skfp-btn-ghost{padding:9px 20px;background:transparent;color:#213F99;border:2px solid #213F99;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
-        .skfp-btn-ghost:hover{background:#213F99;color:#fff}
-        .skfp-grid{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start}
-        .skfp-left,.skfp-right{display:flex;flex-direction:column;gap:16px}
-        .skfp-content-wrap{padding:24px}
-        .skfp-card{background:#fff;border-radius:14px;padding:20px 22px;box-shadow:0 2px 8px rgba(33,63,153,.07)}
-        .skfp-card-title{font-size:14px;font-weight:700;color:#0d1b4b;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-        .skfp-card-title i{color:#213F99}
-        .skfp-info-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
-        .skfp-info-row:last-child{border-bottom:none}
-        .skfp-info-icon{width:30px;height:30px;border-radius:8px;background:#eff3ff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-        .skfp-info-icon i{font-size:12px;color:#213F99}
-        .skfp-info-label{font-size:11px;color:#94a3b8}
-        .skfp-info-value{font-size:13px;font-weight:600;color:#1e293b}
-        .skfp-officer-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9}
-        .skfp-officer-item:last-child{border-bottom:none}
-        .skfp-officer-dot{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#213F99,#3a5fd9);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
-        .skfp-officer-name{font-size:13px;font-weight:700;color:#1e293b}
-        .skfp-officer-role{font-size:11px;color:#94a3b8}
-        .skfp-compose{background:#fff;border-radius:14px;padding:18px 22px;box-shadow:0 2px 8px rgba(33,63,153,.07)}
-        .skfp-compose-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-        .skfp-compose-input{flex:1;padding:10px 16px;border:2px solid #e2e8f0;border-radius:24px;font-size:14px;font-family:inherit;cursor:pointer;background:#f8fafc;color:#64748b;transition:border-color .2s}
-        .skfp-compose-input:focus{outline:none;border-color:#213F99;background:#fff}
-        .skfp-compose-actions{display:flex;gap:8px;flex-wrap:wrap}
-        .skfp-compose-type{padding:6px 14px;border:1px solid #e2e8f0;border-radius:20px;font-size:12px;font-weight:600;color:#64748b;background:#f8fafc;cursor:pointer;transition:all .2s}
-        .skfp-compose-type:hover,.skfp-compose-type.active{background:#213F99;color:#fff;border-color:#213F99}
-        .skfp-post{background:#fff;border-radius:14px;padding:18px 22px;box-shadow:0 2px 8px rgba(33,63,153,.07)}
-        .skfp-post-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-        .skfp-post-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover}
-        .skfp-post-author{font-size:14px;font-weight:700;color:#0d1b4b}
-        .skfp-post-meta{font-size:12px;color:#94a3b8;margin-top:2px}
-        .skfp-post-type{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;margin-right:6px}
-        .skfp-post-type.announcement{background:#dbeafe;color:#1d4ed8}
-        .skfp-post-type.event{background:#fef3c7;color:#92400e}
-        .skfp-post-type.activity{background:#dcfce7;color:#15803d}
-        .skfp-post-type.program{background:#f3e8ff;color:#7e22ce}
-        .skfp-post-title{font-size:16px;font-weight:700;color:#0d1b4b;margin-bottom:6px}
-        .skfp-post-text{font-size:14px;color:#475569;line-height:1.6}
-        .skfp-post-actions{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9}
-        .skfp-post-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border:none;background:none;border-radius:8px;font-size:13px;color:#64748b;cursor:pointer;transition:background .2s}
-        .skfp-post-btn:hover{background:#f1f5f9;color:#213F99}
-        .skfp-post-edit-btn{padding:6px 14px;background:#eff3ff;color:#213F99;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s}
-        .skfp-post-edit-btn:hover{background:#213F99;color:#fff}
-        .skfp-modal-wrap{display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center}
-        .skfp-modal-wrap.active{display:flex}
-        .skfp-modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
-        .skfp-modal-box{position:relative;background:#fff;border-radius:16px;width:90%;max-width:560px;max-height:90vh;overflow-y:auto}
-        .skfp-modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #e2e8f0}
-        .skfp-modal-header h3{font-size:17px;font-weight:700;color:#0d1b4b}
-        .skfp-modal-close{width:32px;height:32px;border:none;background:#f1f5f9;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
-        .skfp-modal-body{padding:20px 22px}
-        .skfp-form-group{margin-bottom:16px}
-        .skfp-form-group label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
-        .skfp-form-group input,.skfp-form-group select,.skfp-form-group textarea{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;transition:border-color .2s}
-        .skfp-form-group input:focus,.skfp-form-group select:focus,.skfp-form-group textarea:focus{outline:none;border-color:#213F99}
-        .skfp-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        .skfp-modal-footer{display:flex;gap:10px;justify-content:flex-end;padding:16px 22px;border-top:1px solid #e2e8f0}
-        @media(max-width:1024px){.skfp-grid{grid-template-columns:1fr}.skfp-content-wrap{padding:16px}}
-        @media(max-width:640px){.skfp-info-section{flex-direction:column;align-items:flex-start}.skfp-form-row{grid-template-columns:1fr}.skfp-info-section{padding:0 16px 20px}.skfp-actions{flex-wrap:wrap}}
-    </style>
-</head>
-<body>
-    <script>(function(){window.history.pushState(null,"",window.location.href);window.onpopstate=function(){window.history.pushState(null,"",window.location.href);}})();</script>
-    @php
-        $avatar = 'https://ui-avatars.com/api/?name=' . urlencode((string)($user->name ?? 'User')) . '&background=213F99&color=fff&size=120';
-        $formattedRole = $user->role ? ucwords(str_replace('_', ' ', (string)$user->role)) : 'SK Official';
-    @endphp
+@extends('layout::app')
 
-    {{-- NAVBAR --}}
-    <nav class="navbar">
-        <div class="navbar-left">
-            <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
-                <i class="fas fa-bars toggle-icon-expand"></i>
-                <i class="fas fa-ellipsis-v toggle-icon-collapse"></i>
-            </button>
-            <div class="navbar-brand">
-                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed Logo" class="brand-logo">
-                <span class="brand-name">SK Federations</span>
-            </div>
-        </div>
-        <div class="navbar-search">
+@section('title', 'SK Federation Profile')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ url('/modules/community_feed/css/community-feed.css') }}">
+@endpush
+
+@push('navbar-center')
+    <div class="navbar-search">
             <i class="fas fa-search search-icon"></i>
             <input type="text" placeholder="Search..." aria-label="Search">
         </div>
-        <div class="navbar-right">
-            <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
-                <i class="fas fa-bell"></i><span class="notif-badge"></span>
-            </button>
-            <div class="profile-dropdown-wrapper">
-                <button class="profile-btn" onclick="toggleProfileDropdown(event)" aria-label="Profile menu">
-                    <img src="{{ $avatar }}" alt="Profile" class="nav-avatar">
-                    <span class="nav-name">{{ $user->name ?? 'User' }}</span>
-                    <i class="fas fa-chevron-down nav-chevron"></i>
-                </button>
-                <div class="profile-dropdown" id="profileDropdown">
-                    <div class="profile-dropdown-header">
-                        <div class="dd-name">{{ $user->name ?? 'User' }}</div>
-                        <div class="dd-email">{{ $user->email ?? '' }}</div>
-                    </div>
-                    <a href="{{ route('profile') }}" class="dd-item"><i class="fas fa-user"></i> Profile</a>
-                    <a href="{{ route('password.request') }}" class="dd-item"><i class="fas fa-lock"></i> Change Password</a>
-                    <div class="dd-divider"></div>
-                    <button class="dd-item danger" onclick="showLogoutModal()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                </div>
-            </div>
-        </div>
-    </nav>
+@endpush
 
-    <div class="notif-popover" id="notifPopover">
-        <div class="notif-popover-header"><h4>Notifications</h4><button class="notif-mark-all">Mark all as read</button></div>
-        <div class="notif-list"><div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:28px;display:block;margin-bottom:8px;opacity:.3;"></i>No notifications yet</div></div>
-    </div>
-    <div class="sidebar-overlay"></div>
-
-    {{-- SIDEBAR --}}
-    <aside class="sidebar">
-        <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link">
-            <img src="{{ $avatar }}" alt="Profile" class="sidebar-avatar">
-            <div class="sidebar-user-info">
-                <div class="s-name">{{ $user->name ?? 'User' }}</div>
-                <div class="s-role">{{ $formattedRole }}</div>
-            </div>
-        </a>
-        <nav class="sidebar-nav">
-            <div class="menu-section-label">Main</div>
-            <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard"><i class="fas fa-home"></i><span>Dashboard</span></a>
-            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar"><i class="fas fa-calendar-alt"></i><span>Calendar</span></a>
-            <div class="menu-section-label">Modules</div>
-            <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed"><i class="fas fa-rss"></i><span>SK Community Feed</span></a>
-            <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring"><i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span></a>
-            <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
-            <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring"><i class="fas fa-users"></i><span>Kabataan Monitoring</span></a>
-            <div class="menu-divider"></div>
-        </nav>
-    </aside>
-
-    {{-- MAIN --}}
-    <main class="main-content">
-
-        {{-- HEADER CARD --}}
+@section('content')
+{{-- HEADER CARD --}}
         <div class="skfp-header-card">
             <div class="skfp-cover"></div>
             <div class="skfp-info-section">
                 <div class="skfp-avatar-wrap">
-                    <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed" class="skfp-avatar">
+                    <img src="{{ asset('Images/SK_OnePortal.png') }}" alt="SK Fed" class="skfp-avatar">
                     <button class="skfp-avatar-edit" onclick="openEditModal()" title="Change photo"><i class="fas fa-camera"></i></button>
                 </div>
                 <div class="skfp-meta">
@@ -269,7 +114,7 @@
                 {{-- Compose --}}
                 <div class="skfp-compose">
                     <div class="skfp-compose-row">
-                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed" class="skfp-post-avatar">
+                        <img src="{{ asset('Images/SK_OnePortal.png') }}" alt="SK Fed" class="skfp-post-avatar">
                         <input type="text" class="skfp-compose-input" placeholder="What's happening in SK Federation?" readonly onclick="openPostModal()">
                     </div>
                     <div class="skfp-compose-actions">
@@ -283,7 +128,7 @@
                 {{-- Posts --}}
                 <div class="skfp-post">
                     <div class="skfp-post-header">
-                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed" class="skfp-post-avatar">
+                        <img src="{{ asset('Images/SK_OnePortal.png') }}" alt="SK Fed" class="skfp-post-avatar">
                         <div>
                             <p class="skfp-post-author">SK Federation Santa Cruz</p>
                             <p class="skfp-post-meta"><span class="skfp-post-type announcement">Announcement</span> Mar 16, 2026 · 9:00 AM</p>
@@ -301,7 +146,7 @@
 
                 <div class="skfp-post">
                     <div class="skfp-post-header">
-                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed" class="skfp-post-avatar">
+                        <img src="{{ asset('Images/SK_OnePortal.png') }}" alt="SK Fed" class="skfp-post-avatar">
                         <div>
                             <p class="skfp-post-author">SK Federation Santa Cruz</p>
                             <p class="skfp-post-meta"><span class="skfp-post-type announcement">Announcement</span> Mar 10, 2026 · 8:00 AM</p>
@@ -320,9 +165,10 @@
             </div>
         </div>
         </div>{{-- end skfp-content-wrap --}}
-    </main>
+@endsection
 
-    {{-- CREATE POST MODAL --}}
+@push('scripts')
+{{-- CREATE POST MODAL --}}
     <div class="skfp-modal-wrap" id="postModal">
         <div class="skfp-modal-overlay" onclick="closePostModal()"></div>
         <div class="skfp-modal-box">
@@ -436,9 +282,7 @@
             </div>
         </div>
     </div>
-
-    <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script src="{{ url('/shared/js/loading.js') }}"></script>
     <script>
     function openPostModal(type) {
         if (type) document.getElementById('postTypeSelect').value = type;
@@ -454,5 +298,4 @@
         if (e.key === 'Escape') { closePostModal(); closeEditModal(); hideLogoutModal(); }
     });
     </script>
-</body>
-</html>
+@endpush

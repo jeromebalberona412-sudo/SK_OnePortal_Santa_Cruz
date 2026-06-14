@@ -1,145 +1,24 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    @include('partials.favicon')
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>SK Community Feed - SK Federation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
+@extends('layout::app')
+
+@section('title', 'SK Community Feed - SK OnePortal')
+
+@push('body-attributes')
+    class="sk-fed-feed"
+@endpush
+
+@push('styles')
     <link rel="stylesheet" href="{{ url('/modules/community_feed/css/community-feed.css') }}">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
-</head>
-<body class="sk-fed-feed">
-    <script>
-        (function() {
-            window.history.pushState(null, "", window.location.href);
-            window.onpopstate = function() { window.history.pushState(null, "", window.location.href); };
-        })();
-    </script>
+@endpush
 
-    @php
-        $avatar = 'https://ui-avatars.com/api/?name=' . urlencode((string) ($user->name ?? 'User')) . '&background=213F99&color=fff&size=120';
-        $formattedRole = $user->role ? ucwords(str_replace('_', ' ', (string) $user->role)) : 'SK Official';
-    @endphp
-
-    {{-- ── NAVBAR (SK Fed style) ── --}}
-    <nav class="navbar">
-        <div class="navbar-left">
-            <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
-                <i class="fas fa-bars toggle-icon-expand"></i>
-                <i class="fas fa-ellipsis-v toggle-icon-collapse"></i>
-            </button>
-            <div class="navbar-brand">
-                <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed Logo" class="brand-logo">
-                <span class="brand-name">SK Federations</span>
-            </div>
-        </div>
-        <div class="navbar-search">
+@push('navbar-center')
+    <div class="navbar-search">
             <i class="fas fa-search search-icon"></i>
             <input type="text" placeholder="Search posts, programs..." aria-label="Search" id="feed-search-input">
         </div>
-        <div class="navbar-right">
-            <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="notif-badge"></span>
-            </button>
-            <div class="profile-dropdown-wrapper">
-                <button class="profile-btn" onclick="toggleProfileDropdown(event)" aria-label="Profile menu">
-                    <img src="{{ $avatar }}" alt="Profile" class="nav-avatar">
-                    <span class="nav-name">{{ $user->name ?? 'User' }}</span>
-                    <i class="fas fa-chevron-down nav-chevron"></i>
-                </button>
-                <div class="profile-dropdown" id="profileDropdown">
-                    <div class="profile-dropdown-header">
-                        <div class="dd-name">{{ $user->name ?? 'User' }}</div>
-                        <div class="dd-email">{{ $user->email ?? '' }}</div>
-                    </div>
-                    <a href="{{ route('profile') }}" class="dd-item" id="nav-profile-link">
-                        <i class="fas fa-user"></i> Profile
-                    </a>
-                    <a href="{{ route('password.request') }}" class="dd-item" id="nav-change-pw-link">
-                        <i class="fas fa-lock"></i> Change Password
-                    </a>
-                    <div class="dd-divider"></div>
-                    <button class="dd-item danger" onclick="showLogoutModal()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
+@endpush
 
-    {{-- Notification Popover --}}
-    <div class="notif-popover" id="notifPopover">
-        <div class="notif-popover-header">
-            <h4>Notifications</h4>
-            <button class="notif-mark-all">Mark all as read</button>
-        </div>
-        <div class="notif-list">
-            <div class="notif-empty">
-                <i class="fas fa-bell-slash" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.3;"></i>
-                No notifications yet
-            </div>
-        </div>
-    </div>
-
-    <div class="sidebar-overlay"></div>
-
-    {{-- ── SIDEBAR (SK Fed style) ── --}}
-    <aside class="sidebar">
-        <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link">
-            <img src="{{ $avatar }}" alt="Profile" class="sidebar-avatar">
-            <div class="sidebar-user-info">
-                <div class="s-name">{{ $user->name ?? 'User' }}</div>
-                <div class="s-role">{{ $formattedRole }}</div>
-            </div>
-        </a>
-        <nav class="sidebar-nav">
-            <div class="menu-section-label">Main</div>
-            <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link">
-                <i class="fas fa-home"></i><span>Dashboard</span>
-            </a>
-            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
-                <i class="fas fa-calendar-alt"></i><span>Calendar</span>
-            </a>
-            <div class="menu-section-label">Modules</div>
-            <a href="{{ route('community-feed') }}" class="menu-item active" data-tooltip="SK Community Feed">
-                <i class="fas fa-rss"></i><span>SK Community Feed</span>
-            </a>
-            <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring">
-                <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
-            </a>
-            <a href="{{ route('reports') }}" class="menu-item" data-tooltip="Reports">
-                <i class="fas fa-chart-bar"></i><span>Reports</span>
-            </a>
-            <a href="{{ route('kabataan-monitoring') }}" class="menu-item" data-tooltip="Kabataan Monitoring">
-                <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
-            </a>
-            <a href="javascript:void(0);" class="menu-item" onclick="document.getElementById('archiveSubmenu').style.display = document.getElementById('archiveSubmenu').style.display === 'block' ? 'none' : 'block'; document.getElementById('archiveChevron').style.transform = document.getElementById('archiveSubmenu').style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)'; return false;" data-tooltip="Archive">
-                <i class="fas fa-archive"></i><span>Archive</span>
-                <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;"></i>
-            </a>
-            <div id="archiveSubmenu" style="display:none;padding-left:20px;border-left:2px solid #e2e8f0;margin-left:10px;">
-                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
-                    <i class="fas fa-trash"></i><span>Deleted Reports</span>
-                </a>
-                <a href="{{ route('archive') }}" class="menu-item" style="font-size:13px;">
-                    <i class="fas fa-box"></i><span>Archived Reports</span>
-                </a>
-            </div>
-            <div class="menu-divider"></div>
-        </nav>
-    </aside>
-
-    {{-- ── MAIN CONTENT ── --}}
-    <main class="main-content cf-main">
-        <div class="cf-container">
+@section('content')
+<div class="cf-container">
 
             {{-- ── CENTER: Feed ── --}}
             <div class="feed-section">
@@ -147,7 +26,7 @@
                 {{-- SK Federation Info Card --}}
                 <div class="sk-fed-card" style="cursor:pointer;" onclick="window.location.href='{{ route('sk-fed-profile') }}'">
                     <div class="sk-fed-card-banner">
-                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed Logo" class="sk-fed-card-logo">
+                        <img src="{{ asset('Images/SK_OnePortal.png') }}" alt="SK OnePortal Logo" class="sk-fed-card-logo">
                         <div class="sk-fed-card-info">
                             <h2 class="sk-fed-card-name">SK Federation Santa Cruz</h2>
                             <p class="sk-fed-card-sub">Sangguniang Kabataan Federation · Santa Cruz, Laguna</p>
@@ -287,9 +166,10 @@
                 </div>
             </aside>
         </div>
-    </main>
+@endsection
 
-    {{-- Programs Drawer Backdrop --}}
+@push('scripts')
+{{-- Programs Drawer Backdrop --}}
     <div class="programs-drawer-backdrop" id="programsDrawerBackdrop"></div>
 
     {{-- Mobile FAB: open programs sidebar --}}
@@ -479,63 +359,8 @@
         </div>
     </div>
 
-    @include('dashboard::logout-modal')
+    
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-    <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
-    <script src="{{ url('/modules/community_feed/js/community-feed.js') }}?v={{ filemtime(public_path('modules/community_feed/js/community-feed.js')) }}"></script>
-    <script>
-        window.logoutRoute  = "{{ route('logout') }}";
-        window.loginRoute   = "{{ route('login') }}";
-        window.currentUser  = "{{ $user->name ?? 'SK Official' }}";
-        window.currentAvatar = "{{ $avatar }}";
-
-        document.getElementById('sidebar-profile-link')?.addEventListener('click', function(e) {
-            e.preventDefault(); LoadingScreen.show('Loading Profile','Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-        document.getElementById('nav-profile-link')?.addEventListener('click', function(e) {
-            e.preventDefault(); LoadingScreen.show('Loading Profile','Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-        document.getElementById('nav-change-pw-link')?.addEventListener('click', function(e) {
-            e.preventDefault(); LoadingScreen.show('Loading','Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-        document.getElementById('nav-dashboard-link')?.addEventListener('click', function(e) {
-            e.preventDefault(); LoadingScreen.show('Loading Dashboard','Please wait...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-
-        // Program modals
-        function openProgramModal(cat) {
-            if (cat === 'education') { document.getElementById('educationModal').classList.add('active'); return; }
-            const titles = { 'anti-drugs':'Anti-Drugs','agriculture':'Agriculture','disaster':'Disaster Preparedness','sports':'Sports Development','gender':'Gender and Development','health':'Health','others':'Others' };
-            document.getElementById('noProgramModalTitle').textContent = (titles[cat] || cat) + ' Programs';
-            document.getElementById('noProgramModal').classList.add('active');
-        }
-        function closeProgramModal(id) { document.getElementById(id).classList.remove('active'); }
-        document.querySelectorAll('.modal-overlay').forEach(el => {
-            el.addEventListener('click', function() {
-                this.closest('.program-modal')?.classList.remove('active');
-            });
-        });
-        function openScholarshipForm() {
-            document.getElementById('educationModal').classList.remove('active');
-            document.getElementById('scholarshipFormModal').classList.add('active');
-        }
-        function submitScholarship(e) {
-            e.preventDefault();
-            document.getElementById('scholarshipFormModal').classList.remove('active');
-            const modal = document.getElementById('programSuccessModal');
-            const bar   = document.getElementById('successProgressBar');
-            modal.classList.add('active');
-            bar.style.transition = 'none'; bar.style.width = '100%';
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                bar.style.transition = 'width 5s linear'; bar.style.width = '0%';
-            }));
-            setTimeout(() => modal.classList.remove('active'), 5000);
-        }
-    </script>
-</body>
-</html>
+<script src="{{ url('/modules/community_feed/js/community-feed.js') }}?v={{ filemtime(public_path('modules/community_feed/js/community-feed.js')) }}"></script>
+@endpush

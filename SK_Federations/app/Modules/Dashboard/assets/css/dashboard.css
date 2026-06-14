@@ -74,10 +74,11 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
 }
 .navbar-brand .brand-logo {
     width: 32px; height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
+    border-radius: 6px;
+    object-fit: contain;
     border: 2px solid rgba(255,255,255,0.5);
     flex-shrink: 0;
+    background: rgba(255,255,255,0.1);
 }
 .navbar-brand .brand-name {
     font-size: 15px;
@@ -204,7 +205,7 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
 }
 .profile-btn:hover { background: rgba(255,255,255,0.22); }
 .profile-btn .nav-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.6); }
-.profile-btn .nav-name { font-size: 13px; font-weight: 600; color: white; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-btn .nav-name { display: none; }
 .profile-btn .nav-chevron { font-size: 11px; color: rgba(255,255,255,0.7); transition: transform var(--transition); }
 .profile-btn.open .nav-chevron { transform: rotate(180deg); }
 
@@ -268,9 +269,9 @@ body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed); }
 .sidebar-profile-active .s-name { color: #213F99; font-weight: 700; }
 
 .sidebar-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fed-blue); flex-shrink: 0; }
-.sidebar-user-info { overflow: hidden; transition: opacity var(--transition), width var(--transition); white-space: nowrap; }
-.sidebar-user-info .s-name { font-size: 13px; font-weight: 700; color: #1e293b; overflow: hidden; text-overflow: ellipsis; }
-.sidebar-user-info .s-role { font-size: 11px; color: #64748b; margin-top: 2px; }
+.sidebar-user-info { overflow: visible; transition: opacity var(--transition), width var(--transition); white-space: normal; min-width: 0; flex: 1; }
+.sidebar-user-info .s-name { font-size: 13px; font-weight: 700; color: #1e293b; white-space: normal; word-break: break-word; line-height: 1.35; overflow: visible; text-overflow: unset; }
+.sidebar-user-info .s-role { font-size: 11px; color: #64748b; margin-top: 3px; white-space: normal; word-break: break-word; line-height: 1.35; }
 body.sidebar-collapsed .sidebar-user-info { opacity: 0; width: 0; overflow: hidden; }
 
 .sidebar-nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 8px 0; }
