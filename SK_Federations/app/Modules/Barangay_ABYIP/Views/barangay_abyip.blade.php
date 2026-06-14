@@ -36,10 +36,6 @@
                 <span class="brand-name">SK Federations</span>
             </div>
         </div>
-        <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="abyipSearchInput" placeholder="Search..." onkeyup="performAbyipSearch()" aria-label="Search ABYIP submissions">
-        </div>
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
                 <i class="fas fa-bell"></i>
@@ -85,6 +81,9 @@
             <div class="menu-section-label">Main</div>
             <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard">
                 <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
+                <i class="fas fa-calendar-alt"></i><span>Calendar</span>
             </a>
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed">

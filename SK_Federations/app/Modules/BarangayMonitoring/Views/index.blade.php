@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('partials.favicon')
@@ -38,10 +38,6 @@
                 <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed Logo" class="brand-logo">
                 <span class="brand-name">SK Federations</span>
             </div>
-        </div>
-        <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input id="bm-search" type="text" placeholder="Search barangay..." aria-label="Search barangay">
         </div>
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
@@ -101,6 +97,9 @@
             <div class="menu-section-label">Main</div>
             <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link">
                 <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar">
+                <i class="fas fa-calendar-alt"></i><span>Calendar</span>
             </a>
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed">
@@ -199,12 +198,6 @@
                             <option value="Santo Angel Norte">Santo Angel Norte</option>
                             <option value="Santo Angel Sur">Santo Angel Sur</option>
                         </select>
-                        <select id="bmFilterTime" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
-                            <option value="all">All Time</option>
-                            <option value="day">Today</option>
-                            <option value="month">This Month</option>
-                            <option value="year">This Year</option>
-                        </select>
                     </div>
                 </div>
                 <div class="bm-card-body">
@@ -275,7 +268,6 @@
         function bmFilterBarangays() {
             const statusFilter = document.getElementById('bmFilterStatus').value;
             const barangayFilter = document.getElementById('bmFilterBarangay').value;
-            const timeFilter = document.getElementById('bmFilterTime').value;
             const grid = document.getElementById('bm-list-grid');
             const items = grid.querySelectorAll('.bm-list-item');
             const emptyMsg = document.getElementById('bm-empty');
@@ -284,13 +276,11 @@
             items.forEach(item => {
                 const itemStatus = item.getAttribute('data-status');
                 const itemBarangay = item.getAttribute('data-barangay');
-                const itemDate = parseInt(item.getAttribute('data-date')) || 0;
                 
                 let statusMatch = statusFilter === 'all' || itemStatus === statusFilter;
                 let barangayMatch = barangayFilter === 'all' || itemBarangay === barangayFilter.toLowerCase();
-                let timeMatch = isDateInTimeRange(itemDate, timeFilter);
                 
-                if (statusMatch && barangayMatch && timeMatch) {
+                if (statusMatch && barangayMatch) {
                     item.style.display = '';
                     visibleCount++;
                 } else {
@@ -299,24 +289,6 @@
             });
 
             emptyMsg.hidden = visibleCount > 0;
-        }
-
-        function isDateInTimeRange(timestamp, range) {
-            if (range === 'all') return true;
-            
-            const now = new Date();
-            const itemDate = new Date(timestamp * 1000);
-            
-            if (range === 'day') {
-                return itemDate.toDateString() === now.toDateString();
-            } else if (range === 'month') {
-                return itemDate.getFullYear() === now.getFullYear() && 
-                       itemDate.getMonth() === now.getMonth();
-            } else if (range === 'year') {
-                return itemDate.getFullYear() === now.getFullYear();
-            }
-            
-            return true;
         }
     </script>
 </body>
