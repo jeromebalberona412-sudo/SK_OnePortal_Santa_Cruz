@@ -1,24 +1,47 @@
 <?php
 
+use App\Modules\ABYIP\Controllers\AbyipController;
+use App\Modules\Announcement\Controllers\AnnouncementController;
+use App\Modules\Announcement\Controllers\AnnouncementPageController;
+use App\Modules\Announcement\Controllers\ArchiveAnnouncementController;
+use App\Modules\Announcement\Controllers\BarangayProfileController;
+use App\Modules\Calendar\Controllers\CalendarController;
+use App\Modules\Committees\Controllers\CommitteeController;
+use App\Modules\Dashboard\Controllers\DashboardController;
+use App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController;
+use App\Modules\Kabataan\Controllers\KabataanController;
+use App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController;
+use App\Modules\PreviousKabataan\Controllers\PreviousKabataanController;
+use App\Modules\Profile\Controllers\ProfileController;
+use App\Modules\Program_Management\Controllers\ProgramApplicationController;
+use App\Modules\Program_Management\Controllers\ProgramSurveyController;
+use App\Modules\Program_Management\Controllers\ScheduleProgramController;
+use App\Modules\Programs\Controllers\ProgramController;
+use App\Modules\Programs\Services\AbyipProgramCatalogService;
+use App\Modules\Rejected_KKProfiling\Controllers\RejectedKKProfilingController;
+use App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController;
+use App\Modules\Rejected_Sports\Controllers\RejectedSportsController;
+use App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController;
+use App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/change-email/confirm/{id}/{token}', [\App\Modules\Profile\Controllers\ProfileController::class, 'confirmChangeEmail'])
+Route::get('/change-email/confirm/{id}/{token}', [ProfileController::class, 'confirmChangeEmail'])
     ->middleware('throttle:6,1')
     ->name('change-email.confirm');
 
-Route::get('/change-email/set-password/{id}/{token}', [\App\Modules\Profile\Controllers\ProfileController::class, 'showSetPasswordAfterEmailChange'])
+Route::get('/change-email/set-password/{id}/{token}', [ProfileController::class, 'showSetPasswordAfterEmailChange'])
     ->middleware('throttle:6,1')
     ->name('change-email.set-password');
 
-Route::post('/change-email/set-password/{id}/{token}', [\App\Modules\Profile\Controllers\ProfileController::class, 'updateSetPasswordAfterEmailChange'])
+Route::post('/change-email/set-password/{id}/{token}', [ProfileController::class, 'updateSetPasswordAfterEmailChange'])
     ->middleware('throttle:6,1')
     ->name('change-email.set-password.update');
 
-Route::get('/change-password/confirm/{id}/{token}', [\App\Modules\Profile\Controllers\ProfileController::class, 'confirmChangePassword'])
+Route::get('/change-password/confirm/{id}/{token}', [ProfileController::class, 'confirmChangePassword'])
     ->middleware('throttle:6,1')
     ->name('change-password.confirm');
 
@@ -28,8 +51,8 @@ Route::middleware([
     'sk_official.access',
     'must.change.password',
 ])->group(function () {
-    Route::get('/dashboard', [\App\Modules\Dashboard\Controllers\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/api/dashboard/stats', [\App\Modules\Dashboard\Controllers\DashboardController::class, 'stats'])->name('api.dashboard.stats');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/api/dashboard/stats', [DashboardController::class, 'stats'])->name('api.dashboard.stats');
 
     Route::get('/ai-assistant', function () {
         $user = auth()->user();
@@ -37,20 +60,20 @@ Route::middleware([
         $userFirstName = explode(' ', trim($userName))[0] ?: 'there';
         $parts = preg_split('/\s+/', trim($userName));
         $userInitials = count($parts) >= 2
-            ? strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1))
+            ? strtoupper(substr($parts[0], 0, 1).substr($parts[count($parts) - 1], 0, 1))
             : strtoupper(substr($userName, 0, 2));
 
         return view('AI_Assistant::ai-assistant', compact('userName', 'userFirstName', 'userInitials'));
     })->name('ai-assistant');
 
-    Route::get('/profile', [\App\Modules\Profile\Controllers\ProfileController::class, 'index'])
+    Route::get('/profile', [ProfileController::class, 'index'])
         ->name('profile');
 
-    Route::get('/change-email', [\App\Modules\Profile\Controllers\ProfileController::class, 'showChangeEmail'])->name('change-email');
-    Route::post('/change-email', [\App\Modules\Profile\Controllers\ProfileController::class, 'requestChangeEmail'])->name('change-email.request');
-    Route::get('/change-email/verify', [\App\Modules\Profile\Controllers\ProfileController::class, 'showChangeEmailVerify'])->name('change-email.verify');
-    Route::post('/change-email/resend', [\App\Modules\Profile\Controllers\ProfileController::class, 'resendChangeEmail'])->name('change-email.resend');
-    Route::post('/change-email/cancel', [\App\Modules\Profile\Controllers\ProfileController::class, 'cancelChangeEmail'])->name('change-email.cancel');
+    Route::get('/change-email', [ProfileController::class, 'showChangeEmail'])->name('change-email');
+    Route::post('/change-email', [ProfileController::class, 'requestChangeEmail'])->name('change-email.request');
+    Route::get('/change-email/verify', [ProfileController::class, 'showChangeEmailVerify'])->name('change-email.verify');
+    Route::post('/change-email/resend', [ProfileController::class, 'resendChangeEmail'])->name('change-email.resend');
+    Route::post('/change-email/cancel', [ProfileController::class, 'cancelChangeEmail'])->name('change-email.cancel');
 
     Route::get('/notifications', function () {
         return view('Profile::notification');
@@ -61,116 +84,126 @@ Route::middleware([
     })->name('calendar');
 
     Route::prefix('api/calendar')->group(function () {
-        Route::get('/notes', [\App\Modules\Calendar\Controllers\CalendarController::class, 'index'])->name('api.calendar.notes.index');
-        Route::post('/notes', [\App\Modules\Calendar\Controllers\CalendarController::class, 'store'])->name('api.calendar.notes.store');
-        Route::put('/notes/{id}', [\App\Modules\Calendar\Controllers\CalendarController::class, 'update'])->name('api.calendar.notes.update');
-        Route::delete('/notes/{id}', [\App\Modules\Calendar\Controllers\CalendarController::class, 'destroy'])->name('api.calendar.notes.destroy');
+        Route::get('/notes', [CalendarController::class, 'index'])->name('api.calendar.notes.index');
+        Route::post('/notes', [CalendarController::class, 'store'])->name('api.calendar.notes.store');
+        Route::put('/notes/{id}', [CalendarController::class, 'update'])->name('api.calendar.notes.update');
+        Route::delete('/notes/{id}', [CalendarController::class, 'destroy'])->name('api.calendar.notes.destroy');
     });
 
-    Route::get('/announcements', [\App\Modules\Announcement\Controllers\AnnouncementPageController::class, 'index'])
+    Route::get('/announcements', [AnnouncementPageController::class, 'index'])
         ->name('announcements');
 
-    Route::get('/announcements/archive', [\App\Modules\Announcement\Controllers\ArchiveAnnouncementController::class, 'index'])
+    Route::get('/announcements/archive', [ArchiveAnnouncementController::class, 'index'])
         ->name('announcements.archive');
 
-    Route::get('/announcements/archive/data', [\App\Modules\Announcement\Controllers\ArchiveAnnouncementController::class, 'data'])
+    Route::get('/announcements/archive/data', [ArchiveAnnouncementController::class, 'data'])
         ->name('announcements.archive.data');
 
-    Route::post('/announcements/archive/{id}/restore', [\App\Modules\Announcement\Controllers\ArchiveAnnouncementController::class, 'restore'])
+    Route::post('/announcements/archive/{id}/restore', [ArchiveAnnouncementController::class, 'restore'])
         ->name('announcements.archive.restore');
 
-    Route::delete('/announcements/archive/{id}', [\App\Modules\Announcement\Controllers\ArchiveAnnouncementController::class, 'destroy'])
+    Route::delete('/announcements/archive/{id}', [ArchiveAnnouncementController::class, 'destroy'])
         ->name('announcements.archive.destroy');
 
     // Announcement API
     Route::prefix('api/announcements')->group(function () {
-        Route::get('/',              [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'feed'])->name('api.announcements.feed');
-        Route::post('/',             [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'store'])->name('api.announcements.store');
-        Route::post('/upload-image', [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'uploadImage'])->name('api.announcements.upload-image');
-        Route::put('/{id}',          [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'update'])->name('api.announcements.update');
-        Route::delete('/{id}',       [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'destroy'])->name('api.announcements.destroy');
-        Route::post('/{id}/react',   [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'react'])->name('api.announcements.react');
-        Route::post('/{id}/comment', [\App\Modules\Announcement\Controllers\AnnouncementController::class, 'comment'])->name('api.announcements.comment');
+        Route::get('/', [AnnouncementController::class, 'feed'])->name('api.announcements.feed');
+        Route::post('/', [AnnouncementController::class, 'store'])->name('api.announcements.store');
+        Route::post('/upload-image', [AnnouncementController::class, 'uploadImage'])->name('api.announcements.upload-image');
+        Route::put('/{id}', [AnnouncementController::class, 'update'])->name('api.announcements.update');
+        Route::delete('/{id}', [AnnouncementController::class, 'destroy'])->name('api.announcements.destroy');
+        Route::post('/{id}/react', [AnnouncementController::class, 'react'])->name('api.announcements.react');
+        Route::post('/{id}/comment', [AnnouncementController::class, 'comment'])->name('api.announcements.comment');
     });
 
-    Route::get('/announcements/barangay/{slug}', [\App\Modules\Announcement\Controllers\BarangayProfileController::class, 'show'])
+    Route::get('/announcements/barangay/{slug}', [BarangayProfileController::class, 'show'])
         ->name('sk-officials.barangay-profile');
 
     Route::get('/committees', function () {
-        return view('Committees::committees');
+        $catalog = app(AbyipProgramCatalogService::class);
+
+        return view('Committees::committees', [
+            'abyipGate' => $catalog->resolveAccessGate(auth()->user()?->barangay_id),
+        ]);
     })->name('committees');
 
     Route::prefix('api/committees')->group(function () {
-        Route::get('/', [\App\Modules\Committees\Controllers\CommitteeController::class, 'index'])->name('api.committees.index');
-        Route::get('/abyip-programs', [\App\Modules\Committees\Controllers\CommitteeController::class, 'abyipPrograms'])->name('api.committees.abyip-programs');
-        Route::get('/sk-officials', [\App\Modules\Committees\Controllers\CommitteeController::class, 'officials'])->name('api.committees.officials');
-        Route::post('/', [\App\Modules\Committees\Controllers\CommitteeController::class, 'store'])->name('api.committees.store');
-        Route::put('/{id}', [\App\Modules\Committees\Controllers\CommitteeController::class, 'update'])->name('api.committees.update');
+        Route::get('/', [CommitteeController::class, 'index'])->name('api.committees.index');
+        Route::get('/abyip-programs', [CommitteeController::class, 'abyipPrograms'])->name('api.committees.abyip-programs');
+        Route::get('/sk-officials', [CommitteeController::class, 'officials'])->name('api.committees.officials');
+        Route::post('/', [CommitteeController::class, 'store'])->name('api.committees.store');
+        Route::put('/{id}', [CommitteeController::class, 'update'])->name('api.committees.update');
     });
 
     Route::get('/programs', function () {
-        return view('Programs::programs');
+        $catalog = app(AbyipProgramCatalogService::class);
+
+        return view('Programs::programs', [
+            'abyipGate' => $catalog->resolveAccessGate(auth()->user()?->barangay_id),
+        ]);
     })->name('programs');
 
     Route::prefix('api/programs')->group(function () {
-        Route::get('/', [\App\Modules\Programs\Controllers\ProgramController::class, 'index'])->name('api.programs.index');
-        Route::get('/management', [\App\Modules\Programs\Controllers\ProgramController::class, 'management'])->name('api.programs.management');
-        Route::put('/{programId}/duration', [\App\Modules\Programs\Controllers\ProgramController::class, 'updateDuration'])->name('api.programs.update-duration');
+        Route::get('/', [ProgramController::class, 'index'])->name('api.programs.index');
+        Route::get('/management', [ProgramController::class, 'management'])->name('api.programs.management');
+        Route::put('/{programId}/duration', [ProgramController::class, 'updateDuration'])->name('api.programs.update-duration');
     });
 
-    Route::get('/kk-profiling-requests', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
-    Route::get('/kk-profiling-requests/data', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'data'])->name('kk-profiling-requests.data');
-    Route::post('/kk-profiling-requests/{id}/approve', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'approve'])->name('kk-profiling-requests.approve');
-    Route::post('/kk-profiling-requests/{id}/reject', [\App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController::class, 'reject'])->name('kk-profiling-requests.reject');
+    Route::get('/kk-profiling-requests', [KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
+    Route::get('/kk-profiling-requests/data', [KKProfilingRequestsController::class, 'data'])->name('kk-profiling-requests.data');
+    Route::post('/kk-profiling-requests/{id}/approve', [KKProfilingRequestsController::class, 'approve'])->name('kk-profiling-requests.approve');
+    Route::post('/kk-profiling-requests/{id}/reject', [KKProfilingRequestsController::class, 'reject'])->name('kk-profiling-requests.reject');
 
     Route::get('/abyip', function () {
         return view('ABYIP::abyip');
     })->name('abyip.index');
 
     Route::prefix('api/abyip')->group(function () {
-        Route::get('/', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'index'])->name('api.abyip.index');
-        Route::get('/{id}', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'show'])->name('api.abyip.show');
-        Route::post('/', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'store'])->name('api.abyip.store');
-        Route::put('/{id}', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'update'])->name('api.abyip.update');
-        Route::delete('/{id}', [\App\Modules\ABYIP\Controllers\AbyipController::class, 'destroy'])->name('api.abyip.destroy');
+        Route::get('/', [AbyipController::class, 'index'])->name('api.abyip.index');
+        Route::get('/{id}', [AbyipController::class, 'show'])->name('api.abyip.show');
+        Route::post('/', [AbyipController::class, 'store'])->name('api.abyip.store');
+        Route::post('/{id}/resubmit', [AbyipController::class, 'resubmit'])->name('api.abyip.resubmit');
+        Route::put('/{id}', [AbyipController::class, 'update'])->name('api.abyip.update');
+        Route::delete('/{id}', [AbyipController::class, 'destroy'])->name('api.abyip.destroy');
     });
 
-    Route::get('/kabataan', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'index'])->name('kabataan');
-    Route::get('/kabataan/data', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'data'])->name('kabataan.data');
-    Route::post('/kabataan', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'store'])->name('kabataan.store');
-    Route::put('/kabataan/{id}', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'update'])->name('kabataan.update');
-    Route::delete('/kabataan/{id}', [\App\Modules\Kabataan\Controllers\KabataanController::class, 'destroy'])->name('kabataan.destroy');
+    Route::get('/kabataan', [KabataanController::class, 'index'])->name('kabataan');
+    Route::get('/kabataan/data', [KabataanController::class, 'data'])->name('kabataan.data');
+    Route::post('/kabataan', [KabataanController::class, 'store'])->name('kabataan.store');
+    Route::put('/kabataan/{id}', [KabataanController::class, 'update'])->name('kabataan.update');
+    Route::delete('/kabataan/{id}', [KabataanController::class, 'destroy'])->name('kabataan.destroy');
 
-    Route::get('/previous-kabataan', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'index'])->name('previous-kabataan');
-    Route::get('/previous-kabataan/data', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'data'])->name('previous-kabataan.data');
-    Route::post('/previous-kabataan/upload', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'upload'])->name('previous-kabataan.upload');
-    Route::post('/previous-kabataan/move/{id}', [\App\Modules\PreviousKabataan\Controllers\PreviousKabataanController::class, 'moveFromActive'])->name('previous-kabataan.move');
+    Route::get('/previous-kabataan', [PreviousKabataanController::class, 'index'])->name('previous-kabataan');
+    Route::get('/previous-kabataan/data', [PreviousKabataanController::class, 'data'])->name('previous-kabataan.data');
+    Route::post('/previous-kabataan/upload', [PreviousKabataanController::class, 'upload'])->name('previous-kabataan.upload');
+    Route::post('/previous-kabataan/move/{id}', [PreviousKabataanController::class, 'moveFromActive'])->name('previous-kabataan.move');
 
-    Route::get('/deleted-kabataan', [\App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController::class, 'index'])->name('deleted-kabataan');
-    Route::get('/deleted-kabataan/data', [\App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController::class, 'data'])->name('deleted-kabataan.data');
-    Route::post('/deleted-kabataan/{id}/restore', [\App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController::class, 'restore'])->name('deleted-kabataan.restore');
+    Route::get('/deleted-kabataan', [DeletedKabataanController::class, 'index'])->name('deleted-kabataan');
+    Route::get('/deleted-kabataan/data', [DeletedKabataanController::class, 'data'])->name('deleted-kabataan.data');
+    Route::post('/deleted-kabataan/{id}/restore', [DeletedKabataanController::class, 'restore'])->name('deleted-kabataan.restore');
 
     Route::get('/deleted-abyip', function () {
         return view('Deleted_Abyip::deleted-abyip');
     })->name('deleted-abyip');
 
-    Route::get('/rejected-kkprofiling', [\App\Modules\Rejected_KKProfiling\Controllers\RejectedKKProfilingController::class, 'index'])->name('rejected-kkprofiling');
-    Route::get('/rejected-kkprofiling/data', [\App\Modules\Rejected_KKProfiling\Controllers\RejectedKKProfilingController::class, 'data'])->name('rejected-kkprofiling.data');
-    Route::post('/rejected-kkprofiling/{id}/restore', [\App\Modules\Rejected_KKProfiling\Controllers\RejectedKKProfilingController::class, 'restore'])->name('rejected-kkprofiling.restore');
+    Route::get('/rejected-kkprofiling', [RejectedKKProfilingController::class, 'index'])->name('rejected-kkprofiling');
+    Route::get('/rejected-kkprofiling/data', [RejectedKKProfilingController::class, 'data'])->name('rejected-kkprofiling.data');
+    Route::post('/rejected-kkprofiling/{id}/restore', [RejectedKKProfilingController::class, 'restore'])->name('rejected-kkprofiling.restore');
 
-    Route::get('/schedule-kk-profiling', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'index'])->name('schedule-kk-profiling');
-    Route::get('/api/schedule-kk-profiling/data', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'data'])->name('schedule-kk-profiling.data');
-    Route::post('/api/schedule-kk-profiling', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'store'])->name('schedule-kk-profiling.store');
-    Route::put('/api/schedule-kk-profiling/{id}', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'update'])->name('schedule-kk-profiling.update');
-    Route::delete('/api/schedule-kk-profiling/{id}', [\App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController::class, 'destroy'])->name('schedule-kk-profiling.destroy');
+    Route::get('/schedule-kk-profiling', [ScheduleKKProfilingController::class, 'index'])->name('schedule-kk-profiling');
+    Route::get('/api/schedule-kk-profiling/data', [ScheduleKKProfilingController::class, 'data'])->name('schedule-kk-profiling.data');
+    Route::post('/api/schedule-kk-profiling', [ScheduleKKProfilingController::class, 'store'])->name('schedule-kk-profiling.store');
+    Route::put('/api/schedule-kk-profiling/{id}', [ScheduleKKProfilingController::class, 'update'])->name('schedule-kk-profiling.update');
+    Route::delete('/api/schedule-kk-profiling/{id}', [ScheduleKKProfilingController::class, 'destroy'])->name('schedule-kk-profiling.destroy');
 
     Route::get('/schedule-programs', function () {
-        $catalog = app(\App\Modules\Programs\Services\AbyipProgramCatalogService::class);
+        $catalog = app(AbyipProgramCatalogService::class);
         $management = $catalog->listForManagement(auth()->user());
 
         return view('Program_Management::program-management', [
             'managementPrograms' => $management['programs'],
             'calendarYear' => $management['calendar_year'],
+            'abyipGate' => $catalog->resolveAccessGate(auth()->user()?->barangay_id),
         ]);
     })->name('schedule-programs'); // legacy route name kept for sidebar
 
@@ -179,52 +212,60 @@ Route::middleware([
     });
 
     Route::get('/schedule-programs/sports-application-form', function () {
-        return view('Program_Management::sports.schedule');
+        $catalog = app(AbyipProgramCatalogService::class);
+
+        return view('Program_Management::sports.schedule', [
+            'abyipGate' => $catalog->resolveAccessGate(auth()->user()?->barangay_id),
+        ]);
     })->name('schedule-programs.sports-application-form');
 
     Route::get('/sports-application-form', function () {
-        return view('Program_Management::sports.schedule');
+        $catalog = app(AbyipProgramCatalogService::class);
+
+        return view('Program_Management::sports.schedule', [
+            'abyipGate' => $catalog->resolveAccessGate(auth()->user()?->barangay_id),
+        ]);
     })->name('sports-application-form');
 
-    Route::get('/sports-programs/archived', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'index'])
+    Route::get('/sports-programs/archived', [ArchivedSportsProgramController::class, 'index'])
         ->name('sports-programs.archived');
-    Route::get('/sports-programs/archived/data', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'data'])
+    Route::get('/sports-programs/archived/data', [ArchivedSportsProgramController::class, 'data'])
         ->name('sports-programs.archived.data');
-    Route::post('/sports-programs/archive/{id}', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'archive'])
+    Route::post('/sports-programs/archive/{id}', [ArchivedSportsProgramController::class, 'archive'])
         ->whereNumber('id')
         ->name('sports-programs.archive');
-    Route::post('/sports-programs/restore/{id}', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'restore'])
+    Route::post('/sports-programs/restore/{id}', [ArchivedSportsProgramController::class, 'restore'])
         ->whereNumber('id')
         ->name('sports-programs.restore');
-    Route::delete('/sports-programs/delete/{id}', [\App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController::class, 'destroy'])
+    Route::delete('/sports-programs/delete/{id}', [ArchivedSportsProgramController::class, 'destroy'])
         ->whereNumber('id')
         ->name('sports-programs.delete');
 
     Route::prefix('api/schedule-programs')->group(function () {
-        Route::get('/meta', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'meta'])->name('api.schedule-programs.meta');
-        Route::get('/', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'index'])->name('api.schedule-programs.index');
-        Route::get('/{id}', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'show'])->name('api.schedule-programs.show');
-        Route::post('/', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'store'])->name('api.schedule-programs.store');
-        Route::put('/{id}', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'update'])->name('api.schedule-programs.update');
-        Route::delete('/{id}', [\App\Modules\Program_Management\Controllers\ScheduleProgramController::class, 'destroy'])->name('api.schedule-programs.destroy');
+        Route::get('/meta', [ScheduleProgramController::class, 'meta'])->name('api.schedule-programs.meta');
+        Route::get('/', [ScheduleProgramController::class, 'index'])->name('api.schedule-programs.index');
+        Route::get('/{id}', [ScheduleProgramController::class, 'show'])->name('api.schedule-programs.show');
+        Route::post('/', [ScheduleProgramController::class, 'store'])->name('api.schedule-programs.store');
+        Route::put('/{id}', [ScheduleProgramController::class, 'update'])->name('api.schedule-programs.update');
+        Route::delete('/{id}', [ScheduleProgramController::class, 'destroy'])->name('api.schedule-programs.destroy');
     });
 
     Route::prefix('api/program-applications')->group(function () {
-        Route::get('/', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'index'])->name('api.program-applications.index');
-        Route::get('/{id}/documents/{questionId}', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'showDocument'])->whereNumber('id')->name('api.program-applications.document');
-        Route::get('/{id}', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'show'])->whereNumber('id')->name('api.program-applications.show');
-        Route::put('/{id}/status', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'updateStatus'])->whereNumber('id')->name('api.program-applications.update-status');
-        Route::put('/{id}/payment', [\App\Modules\Program_Management\Controllers\ProgramApplicationController::class, 'updatePaymentStatus'])->whereNumber('id')->name('api.program-applications.update-payment');
+        Route::get('/', [ProgramApplicationController::class, 'index'])->name('api.program-applications.index');
+        Route::get('/{id}/documents/{questionId}', [ProgramApplicationController::class, 'showDocument'])->whereNumber('id')->name('api.program-applications.document');
+        Route::get('/{id}', [ProgramApplicationController::class, 'show'])->whereNumber('id')->name('api.program-applications.show');
+        Route::put('/{id}/status', [ProgramApplicationController::class, 'updateStatus'])->whereNumber('id')->name('api.program-applications.update-status');
+        Route::put('/{id}/payment', [ProgramApplicationController::class, 'updatePaymentStatus'])->whereNumber('id')->name('api.program-applications.update-payment');
     });
 
     Route::prefix('api/program-surveys/{committee}')->group(function () {
-        Route::get('/meta', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'meta'])->name('api.program-surveys.meta');
-        Route::get('/responses', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'responses'])->name('api.program-surveys.responses');
-        Route::get('/', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'index'])->name('api.program-surveys.index');
-        Route::get('/{id}', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'show'])->name('api.program-surveys.show');
-        Route::post('/', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'store'])->name('api.program-surveys.store');
-        Route::put('/{id}', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'update'])->name('api.program-surveys.update');
-        Route::delete('/{id}', [\App\Modules\Program_Management\Controllers\ProgramSurveyController::class, 'destroy'])->name('api.program-surveys.destroy');
+        Route::get('/meta', [ProgramSurveyController::class, 'meta'])->name('api.program-surveys.meta');
+        Route::get('/responses', [ProgramSurveyController::class, 'responses'])->name('api.program-surveys.responses');
+        Route::get('/', [ProgramSurveyController::class, 'index'])->name('api.program-surveys.index');
+        Route::get('/{id}', [ProgramSurveyController::class, 'show'])->name('api.program-surveys.show');
+        Route::post('/', [ProgramSurveyController::class, 'store'])->name('api.program-surveys.store');
+        Route::put('/{id}', [ProgramSurveyController::class, 'update'])->name('api.program-surveys.update');
+        Route::delete('/{id}', [ProgramSurveyController::class, 'destroy'])->name('api.program-surveys.destroy');
     });
 
     Route::get('/scholarship-schedule', function () {
@@ -245,15 +286,15 @@ Route::middleware([
     Route::redirect('/scholarship-application-request', '/scholarship-applications');
     Route::redirect('/scholarship', '/scholarship-applications');
 
-    Route::get('/rejected-scholars', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'index'])->name('rejected-scholars');
-    Route::get('/rejected-scholars/data', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'data'])->name('rejected-scholars.data');
-    Route::post('/rejected-scholars/{id}/restore', [\App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController::class, 'restore'])->whereNumber('id')->name('rejected-scholars.restore');
+    Route::get('/rejected-scholars', [RejectedScholarshipController::class, 'index'])->name('rejected-scholars');
+    Route::get('/rejected-scholars/data', [RejectedScholarshipController::class, 'data'])->name('rejected-scholars.data');
+    Route::post('/rejected-scholars/{id}/restore', [RejectedScholarshipController::class, 'restore'])->whereNumber('id')->name('rejected-scholars.restore');
 
     Route::redirect('/rejected-scholarship', '/rejected-scholars');
 
-    Route::get('/rejected-sports', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'index'])->name('rejected-sports');
-    Route::get('/rejected-sports/data', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'data'])->name('rejected-sports.data');
-    Route::post('/rejected-sports/{id}/restore', [\App\Modules\Rejected_Sports\Controllers\RejectedSportsController::class, 'restore'])->whereNumber('id')->name('rejected-sports.restore');
+    Route::get('/rejected-sports', [RejectedSportsController::class, 'index'])->name('rejected-sports');
+    Route::get('/rejected-sports/data', [RejectedSportsController::class, 'data'])->name('rejected-sports.data');
+    Route::post('/rejected-sports/{id}/restore', [RejectedSportsController::class, 'restore'])->whereNumber('id')->name('rejected-sports.restore');
 
     // ── Approved Scholars (pure front-end, no DB) ──
     Route::get('/approved-scholars', function () {

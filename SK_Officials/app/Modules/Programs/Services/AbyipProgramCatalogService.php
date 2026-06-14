@@ -6,7 +6,6 @@ use App\Models\Abyip;
 use App\Models\Committee;
 use App\Models\User;
 use App\Modules\Committees\Services\CommitteeService;
-use Illuminate\Support\Collection;
 
 class AbyipProgramCatalogService
 {
@@ -29,11 +28,126 @@ class AbyipProgramCatalogService
         'J' => ['committee_key' => 'other', 'href' => '/others-survey-forms', 'type' => 'other'],
     ];
 
-    public function __construct(private readonly CommitteeService $committeeService)
-    {
-    }
+    public function __construct(private readonly CommitteeService $committeeService) {}
 
     public function getLatestAbyip(?int $barangayId): ?Abyip
+    {
+        return $this->getLatestApprovedAbyip($barangayId);
+    }
+
+    public function getLatestApprovedAbyip(?int $barangayId): ?Abyip
+    {
+        if ($barangayId === null) {
+            return null;
+        }
+
+        return Abyip::query()
+            ->documents()
+            ->where('barangay_id', $barangayId)
+            ->where('status', Abyip::STATUS_APPROVED)
+            ->orderByDesc('fiscal_year')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    public function hasApprovedAbyip(?int $barangayId): bool
+    {
+        return $this->getLatestApprovedAbyip($barangayId) !== null;
+    }
+
+    /**
+     * @return array{
+     *     status: 'approved'|'pending'|'rejected'|'none',
+     *     has_approved: bool,
+     *     fiscal_year: int|null,
+     *     pending_message: string,
+     *     no_abyip_message: string
+     * }
+     */
+    public function resolveAccessGate(?int $barangayId): array
+    {
+        $pendingMessage = 'Pending — waiting for SK Federation President to approve your ABYIP.';
+        $noAbyipMessage = 'No ABYIP document found. Upload your ABYIP first.';
+
+        if ($barangayId === null) {
+            return [
+                'status' => 'none',
+                'has_approved' => false,
+                'fiscal_year' => null,
+                'pending_message' => $pendingMessage,
+                'no_abyip_message' => $noAbyipMessage,
+            ];
+        }
+
+        if ($this->hasApprovedAbyip($barangayId)) {
+            $approved = $this->getLatestApprovedAbyip($barangayId);
+
+            return [
+                'status' => 'approved',
+                'has_approved' => true,
+                'fiscal_year' => $approved?->fiscal_year !== null ? (int) $approved->fiscal_year : null,
+                'pending_message' => $pendingMessage,
+                'no_abyip_message' => $noAbyipMessage,
+            ];
+        }
+
+        $latest = $this->getLatestAbyipDocument($barangayId);
+
+        if ($latest === null) {
+            return [
+                'status' => 'none',
+                'has_approved' => false,
+                'fiscal_year' => null,
+                'pending_message' => $pendingMessage,
+                'no_abyip_message' => $noAbyipMessage,
+            ];
+        }
+
+        $status = strtolower(trim((string) ($latest->status ?? Abyip::STATUS_PENDING)));
+
+        return [
+            'status' => in_array($status, ['pending', 'rejected'], true) ? $status : 'pending',
+            'has_approved' => false,
+            'fiscal_year' => $latest->fiscal_year !== null ? (int) $latest->fiscal_year : null,
+            'pending_message' => $pendingMessage,
+            'no_abyip_message' => $noAbyipMessage,
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listApprovedProgramsForBarangay(int $barangayId): array
+    {
+        $abyip = $this->getLatestApprovedAbyip($barangayId);
+        if ($abyip === null) {
+            return [];
+        }
+
+        return $this->youthProgramsQuery($abyip->id)
+            ->get()
+            ->map(function (Abyip $program) {
+                $activities = $program->children
+                    ->map(fn ($activity) => trim((string) $activity->program_name))
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                return [
+                    'code' => strtoupper(trim((string) ($program->program_letter ?? $program->code ?? ''))),
+                    'name' => $program->program_name,
+                    'activities' => $activities,
+                ];
+            })
+            ->filter(fn (array $program) => $program['code'] !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @deprecated Use getLatestApprovedAbyip() for downstream modules.
+     */
+    public function getLatestAbyipDocument(?int $barangayId): ?Abyip
     {
         if ($barangayId === null) {
             return null;

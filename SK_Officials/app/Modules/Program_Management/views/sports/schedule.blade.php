@@ -14,6 +14,7 @@
         'app/Modules/Program_Management/assets/css/scholarship/scholarship-schedule.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body data-program-key="sports">
 @include('loading')
@@ -22,6 +23,8 @@
 
 <main class="main-content">
 <div class="schol-page-container saf-page-wrap">
+
+    @include('layout::partials.abyip-pending-notice', ['abyipGate' => $abyipGate ?? null])
 
     @include('Program_Management::partials.program-page-top', [
         'activeTab' => 'form',
@@ -157,6 +160,10 @@
     'app/Modules/Program_Management/assets/js/sports/sports-schedule.js',
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script src="{{ url('/shared/js/abyip-pending-notice.js') }}"></script>
+<script>
+    window.sportsAbyipGate = @json($abyipGate ?? null);
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     if (window.GFormBuilder) {

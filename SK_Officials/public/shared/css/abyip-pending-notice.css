@@ -1,0 +1,58 @@
+.abyip-pending-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border: 1px solid #fcd34d;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.08);
+}
+
+.abyip-pending-notice-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #f59e0b;
+    color: #fff;
+}
+
+.abyip-pending-notice-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.abyip-pending-notice-title {
+    display: block;
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #92400e;
+}
+
+.abyip-pending-notice-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #78350f;
+}
+
+.abyip-pending-empty {
+    text-align: center;
+    padding: 28px 16px;
+    color: #92400e;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.abyip-pending-empty strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 15px;
+    color: #78350f;
+}

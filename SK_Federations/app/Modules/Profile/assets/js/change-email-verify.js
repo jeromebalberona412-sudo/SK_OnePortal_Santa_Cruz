@@ -10,9 +10,15 @@ document.addEventListener('DOMContentLoaded', function () {
     let timerInterval = null;
     const serverCooldown = Number(window.ceResendCooldown || 0);
 
+    function formatCountdown(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${String(secs).padStart(2, '0')}`;
+    }
+
     function updateTimerDisplay(seconds) {
         if (timerCountElement) {
-            timerCountElement.textContent = seconds;
+            timerCountElement.textContent = formatCountdown(seconds);
         }
     }
 
@@ -66,12 +72,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function bootstrapTimer() {
         let remaining = getRemainingSeconds();
 
+        if (window.ceFreshVerification === true || window.ceFreshVerification === 'true') {
+            const startedAt = Date.now();
+            localStorage.setItem(TIMER_START_KEY, startedAt.toString());
+            remaining = TIMER_DURATION;
+        }
+
         if (remaining > 0) {
             if (!localStorage.getItem(TIMER_START_KEY)) {
                 const startedAt = Date.now() - ((TIMER_DURATION - remaining) * 1000);
                 localStorage.setItem(TIMER_START_KEY, startedAt.toString());
             }
             startTimer(remaining);
+        } else if (serverCooldown > 0) {
+            const startedAt = Date.now() - ((TIMER_DURATION - serverCooldown) * 1000);
+            localStorage.setItem(TIMER_START_KEY, startedAt.toString());
+            startTimer(serverCooldown);
         } else {
             timerExpired();
         }

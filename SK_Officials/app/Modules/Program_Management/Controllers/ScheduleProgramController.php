@@ -4,22 +4,24 @@ namespace App\Modules\Program_Management\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Program_Management\Services\ScheduleProgramService;
+use App\Modules\Programs\Services\AbyipProgramCatalogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class ScheduleProgramController extends Controller
 {
-    public function __construct(private readonly ScheduleProgramService $service)
-    {
-    }
+    public function __construct(private readonly ScheduleProgramService $service) {}
 
     public function meta(Request $request): JsonResponse
     {
         $letter = strtoupper((string) $request->query('letter', ScheduleProgramService::LETTER_EDUCATION));
+        $user = $request->user();
 
         return response()->json([
-            'data' => $this->service->resolveProgramMeta($request->user(), $letter),
+            'data' => $this->service->resolveProgramMeta($user, $letter),
+            'abyip_gate' => app(AbyipProgramCatalogService::class)
+                ->resolveAccessGate($user->barangay_id),
         ]);
     }
 

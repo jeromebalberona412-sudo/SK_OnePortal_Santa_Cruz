@@ -2,10 +2,17 @@
 
 @section('title', 'Verify Password Change')
 
-@section('card-class', 'ce-verify-card')
+@section('card-class', 'ce-verify-card sk-fed-compact-card')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ url('/modules/profile/css/sk-fed-account-auth.css') }}">
+@endpush
 
 @push('scripts-before')
-    <script>window.cpResendCooldown = {{ (int) $resendCooldown }};</script>
+    <script>
+        window.cpResendCooldown = {{ (int) $resendCooldown }};
+        window.cpFreshVerification = {{ ($freshVerification ?? false) ? 'true' : 'false' }};
+    </script>
 @endpush
 
 @push('scripts')

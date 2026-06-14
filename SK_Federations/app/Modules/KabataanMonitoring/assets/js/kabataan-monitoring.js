@@ -1,4 +1,5 @@
 (function () {
+    const config = window.kmConfig || {};
     const records = [];
 
     const state = { search: '', status: 'all', barangay: 'all' };
@@ -72,8 +73,8 @@
             var rate     = total > 0 ? Math.round(((active + moderate) / total) * 100) : 0;
             var lastUpdate = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
 
-            var statusClass = 'inactive';
-            var statusText  = 'No Data';
+            var statusClass = total === 0 ? 'inactive' : (rate >= 70 ? 'active' : (rate >= 40 ? 'moderate' : 'inactive'));
+            var statusText  = total === 0 ? 'No Data' : (rate >= 70 ? 'Active' : (rate >= 40 ? 'Moderate' : 'Inactive'));
 
             return '<div class="km-brgy-summary-card">' +
                 '<div class="km-bsc-header">' +
@@ -104,9 +105,11 @@
     };
 
     function initIndex() {
-        updateSummary();
-        populateBrgyFilter();
-        renderBrgyCards();
+        loadRecords().then(function () {
+            updateSummary();
+            populateBrgyFilter();
+            renderBrgyCards();
+        });
 
         var searchInput = document.getElementById('km-search');
         if (searchInput) {
@@ -180,12 +183,42 @@
         }).join('');
     }
 
+    async function loadRecords() {
+        if (!config.dataUrl) {
+            return;
+        }
+
+        try {
+            const response = await fetch(config.dataUrl, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load kabataan records');
+            }
+
+            const payload = await response.json();
+            records.length = 0;
+            (payload.data || []).forEach(function (item) {
+                records.push(item);
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        if (window.kmPageMode === 'show') { renderDetail(); return; }
-        if (window.kmPageMode === 'barangay-detail') { 
-            renderBarangayDetail();
-            setupBarangayDetailFilters();
-            return; 
+        if (window.kmPageMode === 'show') {
+            loadRecords().then(renderDetail);
+            return;
+        }
+        if (window.kmPageMode === 'barangay-detail') {
+            loadRecords().then(function () {
+                renderBarangayDetail();
+                setupBarangayDetailFilters();
+            });
+            return;
         }
         initIndex();
     });
@@ -402,83 +435,36 @@
         var profile = records.find(function(r){ return r.slug === kabataanSlug; });
         if (!profile) return;
 
-        // Populate form with example data
-        document.getElementById('kmKKPRespondent').value = 'KKP-' + Math.floor(Math.random() * 10000).toString().padStart(5, '0');
-        document.getElementById('kmKKPDate').value = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        
-        document.getElementById('kmKKPLastName').value = profile.name.split(' ').pop();
-        document.getElementById('kmKKPFirstName').value = profile.name.split(' ')[0];
-        document.getElementById('kmKKPBarangay').value = profile.barangay;
-        document.getElementById('kmKKPAge').value = profile.age;
-        document.getElementById('kmKKPPurok').value = 'Purok ' + String.fromCharCode(65 + Math.floor(Math.random() * 5));
-        
-        // Set sex
-        document.querySelector('input[name="kmKKPSex"][value="' + profile.sex + '"]').checked = true;
-        
-        // Set birthday (approximate from age)
-        var today = new Date();
-        var birthYear = today.getFullYear() - profile.age;
-        var birthDate = new Date(birthYear, today.getMonth(), today.getDate());
-        document.getElementById('kmKKPBirthday').value = birthDate.toISOString().split('T')[0];
-        
-        document.getElementById('kmKKPEmail').value = profile.name.toLowerCase().replace(/\s+/g, '.') + '@example.com';
-        document.getElementById('kmKKPContact').value = '09' + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
-        
-        // Set civil status
-        document.querySelector('input[name="kmKKPCivilStatus"][value="Single"]').checked = true;
-        
-        // Set youth age group
-        if (profile.age >= 15 && profile.age <= 17) {
-            document.querySelector('input[name="kmKKPYouthAge"][value="Child Youth (15-17 yrs old)"]').checked = true;
-        } else if (profile.age >= 18 && profile.age <= 24) {
-            document.querySelector('input[name="kmKKPYouthAge"][value="Core Youth (18-24 yrs old)"]').checked = true;
-        } else {
-            document.querySelector('input[name="kmKKPYouthAge"][value="Young Adult (15-30 yrs old)"]').checked = true;
-        }
-        
-        // Set education based on classification
-        if (profile.youthClassification === 'In-School Youth') {
-            document.querySelector('input[name="kmKKPEducation"][value="High School Level"]').checked = true;
-        } else {
-            document.querySelector('input[name="kmKKPEducation"][value="College Level"]').checked = true;
-        }
-        
-        // Set youth classification
-        var youthClassMap = {
-            'In-School Youth': 'In School Youth',
-            'Out-of-School Youth': 'Out of School Youth',
-            'Working Youth': 'Working Youth'
-        };
-        var mappedClass = youthClassMap[profile.youthClassification] || profile.youthClassification;
-        var youthClassCheckbox = document.querySelector('input[name="kmKKPYouthClass"][value="' + mappedClass + '"]');
-        if (youthClassCheckbox) youthClassCheckbox.checked = true;
-        
-        // Set work status
-        var workStatusMap = {
-            'Student': 'Unemployed',
-            'Employed': 'Employed',
-            'Unemployed': 'Unemployed',
-            'Self-Employed': 'Self-Employed'
-        };
-        var mappedStatus = workStatusMap[profile.workStatus] || 'Unemployed';
-        var workStatusCheckbox = document.querySelector('input[name="kmKKPWorkStatus"][value="' + mappedStatus + '"]');
-        if (workStatusCheckbox) workStatusCheckbox.checked = true;
-        
-        // Set SK voter status
-        if (profile.status === 'active') {
-            document.querySelector('input[name="kmKKPSKVoter"][value="Yes"]').checked = true;
-            document.querySelector('input[name="kmKKPSKVoted"][value="Yes"]').checked = true;
-        }
-        
-        document.getElementById('kmKKPFacebook').value = profile.name.toLowerCase().replace(/\s+/g, '') + '123';
-        document.querySelector('input[name="kmKKPGroupChat"][value="Yes"]').checked = true;
-        
-        // Show modal
         var modal = document.getElementById('kmKKPModal');
-        if (modal) {
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
+        var container = document.getElementById('kmKKPFormContainer');
+        if (!modal || !container) return;
+
+        var urlTemplate = (window.kmConfig && window.kmConfig.questionnaireUrl) || '';
+        var recordId = profile.id || profile.slug;
+        var fetchUrl = urlTemplate.replace('__ID__', encodeURIComponent(recordId));
+
+        container.innerHTML = '<p class="km-kkp-loading">Loading questionnaire...</p>';
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        fetch(fetchUrl, {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        })
+            .then(function(res) {
+                if (!res.ok) {
+                    throw new Error('Failed to load questionnaire');
+                }
+                return res.json();
+            })
+            .then(function(data) {
+                var html = data.html || '<p class="km-kkp-loading">No questionnaire data found.</p>';
+                container.innerHTML = '<div class="kk-qs-scroll-wrapper">' + html + '</div>';
+            })
+            .catch(function() {
+                container.innerHTML = '<p class="km-kkp-loading">Unable to load questionnaire. Please try again.</p>';
+            });
     };
 
     window.closeKKPModal = function() {
@@ -490,26 +476,21 @@
     };
 
     window.printKKPForm = function() {
-        var modal = document.getElementById('kmKKPModal');
-        if (!modal) return;
-        
-        var printWindow = window.open('', '', 'height=600,width=800');
-        var formHTML = modal.querySelector('.km-kkp-form').innerHTML;
-        
+        var container = document.getElementById('kmKKPFormContainer');
+        if (!container || !container.innerHTML.trim()) return;
+
+        var printWindow = window.open('', '', 'height=800,width=900');
+        var formHTML = container.innerHTML;
+        var viewCssHref = window.location.origin + '/modules/kabataan-monitoring/css/kk-questionnaire-view.css';
+
         printWindow.document.write('<html><head><title>KK Survey Questionnaire</title>');
-        printWindow.document.write('<style>');
-        printWindow.document.write('body { font-family: Arial, sans-serif; margin: 20px; }');
-        printWindow.document.write('.km-kkp-section-title { font-weight: bold; margin-top: 15px; margin-bottom: 10px; border-bottom: 2px solid #333; }');
-        printWindow.document.write('.km-kkp-field-group { margin-bottom: 15px; }');
-        printWindow.document.write('.km-kkp-field-label { font-weight: bold; display: block; margin-bottom: 5px; }');
-        printWindow.document.write('input, select { padding: 5px; margin: 3px; }');
-        printWindow.document.write('.km-kkp-checkbox-group { margin-left: 20px; }');
-        printWindow.document.write('label { display: block; margin: 5px 0; }');
-        printWindow.document.write('</style></head><body>');
-        printWindow.document.write('<h1>KK Survey Questionnaire</h1>');
+        printWindow.document.write('<link rel="stylesheet" href="' + viewCssHref + '">');
+        printWindow.document.write('</head><body>');
         printWindow.document.write(formHTML);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
-        printWindow.print();
+        printWindow.onload = function() {
+            printWindow.print();
+        };
     };
 })();

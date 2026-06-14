@@ -5,11 +5,13 @@ namespace App\Modules\ABYIP\Services;
 use App\Models\Abyip;
 use App\Models\OfficialProfile;
 use App\Models\User;
+use Carbon\Carbon;
 use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AbyipService
@@ -72,6 +74,7 @@ class AbyipService
             'Youth Week',
         ],
     ];
+
     /**
      * @return Collection<int, array<string, mixed>>
      */
@@ -118,7 +121,7 @@ class AbyipService
 
         $signatureUserIds = $this->resolveSignatureUserIds($user->barangay_id, $parsed);
 
-        $document = \Illuminate\Support\Facades\DB::transaction(function () use ($user, $data, $fiscalYear, $sourceType, $parsed, $signatureUserIds) {
+        $document = DB::transaction(function () use ($user, $data, $fiscalYear, $sourceType, $parsed, $signatureUserIds) {
             $document = Abyip::create([
                 'row_type' => Abyip::ROW_DOCUMENT,
                 'tenant_id' => $user->tenant_id,
@@ -181,7 +184,111 @@ class AbyipService
 
     public function delete(User $user, int $documentId): void
     {
-        $this->findDocumentModel($user, $documentId)->delete();
+        $document = $this->findDocumentModel($user, $documentId);
+
+        if ((string) ($document->status ?? '') === Abyip::STATUS_APPROVED) {
+            throw ValidationException::withMessages([
+                'document' => ['Approved ABYIP records cannot be deleted.'],
+            ]);
+        }
+
+        DB::transaction(function () use ($document) {
+            Abyip::query()
+                ->where('document_id', $document->id)
+                ->where('id', '!=', $document->id)
+                ->delete();
+
+            $document->delete();
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function resubmit(User $user, int $documentId, array $data): array
+    {
+        $document = $this->findDocumentModel($user, $documentId);
+
+        if ((string) ($document->status ?? '') !== Abyip::STATUS_REJECTED) {
+            throw ValidationException::withMessages([
+                'document' => ['Only rejected ABYIP records can be resubmitted.'],
+            ]);
+        }
+
+        $sourceType = (string) ($data['source_type'] ?? Abyip::SOURCE_PDF);
+
+        if ($sourceType === Abyip::SOURCE_PDF && empty($data['pdf_data'])) {
+            throw ValidationException::withMessages([
+                'pdf_data' => ['PDF data is required for resubmission.'],
+            ]);
+        }
+
+        if ($sourceType === Abyip::SOURCE_WORD && empty($data['document_html'])) {
+            throw ValidationException::withMessages([
+                'document_html' => ['Document content is required for resubmission.'],
+            ]);
+        }
+
+        $parsed = $sourceType === Abyip::SOURCE_PDF
+            ? $this->parseUploadedDocument(
+                documentHtml: '',
+                extractedText: (string) ($data['extracted_text'] ?? '')
+            )
+            : $this->parseUploadedDocument(
+                documentHtml: (string) ($data['document_html'] ?? ''),
+                extractedText: ''
+            );
+
+        $signatureUserIds = $this->resolveSignatureUserIds($user->barangay_id, $parsed);
+
+        $document = DB::transaction(function () use ($document, $data, $sourceType, $parsed, $signatureUserIds) {
+            Abyip::query()
+                ->where('document_id', $document->id)
+                ->where('id', '!=', $document->id)
+                ->delete();
+
+            $document->forceFill([
+                'country' => $parsed['country'] ?? 'Republic of the Philippines',
+                'region' => $parsed['region'],
+                'province' => $parsed['province'],
+                'municipality' => $parsed['municipality'],
+                'barangay_name' => $parsed['barangay_name'],
+                'document_title' => trim((string) ($parsed['document_title'] ?? $data['title'] ?? $document->document_title)),
+                'sk_council_name' => $parsed['sk_council_name'],
+                'barangay_estimated_budget' => $parsed['barangay_estimated_budget'],
+                'sk_fund_percentage' => $this->resolveSkFundPercentage($parsed),
+                'sk_fund_amount' => $parsed['sk_fund_amount'],
+                'total_budget' => $parsed['total_budget'],
+                'prepared_by' => $parsed['prepared_by'],
+                'prepared_position' => $parsed['prepared_position'],
+                'prepared_by_user_id' => $signatureUserIds['prepared_by_user_id'],
+                'approved_by' => $parsed['approved_by'],
+                'approved_position' => $parsed['approved_position'],
+                'approved_by_user_id' => $signatureUserIds['approved_by_user_id'],
+                'prepared_by_name' => $parsed['prepared_by_name'] ?? $parsed['prepared_by'],
+                'prepared_by_position' => $parsed['prepared_by_position'],
+                'approved_by_name' => $parsed['approved_by_name'] ?? $parsed['approved_by'],
+                'approved_by_position' => $parsed['approved_by_position'],
+                'source_type' => $sourceType,
+                'document_html' => $data['document_html'] ?? null,
+                'pdf_data' => $data['pdf_data'] ?? null,
+                'status' => Abyip::STATUS_PENDING,
+                'reviewed_at' => null,
+                'reviewed_by_user_id' => null,
+                'rejection_reason' => null,
+            ])->save();
+
+            $this->syncAbyipLines(
+                $document,
+                $parsed['line_items'] ?? [],
+                $parsed['sk_youth_development_and_empowerment_programs'] ?? []
+            );
+
+            return $document;
+        });
+
+        return $this->formatDocument($document->fresh(['lines.children']));
     }
 
     protected function findDocumentModel(User $user, int $documentId): Abyip
@@ -250,6 +357,8 @@ class AbyipService
             'sk_fund_percentage' => $document->sk_fund_percentage,
             'sk_fund_amount' => $document->sk_fund_amount,
             'status' => $document->status ?? Abyip::STATUS_PENDING,
+            'rejection_reason' => $document->rejection_reason,
+            'reviewed_at' => $document->reviewed_at?->toIso8601String(),
             'total_expenditure' => $document->total_budget,
             'total_budget' => $document->total_budget,
             'prepared_by_name' => $document->prepared_by_name ?? $document->prepared_by,
@@ -575,6 +684,7 @@ class AbyipService
 
             if (! isset($merged[$letter])) {
                 $merged[$letter] = $program;
+
                 continue;
             }
 
@@ -1603,6 +1713,7 @@ class AbyipService
 
             if (stripos($trimmed, 'SK YOUTH DEVELOPMENT') !== false) {
                 $inSection = true;
+
                 continue;
             }
 
@@ -1635,6 +1746,7 @@ class AbyipService
                     $blocks[] = $current;
                 }
                 $current = [$line];
+
                 continue;
             }
 
@@ -1679,24 +1791,28 @@ class AbyipService
             if ($this->isBulletActivityLine($line) || $this->isLikelyActivityLine($line, $phase)) {
                 $activityNames[] = $this->cleanBulletText($line);
                 $phase = 'activities';
+
                 continue;
             }
 
             if ($this->isPeriodLine($line)) {
                 $periodLines[] = $line;
                 $phase = 'period';
+
                 continue;
             }
 
             if ($this->isAmountOnlyLine($line)) {
                 $amountLines[] = $line;
                 $phase = 'amounts';
+
                 continue;
             }
 
             if ($this->isPersonResponsibleLine($line)) {
                 $personLines[] = $line;
                 $phase = 'person';
+
                 continue;
             }
 
@@ -2309,7 +2425,7 @@ class AbyipService
             return $this->emptyParsedMetadata();
         }
 
-        $dom = new DOMDocument();
+        $dom = new DOMDocument;
         libxml_use_internal_errors(true);
         $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_NOERROR | LIBXML_NOWARNING);
         libxml_clear_errors();
@@ -2408,6 +2524,7 @@ class AbyipService
                 $currentSection = 'SK Youth Development and Empowerment Programs';
                 $item['program_section'] = $currentSection;
                 $lineItems[] = $item;
+
                 continue;
             }
 
@@ -2646,6 +2763,7 @@ class AbyipService
                     'ppa_name' => $line,
                     'program_section' => $currentSection,
                 ];
+
                 continue;
             }
 
@@ -2667,6 +2785,7 @@ class AbyipService
                     'youth_program_letter' => $currentYouthLetter,
                     'youth_program_name' => $currentYouthName,
                 ];
+
                 continue;
             }
 
@@ -2681,6 +2800,7 @@ class AbyipService
                     'youth_program_letter' => $currentYouthLetter,
                     'youth_program_name' => $currentYouthName,
                 ];
+
                 continue;
             }
 
@@ -3043,8 +3163,8 @@ class AbyipService
         if (preg_match('/(\w+\s+\d{1,2},?\s+\d{4})\s+to\s+(\w+\s+\d{1,2},?\s+\d{4})/i', $period, $matches)) {
             try {
                 return [
-                    'start' => \Carbon\Carbon::parse($matches[1])->toDateString(),
-                    'end' => \Carbon\Carbon::parse($matches[2])->toDateString(),
+                    'start' => Carbon::parse($matches[1])->toDateString(),
+                    'end' => Carbon::parse($matches[2])->toDateString(),
                 ];
             } catch (\Throwable) {
                 return ['start' => null, 'end' => null];

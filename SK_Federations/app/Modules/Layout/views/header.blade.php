@@ -32,9 +32,6 @@
                 <a href="{{ route('profile') }}" class="dd-item" id="nav-profile-link">
                     <i class="fas fa-user"></i> Profile
                 </a>
-                <a href="{{ route('profile') }}#settings" class="dd-item" id="nav-account-settings-link">
-                    <i class="fas fa-gear"></i> Account Settings
-                </a>
                 <a href="{{ route('change-password') }}" class="dd-item" id="nav-change-pw-link">
                     <i class="fas fa-lock"></i> Change Password
                 </a>

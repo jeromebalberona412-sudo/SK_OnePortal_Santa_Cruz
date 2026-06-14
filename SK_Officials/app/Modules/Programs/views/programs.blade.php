@@ -12,6 +12,7 @@
         'app/Modules/Programs/assets/css/programs.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body>
 
@@ -34,6 +35,8 @@
                 </p>
             </div>
         </section>
+
+        @include('layout::partials.abyip-pending-notice', ['abyipGate' => $abyipGate ?? null])
 
         <!-- ── Programs Stat Cards ── -->
         <div class="module-stats-grid">
@@ -260,6 +263,10 @@
     'app/Modules/Programs/assets/js/programs.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script src="{{ url('/shared/js/abyip-pending-notice.js') }}"></script>
+<script>
+    window.programsAbyipGate = @json($abyipGate ?? null);
+</script>
 <script>
 // Inline date validation for Programs
 document.addEventListener('DOMContentLoaded', function() {

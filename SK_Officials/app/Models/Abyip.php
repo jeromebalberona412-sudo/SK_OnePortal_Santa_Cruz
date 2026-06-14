@@ -25,6 +25,8 @@ class Abyip extends Model
 
     public const STATUS_APPROVED = 'approved';
 
+    public const STATUS_REJECTED = 'rejected';
+
     protected $table = 'abyip';
 
     protected $fillable = [
@@ -51,6 +53,9 @@ class Abyip extends Model
         'approved_position',
         'approved_by_user_id',
         'status',
+        'reviewed_at',
+        'reviewed_by_user_id',
+        'rejection_reason',
         'prepared_by_name',
         'prepared_by_position',
         'approved_by_name',
@@ -86,6 +91,7 @@ class Abyip extends Model
             'co' => 'decimal:2',
             'total' => 'decimal:2',
             'budget' => 'decimal:2',
+            'reviewed_at' => 'datetime',
         ];
     }
 

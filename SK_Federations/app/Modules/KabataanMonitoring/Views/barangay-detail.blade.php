@@ -12,6 +12,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ url('/modules/kabataan-monitoring/css/kabataan-monitoring.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ url('/modules/kabataan-monitoring/css/kk-questionnaire-view.css') }}?v={{ time() }}">
 @endpush
 
 @section('content')
@@ -142,195 +143,34 @@
             </div>
 
         </div>
+
+<div class="km-kkp-modal" id="kmKKPModal">
+    <div class="km-kkp-modal-overlay" onclick="closeKKPModal()"></div>
+    <div class="km-kkp-modal-content">
+        <div class="km-kkp-modal-header">
+            <h2><i class="fas fa-file-alt"></i> KK Survey Questionnaire</h2>
+            <button type="button" class="km-kkp-modal-close" onclick="closeKKPModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="km-kkp-modal-body kk-qs-body" id="kmKKPFormContainer">
+            <p class="km-kkp-loading">Loading questionnaire...</p>
+        </div>
+        <div class="km-kkp-modal-footer">
+            <button type="button" class="km-kkp-btn-close" onclick="closeKKPModal()">Close</button>
+            <button type="button" class="km-kkp-btn-print" onclick="printKKPForm()"><i class="fas fa-print"></i> Print</button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
-{{-- KK Profiling Form Modal --}}
-    <div class="km-kkp-modal" id="kmKKPModal">
-        <div class="km-kkp-modal-overlay" onclick="closeKKPModal()"></div>
-        <div class="km-kkp-modal-content">
-            <div class="km-kkp-modal-header">
-                <h2><i class="fas fa-file-alt"></i> KK Survey Questionnaire</h2>
-                <button class="km-kkp-modal-close" onclick="closeKKPModal()"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="km-kkp-modal-body">
-                <form id="kmKKPForm" class="km-kkp-form">
-                    {{-- Form Header --}}
-                    <div class="km-kkp-form-header">
-                        <div class="km-kkp-header-info">
-                            <div class="km-kkp-header-field">
-                                <label>Respondent #:</label>
-                                <input type="text" id="kmKKPRespondent" readonly>
-                            </div>
-                            <div class="km-kkp-header-field">
-                                <label>Date:</label>
-                                <input type="text" id="kmKKPDate" readonly>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Notice Box --}}
-                    <div class="km-kkp-notice">
-                        <p class="km-kkp-notice-title">TO THE RESPONDENT:</p>
-                        <p>We are currently conducting a study that focuses on assessing the demographic information of the Katipunan ng Kabataan. We would like to ask your participation by taking time to answer this questionnaire. Please read the questions carefully and answer them accurately.</p>
-                        <p class="km-kkp-notice-confidential">REST ASSURED THAT ALL INFORMATION GATHERED FROM THIS STUDY WILL BE TREATED WITH UTMOST CONFIDENTIALITY.</p>
-                    </div>
-
-                    {{-- I. PROFILE --}}
-                    <div class="km-kkp-section-title">I. PROFILE</div>
-
-                    {{-- Name --}}
-                    <div class="km-kkp-field-group">
-                        <label class="km-kkp-field-label">Name of Respondent:</label>
-                        <div class="km-kkp-name-row">
-                            <input type="text" id="kmKKPLastName" placeholder="Last Name" class="km-kkp-input">
-                            <input type="text" id="kmKKPFirstName" placeholder="First Name" class="km-kkp-input">
-                            <input type="text" id="kmKKPMiddleName" placeholder="Middle Name" class="km-kkp-input">
-                            <select id="kmKKPSuffix" class="km-kkp-input km-kkp-input-sm">
-                                <option value="">Suffix</option>
-                                <option>Jr.</option><option>Sr.</option>
-                                <option>II</option><option>III</option><option>IV</option><option>V</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {{-- Location --}}
-                    <div class="km-kkp-field-group">
-                        <label class="km-kkp-field-label">Location:</label>
-                        <div class="km-kkp-location-row">
-                            <input type="text" value="Region IV-A (CALABARZON)" readonly class="km-kkp-input km-kkp-input-readonly">
-                            <input type="text" value="Laguna" readonly class="km-kkp-input km-kkp-input-readonly">
-                            <input type="text" value="Santa Cruz" readonly class="km-kkp-input km-kkp-input-readonly">
-                            <input type="text" id="kmKKPBarangay" readonly class="km-kkp-input km-kkp-input-readonly">
-                            <input type="text" id="kmKKPPurok" placeholder="Purok/Zone" class="km-kkp-input">
-                        </div>
-                    </div>
-
-                    {{-- Personal Info --}}
-                    <div class="km-kkp-field-group">
-                        <div class="km-kkp-personal-row">
-                            <div class="km-kkp-personal-col">
-                                <label>Sex Assigned by Birth:</label>
-                                <div class="km-kkp-checkbox-group">
-                                    <label><input type="radio" name="kmKKPSex" value="Male"> Male</label>
-                                    <label><input type="radio" name="kmKKPSex" value="Female"> Female</label>
-                                </div>
-                            </div>
-                            <div class="km-kkp-personal-col">
-                                <label>Age: *</label>
-                                <input type="number" id="kmKKPAge" min="15" max="30" class="km-kkp-input km-kkp-input-sm">
-                            </div>
-                            <div class="km-kkp-personal-col">
-                                <label>Birthday:</label>
-                                <input type="date" id="kmKKPBirthday" class="km-kkp-input">
-                            </div>
-                        </div>
-                        <div class="km-kkp-personal-row">
-                            <div class="km-kkp-personal-col">
-                                <label>E-mail address:</label>
-                                <input type="email" id="kmKKPEmail" class="km-kkp-input">
-                            </div>
-                            <div class="km-kkp-personal-col">
-                                <label>Contact #:</label>
-                                <input type="text" id="kmKKPContact" class="km-kkp-input">
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- II. DEMOGRAPHIC CHARACTERISTICS --}}
-                    <div class="km-kkp-section-title">II. DEMOGRAPHIC CHARACTERISTICS</div>
-                    <p class="km-kkp-instruction">Please put a Check mark (✓) next to the word or Phrase that matches your response.</p>
-
-                    <div class="km-kkp-demo-grid">
-                        {{-- Left Column --}}
-                        <div class="km-kkp-demo-col">
-                            <div class="km-kkp-demo-block">
-                                <div class="km-kkp-demo-block-title">Civil Status</div>
-                                <div class="km-kkp-checkbox-group">
-                                    <label><input type="checkbox" name="kmKKPCivilStatus" value="Single"> Single</label>
-                                    <label><input type="checkbox" name="kmKKPCivilStatus" value="Married"> Married</label>
-                                    <label><input type="checkbox" name="kmKKPCivilStatus" value="Widowed"> Widowed</label>
-                                    <label><input type="checkbox" name="kmKKPCivilStatus" value="Divorced"> Divorced</label>
-                                    <label><input type="checkbox" name="kmKKPCivilStatus" value="Separated"> Separated</label>
-                                    <label><input type="checkbox" name="kmKKPCivilStatus" value="Annulled"> Annulled</label>
-                                </div>
-                            </div>
-
-                            <div class="km-kkp-demo-block">
-                                <div class="km-kkp-demo-block-title">Youth Age Group</div>
-                                <div class="km-kkp-checkbox-group">
-                                    <label><input type="checkbox" name="kmKKPYouthAge" value="Child Youth (15-17 yrs old)"> Child Youth (15-17 yrs old)</label>
-                                    <label><input type="checkbox" name="kmKKPYouthAge" value="Core Youth (18-24 yrs old)"> Core Youth (18-24 yrs old)</label>
-                                    <label><input type="checkbox" name="kmKKPYouthAge" value="Young Adult (15-30 yrs old)"> Young Adult (15-30 yrs old)</label>
-                                </div>
-                            </div>
-
-                            <div class="km-kkp-demo-block">
-                                <div class="km-kkp-demo-block-title">Educational Background</div>
-                                <div class="km-kkp-checkbox-group">
-                                    <label><input type="checkbox" name="kmKKPEducation" value="High School Level"> High School Level</label>
-                                    <label><input type="checkbox" name="kmKKPEducation" value="High School Grad"> High School Grad</label>
-                                    <label><input type="checkbox" name="kmKKPEducation" value="College Level"> College Level</label>
-                                    <label><input type="checkbox" name="kmKKPEducation" value="College Grad"> College Grad</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Right Column --}}
-                        <div class="km-kkp-demo-col">
-                            <div class="km-kkp-demo-block">
-                                <div class="km-kkp-demo-block-title">Youth Classification</div>
-                                <div class="km-kkp-checkbox-group">
-                                    <label><input type="checkbox" name="kmKKPYouthClass" value="In School Youth"> In School Youth</label>
-                                    <label><input type="checkbox" name="kmKKPYouthClass" value="Out of School Youth"> Out of School Youth</label>
-                                    <label><input type="checkbox" name="kmKKPYouthClass" value="Working Youth"> Working Youth</label>
-                                </div>
-                            </div>
-
-                            <div class="km-kkp-demo-block">
-                                <div class="km-kkp-demo-block-title">Work Status</div>
-                                <div class="km-kkp-checkbox-group">
-                                    <label><input type="checkbox" name="kmKKPWorkStatus" value="Employed"> Employed</label>
-                                    <label><input type="checkbox" name="kmKKPWorkStatus" value="Unemployed"> Unemployed</label>
-                                    <label><input type="checkbox" name="kmKKPWorkStatus" value="Self-Employed"> Self-Employed</label>
-                                </div>
-                            </div>
-
-                            <div class="km-kkp-demo-block">
-                                <div class="km-kkp-demo-block-title">SK Voter Status</div>
-                                <div class="km-kkp-checkbox-group">
-                                    <label><input type="checkbox" name="kmKKPSKVoter" value="Yes"> Registered SK Voter</label>
-                                    <label><input type="checkbox" name="kmKKPSKVoted" value="Yes"> Voted in Last SK Election</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Footer --}}
-                    <div class="km-kkp-footer">
-                        <div class="km-kkp-footer-field">
-                            <label>FB Account:</label>
-                            <input type="text" id="kmKKPFacebook" class="km-kkp-input">
-                        </div>
-                        <div class="km-kkp-footer-field">
-                            <label>Willing to join the group chat?</label>
-                            <div class="km-kkp-checkbox-group">
-                                <label><input type="radio" name="kmKKPGroupChat" value="Yes"> Yes</label>
-                                <label><input type="radio" name="kmKKPGroupChat" value="No"> No</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="km-kkp-thankyou">Thank you for your participation!</div>
-                </form>
-            </div>
-            <div class="km-kkp-modal-footer">
-                <button type="button" class="km-kkp-btn-close" onclick="closeKKPModal()">Close</button>
-                <button type="button" class="km-kkp-btn-print" onclick="printKKPForm()"><i class="fas fa-print"></i> Print</button>
-            </div>
-        </div>
-    </div>
-
+    <script>
+        window.kmPageMode = 'barangay-detail';
+        window.kmBarangay = @json($barangay);
+        window.kmConfig = {
+            dataUrl: @json(route('api.kabataan-monitoring.index')),
+            questionnaireUrl: @json(url('/api/kabataan-monitoring/__ID__/questionnaire')),
+        };
+    </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}?v={{ time() }}"></script>
 @endpush

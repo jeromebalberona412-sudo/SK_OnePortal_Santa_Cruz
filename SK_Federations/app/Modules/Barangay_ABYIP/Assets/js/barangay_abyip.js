@@ -1,531 +1,385 @@
-// Barangay ABYIP Module - JavaScript
-// Handles pagination and filtering
+// Barangay ABYIP — Federation review module
+(function () {
+    'use strict';
 
-const itemsPerPage = 10;
-let currentPage = 1;
+    const config = window.barangayAbyipConfig || {};
+    const itemsPerPage = 10;
+    let currentPage = 1;
+    let submissions = [];
+    let currentSubmissionId = null;
 
-/**
- * Get visible rows
- */
-function getVisibleRows() {
-    const rows = document.querySelectorAll('.abyip-row');
-    return Array.from(rows).filter(row => {
-        // Exclude approved and rejected rows
-        const status = row.getAttribute('data-status');
-        if (status === 'Approved' || status === 'Rejected') {
-            return false;
+    function csrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    }
+
+    async function apiFetch(url, options) {
+        const opts = Object.assign({
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        }, options || {});
+
+        if (opts.body && typeof opts.body === 'string' && !opts.headers['Content-Type']) {
+            opts.headers['Content-Type'] = 'application/json';
         }
-        return row.style.display !== 'none';
-    });
-}
 
-/**
- * Display current page
- */
-function displayAbyipPage() {
-    const visibleRows = getVisibleRows();
-    const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
-    
-    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
+        const response = await fetch(url, opts);
+        const payload = await response.json().catch(function () {
+            return {};
+        });
 
-    const allRows = document.querySelectorAll('.abyip-row');
-    allRows.forEach(row => {
-        // Hide approved and rejected rows
-        const status = row.getAttribute('data-status');
-        if (status === 'Approved' || status === 'Rejected') {
-            row.style.display = 'none';
+        if (!response.ok) {
+            throw new Error(payload.message || 'Request failed.');
+        }
+
+        return payload;
+    }
+
+    function statusClass(status) {
+        const normalized = String(status || 'pending').toLowerCase();
+        if (normalized === 'approved') return 'status-approved';
+        if (normalized === 'rejected') return 'status-rejected';
+        return 'status-pending';
+    }
+
+    function statusLabel(status) {
+        const normalized = String(status || 'pending').toLowerCase();
+        return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function populateModalFields(item) {
+        document.getElementById('modalBarangay').textContent = item.barangay || '-';
+        document.getElementById('modalDateSubmitted').textContent = item.date_submitted || '-';
+        document.getElementById('modalSubmittedBy').textContent = item.submitted_by || '-';
+        document.getElementById('modalTitle').textContent = item.title || '-';
+        document.getElementById('modalSubmittedTime').textContent = item.submitted_time || '-';
+        document.getElementById('modalFiscalYear').textContent = item.fiscal_year ? String(item.fiscal_year) : '-';
+
+        const statusBadge = document.getElementById('modalStatus');
+        statusBadge.textContent = statusLabel(item.status);
+        statusBadge.className = 'status-badge ' + statusClass(item.status);
+
+        const modalActions = document.getElementById('modalActions');
+        modalActions.style.display = String(item.status).toLowerCase() === 'pending' ? 'flex' : 'none';
+
+        const rejectionNotice = document.getElementById('modalRejectionReason');
+        if (rejectionNotice) {
+            const reason = String(item.rejection_reason || '').trim();
+            if (String(item.status).toLowerCase() === 'rejected' && reason) {
+                rejectionNotice.textContent = reason;
+                rejectionNotice.style.display = 'block';
+            } else {
+                rejectionNotice.textContent = '';
+                rejectionNotice.style.display = 'none';
+            }
+        }
+    }
+
+    function renderSubmissionPreview(item) {
+        const preview = document.getElementById('abyipPreviewMount');
+        if (!preview) return;
+
+        if (item.document_html) {
+            preview.innerHTML = '<div class="abyip-html-preview">' + item.document_html + '</div>';
             return;
         }
-        row.style.display = 'none';
-    });
 
-    visibleRows.forEach((row, index) => {
-        const pageStart = (currentPage - 1) * itemsPerPage;
-        const pageEnd = pageStart + itemsPerPage;
-        if (index >= pageStart && index < pageEnd) {
-            row.style.display = '';
+        if (item.has_pdf && item.file_url) {
+            preview.innerHTML =
+                '<iframe src="' + escapeHtml(item.file_url) + '#toolbar=1&navpanes=0" class="abyip-pdf-frame" title="ABYIP PDF"></iframe>';
+            return;
         }
-    });
 
-    const pageStart = (currentPage - 1) * itemsPerPage + 1;
-    const pageEnd = Math.min(currentPage * itemsPerPage, visibleRows.length);
-    
-    const startEl = document.getElementById('abyipStart');
-    const endEl = document.getElementById('abyipEnd');
-    const totalEl = document.getElementById('abyipTotal');
-    
-    if (startEl) startEl.textContent = visibleRows.length > 0 ? pageStart : 0;
-    if (endEl) endEl.textContent = pageEnd;
-    if (totalEl) totalEl.textContent = visibleRows.length;
-    
-    // Update pagination buttons
-    updatePaginationButtons(totalPages);
-}
-
-/**
- * Update pagination button states
- */
-function updatePaginationButtons(totalPages) {
-    const prevButtons = document.querySelectorAll('[onclick="prevAbyipPage()"]');
-    const nextButtons = document.querySelectorAll('[onclick="nextAbyipPage()"]');
-    
-    prevButtons.forEach(btn => {
-        btn.disabled = currentPage === 1;
-    });
-    
-    nextButtons.forEach(btn => {
-        btn.disabled = currentPage >= totalPages;
-    });
-}
-
-/**
- * Next page
- */
-window.nextAbyipPage = function() {
-    const visibleRows = getVisibleRows();
-    const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
-    if (currentPage < totalPages) {
-        currentPage++;
-        displayAbyipPage();
+        preview.innerHTML = '<p class="preview-empty">No preview available for this submission.</p>';
     }
-}
 
-/**
- * Previous page
- */
-window.prevAbyipPage = function() {
-    if (currentPage > 1) {
-        currentPage--;
-        displayAbyipPage();
+    function updateSummaryCards() {
+        const totalEl = document.getElementById('abyipTotalCount');
+        const pendingEl = document.getElementById('abyipPendingCount');
+        const latestEl = document.getElementById('abyipLatestDate');
+
+        if (totalEl) totalEl.textContent = String(submissions.length);
+        if (pendingEl) {
+            pendingEl.textContent = String(submissions.filter(function (item) {
+                return String(item.status).toLowerCase() === 'pending';
+            }).length);
+        }
+        if (latestEl && submissions[0]) {
+            latestEl.textContent = submissions[0].date_submitted || 'N/A';
+        }
     }
-}
 
-/**
- * Filter ABYIP submissions
- */
-window.filterAbyipSubmissions = function() {
-    const barangayFilter = document.getElementById('barangayFilter').value;
-    const dateFilter = document.getElementById('dateFilter').value;
-    const searchTerm = document.getElementById('abyipSearchInput').value.toLowerCase();
-    
-    const rows = document.querySelectorAll('.abyip-row');
-    rows.forEach(row => {
-        const rowBarangay = row.getAttribute('data-barangay');
-        const rowDate = row.getAttribute('data-date');
-        const rowText = row.textContent.toLowerCase();
-        
-        const barangayMatch = (barangayFilter === 'all' || rowBarangay === barangayFilter);
-        const searchMatch = rowText.includes(searchTerm);
-        const dateMatch = isDateInRange(rowDate, dateFilter);
-        
-        row.style.display = (barangayMatch && searchMatch && dateMatch) ? '' : 'none';
-    });
-    
-    currentPage = 1;
-    displayAbyipPage();
-}
+    function populateBarangayFilter() {
+        const select = document.getElementById('barangayFilter');
+        if (!select) return;
 
-/**
- * Check if date is in range
- */
-function isDateInRange(dateStr, filter) {
-    if (filter === 'all') return true;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const rowDate = new Date(dateStr);
-    rowDate.setHours(0, 0, 0, 0);
-    
-    const daysDiff = Math.floor((today - rowDate) / (1000 * 60 * 60 * 24));
-    
-    switch(filter) {
-        case 'today':
-            return daysDiff === 0;
-        case 'week':
-            return daysDiff >= 0 && daysDiff < 7;
-        case 'month':
-            return daysDiff >= 0 && daysDiff < 30;
-        default:
-            return true;
+        const current = select.value;
+        const names = [...new Set(submissions.map(function (item) { return item.barangay; }).filter(Boolean))].sort();
+        select.innerHTML = '<option value="all">All Barangays</option>' +
+            names.map(function (name) {
+                return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>';
+            }).join('');
+        select.value = current || 'all';
     }
-}
 
-/**
- * Perform search
- */
-window.performAbyipSearch = function() {
-    filterAbyipSubmissions();
-}
+    function getFilteredRows() {
+        const barangayFilter = document.getElementById('barangayFilter')?.value || 'all';
+        const dateFilter = document.getElementById('dateFilter')?.value || 'all';
+        const searchTerm = (document.getElementById('abyipSearchInput')?.value || '').toLowerCase();
 
-/**
- * Initialize on DOM ready
- */
-document.addEventListener('DOMContentLoaded', function() {
-    displayAbyipPage();
-    console.log('Barangay ABYIP module loaded successfully');
-    
-    // Add character counter for approval notes
-    const approvalNotes = document.getElementById('approvalNotes');
-    if (approvalNotes) {
-        approvalNotes.addEventListener('input', function() {
-            const count = this.value.length;
-            const counter = document.getElementById('approvalNotesCount');
-            if (counter) {
-                counter.textContent = count;
-            }
+        return submissions.filter(function (item) {
+            const barangayMatch = barangayFilter === 'all' || item.barangay === barangayFilter;
+            const searchMatch = !searchTerm || JSON.stringify(item).toLowerCase().includes(searchTerm);
+            const dateMatch = isDateInRange(item.date_submitted_raw, dateFilter);
+            return barangayMatch && searchMatch && dateMatch;
         });
     }
-    
-    // Add character counter for other reason
-    const otherReason = document.getElementById('otherReason');
-    if (otherReason) {
-        otherReason.addEventListener('input', function() {
-            const count = this.value.length;
-            const counter = document.getElementById('otherReasonCount');
-            if (counter) {
-                counter.textContent = count;
-            }
+
+    function renderTable() {
+        const tbody = document.getElementById('abyipTableBody');
+        if (!tbody) return;
+
+        const filtered = getFilteredRows();
+        const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const pageItems = filtered.slice(start, start + itemsPerPage);
+
+        if (!pageItems.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No ABYIP submissions found.</td></tr>';
+        } else {
+            tbody.innerHTML = pageItems.map(function (item) {
+                return '<tr class="abyip-row" data-id="' + item.id + '" data-barangay="' + escapeHtml(item.barangay) + '" data-date="' + escapeHtml(item.date_submitted_raw || '') + '" data-status="' + escapeHtml(item.status) + '">' +
+                    '<td>' + escapeHtml(item.title) + '</td>' +
+                    '<td>' + escapeHtml(item.barangay) + '</td>' +
+                    '<td>' + escapeHtml(item.date_submitted) + '</td>' +
+                    '<td>' + escapeHtml(item.submitted_by) + '</td>' +
+                    '<td>' + escapeHtml(item.submitted_time) + '</td>' +
+                    '<td><span class="status-badge ' + statusClass(item.status) + '">' + escapeHtml(statusLabel(item.status)) + '</span></td>' +
+                    '<td><button type="button" class="view-btn-text" onclick="openViewModal(this)">View</button></td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        document.getElementById('abyipStart').textContent = filtered.length ? String(start + 1) : '0';
+        document.getElementById('abyipEnd').textContent = String(Math.min(start + itemsPerPage, filtered.length));
+        document.getElementById('abyipTotal').textContent = String(filtered.length);
+
+        document.querySelectorAll('[onclick="prevAbyipPage()"]').forEach(function (btn) {
+            btn.disabled = currentPage <= 1;
+        });
+        document.querySelectorAll('[onclick="nextAbyipPage()"]').forEach(function (btn) {
+            btn.disabled = currentPage >= totalPages;
         });
     }
-});
 
-/**
- * Open view modal with submission details
- */
-window.openViewModal = function(button) {
-    console.log('Opening modal...', button);
-    const row = button.closest('.abyip-row');
-    console.log('Row found:', row);
-    
-    // Get data from row attributes
-    const barangay = row.getAttribute('data-barangay');
-    const dateSubmitted = row.getAttribute('data-date');
-    const submittedBy = row.getAttribute('data-submitted-by');
-    const title = row.getAttribute('data-title');
-    const submittedTime = row.getAttribute('data-submitted-time');
-    const status = row.getAttribute('data-status');
-    
-    console.log('Data:', { barangay, dateSubmitted, submittedBy, title, submittedTime, status });
-    
-    // Store current row ID for later use
-    window.currentSubmissionRow = row;
-    
-    // Populate modal
-    document.getElementById('modalBarangay').textContent = barangay || '-';
-    document.getElementById('modalDateSubmitted').textContent = dateSubmitted || '-';
-    document.getElementById('modalSubmittedBy').textContent = submittedBy || '-';
-    document.getElementById('modalTitle').textContent = title || '-';
-    document.getElementById('modalSubmittedTime').textContent = submittedTime || '-';
-    
-    // Update status badge
-    const statusBadge = document.getElementById('modalStatus');
-    statusBadge.textContent = status || 'Pending';
-    statusBadge.className = 'status-badge';
-    if (status === 'Approved') {
-        statusBadge.classList.add('status-approved');
-    } else if (status === 'Rejected') {
-        statusBadge.classList.add('status-rejected');
-    } else {
-        statusBadge.classList.add('status-pending');
+    async function loadSubmissions() {
+        const payload = await apiFetch(config.listUrl || '/api/barangay-abyip');
+        submissions = Array.isArray(payload.data) ? payload.data : [];
+        updateSummaryCards();
+        populateBarangayFilter();
+        currentPage = 1;
+        renderTable();
     }
-    
-    // Show/hide action buttons based on status
-    const modalActions = document.getElementById('modalActions');
-    if (status === 'Pending') {
-        modalActions.style.display = 'flex';
-    } else {
-        modalActions.style.display = 'none';
+
+    window.filterAbyipSubmissions = function () {
+        currentPage = 1;
+        renderTable();
+    };
+
+    window.performAbyipSearch = function () {
+        filterAbyipSubmissions();
+    };
+
+    window.nextAbyipPage = function () {
+        const filtered = getFilteredRows();
+        const totalPages = Math.ceil(filtered.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage += 1;
+            renderTable();
+        }
+    };
+
+    window.prevAbyipPage = function () {
+        if (currentPage > 1) {
+            currentPage -= 1;
+            renderTable();
+        }
+    };
+
+    function isDateInRange(dateStr, filter) {
+        if (filter === 'all' || !dateStr) return true;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const rowDate = new Date(dateStr);
+        rowDate.setHours(0, 0, 0, 0);
+        const daysDiff = Math.floor((today - rowDate) / (1000 * 60 * 60 * 24));
+        if (filter === 'today') return daysDiff === 0;
+        if (filter === 'week') return daysDiff >= 0 && daysDiff < 7;
+        if (filter === 'month') return daysDiff >= 0 && daysDiff < 30;
+        return true;
     }
-    
-    // Reset forms
-    hideApproveForm();
-    hideRejectForm();
-    
-    // Show modal
-    const modal = document.getElementById('viewModal');
-    console.log('Modal element:', modal);
-    modal.classList.add('active');
-    console.log('Modal classes:', modal.className);
-    
-    // Prevent body scroll
-    document.body.style.overflow = 'hidden';
-}
 
-/**
- * Show approve form
- */
-window.showApproveForm = function() {
-    document.getElementById('modalActions').style.display = 'none';
-    document.getElementById('approveForm').style.display = 'block';
-    document.getElementById('rejectForm').style.display = 'none';
-    document.getElementById('approvalNotes').value = '';
-    document.getElementById('approvalNotesError').textContent = '';
-    document.getElementById('approvalNotesCount').textContent = '0';
-}
+    window.openViewModal = function (button) {
+        const row = button.closest('.abyip-row');
+        const id = row?.getAttribute('data-id');
+        if (!id) return;
 
-/**
- * Hide approve form
- */
-window.hideApproveForm = function() {
-    document.getElementById('approveForm').style.display = 'none';
-    document.getElementById('modalActions').style.display = 'flex';
-}
+        currentSubmissionId = id;
+        const cached = submissions.find(function (item) {
+            return String(item.id) === String(id);
+        }) || {};
 
-/**
- * Show reject form
- */
-window.showRejectForm = function() {
-    document.getElementById('modalActions').style.display = 'none';
-    document.getElementById('rejectForm').style.display = 'block';
-    document.getElementById('approveForm').style.display = 'none';
-    
-    // Reset form
-    const checkboxes = document.querySelectorAll('input[name="rejectReason"]');
-    checkboxes.forEach(cb => cb.checked = false);
-    document.getElementById('otherReasonGroup').style.display = 'none';
-    document.getElementById('otherReason').value = '';
-    document.getElementById('otherReasonCount').textContent = '0';
-    document.getElementById('rejectReasonError').textContent = '';
-    document.getElementById('otherReasonError').textContent = '';
-}
+        populateModalFields(cached);
+        document.getElementById('abyipPreviewMount').innerHTML = '<p class="preview-loading">Loading document preview...</p>';
+        hideRejectForm();
+        document.getElementById('viewModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
 
-/**
- * Hide reject form
- */
-window.hideRejectForm = function() {
-    document.getElementById('rejectForm').style.display = 'none';
-    document.getElementById('modalActions').style.display = 'flex';
-}
+        apiFetch((config.showUrl || '/api/barangay-abyip/__ID__').replace('__ID__', id))
+            .then(function (payload) {
+                const item = payload.data || {};
+                populateModalFields(item);
+                renderSubmissionPreview(item);
+            })
+            .catch(function (error) {
+                document.getElementById('abyipPreviewMount').innerHTML =
+                    '<p class="preview-empty">' + escapeHtml(error.message || 'Unable to load submission.') + '</p>';
+                showToast(error.message || 'Unable to load submission details.', 'error');
+            });
+    };
 
-/**
- * Handle reject reason checkbox change
- */
-window.handleRejectReasonChange = function() {
-    const otherCheckbox = document.getElementById('otherReasonCheckbox');
-    const otherReasonGroup = document.getElementById('otherReasonGroup');
-    
-    if (otherCheckbox.checked) {
-        otherReasonGroup.style.display = 'block';
-    } else {
-        otherReasonGroup.style.display = 'none';
+    window.showRejectForm = function () {
+        document.getElementById('modalActions').style.display = 'none';
+        document.getElementById('rejectForm').style.display = 'block';
+    };
+
+    window.hideRejectForm = function () {
+        document.getElementById('rejectForm').style.display = 'none';
+        document.querySelectorAll('input[name="rejectReason"]').forEach(function (cb) {
+            cb.checked = false;
+        });
         document.getElementById('otherReason').value = '';
-    }
-    
-    // Clear error message
-    document.getElementById('rejectReasonError').textContent = '';
-}
+        document.getElementById('otherReasonGroup').style.display = 'none';
+        document.getElementById('rejectReasonError').textContent = '';
+        document.getElementById('otherReasonError').textContent = '';
+        const item = submissions.find(function (entry) {
+            return String(entry.id) === String(currentSubmissionId);
+        });
+        document.getElementById('modalActions').style.display =
+            item && String(item.status).toLowerCase() === 'pending' ? 'flex' : 'none';
+    };
 
-/**
- * Submit approval
- */
-window.submitApproval = function() {
-    const approvalNotes = document.getElementById('approvalNotes').value.trim();
-    const errorEl = document.getElementById('approvalNotesError');
-    
-    // Validation
-    if (!approvalNotes) {
-        errorEl.textContent = 'Approval notes are required';
-        document.getElementById('approvalNotes').classList.add('error');
-        return;
-    }
-    
-    // Clear error
-    errorEl.textContent = '';
-    document.getElementById('approvalNotes').classList.remove('error');
-    
-    // Update status in table
-    if (window.currentSubmissionRow) {
-        window.currentSubmissionRow.setAttribute('data-status', 'Approved');
-        const statusCell = window.currentSubmissionRow.querySelector('.status-badge');
-        if (statusCell) {
-            statusCell.textContent = 'Approved';
-            statusCell.className = 'status-badge status-approved';
+    window.handleRejectReasonChange = function () {
+        const otherCheckbox = document.getElementById('otherReasonCheckbox');
+        document.getElementById('otherReasonGroup').style.display = otherCheckbox?.checked ? 'block' : 'none';
+        if (!otherCheckbox?.checked) {
+            document.getElementById('otherReason').value = '';
         }
-    }
-    
-    // Update modal status
-    const modalStatus = document.getElementById('modalStatus');
-    modalStatus.textContent = 'Approved';
-    modalStatus.className = 'status-badge status-approved';
-    
-    // Hide forms and action buttons
-    document.getElementById('approveForm').style.display = 'none';
-    document.getElementById('modalActions').style.display = 'none';
-    
-    // Show success toast
-    showToast('Submission successfully approved!', 'success');
-    
-    // Close modal and refresh table after 2 seconds
-    setTimeout(() => {
-        closeViewModal();
-        displayAbyipPage(); // Refresh to hide approved row
-    }, 2000);
-}
+        document.getElementById('rejectReasonError').textContent = '';
+    };
 
-/**
- * Submit rejection
- */
-window.submitRejection = function() {
-    const checkboxes = document.querySelectorAll('input[name="rejectReason"]:checked');
-    const otherCheckbox = document.getElementById('otherReasonCheckbox');
-    const otherReason = document.getElementById('otherReason').value.trim();
-    const reasonError = document.getElementById('rejectReasonError');
-    const otherError = document.getElementById('otherReasonError');
-    
-    // Clear previous errors
-    reasonError.textContent = '';
-    otherError.textContent = '';
-    document.getElementById('otherReason').classList.remove('error');
-    
-    // Validation
-    if (checkboxes.length === 0) {
-        reasonError.textContent = 'Please select at least one rejection reason';
-        return;
-    }
-    
-    if (otherCheckbox.checked && !otherReason) {
-        otherError.textContent = 'Please specify the reason';
-        document.getElementById('otherReason').classList.add('error');
-        return;
-    }
-    
-    // Update status in table
-    if (window.currentSubmissionRow) {
-        window.currentSubmissionRow.setAttribute('data-status', 'Rejected');
-        const statusCell = window.currentSubmissionRow.querySelector('.status-badge');
-        if (statusCell) {
-            statusCell.textContent = 'Rejected';
-            statusCell.className = 'status-badge status-rejected';
-        }
-    }
-    
-    // Update modal status
-    const modalStatus = document.getElementById('modalStatus');
-    modalStatus.textContent = 'Rejected';
-    modalStatus.className = 'status-badge status-rejected';
-    
-    // Hide forms and action buttons
-    document.getElementById('rejectForm').style.display = 'none';
-    document.getElementById('modalActions').style.display = 'none';
-    
-    // Show success toast
-    showToast('Submission successfully rejected!', 'error');
-    
-    // Close modal and refresh table after 2 seconds
-    setTimeout(() => {
-        closeViewModal();
-        displayAbyipPage(); // Refresh to hide rejected row
-    }, 2000);
-}
+    window.submitApproval = async function () {
+        if (!currentSubmissionId) return;
 
-/**
- * Download ABYIP file
- */
-window.downloadABYIPFile = function(event) {
-    event.preventDefault();
-    
-    // Create a sample PDF blob
-    const pdfContent = '%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/Resources <<\n/Font <<\n/F1 4 0 R\n>>\n>>\n/MediaBox [0 0 612 792]\n/Contents 5 0 R\n>>\nendobj\n4 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>\nendobj\n5 0 obj\n<<\n/Length 44\n>>\nstream\nBT\n/F1 24 Tf\n100 700 Td\n(ABYIP Document) Tj\nET\nendstream\nendobj\nxref\n0 6\n0000000000 65535 f\n0000000009 00000 n\n0000000058 00000 n\n0000000115 00000 n\n0000000262 00000 n\n0000000341 00000 n\ntrailer\n<<\n/Size 6\n/Root 1 0 R\n>>\nstartxref\n433\n%%EOF';
-    
-    const blob = new Blob([pdfContent], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'abyip.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    // Show toast
-    showToast('Downloading abyip.pdf...', 'success');
-}
+        const approveBtn = document.querySelector('#modalActions .approve-btn');
+        if (approveBtn) approveBtn.disabled = true;
 
-/**
- * Show toast notification
- */
-window.showToast = function(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const toastMessage = toast.querySelector('.toast-message');
-    const toastIcon = toast.querySelector('.toast-icon');
-    
-    toastMessage.textContent = message;
-    toast.className = 'toast show ' + type;
-    
-    if (type === 'success') {
-        toastIcon.className = 'toast-icon fas fa-check-circle';
-    } else {
-        toastIcon.className = 'toast-icon fas fa-times-circle';
-    }
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-
-/**
- * Close view modal
- */
-window.closeViewModal = function() {
-    const modal = document.getElementById('viewModal');
-    modal.classList.remove('active', 'fullscreen');
-    
-    // Reset fullscreen button icon
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    if (fullscreenBtn) {
-        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-        fullscreenBtn.title = 'Fullscreen';
-    }
-    
-    // Restore body scroll
-    document.body.style.overflow = '';
-}
-
-/**
- * Toggle fullscreen mode
- */
-window.toggleFullscreen = function() {
-    const modal = document.getElementById('viewModal');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    
-    if (modal.classList.contains('fullscreen')) {
-        // Exit fullscreen
-        modal.classList.remove('fullscreen');
-        if (fullscreenBtn) {
-            fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            fullscreenBtn.title = 'Fullscreen';
-        }
-    } else {
-        // Enter fullscreen
-        modal.classList.add('fullscreen');
-        if (fullscreenBtn) {
-            fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            fullscreenBtn.title = 'Restore';
-        }
-    }
-}
-
-/**
- * Close modal when clicking outside
- */
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('viewModal');
-    if (event.target === modal) {
-        closeViewModal();
-    }
-});
-
-/**
- * Close modal with Escape key
- */
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        const modal = document.getElementById('viewModal');
-        if (modal && modal.classList.contains('active')) {
+        try {
+            await apiFetch((config.approveUrl || '/api/barangay-abyip/__ID__/approve').replace('__ID__', currentSubmissionId), {
+                method: 'POST',
+                body: JSON.stringify({}),
+            });
+            showToast('Submission successfully approved!', 'success');
             closeViewModal();
+            await loadSubmissions();
+        } catch (error) {
+            showToast(error.message || 'Approval failed.', 'error');
+        } finally {
+            if (approveBtn) approveBtn.disabled = false;
         }
-    }
-});
+    };
+
+    window.submitRejection = async function () {
+        if (!currentSubmissionId) return;
+
+        const checkboxes = document.querySelectorAll('input[name="rejectReason"]:checked');
+        const otherCheckbox = document.getElementById('otherReasonCheckbox');
+        const otherReason = document.getElementById('otherReason').value.trim();
+        const reasonError = document.getElementById('rejectReasonError');
+        const otherError = document.getElementById('otherReasonError');
+
+        reasonError.textContent = '';
+        otherError.textContent = '';
+
+        if (!checkboxes.length) {
+            reasonError.textContent = 'Please select at least one rejection reason';
+            return;
+        }
+
+        const reasons = Array.from(checkboxes).map(function (cb) { return cb.value; });
+        if (otherCheckbox.checked && !otherReason) {
+            otherError.textContent = 'Please specify the reason';
+            return;
+        }
+        if (otherCheckbox.checked) {
+            reasons.push(otherReason);
+        }
+
+        const rejectBtn = document.querySelector('.reject-submit-btn');
+        if (rejectBtn) rejectBtn.disabled = true;
+
+        try {
+            await apiFetch((config.rejectUrl || '/api/barangay-abyip/__ID__/reject').replace('__ID__', currentSubmissionId), {
+                method: 'POST',
+                body: JSON.stringify({ reason: reasons.join('; ') }),
+            });
+            showToast('Submission successfully rejected!', 'error');
+            closeViewModal();
+            await loadSubmissions();
+        } catch (error) {
+            showToast(error.message || 'Rejection failed.', 'error');
+        } finally {
+            if (rejectBtn) rejectBtn.disabled = false;
+        }
+    };
+
+    window.closeViewModal = function () {
+        document.getElementById('viewModal').classList.remove('active', 'fullscreen');
+        document.body.style.overflow = '';
+        hideRejectForm();
+        currentSubmissionId = null;
+        document.getElementById('abyipPreviewMount').innerHTML = '';
+    };
+
+    window.toggleFullscreen = function () {
+        document.getElementById('viewModal').classList.toggle('fullscreen');
+    };
+
+    window.showToast = function (message, type) {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        toast.querySelector('.toast-message').textContent = message;
+        toast.className = 'toast show ' + (type || 'success');
+        setTimeout(function () { toast.classList.remove('show'); }, 3000);
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadSubmissions().catch(function (error) {
+            showToast(error.message || 'Unable to load ABYIP submissions.', 'error');
+        });
+    });
+})();

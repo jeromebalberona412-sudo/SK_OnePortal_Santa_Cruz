@@ -1,0 +1,109 @@
+/* KK Survey Questionnaire view — reuses Kabataan paper-form styles */
+@import './kkprofiling.css';
+
+/* ── Modal container overrides ── */
+.km-kkp-modal-body.kk-qs-body,
+.kk-view-modal-body.kk-qs-body {
+    padding: 0 !important;
+    background: #e8ecf0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.kk-qs-scroll-wrapper {
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 12px 16px 20px;
+    box-sizing: border-box;
+}
+
+.kk-view-paper {
+    background: #fff;
+    border: 1px solid #b0b8c1;
+    border-radius: 6px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+    padding: 16px 20px 24px;
+    font-size: 12px;
+    color: #111;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Override page-level paper padding inside modal */
+.kk-view-paper.kkp-paper,
+.kkp-paper--modal {
+    padding: 16px 20px 24px !important;
+    margin: 0 auto;
+    max-width: 100%;
+    border-radius: 6px;
+}
+
+/* Read-only value spans styled like underline inputs */
+.kk-view-paper .kkp-view-value {
+    display: block;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #555;
+    background: transparent;
+    font-size: 12px;
+    color: #111;
+    padding: 2px 2px 1px;
+    text-align: center;
+    min-height: 18px;
+    box-sizing: border-box;
+    word-break: break-word;
+}
+
+.kk-view-paper .kkp-view-value.kkp-readonly {
+    color: #444;
+}
+
+.kk-view-paper #kmViewLastName,
+.kk-view-paper #kmViewFirstName,
+.kk-view-paper #kmViewMiddleName,
+.kk-view-paper .kkp-name-col .kkp-view-value:nth-child(1) {
+    text-transform: uppercase;
+}
+
+.kk-view-paper .kkp-hdr-input.kkp-hdr-input-readonly {
+    display: inline-block;
+    min-width: 120px;
+    text-align: center;
+}
+
+.kk-view-paper .kkp-view-chk {
+    cursor: default;
+    pointer-events: none;
+}
+
+.kk-view-paper .kkp-sq-chk:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.kk-view-paper .kkp-sig-name-input.kkp-view-value {
+    border-bottom: 1.5px solid #1a1a1a;
+    min-height: 22px;
+}
+
+@media (max-width: 640px) {
+    .km-kkp-modal-content {
+        max-width: 98vw !important;
+    }
+
+    .km-kkp-modal-body.kk-qs-body {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .kk-qs-scroll-wrapper {
+        min-width: 720px;
+    }
+}
+
+@media print {
+    .kk-view-paper {
+        box-shadow: none;
+        border: none;
+    }
+}

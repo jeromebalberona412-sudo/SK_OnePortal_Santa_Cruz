@@ -16,8 +16,7 @@ class CommitteeController extends Controller
         private readonly CommitteeService $committeeService,
         private readonly AbyipProgramCatalogService $programCatalogService,
         private readonly SkOfficialActivityService $activityService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -35,8 +34,11 @@ class CommitteeController extends Controller
 
     public function abyipPrograms(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         return response()->json([
-            'data' => $this->programCatalogService->listProgramNames($request->user()),
+            'data' => $this->programCatalogService->listProgramNames($user),
+            'abyip_gate' => $this->programCatalogService->resolveAccessGate($user->barangay_id),
         ]);
     }
 

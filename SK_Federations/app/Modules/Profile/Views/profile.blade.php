@@ -183,6 +183,9 @@ class="profile-page" data-heartbeat-interval-ms="{{ (int) config('sk_fed_auth.si
 @endsection
 
 @push('scripts')
+    @php
+        $profileJsVersion = @filemtime(app_path('Modules/Profile/assets/js/profile.js')) ?: time();
+    @endphp
     <script>
         (() => {
             const heartbeatMs = Number(document.body.dataset.heartbeatIntervalMs || 30000);
@@ -205,5 +208,5 @@ class="profile-page" data-heartbeat-interval-ms="{{ (int) config('sk_fed_auth.si
             window.addEventListener('beforeunload', () => clearInterval(id));
         })();
     </script>
-    <script src="{{ url('/modules/profile/js/profile.js') }}"></script>
+    <script src="{{ url('/modules/profile/js/profile.js') }}?v={{ $profileJsVersion }}" defer></script>
 @endpush

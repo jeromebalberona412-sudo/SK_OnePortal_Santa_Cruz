@@ -70,6 +70,9 @@ class ProfileController extends Controller
     {
         $user = $request->user()->fresh();
 
+        $this->emailChangeService->clearExpiredPending($user);
+        $user = $user->fresh();
+
         if ($this->emailChangeService->hasPendingChange($user)) {
             return redirect()->route('change-email.verify');
         }
@@ -100,12 +103,16 @@ class ProfileController extends Controller
 
         return redirect()
             ->route('change-email.verify')
-            ->with('status', 'Verification link sent to your new email address.');
+            ->with('status', 'Verification link sent to your new email address.')
+            ->with('verification_sent', true);
     }
 
     public function showChangeEmailVerify(Request $request): View|RedirectResponse
     {
         $user = $request->user()->fresh();
+
+        $this->emailChangeService->clearExpiredPending($user);
+        $user = $user->fresh();
 
         if (! $this->emailChangeService->hasPendingChange($user)) {
             return redirect()->route('change-email');
@@ -113,7 +120,11 @@ class ProfileController extends Controller
 
         return view('profile::change-email-verify', [
             'user' => $user,
-            'resendCooldown' => $this->emailChangeService->resendCooldownRemaining($user),
+            'resendCooldown' => max(
+                $this->emailChangeService->resendCooldownRemaining($user),
+                $request->session()->get('verification_sent') ? 60 : 0
+            ),
+            'freshVerification' => (bool) $request->session()->get('verification_sent'),
         ]);
     }
 
@@ -203,6 +214,9 @@ class ProfileController extends Controller
     {
         $user = $request->user()->fresh();
 
+        $this->passwordChangeService->clearExpiredPending($user);
+        $user = $user->fresh();
+
         if (! $this->passwordChangeService->hasPendingChange($user)) {
             if ($this->wasPasswordChangeConfirmed($request, $user)) {
                 return $this->finishPasswordChangeLogout($request, $user);
@@ -217,7 +231,11 @@ class ProfileController extends Controller
 
         return view('profile::change-password-verify', [
             'user' => $user,
-            'resendCooldown' => $this->passwordChangeService->resendCooldownRemaining($user),
+            'resendCooldown' => max(
+                $this->passwordChangeService->resendCooldownRemaining($user),
+                $request->session()->get('verification_sent') ? 60 : 0
+            ),
+            'freshVerification' => (bool) $request->session()->get('verification_sent'),
         ]);
     }
 
@@ -300,8 +318,7 @@ class ProfileController extends Controller
 
     protected function wasPasswordChangeConfirmed(Request $request, User $user): bool
     {
-        return $this->passwordChangeService->wasRecentlyConfirmed($user->id)
-            || (bool) $request->session()->get('password_change_verify_active', false);
+        return $this->passwordChangeService->wasRecentlyConfirmed($user->id);
     }
 
     protected function finishPasswordChangeLogout(Request $request, User $user): RedirectResponse

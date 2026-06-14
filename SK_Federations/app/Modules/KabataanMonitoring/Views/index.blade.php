@@ -114,5 +114,10 @@
 
 @push('scripts')
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script>
+    window.kmConfig = {
+        dataUrl: @json(route('api.kabataan-monitoring.index')),
+    };
+</script>
     <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}?v={{ time() }}"></script>
 @endpush

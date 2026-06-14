@@ -101,6 +101,7 @@ function initializeProgramsUI() {
     if (!tbody) return;
 
     let programs = [];
+    let abyipGate = window.programsAbyipGate || null;
 
     let currentQuery = '';
     let currentCommittee = '';
@@ -135,13 +136,17 @@ function initializeProgramsUI() {
 
         if (filtered.length === 0) {
             const tr = document.createElement('tr');
-            const td = document.createElement('td');
-            td.colSpan = 6;
-            td.textContent = 'No programs found matching the current filters.';
-            td.style.textAlign = 'center';
-            td.style.fontSize = '13px';
-            td.style.color = '#6b7280';
-            tr.appendChild(td);
+            if (window.SkAbyipNotice?.isPending(abyipGate) && programs.length === 0) {
+                tr.innerHTML = window.SkAbyipNotice.renderEmptyRow(6, abyipGate);
+            } else {
+                const td = document.createElement('td');
+                td.colSpan = 6;
+                td.textContent = 'No programs found matching the current filters.';
+                td.style.textAlign = 'center';
+                td.style.fontSize = '13px';
+                td.style.color = '#6b7280';
+                tr.appendChild(td);
+            }
             tbody.appendChild(tr);
         } else {
             filtered.forEach((p) => {
@@ -191,6 +196,9 @@ function initializeProgramsUI() {
     async function loadPrograms() {
         const response = await apiFetch('/api/programs');
         programs = response.data?.programs || [];
+        if (response.abyip_gate) {
+            abyipGate = response.abyip_gate;
+        }
         populateCommitteeFilter();
         render();
     }

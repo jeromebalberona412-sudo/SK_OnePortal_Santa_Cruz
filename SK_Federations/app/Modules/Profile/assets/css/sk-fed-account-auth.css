@@ -1,0 +1,187 @@
+/* SK Federation account auth — blue/yellow theme, compact layout */
+
+:root {
+    --sk-fed-blue: #213F99;
+    --sk-fed-blue-dark: #1a3280;
+    --sk-fed-yellow: #F7D31E;
+    --sk-fed-yellow-dark: #e6c200;
+}
+
+.sk-login-page {
+    background: linear-gradient(135deg, #0f1f4d 0%, #213F99 45%, #152a66 100%) !important;
+}
+
+.sk-gradient-overlay {
+    background:
+        radial-gradient(circle at 20% 50%, rgba(247, 211, 30, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 80% 30%, rgba(33, 63, 153, 0.35) 0%, transparent 50%) !important;
+}
+
+.shape-1 { background: var(--sk-fed-yellow) !important; }
+.shape-2 { background: #4a6fd4 !important; }
+.shape-3 { background: var(--sk-fed-blue) !important; }
+
+.sk-tagline {
+    color: var(--sk-fed-yellow) !important;
+}
+
+.sk-login-card,
+.sk-fed-compact-card {
+    padding: 1.35rem 1.5rem 1.1rem !important;
+    max-height: none !important;
+}
+
+.sk-fed-compact-card .card-header {
+    margin-bottom: 0.85rem !important;
+}
+
+.sk-fed-compact-card .card-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.sk-fed-compact-card .card-subtitle {
+    font-size: 0.8125rem !important;
+    line-height: 1.45 !important;
+}
+
+.sk-fed-auth-form .sk-form-group {
+    margin-bottom: 0.85rem !important;
+}
+
+.sk-fed-primary-btn,
+.sk-submit-btn {
+    background: var(--sk-fed-blue) !important;
+    color: var(--sk-fed-yellow) !important;
+    border: 2px solid var(--sk-fed-yellow) !important;
+    box-shadow: 0 4px 14px rgba(33, 63, 153, 0.28) !important;
+    min-height: 44px;
+    margin-top: 0.25rem;
+}
+
+.sk-fed-primary-btn:hover:not(:disabled),
+.sk-submit-btn:hover:not(:disabled) {
+    background: var(--sk-fed-blue-dark) !important;
+    color: var(--sk-fed-yellow) !important;
+    transform: translateY(-1px);
+}
+
+.input-icon,
+.password-wrapper .input-icon {
+    color: var(--sk-fed-yellow) !important;
+}
+
+.sk-input:focus,
+.password-wrapper .sk-input:focus {
+    border-color: var(--sk-fed-blue) !important;
+    box-shadow: 0 0 0 3px rgba(33, 63, 153, 0.15) !important;
+}
+
+.pw-toggle-btn:hover {
+    color: var(--sk-fed-blue) !important;
+}
+
+.register-link {
+    color: var(--sk-fed-blue) !important;
+}
+
+.register-link:hover {
+    color: var(--sk-fed-blue-dark) !important;
+}
+
+.ce-btn-resend {
+    background: var(--sk-fed-blue) !important;
+    color: var(--sk-fed-yellow) !important;
+    border: 2px solid var(--sk-fed-yellow) !important;
+    box-shadow: 0 4px 14px rgba(33, 63, 153, 0.25) !important;
+}
+
+.ce-btn-resend:hover:not(:disabled) {
+    background: var(--sk-fed-blue-dark) !important;
+}
+
+.ce-info-box {
+    background: #f0f4ff !important;
+    border-color: #93b4ff !important;
+    color: #1e3a8a !important;
+    padding: 10px 12px !important;
+    margin-bottom: 12px !important;
+    font-size: 12px !important;
+}
+
+.ce-verify-content {
+    gap: 0.75rem !important;
+}
+
+.ce-sent-header {
+    margin-bottom: 0.25rem !important;
+}
+
+.ce-sent-icon {
+    width: 48px !important;
+    height: 48px !important;
+    margin-bottom: 10px !important;
+}
+
+.ce-status-table {
+    margin-bottom: 12px !important;
+}
+
+.ce-actions {
+    margin-bottom: 12px !important;
+}
+
+.sk-login-container {
+    min-height: 100vh;
+    height: auto !important;
+    overflow: visible !important;
+    align-items: center;
+}
+
+.sk-login-section {
+    overflow: visible !important;
+    padding: 1rem !important;
+}
+
+.sk-login-page {
+    height: auto !important;
+    min-height: 100vh;
+    overflow-y: auto !important;
+}
+
+html, body.sk-login-page-body,
+body.sk-login-page {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+}
+
+@media (min-width: 1025px) {
+    .sk-login-container {
+        grid-template-columns: 1fr 1fr;
+        max-height: 100vh;
+    }
+
+    .sk-login-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sk-fed-compact-card {
+        max-width: 420px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 1024px) {
+    .sk-branding-section {
+        padding: 1.5rem 1rem 0.5rem !important;
+    }
+
+    .sk-fed-compact-card {
+        margin: 0 auto;
+        width: 100%;
+        max-width: 420px;
+    }
+}

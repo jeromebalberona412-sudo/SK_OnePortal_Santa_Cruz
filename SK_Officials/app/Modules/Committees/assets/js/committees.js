@@ -107,6 +107,7 @@ function initializeCommitteesUI() {
     let committees = [];
     let skOfficials = [];
     let abyipPrograms = [];
+    let abyipGate = window.committeesAbyipGate || null;
     let editingId = null;
 
     let currentQuery = '';
@@ -166,7 +167,9 @@ function initializeCommitteesUI() {
             if (abyipPrograms.length === 0) {
                 const emptyOption = document.createElement('option');
                 emptyOption.value = '';
-                emptyOption.textContent = 'No ABYIP programs found — upload ABYIP first';
+                emptyOption.textContent = window.SkAbyipNotice?.isPending(abyipGate)
+                    ? window.SkAbyipNotice.pendingMessage(abyipGate)
+                    : 'No ABYIP programs found — upload ABYIP first';
                 emptyOption.disabled = true;
                 nameInput.appendChild(emptyOption);
             } else {
@@ -255,6 +258,9 @@ function initializeCommitteesUI() {
     async function loadAbyipPrograms() {
         const response = await apiFetch('/api/committees/abyip-programs');
         abyipPrograms = response.data || [];
+        if (response.abyip_gate) {
+            abyipGate = response.abyip_gate;
+        }
         populateDropdowns();
     }
 

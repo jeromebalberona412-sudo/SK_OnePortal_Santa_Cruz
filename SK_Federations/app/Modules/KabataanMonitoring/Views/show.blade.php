@@ -61,6 +61,10 @@
 @endsection
 
 @push('scripts')
+<script>
+    window.kmPageMode = 'show';
+    window.kmConfig = { dataUrl: @json(route('api.kabataan-monitoring.index')) };
+</script>
 <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}"></script>
 @endpush

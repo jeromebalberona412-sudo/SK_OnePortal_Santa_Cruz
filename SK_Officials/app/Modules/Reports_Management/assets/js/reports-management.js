@@ -1,97 +1,9 @@
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'sk_reports_management_uploads_v1';
-
-    const PROGRAMS = [
-        {
-            code: 'A',
-            name: 'Equitable Access to Quality Education',
-            activities: [
-                'Educational Assistance Program',
-                'Tutorial and Review Sessions',
-                'School Supplies Distribution',
-            ],
-        },
-        {
-            code: 'B',
-            name: 'Environmental Protection',
-            activities: [
-                'Tree Planting Activity',
-                'Clean-up Drive',
-                'Environmental Awareness Seminar',
-            ],
-        },
-        {
-            code: 'C',
-            name: 'Disaster Risk Reduction and Resiliency',
-            activities: [
-                'Disaster Preparedness Training',
-                'Emergency Kit Distribution',
-                'Community Evacuation Drill',
-            ],
-        },
-        {
-            code: 'D',
-            name: 'Youth Employment and Livelihood',
-            activities: [
-                'Skills Training Workshop',
-                'Livelihood Starter Kits Distribution',
-                'Job Fair Orientation',
-            ],
-        },
-        {
-            code: 'E',
-            name: 'Health',
-            activities: [
-                'Medical and Dental Mission',
-                'Mental Health Awareness Forum',
-                'Feeding Program',
-            ],
-        },
-        {
-            code: 'F',
-            name: 'Anti-Drug Abuse',
-            activities: [
-                'Anti-Drug Symposium',
-                'Peer Counseling Session',
-                'Community Awareness Campaign',
-            ],
-        },
-        {
-            code: 'G',
-            name: 'Gender Sensitivity',
-            activities: [
-                'Gender Sensitivity Seminar',
-                'Women and Youth Empowerment Forum',
-            ],
-        },
-        {
-            code: 'H',
-            name: 'Feeding Program',
-            activities: [
-                'Community Feeding Activity',
-                'Nutrition Education Session',
-            ],
-        },
-        {
-            code: 'I',
-            name: 'Sports Development',
-            activities: [
-                'Inter-Barangay Sports Tournament',
-                'Sports Clinic and Training',
-            ],
-        },
-        {
-            code: 'J',
-            name: 'Other Programs',
-            activities: [
-                'Katipunan ng Kabataan General Assembly',
-                'Barangay Day Celebration',
-                'Youth Week',
-            ],
-        },
-    ];
+    const config = window.rmConfig || {};
+    const PROGRAMS = Array.isArray(config.programs) ? config.programs : [];
+    const abyipGate = config.abyipGate || null;
 
     let reports = [];
     let selectedFile = null;
@@ -99,24 +11,46 @@
     document.addEventListener('DOMContentLoaded', initializeReportsManagement);
 
     function initializeReportsManagement() {
-        reports = loadReports();
         populateProgramSelects();
         bindEvents();
-        renderTable();
+        applyPendingState();
+        loadReports();
     }
 
-    function loadReports() {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            return raw ? JSON.parse(raw) : [];
-        } catch (error) {
-            console.error('Failed to load reports from localStorage', error);
-            return [];
+    function applyPendingState() {
+        const openBtn = document.getElementById('rmOpenUploadBtn');
+        if (window.SkAbyipNotice?.isPending(abyipGate) && openBtn) {
+            openBtn.disabled = true;
+            openBtn.title = window.SkAbyipNotice.pendingMessage(abyipGate);
         }
     }
 
-    function saveReports() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+    async function loadReports() {
+        try {
+            const params = new URLSearchParams();
+            const search = (document.getElementById('rmSearchInput')?.value || '').trim();
+            const program = document.getElementById('rmProgramFilter')?.value || '';
+            if (search) params.set('search', search);
+            if (program) params.set('program', program);
+
+            const url = config.listUrl + (params.toString() ? '?' + params.toString() : '');
+            const response = await fetch(url, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load reports');
+            }
+
+            const payload = await response.json();
+            reports = payload.data || [];
+            renderTable();
+        } catch (error) {
+            console.error(error);
+            reports = [];
+            renderTable();
+        }
     }
 
     function populateProgramSelects() {
@@ -172,8 +106,8 @@
             activitySelect.addEventListener('change', validateUploadForm);
         }
 
-        if (searchInput) searchInput.addEventListener('input', renderTable);
-        if (programFilter) programFilter.addEventListener('change', renderTable);
+        if (searchInput) searchInput.addEventListener('input', loadReports);
+        if (programFilter) programFilter.addEventListener('change', loadReports);
 
         if (uploadZone && fileInput) {
             uploadZone.addEventListener('click', function () {
@@ -245,7 +179,7 @@
 
     function handleFileSelection(file) {
         if (!isAllowedFile(file)) {
-            alert('Please upload a Word (.doc, .docx) or PDF (.pdf) file only.');
+            alert('Please upload a PDF (.pdf) file only.');
             return;
         }
 
@@ -260,14 +194,7 @@
     function isAllowedFile(file) {
         const name = (file.name || '').toLowerCase();
         const type = (file.type || '').toLowerCase();
-        return (
-            name.endsWith('.pdf') ||
-            name.endsWith('.doc') ||
-            name.endsWith('.docx') ||
-            type.includes('pdf') ||
-            type.includes('msword') ||
-            type.includes('wordprocessingml')
-        );
+        return name.endsWith('.pdf') || type.includes('pdf');
     }
 
     function validateUploadForm() {
@@ -310,83 +237,99 @@
         if (modal) modal.hidden = true;
     }
 
-    function submitUpload() {
+    async function submitUpload() {
         const programSelect = document.getElementById('rmProgramSelect');
         const activitySelect = document.getElementById('rmActivitySelect');
+        const submitBtn = document.getElementById('rmSubmitUploadBtn');
 
         if (!programSelect?.value || !activitySelect?.value || !selectedFile) {
             return;
         }
 
-        const program = PROGRAMS.find(function (item) {
-            return item.code === programSelect.value;
-        });
+        const formData = new FormData();
+        formData.append('program_code', programSelect.value);
+        formData.append('activity_name', activitySelect.value);
+        formData.append('report_file', selectedFile);
 
-        const report = {
-            id: 'rm-' + Date.now(),
-            programCode: program.code,
-            programName: program.name,
-            activity: activitySelect.value,
-            fileName: selectedFile.name,
-            fileType: selectedFile.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'word',
-            status: 'pending',
-            uploadedAt: new Date().toISOString(),
-        };
+        if (submitBtn) submitBtn.disabled = true;
 
-        reports.unshift(report);
-        saveReports();
-        closeUploadModal();
-        renderTable();
+        try {
+            const response = await fetch(config.storeUrl, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: formData,
+            });
+
+            const payload = await response.json().catch(function () {
+                return {};
+            });
+
+            if (!response.ok) {
+                alert(payload.message || 'Failed to upload report.');
+                return;
+            }
+
+            closeUploadModal();
+            await loadReports();
+        } catch (error) {
+            console.error(error);
+            alert('Failed to upload report.');
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
     }
 
-    function deleteReport(id) {
+    async function deleteReport(id) {
         if (!confirm('Delete this uploaded report?')) {
             return;
         }
 
-        reports = reports.filter(function (report) {
-            return report.id !== id;
-        });
-        saveReports();
-        renderTable();
-    }
+        try {
+            const response = await fetch(config.destroyUrl.replace('__ID__', id), {
+                method: 'DELETE',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
 
-    function getFilteredReports() {
-        const search = (document.getElementById('rmSearchInput')?.value || '').trim().toLowerCase();
-        const program = document.getElementById('rmProgramFilter')?.value || '';
-
-        return reports.filter(function (report) {
-            const haystack = [
-                report.programName,
-                report.activity,
-                report.fileName,
-            ].join(' ').toLowerCase();
-
-            if (search && !haystack.includes(search)) {
-                return false;
+            if (!response.ok) {
+                const payload = await response.json().catch(function () {
+                    return {};
+                });
+                alert(payload.message || 'Failed to delete report.');
+                return;
             }
 
-            if (program && report.programCode !== program) {
-                return false;
-            }
-
-            return true;
-        });
+            await loadReports();
+        } catch (error) {
+            console.error(error);
+            alert('Failed to delete report.');
+        }
     }
 
     function renderTable() {
         const tbody = document.getElementById('rmRecordsTableBody');
         if (!tbody) return;
 
-        const filtered = getFilteredReports();
-
-        if (filtered.length === 0) {
-            tbody.innerHTML =
-                '<tr class="rm-empty-row"><td colspan="5">No reports uploaded yet. Click <strong>Upload Report</strong> to submit a program or activity report.</td></tr>';
+        if (reports.length === 0) {
+            if (window.SkAbyipNotice?.isPending(abyipGate)) {
+                tbody.innerHTML = '<tr class="rm-empty-row">' + window.SkAbyipNotice.renderEmptyRow(5, abyipGate) + '</tr>';
+            } else {
+                tbody.innerHTML =
+                    '<tr class="rm-empty-row"><td colspan="5">No reports uploaded yet. Click <strong>Upload Report</strong> to submit a program or activity report.</td></tr>';
+            }
             return;
         }
 
-        tbody.innerHTML = filtered.map(function (report) {
+        tbody.innerHTML = reports.map(function (report) {
             return (
                 '<tr>' +
                 '<td>' + escapeHtml(report.programCode + '. ' + report.programName) + '</td>' +
@@ -406,7 +349,7 @@
 
     function openPreviewModal(id) {
         const report = reports.find(function (item) {
-            return item.id === id;
+            return String(item.id) === String(id);
         });
 
         if (!report) return;
@@ -422,7 +365,7 @@
                     '<div class="rm-preview-row"><dt>File</dt><dd>' + escapeHtml(report.fileName) + '</dd></div>' +
                     '<div class="rm-preview-row"><dt>Uploaded</dt><dd>' + formatDate(report.uploadedAt) + '</dd></div>' +
                     '<div class="rm-preview-row"><dt>Status</dt><dd>' + renderStatusBadge(report.status) + '</dd></div>' +
-                    '<div class="rm-preview-row"><dt>Reviewed by</dt><dd>SK Federations (pending verification)</dd></div>' +
+                    (report.downloadUrl ? '<div class="rm-preview-row"><dt>Download</dt><dd><a href="' + escapeHtml(report.downloadUrl) + '" target="_blank" rel="noopener">Open PDF</a></dd></div>' : '') +
                 '</dl>';
         }
 
@@ -465,5 +408,9 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+    function getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     }
 })();

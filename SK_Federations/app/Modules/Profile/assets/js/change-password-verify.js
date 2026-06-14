@@ -107,7 +107,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function bootstrapTimer() {
         let remaining = getRemainingSeconds();
 
-        if (remaining <= 0 && serverCooldown > 0) {
+        if (window.cpFreshVerification === true || window.cpFreshVerification === 'true') {
+            setResendCooldownExpiry(COOLDOWN_SECONDS);
+            remaining = COOLDOWN_SECONDS;
+        } else if (remaining <= 0 && serverCooldown > 0) {
             remaining = serverCooldown;
             setResendCooldownExpiry(remaining);
         }

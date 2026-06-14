@@ -505,19 +505,27 @@ class AuthController extends Controller
     {
         $user = $request->user()->fresh();
 
+        $this->passwordChangeService->clearExpiredPending($user);
+        $user = $user->fresh();
+
         if ($this->passwordChangeService->hasPendingChange($user)) {
             return redirect()->route('change-password.verify');
         }
 
-        return view('profile::change-password');
+        return view('profile::change-password', [
+            'user' => $user,
+        ]);
     }
 
     public function updatePassword(Request $request): RedirectResponse
     {
         /** @var User $user */
-        $user = $request->user();
+        $user = $request->user()->fresh();
+
+        $this->passwordChangeService->clearExpiredPending($user);
 
         $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
             'password' => [
                 'required',
                 'string',
@@ -530,15 +538,22 @@ class AuthController extends Controller
             ],
         ]);
 
+        if (strcasecmp((string) $validated['email'], (string) $user->email) !== 0) {
+            throw ValidationException::withMessages([
+                'email' => ['The email address does not match your account.'],
+            ]);
+        }
+
         try {
             $this->passwordChangeService->requestChange($user, (string) $validated['password']);
         } catch (ValidationException $exception) {
-            return back()->withErrors($exception->errors());
+            return back()->withErrors($exception->errors())->withInput();
         }
 
         return redirect()
             ->route('change-password.verify')
-            ->with('status', 'Verification link sent to your email address.');
+            ->with('status', 'Verification link sent to your email address.')
+            ->with('verification_sent', true);
     }
 
     /**

@@ -1,6 +1,7 @@
 let schedulePrograms = [];
 const PROGRAM_LETTER = 'I';
 let programMeta = null;
+let abyipGate = window.sportsAbyipGate || null;
 let editingProgramId = null;
 let pendingDeleteProgramId = null;
 
@@ -113,6 +114,9 @@ function getTypeLabel(type) {
 async function loadProgramMeta() {
     const response = await apiFetch(`/api/schedule-programs/meta?letter=${PROGRAM_LETTER}`);
     programMeta = response.data || null;
+    if (response.abyip_gate) {
+        abyipGate = response.abyip_gate;
+    }
 
     const typeEl = document.getElementById('programType');
 
@@ -230,7 +234,11 @@ function renderFormsTable() {
     if (countEl) countEl.textContent = String(forms.length);
 
     if (!forms.length) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="saf-table-empty">No sports programs yet. Click Create Program to add one.</td></tr>';
+        if (window.SkAbyipNotice?.isPending(abyipGate)) {
+            tableBody.innerHTML = '<tr>' + window.SkAbyipNotice.renderEmptyRow(6, abyipGate) + '</tr>';
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="6" class="saf-table-empty">No sports programs yet. Click Create Program to add one.</td></tr>';
+        }
         return;
     }
 

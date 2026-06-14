@@ -1164,7 +1164,8 @@ html {
 
 .btn-action-view,
 .btn-action-edit,
-.btn-action-delete {
+.btn-action-delete,
+.btn-action-resubmit {
     border: none;
     border-radius: 6px;
     padding: 4px 8px;
@@ -1212,12 +1213,30 @@ html {
     box-shadow: 0 2px 8px rgba(220, 53, 69, 0.5);
 }
 
-.btn-action-delete:disabled {
-    background: #d1d5db;
-    color: #9ca3af;
-    box-shadow: none;
+.btn-action-delete:disabled,
+.btn-action-delete.is-disabled {
+    opacity: 0.45;
     cursor: not-allowed;
-    opacity: 0.6;
+    pointer-events: none;
+}
+
+.btn-action-resubmit {
+    background: linear-gradient(135deg, #213F99 0%, #1a3278 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(33, 63, 153, 0.35);
+}
+
+.btn-action-resubmit:hover {
+    background: linear-gradient(135deg, #1a3278 0%, #152960 100%);
+}
+
+.abyip-rejection-note {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #b91c1c;
+    font-weight: 500;
+    text-align: left;
 }
 
 /* Modal Styles */

@@ -12,6 +12,7 @@
         'app/Modules/Program_Management/assets/css/schedule-programs.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body>
 
@@ -29,6 +30,8 @@
                 <p class="page-subtitle">Manage SK youth programs, surveys, scholarship, and sports.</p>
             </div>
         </section>
+
+        @include('layout::partials.abyip-pending-notice', ['abyipGate' => $abyipGate ?? null])
 
         <!-- ── SK Programs Section ── -->
         <section class="committees-section">
@@ -51,7 +54,14 @@
                         <p class="committee-head">SK Head: <span>{{ $program['sk_head_display'] ?? '' }}</span></p>
                     </a>
                 @empty
-                    <p class="section-subtitle" style="grid-column:1/-1;">No ABYIP programs found. Upload your ABYIP document first.</p>
+                    @if(is_array($abyipGate ?? null) && ($abyipGate['status'] ?? null) === 'pending')
+                        <div class="abyip-pending-empty" style="grid-column:1/-1;">
+                            <strong>ABYIP Pending</strong>
+                            {{ $abyipGate['pending_message'] ?? 'Pending — waiting for SK Federation President to approve your ABYIP.' }}
+                        </div>
+                    @else
+                        <p class="section-subtitle" style="grid-column:1/-1;">No ABYIP programs found. Upload your ABYIP document first.</p>
+                    @endif
                 @endforelse
             </div>
             <script type="application/json" id="programManagementData">@json($managementPrograms ?? [])</script>

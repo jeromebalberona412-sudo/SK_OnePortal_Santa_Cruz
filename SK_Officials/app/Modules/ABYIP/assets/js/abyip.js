@@ -8,6 +8,7 @@ const DEFAULT_RECORD_TITLE = 'ABYIP CY 2026';
 let abyipRecords = [];
 let abyipModalMode = 'create';
 let recordPendingDeleteId = null;
+let resubmitRecordId = null;
 let pendingPdfData = null; // Store PDF data temporarily
 let pendingPdfExtractedText = null; // Text extracted from PDF for program auto-detection
 let pendingIsImported = false; // Track if pending record is an imported Word doc
@@ -52,6 +53,7 @@ function mapRecordFromApi(record) {
         title: record.title,
         dateCreated: record.date_created,
         status: record.status || 'pending',
+        rejectionReason: record.rejection_reason || '',
         documentHtml: record.document_html || '',
         pdfData: record.pdf_data || null,
         isPdf: record.source_type === 'pdf',
@@ -255,11 +257,30 @@ function renderRecordsTable() {
     const tbody = document.getElementById('recordsTableBody');
     if (!tbody) return;
 
-    // DO NOT disable the Create button - keep it always enabled
+    // Update create button label based on record status
     const createBtn = document.getElementById('addAbyipBtn');
     if (createBtn) {
-        createBtn.disabled = false;
-        createBtn.title = '';
+        const rejectedRecord = abyipRecords.find(function (record) {
+            return String(record.status || '').toLowerCase() === 'rejected';
+        });
+        const hasBlockingRecord = abyipRecords.some(function (record) {
+            const status = String(record.status || '').toLowerCase();
+            return status === 'pending' || status === 'approved';
+        });
+
+        if (rejectedRecord) {
+            createBtn.textContent = 'Resubmit ABYIP';
+            createBtn.disabled = false;
+            createBtn.title = 'Upload a corrected ABYIP PDF for review';
+        } else if (hasBlockingRecord) {
+            createBtn.textContent = 'Create New ABYIP';
+            createBtn.disabled = true;
+            createBtn.title = 'Delete or wait for review of the existing ABYIP before creating another';
+        } else {
+            createBtn.textContent = 'Create New ABYIP';
+            createBtn.disabled = false;
+            createBtn.title = '';
+        }
     }
 
     if (abyipRecords.length === 0) {
@@ -277,12 +298,20 @@ function renderRecordsTable() {
 
     tbody.innerHTML = filtered
         .map((record) => {
+            const status = String(record.status || 'pending').toLowerCase();
+            const isApproved = status === 'approved';
+            const isRejected = status === 'rejected';
+            const rejectionNote = isRejected && record.rejectionReason
+                ? '<div class="abyip-rejection-note">' + escapeHtml(record.rejectionReason) + '</div>'
+                : '';
+
             return (
                 '<tr data-record-id="' +
                 record.id +
                 '">' +
                 '<td class="abyip-records-title">' +
                 escapeHtml(record.title || '') +
+                rejectionNote +
                 '</td>' +
                 '<td class="abyip-records-date">' +
                 formatDateDisplay(record.dateCreated) +
@@ -298,9 +327,18 @@ function renderRecordsTable() {
                 '<button type="button" class="btn-action-view" data-action="view" data-id="' +
                 record.id +
                 '">View</button>' +
-                '<button type="button" class="btn-action-delete" data-action="delete" data-id="' +
+                (isRejected
+                    ? '<button type="button" class="btn-action-resubmit" data-action="resubmit" data-id="' +
+                      record.id +
+                      '">Resubmit</button>'
+                    : '') +
+                '<button type="button" class="btn-action-delete' +
+                (isApproved ? ' is-disabled' : '') +
+                '" data-action="delete" data-id="' +
                 record.id +
-                '">Delete</button>' +
+                '"' +
+                (isApproved ? ' disabled title="Approved ABYIP cannot be deleted"' : '') +
+                '>Delete</button>' +
                 '</div></td></tr>'
             );
         })
@@ -441,10 +479,15 @@ function closeAbyipModal() {
         modal.setAttribute('aria-hidden', 'true');
     }
     document.body.style.overflow = '';
+    resubmitRecordId = null;
     setMainModalFooterMode('edit');
 }
 
 async function saveAbyip() {
+    if (resubmitRecordId) {
+        return saveResubmitAbyip();
+    }
+
     if (abyipModalMode !== 'create' && abyipModalMode !== 'import' && abyipModalMode !== 'pdf-view') {
         return;
     }
@@ -512,6 +555,68 @@ async function saveAbyip() {
     }
 }
 
+async function saveResubmitAbyip() {
+    if (!resubmitRecordId) return;
+
+    if (!pendingPdfData) {
+        showNotification('No PDF data to resubmit.', 'error');
+        return;
+    }
+
+    if (!pendingPdfExtractedText || !String(pendingPdfExtractedText).trim()) {
+        showNotification('Could not read program data from this PDF. Please re-upload the file.', 'error');
+        return;
+    }
+
+    const saveBtn = document.getElementById('abyipModalSave');
+    if (saveBtn) saveBtn.disabled = true;
+
+    if (typeof window.showLoading === 'function') {
+        window.showLoading('Resubmitting ABYIP');
+    }
+
+    try {
+        await abyipApiFetch('/api/abyip/' + resubmitRecordId + '/resubmit', {
+            method: 'POST',
+            body: {
+                title: DEFAULT_RECORD_TITLE,
+                source_type: 'pdf',
+                pdf_data: pendingPdfData,
+                extracted_text: pendingPdfExtractedText,
+            },
+        });
+
+        pendingPdfData = null;
+        pendingPdfExtractedText = null;
+        resubmitRecordId = null;
+        closeAbyipModal();
+        await loadRecords();
+        renderRecordsTable();
+        showNotification('ABYIP resubmitted for federation review.', 'success');
+    } catch (error) {
+        showNotification(error.message || 'Failed to resubmit ABYIP record.', 'error');
+    } finally {
+        if (typeof window.hideLoading === 'function') {
+            window.hideLoading();
+        }
+        if (saveBtn) saveBtn.disabled = false;
+    }
+}
+
+function openResubmitFlow(recordId) {
+    const record = abyipRecords.find(function (r) {
+        return String(r.id) === String(recordId);
+    });
+
+    if (!record || String(record.status || '').toLowerCase() !== 'rejected') {
+        showNotification('Only rejected ABYIP records can be resubmitted.', 'error');
+        return;
+    }
+
+    resubmitRecordId = recordId;
+    openImportPdfFilePicker();
+}
+
 function printAbyipDocument() {
     // Hide PDF notice message before printing
     const pdfNotice = document.querySelector('.pdf-viewer-notice');
@@ -560,6 +665,11 @@ function showNotification(message, type) {
 }
 
 function openDeleteModal(id) {
+    const record = abyipRecords.find(function (r) { return String(r.id) === String(id); });
+    if (record && String(record.status || '').toLowerCase() === 'approved') {
+        showNotification('Approved ABYIP records cannot be deleted.', 'error');
+        return;
+    }
     recordPendingDeleteId = id;
     const m = document.getElementById('deleteConfirmModal');
     if (m) {
@@ -873,7 +983,15 @@ async function confirmDeleteRecord() {
 }
 
 function openCreateOptionsModal() {
-    // Enforce: only 1 ABYIP record allowed at a time
+    const rejectedRecord = abyipRecords.find(function (record) {
+        return String(record.status || '').toLowerCase() === 'rejected';
+    });
+
+    if (rejectedRecord) {
+        openResubmitFlow(rejectedRecord.id);
+        return;
+    }
+
     if (abyipRecords.length >= 1) {
         showNotification('Cannot create a new ABYIP. An existing record is already present. Please delete it first before creating a new one.', 'error');
         return;
@@ -1767,7 +1885,9 @@ function openAbyipModalWithPdfPreview(pdfDoc, filename) {
 
     header.classList.remove('edit-mode', 'import-mode');
     header.classList.add('view-mode');
-    titleEl.textContent = 'PDF Preview: ' + filename;
+    titleEl.textContent = resubmitRecordId
+        ? 'Resubmit ABYIP PDF: ' + filename
+        : 'PDF Preview: ' + filename;
 
     // Create PDF viewer container
     const mount = document.getElementById('abyipModalContentMount');
@@ -1912,22 +2032,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const printBtn = document.getElementById('abyipModalPrint');
     if (printBtn) printBtn.style.display = 'none';
 
-    document.getElementById('addAbyipBtn')?.addEventListener('click', function() {
-        // Check if an ABYIP record already exists for the current year (2026)
-        const currentYear = new Date().getFullYear();
-        const existingRecordForYear = abyipRecords.some((record) => {
-            const recordYear = record.calendarYear
-                || (record.dateCreated ? new Date(record.dateCreated).getFullYear() : null);
-            return recordYear === currentYear;
-        });
-
-        if (existingRecordForYear) {
-            showNotification('Cannot create another ABYIP for this year. Delete existing record first.', 'error');
-            return;
-        }
-        
-        openCreateOptionsModal();
-    });
+    document.getElementById('addAbyipBtn')?.addEventListener('click', openCreateOptionsModal);
 
     document.getElementById('selectImportBtn')?.addEventListener('click', openImportWordFilePicker);
     document.getElementById('selectImportPdfBtn')?.addEventListener('click', openImportPdfFilePicker);
@@ -1954,7 +2059,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         const id = parseInt(btn.getAttribute('data-id'), 10);
         const action = btn.getAttribute('data-action');
         if (action === 'view') openAbyipModal('view', id);
-        else if (action === 'delete') openDeleteModal(id);
+        else if (action === 'resubmit') openResubmitFlow(id);
+        else if (action === 'delete') {
+            if (btn.disabled || btn.classList.contains('is-disabled')) return;
+            openDeleteModal(id);
+        }
     });
 
 

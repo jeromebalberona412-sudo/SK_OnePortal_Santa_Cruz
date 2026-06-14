@@ -9,21 +9,25 @@ use Illuminate\Routing\Controller;
 
 class ProgramController extends Controller
 {
-    public function __construct(private readonly AbyipProgramCatalogService $catalogService)
-    {
-    }
+    public function __construct(private readonly AbyipProgramCatalogService $catalogService) {}
 
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         return response()->json([
-            'data' => $this->catalogService->listForProgramsPage($request->user()),
+            'data' => $this->catalogService->listForProgramsPage($user),
+            'abyip_gate' => $this->catalogService->resolveAccessGate($user->barangay_id),
         ]);
     }
 
     public function management(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         return response()->json([
-            'data' => $this->catalogService->listForManagement($request->user()),
+            'data' => $this->catalogService->listForManagement($user),
+            'abyip_gate' => $this->catalogService->resolveAccessGate($user->barangay_id),
         ]);
     }
 

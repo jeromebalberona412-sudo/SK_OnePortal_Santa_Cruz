@@ -44,6 +44,10 @@
             <i class="fas fa-chart-bar"></i><span>Reports</span>
         </a>
 
+        <a href="{{ route('barangay.abyip') }}" class="menu-item {{ request()->routeIs('barangay.abyip') ? 'active' : '' }}" data-tooltip="Barangay ABYIP">
+            <i class="fas fa-file-invoice-dollar"></i><span>Barangay ABYIP</span>
+        </a>
+
         <a href="javascript:void(0);" class="menu-item {{ $archiveOpen ? 'active' : '' }}" onclick="toggleArchiveMenu(event)" data-tooltip="Archive">
             <i class="fas fa-archive"></i><span>Archive</span>
             <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;transform:rotate({{ $archiveOpen ? '180deg' : '0deg' }});"></i>

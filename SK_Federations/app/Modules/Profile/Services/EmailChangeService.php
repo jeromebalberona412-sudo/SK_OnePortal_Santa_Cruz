@@ -19,7 +19,32 @@ class EmailChangeService
 
     public function hasPendingChange(User $user): bool
     {
-        return filled($user->pending_email) && filled($user->email_change_token);
+        if (! filled($user->pending_email) || ! filled($user->email_change_token)) {
+            return false;
+        }
+
+        if ($this->isExpired($user)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function isExpired(User $user): bool
+    {
+        return $user->email_change_token_expires_at !== null
+            && $user->email_change_token_expires_at->isPast();
+    }
+
+    public function clearExpiredPending(User $user): void
+    {
+        if (! filled($user->pending_email) && ! filled($user->email_change_token)) {
+            return;
+        }
+
+        if ($this->isExpired($user)) {
+            $this->cancel($user);
+        }
     }
 
     /**

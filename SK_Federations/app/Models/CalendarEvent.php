@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Modules\Profile\Models\Barangay;
+use App\Modules\Shared\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -39,8 +41,17 @@ class CalendarEvent extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function scopeForBarangay($query, int $barangayId)
+    public function scopeForBarangay($query, ?int $barangayId)
     {
+        if ($barangayId === null) {
+            return $query->whereNull('barangay_id');
+        }
+
         return $query->where('barangay_id', $barangayId);
+    }
+
+    public function scopeVisibleToFederation($query)
+    {
+        return $query->where('target_audience', 'SK Fed');
     }
 }

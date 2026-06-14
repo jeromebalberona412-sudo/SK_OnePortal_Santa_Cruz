@@ -1,5 +1,5 @@
 Database = SK_Oneportal
-Last Updated = 2026-06-11
+Last Updated = 2026-06-14
 
 -- ============================================================
 -- CORE / SHARED TABLES
@@ -942,6 +942,9 @@ create table public.abyip (
   approved_position character varying(255) null,
   approved_by_user_id bigint null,
   status character varying(30) null,
+  reviewed_at timestamp(0) without time zone null,
+  reviewed_by_user_id bigint null,
+  rejection_reason text null,
   prepared_by_name character varying(255) null,
   prepared_by_position character varying(255) null,
   approved_by_name character varying(255) null,
@@ -1269,6 +1272,66 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_url TEXT NULL;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_public_id VARCHAR(255) NULL;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_uploaded_at TIMESTAMP NULL;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_change_available_at TIMESTAMP NULL;
+
+-- ============================================================
+-- REPORT MANAGEMENT (Added: 2026-06-14)
+-- Barangay SK Officials upload PDF program/activity reports for SK Federation review
+-- ============================================================
+
+create table if not exists public.report_management (
+  id bigserial not null,
+  tenant_id bigint not null,
+  barangay_id bigint not null,
+  user_id bigint not null,
+  program_code character varying(10) not null,
+  program_name character varying(255) not null,
+  activity_name character varying(255) not null,
+  file_name character varying(255) not null,
+  file_path character varying(500) not null,
+  file_mime character varying(100) not null default 'application/pdf'::character varying,
+  file_size bigint null,
+  status character varying(30) not null default 'pending'::character varying,
+  reviewed_by_user_id bigint null,
+  reviewed_at timestamp without time zone null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  deleted_at timestamp without time zone null,
+  constraint report_management_pkey primary key (id),
+  constraint report_management_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete CASCADE,
+  constraint report_management_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
+  constraint report_management_user_id_foreign foreign KEY (user_id) references users (id) on delete CASCADE,
+  constraint report_management_reviewed_by_user_id_foreign foreign KEY (reviewed_by_user_id) references users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists report_management_barangay_id_status_index on public.report_management using btree (barangay_id, status) TABLESPACE pg_default;
+create index IF not exists report_management_program_code_created_at_index on public.report_management using btree (program_code, created_at) TABLESPACE pg_default;
+
+-- ============================================================
+-- CALENDAR EVENTS (Added: 2026-06-14)
+-- Shared calendar events visible to SK Federation (target_audience = SK Fed)
+-- ============================================================
+
+create table if not exists public.calendar_events (
+  id bigserial not null,
+  barangay_id bigint null,
+  user_id bigint null,
+  event_date date not null,
+  start_time time without time zone not null,
+  end_time time without time zone not null,
+  title character varying(255) not null,
+  description text not null,
+  task_type character varying(30) not null,
+  status character varying(20) not null default 'Pending'::character varying,
+  target_audience character varying(50) not null default 'SK Fed'::character varying,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  constraint calendar_events_pkey primary key (id),
+  constraint calendar_events_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete set null,
+  constraint calendar_events_user_id_foreign foreign KEY (user_id) references users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists calendar_events_event_date_target_audience_index on public.calendar_events using btree (event_date, target_audience) TABLESPACE pg_default;
+create index IF not exists calendar_events_barangay_id_event_date_index on public.calendar_events using btree (barangay_id, event_date) TABLESPACE pg_default;
 
 -- ============================================================
 -- DEFAULT SYSTEM ADMINISTRATOR ACCOUNT

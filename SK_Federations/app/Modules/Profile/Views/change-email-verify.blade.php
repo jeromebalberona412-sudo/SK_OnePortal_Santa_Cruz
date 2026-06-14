@@ -2,10 +2,17 @@
 
 @section('title', 'Verify Email Change')
 
-@section('card-class', 'ce-verify-card')
+@section('card-class', 'ce-verify-card sk-fed-compact-card')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ url('/modules/profile/css/sk-fed-account-auth.css') }}">
+@endpush
 
 @push('scripts-before')
-    <script>window.ceResendCooldown = {{ (int) $resendCooldown }};</script>
+    <script>
+        window.ceResendCooldown = {{ (int) $resendCooldown }};
+        window.ceFreshVerification = {{ ($freshVerification ?? false) ? 'true' : 'false' }};
+    </script>
 @endpush
 
 @push('scripts')
@@ -62,7 +69,7 @@
             </div>
 
             <div class="ce-resend-timer" id="ceTimer" @if($resendCooldown <= 0) style="display:none;" @endif>
-                Resend available in <strong id="ceTimerCount">{{ $resendCooldown > 0 ? $resendCooldown : 60 }}</strong>s
+                Resend available in <strong id="ceTimerCount">{{ $resendCooldown > 0 ? sprintf('%d:%02d', intdiv($resendCooldown, 60), $resendCooldown % 60) : '1:00' }}</strong>
             </div>
 
             <div class="ce-actions">

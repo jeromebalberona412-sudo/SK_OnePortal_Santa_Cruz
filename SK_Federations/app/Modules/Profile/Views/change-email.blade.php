@@ -2,6 +2,12 @@
 
 @section('title', 'Change Email')
 
+@section('card-class', 'sk-fed-compact-card')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ url('/modules/profile/css/sk-fed-account-auth.css') }}">
+@endpush
+
 @push('scripts')
     <script src="{{ url('/modules/profile/js/change-email.js') }}"></script>
 @endpush
@@ -26,7 +32,7 @@
             </div>
         @endif
 
-        <form class="sk-login-form" id="ceForm" action="{{ route('change-email.request') }}" method="POST" novalidate>
+        <form class="sk-login-form sk-fed-auth-form" id="ceForm" action="{{ route('change-email.request') }}" method="POST" novalidate>
             @csrf
 
             <div class="sk-form-group">
@@ -65,7 +71,7 @@
                 <div class="sk-field-error" id="cePasswordError" hidden></div>
             </div>
 
-            <button type="submit" class="sk-submit-btn" id="ceSubmitBtn">
+            <button type="submit" class="sk-submit-btn sk-fed-primary-btn" id="ceSubmitBtn">
                 <span id="ceBtnText">Send Verification Link</span>
                 <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>

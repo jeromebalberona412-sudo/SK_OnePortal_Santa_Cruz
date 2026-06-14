@@ -15,8 +15,7 @@ class AbyipController extends Controller
     public function __construct(
         private readonly AbyipService $abyipService,
         private readonly SkOfficialActivityService $activityService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -125,6 +124,50 @@ class AbyipController extends Controller
 
         return response()->json([
             'message' => 'ABYIP deleted successfully.',
+        ]);
+    }
+
+    public function resubmit(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'source_type' => ['required', Rule::in(['word', 'pdf'])],
+            'document_html' => ['nullable', 'string'],
+            'pdf_data' => ['nullable', 'string'],
+            'extracted_text' => ['nullable', 'string'],
+        ]);
+
+        if ($validated['source_type'] === 'pdf' && empty($validated['pdf_data'])) {
+            return response()->json([
+                'message' => 'PDF data is required for resubmission.',
+            ], 422);
+        }
+
+        if ($validated['source_type'] === 'word' && empty($validated['document_html'])) {
+            return response()->json([
+                'message' => 'Document content is required for resubmission.',
+            ], 422);
+        }
+
+        try {
+            $document = $this->abyipService->resubmit($request->user(), $id, $validated);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => collect($exception->errors())->flatten()->first(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+
+        $this->activityService->log(
+            $request->user(),
+            'abyip.resubmit',
+            'Resubmitted ABYIP document: '.($document['title'] ?? $validated['title']),
+            ['document_id' => $document['id'] ?? null, 'fiscal_year' => $document['fiscal_year'] ?? null]
+        );
+
+        return response()->json([
+            'message' => 'ABYIP resubmitted for review.',
+            'data' => $document,
         ]);
     }
 }

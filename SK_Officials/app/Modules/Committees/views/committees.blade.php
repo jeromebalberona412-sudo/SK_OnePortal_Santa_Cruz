@@ -13,6 +13,7 @@
         'app/Modules/Committees/assets/css/committees.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body>
 
@@ -40,6 +41,8 @@
                 </button>
             </div>
         </section>
+
+        @include('layout::partials.abyip-pending-notice', ['abyipGate' => $abyipGate ?? null])
 
         <section class="page-filters-section">
             <!-- Mobile: Button and Search on top -->
@@ -223,6 +226,10 @@
     'app/Modules/Committees/assets/js/committees.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script src="{{ url('/shared/js/abyip-pending-notice.js') }}"></script>
+<script>
+    window.committeesAbyipGate = @json($abyipGate ?? null);
+</script>
 </body>
 </html>
 

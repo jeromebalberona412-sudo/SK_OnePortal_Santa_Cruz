@@ -212,8 +212,10 @@ async function fetchEvents() {
         const response = await fetch(`/api/calendar/events?year=${currentYear}&month=${currentMonth + 1}`, {
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${getAuthToken()}`,
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': getCsrfToken(),
+            },
+            credentials: 'same-origin',
         });
 
         if (!response.ok) {
@@ -236,9 +238,10 @@ async function saveEvent(eventData) {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${getAuthToken()}`,
                 'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
             },
+            credentials: 'same-origin',
             body: JSON.stringify(eventData),
         });
 
@@ -268,9 +271,10 @@ async function updateEvent(eventId, eventData) {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${getAuthToken()}`,
                 'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
             },
+            credentials: 'same-origin',
             body: JSON.stringify(eventData),
         });
 
@@ -303,9 +307,10 @@ async function deleteEvent(eventId) {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${getAuthToken()}`,
                 'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
             },
+            credentials: 'same-origin',
         });
 
         const result = await response.json();

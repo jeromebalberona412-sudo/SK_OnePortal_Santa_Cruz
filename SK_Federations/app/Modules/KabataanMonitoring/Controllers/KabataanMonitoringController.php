@@ -2,17 +2,41 @@
 
 namespace App\Modules\KabataanMonitoring\Controllers;
 
+use App\Modules\KabataanMonitoring\Services\KabataanMonitoringService;
 use App\Modules\Shared\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class KabataanMonitoringController extends Controller
 {
+    public function __construct(private readonly KabataanMonitoringService $service)
+    {
+    }
+
     public function index(Request $request): View
     {
         return view('kabataan_monitoring::index', [
             'user' => $request->user(),
         ]);
+    }
+
+    public function data(): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->service->listAll(),
+        ]);
+    }
+
+    public function questionnaire(int $id): JsonResponse
+    {
+        $html = $this->service->renderQuestionnaireHtml($id);
+
+        if ($html === null) {
+            return response()->json(['message' => 'Record not found.'], 404);
+        }
+
+        return response()->json(['html' => $html]);
     }
 
     public function show(Request $request, string $kabataan): View

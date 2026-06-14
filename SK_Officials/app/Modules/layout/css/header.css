@@ -1081,13 +1081,17 @@
 
 .main-header .notification-btn,
 .main-header .ai-assistant-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    width: 38px;
+    height: 38px;
+    padding: 0;
     min-width: 38px;
     min-height: 38px;
     box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .main-header .notification-btn svg,
@@ -1095,15 +1099,28 @@
     width: 22px;
     height: 22px;
     flex-shrink: 0;
+    display: block;
 }
 
 .main-header .notification-badge {
     position: absolute;
     top: 4px;
     right: 4px;
-    display: flex;
+    z-index: 2;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #ff4757;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+    box-sizing: border-box;
 }
 
 /* AI Assistant Button */

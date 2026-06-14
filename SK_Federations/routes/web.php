@@ -25,6 +25,3 @@ Route::get('/change-password/confirm/{id}/{token}', [ProfileController::class, '
     ->name('change-password.confirm');
 
 // Note: Module routes are loaded by their respective service providers.
-Route::get('/reports', function () {
-    return redirect()->route('dashboard');
-})->name('reports');

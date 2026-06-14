@@ -4,6 +4,7 @@
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Reports Management - SK Officials Portal</title>
 
     @vite([
@@ -12,6 +13,7 @@
         'app/Modules/Reports_Management/assets/css/reports-management.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body>
 
@@ -41,6 +43,8 @@
             </div>
         </section>
 
+        @include('layout::partials.abyip-pending-notice', ['abyipGate' => $abyipGate ?? null])
+
         <section class="page-filters-section">
             <div class="filters-row">
                 <div class="filter-item">
@@ -58,8 +62,10 @@
 
         <section class="page-content-section">
             <div class="section-heading-row">
-                <h2 class="section-title">Uploaded Reports</h2>
-                <p class="section-note">Reports stay <strong>Pending</strong> until SK Federations verifies and approves them.</p>
+                <div class="section-heading-copy">
+                    <h2 class="section-title">Uploaded Reports</h2>
+                    <p class="section-note">Reports stay <strong>Pending</strong> until SK Federations verifies and approves them.</p>
+                </div>
             </div>
 
             <div class="table-card rm-records-card">
@@ -90,7 +96,7 @@
         </div>
         <div class="rm-modal-body">
             <p class="rm-modal-intro">
-                Select the program and activity, then upload a Word or PDF report file for your barangay.
+                Select the program and activity, then upload a PDF report file for your barangay.
             </p>
 
             <div class="rm-form-grid">
@@ -110,7 +116,7 @@
             </div>
 
             <div class="rm-upload-zone" id="rmUploadZone">
-                <input type="file" id="rmFileInput" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+                <input type="file" id="rmFileInput" accept=".pdf,application/pdf" hidden>
                 <div class="rm-upload-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -119,7 +125,7 @@
                     </svg>
                 </div>
                 <p class="rm-upload-title">Drag &amp; drop your report here</p>
-                <p class="rm-upload-sub">or click to browse — Word (.doc, .docx) or PDF (.pdf)</p>
+                <p class="rm-upload-sub">or click to browse — PDF (.pdf) only</p>
                 <p class="rm-upload-file" id="rmSelectedFileName">No file selected</p>
             </div>
         </div>
@@ -148,6 +154,16 @@
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/Reports_Management/assets/js/reports-management.js'
 ])
+<script>
+    window.rmConfig = {
+        listUrl: @json(route('api.reports-management.index')),
+        storeUrl: @json(route('api.reports-management.store')),
+        destroyUrl: @json(route('api.reports-management.destroy', ['id' => '__ID__'])),
+        programs: @json($programs ?? []),
+        abyipGate: @json($abyipGate ?? null),
+    };
+</script>
 <script src="{{ url('/shared/js/loading.js') }}"></script>
+<script src="{{ url('/shared/js/abyip-pending-notice.js') }}"></script>
 </body>
 </html>

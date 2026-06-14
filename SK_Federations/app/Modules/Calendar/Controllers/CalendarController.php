@@ -4,6 +4,7 @@ namespace App\Modules\Calendar\Controllers;
 
 use App\Modules\Shared\Controllers\Controller;
 use App\Models\CalendarEvent;
+use App\Modules\Shared\Models\User;
 use App\Services\SkFedActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,8 @@ class CalendarController extends Controller
         $start = sprintf('%04d-%02d-01', $year, $month);
         $end = date('Y-m-t', strtotime($start));
 
-        $events = CalendarEvent::forBarangay($user->barangay_id)
+        $events = CalendarEvent::query()
+            ->visibleToFederation()
             ->whereBetween('event_date', [$start, $end])
             ->orderBy('event_date')
             ->orderBy('start_time')
@@ -61,7 +63,8 @@ class CalendarController extends Controller
         $this->assertValidTimeRange($validated['start_time'], $validated['end_time']);
 
         // Check for time overlap on the same date
-        $overlap = CalendarEvent::forBarangay($user->barangay_id)
+        $overlap = CalendarEvent::query()
+            ->visibleToFederation()
             ->whereDate('event_date', $validated['event_date'])
             ->where(function ($query) use ($validated) {
                 $query->whereBetween('start_time', [$validated['start_time'], $validated['end_time']])
@@ -108,7 +111,7 @@ class CalendarController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        $event = $this->findEvent($user->barangay_id, $id);
+        $event = $this->findEvent($id);
 
         $this->assertCanModifyDate($event->event_date->toDateString());
 
@@ -125,7 +128,8 @@ class CalendarController extends Controller
         $this->assertValidTimeRange($validated['start_time'], $validated['end_time']);
 
         // Check for time overlap (excluding current event)
-        $overlap = CalendarEvent::forBarangay($user->barangay_id)
+        $overlap = CalendarEvent::query()
+            ->visibleToFederation()
             ->whereDate('event_date', $event->event_date)
             ->where('id', '!=', $id)
             ->where(function ($query) use ($validated) {
@@ -162,7 +166,7 @@ class CalendarController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        $event = $this->findEvent($user->barangay_id, $id);
+        $event = $this->findEvent($id);
 
         $this->assertCanModifyDate($event->event_date->toDateString());
 
@@ -179,9 +183,9 @@ class CalendarController extends Controller
         return response()->json(['message' => 'Event deleted.']);
     }
 
-    protected function findEvent(int $barangayId, int $id): CalendarEvent
+    protected function findEvent(int $id): CalendarEvent
     {
-        $event = CalendarEvent::forBarangay($barangayId)->find($id);
+        $event = CalendarEvent::query()->visibleToFederation()->find($id);
 
         if ($event === null) {
             throw ValidationException::withMessages([

@@ -10,7 +10,13 @@ class BarangayAbyipServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__ . '/../Views', 'barangay_abyip');
-        $this->loadRoutesFrom(__DIR__ . '/../Routes/web.php');
+        $this->loadRoutes();
+    }
+
+    protected function loadRoutes(): void
+    {
+        Route::middleware('web')
+            ->group(__DIR__ . '/../Routes/web.php');
     }
 
     public function register(): void
