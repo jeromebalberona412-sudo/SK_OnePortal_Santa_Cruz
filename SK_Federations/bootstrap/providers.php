@@ -7,6 +7,7 @@ return [
     App\Modules\Shared\Providers\SharedServiceProvider::class,
     App\Modules\Authentication\Providers\AuthenticationServiceProvider::class,
     App\Modules\Dashboard\Providers\DashboardServiceProvider::class,
+    App\Modules\Calendar\Providers\CalendarServiceProvider::class,
     App\Modules\Profile\Providers\ProfileServiceProvider::class,
     App\Modules\CommunityFeed\Providers\CommunityFeedServiceProvider::class,
     App\Modules\BarangayMonitoring\Providers\BarangayMonitoringServiceProvider::class,

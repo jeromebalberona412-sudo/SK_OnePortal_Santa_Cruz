@@ -11,8 +11,8 @@
     <title>Kabataan Monitoring - SK Federation</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url('/modules/kabataan-monitoring/css/kabataan-monitoring.css') }}">
+    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ url('/modules/kabataan-monitoring/css/kabataan-monitoring.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
@@ -38,10 +38,6 @@
                 <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Fed Logo" class="brand-logo">
                 <span class="brand-name">SK Federations</span>
             </div>
-        </div>
-        <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input id="km-search" type="text" placeholder="Search name, barangay, or focus area..." aria-label="Search kabataan">
         </div>
         <div class="navbar-right">
             <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
@@ -94,6 +90,7 @@
         <nav class="sidebar-nav">
             <div class="menu-section-label">Main</div>
             <a href="{{ route('dashboard') }}" class="menu-item" data-tooltip="Dashboard" id="nav-dashboard-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="{{ route('calendar') }}" class="menu-item" data-tooltip="Calendar"><i class="fas fa-calendar-alt"></i><span>Calendar</span></a>
             <div class="menu-section-label">Modules</div>
             <a href="{{ route('community-feed') }}" class="menu-item" data-tooltip="SK Community Feed"><i class="fas fa-rss"></i><span>SK Community Feed</span></a>
             <a href="{{ route('barangay-monitoring') }}" class="menu-item" data-tooltip="Barangay Monitoring"><i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span></a>
@@ -170,19 +167,39 @@
                         <p>Youth profiling records grouped by barangay</p>
                     </div>
                     <div class="km-masterlist-actions">
+                        <select id="km-brgy-filter" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:220px;margin-right:12px;">
+                            <option value="all">All Barangays</option>
+                            <option value="Alipit">Alipit</option>
+                            <option value="Bagumbayan">Bagumbayan</option>
+                            <option value="Bubukal">Bubukal</option>
+                            <option value="Calios">Calios</option>
+                            <option value="Duhat">Duhat</option>
+                            <option value="Gatid">Gatid</option>
+                            <option value="Jasaan">Jasaan</option>
+                            <option value="Labuin">Labuin</option>
+                            <option value="Malinao">Malinao</option>
+                            <option value="Oogong">Oogong</option>
+                            <option value="Pagsawitan">Pagsawitan</option>
+                            <option value="Palasan">Palasan</option>
+                            <option value="Patimbao">Patimbao</option>
+                            <option value="Poblacion I">Poblacion I</option>
+                            <option value="Poblacion II">Poblacion II</option>
+                            <option value="Poblacion III">Poblacion III</option>
+                            <option value="Poblacion IV">Poblacion IV</option>
+                            <option value="Poblacion V">Poblacion V</option>
+                            <option value="San Jose">San Jose</option>
+                            <option value="San Juan">San Juan</option>
+                            <option value="San Pablo Norte">San Pablo Norte</option>
+                            <option value="San Pablo Sur">San Pablo Sur</option>
+                            <option value="Santisima Cruz">Santisima Cruz</option>
+                            <option value="Santo Angel Central">Santo Angel Central</option>
+                            <option value="Santo Angel Norte">Santo Angel Norte</option>
+                            <option value="Santo Angel Sur">Santo Angel Sur</option>
+                        </select>
                         <button class="km-export-btn" onclick="exportCSV()">
                             <i class="fas fa-download"></i> Export CSV
                         </button>
                     </div>
-                </div>
-                <div class="km-filter-row">
-                    <div class="km-chip-row" id="km-status-filter">
-                        <button type="button" class="km-chip active" data-status="all">All</button>
-                        <button type="button" class="km-chip" data-status="active">Active</button>
-                        <button type="button" class="km-chip" data-status="moderate">Moderate</button>
-                        <button type="button" class="km-chip" data-status="inactive">Inactive</button>
-                    </div>
-                    <div class="km-result-count" id="km-result-count"></div>
                 </div>
             </section>
 
@@ -197,7 +214,7 @@
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/dashboard/js/dashboard.js') }}"></script>
-    <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}"></script>
+    <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}?v={{ time() }}"></script>
     <script>
         window.logoutRoute = "{{ route('logout') }}";
         window.loginRoute  = "{{ route('login') }}";
