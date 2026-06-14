@@ -437,7 +437,15 @@ function toggleNotifPopover(e) {
     const dd  = document.getElementById('profileDropdown');
     dd?.classList.remove('show');
     document.querySelector('.profile-btn')?.classList.remove('open');
-    pop?.classList.toggle('show');
+    const btn = document.getElementById('notifBtn');
+    const isOpen = pop?.classList.contains('show');
+    if (isOpen) {
+        pop?.classList.remove('show');
+        btn?.setAttribute('aria-expanded', 'false');
+    } else {
+        pop?.classList.add('show');
+        btn?.setAttribute('aria-expanded', 'true');
+    }
 }
 
 /* ── SIDEBAR TOGGLE — toggles body.sidebar-collapsed to match dashboard.css ── */
@@ -457,6 +465,7 @@ function toggleProfileDropdown(e) {
     const pop = document.getElementById('notifPopover');
     const btn = document.querySelector('.profile-btn');
     pop?.classList.remove('show');
+    document.getElementById('notifBtn')?.setAttribute('aria-expanded', 'false');
     dd?.classList.toggle('show');
     btn?.classList.toggle('open');
 }
@@ -501,11 +510,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Close dropdowns on outside click
-    document.addEventListener('click', function() {
+    document.addEventListener('click', function(e) {
         document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
-        document.getElementById('notifPopover')?.classList.remove('show');
-        document.getElementById('profileDropdown')?.classList.remove('show');
-        document.querySelector('.profile-btn')?.classList.remove('open');
+        const notifMenu = document.getElementById('notifMenu');
+        const profileWrapper = document.querySelector('.profile-dropdown-wrapper');
+        if (notifMenu && !notifMenu.contains(e.target)) {
+            document.getElementById('notifPopover')?.classList.remove('show');
+            document.getElementById('notifBtn')?.setAttribute('aria-expanded', 'false');
+        }
+        if (profileWrapper && !profileWrapper.contains(e.target)) {
+            document.getElementById('profileDropdown')?.classList.remove('show');
+            document.querySelector('.profile-btn')?.classList.remove('open');
+        }
     });
 
     // Programs drawer (mobile FAB)

@@ -1,13 +1,10 @@
 /**
- * SK Federation — Change Password (email step, then password + verification)
+ * SK Federation — Change Password
  */
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('change-password-form');
     const emailInput = document.getElementById('cpEmail');
     const emailError = document.getElementById('cpEmailClientError');
-    const stepEmail = document.getElementById('cpStepEmail');
-    const stepPassword = document.getElementById('cpStepPassword');
-    const continueBtn = document.getElementById('cpContinueBtn');
     const passwordInput = document.getElementById('password');
     const confirmInput = document.getElementById('password_confirmation');
     const passwordRules = document.getElementById('passwordRules');
@@ -15,38 +12,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const submitBtn = document.getElementById('cpSubmitBtn');
     const btnText = document.getElementById('cpBtnText');
 
-    if (!form || !emailInput) {
+    if (!form) {
         return;
     }
 
     const maxLength = Number.parseInt(form.dataset.passwordMaxLength || '64', 10);
     const minLength = Number.parseInt(form.dataset.passwordMinLength || '12', 10);
-    const accountEmail = (emailInput.defaultValue || emailInput.value || '').trim().toLowerCase();
-
-    const hasPasswordErrors = form.querySelector('.is-invalid[name="password"], .sk-field-error:not([hidden])');
-    if (hasPasswordErrors || document.getElementById('password')?.value) {
-        showPasswordStep();
-    }
-
-    function showPasswordStep() {
-        if (stepPassword) stepPassword.hidden = false;
-        if (continueBtn) continueBtn.hidden = true;
-        if (submitBtn) submitBtn.hidden = false;
-        if (passwordInput) {
-            passwordInput.required = true;
-            passwordInput.focus();
-        }
-        if (confirmInput) confirmInput.required = true;
-    }
+    const accountEmail = emailInput
+        ? (emailInput.defaultValue || emailInput.value || '').trim().toLowerCase()
+        : '';
 
     function showEmailError(message) {
-        if (!emailError) return;
+        if (!emailInput || !emailError) return;
         emailError.textContent = message;
         emailError.hidden = false;
         emailInput.classList.add('is-invalid');
     }
 
     function clearEmailError() {
+        if (!emailInput) return;
         if (emailError) {
             emailError.textContent = '';
             emailError.hidden = true;
@@ -55,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function validateEmailStep() {
+        if (!emailInput) return true;
         clearEmailError();
         const value = emailInput.value.trim();
         if (!value) {
@@ -70,15 +55,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
-    if (continueBtn) {
-        continueBtn.addEventListener('click', function () {
-            if (validateEmailStep()) {
-                showPasswordStep();
-            }
-        });
+    if (emailInput) {
+        emailInput.addEventListener('input', clearEmailError);
     }
-
-    emailInput.addEventListener('input', clearEmailError);
 
     function showSubmitLoading() {
         if (submitBtn) {
@@ -143,6 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
             clientError.hidden = true;
         }
         if (passwordInput) passwordInput.classList.remove('is-invalid');
+        if (confirmInput) confirmInput.classList.remove('is-invalid');
     }
 
     if (passwordInput) {
@@ -150,6 +130,9 @@ document.addEventListener('DOMContentLoaded', function () {
             clearClientError();
             updatePasswordRules(this.value);
         });
+        if (passwordInput.value) {
+            updatePasswordRules(passwordInput.value);
+        }
     }
 
     if (confirmInput) {
@@ -157,17 +140,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     form.addEventListener('submit', function (e) {
-        if (!validateEmailStep()) {
+        if (emailInput && !validateEmailStep()) {
             e.preventDefault();
-            if (stepPassword) stepPassword.hidden = true;
-            if (continueBtn) continueBtn.hidden = false;
-            if (submitBtn) submitBtn.hidden = true;
-            return;
-        }
-
-        if (stepPassword && stepPassword.hidden) {
-            e.preventDefault();
-            showPasswordStep();
             return;
         }
 
@@ -180,6 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             showClientError('Please meet all password requirements.');
             updatePasswordRules(passwordInput.value);
+            passwordInput.focus();
             return;
         }
 
@@ -205,10 +180,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const targetId = btn.getAttribute('data-target');
             const input = document.getElementById(targetId);
             if (!input) return;
-            const show = input.type === 'password';
-            input.type = show ? 'text' : 'password';
-            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-            btn.classList.toggle('pw-visible', show);
+
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.classList.toggle('pw-visible', isHidden);
+            btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         });
     });
 });

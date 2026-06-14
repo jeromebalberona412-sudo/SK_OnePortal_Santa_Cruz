@@ -71,7 +71,13 @@
             <label class="kkp-col-label">Middle Name</label>
         </div>
         <div class="kkp-name-col kkp-name-col-sm">
-            <input type="text" class="kkp-uline" value="{{ $read('suffix', $kabataanRegistration->suffix ?? '') }}" readonly>
+            @php
+                $suffixValue = $read('suffix', $kabataanRegistration->suffix ?? '');
+                if (strcasecmp(trim((string) $suffixValue), 'None') === 0 || $suffixValue === 'N/A') {
+                    $suffixValue = '';
+                }
+            @endphp
+            <input type="text" class="kkp-uline" value="{{ $suffixValue }}" readonly>
             <label class="kkp-col-label">Suffix</label>
         </div>
     </div>

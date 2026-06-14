@@ -248,8 +248,8 @@
     height: 32px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #e1e5e9;
-    background: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    background: transparent;
     flex-shrink: 0;
 }
 
@@ -1092,6 +1092,26 @@
     min-height: 38px;
     box-sizing: border-box;
     flex-shrink: 0;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.main-header .user-menu-btn {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.main-header .user-avatar {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.45);
 }
 
 .main-header .notification-btn svg,

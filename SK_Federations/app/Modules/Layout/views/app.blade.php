@@ -26,7 +26,6 @@
 <body @stack('body-attributes')>
     @include('layout::anti-back')
     @include('layout::header')
-    @include('layout::notif-popover')
     @include('layout::sidebar-overlay')
     @include('layout::sidebar')
 

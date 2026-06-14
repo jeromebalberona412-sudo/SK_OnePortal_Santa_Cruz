@@ -185,3 +185,243 @@ body.sk-login-page {
         max-width: 420px;
     }
 }
+
+/* change-email/verify — fit viewport without scroll */
+body.sk-login-page:has(.ce-verify-card) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+}
+
+body.sk-login-page:has(.ce-verify-card) .sk-login-container {
+    min-height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    align-items: center;
+}
+
+body.sk-login-page:has(.ce-verify-card) .sk-login-section {
+    padding: 0.75rem 1rem !important;
+    overflow: hidden;
+}
+
+.sk-fed-compact-card.ce-verify-card {
+    padding: 0.85rem 1.15rem 0.65rem !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .card-header {
+    margin-bottom: 0.4rem !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .card-title {
+    font-size: 1.05rem !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .card-subtitle {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-info-box {
+    padding: 7px 9px !important;
+    margin-bottom: 6px !important;
+    font-size: 10.5px !important;
+    line-height: 1.35 !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-status-table {
+    margin-bottom: 6px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-status-row {
+    padding: 6px 9px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-status-key {
+    min-width: 90px !important;
+    font-size: 9.5px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-status-val {
+    font-size: 11.5px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-badge-awaiting {
+    font-size: 11px !important;
+    padding: 2px 8px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-resend-timer {
+    font-size: 10.5px !important;
+    margin-bottom: 4px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-actions {
+    margin-bottom: 6px !important;
+    gap: 6px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-btn-resend,
+.sk-fed-compact-card.ce-verify-card .ce-btn-cancel {
+    min-height: 36px !important;
+    padding: 7px 10px !important;
+    font-size: 12.5px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-back-section {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-back-section .register-text {
+    margin: 0 !important;
+    font-size: 11.5px !important;
+}
+
+.sk-fed-compact-card.ce-verify-card .ce-verify-content {
+    gap: 0.45rem !important;
+}
+
+/* change-password — compact layout, no field icons, fixed eye toggle */
+body.sk-login-page:has(.cp-change-card) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+}
+
+body.sk-login-page:has(.cp-change-card) .sk-login-container {
+    min-height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    align-items: center;
+}
+
+body.sk-login-page:has(.cp-change-card) .sk-login-section {
+    padding: 0.75rem 1rem !important;
+    overflow: hidden;
+}
+
+.sk-fed-compact-card.cp-change-card {
+    padding: 0.85rem 1.15rem 0.65rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .card-header {
+    margin-bottom: 0.45rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .card-title {
+    font-size: 1.05rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .card-subtitle {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+}
+
+.sk-fed-compact-card.cp-change-card .sk-form-group {
+    margin-bottom: 0.55rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .sk-label {
+    font-size: 0.78rem !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .input-wrapper .input-icon,
+.sk-fed-compact-card.cp-change-card .password-wrapper .input-icon {
+    display: none !important;
+}
+
+.sk-fed-compact-card.cp-change-card .input-wrapper .sk-input,
+.sk-fed-compact-card.cp-change-card .password-wrapper .sk-input {
+    padding: 0.62rem 0.75rem !important;
+    font-size: 0.82rem !important;
+    min-height: 40px;
+}
+
+.sk-fed-compact-card.cp-change-card .password-wrapper .sk-input {
+    padding-right: 2.5rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .password-wrapper {
+    position: relative;
+}
+
+.sk-fed-compact-card.cp-change-card .pw-toggle-btn {
+    position: absolute;
+    right: 0.45rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    z-index: 2;
+}
+
+.sk-fed-compact-card.cp-change-card .pw-toggle-btn:hover {
+    color: var(--sk-fed-blue) !important;
+    background: rgba(33, 63, 153, 0.08);
+}
+
+.sk-fed-compact-card.cp-change-card .pw-toggle-btn .pw-eye {
+    width: 18px;
+    height: 18px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.15s ease;
+}
+
+.sk-fed-compact-card.cp-change-card .pw-toggle-btn .pw-eye-hide {
+    opacity: 0;
+}
+
+.sk-fed-compact-card.cp-change-card .pw-toggle-btn.pw-visible .pw-eye-show {
+    opacity: 0;
+}
+
+.sk-fed-compact-card.cp-change-card .pw-toggle-btn.pw-visible .pw-eye-hide {
+    opacity: 1;
+}
+
+.sk-fed-compact-card.cp-change-card .password-rules {
+    margin-top: 0.35rem !important;
+    font-size: 0.68rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .sk-field-error {
+    font-size: 0.68rem !important;
+    margin-top: 0.2rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .sk-alert-error {
+    padding: 0.5rem 0.65rem !important;
+    font-size: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .sk-submit-btn {
+    min-height: 38px !important;
+    margin-top: 0.35rem !important;
+    font-size: 0.85rem !important;
+}
+
+.sk-fed-compact-card.cp-change-card .ce-back-section {
+    margin-top: 0.35rem !important;
+    padding-top: 0 !important;
+}
+
+.sk-fed-compact-card.cp-change-card .ce-back-section .register-text {
+    margin: 0 !important;
+    font-size: 11.5px !important;
+}

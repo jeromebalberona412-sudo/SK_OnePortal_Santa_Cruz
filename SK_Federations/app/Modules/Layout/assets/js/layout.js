@@ -47,30 +47,104 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ── Notification Popover ──
+function closeNotifPopover() {
+    const pop = document.getElementById('notifPopover');
+    const btn = document.getElementById('notifBtn');
+    pop?.classList.remove('show');
+    btn?.setAttribute('aria-expanded', 'false');
+}
+
+function updateNotifBadge() {
+    const notifList = document.getElementById('notifList');
+    const notifBadge = document.getElementById('notifBadge');
+    const notifCountPill = document.getElementById('notifCountPill');
+    const notifEmpty = document.getElementById('notifEmpty');
+    const unread = notifList ? notifList.querySelectorAll('.notif-unread').length : 0;
+
+    if (notifBadge) {
+        notifBadge.textContent = unread > 0 ? String(unread) : '';
+        notifBadge.style.display = unread > 0 ? 'inline-flex' : 'none';
+    }
+    if (notifCountPill) {
+        notifCountPill.textContent = unread > 0 ? String(unread) : '';
+        notifCountPill.style.display = unread > 0 ? 'inline' : 'none';
+    }
+    if (notifEmpty && notifList) {
+        const hasItems = notifList.querySelectorAll('.notif-item').length > 0;
+        notifEmpty.style.display = hasItems ? 'none' : 'flex';
+        notifList.style.display = hasItems ? '' : 'none';
+    }
+}
+
 function toggleNotifPopover(e) {
     e.stopPropagation();
     const pop = document.getElementById('notifPopover');
+    const btn = document.getElementById('notifBtn');
     const profileDd = document.getElementById('profileDropdown');
     profileDd?.classList.remove('show');
     document.querySelector('.profile-btn')?.classList.remove('open');
-    pop?.classList.toggle('show');
+
+    const isOpen = pop?.classList.contains('show');
+    if (isOpen) {
+        closeNotifPopover();
+    } else {
+        pop?.classList.add('show');
+        btn?.setAttribute('aria-expanded', 'true');
+    }
 }
 
 // ── Profile Dropdown ──
 function toggleProfileDropdown(e) {
     e.stopPropagation();
     const dd = document.getElementById('profileDropdown');
-    const notifPop = document.getElementById('notifPopover');
     const btn = document.querySelector('.profile-btn');
-    notifPop?.classList.remove('show');
+    closeNotifPopover();
     dd?.classList.toggle('show');
     btn?.classList.toggle('open');
 }
 
-document.addEventListener('click', function () {
-    document.getElementById('notifPopover')?.classList.remove('show');
-    document.getElementById('profileDropdown')?.classList.remove('show');
-    document.querySelector('.profile-btn')?.classList.remove('open');
+document.addEventListener('click', function (e) {
+    const notifMenu = document.getElementById('notifMenu');
+    const profileWrapper = document.querySelector('.profile-dropdown-wrapper');
+
+    if (notifMenu && !notifMenu.contains(e.target)) {
+        closeNotifPopover();
+    }
+    if (profileWrapper && !profileWrapper.contains(e.target)) {
+        document.getElementById('profileDropdown')?.classList.remove('show');
+        document.querySelector('.profile-btn')?.classList.remove('open');
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const notifPopover = document.getElementById('notifPopover');
+    const notifList = document.getElementById('notifList');
+    const markAllBtn = document.getElementById('notifMarkAllBtn');
+
+    notifPopover?.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+
+    notifList?.addEventListener('click', function (e) {
+        const item = e.target.closest('.notif-item');
+        if (!item || !item.classList.contains('notif-unread')) {
+            return;
+        }
+        item.classList.remove('notif-unread');
+        item.querySelector('.notif-unread-dot')?.remove();
+        updateNotifBadge();
+    });
+
+    markAllBtn?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        notifList?.querySelectorAll('.notif-unread').forEach(function (item) {
+            item.classList.remove('notif-unread');
+            item.querySelector('.notif-unread-dot')?.remove();
+        });
+        updateNotifBadge();
+    });
+
+    updateNotifBadge();
 });
 
 // ── Logout Modal ──

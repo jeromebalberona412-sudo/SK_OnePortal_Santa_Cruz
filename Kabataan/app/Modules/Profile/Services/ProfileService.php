@@ -64,6 +64,9 @@ class ProfileService
             $first = trim((string) ($formData['first_name'] ?? $registration->first_name ?? ''));
             $middle = trim((string) ($formData['middle_name'] ?? $registration->middle_name ?? ''));
             $suffix = trim((string) ($formData['suffix'] ?? $registration->suffix ?? ''));
+            if (strcasecmp($suffix, 'None') === 0) {
+                $suffix = '';
+            }
 
             $parts = array_filter([$last, $first, $middle, $suffix], fn ($part) => $part !== '');
 

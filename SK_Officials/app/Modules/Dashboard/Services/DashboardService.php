@@ -6,6 +6,7 @@ use App\Models\Abyip;
 use App\Models\CalendarNote;
 use App\Models\KabataanRegistration;
 use App\Models\KkSurveyResponse;
+use App\Models\OfficialTerm;
 use App\Models\RejectedKkProfiling;
 use App\Models\SkOfficialActivity;
 use App\Models\User;
@@ -16,6 +17,15 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
+    /** @var list<string> */
+    private const EMPLOYMENT_STATUS_OPTIONS = [
+        'Employed',
+        'Unemployed',
+        'Self-Employed',
+        'Currently looking for a Job',
+        'Not Interested Looking for a Job',
+    ];
+
     public function __construct(
         private readonly CommitteeService $committeeService,
         private readonly SkOfficialPresenceService $presenceService,
@@ -27,7 +37,7 @@ class DashboardService
      *
      * @return array<string, mixed>
      */
-    public function getSummary(User $user, int $year): array
+    public function getSummary(User $user, int $year, ?string $termId = null): array
     {
         $barangayId = $user->barangay_id;
 
@@ -35,22 +45,28 @@ class DashboardService
             return $this->emptyPayload();
         }
 
+        $terms = $this->availableTerms($barangayId);
+        $selectedTerm = $this->resolveSelectedTerm($terms, $termId);
+        $year = $this->clampYearToTerm($year, $selectedTerm);
+
         $abyip = $this->resolveAbyipDocument($barangayId, $year);
-        $kkStats = $this->kkProfileStats($barangayId);
+        $kkStats = $this->kkProfileStats($barangayId, $year);
 
         return [
             'year' => $year,
+            'term_id' => $selectedTerm['id'],
             'user_name' => $this->resolveUserDisplayName($user),
             'stats' => array_merge($kkStats, [
                 'active_programs' => $this->activeProgramCount($abyip),
-                'deleted_kabataan' => $this->deletedKabataanCount($barangayId),
+                'deleted_kabataan' => $this->deletedKabataanCount($barangayId, $year),
                 'rejected_items' => $kkStats['rejected'],
             ]),
             'officials' => $this->officialsStatus($user),
             'upcoming_events' => $this->upcomingCalendarNotes($barangayId),
             'today_reminder' => $this->todayReminder($barangayId),
             'recent_activity' => $this->recentActivity($barangayId),
-            'available_years' => $this->availableYears($barangayId),
+            'available_terms' => $terms,
+            'available_years' => $this->yearsForTerm($selectedTerm),
         ];
     }
 
@@ -59,7 +75,7 @@ class DashboardService
      *
      * @return array<string, mixed>
      */
-    public function getChartData(User $user, int $year, string $granularity = 'monthly', ?int $month = null): array
+    public function getChartData(User $user, int $year, string $granularity = 'monthly', ?int $month = null, ?string $termId = null): array
     {
         $barangayId = $user->barangay_id;
 
@@ -74,11 +90,15 @@ class DashboardService
                     'rejected' => array_fill(0, 12, 0),
                 ],
                 'gender_distribution' => ['labels' => ['Male', 'Female'], 'values' => [0, 0]],
-                'employment_status_distribution' => ['items' => [], 'total' => 0],
+                'employment_status_distribution' => $this->emptyEmploymentDistribution(),
             ];
         }
 
-        $activeFormData = $this->activeRegistrationsFormData($barangayId);
+        $terms = $this->availableTerms($barangayId);
+        $selectedTerm = $this->resolveSelectedTerm($terms, $termId);
+        $year = $this->clampYearToTerm($year, $selectedTerm);
+
+        $activeFormData = $this->activeRegistrationsFormData($barangayId, $year);
         $purok = $this->purokDistributionFromRecords($activeFormData);
         $kkChart = $granularity === 'weekly' && $month !== null
             ? $this->weeklyKkRequestStats($barangayId, $year, $month)
@@ -89,7 +109,7 @@ class DashboardService
             'purok_counts' => $purok['counts'],
             'kk_requests_chart' => $kkChart,
             'gender_distribution' => $this->genderDistributionFromRecords($activeFormData),
-            'employment_status_distribution' => $this->employmentStatusDistribution($barangayId),
+            'employment_status_distribution' => $this->employmentStatusDistribution($barangayId, $year),
         ];
     }
 
@@ -98,59 +118,56 @@ class DashboardService
      *
      * @return array{items: list<array{status: string, count: int}>, total: int}
      */
-    public function employmentStatusDistribution(int $barangayId): array
+    public function employmentStatusDistribution(int $barangayId, ?int $year = null): array
     {
-        $approvedRegistrationIds = KabataanRegistration::forBarangay($barangayId)
+        $approvedQuery = KabataanRegistration::forBarangay($barangayId)
             ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
-            ->pluck('id');
+            ->whereIn('evaluation_status', ['active', 'Auto Approved']);
 
-        if ($approvedRegistrationIds->isEmpty()) {
-            return ['items' => [], 'total' => 0];
+        if ($year !== null) {
+            $approvedQuery->whereYear('reviewed_at', $year);
         }
 
-        $surveyCounts = KkSurveyResponse::query()
-            ->where('barangay_id', $barangayId)
-            ->whereIn('kabataan_registration_id', $approvedRegistrationIds)
-            ->whereNotNull('work_status')
-            ->where('work_status', '!=', '')
-            ->selectRaw('TRIM(work_status) AS status, COUNT(*) AS total')
-            ->groupByRaw('TRIM(work_status)')
-            ->orderByDesc('total')
-            ->get();
+        $approvedRegistrationIds = $approvedQuery->pluck('id');
 
-        if ($surveyCounts->isNotEmpty()) {
-            $items = $surveyCounts->map(fn ($row) => [
-                'status' => (string) $row->status,
-                'count' => (int) $row->total,
-            ])->values()->all();
+        $counts = array_fill_keys(self::EMPLOYMENT_STATUS_OPTIONS, 0);
 
-            return [
-                'items' => $items,
-                'total' => array_sum(array_column($items, 'count')),
-            ];
-        }
+        if ($approvedRegistrationIds->isNotEmpty()) {
+            $surveyCounts = KkSurveyResponse::query()
+                ->where('barangay_id', $barangayId)
+                ->whereIn('kabataan_registration_id', $approvedRegistrationIds)
+                ->whereNotNull('work_status')
+                ->where('work_status', '!=', '')
+                ->selectRaw('TRIM(work_status) AS status, COUNT(*) AS total')
+                ->groupByRaw('TRIM(work_status)')
+                ->get();
 
-        $records = KabataanRegistration::forBarangay($barangayId)
-            ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
-            ->get(['form_data']);
+            if ($surveyCounts->isNotEmpty()) {
+                foreach ($surveyCounts as $row) {
+                    $status = $this->normalizeEmploymentStatus((string) $row->status);
+                    if ($status !== null) {
+                        $counts[$status] += (int) $row->total;
+                    }
+                }
+            } else {
+                $records = KabataanRegistration::forBarangay($barangayId)
+                    ->whereIn('id', $approvedRegistrationIds)
+                    ->get(['form_data']);
 
-        $counts = [];
-
-        foreach ($records as $record) {
-            $status = $this->formValue($record->form_data ?? [], 'work_status');
-            if ($status === '' || $status === '—') {
-                continue;
+                foreach ($records as $record) {
+                    $status = $this->normalizeEmploymentStatus(
+                        $this->formValue($record->form_data ?? [], 'work_status')
+                    );
+                    if ($status !== null) {
+                        $counts[$status]++;
+                    }
+                }
             }
-            $counts[$status] = ($counts[$status] ?? 0) + 1;
         }
-
-        arsort($counts);
 
         $items = [];
-        foreach ($counts as $status => $count) {
-            $items[] = ['status' => $status, 'count' => $count];
+        foreach (self::EMPLOYMENT_STATUS_OPTIONS as $status) {
+            $items[] = ['status' => $status, 'count' => $counts[$status]];
         }
 
         return [
@@ -162,11 +179,11 @@ class DashboardService
     /**
      * @return array<string, mixed>
      */
-    public function getStats(User $user, int $year, string $granularity = 'monthly', ?int $month = null): array
+    public function getStats(User $user, int $year, string $granularity = 'monthly', ?int $month = null, ?string $termId = null): array
     {
         return array_merge(
-            $this->getSummary($user, $year),
-            $this->getChartData($user, $year, $granularity, $month),
+            $this->getSummary($user, $year, $termId),
+            $this->getChartData($user, $year, $granularity, $month, $termId),
         );
     }
 
@@ -217,40 +234,64 @@ class DashboardService
                 'rejected' => array_fill(0, 12, 0),
             ],
             'gender_distribution' => ['labels' => ['Male', 'Female'], 'values' => [0, 0]],
-            'employment_status_distribution' => ['items' => [], 'total' => 0],
+            'employment_status_distribution' => $this->emptyEmploymentDistribution(),
             'officials' => [],
             'upcoming_events' => [],
             'today_reminder' => null,
             'recent_activity' => [],
+            'available_terms' => [],
             'available_years' => [(int) now()->year],
         ];
     }
 
     /**
+     * @return array{items: list<array{status: string, count: int}>, total: int}
+     */
+    private function emptyEmploymentDistribution(): array
+    {
+        $items = array_map(
+            fn (string $status) => ['status' => $status, 'count' => 0],
+            self::EMPLOYMENT_STATUS_OPTIONS
+        );
+
+        return ['items' => $items, 'total' => 0];
+    }
+
+    /**
      * @return array{total_kk: int, pending: int, approved: int, rejected: int}
      */
-    private function kkProfileStats(int $barangayId): array
+    private function kkProfileStats(int $barangayId, int $year): array
     {
         $base = KabataanRegistration::forBarangay($barangayId);
 
         $approved = (clone $base)
             ->where('status', 'active')
             ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereYear('reviewed_at', $year)
             ->count();
 
         $pending = (clone $base)
             ->whereNotIn('status', ['rejected'])
             ->whereIn('evaluation_status', ['Not Profiled', 'Wrong Credentials'])
+            ->whereYear('submitted_at', $year)
             ->count();
 
-        $rejected = RejectedKkProfiling::forBarangay($barangayId)->active()->count()
+        $rejected = RejectedKkProfiling::forBarangay($barangayId)
+            ->active()
+            ->whereYear('rejected_at', $year)
+            ->count()
             + (clone $base)
                 ->where('evaluation_status', 'Duplicate')
                 ->where('status', '!=', 'rejected')
+                ->whereYear('submitted_at', $year)
                 ->count();
 
+        $totalKk = (clone $base)
+            ->whereYear('submitted_at', $year)
+            ->count();
+
         return [
-            'total_kk' => (clone $base)->count(),
+            'total_kk' => $totalKk,
             'pending' => $pending,
             'approved' => $approved,
             'rejected' => $rejected,
@@ -299,23 +340,25 @@ class DashboardService
             ->count();
     }
 
-    private function deletedKabataanCount(int $barangayId): int
+    private function deletedKabataanCount(int $barangayId, int $year): int
     {
         return KabataanRegistration::onlyTrashed()
             ->forBarangay($barangayId)
             ->where('status', 'active')
             ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereYear('deleted_at', $year)
             ->count();
     }
 
     /**
      * @return \Illuminate\Support\Collection<int, KabataanRegistration>
      */
-    private function activeRegistrationsFormData(int $barangayId)
+    private function activeRegistrationsFormData(int $barangayId, int $year)
     {
         return KabataanRegistration::forBarangay($barangayId)
             ->where('status', 'active')
             ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereYear('reviewed_at', $year)
             ->get(['form_data']);
     }
 
@@ -626,26 +669,125 @@ class DashboardService
     }
 
     /**
-     * @return list<int>
+     * @return list<array{id: string, label: string, start_year: int, end_year: int, is_active: bool}>
      */
-    private function availableYears(int $barangayId): array
+    public function availableTerms(int $barangayId): array
     {
-        $years = Abyip::query()
-            ->documents()
-            ->where('barangay_id', $barangayId)
-            ->pluck('fiscal_year')
-            ->map(fn ($year) => (int) $year)
-            ->unique()
-            ->sortDesc()
-            ->values()
-            ->all();
+        $rows = OfficialTerm::query()
+            ->whereHas('officialProfile.user', function ($query) use ($barangayId) {
+                $query->where('barangay_id', $barangayId)
+                    ->where('role', User::ROLE_SK_OFFICIAL);
+            })
+            ->orderByDesc('term_start')
+            ->get(['term_start', 'term_end', 'status']);
 
-        $current = (int) now()->year;
-        if (! in_array($current, $years, true)) {
-            array_unshift($years, $current);
+        $unique = [];
+        foreach ($rows as $row) {
+            if ($row->term_start === null || $row->term_end === null) {
+                continue;
+            }
+
+            $id = $row->term_start->format('Y').'-'.$row->term_end->format('Y');
+            if (isset($unique[$id])) {
+                if ($row->status === OfficialTerm::STATUS_ACTIVE) {
+                    $unique[$id]['is_active'] = true;
+                }
+                continue;
+            }
+
+            $unique[$id] = [
+                'id' => $id,
+                'label' => 'SK Term '.$row->term_start->format('Y').'–'.$row->term_end->format('Y'),
+                'start_year' => (int) $row->term_start->format('Y'),
+                'end_year' => (int) $row->term_end->format('Y'),
+                'is_active' => $row->status === OfficialTerm::STATUS_ACTIVE,
+            ];
         }
 
-        return $years !== [] ? $years : [$current];
+        $terms = array_values($unique);
+
+        if ($terms !== []) {
+            return $terms;
+        }
+
+        $currentYear = (int) now()->year;
+
+        return [[
+            'id' => $currentYear.'-'.($currentYear + 2),
+            'label' => 'SK Term '.$currentYear.'–'.($currentYear + 2),
+            'start_year' => $currentYear,
+            'end_year' => $currentYear + 2,
+            'is_active' => true,
+        ]];
+    }
+
+    /**
+     * @param  list<array{id: string, label: string, start_year: int, end_year: int, is_active: bool}>  $terms
+     * @return array{id: string, label: string, start_year: int, end_year: int, is_active: bool}
+     */
+    private function resolveSelectedTerm(array $terms, ?string $termId): array
+    {
+        if ($termId !== null) {
+            foreach ($terms as $term) {
+                if ($term['id'] === $termId) {
+                    return $term;
+                }
+            }
+        }
+
+        foreach ($terms as $term) {
+            if ($term['is_active']) {
+                return $term;
+            }
+        }
+
+        return $terms[0];
+    }
+
+    /**
+     * @param  array{id: string, label: string, start_year: int, end_year: int, is_active: bool}  $term
+     * @return list<int>
+     */
+    private function yearsForTerm(array $term): array
+    {
+        $years = [];
+        for ($year = $term['end_year']; $year >= $term['start_year']; $year--) {
+            $years[] = $year;
+        }
+
+        return $years !== [] ? $years : [(int) now()->year];
+    }
+
+    /**
+     * @param  array{id: string, label: string, start_year: int, end_year: int, is_active: bool}  $term
+     */
+    private function clampYearToTerm(int $year, array $term): int
+    {
+        if ($year < $term['start_year']) {
+            return $term['start_year'];
+        }
+
+        if ($year > $term['end_year']) {
+            return $term['end_year'];
+        }
+
+        return $year;
+    }
+
+    private function normalizeEmploymentStatus(string $status): ?string
+    {
+        $status = trim($status);
+        if ($status === '' || $status === '—') {
+            return null;
+        }
+
+        foreach (self::EMPLOYMENT_STATUS_OPTIONS as $option) {
+            if (strcasecmp($status, $option) === 0) {
+                return $option;
+            }
+        }
+
+        return null;
     }
 
     private function resolveUserDisplayName(User $user): string

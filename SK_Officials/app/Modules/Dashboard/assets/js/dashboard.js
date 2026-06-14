@@ -6,6 +6,8 @@ import Chart from 'chart.js/auto';
 
 let dashboardData = null;
 let selectedYear = new Date().getFullYear();
+let selectedTermId = '';
+let availableTerms = [];
 let kkChartGranularity = 'monthly';
 let kkChartMonth = new Date().getMonth() + 1;
 
@@ -60,6 +62,7 @@ function applyChartDefaults() {
 
 document.addEventListener('DOMContentLoaded', function () {
     applyChartDefaults();
+    initTermFilter();
     initYearFilter();
     initKkChartFilters();
     initModals();
@@ -84,6 +87,20 @@ function listenKkProfileEvents(handler) {
     });
     window.addEventListener('kk-profile-event', function () {
         handler();
+    });
+}
+
+function initTermFilter() {
+    const sel = document.getElementById('termSelect');
+    if (!sel) return;
+
+    sel.addEventListener('change', function () {
+        selectedTermId = sel.value;
+        const term = availableTerms.find(function (item) { return item.id === selectedTermId; });
+        if (term) {
+            populateYearOptions(buildYearsForTerm(term), selectedYear);
+        }
+        loadDashboard();
     });
 }
 
@@ -145,11 +162,23 @@ function buildDashboardParams() {
         granularity: kkChartGranularity,
     });
 
+    if (selectedTermId) {
+        params.set('term_id', selectedTermId);
+    }
+
     if (kkChartGranularity === 'weekly') {
         params.set('month', String(kkChartMonth));
     }
 
     return params;
+}
+
+function buildYearsForTerm(term) {
+    const years = [];
+    for (let year = term.end_year; year >= term.start_year; year--) {
+        years.push(year);
+    }
+    return years.length ? years : [new Date().getFullYear()];
 }
 
 async function loadDashboard() {
@@ -160,7 +189,15 @@ async function loadDashboard() {
         dashboardData = summaryResponse.data || null;
         if (!dashboardData) return;
 
-        populateYearOptions(dashboardData.available_years || [selectedYear]);
+        if (dashboardData.term_id) {
+            selectedTermId = dashboardData.term_id;
+        }
+        if (dashboardData.year) {
+            selectedYear = Number(dashboardData.year);
+        }
+
+        populateTermOptions(dashboardData.available_terms || []);
+        populateYearOptions(dashboardData.available_years || [selectedYear], selectedYear);
         renderSummary(dashboardData);
         loadDashboardCharts();
     } catch (error) {
@@ -184,7 +221,7 @@ async function loadDashboardCharts() {
         renderCharts(chartData);
     } catch (error) {
         console.error('Dashboard charts load failed:', error);
-        renderEmploymentChart({ items: [], total: 0 });
+        renderEmploymentChart({ items: defaultEmploymentItems(), total: 0 });
     } finally {
         chartsLoading = false;
     }
@@ -220,17 +257,41 @@ async function refreshLiveSections() {
     }
 }
 
-function populateYearOptions(years) {
+function populateTermOptions(terms) {
+    const sel = document.getElementById('termSelect');
+    if (!sel) return;
+
+    availableTerms = Array.isArray(terms) ? terms.slice() : [];
+    sel.innerHTML = availableTerms.map(function (term) {
+        return '<option value="' + esc(term.id) + '">' + esc(term.label) + '</option>';
+    }).join('');
+
+    if (dashboardData && dashboardData.term_id) {
+        selectedTermId = dashboardData.term_id;
+    } else if (!selectedTermId || !availableTerms.some(function (term) { return term.id === selectedTermId; })) {
+        const activeTerm = availableTerms.find(function (term) { return term.is_active; });
+        selectedTermId = activeTerm ? activeTerm.id : (availableTerms[0] ? availableTerms[0].id : '');
+    }
+
+    if (selectedTermId) {
+        sel.value = selectedTermId;
+    }
+}
+
+function populateYearOptions(years, preferredYear) {
     const sel = document.getElementById('yearSelect');
     if (!sel) return;
 
-    const uniqueYears = Array.from(new Set(years.map(Number))).sort((a, b) => b - a);
+    const uniqueYears = Array.from(new Set(years.map(Number))).sort(function (a, b) { return b - a; });
     sel.innerHTML = uniqueYears.map(function (year) {
         return '<option value="' + year + '">' + year + '</option>';
     }).join('');
 
-    if (!uniqueYears.includes(selectedYear)) {
+    const targetYear = preferredYear !== undefined ? Number(preferredYear) : selectedYear;
+    if (!uniqueYears.includes(targetYear)) {
         selectedYear = uniqueYears[0] || new Date().getFullYear();
+    } else {
+        selectedYear = targetYear;
     }
 
     sel.value = String(selectedYear);
@@ -271,7 +332,7 @@ function renderEmptyState() {
     renderBarChart({ purok_labels: [], purok_counts: [] });
     renderLineChart({ labels: [], approved: [], pending: [], rejected: [] });
     renderPieChart({ labels: ['Male', 'Female'], values: [0, 0] });
-    renderEmploymentChart({ items: [], total: 0 });
+    renderEmploymentChart({ items: defaultEmploymentItems(), total: 0 });
 }
 
 function renderStats(stats) {
@@ -631,13 +692,25 @@ function setEmploymentChartLoading(loading) {
     }
 }
 
+function defaultEmploymentItems() {
+    return [
+        { status: 'Employed', count: 0 },
+        { status: 'Unemployed', count: 0 },
+        { status: 'Self-Employed', count: 0 },
+        { status: 'Currently looking for a Job', count: 0 },
+        { status: 'Not Interested Looking for a Job', count: 0 },
+    ];
+}
+
 function renderEmploymentChart(distribution) {
     const ctx = document.getElementById('chartEmploymentStatus');
     const wrap = document.getElementById('employmentChartWrap');
     const empty = document.getElementById('employmentChartEmpty');
     const totalEl = document.getElementById('employmentTotalCount');
     const legend = document.getElementById('employmentLegend');
-    const items = distribution.items || [];
+    const items = (distribution.items && distribution.items.length)
+        ? distribution.items
+        : defaultEmploymentItems();
     const total = Number(distribution.total || 0);
 
     setEmploymentChartLoading(false);
@@ -647,14 +720,6 @@ function renderEmploymentChart(distribution) {
     if (chartEmployment) {
         chartEmployment.destroy();
         chartEmployment = null;
-    }
-
-    if (!items.length) {
-        if (wrap) wrap.hidden = true;
-        if (legend) legend.innerHTML = '';
-        if (empty) empty.classList.remove('d-none');
-        if (totalEl) totalEl.textContent = '';
-        return;
     }
 
     if (wrap) wrap.hidden = false;

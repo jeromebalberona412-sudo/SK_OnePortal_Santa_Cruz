@@ -1,6 +1,6 @@
 // Profile Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    initProfileImageUpload();
+    initProfileAvatarChange();
 
     // ── Toast Notification ──────────────────────────────────────────────────
     function showToast(message, type = 'info') {
@@ -147,54 +147,27 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function initProfileImageUpload() {
-    const root = document.getElementById('profileImageUploadRoot');
-    if (!root) return;
+function initProfileAvatarChange() {
+    const wrapper = document.getElementById('profileAvatarWrapper');
+    if (!wrapper) return;
 
-    const uploadUrl = root.dataset.uploadUrl;
+    const uploadUrl = wrapper.dataset.uploadUrl;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     const profileAvatar = document.getElementById('profileAvatar');
-    const previewImage = document.getElementById('profileImagePreview');
-    const changePhotoBtn = document.getElementById('changePhotoBtn');
-    const legacyFileInput = document.getElementById('photoUpload');
-    const fileInput = document.getElementById('profileImageFileInput');
-    const dropZone = document.getElementById('profileImageDropZone');
-    const browseBtn = document.getElementById('profileImageBrowseBtn');
-    const progressWrap = document.getElementById('profileImageProgress');
-    const progressFill = document.getElementById('profileImageProgressFill');
-    const progressText = document.getElementById('profileImageProgressText');
-    const feedback = document.getElementById('profileImageFeedback');
-    const lockNotice = document.getElementById('profileImageLockNotice');
+    const fileInput = document.getElementById('photoUpload');
+    const lockModal = document.getElementById('profilePictureLockModal');
+    const lockDateEl = document.getElementById('profilePictureLockDate');
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     const maxBytes = 10 * 1024 * 1024;
 
-    function setFeedback(message, type) {
-        if (!feedback) return;
-        feedback.textContent = message;
-        feedback.classList.remove('is-hidden', 'is-error', 'is-success');
-        feedback.classList.add(type === 'success' ? 'is-success' : 'is-error');
-    }
-
-    function clearFeedback() {
-        if (!feedback) return;
-        feedback.textContent = '';
-        feedback.classList.add('is-hidden');
-        feedback.classList.remove('is-error', 'is-success');
-    }
-
-    function setProgress(visible, percent, text) {
-        if (!progressWrap || !progressFill || !progressText) return;
-        progressWrap.classList.toggle('is-hidden', !visible);
-        progressFill.style.width = `${percent}%`;
-        progressText.textContent = text || 'Uploading profile picture...';
+    function isUploadAllowed() {
+        return wrapper.dataset.canChange === '1';
     }
 
     function updateAvatarImages(url) {
-        [profileAvatar, previewImage].forEach((img) => {
-            if (img) img.src = url;
-        });
+        if (profileAvatar) profileAvatar.src = url;
 
         document.querySelectorAll('.kabataan-header__avatar-btn img, .kabataan-header__dropdown-head img').forEach((img) => {
             img.src = url;
@@ -202,21 +175,33 @@ function initProfileImageUpload() {
     }
 
     function lockUpload(nextChangeDisplay) {
-        root.dataset.canChange = '0';
-        if (changePhotoBtn) {
-            changePhotoBtn.disabled = true;
-            changePhotoBtn.classList.add('is-disabled');
-        }
-        if (legacyFileInput) legacyFileInput.disabled = true;
+        wrapper.dataset.canChange = '0';
+        wrapper.dataset.nextChange = nextChangeDisplay || '';
+        wrapper.setAttribute('aria-label', 'Profile picture update locked');
+        wrapper.setAttribute('title', 'Profile picture update locked');
         if (fileInput) fileInput.disabled = true;
-        if (browseBtn) browseBtn.disabled = true;
-        if (dropZone) dropZone.classList.add('is-disabled');
-
-        if (lockNotice) {
-            lockNotice.classList.remove('is-hidden');
-            lockNotice.innerHTML = `Next profile picture update available on: <strong>${nextChangeDisplay}</strong>`;
+        if (lockDateEl && nextChangeDisplay) {
+            lockDateEl.textContent = nextChangeDisplay;
         }
     }
+
+    function showLockModal() {
+        const nextChange = wrapper.dataset.nextChange;
+        if (lockDateEl && nextChange) {
+            lockDateEl.textContent = nextChange;
+        }
+        if (lockModal) {
+            lockModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    window.closeProfilePictureLockModal = function() {
+        if (lockModal) {
+            lockModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
 
     function validateFile(file) {
         if (!file) {
@@ -234,30 +219,19 @@ function initProfileImageUpload() {
         return null;
     }
 
-    function isUploadAllowed() {
-        return root.dataset.canChange === '1';
-    }
-
     function uploadFile(file) {
         if (!isUploadAllowed()) {
-            const nextChange = root.dataset.nextChange;
-            setFeedback(
-                nextChange
-                    ? `You can change your profile picture again on ${nextChange}. Profile pictures can only be updated once every 30 days.`
-                    : 'Profile picture updates are currently locked.',
-                'error'
-            );
+            showLockModal();
             return;
         }
 
         const validationError = validateFile(file);
         if (validationError) {
-            setFeedback(validationError, 'error');
+            if (typeof window.showProfileToast === 'function') {
+                window.showProfileToast(validationError, 'error');
+            }
             return;
         }
-
-        clearFeedback();
-        setProgress(true, 12, 'Validating image...');
 
         const formData = new FormData();
         formData.append('profile_picture', file);
@@ -268,30 +242,24 @@ function initProfileImageUpload() {
         xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
         xhr.setRequestHeader('Accept', 'application/json');
 
-        xhr.upload.addEventListener('progress', (event) => {
-            if (!event.lengthComputable) return;
-            const percent = Math.max(15, Math.round((event.loaded / event.total) * 100));
-            setProgress(true, percent, `Uploading profile picture... ${percent}%`);
-        });
-
         xhr.onreadystatechange = function() {
             if (xhr.readyState !== 4) return;
-
-            setProgress(false, 0);
 
             let payload = null;
             try {
                 payload = JSON.parse(xhr.responseText || '{}');
             } catch (error) {
-                setFeedback('Unexpected server response. Please try again.', 'error');
+                if (typeof window.showProfileToast === 'function') {
+                    window.showProfileToast('Unexpected server response. Please try again.', 'error');
+                }
                 return;
             }
 
             if (xhr.status >= 200 && xhr.status < 300 && payload.success) {
                 updateAvatarImages(payload.picture_url);
-                setFeedback(payload.message || 'Profile picture uploaded successfully.', 'success');
+                const message = payload.message || 'Profile picture uploaded successfully.';
                 if (typeof window.showProfileToast === 'function') {
-                    window.showProfileToast(payload.message || 'Profile picture uploaded successfully.', 'success');
+                    window.showProfileToast(message, 'success');
                 }
                 if (payload.next_change_display) {
                     lockUpload(payload.next_change_display);
@@ -302,34 +270,34 @@ function initProfileImageUpload() {
             const message = payload.message
                 || (payload.errors && Object.values(payload.errors).flat()[0])
                 || 'Failed to upload profile picture.';
-            setFeedback(message, 'error');
             if (typeof window.showProfileToast === 'function') {
                 window.showProfileToast(message, 'error');
             }
         };
 
         xhr.onerror = function() {
-            setProgress(false, 0);
-            setFeedback('Network error while uploading. Please try again.', 'error');
+            if (typeof window.showProfileToast === 'function') {
+                window.showProfileToast('Network error while uploading. Please try again.', 'error');
+            }
         };
 
-        setProgress(true, 20, 'Uploading profile picture...');
         xhr.send(formData);
     }
 
-    function openFilePicker() {
-        if (!isUploadAllowed()) return;
+    function handleAvatarClick(event) {
+        event.preventDefault();
+        if (!isUploadAllowed()) {
+            showLockModal();
+            return;
+        }
         fileInput?.click();
     }
 
-    browseBtn?.addEventListener('click', (event) => {
-        event.preventDefault();
-        openFilePicker();
-    });
-
-    changePhotoBtn?.addEventListener('click', (event) => {
-        event.preventDefault();
-        openFilePicker();
+    wrapper.addEventListener('click', handleAvatarClick);
+    wrapper.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            handleAvatarClick(event);
+        }
     });
 
     fileInput?.addEventListener('change', (event) => {
@@ -338,37 +306,9 @@ function initProfileImageUpload() {
         event.target.value = '';
     });
 
-    legacyFileInput?.addEventListener('change', (event) => {
-        const file = event.target.files?.[0];
-        if (file) uploadFile(file);
-        event.target.value = '';
+    lockModal?.addEventListener('click', (event) => {
+        if (event.target === lockModal) {
+            window.closeProfilePictureLockModal();
+        }
     });
-
-    if (dropZone) {
-        dropZone.addEventListener('click', (event) => {
-            if (event.target === browseBtn) return;
-            openFilePicker();
-        });
-
-        ['dragenter', 'dragover'].forEach((eventName) => {
-            dropZone.addEventListener(eventName, (event) => {
-                event.preventDefault();
-                if (isUploadAllowed() || root.dataset.canChange === '1') {
-                    dropZone.classList.add('is-dragover');
-                }
-            });
-        });
-
-        ['dragleave', 'drop'].forEach((eventName) => {
-            dropZone.addEventListener(eventName, (event) => {
-                event.preventDefault();
-                dropZone.classList.remove('is-dragover');
-            });
-        });
-
-        dropZone.addEventListener('drop', (event) => {
-            const file = event.dataTransfer?.files?.[0];
-            if (file) uploadFile(file);
-        });
-    }
 }

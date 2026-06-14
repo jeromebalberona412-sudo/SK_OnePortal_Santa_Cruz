@@ -45,10 +45,19 @@
             }
         }
 
+        function closeProfilePictureLockModal() {
+            const modal = document.getElementById('profilePictureLockModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
         // Close modals on ESC key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeScheduleModal();
+                closeProfilePictureLockModal();
                 if (typeof closeKkPreviewModal === 'function') {
                     closeKkPreviewModal();
                 }
@@ -81,20 +90,24 @@
                     <div class="cover-gradient"></div>
                 </div>
                 <div class="profile-info-section">
-                    <div class="profile-avatar-wrapper">
+                    <div
+                        class="profile-avatar-wrapper profile-avatar-wrapper--interactive"
+                        id="profileAvatarWrapper"
+                        data-upload-url="{{ route('profile.upload-picture') }}"
+                        data-can-change="{{ $canChangeProfileImage ? '1' : '0' }}"
+                        data-next-change="{{ $profileImageNextChangeDisplay ?? '' }}"
+                        role="button"
+                        tabindex="0"
+                        aria-label="{{ $canChangeProfileImage ? 'Change profile picture' : 'Profile picture update locked' }}"
+                        title="{{ $canChangeProfileImage ? 'Click to change profile picture' : 'Profile picture update locked' }}"
+                    >
                         <img src="{{ $profileImageUrl }}" alt="Profile" class="profile-avatar" id="profileAvatar">
-                        <button
-                            class="change-photo-btn{{ $canChangeProfileImage ? '' : ' is-disabled' }}"
-                            id="changePhotoBtn"
-                            type="button"
-                            title="{{ $canChangeProfileImage ? 'Change profile picture' : 'Profile picture update locked' }}"
-                            @if(!$canChangeProfileImage) disabled @endif
-                        >
+                        <span class="profile-avatar-overlay" aria-hidden="true">
                             <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
                             </svg>
-                        </button>
-                        <input type="file" id="photoUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;" @if(!$canChangeProfileImage) disabled @endif>
+                        </span>
+                        <input type="file" id="photoUpload" accept="image/jpeg,image/jpg,image/png,image/webp" hidden @if(!$canChangeProfileImage) disabled @endif>
                     </div>
                     <div class="profile-header-info">
                         <h1 class="profile-name">{{ $fullName ?? strtoupper($user->name) }}</h1>
@@ -198,91 +211,6 @@
                         </div>
                     </div>
 
-                    <!-- Account Settings Card -->
-                    <div class="info-card">
-                        <div class="card-header">
-                            <h2>
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
-                                </svg>
-                                Account Settings
-                            </h2>
-                        </div>
-                        <div class="card-body">
-                            <div
-                                id="profileImageUploadRoot"
-                                class="profile-image-settings"
-                                data-upload-url="{{ route('profile.upload-picture') }}"
-                                data-can-change="{{ $canChangeProfileImage ? '1' : '0' }}"
-                                data-next-change="{{ $profileImageNextChangeDisplay ?? '' }}"
-                            >
-                                <div class="profile-image-settings__header">
-                                    <div>
-                                        <h3>Current Profile Picture</h3>
-                                        <p>Your profile photo appears on your profile and header across Kabataan.</p>
-                                    </div>
-                                </div>
-
-                                <div class="profile-image-settings__preview">
-                                    <img src="{{ $profileImageUrl }}" alt="Current profile picture" id="profileImagePreview" class="profile-image-settings__avatar">
-                                </div>
-
-                                @if(!$canChangeProfileImage && $profileImageNextChangeDisplay)
-                                    <div class="profile-image-lock-notice" id="profileImageLockNotice">
-                                        Next profile picture update available on: <strong>{{ $profileImageNextChangeDisplay }}</strong>
-                                    </div>
-                                @else
-                                    <div class="profile-image-lock-notice is-hidden" id="profileImageLockNotice"></div>
-                                @endif
-
-                                <div class="profile-image-upload-zone{{ $canChangeProfileImage ? '' : ' is-disabled' }}" id="profileImageDropZone">
-                                    <input type="file" id="profileImageFileInput" accept="image/jpeg,image/jpg,image/png,image/webp" hidden @if(!$canChangeProfileImage) disabled @endif>
-                                    <div class="profile-image-upload-zone__icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </div>
-                                    <p class="profile-image-upload-zone__title">Upload New Profile Picture</p>
-                                    <p class="profile-image-upload-zone__hint">Drag and drop an image here, or click to browse</p>
-                                    <p class="profile-image-upload-zone__meta">JPG, JPEG, PNG, WEBP up to 10MB</p>
-                                    <button type="button" class="btn-setting-action profile-image-upload-btn" id="profileImageBrowseBtn" @if(!$canChangeProfileImage) disabled @endif>
-                                        Choose Image
-                                    </button>
-                                </div>
-
-                                <div class="profile-image-progress is-hidden" id="profileImageProgress">
-                                    <div class="profile-image-progress__bar"><span id="profileImageProgressFill"></span></div>
-                                    <p id="profileImageProgressText">Uploading profile picture...</p>
-                                </div>
-
-                                <p class="profile-image-feedback is-hidden" id="profileImageFeedback" role="alert"></p>
-                            </div>
-
-                            <div class="setting-divider"></div>
-
-                            <!-- Email Address Section -->
-                            <div class="account-setting-item">
-                                <div class="setting-info">
-                                    <h3>Email Address</h3>
-                                    <p>Change your account email address via verification link.</p>
-                                </div>
-                                <a href="{{ route('change-email') }}" class="btn-setting-action">
-                                    Change Email
-                                </a>
-                            </div>
-                            
-                            <div class="setting-divider"></div>
-                            
-                            <!-- Password Section -->
-                            <div class="account-setting-item">
-                                <div class="setting-info">
-                                    <h3>Password</h3>
-                                    <p>Change your account password via email reset link.</p>
-                                </div>
-                                <a href="{{ route('change-password') }}" class="btn-setting-action">
-                                    Change Password
-                                </a>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Right Column - Program Participation -->
@@ -422,6 +350,30 @@
             </div>
         </div>
     </main>
+
+    {{-- Profile picture lock notice --}}
+    <div class="modal-backdrop kabataan-modal-backdrop profile-picture-lock-modal" id="profilePictureLockModal" style="display: none;">
+        <div class="kabataan-modal-box profile-picture-lock-modal__box" role="dialog" aria-labelledby="profilePictureLockTitle" aria-modal="true">
+            <div class="modal-header">
+                <h2 class="modal-title" id="profilePictureLockTitle">Profile Picture Update</h2>
+                <button type="button" class="modal-close" onclick="closeProfilePictureLockModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body kabataan-modal-body profile-picture-lock-modal__body">
+                <div class="profile-picture-lock-modal__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M8 11V8a4 4 0 118 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <p class="profile-picture-lock-modal__message">
+                    You can update your profile picture again on
+                    <strong id="profilePictureLockDate">{{ $profileImageNextChangeDisplay ?? '' }}</strong>.
+                </p>
+                <p class="profile-picture-lock-modal__hint">Profile pictures can only be changed once every 30 days.</p>
+                <button type="button" class="btn-primary profile-picture-lock-modal__btn" onclick="closeProfilePictureLockModal()">Got it</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-backdrop kabataan-modal-backdrop" id="kkPreviewModal" style="display: none;">
         <div class="modal-box kabataan-modal-box kk-preview-modal-container" id="kkPreviewModalPanel">

@@ -26,7 +26,7 @@ class CalendarServiceProvider extends ServiceProvider
         // Load routes with proper middleware
         Route::middleware('web')
             ->group(function () {
-                require __DIR__ . '/../routes/calendar.php';
+                require __DIR__ . '/../Routes/calendar.php';
             });
 
         // Publish assets

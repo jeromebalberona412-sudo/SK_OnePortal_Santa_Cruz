@@ -21,36 +21,6 @@
         </a>
     </div>
 
-    <div class="summary-card">
-        <div class="summary-item">
-            <div class="summary-icon" style="background:#e0e7ff;">
-                <i class="fas fa-file-alt" style="color:#213F99;"></i>
-            </div>
-            <div>
-                <p class="summary-label">Total Submissions</p>
-                <p class="summary-value" id="abyipTotalCount">0</p>
-            </div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-icon" style="background:#dcfce7;">
-                <i class="fas fa-calendar-check" style="color:#15803d;"></i>
-            </div>
-            <div>
-                <p class="summary-label">Latest Submission</p>
-                <p class="summary-value" id="abyipLatestDate">N/A</p>
-            </div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-icon" style="background:#fef3c7;">
-                <i class="fas fa-clock" style="color:#b45309;"></i>
-            </div>
-            <div>
-                <p class="summary-label">Pending Review</p>
-                <p class="summary-value" id="abyipPendingCount">0</p>
-            </div>
-        </div>
-    </div>
-
     <div class="filters-container">
         <input type="search" id="abyipSearchInput" class="filter-search" placeholder="Search title, barangay, or submitter..." oninput="filterAbyipSubmissions()">
         <select id="barangayFilter" onchange="filterAbyipSubmissions()" class="filter-select">

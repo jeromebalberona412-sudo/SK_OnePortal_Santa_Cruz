@@ -20,9 +20,10 @@ html, body {
     margin-left: 260px;
     margin-top: 70px;
     min-height: calc(100vh - 70px);
-    transition: margin-left 0.28s ease;
+    transition: margin-left 0.28s ease, width 0.28s ease;
     padding: 0;
     width: calc(100% - 260px);
+    max-width: calc(100% - 260px);
     overflow-x: hidden;
 }
 
@@ -62,7 +63,16 @@ html, body {
     margin-top: 3px;
 }
 
-/* ── Year filter ─────────────────────────────────────────── */
+/* ── Page header filters ─────────────────────────────────── */
+.dash-page-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ── Year / term filter ──────────────────────────────────── */
 .dash-year-filter {
     display: inline-flex;
     align-items: center;
@@ -127,10 +137,11 @@ html, body {
 
 .stats-2row-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 18px;
     width: 100%;
+    max-width: 100%;
 }
 
 /* ── Base card ───────────────────────────────────────────── */
@@ -1191,8 +1202,15 @@ html, body {
 
 /* ── Sidebar state adjustments ───────────────────────────── */
 @media (min-width: 769px) {
-    .main-content.sidebar-collapsed        { margin-left: 80px;  width: calc(100% - 80px); }
-    .main-content.sidebar-expanded-content { margin-left: 260px; width: calc(100% - 260px); }
+    .main-content.sidebar-collapsed        { margin-left: 80px;  width: calc(100% - 80px); max-width: calc(100% - 80px); }
+    .main-content.sidebar-expanded-content { margin-left: 260px; width: calc(100% - 260px); max-width: calc(100% - 260px); }
+}
+
+/* 1400px — stat cards wrap to 4 columns */
+@media (max-width: 1400px) {
+    .stats-2row-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1210,11 +1228,19 @@ html, body {
     .main-content {
         margin-left: 240px;
         width: calc(100% - 240px);
+        max-width: calc(100% - 240px);
+    }
+    .main-content.sidebar-collapsed {
+        margin-left: 80px;
+        width: calc(100% - 80px);
+        max-width: calc(100% - 80px);
     }
     .dashboard-container { padding: 16px 14px; }
 
-    /* Keep auto-fill grid, just tighten cards */
-    .stats-2row-grid { gap: 8px; }
+    .stats-2row-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
     .stat-card { padding: 11px 12px; min-height: 96px; }
     .stat-card-icon { width: 34px; height: 34px; }
     .stat-card-icon svg { width: 16px; height: 16px; }
@@ -1232,17 +1258,18 @@ html, body {
         margin-left: 0;
         margin-top: 60px;
         width: 100%;
+        max-width: 100%;
     }
 
     .dashboard-container { padding: 12px 10px; }
 
-    /* Page header: title left, year filter top-right */
+    /* Page header: title left, filters top-right */
     .dash-page-header {
         position: relative;
         flex-direction: row;
         align-items: flex-start;
         justify-content: space-between;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 8px;
         margin-bottom: 14px;
     }
@@ -1251,20 +1278,26 @@ html, body {
     .dash-page-title { font-size: 20px; }
     .dash-page-sub   { font-size: 12px; }
 
-    /* Year filter — compact, top-right */
+    .dash-page-filters {
+        width: 100%;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    /* Term/year filters — compact, top-right */
     .dash-year-filter { padding: 5px 10px; gap: 5px; flex-shrink: 0; align-self: flex-start; }
     .dash-year-label  { font-size: 11px; gap: 4px; }
     .dash-year-label svg { width: 12px; height: 12px; }
-    .dash-year-select { font-size: 12px; }
+    .dash-year-select { font-size: 12px; max-width: 150px; }
 
     /* Reminder banner — stack on mobile */
     .dash-reminder-banner { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
     .dash-reminder-text   { white-space: normal; }
     .dash-reminder-link   { width: 100%; text-align: center; padding: 8px 12px; }
 
-    /* 2-row grid: auto-fill on mobile, min 120px */
+    /* Stat grid: 2 columns on mobile */
     .stats-2row-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
     }
 
@@ -1314,8 +1347,23 @@ html, body {
 
     .dash-page-title { font-size: 17px; }
 
+    .dash-page-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dash-year-filter {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .dash-year-select {
+        max-width: none;
+        flex: 1;
+    }
+
     .stats-2row-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 6px;
     }
 

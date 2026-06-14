@@ -13,10 +13,22 @@
     @stack('navbar-center')
 
     <div class="navbar-right">
-        <button class="notif-btn" onclick="toggleNotifPopover(event)" aria-label="Notifications">
-            <i class="fas fa-bell"></i>
-            <span class="notif-badge"></span>
-        </button>
+        <div class="notif-menu" id="notifMenu">
+            <button
+                type="button"
+                class="notif-btn"
+                id="notifBtn"
+                onclick="toggleNotifPopover(event)"
+                aria-label="Notifications"
+                aria-expanded="false"
+                aria-haspopup="true"
+            >
+                <i class="fas fa-bell"></i>
+                <span class="notif-badge" id="notifBadge" style="display: none;"></span>
+            </button>
+
+            @include('layout::notif-popover')
+        </div>
 
         <div class="profile-dropdown-wrapper">
             <button class="profile-btn" onclick="toggleProfileDropdown(event)" aria-label="Profile menu">

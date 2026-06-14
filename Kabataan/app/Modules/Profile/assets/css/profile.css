@@ -312,6 +312,98 @@ body.youth-profile {
     margin-top: -60px;
 }
 
+.profile-avatar-wrapper--interactive {
+    cursor: pointer;
+    border-radius: 50%;
+    outline: none;
+}
+
+.profile-avatar-wrapper--interactive:focus-visible {
+    box-shadow: 0 0 0 3px rgba(4, 80, 168, 0.45);
+}
+
+.profile-avatar-overlay {
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.45);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.profile-avatar-overlay svg {
+    width: 28px;
+    height: 28px;
+}
+
+.profile-avatar-wrapper--interactive:hover .profile-avatar-overlay,
+.profile-avatar-wrapper--interactive:focus-visible .profile-avatar-overlay {
+    opacity: 1;
+}
+
+.profile-picture-lock-modal {
+    z-index: 2100;
+}
+
+.profile-picture-lock-modal__box {
+    max-width: 420px;
+    width: calc(100% - 32px);
+}
+
+.profile-picture-lock-modal__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 28px 24px 24px;
+}
+
+.profile-picture-lock-modal__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #0450a8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.profile-picture-lock-modal__icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.profile-picture-lock-modal__message {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.profile-picture-lock-modal__message strong {
+    color: #0450a8;
+    font-weight: 700;
+}
+
+.profile-picture-lock-modal__hint {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.profile-picture-lock-modal__btn {
+    margin-top: 8px;
+    min-width: 120px;
+}
+
 .profile-avatar {
     width: 150px;
     height: 150px;

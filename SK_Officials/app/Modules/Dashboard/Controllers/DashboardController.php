@@ -36,6 +36,7 @@ class DashboardController extends Controller
         $user = $request->user();
         $validated = $request->validate([
             'year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
+            'term_id' => ['nullable', 'string', 'max:20'],
             'granularity' => ['nullable', 'in:monthly,weekly'],
             'month' => ['nullable', 'integer', 'min:1', 'max:12'],
             'summary' => ['nullable', 'boolean'],
@@ -43,23 +44,24 @@ class DashboardController extends Controller
         ]);
 
         $year = (int) ($validated['year'] ?? now()->year);
+        $termId = $validated['term_id'] ?? null;
         $granularity = $validated['granularity'] ?? 'monthly';
         $month = isset($validated['month']) ? (int) $validated['month'] : null;
 
         if ($request->boolean('summary')) {
             return response()->json([
-                'data' => $this->dashboardService->getSummary($user, $year),
+                'data' => $this->dashboardService->getSummary($user, $year, $termId),
             ]);
         }
 
         if ($request->boolean('charts')) {
             return response()->json([
-                'data' => $this->dashboardService->getChartData($user, $year, $granularity, $month),
+                'data' => $this->dashboardService->getChartData($user, $year, $granularity, $month, $termId),
             ]);
         }
 
         return response()->json([
-            'data' => $this->dashboardService->getStats($user, $year, $granularity, $month),
+            'data' => $this->dashboardService->getStats($user, $year, $granularity, $month, $termId),
         ]);
     }
 }

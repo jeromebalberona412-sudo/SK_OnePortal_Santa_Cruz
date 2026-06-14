@@ -104,22 +104,6 @@
         preview.innerHTML = '<p class="preview-empty">No preview available for this submission.</p>';
     }
 
-    function updateSummaryCards() {
-        const totalEl = document.getElementById('abyipTotalCount');
-        const pendingEl = document.getElementById('abyipPendingCount');
-        const latestEl = document.getElementById('abyipLatestDate');
-
-        if (totalEl) totalEl.textContent = String(submissions.length);
-        if (pendingEl) {
-            pendingEl.textContent = String(submissions.filter(function (item) {
-                return String(item.status).toLowerCase() === 'pending';
-            }).length);
-        }
-        if (latestEl && submissions[0]) {
-            latestEl.textContent = submissions[0].date_submitted || 'N/A';
-        }
-    }
-
     function populateBarangayFilter() {
         const select = document.getElementById('barangayFilter');
         if (!select) return;
@@ -189,7 +173,6 @@
     async function loadSubmissions() {
         const payload = await apiFetch(config.listUrl || '/api/barangay-abyip');
         submissions = Array.isArray(payload.data) ? payload.data : [];
-        updateSummaryCards();
         populateBarangayFilter();
         currentPage = 1;
         renderTable();

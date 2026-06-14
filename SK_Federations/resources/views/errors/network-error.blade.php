@@ -154,7 +154,7 @@
                     setTimeout(() => window.location.reload(), 500);
                 }, 1000);
             } else {
-                alert('Still offline. Please check your internet connection.');
+                alert('Still offline. Please try again.');
             }
         }
 
