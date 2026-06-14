@@ -11,9 +11,16 @@ class SuspiciousLoginService
     {
         $signals = [];
 
-        $lastSuccess = LoginAttempt::query()
-            ->where('user_id', $user->getKey())
-            ->where('successful', true)
+        $lastSuccessQuery = LoginAttempt::query()
+            ->where('user_id', $user->getKey());
+
+        if ($lastSuccessQuery->getConnection()->getDriverName() === 'pgsql') {
+            $lastSuccessQuery->whereRaw('"successful" = true');
+        } else {
+            $lastSuccessQuery->where('successful', true);
+        }
+
+        $lastSuccess = $lastSuccessQuery
             ->latest('attempted_at')
             ->first();
 
@@ -31,11 +38,17 @@ class SuspiciousLoginService
 
         $failureThreshold = (int) config('sk_fed_auth.suspicious.failure_threshold', 3);
 
-        $recentFailures = LoginAttempt::query()
+        $recentFailuresQuery = LoginAttempt::query()
             ->where('email', $user->email)
-            ->where('successful', false)
-            ->where('attempted_at', '>=', now()->subMinutes(30))
-            ->count();
+            ->where('attempted_at', '>=', now()->subMinutes(30));
+
+        if ($recentFailuresQuery->getConnection()->getDriverName() === 'pgsql') {
+            $recentFailuresQuery->whereRaw('"successful" = false');
+        } else {
+            $recentFailuresQuery->where('successful', false);
+        }
+
+        $recentFailures = $recentFailuresQuery->count();
 
         if ($recentFailures >= $failureThreshold) {
             $signals[] = 'repeated_failures';
