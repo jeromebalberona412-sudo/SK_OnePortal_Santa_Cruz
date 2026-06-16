@@ -455,7 +455,10 @@ body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed); }
     body.sidebar-collapsed .menu-section-label,
     body.sidebar-collapsed .menu-item span,
     body.sidebar-collapsed .menu-item > i:not(:first-child),
-    body.sidebar-collapsed #archiveSubmenu {
+    body.sidebar-collapsed .sidebar-submenu,
+    body.sidebar-collapsed #archiveSubmenu,
+    body.sidebar-collapsed #accountsSubmenu,
+    body.sidebar-collapsed #archiveManagementSubmenu {
         display: none !important;
     }
 
@@ -525,7 +528,10 @@ body.sidebar-collapsed .menu-item span {
 body.sidebar-collapsed .menu-item > i:not(:first-child) {
     display: none;
 }
-body.sidebar-collapsed #archiveSubmenu {
+body.sidebar-collapsed .sidebar-submenu,
+body.sidebar-collapsed #archiveSubmenu,
+body.sidebar-collapsed #accountsSubmenu,
+body.sidebar-collapsed #archiveManagementSubmenu {
     display: none !important;
 }
 

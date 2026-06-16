@@ -2,11 +2,9 @@
 
 namespace App\Modules\AuditLog\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
-use App\Modules\AuditLog\Services\AuditLogQueryService;
 use App\Modules\AuditLog\Services\AuditLogService;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
 
 class AuditLogServiceProvider extends ServiceProvider
 {
@@ -14,19 +12,10 @@ class AuditLogServiceProvider extends ServiceProvider
     {
         $this->app->singleton(AuditLogInterface::class, AuditLogService::class);
         $this->app->singleton(AuditLogService::class);
-        $this->app->singleton(AuditLogQueryService::class);
     }
 
     public function boot(): void
     {
-        $this->loadRoutes();
-        $this->loadViewsFrom(__DIR__ . '/../views', 'auditlogs');
-        $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
-    }
-
-    protected function loadRoutes(): void
-    {
-        Route::middleware('web')
-            ->group(__DIR__ . '/../routes/web.php');
+        //
     }
 }

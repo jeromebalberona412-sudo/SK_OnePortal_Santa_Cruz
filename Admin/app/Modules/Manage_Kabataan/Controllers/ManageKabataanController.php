@@ -2,7 +2,7 @@
 
 namespace App\Modules\Manage_Kabataan\Controllers;
 
-use App\Modules\Accounts\Models\Barangay;
+use App\Modules\Shared\Models\Barangay;
 use App\Modules\Manage_Kabataan\Models\KabataanRegistration;
 use App\Modules\Manage_Kabataan\Services\ManageKabataanService;
 use App\Modules\Shared\Controllers\Controller;

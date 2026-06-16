@@ -430,55 +430,11 @@ function toggleLinkInput() {
 
 /* ── PROGRAM MODALS ── (defined in blade inline script for success modal support) ── */
 
-/* ── NOTIFICATIONS ── */
-function toggleNotifPopover(e) {
-    e.stopPropagation();
-    const pop = document.getElementById('notifPopover');
-    const dd  = document.getElementById('profileDropdown');
-    dd?.classList.remove('show');
-    document.querySelector('.profile-btn')?.classList.remove('open');
-    const btn = document.getElementById('notifBtn');
-    const isOpen = pop?.classList.contains('show');
-    if (isOpen) {
-        pop?.classList.remove('show');
-        btn?.setAttribute('aria-expanded', 'false');
-    } else {
-        pop?.classList.add('show');
-        btn?.setAttribute('aria-expanded', 'true');
-    }
-}
-
-/* ── SIDEBAR TOGGLE — toggles body.sidebar-collapsed to match dashboard.css ── */
-function toggleSidebar() {
-    const isMobile = window.innerWidth <= 1024;
-    if (isMobile) {
-        document.body.classList.toggle('sidebar-open');
-    } else {
-        document.body.classList.toggle('sidebar-collapsed');
-        localStorage.setItem('sidebarCollapsed', document.body.classList.contains('sidebar-collapsed'));
-    }
-}
-
-function toggleProfileDropdown(e) {
-    e.stopPropagation();
-    const dd  = document.getElementById('profileDropdown');
-    const pop = document.getElementById('notifPopover');
-    const btn = document.querySelector('.profile-btn');
-    pop?.classList.remove('show');
-    document.getElementById('notifBtn')?.setAttribute('aria-expanded', 'false');
-    dd?.classList.toggle('show');
-    btn?.classList.toggle('open');
-}
+/* ── Layout shell (sidebar, notifications, profile) provided by layout.js ── */
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function() {
     renderPosts(true);
-
-    // Restore sidebar collapsed state
-    if (window.innerWidth > 1024 && localStorage.getItem('sidebarCollapsed') === 'true') {
-        document.body.classList.add('sidebar-collapsed');
-    }
-
     // Search
     var searchInput = document.getElementById('feed-search-input');
     if (searchInput) {
@@ -509,19 +465,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Close dropdowns on outside click
+    // Close post option menus on outside click
     document.addEventListener('click', function(e) {
         document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
-        const notifMenu = document.getElementById('notifMenu');
-        const profileWrapper = document.querySelector('.profile-dropdown-wrapper');
-        if (notifMenu && !notifMenu.contains(e.target)) {
-            document.getElementById('notifPopover')?.classList.remove('show');
-            document.getElementById('notifBtn')?.setAttribute('aria-expanded', 'false');
-        }
-        if (profileWrapper && !profileWrapper.contains(e.target)) {
-            document.getElementById('profileDropdown')?.classList.remove('show');
-            document.querySelector('.profile-btn')?.classList.remove('open');
-        }
     });
 
     // Programs drawer (mobile FAB)

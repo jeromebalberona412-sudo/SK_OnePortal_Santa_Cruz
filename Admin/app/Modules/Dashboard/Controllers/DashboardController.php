@@ -2,8 +2,6 @@
 
 namespace App\Modules\Dashboard\Controllers;
 
-use App\Modules\Archive_Management\Services\ExpiredTermProcessorService;
-use App\Modules\AuditLog\Services\AuditLogQueryService;
 use App\Modules\Dashboard\Services\DashboardService;
 use App\Modules\Dashboard\Services\KkProfilingChartService;
 use App\Modules\Shared\Controllers\Controller;
@@ -14,8 +12,6 @@ class DashboardController extends Controller
 {
     public function __construct(
         private readonly DashboardService $dashboardService,
-        private readonly AuditLogQueryService $auditLogQueryService,
-        private readonly ExpiredTermProcessorService $expiredTermProcessor,
         private readonly KkProfilingChartService $kkProfilingChartService,
     ) {
     }
@@ -23,8 +19,6 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $tenantId = $user?->tenant_id;
-        $this->expiredTermProcessor->processForTenant($tenantId, $user);
         $accountMetrics = $this->dashboardService->getAccountMetrics($user);
         $userDistribution = [
             'federation' => $accountMetrics['federationAccounts'],
@@ -37,7 +31,7 @@ class DashboardController extends Controller
             'userDistribution' => $userDistribution,
             'barangays' => $this->dashboardService->getBarangays($user),
             'barangayDistribution' => $this->dashboardService->getBarangayDistribution($user),
-            'recentAuditActivity' => $this->auditLogQueryService->dashboardRecentActivity($tenantId, 10),
+            'recentAuditActivity' => collect(),
             'termFilters' => $this->dashboardService->getTermFilterOptions($user),
         ]);
     }
@@ -45,8 +39,6 @@ class DashboardController extends Controller
     public function dashboardData(Request $request): JsonResponse
     {
         $user = $request->user();
-        $tenantId = $user?->tenant_id;
-        $this->expiredTermProcessor->processForTenant($tenantId, $user);
         $filters = [
             'year' => $request->input('year', 'all'),
             'term' => $request->input('term', 'all'),
@@ -55,7 +47,7 @@ class DashboardController extends Controller
         return response()->json([
             'metrics' => $this->dashboardService->getAccountMetrics($user, $filters),
             'barangayDistribution' => $this->dashboardService->getBarangayDistribution($user, $filters),
-            'recentAuditActivity' => $this->auditLogQueryService->dashboardRecentActivity($tenantId, 10)->values(),
+            'recentAuditActivity' => [],
             'termFilters' => $this->dashboardService->getTermFilterOptions($user),
         ]);
     }

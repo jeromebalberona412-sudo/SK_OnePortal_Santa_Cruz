@@ -2,8 +2,8 @@
 
 namespace App\Modules\Shared\Models;
 
-use App\Modules\Accounts\Models\Barangay;
-use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Shared\Models\Barangay;
+use App\Modules\Shared\Models\OfficialProfile;
 use App\Modules\AuditLog\Models\AdminActivityLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;

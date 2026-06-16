@@ -2,7 +2,7 @@
 
 namespace App\Modules\Dashboard\Services;
 
-use App\Modules\Accounts\Models\Barangay;
+use App\Modules\Shared\Models\Barangay;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;

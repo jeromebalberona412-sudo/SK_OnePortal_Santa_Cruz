@@ -27,14 +27,6 @@ export default defineConfig({
                 'app/Modules/Layout/assets/js/header.js',
                 'app/Modules/Layout/assets/js/logout.js',
 
-                // Accounts Module
-                'app/Modules/Accounts/assets/css/account.css',
-                'app/Modules/Accounts/assets/js/account.js',
-
-                // Audit Log Module
-                'app/Modules/AuditLog/assets/css/auditlogs.css',
-                'app/Modules/AuditLog/assets/js/auditlogs.js',
-
                 // Dashboard Module
                 'app/Modules/Dashboard/assets/css/dashboard.css',
                 'app/Modules/Dashboard/assets/js/dashboard.js',
@@ -45,19 +37,6 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/js/login.js',
                 'app/Modules/Authentication/assets/js/forgot-password.js',
                 'app/Modules/Authentication/assets/js/verify-email.js',
-
-                // ── Archive Management Module (unified) ──────────────────────
-                // Deleted SK Federation & Officials (Consolidated)
-                'app/Modules/Archive_Management/assets/css/deleted-sk-federation.css',
-                'app/Modules/Archive_Management/assets/js/deleted-sk-federation.js',
-                'app/Modules/Archive_Management/assets/css/deleted-sk-officials.css',
-                'app/Modules/Archive_Management/assets/js/deleted-sk-officials.js',
-
-                // Archived Data — SK Federation & Officials Records
-                'app/Modules/Archive_Management/assets/css/SK_federation.css',
-                'app/Modules/Archive_Management/assets/js/SK_federation.js',
-                'app/Modules/Archive_Management/assets/css/SK_officials.css',
-                'app/Modules/Archive_Management/assets/js/SK_officials.js',
 
                 // Manage Kabataan Module
                 'app/Modules/Manage_Kabataan/assets/css/manage-kabataan.css',

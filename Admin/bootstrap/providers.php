@@ -11,8 +11,6 @@ App\Modules\Authentication\Providers\AuthenticationServiceProvider::class,
 App\Modules\AuditLog\Providers\AuditLogServiceProvider::class,
 App\Modules\Dashboard\Providers\DashboardServiceProvider::class,
 App\Modules\Profile\Providers\ProfileServiceProvider::class,
-App\Modules\Accounts\Providers\AccountsServiceProvider::class,
-App\Modules\Archive_Management\Providers\ArchiveManagementServiceProvider::class,
 App\Modules\Manage_Kabataan\Providers\ManageKabataanServiceProvider::class,
 
 ];

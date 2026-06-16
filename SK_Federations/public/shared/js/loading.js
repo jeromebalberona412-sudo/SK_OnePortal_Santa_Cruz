@@ -1,12 +1,13 @@
 /**
  * Global Loading Screen Manager
- * Handles loading states across the application
+ * Supports both #globalLoadingOverlay (module pages) and #globalLoadingScreen (dynamic overlay).
  */
 
 const LoadingScreen = {
     element: null,
     textElement: null,
     subtextElement: null,
+    delayTimeout: null,
 
     init() {
         if (!this.element) {
@@ -15,6 +16,13 @@ const LoadingScreen = {
     },
 
     create() {
+        if (document.getElementById('globalLoadingScreen')) {
+            this.element = document.getElementById('globalLoadingScreen');
+            this.textElement = document.getElementById('loadingText');
+            this.subtextElement = document.getElementById('loadingSubtext');
+            return;
+        }
+
         const loadingHTML = `
             <div id="globalLoadingScreen" class="global-loading-screen">
                 <div class="loading-content">
@@ -35,15 +43,23 @@ const LoadingScreen = {
 
     show(message = 'Loading', subtext = 'Please wait') {
         this.init();
-        this.textElement.innerHTML = message + '<span class="loading-dots"></span>';
-        this.subtextElement.textContent = subtext;
-        this.element.classList.add('active');
+        if (this.textElement) {
+            this.textElement.innerHTML = message + '<span class="loading-dots"></span>';
+        }
+        if (this.subtextElement) {
+            this.subtextElement.textContent = subtext;
+        }
+        if (this.element) {
+            this.element.classList.add('active');
+        }
         document.body.style.overflow = 'hidden';
     },
 
     hide() {
         if (this.element) {
             this.element.classList.remove('active');
+        }
+        if (!document.body.classList.contains('gl-loading-active')) {
             document.body.style.overflow = '';
         }
     },
@@ -57,14 +73,52 @@ const LoadingScreen = {
     hideImmediate() {
         if (this.delayTimeout) {
             clearTimeout(this.delayTimeout);
+            this.delayTimeout = null;
         }
         this.hide();
-    }
+    },
 };
+
+function showLoading(message = 'Loading', subtext = 'Please wait') {
+    const overlay = document.getElementById('globalLoadingOverlay');
+    if (overlay) {
+        const messageEl = overlay.querySelector('.gl-message');
+        const subtextEl = overlay.querySelector('.gl-sub');
+        if (messageEl) {
+            messageEl.textContent = message;
+        }
+        if (subtextEl) {
+            subtextEl.textContent = subtext;
+        }
+        overlay.classList.add('gl-visible');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('gl-loading-active');
+        document.body.style.overflow = 'hidden';
+        return;
+    }
+
+    LoadingScreen.show(message, subtext);
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('globalLoadingOverlay');
+    if (overlay) {
+        overlay.classList.remove('gl-visible');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    document.body.classList.remove('gl-loading-active');
+    LoadingScreen.hideImmediate();
+}
+
+function ensureLoadingHidden() {
+    hideLoading();
+}
 
 const NetworkNotification = {
     element: null,
     hideTimeout: null,
+    textElement: null,
 
     init() {
         if (!this.element) {
@@ -89,7 +143,9 @@ const NetworkNotification = {
 
     show(message = 'Unable to connect. Please try again.', duration = 5000, isOnline = false) {
         this.init();
-        this.textElement.textContent = message;
+        if (this.textElement) {
+            this.textElement.textContent = message;
+        }
 
         if (isOnline) {
             this.element.classList.add('online');
@@ -130,42 +186,43 @@ const NetworkNotification = {
 
     showLoadError() {
         this.show('Unable to load data. Please try again.', 5000);
-    }
+    },
 };
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+window.LoadingScreen = {
+    show(message, subtext) {
+        showLoading(message || 'Loading', subtext || 'Please wait');
+    },
+    hide() {
+        hideLoading();
+    },
+    hideImmediate() {
+        hideLoading();
+    },
+    init() {
         LoadingScreen.init();
-    });
-} else {
-    LoadingScreen.init();
-}
-
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        LoadingScreen.hide();
-    }, 300);
-});
-
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        LoadingScreen.hide();
-    }
-});
-
-window.LoadingScreen = LoadingScreen;
+    },
+};
 window.NetworkNotification = NetworkNotification;
 
-window.addEventListener('beforeunload', function () {
-    LoadingScreen.show('Loading', 'Please wait...');
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureLoadingHidden);
+} else {
+    ensureLoadingHidden();
+}
+
+window.addEventListener('load', ensureLoadingHidden);
 
 window.addEventListener('pageshow', function (event) {
     if (event.persisted) {
-        LoadingScreen.hide();
+        ensureLoadingHidden();
     }
 });
 
-if (document.readyState === 'loading') {
-    LoadingScreen.show('Loading', 'Please wait...');
-}
+document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) {
+        ensureLoadingHidden();
+    }
+});

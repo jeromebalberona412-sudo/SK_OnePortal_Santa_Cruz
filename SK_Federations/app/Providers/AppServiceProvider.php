@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Accounts\Policies\AccountPolicy;
+use App\Modules\Shared\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(User::class, AccountPolicy::class);
+        Gate::policy(OfficialProfile::class, AccountPolicy::class);
+        Gate::define('manage-accounts', fn (User $user) => $user->isSkFed());
+
         $applicationUrl = (string) config('app.url');
 
         if ($applicationUrl !== '') {

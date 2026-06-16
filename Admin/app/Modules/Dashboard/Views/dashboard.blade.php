@@ -14,16 +14,16 @@
 @php
 	$topRowCards = [
 		['label' => 'Total Users', 'metricKey' => 'totalUsers', 'value' => $accountMetrics['totalUsers'], 'tone' => 'azure', 'icon' => 'users', 'route' => null],
-		['label' => 'Total SK Federations', 'metricKey' => 'federationAccounts', 'value' => $accountMetrics['federationAccounts'], 'tone' => 'teal', 'icon' => 'federation', 'route' => 'accounts.federation.index'],
-		['label' => 'Total SK Officials', 'metricKey' => 'officialAccounts', 'value' => $accountMetrics['officialAccounts'], 'tone' => 'violet', 'icon' => 'officials', 'route' => 'accounts.officials.index'],
+		['label' => 'Total SK Federations', 'metricKey' => 'federationAccounts', 'value' => $accountMetrics['federationAccounts'], 'tone' => 'teal', 'icon' => 'federation', 'route' => null],
+		['label' => 'Total SK Officials', 'metricKey' => 'officialAccounts', 'value' => $accountMetrics['officialAccounts'], 'tone' => 'violet', 'icon' => 'officials', 'route' => null],
 		['label' => 'Total Kabataan', 'metricKey' => 'kabataanAccounts', 'value' => $accountMetrics['kabataanAccounts'], 'tone' => 'cyan', 'icon' => 'kabataan', 'route' => 'manage-kabataan.index'],
 	];
 
 	$bottomRowCards = [
-		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'value' => $accountMetrics['deletedSkFederation'], 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-federation'],
-		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'value' => $accountMetrics['deletedSkOfficials'], 'tone' => 'red', 'icon' => 'trash', 'route' => 'archived.deleted-sk-officials'],
-		['label' => 'SK Federation Records', 'metricKey' => 'skFederationRecords', 'value' => $accountMetrics['skFederationRecords'], 'tone' => 'red', 'icon' => 'federation', 'route' => 'archived.sk-federation-records'],
-		['label' => 'SK Officials Records', 'metricKey' => 'skOfficialsRecords', 'value' => $accountMetrics['skOfficialsRecords'], 'tone' => 'red', 'icon' => 'officials', 'route' => 'archived.sk-officials-records'],
+		['label' => 'Deleted SK Federation', 'metricKey' => 'deletedSkFederation', 'value' => $accountMetrics['deletedSkFederation'], 'tone' => 'red', 'icon' => 'trash', 'route' => null],
+		['label' => 'Deleted SK Officials', 'metricKey' => 'deletedSkOfficials', 'value' => $accountMetrics['deletedSkOfficials'], 'tone' => 'red', 'icon' => 'trash', 'route' => null],
+		['label' => 'SK Federation Records', 'metricKey' => 'skFederationRecords', 'value' => $accountMetrics['skFederationRecords'], 'tone' => 'red', 'icon' => 'federation', 'route' => null],
+		['label' => 'SK Officials Records', 'metricKey' => 'skOfficialsRecords', 'value' => $accountMetrics['skOfficialsRecords'], 'tone' => 'red', 'icon' => 'officials', 'route' => null],
 	];
 @endphp
 
@@ -97,16 +97,6 @@
 					</svg>
 					My Profile
 			</a>
-			<a href="{{ route('accounts.federation.index') }}" class="qa-btn qa-green">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<rect x="3" y="4" width="7" height="7" rx="1.4" />
-						<rect x="14" y="4" width="7" height="7" rx="1.4" />
-						<rect x="8.5" y="14" width="7" height="7" rx="1.4" />
-						<path d="M10 7.5h4" />
-						<path d="M12 11v3" />
-					</svg>
-					SK Federation
-			</a>
 			<a href="{{ route('manage-kabataan.index') }}" class="qa-btn qa-blue">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -115,44 +105,6 @@
 						<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
 					</svg>
 					Kabataan
-			</a>
-			<a href="{{ route('accounts.officials.index') }}" class="qa-btn qa-green">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M12 4l8 4v2H4V8l8-4z" />
-						<path d="M5 10v7" />
-						<path d="M9 10v7" />
-						<path d="M15 10v7" />
-						<path d="M19 10v7" />
-						<path d="M3 19h18" />
-					</svg>
-					SK Officials
-			</a>
-			<a href="{{ route('auditlogs.index') }}" class="qa-btn qa-yellow">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-						<polyline points="14,2 14,8 20,8"></polyline>
-						<line x1="16" y1="13" x2="8" y2="13"></line>
-						<line x1="16" y1="17" x2="8" y2="17"></line>
-					</svg>
-					Audit Log
-			</a>
-			<a href="{{ route('archived.deleted-sk-federation') }}" class="qa-btn qa-red">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<polyline points="3 6 5 6 21 6"></polyline>
-						<path d="M19 6l-1 14H6L5 6"></path>
-						<path d="M10 11v6"></path><path d="M14 11v6"></path>
-						<path d="M9 6V4h6v2"></path>
-					</svg>
-					Deleted SK Federation
-			</a>
-			<a href="{{ route('archived.deleted-sk-officials') }}" class="qa-btn qa-red">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<polyline points="3 6 5 6 21 6"></polyline>
-						<path d="M19 6l-1 14H6L5 6"></path>
-						<path d="M10 11v6"></path><path d="M14 11v6"></path>
-						<path d="M9 6V4h6v2"></path>
-					</svg>
-					Deleted SK Officials
 			</a>
 		</div>
 	</div>

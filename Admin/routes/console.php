@@ -1,6 +1,6 @@
 <?php
 
-use App\Modules\Accounts\Models\Barangay;
+use App\Modules\Shared\Models\Barangay;
 use App\Modules\Shared\Models\Tenant;
 use App\Modules\Shared\Models\User;
 use Illuminate\Foundation\Inspiring;

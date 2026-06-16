@@ -2,7 +2,7 @@
 
 namespace App\Modules\Manage_Kabataan\Models;
 
-use App\Modules\Accounts\Models\Barangay;
+use App\Modules\Shared\Models\Barangay;
 use App\Modules\Shared\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

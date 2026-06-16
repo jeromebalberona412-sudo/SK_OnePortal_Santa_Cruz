@@ -2,23 +2,28 @@
 
 namespace App\Modules\Shared\Models;
 
+use App\Modules\Accounts\Models\Barangay;
+use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Authentication\Notifications\SkFedResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Auth\Notifications\VerifyEmail;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     public const ROLE_ADMIN = 'admin';
 
@@ -27,6 +32,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public const ROLE_SK_OFFICIAL = 'sk_official';
 
     public const ROLE_USER = 'user';
+
+    public const STATUS_ACTIVE = 'ACTIVE';
+
+    public const STATUS_INACTIVE = 'INACTIVE';
+
+    public const STATUS_PENDING_APPROVAL = 'PENDING_APPROVAL';
+
+    public const STATUS_SUSPENDED = 'SUSPENDED';
 
     /**
      * Cached list of available table columns.
@@ -97,7 +110,23 @@ class User extends Authenticatable implements MustVerifyEmail
             'password_change_token_expires_at' => 'datetime',
             'password_change_last_sent_at' => 'datetime',
             'must_change_password' => 'boolean',
+            'deleted_at' => 'datetime',
         ];
+    }
+
+    public function barangay(): BelongsTo
+    {
+        return $this->belongsTo(Barangay::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function officialProfile(): HasOne
+    {
+        return $this->hasOne(OfficialProfile::class);
     }
 
     public function hasRole(string ...$roles): bool
@@ -107,6 +136,16 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return in_array($this->role, $roles, true);
+    }
+
+    public function isSkFed(): bool
+    {
+        return $this->hasRole(self::ROLE_SK_FED);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->isSkFed();
     }
 
     public function isLocked(): bool

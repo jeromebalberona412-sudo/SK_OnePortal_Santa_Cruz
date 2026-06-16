@@ -65,6 +65,53 @@ body.sidebar-collapsed .sidebar-profile {
     }
 }
 
+/* ── Sidebar dropdown submenus ───────────────────────────── */
+.menu-dropdown-toggle {
+    justify-content: flex-start;
+}
+
+.menu-dropdown-chevron {
+    margin-left: auto;
+    font-size: 12px !important;
+    width: auto !important;
+    transition: transform 0.3s ease;
+}
+
+.menu-dropdown-chevron.is-open {
+    transform: rotate(180deg);
+}
+
+.sidebar-submenu {
+    max-height: 0;
+    overflow: hidden;
+    padding-left: 20px;
+    border-left: 2px solid #e2e8f0;
+    margin-left: 10px;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-submenu.is-open {
+    max-height: 400px;
+}
+
+body:not(.sidebar-collapsed) .sidebar-nav .sidebar-submenu.is-open {
+    display: block;
+}
+
+.menu-item.submenu-item {
+    font-size: 13px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
+
+body.sidebar-collapsed .sidebar-submenu {
+    display: none !important;
+}
+
+body.sidebar-collapsed .menu-dropdown-chevron {
+    display: none;
+}
+
 /* ── Profile page shell (body.profile-page) ────────────────── */
 body.profile-page {
     background: #f3f4f6;

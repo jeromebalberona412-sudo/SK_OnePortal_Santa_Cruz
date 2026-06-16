@@ -7,7 +7,7 @@
             <p class="gov-card__subtitle">Latest account and security actions captured from the control plane</p>
         </div>
 
-        <a href="{{ route('auditlogs.index') }}" class="panel-action-btn">View Full Audit Log</a>
+        <span class="panel-action-btn panel-action-btn--disabled">Managed in SK Federation</span>
     </header>
 
     <div class="audit-table-wrap">

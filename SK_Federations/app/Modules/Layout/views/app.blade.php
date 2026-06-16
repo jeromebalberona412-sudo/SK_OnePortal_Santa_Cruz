@@ -18,9 +18,12 @@
     <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
     @php
         $layoutCssVersion = @filemtime(app_path('Modules/Layout/assets/css/layout.css')) ?: time();
+        $layoutJsVersion = @filemtime(app_path('Modules/Layout/assets/js/layout.js')) ?: time();
+        $loadingCssVersion = @filemtime(public_path('shared/css/loading.css')) ?: time();
+        $loadingJsVersion = @filemtime(public_path('shared/js/loading.js')) ?: time();
     @endphp
     <link rel="stylesheet" href="{{ url('/modules/layout/css/layout.css') }}?v={{ $layoutCssVersion }}">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}?v={{ $loadingCssVersion }}">
     @stack('styles')
 </head>
 <body @stack('body-attributes')>
@@ -35,8 +38,8 @@
 
     @include('layout::logout-modal')
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
-    <script src="{{ url('/modules/layout/js/layout.js') }}"></script>
+    <script src="{{ url('/shared/js/loading.js') }}?v={{ $loadingJsVersion }}"></script>
+    <script src="{{ url('/modules/layout/js/layout.js') }}?v={{ $layoutJsVersion }}"></script>
     <script>
         window.logoutRoute = "{{ route('logout') }}";
         window.loginRoute  = "{{ route('login') }}";

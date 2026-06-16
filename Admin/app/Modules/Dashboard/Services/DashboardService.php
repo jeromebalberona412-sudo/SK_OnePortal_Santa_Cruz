@@ -2,11 +2,11 @@
 
 namespace App\Modules\Dashboard\Services;
 
-use App\Modules\Accounts\Database\Seeders\BarangaySeeder;
-use App\Modules\Accounts\Models\Barangay;
-use App\Modules\Accounts\Models\OfficialTerm;
-use App\Modules\Archive_Management\Models\ArchivedSkFederationRecord;
-use App\Modules\Archive_Management\Models\ArchivedSkOfficialRecord;
+use App\Modules\Shared\Database\Seeders\BarangaySeeder;
+use App\Modules\Shared\Models\Barangay;
+use App\Modules\Shared\Models\OfficialTerm;
+use App\Modules\Shared\Models\ArchivedSkFederationRecord;
+use App\Modules\Shared\Models\ArchivedSkOfficialRecord;
 use App\Modules\Shared\Models\Tenant;
 use App\Modules\Shared\Models\User;
 use Illuminate\Support\Collection;
