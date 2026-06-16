@@ -48,6 +48,10 @@
             <i class="fas fa-file-invoice-dollar"></i><span>Barangay ABYIP</span>
         </a>
 
+        <a href="{{ route('barangay-logos.index') }}" class="menu-item {{ request()->routeIs('barangay-logos*') ? 'active' : '' }}" data-nav-key="barangay-logos" data-tooltip="Barangay Logos">
+            <i class="fas fa-image"></i><span>Barangay Logos</span>
+        </a>
+
         <a href="javascript:void(0);" class="menu-item {{ $archiveOpen ? 'active' : '' }}" onclick="toggleArchiveMenu(event)" data-tooltip="Archive">
             <i class="fas fa-archive"></i><span>Archive</span>
             <i class="fas fa-chevron-down" id="archiveChevron" style="margin-left:auto;font-size:12px;transition:transform 0.3s ease;transform:rotate({{ $archiveOpen ? '180deg' : '0deg' }});"></i>

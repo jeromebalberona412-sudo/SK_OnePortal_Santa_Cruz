@@ -47,6 +47,7 @@ return [
         'api_key'    => env('CLOUDINARY_API_KEY'),
         'api_secret' => env('CLOUDINARY_API_SECRET'),
         'folder'     => env('CLOUDINARY_FOLDER', 'sk_oneportal/sk_fed_posts'),
+        'barangay_logos_folder' => env('CLOUDINARY_BARANGAY_LOGOS_FOLDER', 'sk_oneportal/barangay_logos'),
     ],
 
 ];

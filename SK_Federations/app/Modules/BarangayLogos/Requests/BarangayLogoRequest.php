@@ -8,7 +8,7 @@ class BarangayLogoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // route already guarded by auth + role:admin middleware
+        return true;
     }
 
     public function rules(): array
@@ -22,9 +22,9 @@ class BarangayLogoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'logo.max'    => 'Logo must not exceed 2 MB.',
-            'logo.mimes'  => 'Logo must be a JPEG, PNG, GIF, WebP, or SVG file.',
-            'logo.image'  => 'The uploaded file must be an image.',
+            'logo.max'   => 'Logo must not exceed 2 MB.',
+            'logo.mimes' => 'Logo must be a JPEG, PNG, GIF, WebP, or SVG file.',
+            'logo.image' => 'The uploaded file must be an image.',
         ];
     }
 }

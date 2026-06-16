@@ -295,7 +295,7 @@
         formData.append('barangay_id', barangayId);
         formData.append('logo', file);
 
-        fetch('/barangay-logos/upload', {
+        fetch((window.barangayLogosRoutes && window.barangayLogosRoutes.upload) || '/barangay-logos/upload', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': csrfToken },
             body: formData,
@@ -349,7 +349,7 @@
         setCardLoading(index, true);
         setUploadOverlay(true, 'Removing Logo');
 
-        fetch('/barangay-logos/' + logoId, {
+        fetch(((window.barangayLogosRoutes && window.barangayLogosRoutes.deleteBase) || '/barangay-logos') + '/' + logoId, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,

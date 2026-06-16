@@ -46,10 +46,6 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/js/forgot-password.js',
                 'app/Modules/Authentication/assets/js/verify-email.js',
 
-                // Barangay Logos Module
-                'app/Modules/BarangayLogos/assets/css/barangay-logos.css',
-                'app/Modules/BarangayLogos/assets/js/barangay-logos.js',
-
                 // ── Archive Management Module (unified) ──────────────────────
                 // Deleted SK Federation & Officials (Consolidated)
                 'app/Modules/Archive_Management/assets/css/deleted-sk-federation.css',

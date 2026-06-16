@@ -2,20 +2,20 @@
 
 namespace App\Modules\BarangayLogos\Controllers;
 
-use App\Modules\Accounts\Models\Barangay;
+use App\Modules\Authentication\Services\AuthAuditLogService;
+use App\Modules\Authentication\Services\TenantContextService;
 use App\Modules\BarangayLogos\Models\BarangayLogo;
 use App\Modules\BarangayLogos\Requests\BarangayLogoRequest;
 use App\Modules\BarangayLogos\Services\CloudinaryService;
-use App\Services\BarangayLogoUrlService;
-use App\Modules\AuditLog\Contracts\AuditLogInterface;
+use App\Modules\Profile\Models\Barangay;
 use App\Modules\Shared\Controllers\Controller;
-use App\Modules\Shared\Models\Tenant;
-use App\Modules\Shared\Models\User;
+use App\Services\BarangayLogoUrlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use RuntimeException;
 use Throwable;
 
 class BarangayLogoController extends Controller
@@ -23,17 +23,14 @@ class BarangayLogoController extends Controller
     public function __construct(
         private readonly CloudinaryService $cloudinary,
         private readonly BarangayLogoUrlService $logoUrls,
-        private readonly AuditLogInterface $auditLog,
-    ) {
-    }
+        private readonly TenantContextService $tenantContext,
+        private readonly AuthAuditLogService $auditLog,
+    ) {}
 
-    /**
-     * Display the barangay logos management page.
-     */
     public function index(Request $request): View
     {
-        $user     = $request->user();
-        $tenantId = $this->resolveTenantId($user);
+        $user = $request->user();
+        $tenantId = $this->resolveTenantId();
 
         $barangays = Barangay::query()
             ->where('tenant_id', $tenantId)
@@ -57,16 +54,12 @@ class BarangayLogoController extends Controller
         ]);
     }
 
-    /**
-     * Upload (or replace) a barangay logo to Cloudinary.
-     */
     public function upload(BarangayLogoRequest $request): JsonResponse
     {
-        $user      = $request->user();
-        $tenantId  = $this->resolveTenantId($user);
+        $user = $request->user();
+        $tenantId = $this->resolveTenantId();
         $barangayId = (int) $request->input('barangay_id');
 
-        // Verify the barangay belongs to this tenant
         $barangay = Barangay::query()
             ->where('id', $barangayId)
             ->where('tenant_id', $tenantId)
@@ -78,13 +71,12 @@ class BarangayLogoController extends Controller
             ->first();
 
         try {
-            // Delete old Cloudinary asset if replacing
             if ($existing) {
                 $this->cloudinary->delete($existing->cloudinary_public_id);
             }
 
-            $publicId = 'barangay_' . $barangayId . '_tenant_' . $tenantId . '_' . Str::lower(Str::random(8));
-            $result   = $this->cloudinary->upload($request->file('logo'), $publicId, true);
+            $publicId = 'barangay_'.$barangayId.'_tenant_'.$tenantId.'_'.Str::lower(Str::random(8));
+            $result = $this->cloudinary->upload($request->file('logo'), $publicId, true);
 
             $logo = BarangayLogo::updateOrCreate(
                 ['barangay_id' => $barangayId, 'tenant_id' => $tenantId],
@@ -96,14 +88,19 @@ class BarangayLogoController extends Controller
                 ]
             );
 
-            $this->auditLog->log('barangay_logos.'.($existing ? 'update' : 'upload'), $user, [
-                'action' => $existing ? 'update_barangay_logo' : 'upload_barangay_logo',
-                'entity_type' => 'barangay_logo',
-                'entity_id' => (string) $logo->id,
-                'module' => 'barangay_logos',
-                'barangay_id' => $barangayId,
-                'barangay_name' => $barangay->name,
-            ]);
+            $this->auditLog->log(
+                event: 'barangay_logos.'.($existing ? 'update' : 'upload'),
+                user: $user,
+                request: $request,
+                metadata: [
+                    'action' => $existing ? 'update_barangay_logo' : 'upload_barangay_logo',
+                    'module' => 'barangay_logos',
+                    'barangay_id' => $barangayId,
+                    'barangay_name' => $barangay->name,
+                ],
+                resourceType: 'barangay_logo',
+                resourceId: (string) $logo->id,
+            );
 
             return response()->json([
                 'id'  => $logo->id,
@@ -119,13 +116,9 @@ class BarangayLogoController extends Controller
         }
     }
 
-    /**
-     * Delete a barangay logo from Cloudinary and the database.
-     */
     public function delete(Request $request, int $id): JsonResponse
     {
-        $user     = $request->user();
-        $tenantId = $this->resolveTenantId($user);
+        $tenantId = $this->resolveTenantId();
 
         $logo = BarangayLogo::query()
             ->where('id', $id)
@@ -147,25 +140,14 @@ class BarangayLogoController extends Controller
         }
     }
 
-    private function resolveTenantId(User $admin): int
+    private function resolveTenantId(): int
     {
-        if ($admin->tenant_id !== null) {
-            return $admin->tenant_id;
+        $tenantId = $this->tenantContext->tenantId();
+
+        if ($tenantId === null) {
+            throw new RuntimeException('Tenant context is not configured for SK Federation.');
         }
 
-        $tenant = Tenant::query()->firstOrCreate(
-            ['code' => 'santa_cruz'],
-            [
-                'name'         => 'Santa Cruz Federation',
-                'municipality' => 'Santa Cruz',
-                'province'     => 'Laguna',
-                'region'       => 'IV-A CALABARZON',
-                'is_active'    => true,
-            ]
-        );
-
-        $admin->forceFill(['tenant_id' => $tenant->id])->save();
-
-        return $tenant->id;
+        return $tenantId;
     }
 }

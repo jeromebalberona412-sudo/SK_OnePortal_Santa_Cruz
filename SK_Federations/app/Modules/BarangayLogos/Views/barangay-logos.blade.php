@@ -1,16 +1,12 @@
-@extends('layouts.app')
+@extends('layout::app')
 
 @section('title', 'SK Barangay Logos')
 
-@section('head')
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    @vite(['app/Modules/BarangayLogos/assets/css/barangay-logos.css'])
-@endsection
+@push('styles')
+    <link rel="stylesheet" href="{{ url('/modules/barangay-logos/css/barangay-logos.css') }}?v={{ @filemtime(app_path('Modules/BarangayLogos/assets/css/barangay-logos.css')) ?: time() }}">
+@endpush
 
 @section('content')
-@include('layout::header')
-@include('layout::sidebar')
-
 <div id="blUploadOverlay" class="bl-upload-overlay" aria-hidden="true" hidden>
     <div class="bl-upload-overlay-inner">
         <div class="bl-upload-spinner">
@@ -23,7 +19,7 @@
     </div>
 </div>
 
-<div class="main-content-modern barangay-logos-page container-fluid" id="mainContent">
+<div class="barangay-logos-page container-fluid" id="mainContent">
     <div class="barangay-logos-container">
 
         {{-- ── Page Header ── --}}
@@ -179,12 +175,6 @@
                 <div class="bl-card-footer">
                     <p class="bl-barangay-name" title="{{ $barangay->name }}">{{ $barangay->name }}</p>
 
-                    {{--
-                        Upload label:
-                        - data-index / data-name used by JS to identify the card
-                        - for="fileInput-N" opens picker when no logo
-                        - JS intercepts click when card has-logo → shows change modal
-                    --}}
                     <label
                         class="bl-upload-btn bl-upload-label"
                         id="uploadBtn-{{ $index }}"
@@ -200,7 +190,6 @@
                         <span id="uploadBtnText-{{ $index }}">{{ $existingLogo ? 'Change Logo' : 'Upload Logo' }}</span>
                     </label>
 
-                    {{-- Hidden file input — separate from label so .click() works reliably --}}
                     <input
                         type="file"
                         id="fileInput-{{ $index }}"
@@ -224,9 +213,7 @@
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════════════
-     MODAL 1: Change Logo Confirmation
-══════════════════════════════════════════════════════════ --}}
+{{-- MODAL 1: Change Logo Confirmation --}}
 <div class="bl-modal-overlay" id="blChangeModal" role="dialog" aria-modal="true" style="display:none;">
     <div class="bl-modal bl-action-modal">
 
@@ -251,9 +238,7 @@
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════════════
-     MODAL 2: Remove Logo Confirmation
-══════════════════════════════════════════════════════════ --}}
+{{-- MODAL 2: Remove Logo Confirmation --}}
 <div class="bl-modal-overlay" id="blRemoveModal" role="dialog" aria-modal="true" style="display:none;">
     <div class="bl-modal bl-action-modal">
 
@@ -279,9 +264,7 @@
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════════════
-     MODAL 3: Upload Preview Confirmation (fresh upload)
-══════════════════════════════════════════════════════════ --}}
+{{-- MODAL 3: Upload Preview Confirmation --}}
 <div class="bl-modal-overlay" id="blConfirmModal" role="dialog" aria-modal="true" style="display:none;">
     <div class="bl-modal">
 
@@ -332,9 +315,14 @@
 
     </div>
 </div>
-
 @endsection
 
-@section('scripts')
-    @vite(['app/Modules/BarangayLogos/assets/js/barangay-logos.js'])
-@endsection
+@push('scripts')
+    <script>
+        window.barangayLogosRoutes = {
+            upload: @json(route('barangay-logos.upload')),
+            deleteBase: @json(url('/barangay-logos')),
+        };
+    </script>
+    <script src="{{ url('/modules/barangay-logos/js/barangay-logos.js') }}?v={{ @filemtime(app_path('Modules/BarangayLogos/assets/js/barangay-logos.js')) ?: time() }}"></script>
+@endpush
