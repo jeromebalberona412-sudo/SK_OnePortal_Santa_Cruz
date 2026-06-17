@@ -1,0 +1,323 @@
+.kkp-wizard-progress-header {
+    position: sticky;
+    top: 0;
+    z-index: 1200;
+    width: 100%;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.25);
+}
+
+.kkp-wizard-progress-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0.85rem 1rem;
+}
+
+.kkp-wizard-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+}
+
+.kkp-wizard-step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.kkp-wizard-step-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    font-size: 0.78rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.kkp-wizard-step-connector {
+    width: 1.75rem;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 0.35rem;
+    flex-shrink: 0;
+}
+
+.kkp-wizard-step-item.is-active {
+    color: #fff;
+}
+
+.kkp-wizard-step-item.is-active .kkp-wizard-step-badge {
+    background: #38bdf8;
+    border-color: #38bdf8;
+    color: #0f172a;
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
+}
+
+.kkp-wizard-step-item.is-complete {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.kkp-wizard-step-item.is-complete .kkp-wizard-step-badge {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #fff;
+}
+
+.kkp-wizard-step-label {
+    white-space: nowrap;
+}
+
+.kkp-wizard-panel {
+    width: 100%;
+}
+
+.kkp-wizard-panel-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+    margin-bottom: 1rem;
+}
+
+.kkp-wizard-panel-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.kkp-wizard-optional {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.kkp-wizard-panel-desc {
+    margin: 0 0 1.25rem;
+    color: #475569;
+    line-height: 1.55;
+}
+
+.kkp-wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0 0.5rem;
+}
+
+.kkp-wizard-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.72rem 1.35rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.kkp-wizard-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.kkp-wizard-btn-primary {
+    background: #0369a1;
+    color: #fff;
+}
+
+.kkp-wizard-btn-primary:hover:not(:disabled) {
+    background: #075985;
+}
+
+.kkp-wizard-btn-secondary {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.kkp-wizard-btn-secondary:hover:not(:disabled) {
+    background: #cbd5e1;
+}
+
+.kkp-wizard-btn-link {
+    background: transparent;
+    color: #0369a1;
+    padding: 0.72rem 0.5rem;
+}
+
+.kkp-wizard-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.kkp-wizard-upload-field {
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 1rem;
+    background: #f8fafc;
+}
+
+.kkp-wizard-upload-label,
+.kkp-wizard-field-label {
+    display: block;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.45rem;
+}
+
+.kkp-wizard-file-input {
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.kkp-wizard-upload-hint,
+.kkp-wizard-field-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.kkp-wizard-field {
+    margin-bottom: 1rem;
+}
+
+.kkp-wizard-input,
+.kkp-wizard-readonly-input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.kkp-wizard-readonly-input {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.kkp-wizard-email-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.kkp-wizard-email-status {
+    margin: 0.85rem 0 0;
+    padding: 0.75rem 0.9rem;
+    border-radius: 8px;
+    background: #f0f9ff;
+    color: #0c4a6e;
+    font-size: 0.9rem;
+}
+
+.kkp-wizard-email-status.is-verified {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.kkp-wizard-email-status.is-error {
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.kkp-wizard-resend-timer {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* Step 4 legacy cards — same layout as pre-wizard KK Profiling flow */
+.kkp-wizard-step4-legacy {
+    padding: 0.5rem 0 1rem;
+}
+
+.kkp-wizard-step4-legacy .verify-card,
+.kkp-wizard-step4-legacy .setpw-card,
+.kkp-wizard-step4-legacy .reg-success-card {
+    margin-top: 0;
+}
+
+.kkp-wizard-email-error {
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.kkp-wizard-mode.kkp-wizard-step4-active .kkp-paper {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+
+.kkp-wizard-mode.kkp-wizard-step4-active .kkp-responsive-container {
+    padding: 0;
+}
+
+.kkp-wizard-complete-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 1rem;
+    color: #16a34a;
+}
+
+.kkp-wizard-complete-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Wizard mode: hide legacy submit; Step 1 uses existing form unchanged */
+.kkp-wizard-mode .kkp-submit-wrapper {
+    display: none !important;
+}
+
+.kkp-wizard-mode #kkpWizardStep2 .kkp-identity-section {
+    margin-top: 0;
+}
+
+@media (max-width: 768px) {
+    .kkp-wizard-step-label {
+        display: none;
+    }
+
+    .kkp-wizard-step-connector {
+        width: 0.85rem;
+    }
+
+    .kkp-wizard-progress-inner {
+        padding: 0.65rem 0.75rem;
+    }
+}
+
+@media (min-width: 769px) {
+    .kkp-wizard-step-item.is-active .kkp-wizard-step-label,
+    .kkp-wizard-step-item.is-complete .kkp-wizard-step-label {
+        display: inline;
+    }
+}

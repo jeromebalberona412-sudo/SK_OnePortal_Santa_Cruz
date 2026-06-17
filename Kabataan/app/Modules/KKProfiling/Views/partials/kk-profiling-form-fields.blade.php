@@ -255,6 +255,10 @@
 
                     </div>
 
+                    @if ($requireFacialVerification ?? true)
+                        @include('kkprofiling::partials.kk-facial-verification')
+                    @endif
+
 
 
                     {{-- -- II. DEMOGRAPHIC CHARACTERISTICS -- --}}

@@ -78,10 +78,14 @@ export default defineConfig({
                 // KK Profiling
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling.js',
+                'app/Modules/KKProfiling/assets/css/facial-verification.css',
+                'app/Modules/KKProfiling/assets/js/facial-verification.js',
                 'app/Modules/KKProfiling/assets/css/kkprofiling-signup.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling-signup.js',
                 'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
                 'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
+                'app/Modules/KKProfiling/assets/css/kkprofiling-wizard.css',
+                'app/Modules/KKProfiling/assets/js/kkprofiling-wizard.js',
 
                 // Shared
                 'app/Modules/Shared/assets/css/loading.css',
@@ -93,6 +97,7 @@ export default defineConfig({
     ],
 
     build: {
+        chunkSizeWarningLimit: 600,
         rollupOptions: {
             output: {
                 assetFileNames: (assetInfo) => {
@@ -101,6 +106,14 @@ export default defineConfig({
                         extType = 'images';
                     }
                     return `assets/${extType}/[name]-[hash][extname]`;
+                },
+                manualChunks(id) {
+                    if (id.includes('node_modules/@vladmandic/face-api') || id.includes('node_modules/@tensorflow')) {
+                        return 'vendor-face-api';
+                    }
+                    if (id.includes('node_modules/@mediapipe')) {
+                        return 'vendor-mediapipe';
+                    }
                 },
             },
         },

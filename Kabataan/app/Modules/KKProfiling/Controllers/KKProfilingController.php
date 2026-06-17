@@ -7,6 +7,8 @@ use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Notifications\KabataanVerifyEmail;
+use App\Services\KabataanPhotoService;
+use App\Services\KkRegistrationDraftService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RegistrationEvaluationService;
 use App\Services\RespondentNumberService;
@@ -18,12 +20,18 @@ use Illuminate\Support\Facades\URL;
 
 class KKProfilingController extends Controller
 {
+    public function __construct(
+        protected KabataanPhotoService $photoService
+    ) {}
     /**
      * Display signup page with barangay selector
      */
-    public function showSignup()
+    public function showSignup(Request $request)
     {
-        // Load barangays from DB so we have their IDs for the schedule gate
+        if ($request->boolean('clear')) {
+            app(KkRegistrationDraftService::class)->clearSessionDraft();
+        }
+
         $barangays = Barangay::orderBy('name')->get(['id', 'name']);
         return view('kkprofiling::signup', compact('barangays'));
     }
@@ -139,12 +147,31 @@ class KKProfilingController extends Controller
 
         $respondentNumber = 'KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 6));
 
+        $draftService = app(KkRegistrationDraftService::class);
+        $wizard = $draftService->resolveWizard();
+
+        $wizardInitialStep = 1;
+        $wizardEmailVerified = false;
+        $verificationSent = false;
+
+        if ($wizard && (int) ($wizard['barangay_id'] ?? 0) === (int) $barangayRecord->id) {
+            $wizardInitialStep = max(1, min(4, (int) ($wizard['current_step'] ?? 1)));
+            $wizardEmailVerified = ! empty($wizard['email_verified_at']);
+            $verificationSent = ! empty($wizard['verification_sent_at']);
+            $respondentNumber = $wizard['respondent_number'] ?? $respondentNumber;
+        } else {
+            session()->forget(['kk_wizard_step', 'kk_wizard_email_verified']);
+        }
+
         return view('kkprofiling::kkprofiling', [
-            'barangay'           => $displayName,
-            'slug'               => $slug,
-            'respondentNumber'   => $respondentNumber,
-            'respondentDisplay'  => self::formatRespondentDisplay($respondentNumber),
-            'barangayLogoUrl'    => self::getBarangayLogoUrl($barangayRecord->id),
+            'barangay'            => $displayName,
+            'slug'                => $slug,
+            'respondentNumber'    => $respondentNumber,
+            'respondentDisplay'   => self::formatRespondentDisplay($respondentNumber),
+            'barangayLogoUrl'     => self::getBarangayLogoUrl($barangayRecord->id),
+            'wizardInitialStep'   => $wizardInitialStep,
+            'wizardEmailVerified' => $wizardEmailVerified,
+            'verificationSent'    => $verificationSent,
         ]);
     }
 
@@ -315,7 +342,15 @@ class KKProfilingController extends Controller
             'facebook'              => ['required', 'string', 'max:150', 'regex:/^\S*[^0-9]\S*$/'],
             'group_chat'            => 'required|string',
             'signature'             => 'required|string',
+            'facial_verification_completed' => 'required|in:1',
+            'verified_selfie'       => 'required|string',
         ]);
+
+        if ($request->input('facial_verification_completed') !== '1' || ! $request->filled('verified_selfie')) {
+            return $this->submitErrorResponse($request, [
+                'verified_selfie' => 'Identity verification is required. Please complete facial verification before submitting.',
+            ]);
+        }
 
         if (($validated['suffix'] ?? null) === 'Others') {
             $customSuffix = trim((string) ($validated['custom_suffix'] ?? ''));
@@ -399,6 +434,27 @@ class KKProfilingController extends Controller
             ]);
         }
 
+        $this->photoService->ensureDirectoryExists();
+
+        $existingRegistration = KabataanRegistration::where('email', $validated['email'])
+            ->where('barangay_id', $barangayRecord->id)
+            ->first();
+
+        try {
+            $photo = $this->photoService->storeVerifiedSelfie(
+                $request->input('verified_selfie'),
+                $email
+            );
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            return $this->submitErrorResponse($request, $exception->errors());
+        }
+
+        if ($existingRegistration?->profile_photo_path) {
+            $this->photoService->deleteByPath($existingRegistration->profile_photo_path);
+        }
+
+        unset($validated['verified_selfie'], $validated['facial_verification_completed']);
+
         $registration = KabataanRegistration::updateOrCreate(
             [
                 'email' => $validated['email'],
@@ -411,6 +467,8 @@ class KKProfilingController extends Controller
                 'middle_name'       => $validated['middle_name'] ?? null,
                 'suffix'            => $validated['suffix'] ?? null,
                 'contact_number'    => $validated['contact_number'] ?? null,
+                'profile_photo_path' => $photo['path'],
+                'facial_verification_completed_at' => now(),
                 'form_data'         => $validated,
                 'status'            => 'pending_verification',
                 'evaluation_status' => null,
@@ -781,6 +839,8 @@ class KKProfilingController extends Controller
                     'status'             => 'PENDING_APPROVAL',
                     'tenant_id'          => $registration->tenant_id,
                     'barangay_id'        => $registration->barangay_id,
+                    'profile_image_url'  => app(KabataanPhotoService::class)->publicUrl($registration->profile_photo_path),
+                    'profile_image_uploaded_at' => $registration->facial_verification_completed_at ?? now(),
                 ]);
                 $user = $existing;
             } else {
@@ -793,6 +853,8 @@ class KKProfilingController extends Controller
                     'barangay_id'        => $registration->barangay_id,
                     'role'               => 'kabataan',
                     'status'             => 'PENDING_APPROVAL',
+                    'profile_image_url'  => app(KabataanPhotoService::class)->publicUrl($registration->profile_photo_path),
+                    'profile_image_uploaded_at' => $registration->facial_verification_completed_at ?? now(),
                 ]);
             }
 

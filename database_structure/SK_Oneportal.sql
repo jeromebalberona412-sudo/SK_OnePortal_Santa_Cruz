@@ -1,5 +1,10 @@
 Database = SK_Oneportal
-Last Updated = 2026-06-14
+Last Updated = 2026-06-16
+
+-- Architecture note (2026-06-16):
+-- SK Federation portal (role: sk_fed) is the system administrator.
+-- Former Admin portal accounts/modules are owned by SK Federation.
+-- Default bootstrap account: skoneportal@gmail.com (sk_fed only).
 
 -- ============================================================
 -- CORE / SHARED TABLES
@@ -45,7 +50,7 @@ create table public.users (
   password_change_token character varying(255) null,
   password_change_token_expires_at timestamp without time zone null,
   password_change_last_sent_at timestamp without time zone null,
-  role character varying(30) not null default 'user'::character varying,
+  role character varying(30) not null default 'user'::character varying, -- sk_fed | sk_official | user (kabataan uses user)
   status character varying(30) not null default 'PENDING_APPROVAL'::character varying,
   must_change_password boolean not null default false,
   two_factor_secret text null,
@@ -162,7 +167,8 @@ create table public.failed_jobs (
 
 
 -- ============================================================
--- ADMIN APP TABLES
+-- SK FEDERATION PORTAL TABLES (shared; formerly Admin app)
+-- Accounts, audit logs, archive, barangay logos, official profiles
 -- ============================================================
 
 create table public.official_profiles (
@@ -346,6 +352,7 @@ create index IF not exists login_attempts_ip_address_attempted_at_index on publi
 create index IF not exists login_attempts_email_index on public.login_attempts using btree (email) TABLESPACE pg_default;
 create index IF not exists login_attempts_ip_address_index on public.login_attempts using btree (ip_address) TABLESPACE pg_default;
 
+-- Audit trail used by SK Federation portal (admin_activity_logs name kept for compatibility)
 create table public.admin_activity_logs (
   id uuid not null,
   user_id bigint null,
@@ -370,7 +377,7 @@ create index IF not exists admin_activity_logs_tenant_id_index on public.admin_a
 create index IF not exists admin_activity_logs_action_created_at_index on public.admin_activity_logs using btree (action, created_at) TABLESPACE pg_default;
 create index IF not exists admin_activity_logs_entity_type_entity_id_index on public.admin_activity_logs using btree (entity_type, entity_id) TABLESPACE pg_default;
 
--- Added: 2026-05-03 (Admin migration)
+-- Added: 2026-05-03 (managed by SK Federation portal)
 create table public.barangay_logos (
   id bigserial not null,
   barangay_id bigint not null,
@@ -1273,6 +1280,10 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_public_id VARCHA
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_uploaded_at TIMESTAMP NULL;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_image_change_available_at TIMESTAMP NULL;
 
+-- Verified selfie from KK Profiling registration (storage/app/public/kabataan_photos)
+ALTER TABLE public.kabataan_registrations ADD COLUMN IF NOT EXISTS profile_photo_path VARCHAR(500) NULL;
+ALTER TABLE public.kabataan_registrations ADD COLUMN IF NOT EXISTS facial_verification_completed_at TIMESTAMP NULL;
+
 -- ============================================================
 -- REPORT MANAGEMENT (Added: 2026-06-14)
 -- Barangay SK Officials upload PDF program/activity reports for SK Federation review
@@ -1334,8 +1345,44 @@ create index IF not exists calendar_events_event_date_target_audience_index on p
 create index IF not exists calendar_events_barangay_id_event_date_index on public.calendar_events using btree (barangay_id, event_date) TABLESPACE pg_default;
 
 -- ============================================================
--- DEFAULT SYSTEM ADMINISTRATOR ACCOUNT
+-- DEFAULT SK FEDERATION ADMINISTRATOR (portal bootstrap)
+-- Replaces former Admin SUPER_ADMIN account.
+-- Single default account only: skoneportal@gmail.com / role sk_fed
+-- must_change_password = true on first login
 -- ============================================================
+
+INSERT INTO public.tenants (
+    name,
+    code,
+    municipality,
+    province,
+    region,
+    is_active,
+    created_at,
+    updated_at
+)
+SELECT
+    'Santa Cruz Federation',
+    'santa-cruz-federation',
+    'Santa Cruz',
+    'Laguna',
+    'IV-A CALABARZON',
+    true,
+    NOW(),
+    NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM public.tenants WHERE code = 'santa-cruz-federation'
+);
+
+-- Promote legacy Admin bootstrap account to SK Federation admin
+UPDATE public.users
+SET
+    role = 'sk_fed',
+    name = 'SK Federation Administrator',
+    status = 'ACTIVE',
+    updated_at = NOW()
+WHERE email = 'skoneportal@gmail.com'
+  AND role IN ('SUPER_ADMIN', 'super_admin', 'admin', 'ADMIN');
 
 INSERT INTO public.users (
     name,
@@ -1345,19 +1392,81 @@ INSERT INTO public.users (
     status,
     must_change_password,
     email_verified_at,
+    tenant_id,
     created_at,
     updated_at
 )
 SELECT
-    'System Administrator',
+    'SK Federation Administrator',
     'skoneportal@gmail.com',
     '$2y$12$vurYtZcT/tlW4Sz0HyZgeOB9HBTDfllm6epcYO7EF8zvZsgO1o45a',
-    'SUPER_ADMIN',
+    'sk_fed',
     'ACTIVE',
     true,
     NOW(),
+    t.id,
     NOW(),
     NOW()
-WHERE NOT EXISTS (
+FROM public.tenants t
+WHERE t.code = 'santa-cruz-federation'
+  AND NOT EXISTS (
     SELECT 1 FROM public.users WHERE email = 'skoneportal@gmail.com'
+);
+
+UPDATE public.users u
+SET tenant_id = t.id, updated_at = NOW()
+FROM public.tenants t
+WHERE u.email = 'skoneportal@gmail.com'
+  AND t.code = 'santa-cruz-federation'
+  AND u.tenant_id IS NULL;
+
+INSERT INTO public.official_profiles (
+    user_id,
+    first_name,
+    last_name,
+    position,
+    municipality,
+    province,
+    region,
+    tenant_id,
+    created_at,
+    updated_at
+)
+SELECT
+    u.id,
+    'SK Federation',
+    'Administrator',
+    'President',
+    'Santa Cruz',
+    'Laguna',
+    'IV-A CALABARZON',
+    u.tenant_id,
+    NOW(),
+    NOW()
+FROM public.users u
+WHERE u.email = 'skoneportal@gmail.com'
+  AND NOT EXISTS (
+    SELECT 1 FROM public.official_profiles op WHERE op.user_id = u.id
+);
+
+INSERT INTO public.official_terms (
+    official_profile_id,
+    term_start,
+    term_end,
+    status,
+    created_at,
+    updated_at
+)
+SELECT
+    op.id,
+    DATE_TRUNC('year', CURRENT_DATE)::date,
+    (DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '3 years' - INTERVAL '1 day')::date,
+    'ACTIVE',
+    NOW(),
+    NOW()
+FROM public.official_profiles op
+INNER JOIN public.users u ON u.id = op.user_id
+WHERE u.email = 'skoneportal@gmail.com'
+  AND NOT EXISTS (
+    SELECT 1 FROM public.official_terms ot WHERE ot.official_profile_id = op.id
 );

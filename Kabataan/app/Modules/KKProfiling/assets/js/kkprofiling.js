@@ -115,8 +115,9 @@ function isValidSuffixText(value) {
         });
     });
 
-    // ── Email existence check (backend) ──
+    // ── Email existence check (backend) — disabled in wizard mode (checked at Step 4 only) ──
     const emailInput = document.querySelector('input[name="email"]');
+    const isWizardForm = document.getElementById('kkProfilingForm')?.dataset?.wizardMode === '1';
     let emailCheckTimer = null;
 
     async function checkEmailExists(value) {
@@ -134,7 +135,7 @@ function isValidSuffixText(value) {
         return response.json();
     }
 
-    if (emailInput) {
+    if (emailInput && !isWizardForm) {
         emailInput.addEventListener('blur', function () {
             const value = (this.value || '').trim();
             clearFieldError(this);
@@ -318,8 +319,9 @@ function isValidSuffixText(value) {
 /* ═══════════════════════════════════════════════════════════════
    FORM SUBMISSION HANDLER - Validate then Submit Form
 ═══════════════════════════════════════════════════════════════ */
-window.handleFormSubmit = async function (event) {
-    event.preventDefault();
+window.validateKkProfilingForm = async function (options = {}) {
+    const skipFacialVerification = options.skipFacialVerification === true;
+    const skipEmailExistenceCheck = options.skipEmailExistenceCheck === true;
 
     // ── Clear previous errors ──
     document.querySelectorAll('.kkp-field-error').forEach(el => el.remove());
@@ -453,7 +455,7 @@ window.handleFormSubmit = async function (event) {
     } else if (hasAnySpace(email.value) || !/^[A-Za-z0-9._%+-]+@gmail\.com$/i.test(email.value)) {
         errors.push('Email must be a valid @gmail.com address and must not contain spaces.');
         fieldError(email, 'Use valid @gmail.com only, no spaces.');
-    } else if (email.dataset.emailExists === 'true') {
+    } else if (!skipEmailExistenceCheck && email.dataset.emailExists === 'true') {
         errors.push('This email already exists. Please use a different email address.');
         fieldError(email, 'This email already exists. Please use a different email address.');
     }
@@ -633,6 +635,27 @@ window.handleFormSubmit = async function (event) {
         }
     }
 
+    // ── 21. Facial identity verification (registration only) ──
+    const identitySection = document.getElementById('kkpIdentitySection');
+    if (!skipFacialVerification && identitySection) {
+        const verificationCompleted = document.getElementById('kkpFacialVerificationCompleted');
+        const verifiedSelfie = document.getElementById('kkpVerifiedSelfie');
+        const isComplete = verificationCompleted?.value === '1' && verifiedSelfie?.value?.trim();
+
+        if (!isComplete) {
+            errors.push('Identity verification is required.');
+            let err = identitySection.querySelector('.kkp-field-error');
+            if (!err) {
+                err = document.createElement('span');
+                err.className = 'kkp-field-error';
+                err.textContent = 'Please complete facial identity verification before submitting.';
+                identitySection.appendChild(err);
+            } else {
+                err.textContent = 'Please complete facial identity verification before submitting.';
+            }
+        }
+    }
+
     // ── If errors, scroll to first error and stop ──
     if (errors.length > 0) {
         const firstErr = document.querySelector('.kkp-field-error');
@@ -642,9 +665,12 @@ window.handleFormSubmit = async function (event) {
         return false;
     }
 
-    // ── Backend email existence check before submit ──
+    // ── Backend email existence check before submit (non-wizard only) ──
     const emailField = document.querySelector('input[name="email"]');
-    if (emailField && emailField.value.trim()) {
+    const formEl = document.getElementById('kkProfilingForm');
+    const isWizardSubmit = formEl?.dataset?.wizardMode === '1';
+
+    if (!skipEmailExistenceCheck && !isWizardSubmit && emailField && emailField.value.trim()) {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
             const emailCheckResponse = await fetch('/api/kkprofiling/check-email-exists', {
@@ -669,11 +695,27 @@ window.handleFormSubmit = async function (event) {
         }
     }
 
+    return true;
+};
+
+window.handleFormSubmit = async function (event) {
+    event.preventDefault();
+
+    const form = document.getElementById('kkProfilingForm');
+    const isWizardMode = form?.dataset?.wizardMode === '1';
+
+    if (!await window.validateKkProfilingForm({ skipFacialVerification: isWizardMode })) {
+        return false;
+    }
+
+    if (isWizardMode) {
+        return false;
+    }
+
     // ── All valid — submit via AJAX for proper error handling ──
     console.log('Form validation passed. Submitting to backend...');
     const submitBtn = document.getElementById('kkpSubmitBtn');
     const submitText = document.getElementById('kkpSubmitText');
-    const form = document.getElementById('kkProfilingForm');
 
     function resetSubmitState() {
         if (window.hideLoading) {
@@ -910,11 +952,18 @@ function showEmailVerification(email) {
         resendEmailBtn.addEventListener('click', async function () {
             if (this.disabled) return;
 
+            const wizardRoot = document.getElementById('kkpRegistrationWizard');
+
+            if (wizardRoot && typeof window.kkpWizardSendVerification === 'function') {
+                await window.kkpWizardSendVerification(true);
+                return;
+            }
+
             const btn = this;
             const displayEmail = document.getElementById('displayEmail');
             const email = (displayEmail && displayEmail.textContent.trim()) || '';
             const form = document.getElementById('kkProfilingForm');
-            const barangay = form ? (form.dataset.barangaySlug || '') : '';
+            const barangay = form ? (form.dataset.barangaySlug || '') : (wizardRoot?.dataset.barangaySlug || '');
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
             if (!email || email === 'your-email@example.com') {
@@ -924,7 +973,7 @@ function showEmailVerification(email) {
             btn.disabled = true;
 
             if (window.showLoading) {
-                window.showLoading('Sending verification email...');
+                window.showLoading('Resending verification email...');
             }
 
             try {
@@ -1022,7 +1071,81 @@ function showEmailVerification(email) {
             if (btnSpinner) btnSpinner.style.display = 'block';
             if (btnText) btnText.textContent = 'Signing up...';
 
-            // Simulate async registration (replace with real AJAX in production)
+            const wizardRoot = document.getElementById('kkpRegistrationWizard');
+
+            if (wizardRoot) {
+                const slug = wizardRoot.dataset.barangaySlug || '';
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+                if (window.showLoading) {
+                    window.showLoading('Creating your account...');
+                }
+
+                fetch(`/api/kkprofiling/${slug}/wizard/finalize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        password: password.value,
+                        password_confirmation: passwordConfirm.value,
+                    }),
+                })
+                    .then(async (response) => {
+                        const data = await response.json().catch(() => ({}));
+
+                        if (window.hideLoading) {
+                            window.hideLoading();
+                        }
+
+                        if (response.ok) {
+                            if (window.kkpWizardShowSuccess) {
+                                window.kkpWizardShowSuccess();
+                            } else {
+                                const setPasswordCard = document.getElementById('setPasswordCard');
+                                const regSuccessCard = document.getElementById('regSuccessCard');
+                                if (setPasswordCard) setPasswordCard.style.display = 'none';
+                                if (regSuccessCard) regSuccessCard.style.display = 'block';
+                            }
+
+                            if (submitBtn) submitBtn.disabled = false;
+                            if (btnIcon) btnIcon.style.display = 'block';
+                            if (btnSpinner) btnSpinner.style.display = 'none';
+                            if (btnText) btnText.textContent = 'Complete Registration';
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            return;
+                        }
+
+                        let errorMessage = data.message || 'Unable to complete registration. Please try again.';
+                        if (data.errors) {
+                            errorMessage = Object.values(data.errors).flat().join('\n');
+                        }
+
+                        showSetPwError(errorMessage);
+
+                        if (submitBtn) submitBtn.disabled = false;
+                        if (btnIcon) btnIcon.style.display = 'block';
+                        if (btnSpinner) btnSpinner.style.display = 'none';
+                        if (btnText) btnText.textContent = 'Complete Registration';
+                    })
+                    .catch(() => {
+                        if (window.hideLoading) {
+                            window.hideLoading();
+                        }
+                        showSetPwError('Unable to complete registration. Please check your connection and try again.');
+                        if (submitBtn) submitBtn.disabled = false;
+                        if (btnIcon) btnIcon.style.display = 'block';
+                        if (btnSpinner) btnSpinner.style.display = 'none';
+                        if (btnText) btnText.textContent = 'Complete Registration';
+                    });
+
+                return;
+            }
+
+            // Legacy non-wizard flow (separate set-password page)
             setTimeout(function () {
                 // Hide set password card, show success card
                 const setPasswordCard = document.getElementById('setPasswordCard');
