@@ -23,9 +23,6 @@
 </head>
 <body class="homepage-body kkp-form-page kkp-wizard-mode">
 
-    {{-- Step progress indicator — very top of page, always visible --}}
-    @include('kkprofiling::partials.wizard.progress-header')
-
     @include('dashboard::loading')
 
     <main class="kkp-main">
@@ -60,6 +57,8 @@
                 data-verification-sent="{{ ($verificationSent ?? false) ? '1' : '0' }}"
                 @if($errors->has('email')) data-email-error="{{ $errors->first('email') }}" @endif
             >
+                @include('kkprofiling::partials.wizard.progress-header')
+
                 <div class="kkp-paper" id="kkpFormCard">
                     <div class="kkp-responsive-container">
 

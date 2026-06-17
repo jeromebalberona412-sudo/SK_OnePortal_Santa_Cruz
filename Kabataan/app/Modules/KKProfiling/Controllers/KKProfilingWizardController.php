@@ -73,13 +73,36 @@ class KKProfilingWizardController extends Controller
         $wizard = $this->requireWizard();
 
         $request->validate([
-            'school_id'          => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'barangay_clearance' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'document_type'      => ['nullable', 'in:school_id,barangay_clearance'],
+            'school_id'          => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'barangay_clearance' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
         ]);
 
+        $schoolId = $request->file('school_id');
+        $clearance = $request->file('barangay_clearance');
+        $documentType = $request->input('document_type');
+
+        if ($schoolId && $clearance) {
+            throw ValidationException::withMessages([
+                'document_type' => ['You can only upload one supporting document at a time.'],
+            ]);
+        }
+
+        if ($documentType === 'school_id' && $clearance) {
+            throw ValidationException::withMessages([
+                'document_type' => ['Selected School ID but a Barangay Clearance file was uploaded.'],
+            ]);
+        }
+
+        if ($documentType === 'barangay_clearance' && $schoolId) {
+            throw ValidationException::withMessages([
+                'document_type' => ['Selected Barangay Clearance but a School ID file was uploaded.'],
+            ]);
+        }
+
         $files = [
-            'school_id'          => $request->file('school_id'),
-            'barangay_clearance' => $request->file('barangay_clearance'),
+            'school_id'          => $documentType === 'school_id' ? $schoolId : null,
+            'barangay_clearance' => $documentType === 'barangay_clearance' ? $clearance : null,
         ];
 
         $hasUpload = collect($files)->contains(fn ($file) => $file instanceof \Illuminate\Http\UploadedFile);

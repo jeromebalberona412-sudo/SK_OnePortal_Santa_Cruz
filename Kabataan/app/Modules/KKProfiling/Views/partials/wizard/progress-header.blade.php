@@ -1,4 +1,4 @@
-{{-- Sticky 4-step progress header — always at the top of the KK Profiling page --}}
+{{-- 4-step progress indicator — above the registration form --}}
 <header class="kkp-wizard-progress-header" id="kkpWizardProgressHeader" aria-label="Registration progress">
     <div class="kkp-wizard-progress-inner">
         <ol class="kkp-wizard-steps" id="kkpWizardSteps">

@@ -1,11 +1,12 @@
 .kkp-wizard-progress-header {
-    position: sticky;
-    top: 0;
-    z-index: 1200;
+    position: relative;
+    z-index: 1;
     width: 100%;
+    margin-bottom: 1rem;
     background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.25);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
 }
 
 .kkp-wizard-progress-inner {
@@ -169,6 +170,75 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1rem;
+}
+
+.kkp-wizard-doc-type-fieldset {
+    border: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+}
+
+.kkp-wizard-doc-type-legend {
+    display: block;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.kkp-wizard-doc-type-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.85rem;
+}
+
+.kkp-wizard-doc-type-option {
+    display: block;
+    cursor: pointer;
+}
+
+.kkp-wizard-doc-type-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.kkp-wizard-doc-type-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.95rem 1rem;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kkp-wizard-doc-type-option input:checked + .kkp-wizard-doc-type-card {
+    border-color: #0369a1;
+    background: #f0f9ff;
+    box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.12);
+}
+
+.kkp-wizard-doc-type-option input:focus-visible + .kkp-wizard-doc-type-card {
+    outline: 2px solid #0369a1;
+    outline-offset: 2px;
+}
+
+.kkp-wizard-doc-type-name {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.95rem;
+}
+
+.kkp-wizard-doc-type-desc {
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.kkp-wizard-upload-panel {
+    margin-top: 0.25rem;
 }
 
 .kkp-wizard-upload-field {

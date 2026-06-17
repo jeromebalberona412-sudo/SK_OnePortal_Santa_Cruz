@@ -167,11 +167,13 @@ class KkRegistrationDraftService
 
             $path = $file->storeAs($dir, $filename, self::TEMP_DISK);
 
-            $stored[$key] = [
-                'path'          => $path,
-                'original_name' => $file->getClientOriginalName(),
-                'mime'          => $file->getMimeType(),
-                'size'          => $file->getSize(),
+            $stored = [
+                $key => [
+                    'path'          => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'mime'          => $file->getMimeType(),
+                    'size'          => $file->getSize(),
+                ],
             ];
         }
 

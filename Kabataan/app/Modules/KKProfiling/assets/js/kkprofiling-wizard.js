@@ -34,9 +34,120 @@
     const setPasswordCard = document.getElementById('setPasswordCard');
     const regSuccessCard = document.getElementById('regSuccessCard');
 
+    const DOC_MAX_BYTES = 10 * 1024 * 1024;
+    const DOC_ALLOWED_TYPES = ['image/jpeg', 'image/png'];
+    const DOC_ALLOWED_EXT = ['.jpg', '.jpeg', '.png'];
+
+    const docTypeRadios = document.querySelectorAll('input[name="document_type"]');
+    const schoolIdUploadPanel = document.getElementById('kkpSchoolIdUpload');
+    const clearanceUploadPanel = document.getElementById('kkpBarangayClearanceUpload');
+    const schoolIdInput = document.getElementById('kkpSchoolId');
+    const clearanceInput = document.getElementById('kkpBarangayClearance');
+    const docUploadError = document.getElementById('kkpDocUploadError');
+
     let currentStep = Math.min(Math.max(initialStep, 1), 4);
     let emailVerified = emailVerifiedOnLoad;
     let verificationSent = verificationSentOnLoad;
+
+    function hideDocUploadError() {
+        if (docUploadError) {
+            docUploadError.hidden = true;
+            docUploadError.textContent = '';
+        }
+    }
+
+    function showDocUploadError(message) {
+        if (docUploadError) {
+            docUploadError.textContent = message;
+            docUploadError.hidden = false;
+        } else {
+            alert(message);
+        }
+    }
+
+    function isAllowedDocumentFile(file) {
+        if (!file) {
+            return false;
+        }
+
+        const name = file.name.toLowerCase();
+        const hasAllowedExt = DOC_ALLOWED_EXT.some((ext) => name.endsWith(ext));
+
+        return DOC_ALLOWED_TYPES.includes(file.type) || hasAllowedExt;
+    }
+
+    function validateDocumentFile(file) {
+        if (!file) {
+            return null;
+        }
+
+        if (!isAllowedDocumentFile(file)) {
+            return 'Only JPG or PNG images are allowed.';
+        }
+
+        if (file.size > DOC_MAX_BYTES) {
+            return 'Image must be 10MB or smaller.';
+        }
+
+        return null;
+    }
+
+    function getSelectedDocumentType() {
+        return document.querySelector('input[name="document_type"]:checked')?.value || '';
+    }
+
+    function clearDocumentInput(input) {
+        if (!input) {
+            return;
+        }
+
+        input.value = '';
+    }
+
+    function syncDocumentUploadPanels() {
+        const selectedType = getSelectedDocumentType();
+
+        hideDocUploadError();
+
+        if (schoolIdUploadPanel) {
+            schoolIdUploadPanel.hidden = selectedType !== 'school_id';
+        }
+
+        if (clearanceUploadPanel) {
+            clearanceUploadPanel.hidden = selectedType !== 'barangay_clearance';
+        }
+
+        if (selectedType === 'school_id') {
+            clearDocumentInput(clearanceInput);
+        } else if (selectedType === 'barangay_clearance') {
+            clearDocumentInput(schoolIdInput);
+        } else {
+            clearDocumentInput(schoolIdInput);
+            clearDocumentInput(clearanceInput);
+        }
+    }
+
+    function bindDocumentTypeControls() {
+        docTypeRadios.forEach((radio) => {
+            radio.addEventListener('change', syncDocumentUploadPanels);
+        });
+
+        [schoolIdInput, clearanceInput].forEach((input) => {
+            input?.addEventListener('change', () => {
+                const error = validateDocumentFile(input.files?.[0]);
+
+                if (error) {
+                    clearDocumentInput(input);
+                    showDocUploadError(error);
+                    return;
+                }
+
+                hideDocUploadError();
+            });
+        });
+
+        syncDocumentUploadPanels();
+    }
 
     function csrfToken() {
         return document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -328,21 +439,50 @@
     }
 
     async function saveStep3() {
+        hideDocUploadError();
+
+        const documentType = getSelectedDocumentType();
+        const schoolId = schoolIdInput;
+        const clearance = clearanceInput;
+        const schoolFile = schoolId?.files?.[0] || null;
+        const clearanceFile = clearance?.files?.[0] || null;
+
+        if (schoolFile && clearanceFile) {
+            showDocUploadError('You can only upload one supporting document at a time.');
+            return false;
+        }
+
+        if (documentType === 'school_id') {
+            const error = validateDocumentFile(schoolFile);
+            if (error) {
+                showDocUploadError(error);
+                return false;
+            }
+        } else if (documentType === 'barangay_clearance') {
+            const error = validateDocumentFile(clearanceFile);
+            if (error) {
+                showDocUploadError(error);
+                return false;
+            }
+        }
+
         showLoading('Saving documents...');
 
         let saved = false;
 
         try {
             const formData = new FormData();
-            const schoolId = document.getElementById('kkpSchoolId');
-            const clearance = document.getElementById('kkpBarangayClearance');
 
-            if (schoolId?.files?.[0]) {
-                formData.append('school_id', schoolId.files[0]);
+            if (documentType) {
+                formData.append('document_type', documentType);
             }
 
-            if (clearance?.files?.[0]) {
-                formData.append('barangay_clearance', clearance.files[0]);
+            if (documentType === 'school_id' && schoolFile) {
+                formData.append('school_id', schoolFile);
+            }
+
+            if (documentType === 'barangay_clearance' && clearanceFile) {
+                formData.append('barangay_clearance', clearanceFile);
             }
 
             await postFormData(`${apiBase}/step-3`, formData);
@@ -350,7 +490,12 @@
             root.dataset.verificationSent = '0';
             saved = true;
         } catch (error) {
-            alert(error.message);
+            const message = error.errors?.document_type?.[0]
+                || error.errors?.school_id?.[0]
+                || error.errors?.barangay_clearance?.[0]
+                || error.message;
+
+            showDocUploadError(message);
         } finally {
             hideLoading();
         }
@@ -505,6 +650,7 @@
     }
 
     async function initWizard() {
+        bindDocumentTypeControls();
         await restoreDraftState();
 
         if (emailVerifiedOnLoad) {
