@@ -253,15 +253,17 @@
 
     function updateNavButtons(step) {
         const showWizardNav = step !== 4 || !emailVerified;
-        const canGoBack = step > 1 && (step !== 4 || !emailVerified);
+        const canGoBack = step >= 2 && step <= 4 && (step !== 4 || !emailVerified);
 
         if (navBar) {
             navBar.hidden = !showWizardNav;
+            navBar.classList.toggle('kkp-wizard-nav--step1', step === 1);
         }
 
         if (backBtn) {
             backBtn.hidden = !canGoBack;
             backBtn.disabled = !canGoBack;
+            backBtn.style.display = canGoBack ? '' : 'none';
         }
 
         if (nextBtn) {

@@ -189,6 +189,18 @@
     text-align: center;
 }
 
+.kkp-hdr-input-auto {
+    width: 92px;
+    font-size: 10px;
+    color: #64748b;
+    font-style: italic;
+}
+
+.kkp-hdr-input-auto::placeholder {
+    color: #64748b;
+    opacity: 1;
+}
+
 .kkp-form-logo {
     flex-shrink: 0;
 }
@@ -238,12 +250,103 @@
 }
 
 /* ── FIELD VALIDATION ERRORS ── */
+.kkp-name-col,
+.kkp-loc-col,
+.kkp-inline-pair,
+.kkp-footer-fb,
+.kkp-footer-fb-field,
+.kkp-footer-chat,
+.kkp-personal-left,
+.kkp-sex-block,
+.kkp-age-select-box {
+    position: relative;
+}
+
 .kkp-field-error {
+    position: absolute;
+    left: 0;
+    right: 0;
     display: block;
-    font-size: 9.5px;
+    font-size: 8.5px;
     color: #dc2626;
-    margin-top: 2px;
+    margin: 0;
     font-weight: 500;
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.kkp-name-col > .kkp-field-error,
+.kkp-loc-col > .kkp-field-error {
+    top: 19px;
+}
+
+.kkp-inline-pair > .kkp-field-error {
+    top: calc(100% - 10px);
+    left: 0;
+    right: auto;
+    min-width: 140px;
+    text-align: left;
+}
+
+.kkp-footer-fb > .kkp-field-error {
+    display: none;
+}
+
+.kkp-sex-block + .kkp-field-error,
+.kkp-section-error {
+    position: static;
+    display: block;
+    text-align: left;
+    margin-top: 3px;
+    white-space: normal;
+    pointer-events: auto;
+}
+
+.kkp-demo-block {
+    border: 1px solid #bbb;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: wrap;
+    min-width: 0;
+    position: relative;
+}
+
+.kkp-demo-block-error {
+    position: static;
+    flex-basis: 100%;
+    width: 100%;
+    order: 99;
+    text-align: left;
+    padding: 2px 6px 3px;
+    border-top: 1px solid #fecaca;
+    background: #fef2f2;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    pointer-events: auto;
+}
+
+.kkp-footer-chat > .kkp-field-error {
+    display: none;
+}
+
+.kkp-footer-chat > .kkp-footer-chat-error {
+    position: absolute;
+    top: calc(100% - 10px);
+    left: 0;
+    right: auto;
+    display: block;
+    min-width: 72px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: unset;
 }
 
 .kkp-input-err {
@@ -337,7 +440,7 @@
     font-size: 9.5px;
     color: #1f2937;
     text-align: center;
-    margin-top: 1px;
+    margin-top: 10px;
     white-space: nowrap;
 }
 
@@ -373,12 +476,67 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+    padding-bottom: 12px;
+    position: relative;
 }
 
+.kkp-name-input-wrap {
+    width: 100%;
+    height: 20px;
+    flex: 0 0 20px;
+    overflow: hidden;
+}
+
+.kkp-name-input,
 #kkpLastName,
 #kkpFirstName,
 #kkpMiddleName {
     text-transform: uppercase;
+    text-align: center;
+    width: 100%;
+    height: 20px;
+    line-height: 16px;
+    padding: 2px 2px 1px;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-size: 12px;
+}
+
+.kkp-name-max-hint {
+    position: absolute;
+    top: 19px;
+    left: 0;
+    right: 0;
+    display: block;
+    font-size: 8px;
+    color: #dc2626;
+    font-weight: 500;
+    line-height: 1.15;
+    text-align: center;
+    white-space: normal;
+    pointer-events: none;
+    z-index: 4;
+}
+
+#kkpAssemblyNoCell {
+    overflow: visible;
+}
+
+#kkpAssemblyNoCell .kkp-demo-block-options {
+    overflow: visible;
+    padding: 3px 4px;
+}
+
+#kkpAssemblyNoCell .kkp-chk-lbl {
+    white-space: normal;
+    font-size: 9px;
+    line-height: 1.25;
+    align-items: flex-start;
+    width: 100%;
+}
+
+#kkpAssemblyNoCell .kkp-sq-chk {
+    margin-top: 1px;
 }
 
 /* ── LOCATION ROW: 5 columns ── */
@@ -403,7 +561,7 @@
     border: 1px solid #ccc;
     padding: 5px 8px;
     margin: 4px 0;
-    align-items: center;
+    align-items: start;
     min-width: 0;
 }
 
@@ -463,11 +621,83 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 4px;
     flex-wrap: nowrap;
 }
 
-.kkp-age-dob-row .kkp-uline-short,
+.kkp-inline-pair--age {
+    align-items: flex-end;
+    padding-bottom: 0;
+}
+
+.kkp-age-select-box {
+    display: inline-block;
+    vertical-align: bottom;
+    min-width: 64px;
+    min-height: 24px;
+    position: relative;
+}
+
+.kkp-uline-age {
+    width: 64px;
+    min-width: 64px;
+    height: 24px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #111;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.kkp-age-select-compact {
+    height: 24px;
+    line-height: 1.3;
+}
+
+.kkp-age-select-compact.is-expanded {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 40;
+    width: 64px;
+    min-width: 64px;
+    height: auto;
+    max-height: 120px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #b0b8c1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+    scrollbar-width: thin;
+}
+
+.kkp-age-select-compact.is-expanded option {
+    padding: 2px 4px;
+}
+
+.kkp-inline-pair--birthday {
+    align-items: flex-start;
+    padding-bottom: 0;
+}
+
+.kkp-birthday-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 140px;
+}
+
+.kkp-birthday-field .kkp-uline-med {
+    width: 100%;
+}
+
+.kkp-birthday-hint {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 1px;
+    line-height: 1.2;
+}
+
 .kkp-age-dob-row .kkp-uline-med {
     text-align: center;
 }
@@ -476,6 +706,8 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    position: relative;
+    padding-bottom: 12px;
 }
 
 .kkp-inline-label {
@@ -531,16 +763,6 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-}
-
-/* ── DEMO BLOCK: label sidebar + options ── */
-.kkp-demo-block {
-    border: 1px solid #bbb;
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    flex-wrap: nowrap;
-    min-width: 0;
 }
 
 .kkp-demo-block-label {
@@ -631,17 +853,90 @@
 /* Voter section now uses .kkp-demo-block structure - old CSS removed */
 
 /* ── VOTER QUESTIONS 2-COLUMN GRID ── */
+.kkp-voter-questions-wrap {
+    position: relative;
+    margin-bottom: 6px;
+}
+
 .kkp-voter-questions-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
-    margin-bottom: 6px;
+    position: relative;
+    z-index: 2;
 }
 
 .kkp-voter-questions-col {
     display: flex;
     flex-direction: column;
     gap: 6px;
+}
+
+.kkp-assembly-question .kkp-demo-block-options {
+    gap: 2px;
+}
+
+.kkp-assembly-chk-yes,
+.kkp-assembly-chk-no {
+    position: relative;
+    padding-right: 16px;
+}
+
+.kkp-assembly-arrow {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    font-weight: 700;
+    color: #b8c0c8;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.kkp-assembly-arrow--on {
+    color: #111;
+}
+
+.kkp-assembly-flow-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.kkp-assembly-flow-path {
+    fill: none;
+    stroke: #c5ccd3;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    opacity: 0.55;
+}
+
+.kkp-assembly-flow-path--on {
+    stroke: #111;
+    opacity: 1;
+    stroke-width: 1.8;
+}
+
+.kkp-assembly-followup--inactive {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.kkp-assembly-followup--inactive .kkp-sq-chk {
+    cursor: not-allowed;
+}
+
+.kkp-assembly-followup--active {
+    opacity: 1;
+    pointer-events: auto;
+    outline: 1px solid #64748b;
+    outline-offset: -1px;
 }
 
 /* ── FOOTER ROW: FB + Group Chat ── */
@@ -660,15 +955,41 @@
     display: flex;
     align-items: center;
     gap: 5px;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.kkp-footer-fb-field {
+    position: relative;
+    flex: 0 0 auto;
+    width: 130px;
+    max-width: 130px;
+    padding-bottom: 12px;
+}
+
+.kkp-footer-fb-field > .kkp-field-error {
+    position: absolute;
+    top: calc(100% - 10px);
+    left: 0;
+    right: 0;
+    text-align: left;
+    white-space: normal;
 }
 
 .kkp-footer-fb .kkp-inline-label {
     font-size: 9.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .kkp-footer-fb .kkp-uline-fb {
     font-size: 10px;
+    width: 100%;
     max-width: 130px;
+}
+
+.kkp-email-input {
+    text-transform: lowercase;
 }
 
 .kkp-footer-chat {
@@ -677,6 +998,8 @@
     gap: 6px;
     flex-shrink: 0;
     flex-wrap: nowrap;
+    position: relative;
+    padding-bottom: 12px;
 }
 
 /* ── THANK YOU ── */
@@ -757,10 +1080,15 @@
     position: relative;
     z-index: 1;
     width: 100%;
+    height: 22px;
+    flex: 0 0 22px;
+    overflow: hidden;
 }
 
 .kkp-sig-name-input {
     width: 100%;
+    height: 22px;
+    line-height: 18px;
     border: none;
     border-bottom: 1.5px solid #1a1a1a;
     outline: none;
@@ -768,9 +1096,10 @@
     font-family: inherit;
     color: #111;
     background: transparent;
-    padding: 4px 2px;
+    padding: 2px 2px 1px;
     box-sizing: border-box;
     text-align: center;
+    overflow: hidden;
 }
 
 /* Label below */
@@ -1176,12 +1505,16 @@
 
 /* ── RESPONSIVE ── */
 body.homepage-body.kkp-form-page {
-    overflow-x: auto;
+    overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
     body.homepage-body.kkp-form-page {
         overflow-x: auto;
+    }
+
+    .kkp-assembly-flow-svg {
+        display: none;
     }
 
     .kkp-page-wrap {
@@ -1241,6 +1574,13 @@ body.homepage-body.kkp-form-page {
     .kkp-chk-lbl {
         white-space: nowrap;
         flex-wrap: nowrap;
+    }
+
+    #kkpAssemblyNoCell .kkp-chk-lbl {
+        white-space: normal;
+        flex-wrap: wrap;
+        font-size: 9px;
+        line-height: 1.25;
     }
 }
 

@@ -8,11 +8,19 @@
 
                             <div class="kkp-form-header-fields">
 
-                                <div class="kkp-hdr-field">
+                                <div class="kkp-hdr-field kkp-hdr-field--respondent">
 
                                     <span class="kkp-hdr-label">Respondent #:</span>
 
-                                    <input type="text" class="kkp-hdr-input kkp-hdr-input-readonly" value="" readonly tabindex="-1" aria-readonly="true">
+                                    <input
+                                        type="text"
+                                        class="kkp-hdr-input kkp-hdr-input-readonly kkp-hdr-input-auto"
+                                        value=""
+                                        placeholder="Auto-generated"
+                                        readonly
+                                        tabindex="-1"
+                                        aria-readonly="true"
+                                    >
 
                                 </div>
 
@@ -70,7 +78,9 @@
 
                         <div class="kkp-name-col">
 
-                            <input type="text" name="last_name" id="kkpLastName" class="kkp-uline" placeholder=" " required maxlength="100" autocomplete="off">
+                            <div class="kkp-name-input-wrap">
+                                <input type="text" name="last_name" id="kkpLastName" class="kkp-uline kkp-name-input" placeholder=" " required maxlength="50" autocomplete="off">
+                            </div>
 
                             <label class="kkp-col-label">Last Name <span class="kkp-required">*</span></label>
 
@@ -78,7 +88,9 @@
 
                         <div class="kkp-name-col">
 
-                            <input type="text" name="first_name" id="kkpFirstName" class="kkp-uline" placeholder=" " required maxlength="100" autocomplete="off">
+                            <div class="kkp-name-input-wrap">
+                                <input type="text" name="first_name" id="kkpFirstName" class="kkp-uline kkp-name-input" placeholder=" " required maxlength="50" autocomplete="off">
+                            </div>
 
                             <label class="kkp-col-label">First Name <span class="kkp-required">*</span></label>
 
@@ -86,7 +98,9 @@
 
                         <div class="kkp-name-col">
 
-                            <input type="text" name="middle_name" id="kkpMiddleName" class="kkp-uline" placeholder=" " maxlength="100" autocomplete="off">
+                            <div class="kkp-name-input-wrap">
+                                <input type="text" name="middle_name" id="kkpMiddleName" class="kkp-uline kkp-name-input" placeholder=" " maxlength="50" autocomplete="off">
+                            </div>
 
                             <label class="kkp-col-label">Middle Name</label>
 
@@ -210,24 +224,31 @@
 
                             <div class="kkp-age-dob-row">
 
-                                <div class="kkp-inline-pair">
+                                <div class="kkp-inline-pair kkp-inline-pair--age">
 
                                     <label class="kkp-inline-label">Age: <span class="kkp-required">*</span></label>
 
-                                    <input type="text" name="age" id="kkpAge" inputmode="numeric" pattern="[0-9]*" maxlength="2" class="kkp-uline kkp-uline-short" placeholder=" " required aria-describedby="kkpAgeHint">
+                                    <div class="kkp-age-select-box">
+                                        <select name="age" id="kkpAge" class="kkp-uline kkp-uline-select kkp-uline-age kkp-age-select-compact" required>
+                                            <option value="" disabled selected>Select</option>
+                                            @for ($ageOption = 15; $ageOption <= 30; $ageOption++)
+                                                <option value="{{ $ageOption }}">{{ $ageOption }}</option>
+                                            @endfor
+                                        </select>
+                                    </div>
 
                                 </div>
 
-                                <div class="kkp-inline-pair">
+                                <div class="kkp-inline-pair kkp-inline-pair--birthday">
 
                                     <label class="kkp-inline-label">Birthday: <span class="kkp-required">*</span></label>
 
-                                    <input type="date" name="birthday" id="kkpBirthday" class="kkp-uline kkp-uline-med" required>
+                                    <div class="kkp-birthday-field">
+                                        <input type="date" name="birthday" id="kkpBirthday" class="kkp-uline kkp-uline-med" required>
+                                        <span class="kkp-hint kkp-birthday-hint">(mm/dd/yyyy)</span>
+                                    </div>
 
                                 </div>
-
-                                <span class="kkp-hint" id="kkpAgeHint" style="display:block;text-align:center;margin-top:2px;">Age: 15–30 years old only</span>
-                                <span class="kkp-hint" style="display:block;text-align:center;margin-top:2px;">(mm/dd/yyyy)</span>
 
                             </div>
 
@@ -239,7 +260,7 @@
 
                                 <label class="kkp-inline-label">E-mail address: <span class="kkp-required">*</span></label>
 
-                                <input type="email" name="email" class="kkp-uline kkp-uline-med" placeholder=" " maxlength="150" required>
+                                <input type="email" name="email" id="kkpEmail" class="kkp-uline kkp-uline-med kkp-email-input" placeholder=" " maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false" required>
 
                             </div>
 
@@ -427,6 +448,8 @@
 
                             </div>
 
+                            <div class="kkp-voter-questions-wrap">
+
                             <div class="kkp-voter-questions-grid">
 
                                 {{-- LEFT COLUMN --}}
@@ -464,15 +487,21 @@
 
                                     </div>
 
-                                    <div class="kkp-demo-block">
+                                    <div class="kkp-demo-block kkp-assembly-question" id="kkpAssemblyQuestion">
 
                                         <div class="kkp-demo-block-label">Have you attended a KK Assembly? <span class="kkp-required">*</span></div>
 
                                         <div class="kkp-demo-block-options">
 
-                                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_assemblyChk" value="Yes" onchange="kkpSingleCheck(this,'kkpKkAssembly'); kkpHandleAssembly(this)"> Yes</label>
+                                            <label class="kkp-chk-lbl kkp-assembly-chk-yes">
+                                                <input type="checkbox" class="kkp-sq-chk" name="kk_assemblyChk" value="Yes" onchange="kkpSingleCheck(this,'kkpKkAssembly'); kkpHandleAssembly(this)"> Yes
+                                                <span class="kkp-assembly-arrow kkp-assembly-arrow--yes" aria-hidden="true">→</span>
+                                            </label>
 
-                                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kk_assemblyChk" value="No" onchange="kkpSingleCheck(this,'kkpKkAssembly'); kkpHandleAssembly(this)"> No</label>
+                                            <label class="kkp-chk-lbl kkp-assembly-chk-no">
+                                                <input type="checkbox" class="kkp-sq-chk" name="kk_assemblyChk" value="No" onchange="kkpSingleCheck(this,'kkpKkAssembly'); kkpHandleAssembly(this)"> No
+                                                <span class="kkp-assembly-arrow kkp-assembly-arrow--no" aria-hidden="true">→</span>
+                                            </label>
 
                                             <input type="hidden" id="kkpKkAssembly" name="kk_assembly">
 
@@ -501,7 +530,7 @@
 
                                     </div>
 
-                                    <div class="kkp-demo-block" id="kkpAssemblyYesCell">
+                                    <div class="kkp-demo-block kkp-assembly-followup" id="kkpAssemblyYesCell">
 
                                         <div class="kkp-demo-block-label">If Yes, How many times? <span class="kkp-required">*</span></div>
 
@@ -519,7 +548,7 @@
 
                                     </div>
 
-                                    <div class="kkp-demo-block" id="kkpAssemblyNoCell">
+                                    <div class="kkp-demo-block kkp-assembly-followup" id="kkpAssemblyNoCell">
 
                                         <div class="kkp-demo-block-label">If No, Why? <span class="kkp-required">*</span></div>
 
@@ -539,6 +568,13 @@
 
                             </div>
 
+                            <svg class="kkp-assembly-flow-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                                <path class="kkp-assembly-flow-path kkp-assembly-flow-path--yes" d="M42 72 C55 72, 58 38, 72 38" />
+                                <path class="kkp-assembly-flow-path kkp-assembly-flow-path--no" d="M42 88 C58 88, 58 78, 72 78" />
+                            </svg>
+
+                            </div>
+
                         </div>
 
                     </div>
@@ -551,9 +587,11 @@
 
                         <div class="kkp-footer-fb">
 
-                            <label class="kkp-inline-label">FB Account: <span class="kkp-required">*</span></label>
+                            <label class="kkp-inline-label" for="kkpFacebook">FB Account: <span class="kkp-required">*</span></label>
 
-                            <input type="text" name="facebook" class="kkp-uline kkp-uline-fb" placeholder=" " maxlength="150" required>
+                            <div class="kkp-footer-fb-field">
+                                <input type="text" name="facebook" id="kkpFacebook" class="kkp-uline kkp-uline-fb" placeholder=" " minlength="3" maxlength="35" required>
+                            </div>
 
                         </div>
 

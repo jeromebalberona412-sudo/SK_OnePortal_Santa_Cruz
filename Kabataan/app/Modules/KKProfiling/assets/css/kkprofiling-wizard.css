@@ -122,6 +122,14 @@
     padding: 1rem 0 0.5rem;
 }
 
+.kkp-wizard-nav--step1 {
+    justify-content: flex-end;
+}
+
+.kkp-wizard-nav--step1 #kkpWizardBackBtn {
+    display: none !important;
+}
+
 .kkp-wizard-btn {
     display: inline-flex;
     align-items: center;
