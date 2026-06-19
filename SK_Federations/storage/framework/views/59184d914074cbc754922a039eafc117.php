@@ -1,8 +1,6 @@
-@extends('layout::app')
+<?php $__env->startSection('title', 'Manage Account'); ?>
 
-@section('title', 'Manage Account')
-
-@php
+<?php
     $isOfficials = ($accountType ?? 'sk_federation') === 'sk_officials';
     $pageTitle = $isOfficials ? 'Manage SK Officials Account' : 'Manage SK Federation Account';
     $pageSubtitle = $isOfficials
@@ -15,54 +13,54 @@
     $accountJsVersion = @filemtime(app_path('Modules/Accounts/assets/js/account.js')) ?: time();
     $batchTemplateType = $isOfficials ? 'officials' : 'federation';
     $batchRole = $isOfficials ? 'sk_official' : 'sk_fed';
-@endphp
+?>
 
-@push('styles')
-    <link rel="stylesheet" href="{{ url('/modules/accounts/css/account.css') }}?v={{ $accountCssVersion }}">
-@endpush
+<?php $__env->startPush('styles'); ?>
+    <link rel="stylesheet" href="<?php echo e(url('/modules/accounts/css/account.css')); ?>?v=<?php echo e($accountCssVersion); ?>">
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="main-content-modern accounts-page container-fluid" id="mainContent"
      x-data="accountsPage()"
      x-init="init()"
-     data-account-type="{{ $accountType ?? 'sk_federation' }}"
-     data-batch-role="{{ $batchRole }}"
-     data-batch-template-type="{{ $batchTemplateType }}"
-     @unless($isOfficials)
-     data-taken-federation-positions="{{ json_encode(array_values($takenFederationPositions ?? [])) }}"
-     @endunless>
+     data-account-type="<?php echo e($accountType ?? 'sk_federation'); ?>"
+     data-batch-role="<?php echo e($batchRole); ?>"
+     data-batch-template-type="<?php echo e($batchTemplateType); ?>"
+     <?php if (! ($isOfficials)): ?>
+     data-taken-federation-positions="<?php echo e(json_encode(array_values($takenFederationPositions ?? []))); ?>"
+     <?php endif; ?>>
 
     <div class="manage-account-container">
         <div class="page-header-modern-with-button">
             <div class="page-header-top">
-                <h1 class="page-title-modern" id="pageTitle">{{ $pageTitle }}</h1>
-                <p class="page-subtitle-modern" id="pageSubtitle">{{ $pageSubtitle }}</p>
+                <h1 class="page-title-modern" id="pageTitle"><?php echo e($pageTitle); ?></h1>
+                <p class="page-subtitle-modern" id="pageSubtitle"><?php echo e($pageSubtitle); ?></p>
             </div>
             <div class="page-header-filters">
-                <form method="GET" action="{{ $isOfficials ? route('accounts.officials.index') : route('accounts.federation.index') }}" class="accounts-filter-form">
+                <form method="GET" action="<?php echo e($isOfficials ? route('accounts.officials.index') : route('accounts.federation.index')); ?>" class="accounts-filter-form">
                     <div class="accounts-filter-grid">
                         <div class="filter-dropdown-container">
                             <label class="filter-label" for="barangayFilter">Barangay</label>
                             <select id="barangayFilter" class="filter-dropdown form-select" name="barangay_id">
                                 <option value="">All Barangays</option>
-                                @foreach($barangays as $barangay)
-                                    <option value="{{ $barangay->id }}" {{ request('barangay_id') == $barangay->id ? 'selected' : '' }}>{{ $barangay->name }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $barangays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $barangay): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($barangay->id); ?>" <?php echo e(request('barangay_id') == $barangay->id ? 'selected' : ''); ?>><?php echo e($barangay->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="filter-dropdown-container">
-                            <label class="filter-label" for="positionFilter">{{ $positionFilterLabel }}</label>
+                            <label class="filter-label" for="positionFilter"><?php echo e($positionFilterLabel); ?></label>
                             <select id="positionFilter" class="filter-dropdown form-select" name="position">
                                 <option value="">All Positions</option>
-                                @foreach($positionOptions ?? [] as $value => $label)
-                                    <option value="{{ $value }}" {{ request('position') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $positionOptions ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($value); ?>" <?php echo e(request('position') === $value ? 'selected' : ''); ?>><?php echo e($label); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="search-container">
                             <label class="filter-label" for="searchInput">Search</label>
                             <div class="search-input-wrap">
-                                <input type="text" id="searchInput" name="search" class="search-input form-control" value="{{ request('search') }}" placeholder="Search accounts...">
+                                <input type="text" id="searchInput" name="search" class="search-input form-control" value="<?php echo e(request('search')); ?>" placeholder="Search accounts...">
                                 <button type="submit" class="search-btn" id="searchBtn" aria-label="Search">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <circle cx="11" cy="11" r="8"></circle>
@@ -71,21 +69,21 @@
                                 </button>
                             </div>
                         </div>
-                        @if($isOfficials)
+                        <?php if($isOfficials): ?>
                         <div class="header-action-buttons">
                             <label class="filter-label filter-label-invisible">Add</label>
                             <button type="button" class="btn-primary-modern btn-green" id="addAccountBtn" onclick="openAddAccountModal()">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
-                                <span id="addButtonText">{{ $addLabel }}</span>
+                                <span id="addButtonText"><?php echo e($addLabel); ?></span>
                             </button>
                         </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </form>
             </div>
         </div>
 
-        @if($isOfficials)
+        <?php if($isOfficials): ?>
         <div class="accounts-table-toolbar"
              x-show="selectedCount > 0"
              x-transition:enter="float-delete-enter"
@@ -99,42 +97,42 @@
                 <span x-text="'Delete ' + selectedCount + ' row' + (selectedCount === 1 ? '' : 's')"></span>
             </button>
         </div>
-        @endif
+        <?php endif; ?>
 
         <div class="table-card-modern">
             <div class="table-responsive">
                 <table class="accounts-table" id="accountsTable">
                     <thead>
                         <tr>
-                            @if($isOfficials)
+                            <?php if($isOfficials): ?>
                             <th class="th-checkbox">
                                 <input type="checkbox" class="account-checkbox account-checkbox-header"
                                        :checked="selectAll" @change="toggleSelectAll($event.target.checked)" aria-label="Select all visible rows">
                             </th>
-                            @endif
+                            <?php endif; ?>
                             <th class="th-name accounts-th-sortable" data-sort-key="name" data-sort-type="text" aria-sort="none">
                                 <button type="button" class="accounts-sort-btn" aria-haspopup="menu" aria-expanded="false">Name <span class="accounts-sort-icon" aria-hidden="true"></span></button>
                             </th>
                             <th class="th-email">Email Address</th>
-                            @if($isOfficials)
+                            <?php if($isOfficials): ?>
                                 <th class="th-barangay">Barangay</th>
-                            @else
+                            <?php else: ?>
                                 <th class="th-barangay">Barangay</th>
-                            @endif
-                            <th class="th-position">{{ $isOfficials ? 'Position' : 'SK Position' }}</th>
-                            @if($isOfficials)
+                            <?php endif; ?>
+                            <th class="th-position"><?php echo e($isOfficials ? 'Position' : 'SK Position'); ?></th>
+                            <?php if($isOfficials): ?>
                                 <th class="th-term accounts-th-sortable" data-sort-key="term" data-sort-type="date" aria-sort="none">
                                     <button type="button" class="accounts-sort-btn" aria-haspopup="menu" aria-expanded="false">Term End <span class="accounts-sort-icon" aria-hidden="true"></span></button>
                                 </th>
-                            @else
+                            <?php else: ?>
                                 <th class="th-federation-position">Federation Position</th>
-                            @endif
+                            <?php endif; ?>
                             <th class="th-actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="accountsTableBody">
-                        @forelse($accounts as $account)
-                            @php
+                        <?php $__empty_1 = true; $__currentLoopData = $accounts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $account): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php
                                 $profile = $account->officialProfile;
                                 $term = $profile?->latestTerm;
                                 $firstName = $profile?->first_name ? mb_strtoupper($profile->first_name, 'UTF-8') : null;
@@ -149,46 +147,49 @@
                                 ])->filter()->implode(' '));
                                 $displayName = $fullName !== '' ? $fullName : ($account->name ?? 'N/A');
                                 $federationPosition = $profile?->displayFederationPosition();
-                            @endphp
-                            <tr data-account-id="{{ $account->id }}"
-                                data-sort-name="{{ strtolower($displayName) }}"
-                                data-sort-email="{{ strtolower($account->email ?? '') }}"
-                                data-sort-barangay="{{ strtolower($account->barangay?->name ?? '') }}"
-                                data-sort-position="{{ strtolower($profile?->position ?? '') }}"
-                                data-sort-federation-position="{{ strtolower($federationPosition ?? '') }}"
-                                data-sort-term="{{ $term?->term_end?->format('Y-m-d') ?? '' }}">
-                                @if($isOfficials)
+                            ?>
+                            <tr data-account-id="<?php echo e($account->id); ?>"
+                                data-sort-name="<?php echo e(strtolower($displayName)); ?>"
+                                data-sort-email="<?php echo e(strtolower($account->email ?? '')); ?>"
+                                data-sort-barangay="<?php echo e(strtolower($account->barangay?->name ?? '')); ?>"
+                                data-sort-position="<?php echo e(strtolower($profile?->position ?? '')); ?>"
+                                data-sort-federation-position="<?php echo e(strtolower($federationPosition ?? '')); ?>"
+                                data-sort-term="<?php echo e($term?->term_end?->format('Y-m-d') ?? ''); ?>">
+                                <?php if($isOfficials): ?>
                                 <td class="td-checkbox">
                                     <input type="checkbox" class="account-checkbox account-row-checkbox"
-                                           value="{{ $account->id }}"
-                                           @change="toggleRow({{ $account->id }}, $event.target.checked)"
-                                           :checked="selectedRows.includes({{ $account->id }})"
-                                           aria-label="Select {{ $displayName }}">
+                                           value="<?php echo e($account->id); ?>"
+                                           @change="toggleRow(<?php echo e($account->id); ?>, $event.target.checked)"
+                                           :checked="selectedRows.includes(<?php echo e($account->id); ?>)"
+                                           aria-label="Select <?php echo e($displayName); ?>">
                                 </td>
-                                @endif
-                                <td class="td-name">{{ $displayName }}</td>
-                                <td class="td-email">{{ $account->email }}</td>
-                                <td class="td-barangay">{{ $account->barangay?->name ?? '—' }}</td>
+                                <?php endif; ?>
+                                <td class="td-name"><?php echo e($displayName); ?></td>
+                                <td class="td-email"><?php echo e($account->email); ?></td>
+                                <td class="td-barangay"><?php echo e($account->barangay?->name ?? '—'); ?></td>
                                 <td class="td-position">
-                                    @if($isOfficials)
-                                        {{ $profile?->position ?? '—' }}
-                                    @else
-                                        {{ $profile?->position ?? '—' }}
-                                    @endif
+                                    <?php if($isOfficials): ?>
+                                        <?php echo e($profile?->position ?? '—'); ?>
+
+                                    <?php else: ?>
+                                        <?php echo e($profile?->position ?? '—'); ?>
+
+                                    <?php endif; ?>
                                 </td>
-                                @if($isOfficials)
-                                    <td class="td-term">{{ $term?->term_end?->format('m/d/Y') ?? '—' }}</td>
-                                @else
+                                <?php if($isOfficials): ?>
+                                    <td class="td-term"><?php echo e($term?->term_end?->format('m/d/Y') ?? '—'); ?></td>
+                                <?php else: ?>
                                     <td class="td-federation-position">
-                                        @if($federationPosition)
-                                            {{ $federationPosition }}
-                                        @else
+                                        <?php if($federationPosition): ?>
+                                            <?php echo e($federationPosition); ?>
+
+                                        <?php else: ?>
                                             <span class="text-muted">Not assigned</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
-                                @endif
+                                <?php endif; ?>
                                 <td class="td-actions">
-                                    @include('accounts::account_actions_menu', [
+                                    <?php echo $__env->make('accounts::account_actions_menu', [
                                         'account' => $account,
                                         'profile' => $profile,
                                         'term' => $term,
@@ -197,14 +198,14 @@
                                         'lastName' => $lastName,
                                         'middleName' => $middleName,
                                         'hideDelete' => ! $isOfficials,
-                                    ])
+                                    ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
-                                <td colspan="{{ $tableColspan }}" class="text-center">No accounts found.</td>
+                                <td colspan="<?php echo e($tableColspan); ?>" class="text-center">No accounts found.</td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -236,21 +237,23 @@
 
 <div id="accountsSortMenu" class="accounts-sort-menu" hidden role="menu" aria-label="Sort options"></div>
 
-@if($isOfficials)
-@include('accounts::form_sk_officials')
-@else
-@include('accounts::assign_federation_position_modal')
-@endif
-@include('accounts::view_account')
-@include('accounts::delete_account_modal')
+<?php if($isOfficials): ?>
+<?php echo $__env->make('accounts::form_sk_officials', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php else: ?>
+<?php echo $__env->make('accounts::assign_federation_position_modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php endif; ?>
+<?php echo $__env->make('accounts::view_account', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('accounts::delete_account_modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <div id="accountToast" role="status" aria-live="polite"><span id="accountToastMsg">Account successfully created!</span></div>
 <div id="accountToastEdit" role="status" aria-live="polite"><span id="accountToastEditMsg">Account updated successfully!</span></div>
 <div id="accountToastDelete" role="status" aria-live="polite"><span id="accountToastDeleteMsg">Account deleted successfully!</span></div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
-    <script src="{{ url('/modules/accounts/js/account.js') }}?v={{ $accountJsVersion }}"></script>
+<?php $__env->startPush('scripts'); ?>
+    <script src="<?php echo e(url('/modules/accounts/js/account.js')); ?>?v=<?php echo e($accountJsVersion); ?>"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layout::app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Administrator\Documents\SK_OnePortal_Santa_Cruz\SK_Federations\app\Modules\Accounts\Providers/../Views/manage_account.blade.php ENDPATH**/ ?>

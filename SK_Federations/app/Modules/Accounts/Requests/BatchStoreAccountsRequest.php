@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class BatchStoreAccountsRequest extends FormRequest
 {
+    public const MAX_ACCOUNTS = 260;
+
     public function authorize(): bool
     {
         return $this->user()?->isSkFed() ?? false;
@@ -20,7 +22,7 @@ class BatchStoreAccountsRequest extends FormRequest
                 User::ROLE_SK_OFFICIAL,
                 User::ROLE_SK_FED,
             ])],
-            'accounts' => ['required', 'array', 'min:1', 'max:100'],
+            'accounts' => ['required', 'array', 'min:1', 'max:'.self::MAX_ACCOUNTS],
             'headers' => ['nullable', 'array'],
             'headers.*' => ['nullable', 'string', 'max:100'],
             'accounts.*.first_name' => ['nullable', 'string', 'max:100'],
@@ -40,6 +42,13 @@ class BatchStoreAccountsRequest extends FormRequest
             'accounts.*.barangay_id' => ['nullable'],
             'accounts.*.term_start' => ['nullable', 'string', 'max:50'],
             'accounts.*.term_end' => ['nullable', 'string', 'max:50'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'accounts.max' => 'You can import up to '.self::MAX_ACCOUNTS.' accounts per batch upload.',
         ];
     }
 }

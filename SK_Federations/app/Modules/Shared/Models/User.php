@@ -131,6 +131,36 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(OfficialProfile::class);
     }
 
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeHasFederationAccess($query)
+    {
+        $driver = config('database.connections.'.config('database.default').'.driver');
+
+        if ($driver === 'pgsql') {
+            return $query->whereRaw('has_federation_access IS TRUE');
+        }
+
+        return $query->where('has_federation_access', true);
+    }
+
+    public function setHasFederationAccess(bool $enabled): void
+    {
+        $driver = config('database.connections.'.config('database.default').'.driver');
+
+        if ($driver === 'pgsql') {
+            $this->forceFill([
+                'has_federation_access' => \Illuminate\Support\Facades\DB::raw($enabled ? 'true' : 'false'),
+            ])->save();
+
+            return;
+        }
+
+        $this->forceFill(['has_federation_access' => $enabled])->save();
+    }
+
     public function hasRole(string ...$roles): bool
     {
         if (! $this->hasTableColumn('role')) {

@@ -589,6 +589,11 @@ select.form-input-light option {
     margin-top: 0.2rem;
     color: #ef4444;
     font-size: 11.5px;
+    line-height: 1.35;
+}
+
+.form-error-light:not(:empty) {
+    min-height: 14px;
 }
 
 /* ── Validation States ─────────────────────────────────────── */
@@ -1025,10 +1030,11 @@ select.form-input-light option {
 
 /* ── Manage Account Page ───────────────────────────────────── */
 .main-content-modern.accounts-page {
+    --accounts-footer-height: 34px;
     position: relative;
     box-sizing: border-box;
-    min-height: 100vh;
-    padding: calc(var(--topbar-height) + 16px) 20px 20px;
+    min-height: calc(100vh - var(--navbar-height, 64px));
+    padding: calc(var(--topbar-height) + 16px) 20px calc(var(--accounts-footer-height, 36px) + 20px);
     background: transparent;
     color: var(--accounts-text);
 }
@@ -1040,10 +1046,18 @@ select.form-input-light option {
 
 .page-header-modern-with-button {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1.4rem;
-    gap: 1.1rem;
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+}
+
+.page-header-top {
+    flex: none;
+}
+
+.page-header-filters {
+    width: 100%;
 }
 
 .page-header-left {
@@ -1052,6 +1066,7 @@ select.form-input-light option {
 
 .page-header-right {
     flex: none;
+    width: 100%;
 }
 
 .page-title-modern {
@@ -1081,9 +1096,30 @@ select.form-input-light option {
 
 .accounts-filter-grid {
     display: grid;
-    grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) minmax(200px, 1.4fr) auto;
-    gap: 0.75rem;
+    grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(220px, 1.5fr) auto;
+    gap: 0.85rem;
     align-items: end;
+}
+
+.filter-dropdown-container,
+.search-container,
+.header-action-buttons {
+    min-width: 0;
+}
+
+.filter-dropdown,
+.search-input-wrap .search-input {
+    width: 100%;
+    height: 42px;
+}
+
+.search-input-wrap .search-input {
+    padding: 0.72rem 2.5rem 0.72rem 0.85rem;
+}
+
+.header-action-buttons .btn-primary-modern {
+    height: 42px;
+    padding: 0 1rem;
 }
 
 .filter-label {
@@ -1200,6 +1236,7 @@ select.form-input-light option {
 
 /* Table */
 .table-card-modern {
+    position: relative;
     overflow: visible;
     border-radius: var(--border-radius-lg);
     border: 1px solid var(--accounts-border);
@@ -1343,7 +1380,188 @@ select.form-input-light option {
     transform: translateY(-1px);
 }
 
-/* Pagination */
+/* Delete toolbar — outside/above table card */
+.accounts-table-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 8px;
+    min-height: 32px;
+}
+
+.btn-float-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(220, 38, 38, 0.12);
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-float-delete:hover {
+    background: #fee2e2;
+    border-color: #f87171;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.18);
+}
+
+.btn-float-delete svg {
+    flex-shrink: 0;
+}
+
+.float-delete-enter {
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.float-delete-leave {
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+/* Pagination footer — fixed at page bottom (Supabase-style) */
+.accounts-page-footer {
+    --accounts-footer-height: 34px;
+    position: fixed;
+    bottom: 0;
+    left: var(--sidebar-width, 260px);
+    right: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 5px 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 11px;
+    color: #64748b;
+    min-height: var(--accounts-footer-height);
+    box-shadow: 0 -1px 4px rgba(15, 23, 42, 0.04);
+}
+
+body.sidebar-collapsed .accounts-page-footer {
+    left: var(--sidebar-collapsed, 72px);
+}
+
+@media (max-width: 1024px) {
+    .accounts-page-footer {
+        left: 0;
+    }
+}
+
+.pagination-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.pagination-footer-nav {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pagination-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-page-label,
+.pagination-page-of {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.pagination-page-input {
+    width: 34px;
+    height: 22px;
+    padding: 0 2px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.pagination-page-input::-webkit-outer-spin-button,
+.pagination-page-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.pagination-page-input:focus {
+    outline: none;
+    border-color: #94a3b8;
+    box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+.pagination-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #64748b;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.pagination-arrow:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #374151;
+}
+
+.pagination-arrow:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.pagination-rows-select {
+    height: 22px;
+    min-width: 72px;
+    padding: 0 1.4rem 0 0.45rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.35rem center;
+    background-size: 0.75rem;
+}
+
+.pagination-record-count {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+/* Legacy pagination (kept for compatibility) */
 .pagination-container {
     border-top: 1px solid var(--accounts-border);
     background: #f8fafc;
@@ -1408,6 +1626,51 @@ select.form-input-light option {
 .pagination-info {
     color: var(--accounts-text-muted);
     font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pagination-rows-per-page {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.pagination-rows-label {
+    font-size: 12px;
+    color: var(--accounts-text-muted);
+    margin: 0;
+    white-space: nowrap;
+}
+
+.pagination-rows-select {
+    height: 34px;
+    min-width: 72px;
+    padding: 0 0.55rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--accounts-text);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.assign-fed-position-modal {
+    max-width: 480px;
+}
+
+.assign-fed-summary {
+    margin: 0 0 0.75rem;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.assign-fed-summary strong {
+    color: #0f172a;
 }
 
 .pagination-text strong {
@@ -1554,8 +1817,13 @@ select.form-input-light option {
 
 @media (max-width: 768px) {
     .main-content-modern.accounts-page {
-        padding: calc(var(--topbar-height) + 12px) 12px 14px;
+        padding: calc(var(--topbar-height) + 12px) 12px calc(var(--accounts-footer-height, 36px) + 14px);
         width: 100%;
+    }
+
+    .accounts-page-footer {
+        left: 0;
+        padding: 5px 12px;
     }
 
     .page-title-modern {
@@ -1582,6 +1850,18 @@ select.form-input-light option {
     .accounts-table thead th,
     .accounts-table tbody td {
         padding: 0.62rem 0.7rem;
+    }
+
+    .pagination-footer {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 6px 10px;
+    }
+
+    .pagination-footer-nav,
+    .pagination-footer-right {
+        justify-content: center;
     }
 
     .pagination-wrapper {
@@ -1741,6 +2021,74 @@ select.form-input-light option {
 
 :root.dark .text-center {
     color: #64748b;
+}
+
+:root.dark .accounts-page-footer,
+:root.dark .pagination-footer {
+    background: #172033;
+    border-top-color: #334155;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.2);
+}
+
+:root.dark .pagination-page-label,
+:root.dark .pagination-page-of,
+:root.dark .pagination-record-count {
+    color: #64748b;
+}
+
+:root.dark .pagination-page-input,
+:root.dark .pagination-arrow,
+:root.dark .pagination-rows-select {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+:root.dark .pagination-arrow:hover:not(:disabled) {
+    background: #334155;
+    border-color: #475569;
+}
+
+:root.dark .accounts-table-toolbar {
+    background: transparent;
+}
+
+:root.dark .accounts-sort-menu {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+:root.dark .accounts-sort-option {
+    color: #cbd5e1;
+}
+
+:root.dark .accounts-sort-option:hover {
+    background: #334155;
+}
+
+:root.dark .accounts-sort-option.is-active {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+}
+
+:root.dark .accounts-sort-option-icon {
+    color: #94a3b8;
+}
+
+:root.dark .accounts-sort-option-hint {
+    color: #64748b;
+}
+
+:root.dark .btn-float-delete {
+    background: rgba(220, 38, 38, 0.12);
+    border-color: rgba(248, 113, 113, 0.45);
+    color: #f87171;
+}
+
+:root.dark .btn-float-delete:hover {
+    background: rgba(220, 38, 38, 0.2);
+    border-color: rgba(248, 113, 113, 0.65);
 }
 
 :root.dark .pagination-container {
@@ -2513,9 +2861,137 @@ select.form-input-light option {
 }
 .th-barangay, .td-barangay { min-width: 120px; }
 .th-position, .td-position { min-width: 120px; }
+.th-federation-position, .td-federation-position { min-width: 150px; }
 .th-term, .td-term { min-width: 100px; }
 .th-status, .td-status { min-width: 110px; }
 .th-actions, .td-actions { min-width: 72px; width: 72px; }
+
+.accounts-th-sortable {
+    position: relative;
+    padding: 0 !important;
+}
+
+.accounts-sort-menu {
+    position: fixed;
+    z-index: 1250;
+    min-width: 240px;
+    max-width: 340px;
+    padding: 4px 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.accounts-sort-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 14px;
+    border: none;
+    background: transparent;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.accounts-sort-option:hover {
+    background: #f1f5f9;
+}
+
+.accounts-sort-option.is-active {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.accounts-sort-option-icon {
+    flex-shrink: 0;
+    width: 16px;
+    margin-top: 1px;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1;
+    text-align: center;
+}
+
+.accounts-sort-option.is-active .accounts-sort-option-icon {
+    color: #2563eb;
+}
+
+.accounts-sort-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.accounts-sort-option-label {
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.accounts-sort-option-hint {
+    font-size: 11px;
+    font-weight: 400;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.accounts-sort-option.is-active .accounts-sort-option-hint {
+    color: #3b82f6;
+}
+
+.accounts-sort-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.65rem 0.5rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.accounts-sort-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.accounts-sort-icon::before {
+    content: '↕';
+    font-size: 0.75rem;
+    opacity: 0.55;
+}
+
+.accounts-th-sortable.is-sorted-asc .accounts-sort-icon::before {
+    content: '▲';
+    opacity: 1;
+}
+
+.accounts-th-sortable.is-sorted-desc .accounts-sort-icon::before {
+    content: '▼';
+    opacity: 1;
+}
+
+.text-muted {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.form-hint-light {
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    color: #64748b;
+}
 
 /* ── Account actions meatballs menu ─────────────────────────── */
 .account-actions-menu {
@@ -2866,7 +3342,44 @@ select.form-input-light option {
     background: #f4f7fb;
     padding: 1.15rem 1.25rem;
     overflow-y: auto;
-    max-height: calc(92vh - 132px);
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+}
+
+#addSkOfficialsModal .modal-content.modal-large,
+#addAccountModal .modal-content.modal-large {
+    display: flex;
+    flex-direction: column;
+    max-height: min(92vh, 920px);
+    overflow: hidden;
+}
+
+#addSkOfficialsModal .account-modal-footer,
+#addAccountModal .account-modal-footer {
+    flex-shrink: 0;
+    margin-top: 0;
+    position: relative;
+    z-index: 4;
+    background: #ffffff;
+    box-shadow: 0 -10px 18px rgba(15, 23, 42, 0.08);
+}
+
+#addOfficialBatchPane {
+    padding-bottom: 0.25rem;
+}
+
+#addOfficialBatchPane .batch-preview-always,
+#addFedBatchPane .batch-preview-always {
+    margin-bottom: 0.35rem;
+}
+
+#addOfficialBatchPane .batch-preview-wrap,
+#addFedBatchPane .batch-preview-wrap,
+#addOfficialBatchPane .batch-error-report .batch-preview-wrap,
+#addFedBatchPane .batch-error-report .batch-preview-wrap {
+    max-height: min(38vh, 320px);
+    overflow: auto;
 }
 
 .account-modal-footer {
@@ -2881,7 +3394,8 @@ select.form-input-light option {
 .modal-content.modal-large {
     display: flex;
     flex-direction: column;
-    max-height: 92vh;
+    max-height: min(92vh, 920px);
+    overflow: hidden;
 }
 
 .modal-content.modal-large .modal-body,

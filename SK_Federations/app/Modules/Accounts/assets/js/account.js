@@ -382,7 +382,13 @@ function attachDobAgeAutoFill(form, dobName, ageName) {
     const dob = form.querySelector(`[name="${dobName}"]`);
     const age = form.querySelector(`[name="${ageName}"]`);
     if (!dob || !age) return;
-    const update = () => { age.value = calculateAge(dob.value); };
+    const update = () => {
+        if (isSkOfficialsManualForm(form)) {
+            _validateSkOfficialBirthdate(form);
+            return;
+        }
+        age.value = calculateAge(dob.value);
+    };
     dob.addEventListener('change', update);
     dob.addEventListener('input', update);
     update();
@@ -393,9 +399,9 @@ function setFormFieldValue(form, name, value) {
     if (field) field.value = value;
 }
 
-function showLoadingOverlay(message = 'Processing...') {
+function showLoadingOverlay(message = 'Processing...', subtext = 'Please wait') {
     if (typeof window.showLoading === 'function') {
-        window.showLoading(message);
+        window.showLoading(message, subtext);
         return;
     }
 
@@ -469,19 +475,42 @@ function escapeHtml(value) {
 
 // ── Inline validation helpers (light-theme forms) ─────────────
 const ACCOUNT_TERM_MAX_YEARS = 5;
+const SK_OFFICIAL_NAME_MIN = 3;
+const SK_OFFICIAL_NAME_MAX = 50;
+const SK_OFFICIAL_SUFFIX_OTHER_MAX = 10;
+const SK_OFFICIAL_AGE_MIN = 15;
+const SK_OFFICIAL_AGE_MAX = 30;
+const SK_OFFICIAL_GMAIL_REGEX = /^[a-z0-9._%+-]{6,30}@gmail\.com$/i;
+const SK_OFFICIAL_MAX_MSG = 'Maximum of 50 characters reached';
 
 function _showErr(input, msg) {
-    _clearErr(input);
-    const span = document.createElement('span');
-    span.className = 'validation-error';
-    span.textContent = msg;
-    input.parentNode.appendChild(span);
+    if (!input) return;
+    input.classList.remove('is-valid');
     input.classList.add('is-invalid');
+    const span = input.parentNode?.querySelector('.form-error-light');
+    if (span) {
+        span.textContent = msg;
+        return;
+    }
+    const fallback = document.createElement('span');
+    fallback.className = 'validation-error';
+    fallback.textContent = msg;
+    input.parentNode.appendChild(fallback);
 }
+
 function _clearErr(input) {
+    if (!input) return;
     input.classList.remove('is-invalid', 'is-valid');
-    const ex = input.parentNode.querySelector('.validation-error');
+    const span = input.parentNode?.querySelector('.form-error-light');
+    if (span) span.textContent = '';
+    const ex = input.parentNode?.querySelector('.validation-error:not(.form-error-light)');
     if (ex) ex.remove();
+}
+
+function _markValid(input) {
+    if (!input) return;
+    _clearErr(input);
+    input.classList.add('is-valid');
 }
 
 function getCurrentYearStartDate() {
@@ -495,6 +524,307 @@ function addYearsToDateString(dateStr, years) {
     }
     date.setFullYear(date.getFullYear() + years);
     return date.toISOString().slice(0, 10);
+}
+
+
+function isSkOfficialsManualForm(form) {
+    return form?.id === 'addSkOfficialsForm';
+}
+
+function processSkOfficialNameInput(input) {
+    if (!input) return '';
+    let value = input.value.replace(/\s+/g, '').replace(/[^a-zA-Z\-']/g, '').toUpperCase();
+    if (value.length > SK_OFFICIAL_NAME_MAX) {
+        value = value.slice(0, SK_OFFICIAL_NAME_MAX);
+    }
+    input.value = value;
+    return value;
+}
+
+function showSkOfficialMaxMessage(input) {
+    if ((input.value || '').length >= SK_OFFICIAL_NAME_MAX) {
+        _showErr(input, SK_OFFICIAL_MAX_MSG);
+        return true;
+    }
+    return false;
+}
+
+function toggleSkOfficialSuffixOther(form) {
+    const suffixSelect = form.querySelector('[name="suffix"]');
+    const otherGroup = form.querySelector('#official_suffix_other_group');
+    const otherInput = form.querySelector('[name="suffix_other"]');
+    if (!suffixSelect || !otherGroup) return;
+    const show = suffixSelect.value === '__other__';
+    otherGroup.style.display = show ? '' : 'none';
+    if (otherInput) {
+        if (show) {
+            otherInput.setAttribute('required', '');
+        } else {
+            otherInput.removeAttribute('required');
+            otherInput.value = '';
+            _clearErr(otherInput);
+        }
+    }
+}
+
+function _validateSkOfficialFirstName(input) {
+    const val = processSkOfficialNameInput(input);
+    if (!val) {
+        _showErr(input, 'First name is required');
+        return false;
+    }
+    if (val.length < SK_OFFICIAL_NAME_MIN) {
+        _showErr(input, 'First name must be at least 3 characters');
+        return false;
+    }
+    if (showSkOfficialMaxMessage(input)) return false;
+    _markValid(input);
+    return true;
+}
+
+function _validateSkOfficialMiddleName(input) {
+    const val = processSkOfficialNameInput(input);
+    if (!val) {
+        _clearErr(input);
+        return true;
+    }
+    if (val.length < SK_OFFICIAL_NAME_MIN) {
+        _showErr(input, 'Middle name must be at least 3 characters');
+        return false;
+    }
+    if (showSkOfficialMaxMessage(input)) return false;
+    _markValid(input);
+    return true;
+}
+
+function _validateSkOfficialLastName(input) {
+    const val = processSkOfficialNameInput(input);
+    if (!val) {
+        _showErr(input, 'Last name is required');
+        return false;
+    }
+    if (val.length < SK_OFFICIAL_NAME_MIN) {
+        _showErr(input, 'Last name must be at least 3 characters');
+        return false;
+    }
+    if (showSkOfficialMaxMessage(input)) return false;
+    _markValid(input);
+    return true;
+}
+
+function _validateSkOfficialSuffix(form) {
+    const suffixSelect = form.querySelector('[name="suffix"]');
+    const otherInput = form.querySelector('[name="suffix_other"]');
+    if (!suffixSelect) return true;
+
+    toggleSkOfficialSuffixOther(form);
+
+    if (!suffixSelect.value || suffixSelect.selectedIndex <= 0) {
+        _showErr(suffixSelect, 'Suffix is required');
+        return false;
+    }
+
+    if (suffixSelect.value === '__other__') {
+        const other = (otherInput?.value || '').trim().toUpperCase();
+        if (otherInput) otherInput.value = other.replace(/[^A-Z\-'.]/g, '');
+        if (!other) {
+            _showErr(otherInput || suffixSelect, 'Other suffix is required');
+            return false;
+        }
+        if (other.length > SK_OFFICIAL_SUFFIX_OTHER_MAX) {
+            _showErr(otherInput, `Other suffix must not exceed ${SK_OFFICIAL_SUFFIX_OTHER_MAX} characters`);
+            return false;
+        }
+        if (/\s/.test(other)) {
+            _showErr(otherInput, 'Other suffix cannot contain spaces');
+            return false;
+        }
+        _markValid(otherInput);
+    }
+
+    _markValid(suffixSelect);
+    return true;
+}
+
+function getSkOfficialBirthdateBounds() {
+    const today = new Date();
+    const maxDob = new Date(today.getFullYear() - SK_OFFICIAL_AGE_MIN, today.getMonth(), today.getDate());
+    const minDob = new Date(today.getFullYear() - SK_OFFICIAL_AGE_MAX, today.getMonth(), today.getDate());
+    return {
+        min: minDob.toISOString().slice(0, 10),
+        max: maxDob.toISOString().slice(0, 10),
+    };
+}
+
+function applySkOfficialDobConstraints(form) {
+    if (!isSkOfficialsManualForm(form)) return;
+    const dob = form.querySelector('[name="date_of_birth"]');
+    if (!dob) return;
+    const bounds = getSkOfficialBirthdateBounds();
+    dob.min = bounds.min;
+    dob.max = bounds.max;
+}
+
+function _validateSkOfficialBirthdate(form) {
+    const dob = form.querySelector('[name="date_of_birth"]');
+    const age = form.querySelector('[name="age"]');
+    if (!dob) return true;
+
+    const val = dob.value;
+    if (!val) {
+        _showErr(dob, 'Birthdate is required');
+        if (age) age.value = '';
+        return false;
+    }
+
+    const bounds = getSkOfficialBirthdateBounds();
+    if (val < bounds.min || val > bounds.max) {
+        _showErr(dob, `Birthdate must correspond to age ${SK_OFFICIAL_AGE_MIN}–${SK_OFFICIAL_AGE_MAX}`);
+        if (age) age.value = '';
+        return false;
+    }
+
+    const computedAge = calculateAge(val);
+    if (age) age.value = computedAge;
+    const ageNum = parseInt(computedAge, 10);
+    if (Number.isNaN(ageNum) || ageNum < SK_OFFICIAL_AGE_MIN || ageNum > SK_OFFICIAL_AGE_MAX) {
+        _showErr(dob, `Age must be between ${SK_OFFICIAL_AGE_MIN} and ${SK_OFFICIAL_AGE_MAX}`);
+        return false;
+    }
+
+    _markValid(dob);
+    if (age) _markValid(age);
+    return true;
+}
+
+function _validateSkOfficialEmail(input) {
+    if (!input) return true;
+    let val = (input.value || '').toLowerCase().replace(/\s+/g, '');
+    input.value = val;
+
+    if (!val) {
+        _showErr(input, 'Email address is required');
+        return false;
+    }
+    if (!SK_OFFICIAL_GMAIL_REGEX.test(val)) {
+        _showErr(input, 'Enter a valid @gmail.com address (6–30 characters before @)');
+        return false;
+    }
+    _markValid(input);
+    return true;
+}
+
+function validateSkOfficialsManualForm(form) {
+    let valid = true;
+    const first = form.querySelector('[name="first_name"]');
+    const middle = form.querySelector('[name="middle_name"]');
+    const last = form.querySelector('[name="last_name"]');
+    const email = form.querySelector('[name="email"]');
+    const contact = form.querySelector('[name="contact_number"]');
+
+    if (!_validateSkOfficialFirstName(first)) valid = false;
+    if (!_validateSkOfficialMiddleName(middle)) valid = false;
+    if (!_validateSkOfficialLastName(last)) valid = false;
+    if (!_validateSkOfficialSuffix(form)) valid = false;
+    if (!_validateSkOfficialBirthdate(form)) valid = false;
+    if (!_validateSkOfficialEmail(email)) valid = false;
+    if (contact && !_validateContactNumber(contact)) valid = false;
+    if (!validateTermRange(form)) valid = false;
+
+    form.querySelectorAll('select[required]').forEach((select) => {
+        if (select.name === 'suffix') return;
+        if (!select.value || select.selectedIndex <= 0) {
+            _showErr(select, 'Please select an option');
+            valid = false;
+        } else {
+            _markValid(select);
+        }
+    });
+
+    return valid;
+}
+
+function wireSkOfficialsManualValidation(form) {
+    if (!isSkOfficialsManualForm(form)) return;
+    if (form.dataset.skValidationWired === '1') return;
+    form.dataset.skValidationWired = '1';
+
+    applySkOfficialDobConstraints(form);
+
+    const nameMap = {
+        first_name: _validateSkOfficialFirstName,
+        middle_name: _validateSkOfficialMiddleName,
+        last_name: _validateSkOfficialLastName,
+    };
+
+    Object.entries(nameMap).forEach(([name, fn]) => {
+        const el = form.querySelector(`[name="${name}"]`);
+        if (!el) return;
+        el.addEventListener('input', () => fn(el));
+        el.addEventListener('blur', () => fn(el));
+        el.addEventListener('keydown', (e) => {
+            if (e.key === ' ') {
+                e.preventDefault();
+                return;
+            }
+            const len = (el.value || '').length;
+            if (len >= SK_OFFICIAL_NAME_MAX && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                showSkOfficialMaxMessage(el);
+            }
+        });
+    });
+
+    const suffixSelect = form.querySelector('[name="suffix"]');
+    if (suffixSelect) {
+        suffixSelect.addEventListener('change', () => {
+            toggleSkOfficialSuffixOther(form);
+            _validateSkOfficialSuffix(form);
+        });
+    }
+
+    const suffixOther = form.querySelector('[name="suffix_other"]');
+    if (suffixOther) {
+        suffixOther.addEventListener('input', () => {
+            suffixOther.value = suffixOther.value.replace(/[^a-zA-Z\-'.]/g, '').toUpperCase().slice(0, SK_OFFICIAL_SUFFIX_OTHER_MAX);
+            _validateSkOfficialSuffix(form);
+        });
+        suffixOther.addEventListener('blur', () => _validateSkOfficialSuffix(form));
+    }
+
+    const email = form.querySelector('[name="email"]');
+    if (email) {
+        email.addEventListener('input', () => _validateSkOfficialEmail(email));
+        email.addEventListener('blur', () => _validateSkOfficialEmail(email));
+        email.addEventListener('keydown', (e) => {
+            if (e.key === ' ') e.preventDefault();
+        });
+    }
+
+    const contact = form.querySelector('[name="contact_number"]');
+    if (contact) {
+        contact.addEventListener('input', () => _validateContactNumber(contact));
+        contact.addEventListener('blur', () => _validateContactNumber(contact));
+    }
+
+    form.querySelectorAll('select[required]').forEach((select) => {
+        if (select.name === 'suffix') return;
+        select.addEventListener('change', () => {
+            if (!select.value || select.selectedIndex <= 0) {
+                _showErr(select, 'Please select an option');
+            } else {
+                _markValid(select);
+            }
+        });
+    });
+
+    ['term_start', 'term_end'].forEach((name) => {
+        const input = form.querySelector(`[name="${name}"]`);
+        if (input) {
+            input.addEventListener('change', () => validateTermRange(form));
+            input.addEventListener('blur', () => validateTermRange(form));
+        }
+    });
 }
 
 function isNameField(input) {
@@ -550,14 +880,23 @@ function validateTermRange(form) {
     const end = endInput.value;
     const yearStart = getCurrentYearStartDate();
 
+    let termValid = true;
+
     if (startInput.hasAttribute('required') && !start) {
         _showErr(startInput, 'Term start date is required');
-        return false;
+        termValid = false;
+    } else {
+        _clearErr(startInput);
     }
+
     if (endInput.hasAttribute('required') && !end) {
         _showErr(endInput, 'Term end date is required');
-        return false;
+        termValid = false;
+    } else if (termValid) {
+        _clearErr(endInput);
     }
+
+    if (!termValid) return false;
     if (start && start < yearStart) {
         _showErr(startInput, 'Term start date cannot be before the current year');
         return false;
@@ -736,15 +1075,23 @@ function wireCreateAccountForm(form) {
         return;
     }
 
-    form.querySelectorAll('[name="first_name"], [name="last_name"], [name="middle_name"]').forEach(applyUppercaseNameInput);
+    if (isSkOfficialsManualForm(form)) {
+        wireSkOfficialsManualValidation(form);
+    } else {
+        form.querySelectorAll('[name="first_name"], [name="last_name"], [name="middle_name"]').forEach(applyUppercaseNameInput);
+    }
+
     applyContactNumberInput(form.querySelector('[name="contact_number"]'));
     applyTermDateConstraints(form);
     applyFutureOnlyDateConstraints(form);
+    applySkOfficialDobConstraints(form);
     initCreateAccountFormDefaults(form);
 
-    form.querySelectorAll('[required]').forEach((el) => {
-        el.addEventListener('blur', () => _validateField(el));
-    });
+    if (!isSkOfficialsManualForm(form)) {
+        form.querySelectorAll('[required]').forEach((el) => {
+            el.addEventListener('blur', () => _validateField(el));
+        });
+    }
 }
 
 // ── Add SK Officials modal ────────────────────────────────────
@@ -788,6 +1135,7 @@ window.closeAddSkOfficialsModal = function () {
         form.reset();
         form.querySelectorAll('.is-invalid,.is-valid').forEach(el => el.classList.remove('is-invalid', 'is-valid'));
         form.querySelectorAll('.validation-error').forEach(el => el.remove());
+        form.querySelectorAll('.form-error-light').forEach(el => { el.textContent = ''; });
     }
     switchAddOfficialTab('manual');
     resetBatchUploadPanel('official');
@@ -1406,7 +1754,7 @@ function initBatchUploadPanel(prefix, role) {
                 return;
             }
 
-            showLoadingOverlay('Creating accounts...');
+            showLoadingOverlay('Uploading accounts', 'Please wait while we import your file...');
             els.confirmBtn.disabled = true;
 
             try {
@@ -1587,6 +1935,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const positionFilter = document.getElementById('positionFilter');
+    if (positionFilter) {
+        positionFilter.addEventListener('change', function () {
+            const form = this.closest('form');
+            if (form) form.submit();
+        });
+    }
+
     // ── Add SK Officials — backend submit ───────────────────
     const officialsForm = document.getElementById('addSkOfficialsForm');
     if (officialsForm) {
@@ -1594,18 +1950,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         officialsForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            let valid = true;
-            officialsForm.querySelectorAll('[required]').forEach(el => { if (!_validateField(el)) valid = false; });
-            if (!validateTermRange(officialsForm)) valid = false;
-            if (!valid) { const first = officialsForm.querySelector('.is-invalid'); if (first) first.focus(); return; }
+            if (!validateSkOfficialsManualForm(officialsForm)) {
+                const first = officialsForm.querySelector('.is-invalid');
+                if (first) first.focus();
+                return;
+            }
 
-            officialsForm.querySelectorAll('.validation-error').forEach(err => err.remove());
             const formData = new FormData(officialsForm);
             const payload = {};
             for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
             payload.term_status = payload.term_status || (payload.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
 
-            showLoadingOverlay('Creating account...');
+            showLoadingOverlay('Creating account', 'Please wait while we set up the account...');
             fetch('/accounts', {
                 method: 'POST',
                 headers: {

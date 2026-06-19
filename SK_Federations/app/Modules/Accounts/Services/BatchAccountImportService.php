@@ -41,6 +41,8 @@ class BatchAccountImportService
     {
         $errors = [];
         $seenEmails = [];
+        $chairsInFileByBarangay = [];
+        $rosterService = app(FederationRosterService::class);
 
         foreach ($rows as $index => $row) {
             if (! is_array($row)) {
@@ -63,6 +65,31 @@ class BatchAccountImportService
 
                 if (User::query()->where('email', $email)->whereNull('deleted_at')->exists()) {
                     $errors[] = ['row' => $index + 1, 'error' => 'Email is already registered.'];
+                }
+
+                if ($role === User::ROLE_SK_OFFICIAL && $rosterService->isChairPosition((string) $normalized['position'])) {
+                    $barangayId = (int) ($normalized['barangay_id'] ?? 0);
+
+                    if ($barangayId > 0) {
+                        if (isset($chairsInFileByBarangay[$barangayId])) {
+                            $errors[] = ['row' => $index + 1, 'error' => 'This barangay already has an SK Chairperson in the uploaded file.'];
+                        } else {
+                            $chairsInFileByBarangay[$barangayId] = true;
+                        }
+
+                        try {
+                            $rosterService->assertSingleChairPerBarangay(
+                                $this->tenantId,
+                                $barangayId,
+                                (string) $normalized['position'],
+                            );
+                        } catch (ValidationException $chairException) {
+                            $errors[] = [
+                                'row' => $index + 1,
+                                'error' => collect($chairException->errors())->flatten()->first() ?? 'This barangay already has an SK Chairperson account.',
+                            ];
+                        }
+                    }
                 }
             } catch (ValidationException $exception) {
                 $errors[] = [
@@ -106,6 +133,11 @@ class BatchAccountImportService
     {
         $firstName = mb_strtoupper($this->stringValue($row, ['first_name', 'first name']), 'UTF-8');
         $lastName = mb_strtoupper($this->stringValue($row, ['last_name', 'last name']), 'UTF-8');
+
+        if ($role === User::ROLE_SK_OFFICIAL) {
+            $firstName = preg_replace('/\s+/u', '', $firstName) ?? $firstName;
+            $lastName = preg_replace('/\s+/u', '', $lastName) ?? $lastName;
+        }
         $email = strtolower($this->stringValue($row, ['email', 'email address']));
         $barangayName = $this->stringValue($row, ['barangay', 'barangay_name', 'barangay name']);
         $municipality = $this->stringValue($row, ['municipality']) ?: 'Santa Cruz';
@@ -148,6 +180,10 @@ class BatchAccountImportService
 
         $middleNameRaw = $this->stringValue($row, ['middle_name', 'middle name']);
         $middleName = $middleNameRaw !== '' ? mb_strtoupper($middleNameRaw, 'UTF-8') : null;
+        if ($role === User::ROLE_SK_OFFICIAL && $middleName !== null) {
+            $middleName = preg_replace('/\s+/u', '', $middleName) ?? $middleName;
+            $middleName = $middleName !== '' ? $middleName : null;
+        }
 
         $data = [
             'first_name' => $firstName,
@@ -182,31 +218,41 @@ class BatchAccountImportService
     private function assertRowIsValid(array $data, string $barangayName, string $role, bool $strictDemographics): void
     {
         $errors = [];
+        $isOfficial = $role === User::ROLE_SK_OFFICIAL;
+        $namePattern = $isOfficial ? '/^[A-Z\-']+$/u' : '/^[A-Z\s\-\']+$/u';
+        $middlePattern = $isOfficial ? '/^[A-Z\-']*$/u' : '/^[A-Z\s\-\']*$/u';
+        $nameMax = $isOfficial ? 50 : 35;
 
         if ($data['first_name'] === '') {
             $errors[] = 'First name is required.';
         } elseif (mb_strlen($data['first_name']) < 3) {
             $errors[] = 'First name must be at least 3 characters.';
-        } elseif (mb_strlen($data['first_name']) > 35) {
-            $errors[] = 'First name must not exceed 35 characters.';
-        } elseif (! preg_match('/^[A-Z\s\-\']+$/u', $data['first_name'])) {
-            $errors[] = 'First name must use uppercase letters only.';
+        } elseif (mb_strlen($data['first_name']) > $nameMax) {
+            $errors[] = 'First name must not exceed '.$nameMax.' characters.';
+        } elseif (! preg_match($namePattern, $data['first_name'])) {
+            $errors[] = $isOfficial
+                ? 'First name must use uppercase letters only, with no spaces.'
+                : 'First name must use uppercase letters only.';
         }
 
-        if ($data['middle_name'] !== null && mb_strlen((string) $data['middle_name']) > 35) {
-            $errors[] = 'Middle name must not exceed 35 characters.';
-        } elseif ($data['middle_name'] !== null && ! preg_match('/^[A-Z\s\-\']*$/u', (string) $data['middle_name'])) {
-            $errors[] = 'Middle name must use uppercase letters only.';
+        if ($data['middle_name'] !== null && mb_strlen((string) $data['middle_name']) > $nameMax) {
+            $errors[] = 'Middle name must not exceed '.$nameMax.' characters.';
+        } elseif ($data['middle_name'] !== null && ! preg_match($middlePattern, (string) $data['middle_name'])) {
+            $errors[] = $isOfficial
+                ? 'Middle name must use uppercase letters only, with no spaces.'
+                : 'Middle name must use uppercase letters only.';
         }
 
         if ($data['last_name'] === '') {
             $errors[] = 'Last name is required.';
         } elseif (mb_strlen($data['last_name']) < 3) {
             $errors[] = 'Last name must be at least 3 characters.';
-        } elseif (mb_strlen($data['last_name']) > 35) {
-            $errors[] = 'Last name must not exceed 35 characters.';
-        } elseif (! preg_match('/^[A-Z\s\-\']+$/u', $data['last_name'])) {
-            $errors[] = 'Last name must use uppercase letters only.';
+        } elseif (mb_strlen($data['last_name']) > $nameMax) {
+            $errors[] = 'Last name must not exceed '.$nameMax.' characters.';
+        } elseif (! preg_match($namePattern, $data['last_name'])) {
+            $errors[] = $isOfficial
+                ? 'Last name must use uppercase letters only, with no spaces.'
+                : 'Last name must use uppercase letters only.';
         }
 
         if ($data['suffix'] !== null && mb_strlen((string) $data['suffix']) > 10) {

@@ -23,7 +23,7 @@
             Download Excel Template
         </a>
     </div>
-    <p class="batch-hint">Use the Excel template columns exactly. All fields are required except Middle Name (can be blank). Upload your own filled file — no sample rows are added by the system.</p>
+    <p class="batch-hint">Use the Excel template columns exactly. All fields are required except Middle Name (can be blank). Upload your own filled file — no sample rows are added by the system. Maximum <strong>{{ \App\Modules\Accounts\Requests\BatchStoreAccountsRequest::MAX_ACCOUNTS }}</strong> accounts per upload.</p>
 </div>
 
 <div class="form-section-light">

@@ -37,6 +37,7 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
             ->name('accounts.batch-template');
 
         Route::put('/accounts/{user}', [AdminAccountController::class, 'update'])->name('accounts.update');
+        Route::put('/accounts/{user}/federation-position', [AdminAccountController::class, 'updateFederationPosition'])->name('accounts.federation-position.update');
 
         Route::post('/accounts/{user}/deactivate', [AdminAccountController::class, 'deactivate'])->name('accounts.deactivate');
         Route::post('/accounts/{user}/reset-password', [AdminAccountController::class, 'resetPassword'])->name('accounts.reset-password');

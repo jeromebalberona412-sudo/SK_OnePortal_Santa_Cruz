@@ -55,6 +55,7 @@ class OfficialProfile extends Model
     {
         return [
             'Chairperson' => 'SK Chairperson',
+            'Chairman' => 'SK Chairman',
             'Secretary' => 'SK Secretary',
             'Treasurer' => 'SK Treasurer',
             'Kagawad' => 'SK Kagawad',
@@ -94,6 +95,7 @@ class OfficialProfile extends Model
         'age',
         'contact_number',
         'position',
+        'federation_position',
         'municipality',
         'province',
         'region',
@@ -122,5 +124,23 @@ class OfficialProfile extends Model
     public function latestTerm(): HasOne
     {
         return $this->hasOne(OfficialTerm::class)->latestOfMany('term_end');
+    }
+
+    public function displayFederationPosition(): ?string
+    {
+        if ($this->federation_position !== null && $this->federation_position !== '') {
+            return $this->federation_position;
+        }
+
+        if ($this->user?->role === User::ROLE_SK_FED) {
+            return $this->position ?: null;
+        }
+
+        return null;
+    }
+
+    public function isChairpersonPosition(): bool
+    {
+        return in_array($this->position, ['Chairperson', 'Chairman'], true);
     }
 }

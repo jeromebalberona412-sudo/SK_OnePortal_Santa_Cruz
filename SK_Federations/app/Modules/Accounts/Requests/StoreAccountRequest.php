@@ -20,7 +20,12 @@ class StoreAccountRequest extends FormRequest
     {
         $suffix = $this->input('suffix');
 
-        if ($suffix === '' || $suffix === 'None') {
+        if ($suffix === '__other__') {
+            $other = trim((string) $this->input('suffix_other', ''));
+            if ($other !== '') {
+                $this->merge(['suffix' => mb_strtoupper($other, 'UTF-8')]);
+            }
+        } elseif ($suffix === '' || $suffix === 'None') {
             $this->merge(['suffix' => null]);
         }
 
@@ -30,7 +35,11 @@ class StoreAccountRequest extends FormRequest
 
         foreach (['first_name', 'last_name', 'middle_name'] as $field) {
             if ($this->filled($field)) {
-                $this->merge([$field => mb_strtoupper(trim((string) $this->input($field)), 'UTF-8')]);
+                $value = mb_strtoupper(trim((string) $this->input($field)), 'UTF-8');
+                if ($this->input('role') === User::ROLE_SK_OFFICIAL) {
+                    $value = preg_replace('/\s+/u', '', $value) ?? $value;
+                }
+                $this->merge([$field => $value]);
             }
         }
 
@@ -55,23 +64,58 @@ class StoreAccountRequest extends FormRequest
             User::ROLE_SK_OFFICIAL,
         ], true);
 
+        $isOfficial = $this->input('role') === User::ROLE_SK_OFFICIAL;
         $currentYearStart = now()->startOfYear()->toDateString();
+        $minBirthdate = Carbon::now()->subYears(30)->startOfDay()->format('Y-m-d');
+        $maxBirthdate = Carbon::now()->subYears(15)->endOfDay()->format('Y-m-d');
+
+        $nameRules = $isOfficial
+            ? ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Z\-']+$/u']
+            : ['required', 'string', 'max:100', 'regex:/^[A-Z\s\-\']+$/u'];
+
+        $middleNameRules = $isOfficial
+            ? ['nullable', 'string', 'min:3', 'max:50', 'regex:/^[A-Z\-']+$/u']
+            : ['nullable', 'string', 'max:100', 'regex:/^[A-Z\s\-\']*$/u'];
+
+        $dateOfBirthRules = $isOfficial
+            ? ['required', 'date', 'after_or_equal:'.$minBirthdate, 'before_or_equal:'.$maxBirthdate]
+            : [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'];
+
+        $ageRules = $isOfficial
+            ? ['required', 'integer', 'min:15', 'max:30']
+            : ['nullable', 'integer', 'min:0', 'max:150'];
+
+        $emailRules = [
+            'required',
+            'email',
+            'max:255',
+            Rule::unique('users', 'email')->whereNull('deleted_at'),
+        ];
+
+        if ($isOfficial) {
+            $emailRules[] = 'regex:/^[a-z0-9._%+-]{6,30}@gmail\.com$/i';
+        }
 
         return [
-            'first_name' => ['required', 'string', 'max:100', 'regex:/^[A-Z\s\-\']+$/u'],
-            'last_name' => ['required', 'string', 'max:100', 'regex:/^[A-Z\s\-\']+$/u'],
-            'middle_name' => ['nullable', 'string', 'max:100', 'regex:/^[A-Z\s\-\']*$/u'],
-            'suffix' => ['nullable', Rule::in(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'])],
-            'sex' => [$requiresDemographics ? 'required' : 'nullable', Rule::in(['Male', 'Female']), 'not_in:'],
-            'date_of_birth' => [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'],
-            'age' => ['nullable', 'integer', 'min:0', 'max:150'],
-            'contact_number' => [$requiresDemographics ? 'required' : 'nullable', 'regex:/^09\d{9}$/'],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->whereNull('deleted_at'),
+            'first_name' => $nameRules,
+            'last_name' => $nameRules,
+            'middle_name' => $middleNameRules,
+            'suffix' => $isOfficial
+                ? ['required', 'string', Rule::in(['NONE', 'Jr.', 'Sr.', 'II', 'III', 'IV', 'V', '__other__'])]
+                : ['nullable', 'string', 'max:10'],
+            'suffix_other' => [
+                Rule::requiredIf(fn (): bool => $this->input('suffix') === '__other__'),
+                'nullable',
+                'string',
+                'min:1',
+                'max:10',
+                'regex:/^\S+$/u',
             ],
+            'sex' => [$requiresDemographics ? 'required' : 'nullable', Rule::in(['Male', 'Female']), 'not_in:'],
+            'date_of_birth' => $dateOfBirthRules,
+            'age' => $ageRules,
+            'contact_number' => [$requiresDemographics ? 'required' : 'nullable', 'regex:/^09\d{9}$/'],
+            'email' => $emailRules,
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', Rule::in([
                 User::ROLE_SK_FED,
@@ -94,6 +138,16 @@ class StoreAccountRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            if ($this->input('role') === User::ROLE_SK_OFFICIAL) {
+                $suffix = $this->input('suffix');
+                $allowedSuffixes = ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'];
+                if ($suffix !== null && $suffix !== '' && $suffix !== '__other__' && ! in_array($suffix, $allowedSuffixes, true)) {
+                    if (strlen((string) $suffix) < 1 || strlen((string) $suffix) > 10 || preg_match('/\s/u', (string) $suffix)) {
+                        $validator->errors()->add('suffix_other', 'Other suffix must be 1-10 characters with no spaces.');
+                    }
+                }
+            }
+
             $termStart = $this->input('term_start');
             $termEnd = $this->input('term_end');
 
@@ -126,9 +180,21 @@ class StoreAccountRequest extends FormRequest
             'email.unique' => 'This email is already taken.',
             'email.required' => 'Email address is required.',
             'email.email' => 'Please enter a valid email address.',
-            'first_name.regex' => 'First name must use uppercase letters only.',
-            'last_name.regex' => 'Last name must use uppercase letters only.',
-            'middle_name.regex' => 'Middle name must use uppercase letters only.',
+            'first_name.regex' => 'First name must use uppercase letters only, with no spaces.',
+            'first_name.min' => 'First name must be at least 3 characters.',
+            'first_name.max' => 'First name must not exceed 50 characters.',
+            'last_name.regex' => 'Last name must use uppercase letters only, with no spaces.',
+            'last_name.min' => 'Last name must be at least 3 characters.',
+            'last_name.max' => 'Last name must not exceed 50 characters.',
+            'middle_name.regex' => 'Middle name must use uppercase letters only, with no spaces.',
+            'middle_name.min' => 'Middle name must be at least 3 characters when provided.',
+            'middle_name.max' => 'Middle name must not exceed 50 characters.',
+            'email.regex' => 'Email must be a @gmail.com address with 6-30 characters before @.',
+            'date_of_birth.after_or_equal' => 'Age must be between 15 and 30 years old.',
+            'date_of_birth.before_or_equal' => 'Age must be between 15 and 30 years old.',
+            'age.min' => 'Age must be at least 15.',
+            'age.max' => 'Age must not exceed 30.',
+            'suffix_other.regex' => 'Other suffix must not contain spaces.',
             'contact_number.regex' => 'Contact number must be 11 digits starting with 09.',
             'term_start.after_or_equal' => 'Term start date cannot be before the current year.',
             'term_end.after' => 'Term end date must be after the term start date.',

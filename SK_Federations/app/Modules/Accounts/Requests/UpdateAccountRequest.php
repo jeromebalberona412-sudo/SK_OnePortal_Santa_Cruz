@@ -30,7 +30,8 @@ class UpdateAccountRequest extends FormRequest
     public function rules(): array
     {
         $userId = $this->route('user')?->id;
-        $requiresDemographics = in_array($this->route('user')?->role, [
+        $accountRole = (string) ($this->route('user')?->role ?? '');
+        $requiresDemographics = in_array($accountRole, [
             User::ROLE_SK_FED,
             User::ROLE_SK_OFFICIAL,
         ], true);
@@ -58,9 +59,10 @@ class UpdateAccountRequest extends FormRequest
             ])],
             'barangay_id' => ['required', 'integer', 'exists:barangays,id'],
             'position' => [
-                'required',
-                Rule::in(OfficialProfile::positionsForRole((string) ($this->route('user')?->role ?? ''))),
+                $accountRole === User::ROLE_SK_FED ? 'required' : 'nullable',
+                Rule::in(OfficialProfile::positionsForRole($accountRole !== '' ? $accountRole : User::ROLE_SK_FED)),
             ],
+            'federation_position' => ['nullable', Rule::in(OfficialProfile::FEDERATION_POSITIONS)],
             'term_start' => ['required', 'date'],
             'term_end' => ['required', 'date', 'after:term_start'],
             'term_status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'EXPIRED', 'REPLACED'])],

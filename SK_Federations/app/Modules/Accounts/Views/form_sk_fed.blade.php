@@ -343,14 +343,26 @@
                 <div class="form-section-light">
                     <h4 class="section-title-light"><i class="fa-solid fa-briefcase"></i> Position & Term</h4>
                     <div class="form-grid">
-                        <div class="form-group-light">
-                            <label for="edit_position" class="form-label-light required">Position</label>
+                        <div class="form-group-light" id="edit_fed_position_group">
+                            <label for="edit_position" class="form-label-light required">Federation Position</label>
                             <select id="edit_position" name="position" class="form-input-light" required>
                                 <option value="">Select Position</option>
                                 @foreach(\App\Modules\Accounts\Models\OfficialProfile::federationPositionOptions() as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
                             </select>
+                            <span class="form-error-light"></span>
+                        </div>
+                        <div class="form-group-light" id="edit_federation_position_group" style="display:none;">
+                            <label for="edit_federation_position" class="form-label-light">Assign Federation Position</label>
+                            <select id="edit_federation_position" name="federation_position" class="form-input-light">
+                                <option value="">Not assigned yet</option>
+                                @foreach(\App\Modules\Accounts\Models\OfficialProfile::federationPositionOptions() as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <p class="form-hint-light">This SK Chairperson is listed here automatically. Assign their federation role when ready.</p>
+                            <input type="hidden" id="edit_chair_position" name="position" value="" disabled>
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">

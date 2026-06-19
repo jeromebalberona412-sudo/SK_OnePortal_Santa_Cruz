@@ -26,20 +26,30 @@ class AccountService
         private readonly AuditLogInterface $auditLog,
         private readonly TermRecordsArchiveService $termRecordsArchiveService,
         private readonly ChairpersonFederationSyncService $chairpersonFederationSyncService,
+        private readonly FederationRosterService $federationRosterService,
     ) {
     }
 
     /**
      * @param  list<array<string, mixed>>  $rows
-     * @return array{created: int, failed: list<array{row: int, email: ?string, message: string}>}
+     * @return array{
+     *     created: int,
+     *     failed: list<array{row: int, email: ?string, message: string}>,
+     *     validation_errors: list<array{row: int, error: string}>,
+     *     emails_sent: int,
+     *     email_failed: list<array{row: int, email: ?string, message: string}>
+     * }
      */
     public function batchCreateAccounts(array $rows, string $role, User $admin): array
     {
+        set_time_limit(0);
+
         $importService = new BatchAccountImportService((int) $admin->tenant_id);
         $created = 0;
         $failed = [];
         $validationErrors = [];
         $seenEmails = [];
+        $pendingEmails = [];
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 1;
@@ -71,7 +81,12 @@ class AccountService
                 $this->purgeSoftDeletedUserByEmail($normalized['email'], (int) $admin->tenant_id);
 
                 $accountData = array_merge($normalized, ['role' => $role]);
-                $this->createAccount($accountData, $admin);
+                $user = $this->createAccount($accountData, $admin, sendPasswordEmail: false);
+                $pendingEmails[] = [
+                    'row' => $rowNumber,
+                    'user' => $user,
+                    'role' => $role,
+                ];
                 $created++;
             } catch (ValidationException $exception) {
                 $message = collect($exception->errors())->flatten()->first() ?? 'Validation failed.';
@@ -95,24 +110,50 @@ class AccountService
             } catch (\Throwable $exception) {
                 report($exception);
 
-                $message = $exception->getMessage();
-                if (str_contains(strtolower($message), 'password setup email')) {
-                    $message = 'Account saved locally failed because the password setup email could not be sent.';
-                }
+                $message = $exception->getMessage() !== ''
+                    ? $exception->getMessage()
+                    : 'Unable to create account for this row.';
 
                 $failed[] = [
                     'row' => $rowNumber,
                     'email' => $email !== '' ? $email : null,
-                    'message' => $message !== '' ? $message : 'Unable to create account for this row.',
+                    'message' => $message,
                 ];
                 $validationErrors[] = ['row' => $rowNumber, 'error' => $message];
             }
+        }
+
+        $emailsSent = 0;
+        $emailFailed = [];
+
+        foreach ($pendingEmails as $pending) {
+            /** @var User $user */
+            $user = $pending['user'];
+
+            try {
+                $this->sendInitialResetLink($user, $pending['role'], resetMailTransport: false);
+                $emailsSent++;
+            } catch (\Throwable $exception) {
+                report($exception);
+
+                $emailFailed[] = [
+                    'row' => $pending['row'],
+                    'email' => $user->email,
+                    'message' => 'Account created but password setup email could not be sent.',
+                ];
+            }
+        }
+
+        if (method_exists(Mail::class, 'purgeSymfonyTransport')) {
+            Mail::purgeSymfonyTransport();
         }
 
         return [
             'created' => $created,
             'failed' => $failed,
             'validation_errors' => $validationErrors,
+            'emails_sent' => $emailsSent,
+            'email_failed' => $emailFailed,
         ];
     }
 
@@ -154,7 +195,7 @@ class AccountService
         ];
     }
 
-    public function createAccount(array $data, User $admin): User
+    public function createAccount(array $data, User $admin, bool $sendPasswordEmail = true): User
     {
         $normalizedData = $this->withNormalizedMiddleName($data);
         $shouldSendReset = empty($normalizedData['password']);
@@ -167,6 +208,20 @@ class AccountService
         }
 
         $this->purgeSoftDeletedUserByEmail($email, (int) $admin->tenant_id);
+
+        if (($normalizedData['role'] ?? '') === User::ROLE_SK_FED) {
+            throw ValidationException::withMessages([
+                'role' => 'Federation roster members are added automatically when an SK Chairperson is created in SK Officials.',
+            ]);
+        }
+
+        if (($normalizedData['role'] ?? '') === User::ROLE_SK_OFFICIAL) {
+            $this->federationRosterService->assertSingleChairPerBarangay(
+                (int) $admin->tenant_id,
+                (int) $normalizedData['barangay_id'],
+                (string) $normalizedData['position'],
+            );
+        }
 
         if ($shouldSendReset) {
             $normalizedData['status'] = User::STATUS_PENDING_APPROVAL;
@@ -187,7 +242,7 @@ class AccountService
             return $user->fresh(['officialProfile.terms', 'barangay']);
         });
 
-        if ($shouldSendReset) {
+        if ($shouldSendReset && $sendPasswordEmail) {
             try {
                 $this->sendInitialResetLinkOrFail($user, $normalizedData['role'] ?? null);
             } catch (ValidationException $exception) {
@@ -275,6 +330,15 @@ class AccountService
 
         $normalizedData = $this->withNormalizedMiddleName($data);
 
+        if ($account->role === User::ROLE_SK_OFFICIAL) {
+            $this->federationRosterService->assertSingleChairPerBarangay(
+                (int) $admin->tenant_id,
+                (int) ($normalizedData['barangay_id'] ?? $account->barangay_id),
+                (string) ($normalizedData['position'] ?? $account->officialProfile?->position ?? ''),
+                (int) $account->id,
+            );
+        }
+
         return DB::transaction(function () use ($account, $normalizedData, $admin) {
             $account->forceFill([
                 'name' => $this->buildFullName($normalizedData),
@@ -288,7 +352,7 @@ class AccountService
             if (! $profile) {
                 $profile = $this->createOfficialProfile($account, $normalizedData);
             } else {
-                $profile->update([
+                $profileUpdate = [
                     'first_name' => $normalizedData['first_name'],
                     'last_name' => $normalizedData['last_name'],
                     'middle_name' => $normalizedData['middle_name'] ?? null,
@@ -297,11 +361,26 @@ class AccountService
                     'date_of_birth' => $normalizedData['date_of_birth'] ?? null,
                     'age' => $this->deriveAge($normalizedData['date_of_birth'] ?? null),
                     'contact_number' => $normalizedData['contact_number'] ?? null,
-                    'position' => $normalizedData['position'],
                     'municipality' => 'Santa Cruz',
                     'province' => 'Laguna',
                     'region' => 'IV-A CALABARZON',
-                ]);
+                ];
+
+                if ($account->role === User::ROLE_SK_FED) {
+                    $profileUpdate['position'] = $normalizedData['position'];
+                    $profileUpdate['federation_position'] = $normalizedData['federation_position']
+                        ?? $normalizedData['position'];
+                } else {
+                    if (array_key_exists('position', $normalizedData) && $normalizedData['position'] !== '') {
+                        $profileUpdate['position'] = $normalizedData['position'];
+                    }
+
+                    if (array_key_exists('federation_position', $normalizedData)) {
+                        $profileUpdate['federation_position'] = $normalizedData['federation_position'] ?: null;
+                    }
+                }
+
+                $profile->update($profileUpdate);
             }
 
             $latestTerm = $profile->terms()->latest('term_end')->first();
@@ -419,7 +498,7 @@ class AccountService
         ]);
     }
 
-    private function sendInitialResetLink(User $user, ?string $role = null): void
+    private function sendInitialResetLink(User $user, ?string $role = null, bool $resetMailTransport = true): void
     {
         $user->refresh();
 
@@ -437,7 +516,7 @@ class AccountService
             new AccountResetPasswordNotification($token, $baseUrl, $label)
         );
 
-        if (method_exists(Mail::class, 'purgeSymfonyTransport')) {
+        if ($resetMailTransport && method_exists(Mail::class, 'purgeSymfonyTransport')) {
             Mail::purgeSymfonyTransport();
         }
 
@@ -474,6 +553,14 @@ class AccountService
 
     public function createOfficialProfile(User $user, array $data): OfficialProfile
     {
+        $role = $data['role'] ?? $user->role;
+        $position = $data['position'];
+        $federationPosition = null;
+
+        if ($role === User::ROLE_SK_FED) {
+            $federationPosition = $position;
+        }
+
         return OfficialProfile::create([
             'tenant_id' => $user->tenant_id,
             'user_id' => $user->id,
@@ -485,7 +572,8 @@ class AccountService
             'date_of_birth' => $data['date_of_birth'] ?? null,
             'age' => $this->deriveAge($data['date_of_birth'] ?? null),
             'contact_number' => $data['contact_number'] ?? null,
-            'position' => $data['position'],
+            'position' => $position,
+            'federation_position' => $federationPosition,
             'municipality' => 'Santa Cruz',
             'province' => 'Laguna',
             'region' => 'IV-A CALABARZON',
@@ -687,6 +775,9 @@ class AccountService
         $data['first_name'] = $this->normalizePersonName($data['first_name'] ?? null);
         $data['last_name'] = $this->normalizePersonName($data['last_name'] ?? null);
         $data['middle_name'] = $this->normalizePersonName($middleName);
+        if (($data['suffix'] ?? null) === 'NONE') {
+            $data['suffix'] = null;
+        }
         unset($data['middle_initial']);
 
         return $data;

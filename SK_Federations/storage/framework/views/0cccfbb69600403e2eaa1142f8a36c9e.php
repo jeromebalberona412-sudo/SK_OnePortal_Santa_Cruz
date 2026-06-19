@@ -1,10 +1,6 @@
-{{-- ============================================================
-     SK Officials Form — shared Add / Edit modal
-     Add mode:  $mode = 'add'  (no $official passed)
-     Edit mode: $mode = 'edit' (pass $official data via JS)
-     ============================================================ --}}
 
-{{-- ── ADD SK OFFICIALS MODAL ─────────────────────────────── --}}
+
+
 <div id="addSkOfficialsModal" class="modal-overlay" style="display:none;">
     <div class="modal-content modal-large modal-light" id="addSkOfficialsModalContent">
 
@@ -34,10 +30,10 @@
 
             <div id="addOfficialManualPane">
             <form id="addSkOfficialsForm" class="sk-officials-form account-modal-form" novalidate>
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="role" value="sk_official">
                     <input type="hidden" name="term_status" value="ACTIVE">
-                    <input type="hidden" name="status" value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}">
+                    <input type="hidden" name="status" value="<?php echo e(\App\Modules\Shared\Models\User::STATUS_ACTIVE); ?>">
 
                     <div class="form-section-light">
                         <h4 class="section-title-light">
@@ -123,9 +119,9 @@
                                 <label class="form-label-light required">Position</label>
                                 <select name="position" id="official_position" class="form-input-light" required>
                                     <option value="" disabled selected>Select Position</option>
-                                    @foreach(\App\Modules\Accounts\Models\OfficialProfile::officialPositionOptions() as $value => $label)
-                                        <option value="{{ $value }}">{{ $label }}</option>
-                                    @endforeach
+                                    <?php $__currentLoopData = \App\Modules\Accounts\Models\OfficialProfile::officialPositionOptions(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($value); ?>"><?php echo e($label); ?></option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                                 <span class="form-error-light"></span>
                             </div>
@@ -157,9 +153,9 @@
                                 <label class="form-label-light required">Barangay</label>
                                 <select name="barangay_id" id="official_barangay_id" class="form-input-light" required>
                                     <option value="" disabled selected>Select Barangay</option>
-                                    @foreach($barangays as $barangay)
-                                        <option value="{{ $barangay->id }}">{{ $barangay->name }}</option>
-                                    @endforeach
+                                    <?php $__currentLoopData = $barangays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $barangay): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($barangay->id); ?>"><?php echo e($barangay->name); ?></option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                                 <span class="form-error-light"></span>
                             </div>
@@ -211,7 +207,7 @@
             </div>
 
             <div id="addOfficialBatchPane" style="display:none;">
-                @include('accounts::batch_upload_panel', ['prefix' => 'official', 'templateType' => 'officials'])
+                <?php echo $__env->make('accounts::batch_upload_panel', ['prefix' => 'official', 'templateType' => 'officials'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             </div>
         </div>
         <div class="modal-footer account-modal-footer" id="addOfficialManualFooter">
@@ -233,7 +229,7 @@
 </div>
 
 
-{{-- ── EDIT SK OFFICIALS MODAL ─────────────────────────────── --}}
+
 <div id="editSkOfficialsModal" class="modal-overlay" style="display: none;">
     <div class="modal-content modal-large modal-light">
         <div class="modal-header modal-header-blue-grad">
@@ -252,9 +248,9 @@
         </div>
         <div class="modal-body modal-body-light account-modal-scroll">
             <form id="editSkOfficialsForm" class="sk-officials-form account-modal-form" data-account-id="" novalidate>
-                @csrf
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="term_status" id="edit_sk_officials_term_status" value="ACTIVE">
-                <input type="hidden" name="status" id="edit_sk_officials_status" value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}">
+                <input type="hidden" name="status" id="edit_sk_officials_status" value="<?php echo e(\App\Modules\Shared\Models\User::STATUS_ACTIVE); ?>">
 
                 <div class="form-section-light">
                     <h4 class="section-title-light"><i class="fa-solid fa-user"></i> Personal Information</h4>
@@ -326,9 +322,9 @@
                             <label for="edit_sk_officials_position" class="form-label-light required">Position</label>
                             <select id="edit_sk_officials_position" name="position" class="form-input-light" required>
                                 <option value="">Select Position</option>
-                                @foreach(\App\Modules\Accounts\Models\OfficialProfile::officialPositionOptions() as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = \App\Modules\Accounts\Models\OfficialProfile::officialPositionOptions(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($value); ?>"><?php echo e($label); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                             <span class="form-error-light"></span>
                         </div>
@@ -336,9 +332,9 @@
                             <label for="edit_sk_officials_barangay_id" class="form-label-light required">Barangay</label>
                             <select id="edit_sk_officials_barangay_id" name="barangay_id" class="form-input-light" required>
                                 <option value="">Select Barangay</option>
-                                @foreach($barangays as $barangay)
-                                    <option value="{{ $barangay->id }}">{{ $barangay->name }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $barangays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $barangay): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($barangay->id); ?>"><?php echo e($barangay->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                             <span class="form-error-light"></span>
                         </div>
@@ -372,3 +368,4 @@
         </div>
     </div>
 </div>
+<?php /**PATH C:\Users\Administrator\Documents\SK_OnePortal_Santa_Cruz\SK_Federations\app\Modules\Accounts\Providers/../Views/form_sk_officials.blade.php ENDPATH**/ ?>

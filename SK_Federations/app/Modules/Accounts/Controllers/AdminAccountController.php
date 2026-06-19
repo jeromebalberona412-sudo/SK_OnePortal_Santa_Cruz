@@ -7,6 +7,7 @@ use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Models\OfficialTerm;
 use App\Modules\Archive_Management\Services\ExpiredTermProcessorService;
+use App\Modules\Accounts\Requests\AssignFederationPositionRequest;
 use App\Modules\Accounts\Requests\BatchStoreAccountsRequest;
 use App\Modules\Accounts\Requests\ExtendTermRequest;
 use App\Modules\Accounts\Requests\StoreAccountRequest;
@@ -14,6 +15,7 @@ use App\Modules\Accounts\Requests\UpdateAccountRequest;
 use App\Modules\Accounts\Requests\BulkDeactivateAccountsRequest;
 use App\Modules\Accounts\Services\AccountBatchTemplateService;
 use App\Modules\Accounts\Services\AccountService;
+use App\Modules\Accounts\Services\FederationRosterService;
 use App\Modules\Shared\Controllers\Controller;
 use App\Modules\Authentication\Services\BootstrapSkFedAdminService;
 use App\Modules\Shared\Models\Tenant;
@@ -32,6 +34,7 @@ class AdminAccountController extends Controller
         private readonly AccountService $accountService,
         private readonly ExpiredTermProcessorService $expiredTermProcessor,
         private readonly AccountBatchTemplateService $batchTemplateService,
+        private readonly FederationRosterService $federationRosterService,
     ) {
     }
 
@@ -42,18 +45,9 @@ class AdminAccountController extends Controller
         $tenantId = $this->resolveTenantId($request->user());
         $this->ensureTenantBarangays($tenantId);
         $this->expiredTermProcessor->processForTenant($tenantId, $request->user());
+        $this->federationRosterService->syncFederationRosterAccess($tenantId);
 
-        $query = User::query()
-            ->with(['barangay', 'officialProfile.latestTerm'])
-            ->where('tenant_id', $tenantId)
-            ->where('role', User::ROLE_SK_FED)
-            ->whereRaw('LOWER(email) != ?', [BootstrapSkFedAdminService::bootstrapEmailNormalized()])
-            ->whereHas('officialProfile.terms', function ($termQuery) {
-                $termQuery
-                    ->where('status', OfficialTerm::STATUS_ACTIVE)
-                    ->whereDate('term_end', '>=', now()->startOfDay());
-            })
-            ->orderByDesc('created_at');
+        $query = $this->federationRosterService->federationRosterQuery($tenantId);
 
         if ($search = $request->string('search')->toString()) {
             $query->where(function ($builder) use ($search) {
@@ -73,21 +67,26 @@ class AdminAccountController extends Controller
         }
 
         if ($request->filled('position')) {
-            $query->whereHas('officialProfile', function ($profileQuery) use ($request) {
-                $profileQuery->where('position', $request->input('position'));
+            $position = $request->input('position');
+            $query->whereHas('officialProfile', function ($profileQuery) use ($position) {
+                $profileQuery->where('federation_position', $position);
             });
         }
 
-        $accounts = $query->paginate(10)->withQueryString();
+        $accounts = $query->get()
+            ->sortBy(fn (User $account) => Str::lower($account->barangay?->name ?? 'zzzz'))
+            ->values();
         $barangays = Barangay::query()
             ->where('tenant_id', $tenantId)
             ->orderBy('name')
             ->get();
 
+        $takenFederationPositions = $this->federationRosterService->takenFederationPositions($tenantId);
+
         $accountType = 'sk_federation';
         $positionOptions = OfficialProfile::federationPositionOptions();
 
-        return view('accounts::manage_account', compact('accounts', 'accountType', 'barangays', 'positionOptions'));
+        return view('accounts::manage_account', compact('accounts', 'accountType', 'barangays', 'positionOptions', 'takenFederationPositions'));
     }
 
     public function indexOfficials(Request $request): View
@@ -132,7 +131,7 @@ class AdminAccountController extends Controller
             });
         }
 
-        $accounts = $query->paginate(10)->withQueryString();
+        $accounts = $query->orderByDesc('created_at')->get();
         $barangays = Barangay::query()
             ->where('tenant_id', $tenantId)
             ->orderBy('name')
@@ -154,6 +153,8 @@ class AdminAccountController extends Controller
     public function batchStore(BatchStoreAccountsRequest $request): JsonResponse
     {
         $this->authorize('create', User::class);
+
+        set_time_limit(0);
 
         $tenantId = $this->resolveTenantId($request->user());
         $this->ensureTenantBarangays($tenantId);
@@ -177,6 +178,18 @@ class AdminAccountController extends Controller
             }
         }
 
+        if ($validated['role'] === User::ROLE_SK_FED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Federation roster members are added automatically when an SK Chairperson is created in SK Officials.',
+                'created' => 0,
+                'failed' => [],
+                'validation_errors' => [
+                    ['row' => 0, 'error' => 'Batch upload for federation accounts is disabled. Add SK Chairpersons from SK Officials instead.'],
+                ],
+            ], 422);
+        }
+
         $result = $this->accountService->batchCreateAccounts(
             $validated['accounts'],
             $validated['role'],
@@ -185,8 +198,15 @@ class AdminAccountController extends Controller
 
         $created = $result['created'];
         $failedCount = count($result['failed']);
+        $emailFailedCount = count($result['email_failed'] ?? []);
+        $emailsSent = (int) ($result['emails_sent'] ?? 0);
         $total = $created + $failedCount;
-        $validationErrors = $result['validation_errors'] ?? [];
+        $validationErrors = array_merge(
+            $result['validation_errors'] ?? [],
+            collect($result['email_failed'] ?? [])->map(
+                fn (array $item): array => ['row' => $item['row'], 'error' => $item['message']]
+            )->all()
+        );
 
         if ($created === 0) {
             return response()->json([
@@ -194,19 +214,28 @@ class AdminAccountController extends Controller
                 'message' => 'No accounts were created. Please review the uploaded rows and try again.',
                 'created' => 0,
                 'failed' => $result['failed'],
+                'email_failed' => $result['email_failed'] ?? [],
                 'validation_errors' => $validationErrors,
             ], 422);
         }
 
         $message = $failedCount > 0
             ? "{$created} of {$total} accounts created successfully. {$failedCount} row(s) failed."
-            : "{$created} account".($created === 1 ? '' : 's').' created successfully. Password setup emails were sent.';
+            : "{$created} account".($created === 1 ? '' : 's').' created successfully.';
+
+        if ($emailFailedCount > 0) {
+            $message .= " {$emailsSent} password setup email(s) sent. {$emailFailedCount} email(s) could not be sent.";
+        } else {
+            $message .= ' Password setup emails were sent.';
+        }
 
         return response()->json([
             'success' => true,
             'message' => $message,
             'created' => $created,
+            'emails_sent' => $emailsSent,
             'failed' => $result['failed'],
+            'email_failed' => $result['email_failed'] ?? [],
             'validation_errors' => $validationErrors,
         ]);
     }
@@ -265,6 +294,12 @@ class AdminAccountController extends Controller
         try {
             $validatedData = $request->validated();
             Log::info('AdminAccountController@store: Validation passed.', $validatedData);
+
+            if (($validatedData['role'] ?? '') === User::ROLE_SK_FED) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'role' => 'Federation roster members are added automatically when an SK Chairperson is created in SK Officials.',
+                ]);
+            }
 
             $tenantId = $this->resolveTenantId($request->user());
             $this->ensureTenantBarangays($tenantId);
@@ -355,6 +390,27 @@ class AdminAccountController extends Controller
         }
 
         return back()->with('status', 'Account updated successfully.');
+    }
+
+    public function updateFederationPosition(AssignFederationPositionRequest $request, User $user): JsonResponse
+    {
+        $this->resolveTenantId($request->user());
+        $this->authorize('update', $user);
+
+        $account = $this->federationRosterService->assignFederationPosition(
+            $user,
+            $request->validated('federation_position'),
+            $request->user()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Federation position updated successfully.',
+            'data' => [
+                'id' => $account->id,
+                'federation_position' => $account->officialProfile?->federation_position,
+            ],
+        ]);
     }
 
     public function deactivate(Request $request, User $user): RedirectResponse|JsonResponse

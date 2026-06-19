@@ -1,4 +1,4 @@
-@php
+<?php
     $sharedData = [
         'data-account-id' => $account->id,
         'data-first-name' => $firstName ?? '',
@@ -23,12 +23,12 @@
         'data-term-start' => $term?->term_start?->toDateString() ?? '',
         'data-term-end' => $term?->term_end?->toDateString() ?? '',
     ];
-@endphp
+?>
 
 <div class="account-actions-menu">
     <button type="button"
             class="account-actions-trigger"
-            aria-label="Account actions for {{ $displayName }}"
+            aria-label="Account actions for <?php echo e($displayName); ?>"
             aria-haspopup="true"
             aria-expanded="false">
         <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
@@ -38,27 +38,28 @@
         <button type="button"
                 class="account-actions-item account-actions-item-view btn-view-account"
                 role="menuitem"
-                @foreach($sharedData as $attr => $value) {{ $attr }}="{{ $value }}" @endforeach
-                data-email-verified-at="{{ $account->email_verified_at?->format('m/d/Y h:i A') ?? '' }}">
+                <?php $__currentLoopData = $sharedData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $attr => $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?> <?php echo e($attr); ?>="<?php echo e($value); ?>" <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                data-email-verified-at="<?php echo e($account->email_verified_at?->format('m/d/Y h:i A') ?? ''); ?>">
             <i class="fas fa-eye" aria-hidden="true"></i>
             <span>View Details</span>
         </button>
         <button type="button"
                 class="account-actions-item account-actions-item-edit btn-edit-account"
                 role="menuitem"
-                @foreach($sharedData as $attr => $value) {{ $attr }}="{{ $value }}" @endforeach>
+                <?php $__currentLoopData = $sharedData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $attr => $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?> <?php echo e($attr); ?>="<?php echo e($value); ?>" <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>>
             <i class="fas fa-pen" aria-hidden="true"></i>
-            <span>{{ ($hideDelete ?? false) ? 'Assign Federation Position' : 'Edit Member' }}</span>
+            <span><?php echo e(($hideDelete ?? false) ? 'Assign Federation Position' : 'Edit Member'); ?></span>
         </button>
-        @if(empty($hideDelete))
+        <?php if(empty($hideDelete)): ?>
         <button type="button"
                 class="account-actions-item account-actions-item-danger btn-delete-account"
                 role="menuitem"
-                data-account-id="{{ $account->id }}"
-                data-display-name="{{ $displayName }}">
+                data-account-id="<?php echo e($account->id); ?>"
+                data-display-name="<?php echo e($displayName); ?>">
             <i class="fas fa-trash" aria-hidden="true"></i>
             <span>Delete Account</span>
         </button>
-        @endif
+        <?php endif; ?>
     </div>
 </div>
+<?php /**PATH C:\Users\Administrator\Documents\SK_OnePortal_Santa_Cruz\SK_Federations\app\Modules\Accounts\Providers/../Views/account_actions_menu.blade.php ENDPATH**/ ?>

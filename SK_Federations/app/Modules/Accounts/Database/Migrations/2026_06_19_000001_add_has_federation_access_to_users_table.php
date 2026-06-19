@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (! Schema::hasColumn('users', 'has_federation_access')) {
-                $table->boolean('has_federation_access')->default(false)->after('role');
+                $table->boolean('has_federation_access')->default(false);
             }
         });
     }
