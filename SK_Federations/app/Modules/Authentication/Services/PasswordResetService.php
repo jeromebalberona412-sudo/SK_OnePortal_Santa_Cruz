@@ -25,12 +25,18 @@ class PasswordResetService
     public function __construct(
         protected TenantContextService $tenantContextService,
         protected AuthAuditLogService $auditLogService,
+        protected BootstrapSkFedAdminService $bootstrapSkFedAdminService,
     ) {}
 
     public function sendResetLink(Request $request, string $email): void
     {
         $normalizedEmail = Str::lower(trim($email));
         $user = $this->findUserByEmail($normalizedEmail);
+
+        if ($user !== null) {
+            $user = $this->bootstrapSkFedAdminService->normalizeUserIfBootstrap($user);
+        }
+
         $emailHash = $this->emailHash($normalizedEmail);
 
         $isResettable = $user !== null && $this->isResettableUser($user);
@@ -99,6 +105,10 @@ class PasswordResetService
         $token = (string) ($credentials['token'] ?? '');
         $password = (string) ($credentials['password'] ?? '');
         $user = $this->findUserByEmail($normalizedEmail);
+
+        if ($user !== null) {
+            $user = $this->bootstrapSkFedAdminService->normalizeUserIfBootstrap($user);
+        }
 
         if ($user === null) {
             $this->logResetFailure(
@@ -192,7 +202,9 @@ class PasswordResetService
 
     protected function findUserByEmail(string $email): ?User
     {
-        return User::query()->where('email', $email)->first();
+        return User::query()
+            ->whereRaw('LOWER(email) = ?', [Str::lower(trim($email))])
+            ->first();
     }
 
     protected function isResettableUser(User $user): bool

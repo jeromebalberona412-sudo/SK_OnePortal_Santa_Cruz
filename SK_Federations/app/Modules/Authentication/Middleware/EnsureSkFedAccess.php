@@ -24,9 +24,8 @@ class EnsureSkFedAccess
         }
 
         $tenantId = $this->tenantContextService->tenantId();
-        $requiredRole = (string) config('sk_fed_auth.required_role', User::ROLE_SK_FED);
 
-        if ($tenantId === null || ! $user->hasRole($requiredRole) || (int) ($user->tenant_id ?? 0) !== $tenantId) {
+        if ($tenantId === null || ! $user->canAccessFederationPortal() || (int) ($user->tenant_id ?? 0) !== $tenantId) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

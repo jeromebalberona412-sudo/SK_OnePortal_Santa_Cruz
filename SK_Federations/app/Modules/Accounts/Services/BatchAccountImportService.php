@@ -14,16 +14,65 @@ class BatchAccountImportService
     /** @var array<string, int> */
     private array $barangayLookup = [];
 
+    private ?int $defaultBarangayId = null;
+
     public function __construct(private readonly int $tenantId)
     {
         $this->barangayLookup = [];
 
         Barangay::query()
             ->where('tenant_id', $tenantId)
+            ->orderBy('name')
             ->get()
             ->each(function (Barangay $barangay): void {
+                if ($this->defaultBarangayId === null) {
+                    $this->defaultBarangayId = $barangay->id;
+                }
+
                 $this->registerBarangayAlias($barangay->name, $barangay->id);
             });
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array{row: int, error: string}>
+     */
+    public function validateRows(array $rows, string $role): array
+    {
+        $errors = [];
+        $seenEmails = [];
+
+        foreach ($rows as $index => $row) {
+            if (! is_array($row)) {
+                $errors[] = ['row' => $index + 1, 'error' => 'Invalid row format.'];
+
+                continue;
+            }
+
+            try {
+                $normalized = $this->normalizeAccountRow($row, $role, true);
+                $email = $normalized['email'];
+
+                if (isset($seenEmails[$email])) {
+                    $errors[] = ['row' => $index + 1, 'error' => 'Duplicate email in upload file.'];
+
+                    continue;
+                }
+
+                $seenEmails[$email] = true;
+
+                if (User::query()->where('email', $email)->whereNull('deleted_at')->exists()) {
+                    $errors[] = ['row' => $index + 1, 'error' => 'Email is already registered.'];
+                }
+            } catch (ValidationException $exception) {
+                $errors[] = [
+                    'row' => $index + 1,
+                    'error' => collect($exception->errors())->flatten()->first() ?? 'Validation failed.',
+                ];
+            }
+        }
+
+        return $errors;
     }
 
     private function registerBarangayAlias(string $name, int $id): void
@@ -53,53 +102,76 @@ class BatchAccountImportService
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>
      */
-    public function normalizeAccountRow(array $row, string $role): array
+    public function normalizeAccountRow(array $row, string $role, bool $strictDemographics = true): array
     {
-        $firstName = $this->stringValue($row, ['first_name', 'first name']);
-        $lastName = $this->stringValue($row, ['last_name', 'last name']);
-        $email = $this->stringValue($row, ['email', 'email address']);
+        $firstName = mb_strtoupper($this->stringValue($row, ['first_name', 'first name']), 'UTF-8');
+        $lastName = mb_strtoupper($this->stringValue($row, ['last_name', 'last name']), 'UTF-8');
+        $email = strtolower($this->stringValue($row, ['email', 'email address']));
         $barangayName = $this->stringValue($row, ['barangay', 'barangay_name', 'barangay name']);
+        $municipality = $this->stringValue($row, ['municipality']) ?: 'Santa Cruz';
         $barangayId = $this->resolveBarangayId(
             $this->intValue($row, ['barangay_id', 'barangay id']) ?: null,
-            $barangayName
+            $barangayName !== '' ? $barangayName : $municipality
         );
 
-        $status = $this->normalizeStatus($this->stringValue($row, ['status']) ?: 'ACTIVE');
+        if ($barangayId === null && $role === User::ROLE_SK_FED && ! $strictDemographics) {
+            $barangayId = $this->defaultBarangayId;
+        }
+
+        $status = User::STATUS_ACTIVE;
         $position = $this->normalizePosition($this->stringValue($row, ['position']), $role);
 
-        $termStart = $this->parseDate($this->rawValue($row, [
-            'term_start', 'term start date', 'term start', 'term_start_date', 'start date', 'term begin', 'term begin date',
-        ]));
         $termEnd = $this->parseDate($this->rawValue($row, [
             'term_end', 'term end date', 'term end', 'term_end_date', 'end date', 'term expiry', 'term expiry date',
         ]));
+        $termStart = $this->parseDate($this->rawValue($row, [
+            'term_start', 'term start date', 'term start', 'term_start_date', 'start date', 'term begin', 'term begin date',
+        ]));
+
+        if (! $strictDemographics) {
+            if ($termStart === null) {
+                $termStart = now()->startOfYear()->toDateString();
+            }
+
+            if ($termEnd === null) {
+                $termEnd = Carbon::parse($termStart)->addYears(3)->toDateString();
+            }
+        }
+
         $dateOfBirth = $this->parseDate($this->rawValue($row, [
             'date_of_birth', 'birthdate', 'date of birth', 'birth date', 'dob',
         ]));
 
         $suffix = $this->normalizeSuffix($this->stringValue($row, ['suffix']));
         $sex = $this->normalizeSex($this->stringValue($row, ['sex']));
+        $contactNumber = $this->normalizeContactNumber($this->stringValue($row, ['contact_number', 'contact number']));
+
+        $middleNameRaw = $this->stringValue($row, ['middle_name', 'middle name']);
+        $middleName = $middleNameRaw !== '' ? mb_strtoupper($middleNameRaw, 'UTF-8') : null;
 
         $data = [
             'first_name' => $firstName,
-            'middle_name' => $this->nullableString($this->stringValue($row, ['middle_name', 'middle name'])),
+            'middle_name' => $middleName,
             'last_name' => $lastName,
             'suffix' => $suffix,
             'sex' => $sex,
             'date_of_birth' => $dateOfBirth,
             'age' => $this->intValue($row, ['age']) ?: ($dateOfBirth ? Carbon::parse($dateOfBirth)->age : null),
-            'contact_number' => $this->stringValue($row, ['contact_number', 'contact number']),
-            'email' => strtolower($email),
+            'contact_number' => $contactNumber,
+            'email' => $email,
             'role' => $role,
             'status' => $status,
             'barangay_id' => $barangayId,
             'position' => $position,
+            'region' => $this->stringValue($row, ['region']) ?: 'IV-A CALABARZON',
+            'province' => $this->stringValue($row, ['province']) ?: 'Laguna',
+            'municipality' => $municipality,
             'term_start' => $termStart,
             'term_end' => $termEnd,
-            'term_status' => $status === User::STATUS_INACTIVE ? 'INACTIVE' : 'ACTIVE',
+            'term_status' => 'ACTIVE',
         ];
 
-        $this->assertRowIsValid($data, $barangayName);
+        $this->assertRowIsValid($data, $barangayName, $role, $strictDemographics);
 
         return $data;
     }
@@ -107,36 +179,48 @@ class BatchAccountImportService
     /**
      * @param  array<string, mixed>  $data
      */
-    private function assertRowIsValid(array $data, string $barangayName): void
+    private function assertRowIsValid(array $data, string $barangayName, string $role, bool $strictDemographics): void
     {
         $errors = [];
 
         if ($data['first_name'] === '') {
             $errors[] = 'First name is required.';
+        } elseif (mb_strlen($data['first_name']) < 3) {
+            $errors[] = 'First name must be at least 3 characters.';
+        } elseif (mb_strlen($data['first_name']) > 35) {
+            $errors[] = 'First name must not exceed 35 characters.';
+        } elseif (! preg_match('/^[A-Z\s\-\']+$/u', $data['first_name'])) {
+            $errors[] = 'First name must use uppercase letters only.';
+        }
+
+        if ($data['middle_name'] !== null && mb_strlen((string) $data['middle_name']) > 35) {
+            $errors[] = 'Middle name must not exceed 35 characters.';
+        } elseif ($data['middle_name'] !== null && ! preg_match('/^[A-Z\s\-\']*$/u', (string) $data['middle_name'])) {
+            $errors[] = 'Middle name must use uppercase letters only.';
         }
 
         if ($data['last_name'] === '') {
             $errors[] = 'Last name is required.';
+        } elseif (mb_strlen($data['last_name']) < 3) {
+            $errors[] = 'Last name must be at least 3 characters.';
+        } elseif (mb_strlen($data['last_name']) > 35) {
+            $errors[] = 'Last name must not exceed 35 characters.';
+        } elseif (! preg_match('/^[A-Z\s\-\']+$/u', $data['last_name'])) {
+            $errors[] = 'Last name must use uppercase letters only.';
+        }
+
+        if ($data['suffix'] !== null && mb_strlen((string) $data['suffix']) > 10) {
+            $errors[] = 'Suffix must not exceed 10 characters.';
         }
 
         if ($data['email'] === '' || ! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'A valid email address is required.';
+            $errors[] = 'Invalid email';
+        } elseif (strlen($data['email']) > 254) {
+            $errors[] = 'Email must not exceed 254 characters.';
         }
 
-        if ($data['sex'] === null) {
-            $errors[] = 'Sex must be Male or Female.';
-        }
-
-        if ($data['date_of_birth'] === null) {
-            $errors[] = 'Birthdate is required.';
-        }
-
-        if ($data['contact_number'] === '') {
-            $errors[] = 'Contact number is required.';
-        }
-
-        if ($data['position'] === null) {
-            $errors[] = 'Position is invalid or missing.';
+        if ($data['position'] === null || $data['position'] === '') {
+            $errors[] = 'Position is required or not recognized for this account type.';
         }
 
         if ($data['barangay_id'] === null) {
@@ -145,10 +229,40 @@ class BatchAccountImportService
                 : 'Barangay is required.';
         }
 
-        if ($data['term_start'] === null || $data['term_end'] === null) {
-            $errors[] = 'Term start and term end dates are required.';
-        } elseif ($data['term_start'] >= $data['term_end']) {
-            $errors[] = 'Term end date must be after term start date.';
+        if ($strictDemographics) {
+            if ($data['sex'] === null) {
+                $errors[] = 'Sex must be Male or Female.';
+            }
+
+            if ($data['date_of_birth'] === null) {
+                $errors[] = 'Birthdate is required.';
+            } elseif (Carbon::parse($data['date_of_birth'])->isFuture()) {
+                $errors[] = 'Birthdate must be before today.';
+            }
+
+            if ($data['contact_number'] === '') {
+                $errors[] = 'Contact number is required.';
+            } elseif (! preg_match('/^09\d{9}$/', $data['contact_number'])) {
+                $errors[] = 'Contact number must be 11 digits starting with 09.';
+            }
+
+            if ($data['term_start'] === null) {
+                $errors[] = 'Term start date is required.';
+            } elseif ($data['term_start'] < now()->startOfYear()->toDateString()) {
+                $errors[] = 'Term start date cannot be before the current year.';
+            }
+
+            if ($data['term_end'] === null) {
+                $errors[] = 'Term end date is required.';
+            }
+        }
+
+        if ($data['term_start'] !== null && $data['term_end'] !== null) {
+            if ($data['term_start'] >= $data['term_end']) {
+                $errors[] = 'Term end date must be after term start date.';
+            } elseif (Carbon::parse($data['term_end'])->gt(Carbon::parse($data['term_start'])->addYears(5))) {
+                $errors[] = 'Term end date must be within 5 years of the term start date.';
+            }
         }
 
         if ($errors !== []) {
@@ -156,6 +270,21 @@ class BatchAccountImportService
                 'row' => implode(' ', $errors),
             ]);
         }
+    }
+
+    private function normalizeContactNumber(string $value): string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?? '';
+
+        if ($digits === '') {
+            return '';
+        }
+
+        if (! str_starts_with($digits, '09')) {
+            $digits = '09'.ltrim($digits, '0');
+        }
+
+        return substr($digits, 0, 11);
     }
 
     private function resolveBarangayId(?int $barangayId, string $barangayName): ?int
@@ -194,6 +323,10 @@ class BatchAccountImportService
 
         if (preg_match('/^barangay\s+([0-9ivx]+)$/i', $trimmed, $matches)) {
             return 'Poblacion '.$this->normalizeRomanOrDigitToken($matches[1]);
+        }
+
+        if (Str::lower($trimmed) === 'santa cruz') {
+            return $trimmed;
         }
 
         return $trimmed;
@@ -274,16 +407,6 @@ class BatchAccountImportService
         return in_array($position, $allowed, true) ? $position : null;
     }
 
-    private function normalizeStatus(string $value): string
-    {
-        $normalized = Str::upper(trim($value));
-
-        return match ($normalized) {
-            'INACTIVE', 'DISABLED' => User::STATUS_INACTIVE,
-            default => User::STATUS_ACTIVE,
-        };
-    }
-
     private function normalizeSuffix(?string $value): ?string
     {
         if ($value === null || $value === '') {
@@ -303,7 +426,7 @@ class BatchAccountImportService
             'iii' => 'III',
             'iv' => 'IV',
             'v' => 'V',
-            default => in_array($normalized, ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'], true) ? $normalized : null,
+            default => mb_strlen($normalized) <= 10 ? $normalized : null,
         };
     }
 

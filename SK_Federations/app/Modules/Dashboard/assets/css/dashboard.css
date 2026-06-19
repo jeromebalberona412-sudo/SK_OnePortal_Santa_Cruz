@@ -2,11 +2,14 @@
    SK Federations - Dashboard Layout
    ============================================ */
 :root {
-    --fed-blue: #213F99;
+    --sk-logo-blue: #1A3263;
+    --fed-blue: #1A3263;
+    --fed-navy: #1A3263;
+    --fed-navy-deep: #152850;
     --fed-red: #d0242b;
     --fed-yellow: #F7D31E;
-    --fed-blue-dark: #162d72;
-    --fed-blue-light: #2d52c4;
+    --fed-blue-dark: #152a4a;
+    --fed-blue-light: #2d4a7c;
     --sidebar-width: 260px;
     --sidebar-collapsed: 72px;
     --navbar-height: 64px;
@@ -22,18 +25,26 @@ body {
     overflow-x: hidden;
 }
 
-/* ── NAVBAR ── */
-.navbar {
+/* ── NAVBAR (uniform SK logo S blue) ── */
+.navbar,
+.navbar.sk-fed-navbar {
     position: fixed;
     top: 0; left: 0; right: 0;
     height: var(--navbar-height);
-    background: linear-gradient(135deg, var(--fed-blue) 0%, var(--fed-red) 100%);
+    background: var(--sk-logo-blue);
+    background-color: var(--sk-logo-blue);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 20px 0 0;
     z-index: 1100;
     box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.navbar-left,
+.navbar-right,
+.navbar-brand {
+    background: transparent;
 }
 
 .navbar-left {
@@ -45,7 +56,7 @@ body {
 .menu-toggle {
     width: 56px;
     height: 100%;
-    background: rgba(0,0,0,0.12);
+    background: transparent;
     border: none;
     color: white;
     font-size: 20px;
@@ -57,7 +68,11 @@ body {
     transition: background var(--transition);
     flex-shrink: 0;
 }
-.menu-toggle:hover { background: rgba(0,0,0,0.2); }
+.menu-toggle:hover,
+.menu-toggle:focus-visible {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
 
 .toggle-icon-expand  { display: block; }
 .toggle-icon-collapse { display: none; }
@@ -73,12 +88,15 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
     transition: opacity var(--transition), width var(--transition);
 }
 .navbar-brand .brand-logo {
-    width: 32px; height: 32px;
-    border-radius: 6px;
-    object-fit: contain;
-    border: 2px solid rgba(255,255,255,0.5);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+    border: 2px solid rgba(255,255,255,0.55);
     flex-shrink: 0;
-    background: rgba(255,255,255,0.1);
+    background: #ffffff;
+    padding: 1px;
 }
 .navbar-brand .brand-name {
     font-size: 15px;
@@ -154,9 +172,10 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
     appearance: none;
     transition: background-color 0.22s ease, color 0.22s ease;
 }
-.notif-btn:hover {
-    background-color: rgba(245, 197, 24, 0.15);
-    color: #f5c518;
+.notif-btn:hover,
+.notif-btn:focus-visible {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 .notif-badge {
     position: absolute;
@@ -208,12 +227,12 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
 
 .notif-popover-header {
     padding: 14px 16px 12px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    background: linear-gradient(135deg, var(--fed-blue) 0%, var(--fed-red) 100%);
+    background: var(--sk-logo-blue);
 }
 .notif-popover-title {
     display: flex;
@@ -342,6 +361,33 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
 .notif-empty i { font-size: 32px; opacity: 0.35; }
 .notif-empty p { font-size: 13px; font-weight: 600; margin: 0; }
 
+.notif-popover-footer {
+    padding: 10px 14px 12px;
+    border-top: 1px solid #f1f5f9;
+    background: #fafbfc;
+}
+
+.notif-see-all-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--fed-blue), var(--fed-blue-light));
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.notif-see-all-btn:hover {
+    opacity: 0.92;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
 @keyframes popoverIn {
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -369,9 +415,11 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
     appearance: none;
     box-shadow: none;
 }
-.profile-btn:hover {
-    background-color: rgba(245, 197, 24, 0.15);
-    color: #f5c518;
+.profile-btn:hover,
+.profile-btn:focus-visible,
+.profile-btn.open {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 .profile-btn .nav-avatar {
     width: 32px;
@@ -438,7 +486,7 @@ body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed); }
     padding: 20px 16px 16px;
     display: flex; align-items: center; gap: 12px;
     border-bottom: 1px solid #f1f5f9;
-    flex-shrink: 0; overflow: hidden; min-height: 80px;
+    overflow: hidden; min-height: 80px;
 }
 .sidebar-profile-link { text-decoration: none; transition: background var(--transition); cursor: pointer; }
 .sidebar-profile-link:hover { background: #f8fafc; }
@@ -576,9 +624,44 @@ body.sidebar-collapsed #archiveManagementSubmenu {
     border-left-color: transparent;
 }
 
-.sidebar-nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 8px 0; }
-.sidebar-nav::-webkit-scrollbar { width: 3px; }
-.sidebar-nav::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+.sidebar-nav {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 0 8px;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    overscroll-behavior: contain;
+}
+
+.sidebar-nav:hover {
+    scrollbar-color: rgba(26, 50, 99, 0.85) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.sidebar-nav:hover::-webkit-scrollbar-thumb {
+    background: rgba(26, 50, 99, 0.85);
+    box-shadow: 0 0 6px rgba(26, 50, 99, 0.35);
+}
+
+.sidebar-nav:hover::-webkit-scrollbar-thumb:hover {
+    background: var(--sk-logo-blue);
+    box-shadow: 0 0 8px rgba(26, 50, 99, 0.55);
+}
 
 .menu-section-label {
     font-size: 10px; font-weight: 700; color: #94a3b8;

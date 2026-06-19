@@ -8,12 +8,15 @@ use App\Modules\Accounts\Models\OfficialTerm;
 use App\Modules\Archive_Management\Services\TermRecordsArchiveService;
 use App\Modules\Accounts\Notifications\AccountResetPasswordNotification;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
+use App\Modules\Authentication\Services\BootstrapSkFedAdminService;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -22,6 +25,7 @@ class AccountService
     public function __construct(
         private readonly AuditLogInterface $auditLog,
         private readonly TermRecordsArchiveService $termRecordsArchiveService,
+        private readonly ChairpersonFederationSyncService $chairpersonFederationSyncService,
     ) {
     }
 
@@ -34,24 +38,52 @@ class AccountService
         $importService = new BatchAccountImportService((int) $admin->tenant_id);
         $created = 0;
         $failed = [];
+        $validationErrors = [];
+        $seenEmails = [];
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 1;
-            $email = is_array($row) ? (string) ($row['email'] ?? $row['email address'] ?? '') : '';
+            $email = is_array($row) ? strtolower((string) ($row['email'] ?? $row['email address'] ?? '')) : '';
+
+            if ($email !== '' && isset($seenEmails[$email])) {
+                $message = 'Duplicate email in upload file.';
+                $failed[] = ['row' => $rowNumber, 'email' => $email, 'message' => $message];
+                $validationErrors[] = ['row' => $rowNumber, 'error' => $message];
+
+                continue;
+            }
+
+            if ($email !== '') {
+                $seenEmails[$email] = true;
+            }
 
             try {
-                $normalized = $importService->normalizeAccountRow($row, $role);
-                $this->createAccount($normalized, $admin);
+                $normalized = $importService->normalizeAccountRow($row, $role, true);
+
+                if (User::query()->where('email', $normalized['email'])->whereNull('deleted_at')->exists()) {
+                    $message = 'Email is already registered.';
+                    $failed[] = ['row' => $rowNumber, 'email' => $normalized['email'], 'message' => $message];
+                    $validationErrors[] = ['row' => $rowNumber, 'error' => $message];
+
+                    continue;
+                }
+
+                $this->purgeSoftDeletedUserByEmail($normalized['email'], (int) $admin->tenant_id);
+
+                $accountData = array_merge($normalized, ['role' => $role]);
+                $this->createAccount($accountData, $admin);
                 $created++;
             } catch (ValidationException $exception) {
+                $message = collect($exception->errors())->flatten()->first() ?? 'Validation failed.';
                 $failed[] = [
                     'row' => $rowNumber,
                     'email' => $email !== '' ? $email : null,
-                    'message' => collect($exception->errors())->flatten()->first() ?? 'Validation failed.',
+                    'message' => $message,
                 ];
+                $validationErrors[] = ['row' => $rowNumber, 'error' => $message];
             } catch (\Illuminate\Database\QueryException $exception) {
                 $message = str_contains(strtolower($exception->getMessage()), 'duplicate')
-                    ? 'Email already exists.'
+                    ? 'Email is already registered.'
                     : 'Database error while creating this account.';
 
                 $failed[] = [
@@ -59,6 +91,7 @@ class AccountService
                     'email' => $email !== '' ? $email : null,
                     'message' => $message,
                 ];
+                $validationErrors[] = ['row' => $rowNumber, 'error' => $message];
             } catch (\Throwable $exception) {
                 report($exception);
 
@@ -70,15 +103,53 @@ class AccountService
                 $failed[] = [
                     'row' => $rowNumber,
                     'email' => $email !== '' ? $email : null,
-                    'message' => $message !== ''
-                        ? $message
-                        : 'Unable to create account for this row.',
+                    'message' => $message !== '' ? $message : 'Unable to create account for this row.',
                 ];
+                $validationErrors[] = ['row' => $rowNumber, 'error' => $message];
             }
         }
 
         return [
             'created' => $created,
+            'failed' => $failed,
+            'validation_errors' => $validationErrors,
+        ];
+    }
+
+    /**
+     * @param  list<int>  $accountIds
+     * @return array{deleted: int, failed: list<array{id: int, message: string}>}
+     */
+    public function bulkDeactivate(array $accountIds, User $admin): array
+    {
+        $deleted = 0;
+        $failed = [];
+
+        foreach ($accountIds as $accountId) {
+            $target = User::query()
+                ->where('id', $accountId)
+                ->where('tenant_id', $admin->tenant_id)
+                ->first();
+
+            if (! $target) {
+                $failed[] = ['id' => $accountId, 'message' => 'Account not found.'];
+
+                continue;
+            }
+
+            try {
+                $this->deactivate($target, $admin);
+                $deleted++;
+            } catch (ValidationException $exception) {
+                $failed[] = [
+                    'id' => $accountId,
+                    'message' => collect($exception->errors())->flatten()->first() ?? 'Unable to delete account.',
+                ];
+            }
+        }
+
+        return [
+            'deleted' => $deleted,
             'failed' => $failed,
         ];
     }
@@ -87,6 +158,19 @@ class AccountService
     {
         $normalizedData = $this->withNormalizedMiddleName($data);
         $shouldSendReset = empty($normalizedData['password']);
+        $email = strtolower(trim((string) $normalizedData['email']));
+
+        if (User::query()->where('email', $email)->whereNull('deleted_at')->exists()) {
+            throw ValidationException::withMessages([
+                'email' => 'Email is already registered.',
+            ]);
+        }
+
+        $this->purgeSoftDeletedUserByEmail($email, (int) $admin->tenant_id);
+
+        if ($shouldSendReset) {
+            $normalizedData['status'] = User::STATUS_PENDING_APPROVAL;
+        }
 
         $user = DB::transaction(function () use ($normalizedData, $admin) {
             $user = $this->createUser($normalizedData, $admin);
@@ -100,24 +184,28 @@ class AccountService
                 'status' => $normalizedData['term_status'],
             ]);
 
-            $this->logAuditAction(
-                $admin,
-                'account_created',
-                'users',
-                (string) $user->id,
-                ['role' => $normalizedData['role'], 'email' => $user->email]
-            );
-
             return $user->fresh(['officialProfile.terms', 'barangay']);
         });
 
         if ($shouldSendReset) {
             try {
-                $this->sendInitialResetLinkOrFail($user);
+                $this->sendInitialResetLinkOrFail($user, $normalizedData['role'] ?? null);
             } catch (ValidationException $exception) {
                 $this->rollbackCreatedAccount($user);
                 throw $exception;
             }
+        }
+
+        $this->logAuditAction(
+            $admin,
+            'account_created',
+            'users',
+            (string) $user->id,
+            ['role' => $normalizedData['role'], 'email' => $user->email]
+        );
+
+        if ($user->officialProfile) {
+            $this->chairpersonFederationSyncService->syncForUser($user, (string) $user->officialProfile->position);
         }
 
         return $user;
@@ -126,7 +214,9 @@ class AccountService
     private function rollbackCreatedAccount(User $user): void
     {
         DB::transaction(function () use ($user) {
-            $profile = $user->officialProfile;
+            $this->clearInvitationStateForUser($user);
+
+            $profile = OfficialProfile::query()->where('user_id', $user->id)->first();
 
             if ($profile) {
                 $profile->terms()->delete();
@@ -135,6 +225,48 @@ class AccountService
 
             $user->forceDelete();
         });
+    }
+
+    private function purgeSoftDeletedUserByEmail(string $email, int $tenantId): void
+    {
+        $normalizedEmail = strtolower(trim($email));
+
+        $existingUsers = User::withTrashed()
+            ->where('email', $normalizedEmail)
+            ->where('tenant_id', $tenantId)
+            ->whereNotNull('deleted_at')
+            ->get();
+
+        foreach ($existingUsers as $existing) {
+            $this->rollbackCreatedAccount($existing);
+        }
+
+        $this->clearPasswordResetTokensForEmail($normalizedEmail);
+    }
+
+    private function clearInvitationStateForUser(User $user): void
+    {
+        $this->clearPasswordResetTokensForEmail((string) $user->email);
+
+        if (Schema::hasTable('sk_official_email_verified_devices')) {
+            DB::table('sk_official_email_verified_devices')->where('user_id', $user->id)->delete();
+        }
+
+        if (Schema::hasTable('sk_fed_email_verified_devices')) {
+            DB::table('sk_fed_email_verified_devices')->where('user_id', $user->id)->delete();
+        }
+    }
+
+    private function clearPasswordResetTokensForEmail(string $email): void
+    {
+        $normalizedEmail = strtolower(trim($email));
+
+        if ($normalizedEmail === '') {
+            return;
+        }
+
+        $table = (string) config('auth.passwords.users.table', 'password_reset_tokens');
+        DB::table($table)->where('email', $normalizedEmail)->delete();
     }
 
     public function updateAccount(User $account, array $data, User $admin): User
@@ -231,14 +363,22 @@ class AccountService
                 ['email' => $account->email]
             );
 
-            return $account->fresh(['officialProfile.terms', 'barangay']);
+            $fresh = $account->fresh(['officialProfile.terms', 'barangay']);
+
+            if ($fresh->officialProfile) {
+                $this->chairpersonFederationSyncService->syncForUser($fresh, (string) $fresh->officialProfile->position);
+            }
+
+            return $fresh;
         });
     }
 
-    private function sendInitialResetLinkOrFail(User $user): void
+    private function sendInitialResetLinkOrFail(User $user, ?string $role = null): void
     {
         try {
-            $this->sendInitialResetLink($user);
+            $this->sendInitialResetLink($user, $role);
+        } catch (ValidationException $exception) {
+            throw $exception;
         } catch (\Throwable $exception) {
             report($exception);
 
@@ -279,12 +419,14 @@ class AccountService
         ]);
     }
 
-    private function sendInitialResetLink(User $user): void
+    private function sendInitialResetLink(User $user, ?string $role = null): void
     {
         $user->refresh();
 
+        $this->clearPasswordResetTokensForEmail((string) $user->email);
+
         $token = Password::createToken($user);
-        [$label, $baseUrl] = $this->resolvePasswordSetupTarget($user);
+        [$label, $baseUrl] = $this->resolvePasswordSetupTarget($user, $role);
 
         if (! is_string($baseUrl) || $baseUrl === '' || ! is_string($label) || $label === '') {
             throw new \RuntimeException('Password setup email could not be sent because the target application URL is not configured.');
@@ -295,10 +437,14 @@ class AccountService
             new AccountResetPasswordNotification($token, $baseUrl, $label)
         );
 
+        if (method_exists(Mail::class, 'purgeSymfonyTransport')) {
+            Mail::purgeSymfonyTransport();
+        }
+
         Log::info('Password setup email sent.', [
             'user_id' => $user->id,
             'email' => $user->email,
-            'role' => $user->role,
+            'role' => $role ?? $user->role,
             'target' => $baseUrl,
         ]);
     }
@@ -306,13 +452,15 @@ class AccountService
     /**
      * @return array{0: ?string, 1: ?string}
      */
-    private function resolvePasswordSetupTarget(User $user): array
+    private function resolvePasswordSetupTarget(User $user, ?string $role = null): array
     {
-        if ($user->role === User::ROLE_SK_OFFICIAL) {
+        $role = $role ?? $user->role;
+
+        if ($role === User::ROLE_SK_OFFICIAL) {
             return ['SK Official', config('services.sk_officials_app_url')];
         }
 
-        if ($user->role === User::ROLE_SK_FED) {
+        if ($role === User::ROLE_SK_FED) {
             return ['SK Federation', config('services.sk_fed_app_url')];
         }
 
@@ -376,6 +524,12 @@ class AccountService
     {
         $this->assertSameTenant($target->tenant_id, $admin->tenant_id, 'Target account is outside your tenant scope.');
 
+        if (Str::lower((string) $target->email) === BootstrapSkFedAdminService::bootstrapEmailNormalized()) {
+            throw ValidationException::withMessages([
+                'account' => 'The SK Federation Administrator account cannot be deactivated.',
+            ]);
+        }
+
         if ($target->is($admin)) {
             throw ValidationException::withMessages([
                 'account' => 'You cannot deactivate your own admin account.',
@@ -386,6 +540,8 @@ class AccountService
             'status' => User::STATUS_INACTIVE,
         ])->save();
         $target->delete();
+
+        $this->clearInvitationStateForUser($target);
 
         $this->logAuditAction(
             $admin,

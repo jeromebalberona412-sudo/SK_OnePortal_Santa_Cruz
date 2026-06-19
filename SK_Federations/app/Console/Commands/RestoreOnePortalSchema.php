@@ -129,12 +129,17 @@ class RestoreOnePortalSchema extends Command
     {
         $now = now();
 
-        $tenantId = DB::table('tenants')->where('code', 'santa_cruz')->value('id');
+        $tenantId = app(\App\Modules\Authentication\Services\SkFedTenantResolver::class)->tenantId();
 
         if ($tenantId === null) {
+            $tenantId = app(\App\Modules\Authentication\Services\SkFedTenantResolver::class)->ensureTenantExists();
+        }
+
+        if ($tenantId === null) {
+            $tenantCode = (string) config('sk_fed_auth.tenant_code', 'santa_cruz');
             $tenantId = DB::table('tenants')->insertGetId([
                 'name' => 'Santa Cruz Federation',
-                'code' => 'santa_cruz',
+                'code' => $tenantCode !== '' ? $tenantCode : 'santa_cruz',
                 'municipality' => 'Santa Cruz',
                 'province' => 'Laguna',
                 'region' => 'IV-A CALABARZON',

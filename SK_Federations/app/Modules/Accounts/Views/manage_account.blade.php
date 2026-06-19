@@ -8,9 +8,11 @@
     $pageSubtitle = $isOfficials
         ? 'Create or manage SK Officials member accounts'
         : 'Create or manage SK Federation member accounts';
-    $addLabel = $isOfficials ? 'Add SK Officials' : 'Add SK Federation';
+    $addLabel = $isOfficials ? 'Add SK Official' : 'Add Federation Member';
     $accountCssVersion = @filemtime(app_path('Modules/Accounts/assets/css/account.css')) ?: time();
     $accountJsVersion = @filemtime(app_path('Modules/Accounts/assets/js/account.js')) ?: time();
+    $batchTemplateType = $isOfficials ? 'officials' : 'federation';
+    $batchRole = $isOfficials ? 'sk_official' : 'sk_fed';
 @endphp
 
 @push('styles')
@@ -18,64 +20,104 @@
 @endpush
 
 @section('content')
-<div class="main-content-modern accounts-page container-fluid" id="mainContent">
+<div class="main-content-modern accounts-page container-fluid" id="mainContent"
+     x-data="accountsPage()"
+     x-init="init()"
+     data-account-type="{{ $accountType ?? 'sk_federation' }}"
+     data-batch-role="{{ $batchRole }}"
+     data-batch-template-type="{{ $batchTemplateType }}">
+
     <div class="manage-account-container">
-        <!-- Page Header with Search and Add Account Button -->
         <div class="page-header-modern-with-button row">
-            <div class="page-header-left col-md-6">
+            <div class="page-header-left col-md-5 col-lg-4">
                 <h1 class="page-title-modern" id="pageTitle">{{ $pageTitle }}</h1>
                 <p class="page-subtitle-modern" id="pageSubtitle">{{ $pageSubtitle }}</p>
             </div>
-            <div class="page-header-right col-md-6">
-                <form method="GET" action="{{ $isOfficials ? route('accounts.officials.index') : route('accounts.federation.index') }}" class="search-add-container row align-items-center">
-                    <div class="filter-dropdown-container col-md-4 col-lg-3">
-                        <select id="barangayFilter" class="filter-dropdown form-select" name="barangay_id">
-                            <option value="">All Barangays</option>
-                            @foreach($barangays as $barangay)
-                                <option value="{{ $barangay->id }}" {{ request('barangay_id') == $barangay->id ? 'selected' : '' }}>{{ $barangay->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="search-container col-md-5 col-lg-6">
-                        <input type="text" id="searchInput" name="search" class="search-input form-control" value="{{ request('search') }}" placeholder="Search accounts...">
-                        <button type="submit" class="search-btn" id="searchBtn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.35-4.35"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="col-md-3 col-lg-3">
-                        <button type="button" class="btn-primary-modern btn-green w-100" id="addAccountBtn" onclick="openAddAccountModal()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 4v16m8-8H4"/>
-                            </svg>
-                            <span id="addButtonText">{{ $addLabel }}</span>
-                        </button>
+            <div class="page-header-right col-12">
+                <form method="GET" action="{{ $isOfficials ? route('accounts.officials.index') : route('accounts.federation.index') }}" class="accounts-filter-form">
+                    <div class="accounts-filter-grid">
+                        <div class="filter-dropdown-container">
+                            <label class="filter-label" for="barangayFilter">Barangay</label>
+                            <select id="barangayFilter" class="filter-dropdown form-select" name="barangay_id">
+                                <option value="">All Barangays</option>
+                                @foreach($barangays as $barangay)
+                                    <option value="{{ $barangay->id }}" {{ request('barangay_id') == $barangay->id ? 'selected' : '' }}>{{ $barangay->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="filter-dropdown-container">
+                            <label class="filter-label" for="positionFilter">Position</label>
+                            <select id="positionFilter" class="filter-dropdown form-select" name="position">
+                                <option value="">All Positions</option>
+                                @foreach($positionOptions ?? [] as $value => $label)
+                                    <option value="{{ $value }}" {{ request('position') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="search-container">
+                            <label class="filter-label" for="searchInput">Search</label>
+                            <div class="search-input-wrap">
+                                <input type="text" id="searchInput" name="search" class="search-input form-control" value="{{ request('search') }}" placeholder="Search accounts...">
+                                <button type="submit" class="search-btn" id="searchBtn" aria-label="Search">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21-4.35-4.35"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="header-action-buttons">
+                            <label class="filter-label filter-label-invisible">Add</label>
+                            <button type="button" class="btn-primary-modern btn-green" id="addAccountBtn" onclick="openAddAccountModal()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+                                <span id="addButtonText">{{ $addLabel }}</span>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Table Card -->
+        <div class="bulk-action-bar"
+             x-show="selectedCount > 0"
+             x-transition:enter="bulk-bar-enter"
+             x-transition:leave="bulk-bar-leave"
+             style="display:none;">
+            <div class="bulk-action-left">
+                <span class="bulk-selected-icon"><i class="fas fa-check-circle"></i></span>
+                <span class="bulk-selected-count" x-text="selectedCount + ' account' + (selectedCount === 1 ? '' : 's') + ' selected'"></span>
+            </div>
+            <div class="bulk-action-right">
+                <button type="button" class="btn-bulk-clear" @click="clearSelection()">Clear</button>
+                <button type="button" class="btn-bulk-delete" @click="openBulkDelete()">
+                    <i class="fas fa-trash-alt"></i>
+                    Delete Selected
+                </button>
+            </div>
+        </div>
+
         <div class="table-card-modern">
             <div class="table-responsive">
-                <table class="accounts-table">
+                <table class="accounts-table" id="accountsTable">
                     <thead>
                         <tr>
-                            <th class="full-name-header">
-                                <div class="header-main">Full Name</div>
-                                <div class="header-sub">(FN,MN LN,Suffix)</div>
+                            <th class="th-checkbox">
+                                <input type="checkbox" class="account-checkbox account-checkbox-header"
+                                       :checked="selectAll" @change="toggleSelectAll($event.target.checked)" aria-label="Select all visible rows">
                             </th>
-                            <th>Email Address</th>
-                            <th>Barangay</th>
-                            <th>Position (SK Role)</th>
-                            <th>Term End</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th class="th-name">Name</th>
+                            <th class="th-email">Email Address</th>
+                            @if($isOfficials)
+                                <th class="th-barangay">Barangay</th>
+                            @endif
+                            <th class="th-position">Position</th>
+                            @if($isOfficials)
+                                <th class="th-term">Term End</th>
+                            @endif
+                            <th class="th-actions">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="accountsTableBody">
                         @forelse($accounts as $account)
                             @php
                                 $profile = $account->officialProfile;
@@ -92,103 +134,57 @@
                                 ])->filter()->implode(' '));
                                 $displayName = $fullName !== '' ? $fullName : ($account->name ?? 'N/A');
                             @endphp
-                            <tr>
-                                <td>{{ $displayName }}</td>
-                                <td>{{ $account->email }}</td>
-                                <td>{{ $account->barangay?->name ?? '-' }}</td>
-                                <td>{{ $profile?->position ?? '-' }}</td>
-                                <td>{{ $term?->term_end?->format('m/d/Y') ?? '-' }}</td>
-                                <td>
-                                    <span class="status-badge {{ strtolower($account->status) }}">{{ $account->status }}</span>
+                            <tr data-account-id="{{ $account->id }}">
+                                <td class="td-checkbox">
+                                    <input type="checkbox" class="account-checkbox account-row-checkbox"
+                                           value="{{ $account->id }}"
+                                           @change="toggleRow({{ $account->id }}, $event.target.checked)"
+                                           :checked="selectedRows.includes({{ $account->id }})"
+                                           aria-label="Select {{ $displayName }}">
                                 </td>
-                                <td>
-                                    <div class="action-buttons-container">
-                                        <button
-                                            type="button"
-                                            class="btn-view-modern btn-view-account"
-                                            data-account-id="{{ $account->id }}"
-                                            data-first-name="{{ $firstName ?? '' }}"
-                                            data-last-name="{{ $lastName ?? '' }}"
-                                            data-middle-name="{{ $middleName !== '' ? mb_strtoupper($middleName, 'UTF-8') : '' }}"
-                                            data-suffix="{{ $profile?->suffix ?? '' }}"
-                                            data-sex="{{ $profile?->sex ?? '' }}"
-                                            data-date-of-birth="{{ $profile?->date_of_birth?->toDateString() ?? '' }}"
-                                            data-age="{{ $profile?->age ?? '' }}"
-                                            data-contact-number="{{ $profile?->contact_number ?? '' }}"
-                                            data-email="{{ $account->email ?? '' }}"
-                                            data-position="{{ $profile?->position ?? '' }}"
-                                            data-barangay-id="{{ $account->barangay_id ?? '' }}"
-                                            data-barangay-name="{{ $account->barangay?->name ?? '' }}"
-                                            data-municipality="{{ $profile?->municipality ?? '' }}"
-                                            data-province="{{ $profile?->province ?? '' }}"
-                                            data-region="{{ $profile?->region ?? '' }}"
-                                            data-status="{{ $account->status ?? '' }}"
-                                            data-term-status="{{ $term?->status ?? 'ACTIVE' }}"
-                                            data-term-start="{{ $term?->term_start?->toDateString() ?? '' }}"
-                                            data-term-end="{{ $term?->term_end?->toDateString() ?? '' }}"
-                                            data-email-verified-at="{{ $account->email_verified_at?->format('m/d/Y h:i A') ?? '' }}"
-                                        >View</button>
-                                        <button
-                                            type="button"
-                                            class="btn-edit-modern btn-edit-account"
-                                            data-account-id="{{ $account->id }}"
-                                            data-first-name="{{ $firstName ?? '' }}"
-                                            data-last-name="{{ $lastName ?? '' }}"
-                                            data-middle-name="{{ $middleName !== '' ? mb_strtoupper($middleName, 'UTF-8') : '' }}"
-                                            data-suffix="{{ $profile?->suffix ?? '' }}"
-                                            data-sex="{{ $profile?->sex ?? '' }}"
-                                            data-date-of-birth="{{ $profile?->date_of_birth?->toDateString() ?? '' }}"
-                                            data-age="{{ $profile?->age ?? '' }}"
-                                            data-contact-number="{{ $profile?->contact_number ?? '' }}"
-                                            data-email="{{ $account->email ?? '' }}"
-                                            data-position="{{ $profile?->position ?? '' }}"
-                                            data-barangay-id="{{ $account->barangay_id ?? '' }}"
-                                            data-status="{{ $account->status ?? '' }}"
-                                            data-term-status="{{ $term?->status ?? 'ACTIVE' }}"
-                                            data-term-start="{{ $term?->term_start?->toDateString() ?? '' }}"
-                                            data-term-end="{{ $term?->term_end?->toDateString() ?? '' }}"
-                                        >Edit</button>
-                                        <button
-                                            type="button"
-                                            class="btn-delete-modern btn-delete-account"
-                                            data-account-id="{{ $account->id }}"
-                                            data-display-name="{{ $displayName }}"
-                                        >Delete</button>
-                                    </div>
+                                <td class="td-name">{{ $displayName }}</td>
+                                <td class="td-email">{{ $account->email }}</td>
+                                @if($isOfficials)
+                                    <td class="td-barangay">{{ $account->barangay?->name ?? '-' }}</td>
+                                @endif
+                                <td class="td-position">{{ $profile?->position ?? '-' }}</td>
+                                @if($isOfficials)
+                                    <td class="td-term">{{ $term?->term_end?->format('m/d/Y') ?? '-' }}</td>
+                                @endif
+                                <td class="td-actions">
+                                    @include('accounts::account_actions_menu', [
+                                        'account' => $account,
+                                        'profile' => $profile,
+                                        'term' => $term,
+                                        'displayName' => $displayName,
+                                        'firstName' => $firstName,
+                                        'lastName' => $lastName,
+                                        'middleName' => $middleName,
+                                    ])
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">No accounts found.</td>
+                                <td colspan="{{ $isOfficials ? 7 : 5 }}" class="text-center">No accounts found.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <!-- Custom Pagination -->
             <div class="pagination-container">
                 <div class="pagination-wrapper">
                     <nav class="pagination-nav" aria-label="Table pagination">
                         <button type="button" class="pagination-btn pagination-btn-prev" id="prevBtn" disabled>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M15 18l-6-6 6-6"/>
-                            </svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
                             Previous
                         </button>
-                        
-                        <div class="pagination-numbers" id="paginationNumbers">
-                            <!-- Page numbers will be dynamically generated here -->
-                        </div>
-                        
+                        <div class="pagination-numbers" id="paginationNumbers"></div>
                         <button type="button" class="pagination-btn pagination-btn-next" id="nextBtn" disabled>
                             Next
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6"/>
-                            </svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
                         </button>
                     </nav>
-                    
                     <div class="pagination-info">
                         <span class="pagination-text" id="paginationInfo">Showing <strong>1-10</strong> of <strong>0</strong> accounts</span>
                     </div>
@@ -198,61 +194,18 @@
     </div>
 </div>
 
-<!-- SK Federation: Add + Edit modals (shared form) -->
 @include('accounts::form_sk_fed')
-<!-- SK Officials: Add + Edit modals (shared form) -->
 @include('accounts::form_sk_officials')
-<!-- View Account Modal -->
 @include('accounts::view_account')
+@include('accounts::delete_account_modal')
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteAccountModal" class="modal-overlay" style="display:none;">
-    <div class="modal-content" style="max-width:360px;border-radius:14px;overflow:hidden;">
-        <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:13px 18px;text-align:center;">
-            <h3 style="margin:0;font-size:15px;font-weight:700;color:#ffffff;">Delete Account</h3>
-        </div>
-        <div style="padding:1.75rem 1.5rem 1.25rem;background:#ffffff;text-align:center;">
-            <div style="width:52px;height:52px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                    <path d="M10 11v6"/><path d="M14 11v6"/>
-                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                </svg>
-            </div>
-            <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#1e293b;">Are you sure?</p>
-            <p style="margin:0;font-size:13px;color:#64748b;line-height:1.55;">
-                You are about to delete <strong id="deleteAccountName" style="color:#1e293b;"></strong>. This action cannot be undone.
-            </p>
-        </div>
-        <div style="padding:0 1.5rem 1.5rem;background:#ffffff;display:flex;gap:0.6rem;">
-            <button type="button" onclick="closeDeleteModal()"
-                style="flex:1;padding:9px 0;border-radius:8px;border:1.5px solid #e2e8f0;background:#ffffff;color:#475569;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">
-                Cancel
-            </button>
-            <button type="button" id="deleteConfirmBtn" onclick="confirmDeleteAccount()"
-                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:8px;border:none;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#ffffff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">
-                Delete
-            </button>
-        </div>
-    </div>
-</div>
-
-{{-- Toast notifications — placed in body so they render as proper HTML elements --}}
-<div id="accountToast" role="status" aria-live="polite">
-    <span id="accountToastMsg">Account successfully created!</span>
-</div>
-
-<div id="accountToastEdit" role="status" aria-live="polite">
-    <span id="accountToastEditMsg">Account updated successfully!</span>
-</div>
-
-<div id="accountToastDelete" role="status" aria-live="polite">
-    <span id="accountToastDeleteMsg">Account deleted successfully!</span>
-</div>
+<div id="accountToast" role="status" aria-live="polite"><span id="accountToastMsg">Account successfully created!</span></div>
+<div id="accountToastEdit" role="status" aria-live="polite"><span id="accountToastEditMsg">Account updated successfully!</span></div>
+<div id="accountToastDelete" role="status" aria-live="polite"><span id="accountToastDeleteMsg">Account deleted successfully!</span></div>
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="{{ url('/modules/accounts/js/account.js') }}?v={{ $accountJsVersion }}"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 @endpush

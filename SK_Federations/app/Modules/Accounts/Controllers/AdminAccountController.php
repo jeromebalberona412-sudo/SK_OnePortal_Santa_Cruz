@@ -11,8 +11,11 @@ use App\Modules\Accounts\Requests\BatchStoreAccountsRequest;
 use App\Modules\Accounts\Requests\ExtendTermRequest;
 use App\Modules\Accounts\Requests\StoreAccountRequest;
 use App\Modules\Accounts\Requests\UpdateAccountRequest;
+use App\Modules\Accounts\Requests\BulkDeactivateAccountsRequest;
+use App\Modules\Accounts\Services\AccountBatchTemplateService;
 use App\Modules\Accounts\Services\AccountService;
 use App\Modules\Shared\Controllers\Controller;
+use App\Modules\Authentication\Services\BootstrapSkFedAdminService;
 use App\Modules\Shared\Models\Tenant;
 use App\Modules\Shared\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -28,6 +31,7 @@ class AdminAccountController extends Controller
     public function __construct(
         private readonly AccountService $accountService,
         private readonly ExpiredTermProcessorService $expiredTermProcessor,
+        private readonly AccountBatchTemplateService $batchTemplateService,
     ) {
     }
 
@@ -43,6 +47,7 @@ class AdminAccountController extends Controller
             ->with(['barangay', 'officialProfile.latestTerm'])
             ->where('tenant_id', $tenantId)
             ->where('role', User::ROLE_SK_FED)
+            ->whereRaw('LOWER(email) != ?', [BootstrapSkFedAdminService::bootstrapEmailNormalized()])
             ->whereHas('officialProfile.terms', function ($termQuery) {
                 $termQuery
                     ->where('status', OfficialTerm::STATUS_ACTIVE)
@@ -67,8 +72,10 @@ class AdminAccountController extends Controller
             $query->where('barangay_id', (int) $request->input('barangay_id'));
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+        if ($request->filled('position')) {
+            $query->whereHas('officialProfile', function ($profileQuery) use ($request) {
+                $profileQuery->where('position', $request->input('position'));
+            });
         }
 
         $accounts = $query->paginate(10)->withQueryString();
@@ -78,8 +85,9 @@ class AdminAccountController extends Controller
             ->get();
 
         $accountType = 'sk_federation';
+        $positionOptions = OfficialProfile::federationPositionOptions();
 
-        return view('accounts::manage_account', compact('accounts', 'accountType', 'barangays'));
+        return view('accounts::manage_account', compact('accounts', 'accountType', 'barangays', 'positionOptions'));
     }
 
     public function indexOfficials(Request $request): View
@@ -118,8 +126,10 @@ class AdminAccountController extends Controller
             $query->where('barangay_id', (int) $request->input('barangay_id'));
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+        if ($request->filled('position')) {
+            $query->whereHas('officialProfile', function ($profileQuery) use ($request) {
+                $profileQuery->where('position', $request->input('position'));
+            });
         }
 
         $accounts = $query->paginate(10)->withQueryString();
@@ -129,8 +139,9 @@ class AdminAccountController extends Controller
             ->get();
 
         $accountType = 'sk_officials';
+        $positionOptions = OfficialProfile::officialPositionOptions();
 
-        return view('accounts::manage_account', compact('accounts', 'accountType', 'barangays'));
+        return view('accounts::manage_account', compact('accounts', 'accountType', 'barangays', 'positionOptions'));
     }
 
     public function create(): View
@@ -148,6 +159,24 @@ class AdminAccountController extends Controller
         $this->ensureTenantBarangays($tenantId);
 
         $validated = $request->validated();
+        $uploadedHeaders = $validated['headers'] ?? [];
+
+        if (is_array($uploadedHeaders) && $uploadedHeaders !== []) {
+            $missingHeaders = $this->batchTemplateService->missingRequiredHeaders($uploadedHeaders);
+
+            if ($missingHeaders !== []) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your Excel file is missing required columns: '.implode(', ', $missingHeaders).'.',
+                    'created' => 0,
+                    'failed' => [],
+                    'validation_errors' => collect($missingHeaders)->map(
+                        fn (string $header): array => ['row' => 0, 'error' => 'Missing required column: '.$header]
+                    )->all(),
+                ], 422);
+            }
+        }
+
         $result = $this->accountService->batchCreateAccounts(
             $validated['accounts'],
             $validated['role'],
@@ -157,6 +186,7 @@ class AdminAccountController extends Controller
         $created = $result['created'];
         $failedCount = count($result['failed']);
         $total = $created + $failedCount;
+        $validationErrors = $result['validation_errors'] ?? [];
 
         if ($created === 0) {
             return response()->json([
@@ -164,19 +194,67 @@ class AdminAccountController extends Controller
                 'message' => 'No accounts were created. Please review the uploaded rows and try again.',
                 'created' => 0,
                 'failed' => $result['failed'],
+                'validation_errors' => $validationErrors,
             ], 422);
         }
 
         $message = $failedCount > 0
             ? "{$created} of {$total} accounts created successfully. {$failedCount} row(s) failed."
-            : "{$created} account".($created === 1 ? '' : 's').' created successfully.';
+            : "{$created} account".($created === 1 ? '' : 's').' created successfully. Password setup emails were sent.';
 
         return response()->json([
             'success' => true,
             'message' => $message,
             'created' => $created,
             'failed' => $result['failed'],
+            'validation_errors' => $validationErrors,
         ]);
+    }
+
+    public function bulkDeactivate(BulkDeactivateAccountsRequest $request): JsonResponse
+    {
+        $this->authorize('viewAny', User::class);
+
+        $result = $this->accountService->bulkDeactivate(
+            $request->validated('account_ids'),
+            $request->user()
+        );
+
+        $deleted = $result['deleted'];
+        $failedCount = count($result['failed']);
+
+        if ($deleted === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No accounts were deleted.',
+                'deleted' => 0,
+                'failed' => $result['failed'],
+            ], 422);
+        }
+
+        $message = $failedCount > 0
+            ? "{$deleted} account(s) deleted. {$failedCount} could not be deleted."
+            : "{$deleted} account(s) deleted successfully.";
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'deleted' => $deleted,
+            'failed' => $result['failed'],
+        ]);
+    }
+
+    public function downloadBatchTemplate(Request $request, string $type): Response
+    {
+        $this->authorize('create', User::class);
+
+        $role = $type === 'federation' ? User::ROLE_SK_FED : User::ROLE_SK_OFFICIAL;
+
+        if ($request->query('format') === 'csv') {
+            return $this->batchTemplateService->downloadResponse($role);
+        }
+
+        return $this->batchTemplateService->downloadXlsxResponse($role);
     }
 
     public function store(StoreAccountRequest $request): Response|RedirectResponse

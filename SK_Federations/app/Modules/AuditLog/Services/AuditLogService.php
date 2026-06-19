@@ -42,20 +42,31 @@ class AuditLogService implements AuditLogInterface
                 'metadata' => $metadata,
             ]);
         } catch (Throwable $e) {
-            Log::channel('audit')->warning('Failed to persist audit event', [
+            $this->writeAuditChannelLog('warning', 'Failed to persist audit event', [
                 'event_type' => $eventType,
                 'user_id' => $user?->id,
                 'error' => $e->getMessage(),
             ]);
         }
 
-        // Also log to audit log file for redundancy
-        Log::channel('audit')->info("Audit: {$eventType}", [
+        $this->writeAuditChannelLog('info', "Audit: {$eventType}", [
             'user_id' => $user?->id,
             'email' => $user?->email,
             'ip_address' => $ipAddress,
             'metadata' => $metadata,
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function writeAuditChannelLog(string $level, string $message, array $context = []): void
+    {
+        try {
+            Log::channel('audit')->{$level}($message, $context);
+        } catch (Throwable) {
+            Log::{$level}($message, $context);
+        }
     }
 
     /**

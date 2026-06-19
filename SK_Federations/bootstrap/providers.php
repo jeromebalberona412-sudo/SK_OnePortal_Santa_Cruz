@@ -20,4 +20,5 @@ return [
     App\Modules\Archive_Management\Providers\ArchiveManagementServiceProvider::class,
     App\Modules\Archive\Providers\ArchiveServiceProvider::class,
     App\Modules\Layout\Providers\LayoutServiceProvider::class,
+    App\Modules\Notifications\Providers\NotificationsServiceProvider::class,
 ];

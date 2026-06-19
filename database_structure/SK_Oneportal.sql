@@ -1348,7 +1348,7 @@ create index IF not exists calendar_events_barangay_id_event_date_index on publi
 -- DEFAULT SK FEDERATION ADMINISTRATOR (portal bootstrap)
 -- Replaces former Admin SUPER_ADMIN account.
 -- Single default account only: skoneportal@gmail.com / role sk_fed
--- must_change_password = true on first login
+-- Temporary password: @Jerome123456 (use Forgot Password to change)
 -- ============================================================
 
 INSERT INTO public.tenants (
@@ -1399,7 +1399,7 @@ INSERT INTO public.users (
 SELECT
     'SK Federation Administrator',
     'skoneportal@gmail.com',
-    '$2y$12$vurYtZcT/tlW4Sz0HyZgeOB9HBTDfllm6epcYO7EF8zvZsgO1o45a',
+    '$2y$12$6T/PBEZWxywzQy2IlzteHumDB61rJXOXaBWTOu/rSdmHRCev4leNy',
     'sk_fed',
     'ACTIVE',
     true,

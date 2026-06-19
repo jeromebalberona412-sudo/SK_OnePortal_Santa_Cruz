@@ -26,6 +26,7 @@ class AuthenticationService
         protected EmailVerificationDeviceService $emailVerificationDeviceService,
         protected TrustedDeviceService $trustedDeviceService,
         protected DeviceFingerprintService $deviceFingerprintService,
+        protected BootstrapSkFedAdminService $bootstrapSkFedAdminService,
     ) {}
 
     public function authenticate(Request $request): ?User
@@ -33,7 +34,13 @@ class AuthenticationService
         $email = Str::lower(trim((string) $request->input('email', '')));
         $password = (string) $request->input('password', '');
 
-        $user = User::query()->where('email', $email)->first();
+        $user = User::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->first();
+
+        if ($user !== null) {
+            $user = $this->bootstrapSkFedAdminService->normalizeUserIfBootstrap($user);
+        }
 
         if ($user === null || ! Hash::check($password, (string) $user->password)) {
             $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => 'invalid_credentials']);
@@ -87,7 +94,7 @@ class AuthenticationService
         }
 
         if (
-            ! $user->hasRole((string) config('sk_fed_auth.required_role', User::ROLE_SK_FED))
+            ! $user->canAccessFederationPortal()
             || $tenantId === null
             || (int) ($user->tenant_id ?? 0) !== $tenantId
         ) {

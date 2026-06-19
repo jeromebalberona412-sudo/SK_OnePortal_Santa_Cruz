@@ -15,13 +15,14 @@
     <title>@yield('title', 'SK OnePortal')</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}">
     @php
+        $dashboardCssVersion = @filemtime(app_path('Modules/Dashboard/assets/css/dashboard.css')) ?: time();
         $layoutCssVersion = @filemtime(app_path('Modules/Layout/assets/css/layout.css')) ?: time();
         $layoutJsVersion = @filemtime(app_path('Modules/Layout/assets/js/layout.js')) ?: time();
         $loadingCssVersion = @filemtime(public_path('shared/css/loading.css')) ?: time();
         $loadingJsVersion = @filemtime(public_path('shared/js/loading.js')) ?: time();
     @endphp
+    <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}?v={{ $dashboardCssVersion }}">
     <link rel="stylesheet" href="{{ url('/modules/layout/css/layout.css') }}?v={{ $layoutCssVersion }}">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}?v={{ $loadingCssVersion }}">
     @stack('styles')

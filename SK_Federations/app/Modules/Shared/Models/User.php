@@ -69,6 +69,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'active_device',
         'last_ip',
         'barangay_id',
+        'has_federation_access',
         'pending_email',
         'email_change_token',
         'email_change_token_expires_at',
@@ -110,6 +111,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password_change_token_expires_at' => 'datetime',
             'password_change_last_sent_at' => 'datetime',
             'must_change_password' => 'boolean',
+            'has_federation_access' => 'boolean',
             'deleted_at' => 'datetime',
         ];
     }
@@ -141,6 +143,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isSkFed(): bool
     {
         return $this->hasRole(self::ROLE_SK_FED);
+    }
+
+    public function canAccessFederationPortal(): bool
+    {
+        return $this->isSkFed()
+            || ($this->hasRole(self::ROLE_SK_OFFICIAL) && (bool) $this->has_federation_access);
     }
 
     public function isAdmin(): bool

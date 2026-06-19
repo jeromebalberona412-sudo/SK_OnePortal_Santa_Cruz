@@ -7,16 +7,14 @@
 @endphp
 
 <aside class="sidebar">
-    <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link">
-        <img src="{{ $avatar }}" alt="Profile" class="sidebar-avatar">
-        <div class="sidebar-user-info">
-            <div class="s-name">{{ $user->name ?? 'User' }}</div>
-            <div class="s-role">{{ $formattedRole }}</div>
-        </div>
-    </a>
-
     <nav class="sidebar-nav">
-        <div class="menu-section-label">Main</div>
+        <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link">
+            <img src="{{ $avatar }}" alt="Profile" class="sidebar-avatar">
+            <div class="sidebar-user-info">
+                <div class="s-name">{{ $user->name ?? 'User' }}</div>
+                <div class="s-role">{{ $formattedRole }}</div>
+            </div>
+        </a>
 
         <a href="{{ route('dashboard') }}" class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-tooltip="Dashboard" id="sidebar-dashboard-link">
             <i class="fas fa-home"></i><span>Dashboard</span>
@@ -29,8 +27,6 @@
         <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" data-tooltip="Profile">
             <i class="fas fa-user"></i><span>Profile</span>
         </a>
-
-        <div class="menu-section-label">Modules</div>
 
         <a href="{{ route('community-feed') }}" class="menu-item {{ request()->routeIs('community-feed', 'sk-fed-profile', 'skfed.barangay-profile') ? 'active' : '' }}" data-tooltip="SK Community Feed" id="sidebar-community-feed-link">
             <i class="fas fa-rss"></i><span>SK Community Feed</span>
@@ -57,16 +53,16 @@
         </a>
 
         <button type="button" class="menu-item menu-dropdown-toggle {{ $accountsOpen ? 'active' : '' }}" data-submenu-toggle="accountsSubmenu" data-tooltip="Accounts" aria-expanded="{{ $accountsOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
-            <i class="fas fa-user-cog"></i><span>Accounts</span>
+            <i class="fas fa-user-cog"></i><span>Manage Accounts</span>
             <i class="fas fa-chevron-down menu-dropdown-chevron {{ $accountsOpen ? 'is-open' : '' }}" id="accountsChevron"></i>
         </button>
 
         <div id="accountsSubmenu" class="sidebar-submenu {{ $accountsOpen ? 'is-open' : '' }}">
-            <a href="{{ route('accounts.federation.index') }}" class="menu-item submenu-item {{ $isFederationAccountsActive ? 'active' : '' }}">
-                <i class="fas fa-id-badge"></i><span>SK Federation</span>
-            </a>
             <a href="{{ route('accounts.officials.index') }}" class="menu-item submenu-item {{ $isOfficialsAccountsActive ? 'active' : '' }}">
                 <i class="fas fa-users-cog"></i><span>SK Officials</span>
+            </a>
+            <a href="{{ route('accounts.federation.index') }}" class="menu-item submenu-item {{ $isFederationAccountsActive ? 'active' : '' }}">
+                <i class="fas fa-id-badge"></i><span>SK Federation</span>
             </a>
         </div>
 

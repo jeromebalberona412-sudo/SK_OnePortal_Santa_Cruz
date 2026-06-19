@@ -1,4 +1,4 @@
-<nav class="navbar">
+<nav class="navbar sk-fed-navbar">
     <div class="navbar-left">
         <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
             <i class="fas fa-bars toggle-icon-expand"></i>
@@ -24,10 +24,10 @@
                 aria-haspopup="true"
             >
                 <i class="fas fa-bell"></i>
-                <span class="notif-badge" id="notifBadge" style="display: none;"></span>
+                <span class="notif-badge" id="notifBadge" style="{{ ($unreadNotificationCount ?? 0) > 0 ? '' : 'display: none;' }}">{{ $unreadNotificationCount ?? 0 }}</span>
             </button>
 
-            @include('layout::notif-popover')
+            @include('notifications::dropdown-popover')
         </div>
 
         <div class="profile-dropdown-wrapper">

@@ -31,6 +31,10 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
         Route::get('/accounts/create', [AdminAccountController::class, 'create'])->name('accounts.create');
         Route::post('/accounts', [AdminAccountController::class, 'store'])->name('accounts.store');
         Route::post('/accounts/batch', [AdminAccountController::class, 'batchStore'])->name('accounts.batch-store');
+        Route::post('/accounts/bulk-deactivate', [AdminAccountController::class, 'bulkDeactivate'])->name('accounts.bulk-deactivate');
+        Route::get('/accounts/batch-template/{type}', [AdminAccountController::class, 'downloadBatchTemplate'])
+            ->where('type', 'officials|federation')
+            ->name('accounts.batch-template');
 
         Route::put('/accounts/{user}', [AdminAccountController::class, 'update'])->name('accounts.update');
 

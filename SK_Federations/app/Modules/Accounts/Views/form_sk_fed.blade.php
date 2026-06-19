@@ -23,11 +23,21 @@
             </div>
         </div>
 
-        <div class="modal-body modal-body-light">
-            <form id="addSkFedForm" class="sk-officials-form" novalidate>
+        <div class="modal-body modal-body-light account-modal-scroll">
+            <div class="add-mode-switcher">
+                <p class="add-mode-label">How do you want to add?</p>
+                <div class="add-mode-tabs">
+                    <button type="button" class="add-mode-tab active" id="fedTabManual" onclick="switchAddFedTab('manual')">Manual</button>
+                    <button type="button" class="add-mode-tab" id="fedTabBatch" onclick="switchAddFedTab('batch')">Batch Upload</button>
+                </div>
+            </div>
+
+            <div id="addFedManualPane">
+            <form id="addSkFedForm" class="sk-officials-form account-modal-form" novalidate>
                 @csrf
                 <input type="hidden" name="role" value="sk_fed">
                 <input type="hidden" name="term_status" value="ACTIVE">
+                <input type="hidden" name="status" value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}">
 
                 <div class="form-section-light">
                     <h4 class="section-title-light">
@@ -113,14 +123,6 @@
                             </select>
                             <span class="form-error-light"></span>
                         </div>
-                        <div class="form-group-light">
-                            <label class="form-label-light required">Status</label>
-                            <select id="status" name="status" class="form-input-light" required>
-                                <option value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}" selected>Active</option>
-                                <option value="{{ \App\Modules\Shared\Models\User::STATUS_INACTIVE }}">Inactive</option>
-                            </select>
-                            <span class="form-error-light"></span>
-                        </div>
                     </div>
                 </div>
 
@@ -199,22 +201,35 @@
                     </div>
                 </div>
 
-                <div class="form-actions-light">
-                    <button type="button" class="btn-cancel-light" onclick="closeAddAccountModal()">Cancel</button>
-                    <button type="submit" form="addSkFedForm" class="btn-submit-light">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
-                        Create Account
-                    </button>
-                </div>
             </form>
+            </div>
+
+            <div id="addFedBatchPane" style="display:none;">
+                @include('accounts::batch_upload_panel', ['prefix' => 'fed', 'templateType' => 'federation'])
+            </div>
+        </div>
+        <div class="modal-footer account-modal-footer" id="addFedManualFooter">
+            <button type="button" class="btn-cancel-light" onclick="closeAddAccountModal()">Cancel</button>
+            <button type="submit" form="addSkFedForm" class="btn-submit-light">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
+                Create Account
+            </button>
+        </div>
+        <div class="modal-footer account-modal-footer" id="addFedBatchFooter" style="display:none;">
+            <button type="button" class="btn-cancel-light" onclick="closeAddAccountModal()">Cancel</button>
+            <button type="button" class="btn-template-download btn-error-report" id="fed_batchErrorDownloadBtn" style="display:none;">Download Error Report</button>
+            <button type="button" class="btn-submit-light" id="fed_batchConfirmBtn" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
+                Import Accounts
+            </button>
         </div>
     </div>
 </div>
 
 {{-- ── EDIT SK FEDERATION MODAL ─────────────────────────────── --}}
 <div id="editAccountModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content modal-large modal-themed">
-        <div class="modal-header modal-header-yellow">
+    <div class="modal-content modal-large modal-light">
+        <div class="modal-header modal-header-blue-grad">
             <h3 class="modal-title">Edit SK Federation Account</h3>
             <div class="modal-controls">
                 <button type="button" class="modal-win-btn modal-win-btn-maximize" id="editFedResizeBtn"
@@ -228,190 +243,133 @@
                 </button>
             </div>
         </div>
-        <div class="modal-body">
-            <form id="editAccountForm" class="sk-fed-form" data-account-id="" novalidate>
+        <div class="modal-body modal-body-light account-modal-scroll">
+            <form id="editAccountForm" class="sk-officials-form account-modal-form" data-account-id="" novalidate>
                 @csrf
                 <input type="hidden" name="term_status" id="edit_term_status" value="ACTIVE">
+                <input type="hidden" name="status" id="edit_status" value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}">
 
-                <div class="form-section">
-                    <h4 class="section-title">Personal Information</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_first_name" class="form-label-modern required">First Name</label>
-                                <input type="text" id="edit_first_name" name="first_name" class="form-input-modern" required>
-                                <span class="form-error"></span>
-                            </div>
+                <div class="form-section-light">
+                    <h4 class="section-title-light"><i class="fa-solid fa-user"></i> Personal Information</h4>
+                    <div class="form-grid">
+                        <div class="form-group-light">
+                            <label for="edit_first_name" class="form-label-light required">First Name</label>
+                            <input type="text" id="edit_first_name" name="first_name" class="form-input-light input-uppercase" required style="text-transform:uppercase;">
+                            <span class="form-error-light"></span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_last_name" class="form-label-modern required">Last Name</label>
-                                <input type="text" id="edit_last_name" name="last_name" class="form-input-modern" required>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_last_name" class="form-label-light required">Last Name</label>
+                            <input type="text" id="edit_last_name" name="last_name" class="form-input-light input-uppercase" required style="text-transform:uppercase;">
+                            <span class="form-error-light"></span>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_middle_name" class="form-label-modern">Middle Name / Initial</label>
-                                <input type="text" id="edit_middle_name" name="middle_name" class="form-input-modern" maxlength="100" placeholder="e.g., Marie">
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_middle_name" class="form-label-light">Middle Name</label>
+                            <input type="text" id="edit_middle_name" name="middle_name" class="form-input-light input-uppercase" maxlength="100" placeholder="e.g., Marie" style="text-transform:uppercase;">
+                            <span class="form-error-light"></span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_suffix" class="form-label-modern">Suffix</label>
-                                <select id="edit_suffix" name="suffix" class="form-input-modern">
-                                    <option value="">Select Suffix</option>
-                                    <option value="Jr.">Jr.</option>
-                                    <option value="Sr.">Sr.</option>
-                                    <option value="II">II</option>
-                                    <option value="III">III</option>
-                                    <option value="IV">IV</option>
-                                    <option value="V">V</option>
-                                </select>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_suffix" class="form-label-light">Suffix</label>
+                            <select id="edit_suffix" name="suffix" class="form-input-light">
+                                <option value="">None</option>
+                                <option value="Jr.">Jr.</option>
+                                <option value="Sr.">Sr.</option>
+                                <option value="II">II</option>
+                                <option value="III">III</option>
+                                <option value="IV">IV</option>
+                                <option value="V">V</option>
+                            </select>
+                            <span class="form-error-light"></span>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_sex" class="form-label-modern required">Sex</label>
-                                <select id="edit_sex" name="sex" class="form-input-modern" required>
-                                    <option value="">Select Sex</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_sex" class="form-label-light required">Sex</label>
+                            <select id="edit_sex" name="sex" class="form-input-light" required>
+                                <option value="">Select Sex</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                            <span class="form-error-light"></span>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_email" class="form-label-modern required">Email Address</label>
-                                <input type="email" id="edit_email" name="email" class="form-input-modern" required>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_email" class="form-label-light required">Email Address</label>
+                            <input type="email" id="edit_email" name="email" class="form-input-light" required>
+                            <span class="form-error-light"></span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_contact_number" class="form-label-modern required">Contact Number</label>
-                                <input type="text" id="edit_contact_number" name="contact_number" class="form-input-modern" maxlength="20" placeholder="e.g., 09171234567" required>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_contact_number" class="form-label-light required">Contact Number</label>
+                            <input type="text" id="edit_contact_number" name="contact_number" class="form-input-light" maxlength="20" placeholder="09XXXXXXXXX" required>
+                            <span class="form-error-light"></span>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_date_of_birth" class="form-label-modern required">Date of Birth</label>
-                                <input type="date" id="edit_date_of_birth" name="date_of_birth" class="form-input-modern" required>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_date_of_birth" class="form-label-light required">Date of Birth</label>
+                            <input type="date" id="edit_date_of_birth" name="date_of_birth" class="form-input-light" required>
+                            <span class="form-error-light"></span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_age" class="form-label-modern required">Age</label>
-                                <input type="number" id="edit_age" name="age" class="form-input-modern" min="0" max="150" readonly>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_age" class="form-label-light required">Age</label>
+                            <input type="number" id="edit_age" name="age" class="form-input-light" min="0" max="150" readonly>
+                            <span class="form-error-light"></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-section">
-                    <h4 class="section-title">Location Information</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_barangay_id" class="form-label-modern required">Barangay</label>
-                                <select id="edit_barangay_id" name="barangay_id" class="form-input-modern" required>
-                                    <option value="">Select Barangay</option>
-                                    @foreach($barangays as $barangay)
-                                        <option value="{{ $barangay->id }}">{{ $barangay->name }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="form-error"></span>
-                            </div>
+                <div class="form-section-light">
+                    <h4 class="section-title-light"><i class="fa-solid fa-location-dot"></i> Address</h4>
+                    <div class="form-grid">
+                        <div class="form-group-light">
+                            <label for="edit_region" class="form-label-light required">Region</label>
+                            <input type="text" id="edit_region" class="form-input-light" value="IV-A CALABARZON" readonly>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_municipality" class="form-label-modern required">Municipality</label>
-                                <input type="text" id="edit_municipality" class="form-input-modern" value="Santa Cruz" readonly required>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_province" class="form-label-light required">Province</label>
+                            <input type="text" id="edit_province" class="form-input-light" value="Laguna" readonly>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_province" class="form-label-modern required">Province</label>
-                                <input type="text" id="edit_province" class="form-input-modern" value="Laguna" readonly required>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_municipality" class="form-label-light required">Municipality</label>
+                            <input type="text" id="edit_municipality" class="form-input-light" value="Santa Cruz" readonly>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_region" class="form-label-modern required">Region</label>
-                                <input type="text" id="edit_region" class="form-input-modern" value="IV-A CALABARZON" readonly required>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_barangay_id" class="form-label-light required">Barangay</label>
+                            <select id="edit_barangay_id" name="barangay_id" class="form-input-light" required>
+                                <option value="">Select Barangay</option>
+                                @foreach($barangays as $barangay)
+                                    <option value="{{ $barangay->id }}">{{ $barangay->name }}</option>
+                                @endforeach
+                            </select>
+                            <span class="form-error-light"></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-section">
-                    <h4 class="section-title">Term Information</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_position" class="form-label-modern required">Position (SK Role)</label>
-                                <select id="edit_position" name="position" class="form-input-modern" required>
-                                    <option value="">Select Position</option>
-                                    @foreach(\App\Modules\Accounts\Models\OfficialProfile::federationPositionOptions() as $value => $label)
-                                        <option value="{{ $value }}">{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="form-error"></span>
-                            </div>
+                <div class="form-section-light">
+                    <h4 class="section-title-light"><i class="fa-solid fa-briefcase"></i> Position & Term</h4>
+                    <div class="form-grid">
+                        <div class="form-group-light">
+                            <label for="edit_position" class="form-label-light required">Position</label>
+                            <select id="edit_position" name="position" class="form-input-light" required>
+                                <option value="">Select Position</option>
+                                @foreach(\App\Modules\Accounts\Models\OfficialProfile::federationPositionOptions() as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <span class="form-error-light"></span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_term_start" class="form-label-modern required">Term Start</label>
-                                <input type="date" id="edit_term_start" name="term_start" class="form-input-modern" required>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_term_start" class="form-label-light required">Term Start</label>
+                            <input type="date" id="edit_term_start" name="term_start" class="form-input-light" required>
+                            <span class="form-error-light"></span>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_term_end" class="form-label-modern required">Term End</label>
-                                <input type="date" id="edit_term_end" name="term_end" class="form-input-modern" required>
-                                <span class="form-error"></span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group-modern">
-                                <label for="edit_status" class="form-label-modern required">Status</label>
-                                <select id="edit_status" name="status" class="form-input-modern" required>
-                                    <option value="">Select Status</option>
-                                    <option value="{{ \App\Modules\Shared\Models\User::STATUS_ACTIVE }}">Active</option>
-                                    <option value="{{ \App\Modules\Shared\Models\User::STATUS_INACTIVE }}">Inactive</option>
-                                </select>
-                                <span class="form-error"></span>
-                            </div>
+                        <div class="form-group-light">
+                            <label for="edit_term_end" class="form-label-light required">Term End</label>
+                            <input type="date" id="edit_term_end" name="term_end" class="form-input-light" required>
+                            <span class="form-error-light"></span>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
-        <div class="modal-footer edit-modal-footer">
-            <button type="button" class="btn-secondary-modern" onclick="closeEditModal()">Cancel</button>
-            <button type="submit" form="editAccountForm" class="btn-primary-modern btn-green">Update Account</button>
+        <div class="modal-footer account-modal-footer">
+            <button type="button" class="btn-cancel-light" onclick="closeEditModal()">Cancel</button>
+            <button type="submit" form="editAccountForm" class="btn-submit-light">Update Account</button>
         </div>
     </div>
 </div>

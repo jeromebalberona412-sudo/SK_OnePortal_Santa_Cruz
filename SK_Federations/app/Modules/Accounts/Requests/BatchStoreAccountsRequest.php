@@ -18,8 +18,11 @@ class BatchStoreAccountsRequest extends FormRequest
         return [
             'role' => ['required', Rule::in([
                 User::ROLE_SK_OFFICIAL,
+                User::ROLE_SK_FED,
             ])],
             'accounts' => ['required', 'array', 'min:1', 'max:100'],
+            'headers' => ['nullable', 'array'],
+            'headers.*' => ['nullable', 'string', 'max:100'],
             'accounts.*.first_name' => ['nullable', 'string', 'max:100'],
             'accounts.*.middle_name' => ['nullable', 'string', 'max:100'],
             'accounts.*.last_name' => ['nullable', 'string', 'max:100'],
@@ -29,7 +32,7 @@ class BatchStoreAccountsRequest extends FormRequest
             'accounts.*.birthdate' => ['nullable', 'string', 'max:50'],
             'accounts.*.age' => ['nullable'],
             'accounts.*.contact_number' => ['nullable', 'string', 'max:20'],
-            'accounts.*.email' => ['nullable', 'string', 'max:255'],
+            'accounts.*.email' => ['nullable', 'string', 'max:254'],
             'accounts.*.position' => ['nullable', 'string', 'max:100'],
             'accounts.*.status' => ['nullable', 'string', 'max:50'],
             'accounts.*.barangay' => ['nullable', 'string', 'max:100'],
