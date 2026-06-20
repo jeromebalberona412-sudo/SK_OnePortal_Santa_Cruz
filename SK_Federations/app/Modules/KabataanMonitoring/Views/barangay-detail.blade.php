@@ -75,18 +75,15 @@
                     <table class="km-table">
                         <thead>
                             <tr>
-                                <th>#</th>
+                                <th>Respondent #</th>
                                 <th>
-                                    Full Name
+                                    FULLNAME
                                     <div class="table-col-hint">LN, FN, MN, Suffix</div>
                                 </th>
                                 <th>Age</th>
-                                <th>Sex</th>
-                                <th>Civil Status</th>
-                                <th>Education</th>
-                                <th>Work Status</th>
-                                <th>Classification</th>
-                                <th>Status</th>
+                                <th>Barangay</th>
+                                <th>Purok/Zone</th>
+                                <th>Registered Voter</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>

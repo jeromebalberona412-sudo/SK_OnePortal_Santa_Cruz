@@ -74,12 +74,12 @@ class KabataanMonitoringService
     private function buildQuestionnaireFields(KabataanRegistration $record, array $formData): array
     {
         return [
-            'respondent_number' => $record->respondent_number ?: '—',
+            'respondent_number' => $this->displayRespondentNumber($record),
             'date' => $record->submitted_at?->format('m/d/Y') ?? '—',
             'last_name' => $record->last_name,
             'first_name' => $record->first_name,
             'middle_name' => $record->middle_name ?: '—',
-            'suffix' => $record->suffix ?: '—',
+            'suffix' => $this->formSuffixValue($record, $formData),
             'region' => $this->formValue($formData, 'region') !== '—' ? $this->formValue($formData, 'region') : 'Region IV-A (CALABARZON)',
             'province' => $this->formValue($formData, 'province') !== '—' ? $this->formValue($formData, 'province') : 'Laguna',
             'city' => $this->formValue($formData, 'city') !== '—' ? $this->formValue($formData, 'city') : ($this->formValue($formData, 'municipality') !== '—' ? $this->formValue($formData, 'municipality') : 'Santa Cruz'),
@@ -143,8 +143,9 @@ class KabataanMonitoringService
         }
 
         $fullName = trim($record->first_name.' '.($record->middle_name ? $record->middle_name.' ' : '').$record->last_name);
-        if ($record->suffix && $record->suffix !== 'None') {
-            $fullName .= ', '.$record->suffix;
+        $suffix = trim((string) ($record->suffix ?? ''));
+        if ($suffix !== '') {
+            $fullName .= ', '.$suffix;
         }
 
         return $fullName !== '' ? $fullName : '—';
@@ -172,20 +173,26 @@ class KabataanMonitoringService
     private function formatRecord(KabataanRegistration $record): array
     {
         $formData = is_array($record->form_data) ? $record->form_data : [];
-        $name = trim($record->first_name.' '.($record->middle_name ? $record->middle_name.' ' : '').$record->last_name);
-        if ($record->suffix) {
-            $name .= ', '.$record->suffix;
-        }
 
         return [
             'id' => $record->id,
             'slug' => (string) $record->id,
-            'name' => $name ?: '—',
+            'respondentNumber' => $this->displayRespondentNumber($record),
+            'firstName' => $record->first_name,
+            'middleName' => $record->middle_name,
+            'lastName' => $record->last_name,
+            'suffix' => $this->normalizeSuffix($record->suffix),
+            'name' => $this->formatDisplayName($record),
             'barangay' => $record->barangay?->name ?? '—',
             'age' => $this->formValue($formData, 'age'),
             'sex' => $this->formValue($formData, 'sex'),
+            'purokZone' => $this->formValue($formData, 'purok_zone'),
+            'registeredVoter' => $this->formValue($formData, 'sk_voter'),
             'focus' => $this->formValue($formData, 'youth_classification'),
             'youthClassification' => $this->formValue($formData, 'youth_classification'),
+            'civilStatus' => $this->formValue($formData, 'civil_status'),
+            'education' => $this->formValue($formData, 'education'),
+            'workStatus' => $this->formValue($formData, 'work_status'),
             'status' => $this->resolveParticipationStatus($formData),
             'attendance' => $this->formValue($formData, 'kk_assembly'),
             'lastCheckIn' => $record->submitted_at?->format('M j, Y') ?? '—',
@@ -194,6 +201,76 @@ class KabataanMonitoringService
             'recommendations' => [],
             'timeline' => [],
         ];
+    }
+
+    private function displayRespondentNumber(KabataanRegistration $record): string
+    {
+        if ($record->respondent_sequence) {
+            return str_pad((string) $record->respondent_sequence, 2, '0', STR_PAD_LEFT);
+        }
+
+        if ($record->respondent_number) {
+            $fullNumber = (string) $record->respondent_number;
+            $last = strrpos($fullNumber, '-') !== false
+                ? substr($fullNumber, strrpos($fullNumber, '-') + 1)
+                : $fullNumber;
+
+            if ($last === '') {
+                return '—';
+            }
+
+            return str_pad((string) ((int) $last), 2, '0', STR_PAD_LEFT);
+        }
+
+        return '—';
+    }
+
+    private function formatDisplayName(KabataanRegistration $record): string
+    {
+        $nameParts = array_values(array_filter([
+            trim((string) ($record->first_name ?? '')),
+            trim((string) ($record->middle_name ?? '')),
+        ], fn (string $part) => $part !== ''));
+
+        $firstMiddle = $nameParts !== [] ? implode(',', $nameParts) : '';
+        $last = trim((string) ($record->last_name ?? ''));
+        $suffix = $this->normalizeSuffix($record->suffix);
+        $suffixPart = $suffix !== '' ? ','.$suffix : '';
+
+        if ($last !== '' && $firstMiddle !== '') {
+            return $last.','.$firstMiddle.$suffixPart;
+        }
+
+        if ($last !== '') {
+            return $last.$suffixPart;
+        }
+
+        if ($firstMiddle !== '') {
+            return $firstMiddle.$suffixPart;
+        }
+
+        return '—';
+    }
+
+    private function formSuffixValue(KabataanRegistration $record, array $formData): string
+    {
+        $suffix = trim((string) ($record->suffix ?? ''));
+        if ($suffix !== '') {
+            return $suffix;
+        }
+
+        return $this->formValue($formData, 'suffix');
+    }
+
+    private function normalizeSuffix(?string $suffix): string
+    {
+        $suffix = trim((string) ($suffix ?? ''));
+
+        if ($suffix === '' || strcasecmp($suffix, 'none') === 0) {
+            return '';
+        }
+
+        return $suffix;
     }
 
     /**

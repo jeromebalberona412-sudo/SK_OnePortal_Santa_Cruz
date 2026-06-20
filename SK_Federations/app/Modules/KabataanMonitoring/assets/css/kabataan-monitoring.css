@@ -259,11 +259,17 @@
     scrollbar-color: #e2e8f0 transparent;
 }
 
+.km-respondent-cell {
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+}
+
 .km-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
-    min-width: 980px;
+    min-width: 820px;
 }
 
 .km-table thead {

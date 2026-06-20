@@ -9,7 +9,7 @@
         return records.filter(function(r) {
             var matchStatus = state.status === 'all' || r.status === state.status;
             var matchBrgy   = state.barangay === 'all' || r.barangay === state.barangay;
-            var hay = (r.name + ' ' + r.barangay + ' ' + r.focus + ' ' + r.youthClassification).toLowerCase();
+            var hay = (r.name + ' ' + r.barangay + ' ' + r.focus + ' ' + r.youthClassification + ' ' + (r.respondentNumber || '') + ' ' + (r.purokZone || '')).toLowerCase();
             var matchSearch = !q || hay.includes(q);
             return matchStatus && matchBrgy && matchSearch;
         });
@@ -276,6 +276,26 @@
         renderPaginatedTable();
     }
 
+    function formatFullName(r) {
+        var suffixRaw = r.suffix || '';
+        var suffix = (suffixRaw && String(suffixRaw).toLowerCase() !== 'none') ? ',' + suffixRaw : '';
+        var parts = [r.firstName, r.middleName].filter(Boolean);
+        var firstMiddle = parts.length ? parts.join(',') : '';
+        var last = r.lastName || '';
+
+        if (last && firstMiddle) {
+            return last + ',' + firstMiddle + suffix;
+        }
+        if (last) {
+            return last + suffix;
+        }
+        if (firstMiddle) {
+            return firstMiddle + suffix;
+        }
+
+        return r.name || '—';
+    }
+
     function escapeHtml(value) {
         return String(value ?? '')
             .replace(/&/g, '&amp;')
@@ -295,20 +315,15 @@
         var end = start + state.itemsPerPage;
         var pageItems = state.allItems.slice(start, end);
 
-        var rows = pageItems.map(function(r, idx) {
-            var rowNum = start + idx + 1;
-            var statusClass = r.status || 'inactive';
-            var statusText = statusLabel[r.status] || r.status || '-';
+        var rows = pageItems.map(function(r) {
+            var fullName = formatFullName(r);
             return '<tr>' +
-                '<td>' + rowNum + '</td>' +
-                '<td class="km-fullname-cell"><span class="km-fullname">' + escapeHtml(r.name) + '</span></td>' +
-                '<td>' + escapeHtml(String(r.age ?? '-')) + '</td>' +
-                '<td>' + escapeHtml(r.sex || '-') + '</td>' +
-                '<td>' + escapeHtml(r.civilStatus || '-') + '</td>' +
-                '<td>' + escapeHtml(r.education || '-') + '</td>' +
-                '<td>' + escapeHtml(r.workStatus || '-') + '</td>' +
-                '<td>' + escapeHtml(r.youthClassification || '-') + '</td>' +
-                '<td><span class="km-status-badge ' + statusClass + '">' + escapeHtml(statusText) + '</span></td>' +
+                '<td class="km-respondent-cell">' + escapeHtml(r.respondentNumber || '—') + '</td>' +
+                '<td class="km-fullname-cell"><span class="km-fullname">' + escapeHtml(fullName) + '</span></td>' +
+                '<td>' + escapeHtml(String(r.age ?? '—')) + '</td>' +
+                '<td>' + escapeHtml(r.barangay || '—') + '</td>' +
+                '<td>' + escapeHtml(r.purokZone || '—') + '</td>' +
+                '<td>' + escapeHtml(r.registeredVoter || '—') + '</td>' +
                 '<td><div class="km-actions"><button type="button" class="km-btn-view" onclick="openKKPModal(\'' + r.slug.replace(/'/g, "\\'") + '\')">View</button></div></td>' +
                 '</tr>';
         }).join('');
@@ -393,9 +408,9 @@
     window.exportBarangayCSV = function() {
         var brgy = window.kmBarangay || '';
         var members = records.filter(function(r){ return r.barangay === brgy; });
-        var headers = ['Name','Age','Sex','Barangay','Civil Status','Education','Work Status','Youth Classification','Engagement Score','Status'];
+        var headers = ['Respondent #','Full Name','Age','Barangay','Purok/Zone','Registered Voter'];
         var rows = members.map(function(r) {
-            return [r.name,r.age,r.sex,r.barangay,r.civilStatus,r.education,r.workStatus,r.youthClassification,r.score,statusLabel[r.status]||r.status]
+            return [r.respondentNumber,r.name,r.age,r.barangay,r.purokZone,r.registeredVoter]
                 .map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
         });
         var csv = [headers.join(',')].concat(rows).join('\n');
