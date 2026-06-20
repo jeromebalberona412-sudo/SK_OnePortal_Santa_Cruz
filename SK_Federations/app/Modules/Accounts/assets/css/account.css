@@ -154,6 +154,16 @@
     color: #ffffff;
 }
 
+.modal-header-blue-grad .modal-win-btn {
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.modal-header-blue-grad .modal-win-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.45);
+}
+
 .modal-controls {
     display: inline-flex;
     align-items: center;
@@ -1096,9 +1106,13 @@ select.form-input-light option {
 
 .accounts-filter-grid {
     display: grid;
-    grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(220px, 1.5fr) auto;
+    grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(220px, 1.5fr);
     gap: 0.85rem;
-    align-items: end;
+    align-items: center;
+}
+
+.accounts-filter-grid:has(.header-action-buttons) {
+    grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(220px, 1.5fr) auto;
 }
 
 .filter-dropdown-container,
@@ -2944,6 +2958,19 @@ body.sidebar-collapsed .accounts-page-footer {
 
 .accounts-sort-option.is-active .accounts-sort-option-hint {
     color: #3b82f6;
+}
+
+.accounts-sort-col-hint {
+    font-size: 10px;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-left: 2px;
+    white-space: nowrap;
+}
+
+.accounts-th-sortable.is-sorted-asc .accounts-sort-col-hint,
+.accounts-th-sortable.is-sorted-desc .accounts-sort-col-hint {
+    color: #64748b;
 }
 
 .accounts-sort-btn {

@@ -37,11 +37,10 @@
                 <p class="page-subtitle-modern" id="pageSubtitle"><?php echo e($pageSubtitle); ?></p>
             </div>
             <div class="page-header-filters">
-                <form method="GET" action="<?php echo e($isOfficials ? route('accounts.officials.index') : route('accounts.federation.index')); ?>" class="accounts-filter-form">
+                <form method="get" action="#" class="accounts-filter-form" id="accountsFilterForm" novalidate>
                     <div class="accounts-filter-grid">
                         <div class="filter-dropdown-container">
-                            <label class="filter-label" for="barangayFilter">Barangay</label>
-                            <select id="barangayFilter" class="filter-dropdown form-select" name="barangay_id">
+                            <select id="barangayFilter" class="filter-dropdown form-select" name="barangay_id" aria-label="Filter by barangay">
                                 <option value="">All Barangays</option>
                                 <?php $__currentLoopData = $barangays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $barangay): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <option value="<?php echo e($barangay->id); ?>" <?php echo e(request('barangay_id') == $barangay->id ? 'selected' : ''); ?>><?php echo e($barangay->name); ?></option>
@@ -49,8 +48,7 @@
                             </select>
                         </div>
                         <div class="filter-dropdown-container">
-                            <label class="filter-label" for="positionFilter"><?php echo e($positionFilterLabel); ?></label>
-                            <select id="positionFilter" class="filter-dropdown form-select" name="position">
+                            <select id="positionFilter" class="filter-dropdown form-select" name="position" aria-label="Filter by position">
                                 <option value="">All Positions</option>
                                 <?php $__currentLoopData = $positionOptions ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <option value="<?php echo e($value); ?>" <?php echo e(request('position') === $value ? 'selected' : ''); ?>><?php echo e($label); ?></option>
@@ -58,10 +56,9 @@
                             </select>
                         </div>
                         <div class="search-container">
-                            <label class="filter-label" for="searchInput">Search</label>
                             <div class="search-input-wrap">
-                                <input type="text" id="searchInput" name="search" class="search-input form-control" value="<?php echo e(request('search')); ?>" placeholder="Search accounts...">
-                                <button type="submit" class="search-btn" id="searchBtn" aria-label="Search">
+                                <input type="text" id="searchInput" name="search" class="search-input form-control" value="<?php echo e(request('search')); ?>" placeholder="Search accounts..." aria-label="Search accounts">
+                                <button type="button" class="search-btn" id="searchBtn" aria-label="Search">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <circle cx="11" cy="11" r="8"></circle>
                                         <path d="m21 21-4.35-4.35"></path>
@@ -71,7 +68,6 @@
                         </div>
                         <?php if($isOfficials): ?>
                         <div class="header-action-buttons">
-                            <label class="filter-label filter-label-invisible">Add</label>
                             <button type="button" class="btn-primary-modern btn-green" id="addAccountBtn" onclick="openAddAccountModal()">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
                                 <span id="addButtonText"><?php echo e($addLabel); ?></span>
@@ -111,7 +107,10 @@
                             </th>
                             <?php endif; ?>
                             <th class="th-name accounts-th-sortable" data-sort-key="name" data-sort-type="text" aria-sort="none">
-                                <button type="button" class="accounts-sort-btn" aria-haspopup="menu" aria-expanded="false">Name <span class="accounts-sort-icon" aria-hidden="true"></span></button>
+                                <button type="button" class="accounts-sort-btn" aria-haspopup="menu" aria-expanded="false">
+                                    Fullname <span class="accounts-sort-col-hint">(LN, FN, MI, Suffix)</span>
+                                    <span class="accounts-sort-icon" aria-hidden="true"></span>
+                                </button>
                             </th>
                             <th class="th-email">Email Address</th>
                             <?php if($isOfficials): ?>
@@ -121,9 +120,7 @@
                             <?php endif; ?>
                             <th class="th-position"><?php echo e($isOfficials ? 'Position' : 'SK Position'); ?></th>
                             <?php if($isOfficials): ?>
-                                <th class="th-term accounts-th-sortable" data-sort-key="term" data-sort-type="date" aria-sort="none">
-                                    <button type="button" class="accounts-sort-btn" aria-haspopup="menu" aria-expanded="false">Term End <span class="accounts-sort-icon" aria-hidden="true"></span></button>
-                                </th>
+                                <th class="th-term">Term End</th>
                             <?php else: ?>
                                 <th class="th-federation-position">Federation Position</th>
                             <?php endif; ?>
@@ -139,17 +136,33 @@
                                 $lastName = $profile?->last_name ? mb_strtoupper($profile->last_name, 'UTF-8') : null;
                                 $middleName = trim((string) ($profile?->middle_name ?? ''));
                                 $middleInitial = $middleName !== '' ? mb_strtoupper(mb_substr($middleName, 0, 1, 'UTF-8'), 'UTF-8').'.' : null;
+                                $suffixDisplay = $profile?->suffix;
+                                if (in_array($suffixDisplay, ['NONE', 'None', null, ''], true)) {
+                                    $suffixDisplay = null;
+                                }
+                                $nameCore = collect([$lastName, $firstName])->filter()->implode(', ');
                                 $fullName = trim(collect([
-                                    $firstName,
+                                    $nameCore,
                                     $middleInitial,
-                                    $lastName,
-                                    $profile?->suffix,
+                                    $suffixDisplay,
                                 ])->filter()->implode(' '));
                                 $displayName = $fullName !== '' ? $fullName : ($account->name ?? 'N/A');
+                                $sortName = strtolower(trim(collect([$lastName, $firstName, $middleInitial, $suffixDisplay])->filter()->implode(' ')));
                                 $federationPosition = $profile?->displayFederationPosition();
+                                $filterPosition = $isOfficials ? ($profile?->position ?? '') : ($profile?->federation_position ?? '');
+                                $searchBlob = strtolower(trim(collect([
+                                    $displayName,
+                                    $account->email,
+                                    $account->barangay?->name,
+                                    $profile?->position,
+                                    $federationPosition,
+                                ])->filter()->implode(' ')));
                             ?>
                             <tr data-account-id="<?php echo e($account->id); ?>"
-                                data-sort-name="<?php echo e(strtolower($displayName)); ?>"
+                                data-barangay-id="<?php echo e($account->barangay_id ?? ''); ?>"
+                                data-filter-position="<?php echo e($filterPosition); ?>"
+                                data-search-text="<?php echo e($searchBlob); ?>"
+                                data-sort-name="<?php echo e($sortName); ?>"
                                 data-sort-email="<?php echo e(strtolower($account->email ?? '')); ?>"
                                 data-sort-barangay="<?php echo e(strtolower($account->barangay?->name ?? '')); ?>"
                                 data-sort-position="<?php echo e(strtolower($profile?->position ?? '')); ?>"

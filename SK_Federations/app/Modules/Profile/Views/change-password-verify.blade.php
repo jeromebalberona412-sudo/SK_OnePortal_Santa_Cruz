@@ -4,10 +4,6 @@
 
 @section('card-class', 'ce-verify-card sk-fed-compact-card')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ url('/modules/profile/css/sk-fed-account-auth.css') }}">
-@endpush
-
 @push('scripts-before')
     <script>
         window.cpResendCooldown = {{ (int) $resendCooldown }};

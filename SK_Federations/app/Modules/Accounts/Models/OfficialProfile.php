@@ -34,7 +34,6 @@ class OfficialProfile extends Model
     public const POSITIONS = [
         ...self::FEDERATION_POSITIONS,
         ...self::OFFICIAL_POSITIONS,
-        'Chairman',
         'Councilor',
         'Auditor',
     ];
@@ -55,7 +54,6 @@ class OfficialProfile extends Model
     {
         return [
             'Chairperson' => 'SK Chairperson',
-            'Chairman' => 'SK Chairman',
             'Secretary' => 'SK Secretary',
             'Treasurer' => 'SK Treasurer',
             'Kagawad' => 'SK Kagawad',
@@ -66,7 +64,7 @@ class OfficialProfile extends Model
     {
         return $role === \App\Modules\Shared\Models\User::ROLE_SK_FED
             ? self::FEDERATION_POSITIONS
-            : array_merge(self::OFFICIAL_POSITIONS, ['Chairman', 'Councilor', 'Auditor', 'PIO']);
+            : array_merge(self::OFFICIAL_POSITIONS, ['Councilor', 'Auditor', 'PIO']);
     }
 
     /**
@@ -77,7 +75,6 @@ class OfficialProfile extends Model
         return array_values(array_unique([
             ...self::FEDERATION_POSITIONS,
             ...self::OFFICIAL_POSITIONS,
-            'Chairman',
             'Councilor',
             'Auditor',
         ]));

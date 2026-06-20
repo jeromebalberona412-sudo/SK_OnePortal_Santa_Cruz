@@ -1,134 +1,44 @@
-/* SK Federation account auth — blue/yellow theme, compact layout */
+/* SK Federation — Change Email / Change Password (professional portal theme) */
 
 :root {
-    --sk-fed-blue: #213F99;
-    --sk-fed-blue-dark: #1a3280;
-    --sk-fed-yellow: #F7D31E;
-    --sk-fed-yellow-dark: #e6c200;
+    --skfed-blue: #1a365d;
+    --skfed-blue-mid: #213f99;
+    --skfed-blue-light: #3b5bcc;
+    --skfed-yellow: #f7d31e;
+    --skfed-yellow-soft: #fef9c3;
+    --skfed-red: #dc2626;
+    --skfed-red-soft: #fef2f2;
+    --skfed-white: #ffffff;
+    --skfed-gray-50: #f8fafc;
+    --skfed-gray-100: #f1f5f9;
+    --skfed-gray-200: #e2e8f0;
+    --skfed-gray-400: #94a3b8;
+    --skfed-gray-500: #64748b;
+    --skfed-gray-700: #334155;
+    --skfed-gray-900: #0f172a;
 }
 
+/* ── Page background ─────────────────────────────────────── */
 .sk-login-page {
-    background: linear-gradient(135deg, #0f1f4d 0%, #213F99 45%, #152a66 100%) !important;
+    background: linear-gradient(135deg, #0f172a 0%, var(--skfed-blue) 42%, #152a66 100%) !important;
+    min-height: 100vh;
+    height: auto !important;
+    overflow-y: auto !important;
 }
 
 .sk-gradient-overlay {
     background:
-        radial-gradient(circle at 20% 50%, rgba(247, 211, 30, 0.12) 0%, transparent 50%),
-        radial-gradient(circle at 80% 30%, rgba(33, 63, 153, 0.35) 0%, transparent 50%) !important;
+        radial-gradient(circle at 18% 48%, rgba(247, 211, 30, 0.14) 0%, transparent 48%),
+        radial-gradient(circle at 82% 22%, rgba(59, 91, 204, 0.28) 0%, transparent 52%),
+        radial-gradient(circle at 60% 90%, rgba(220, 38, 38, 0.08) 0%, transparent 40%) !important;
 }
 
-.shape-1 { background: var(--sk-fed-yellow) !important; }
-.shape-2 { background: #4a6fd4 !important; }
-.shape-3 { background: var(--sk-fed-blue) !important; }
+.shape-1 { background: var(--skfed-yellow) !important; opacity: 0.14 !important; }
+.shape-2 { background: var(--skfed-blue-light) !important; opacity: 0.12 !important; }
+.shape-3 { background: var(--skfed-red) !important; opacity: 0.07 !important; }
 
 .sk-tagline {
-    color: var(--sk-fed-yellow) !important;
-}
-
-.sk-login-card,
-.sk-fed-compact-card {
-    padding: 1.35rem 1.5rem 1.1rem !important;
-    max-height: none !important;
-}
-
-.sk-fed-compact-card .card-header {
-    margin-bottom: 0.85rem !important;
-}
-
-.sk-fed-compact-card .card-title {
-    font-size: 1.25rem !important;
-    margin-bottom: 0.25rem !important;
-}
-
-.sk-fed-compact-card .card-subtitle {
-    font-size: 0.8125rem !important;
-    line-height: 1.45 !important;
-}
-
-.sk-fed-auth-form .sk-form-group {
-    margin-bottom: 0.85rem !important;
-}
-
-.sk-fed-primary-btn,
-.sk-submit-btn {
-    background: var(--sk-fed-blue) !important;
-    color: var(--sk-fed-yellow) !important;
-    border: 2px solid var(--sk-fed-yellow) !important;
-    box-shadow: 0 4px 14px rgba(33, 63, 153, 0.28) !important;
-    min-height: 44px;
-    margin-top: 0.25rem;
-}
-
-.sk-fed-primary-btn:hover:not(:disabled),
-.sk-submit-btn:hover:not(:disabled) {
-    background: var(--sk-fed-blue-dark) !important;
-    color: var(--sk-fed-yellow) !important;
-    transform: translateY(-1px);
-}
-
-.input-icon,
-.password-wrapper .input-icon {
-    color: var(--sk-fed-yellow) !important;
-}
-
-.sk-input:focus,
-.password-wrapper .sk-input:focus {
-    border-color: var(--sk-fed-blue) !important;
-    box-shadow: 0 0 0 3px rgba(33, 63, 153, 0.15) !important;
-}
-
-.pw-toggle-btn:hover {
-    color: var(--sk-fed-blue) !important;
-}
-
-.register-link {
-    color: var(--sk-fed-blue) !important;
-}
-
-.register-link:hover {
-    color: var(--sk-fed-blue-dark) !important;
-}
-
-.ce-btn-resend {
-    background: var(--sk-fed-blue) !important;
-    color: var(--sk-fed-yellow) !important;
-    border: 2px solid var(--sk-fed-yellow) !important;
-    box-shadow: 0 4px 14px rgba(33, 63, 153, 0.25) !important;
-}
-
-.ce-btn-resend:hover:not(:disabled) {
-    background: var(--sk-fed-blue-dark) !important;
-}
-
-.ce-info-box {
-    background: #f0f4ff !important;
-    border-color: #93b4ff !important;
-    color: #1e3a8a !important;
-    padding: 10px 12px !important;
-    margin-bottom: 12px !important;
-    font-size: 12px !important;
-}
-
-.ce-verify-content {
-    gap: 0.75rem !important;
-}
-
-.ce-sent-header {
-    margin-bottom: 0.25rem !important;
-}
-
-.ce-sent-icon {
-    width: 48px !important;
-    height: 48px !important;
-    margin-bottom: 10px !important;
-}
-
-.ce-status-table {
-    margin-bottom: 12px !important;
-}
-
-.ce-actions {
-    margin-bottom: 12px !important;
+    color: var(--skfed-yellow) !important;
 }
 
 .sk-login-container {
@@ -140,191 +50,347 @@
 
 .sk-login-section {
     overflow: visible !important;
-    padding: 1rem !important;
+    padding: 1.5rem !important;
+    align-items: center !important;
 }
 
-.sk-login-page {
-    height: auto !important;
-    min-height: 100vh;
-    overflow-y: auto !important;
-}
-
-html, body.sk-login-page-body,
+html,
+body.sk-login-page-body,
 body.sk-login-page {
     overflow-y: auto !important;
     height: auto !important;
     min-height: 100vh;
 }
 
-@media (min-width: 1025px) {
-    .sk-login-container {
-        grid-template-columns: 1fr 1fr;
-        max-height: 100vh;
-    }
-
-    .sk-login-section {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .sk-fed-compact-card {
-        max-width: 420px;
-        width: 100%;
-    }
-}
-
-@media (max-width: 1024px) {
-    .sk-branding-section {
-        padding: 1.5rem 1rem 0.5rem !important;
-    }
-
-    .sk-fed-compact-card {
-        margin: 0 auto;
-        width: 100%;
-        max-width: 420px;
-    }
-}
-
-/* change-email/verify — fit viewport without scroll */
-body.sk-login-page:has(.ce-verify-card) {
-    overflow: hidden !important;
-    height: 100vh !important;
-    min-height: 100vh !important;
-}
-
-body.sk-login-page:has(.ce-verify-card) .sk-login-container {
-    min-height: 100vh;
-    max-height: 100vh;
-    overflow: hidden;
-    align-items: center;
-}
-
-body.sk-login-page:has(.ce-verify-card) .sk-login-section {
-    padding: 0.75rem 1rem !important;
+/* ── Card shell ──────────────────────────────────────────── */
+.sk-login-card,
+.sk-fed-compact-card {
+    background: var(--skfed-white) !important;
+    border: 1px solid var(--skfed-gray-200) !important;
+    border-radius: 20px !important;
+    padding: 2rem 2rem 1.75rem !important;
+    max-width: 460px !important;
+    width: 100% !important;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28) !important;
+    max-height: none !important;
     overflow: hidden;
 }
 
-.sk-fed-compact-card.ce-verify-card {
-    padding: 0.85rem 1.15rem 0.65rem !important;
+.sk-login-card::before,
+.sk-fed-compact-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(
+        90deg,
+        var(--skfed-red) 0%,
+        var(--skfed-yellow) 35%,
+        var(--skfed-blue-mid) 70%,
+        var(--skfed-white) 100%
+    );
+    z-index: 1;
 }
 
-.sk-fed-compact-card.ce-verify-card .card-header {
+.sk-fed-compact-card .card-header {
+    margin-bottom: 1.35rem !important;
+    text-align: left;
+    position: relative;
+    z-index: 2;
+}
+
+.sk-fed-compact-card .card-title {
+    font-size: 1.45rem !important;
+    font-weight: 800 !important;
+    color: var(--skfed-gray-900) !important;
     margin-bottom: 0.4rem !important;
+    letter-spacing: -0.02em;
 }
 
-.sk-fed-compact-card.ce-verify-card .card-title {
-    font-size: 1.05rem !important;
+.sk-fed-compact-card .card-subtitle {
+    font-size: 0.875rem !important;
+    line-height: 1.55 !important;
+    color: var(--skfed-gray-500) !important;
 }
 
-.sk-fed-compact-card.ce-verify-card .card-subtitle {
-    font-size: 0.72rem !important;
-    line-height: 1.3 !important;
+/* ── Form fields ─────────────────────────────────────────── */
+.sk-fed-auth-form .sk-form-group {
+    margin-bottom: 1.1rem !important;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-info-box {
-    padding: 7px 9px !important;
-    margin-bottom: 6px !important;
-    font-size: 10.5px !important;
-    line-height: 1.35 !important;
+.sk-label {
+    color: var(--skfed-gray-700) !important;
+    font-weight: 700 !important;
+    font-size: 0.78rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-status-table {
-    margin-bottom: 6px !important;
+.sk-input {
+    border: 1.5px solid var(--skfed-gray-200) !important;
+    background: var(--skfed-gray-50) !important;
+    color: var(--skfed-gray-900) !important;
+    border-radius: 10px !important;
+    min-height: 44px;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-status-row {
-    padding: 6px 9px !important;
+.sk-input::placeholder {
+    color: var(--skfed-gray-400) !important;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-status-key {
-    min-width: 90px !important;
-    font-size: 9.5px !important;
+.sk-input:focus,
+.password-wrapper .sk-input:focus {
+    border-color: var(--skfed-blue-mid) !important;
+    background: var(--skfed-white) !important;
+    box-shadow: 0 0 0 3px rgba(33, 63, 153, 0.14) !important;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-status-val {
-    font-size: 11.5px !important;
+.input-icon,
+.password-wrapper .input-icon {
+    color: var(--skfed-blue-mid) !important;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-badge-awaiting {
-    font-size: 11px !important;
-    padding: 2px 8px !important;
+.sk-field-error {
+    color: var(--skfed-red) !important;
+    font-size: 0.75rem !important;
+    font-weight: 600;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-resend-timer {
-    font-size: 10.5px !important;
-    margin-bottom: 4px !important;
+/* ── Primary button ──────────────────────────────────────── */
+.sk-fed-primary-btn,
+.sk-submit-btn {
+    background: linear-gradient(135deg, var(--skfed-blue) 0%, var(--skfed-blue-mid) 100%) !important;
+    color: var(--skfed-yellow) !important;
+    border: 2px solid var(--skfed-yellow) !important;
+    border-radius: 11px !important;
+    box-shadow: 0 6px 18px rgba(26, 54, 93, 0.28) !important;
+    min-height: 46px;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em;
+    margin-top: 0.35rem;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-actions {
-    margin-bottom: 6px !important;
-    gap: 6px !important;
+.sk-fed-primary-btn:hover:not(:disabled),
+.sk-submit-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #152a52 0%, var(--skfed-blue) 100%) !important;
+    color: var(--skfed-white) !important;
+    border-color: var(--skfed-yellow) !important;
+    transform: translateY(-1px);
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-btn-resend,
-.sk-fed-compact-card.ce-verify-card .ce-btn-cancel {
-    min-height: 36px !important;
-    padding: 7px 10px !important;
-    font-size: 12.5px !important;
+/* ── Alerts ──────────────────────────────────────────────── */
+.sk-alert-error {
+    background: var(--skfed-red-soft) !important;
+    border: 1.5px solid #fca5a5 !important;
+    color: #991b1b !important;
+    border-radius: 10px !important;
+    padding: 0.75rem 0.9rem !important;
+    font-size: 0.8125rem !important;
+    margin-bottom: 1rem !important;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-back-section {
-    margin-top: 0 !important;
+.sk-alert-error .alert-icon {
+    color: var(--skfed-red) !important;
+}
+
+/* ── Back link ───────────────────────────────────────────── */
+.register-link {
+    color: var(--skfed-blue-mid) !important;
+    font-weight: 600 !important;
+    text-decoration: none;
+}
+
+.register-link:hover {
+    color: var(--skfed-blue) !important;
+    text-decoration: underline;
+}
+
+.ce-back-section {
+    margin-top: 1.25rem !important;
     padding-top: 0 !important;
+    border-top: none !important;
+    text-align: center;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-back-section .register-text {
-    margin: 0 !important;
-    font-size: 11.5px !important;
+/* ── Password toggle ─────────────────────────────────────── */
+.pw-toggle-btn,
+.ce-password-wrapper .toggle-password {
+    color: var(--skfed-gray-500) !important;
 }
 
-.sk-fed-compact-card.ce-verify-card .ce-verify-content {
-    gap: 0.45rem !important;
+.pw-toggle-btn:hover,
+.ce-password-wrapper .toggle-password:hover {
+    color: var(--skfed-blue-mid) !important;
+    background: rgba(33, 63, 153, 0.08) !important;
 }
 
-/* change-password — compact layout, no field icons, fixed eye toggle */
-body.sk-login-page:has(.cp-change-card) {
-    overflow: hidden !important;
-    height: 100vh !important;
-    min-height: 100vh !important;
+.password-rules {
+    background: var(--skfed-gray-50);
+    border: 1px solid var(--skfed-gray-200);
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    color: var(--skfed-gray-700);
 }
 
-body.sk-login-page:has(.cp-change-card) .sk-login-container {
-    min-height: 100vh;
-    max-height: 100vh;
+.password-rules li.is-valid {
+    color: #15803d;
+}
+
+.password-rules li.is-invalid {
+    color: var(--skfed-red);
+}
+
+/* ── Verify pages ────────────────────────────────────────── */
+.ce-verify-card .card-header {
+    text-align: center;
+}
+
+.ce-info-box {
+    background: linear-gradient(135deg, #eff6ff 0%, var(--skfed-yellow-soft) 100%) !important;
+    border: 1.5px solid #bfdbfe !important;
+    color: var(--skfed-gray-700) !important;
+    border-radius: 12px !important;
+    padding: 0.85rem 1rem !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.55 !important;
+}
+
+.ce-info-box strong {
+    color: var(--skfed-blue);
+}
+
+.ce-status-table {
+    border: 1.5px solid var(--skfed-gray-200) !important;
+    border-radius: 12px !important;
     overflow: hidden;
-    align-items: center;
+    background: var(--skfed-white);
 }
 
-body.sk-login-page:has(.cp-change-card) .sk-login-section {
-    padding: 0.75rem 1rem !important;
-    overflow: hidden;
+.ce-status-row {
+    padding: 0.7rem 0.95rem !important;
+    border-bottom: 1px solid var(--skfed-gray-100) !important;
 }
 
+.ce-status-row:nth-child(even) {
+    background: var(--skfed-gray-50) !important;
+}
+
+.ce-status-key {
+    color: var(--skfed-gray-500) !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ce-status-val {
+    color: var(--skfed-gray-900) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600;
+}
+
+.ce-badge-awaiting {
+    background: var(--skfed-yellow-soft) !important;
+    color: #92400e !important;
+    border: 1px solid #fde047;
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem !important;
+    font-size: 0.75rem !important;
+}
+
+.ce-badge-awaiting::before {
+    background: var(--skfed-yellow) !important;
+}
+
+.ce-btn-resend {
+    background: linear-gradient(135deg, var(--skfed-blue) 0%, var(--skfed-blue-mid) 100%) !important;
+    color: var(--skfed-yellow) !important;
+    border: 2px solid var(--skfed-yellow) !important;
+    border-radius: 11px !important;
+    min-height: 44px;
+    font-weight: 700 !important;
+}
+
+.ce-btn-resend:hover:not(:disabled) {
+    background: linear-gradient(135deg, #152a52 0%, var(--skfed-blue) 100%) !important;
+    color: var(--skfed-white) !important;
+}
+
+.ce-btn-resend:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.ce-btn-cancel {
+    background: var(--skfed-white) !important;
+    color: var(--skfed-red) !important;
+    border: 1.5px solid #fca5a5 !important;
+    border-radius: 11px !important;
+    min-height: 44px;
+    font-weight: 700 !important;
+}
+
+.ce-btn-cancel:hover {
+    background: var(--skfed-red-soft) !important;
+    border-color: var(--skfed-red) !important;
+}
+
+.ce-resend-timer {
+    color: var(--skfed-gray-500) !important;
+    font-size: 0.8125rem !important;
+}
+
+.ce-sent-icon {
+    background: #eff6ff !important;
+    border: 2px solid var(--skfed-blue-light) !important;
+}
+
+.ce-sent-icon svg {
+    fill: var(--skfed-blue-mid) !important;
+}
+
+.ce-sent-title {
+    color: var(--skfed-gray-900) !important;
+    font-weight: 800 !important;
+}
+
+.ce-sent-sub {
+    color: var(--skfed-gray-500) !important;
+}
+
+.cp-listening-badge {
+    background: #eff6ff !important;
+    border: 1.5px solid #93c5fd !important;
+    color: var(--skfed-blue-mid) !important;
+}
+
+.cp-listening-dot {
+    background: var(--skfed-blue-light) !important;
+}
+
+.cp-listening-badge.is-confirmed {
+    background: #f0fdf4 !important;
+    border-color: #86efac !important;
+    color: #166534 !important;
+}
+
+/* ── Change password card specifics ─────────────────────── */
 .sk-fed-compact-card.cp-change-card {
-    padding: 0.85rem 1.15rem 0.65rem !important;
-}
-
-.sk-fed-compact-card.cp-change-card .card-header {
-    margin-bottom: 0.45rem !important;
+    padding: 2rem 2rem 1.75rem !important;
 }
 
 .sk-fed-compact-card.cp-change-card .card-title {
-    font-size: 1.05rem !important;
+    font-size: 1.45rem !important;
 }
 
 .sk-fed-compact-card.cp-change-card .card-subtitle {
-    font-size: 0.72rem !important;
-    line-height: 1.3 !important;
+    font-size: 0.875rem !important;
 }
 
 .sk-fed-compact-card.cp-change-card .sk-form-group {
-    margin-bottom: 0.55rem !important;
-}
-
-.sk-fed-compact-card.cp-change-card .sk-label {
-    font-size: 0.78rem !important;
-    margin-bottom: 0.25rem !important;
+    margin-bottom: 1rem !important;
 }
 
 .sk-fed-compact-card.cp-change-card .input-wrapper .input-icon,
@@ -334,13 +400,12 @@ body.sk-login-page:has(.cp-change-card) .sk-login-section {
 
 .sk-fed-compact-card.cp-change-card .input-wrapper .sk-input,
 .sk-fed-compact-card.cp-change-card .password-wrapper .sk-input {
-    padding: 0.62rem 0.75rem !important;
-    font-size: 0.82rem !important;
-    min-height: 40px;
+    padding: 0.72rem 0.85rem !important;
+    font-size: 0.875rem !important;
 }
 
 .sk-fed-compact-card.cp-change-card .password-wrapper .sk-input {
-    padding-right: 2.5rem !important;
+    padding-right: 2.75rem !important;
 }
 
 .sk-fed-compact-card.cp-change-card .password-wrapper {
@@ -349,27 +414,21 @@ body.sk-login-page:has(.cp-change-card) .sk-login-section {
 
 .sk-fed-compact-card.cp-change-card .pw-toggle-btn {
     position: absolute;
-    right: 0.45rem;
+    right: 0.5rem;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     padding: 0;
-    margin: 0;
     border: none;
     background: transparent;
-    color: #64748b;
+    color: var(--skfed-gray-500);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 6px;
     z-index: 2;
-}
-
-.sk-fed-compact-card.cp-change-card .pw-toggle-btn:hover {
-    color: var(--sk-fed-blue) !important;
-    background: rgba(33, 63, 153, 0.08);
 }
 
 .sk-fed-compact-card.cp-change-card .pw-toggle-btn .pw-eye {
@@ -394,34 +453,63 @@ body.sk-login-page:has(.cp-change-card) .sk-login-section {
     opacity: 1;
 }
 
-.sk-fed-compact-card.cp-change-card .password-rules {
-    margin-top: 0.35rem !important;
-    font-size: 0.68rem !important;
+/* Remove cramped no-scroll overrides */
+body.sk-login-page:has(.ce-verify-card),
+body.sk-login-page:has(.cp-change-card) {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh !important;
 }
 
-.sk-fed-compact-card.cp-change-card .sk-field-error {
-    font-size: 0.68rem !important;
-    margin-top: 0.2rem !important;
+body.sk-login-page:has(.ce-verify-card) .sk-login-container,
+body.sk-login-page:has(.cp-change-card) .sk-login-container {
+    max-height: none !important;
+    overflow: visible !important;
 }
 
-.sk-fed-compact-card.cp-change-card .sk-alert-error {
-    padding: 0.5rem 0.65rem !important;
-    font-size: 0.75rem !important;
-    margin-bottom: 0.5rem !important;
+body.sk-login-page:has(.ce-verify-card) .sk-login-section,
+body.sk-login-page:has(.cp-change-card) .sk-login-section {
+    overflow: visible !important;
+    padding: 1.5rem !important;
 }
 
-.sk-fed-compact-card.cp-change-card .sk-submit-btn {
-    min-height: 38px !important;
-    margin-top: 0.35rem !important;
-    font-size: 0.85rem !important;
+.sk-fed-compact-card.ce-verify-card {
+    padding: 2rem 2rem 1.75rem !important;
 }
 
-.sk-fed-compact-card.cp-change-card .ce-back-section {
-    margin-top: 0.35rem !important;
-    padding-top: 0 !important;
+.sk-fed-compact-card.ce-verify-card .card-title {
+    font-size: 1.35rem !important;
 }
 
-.sk-fed-compact-card.cp-change-card .ce-back-section .register-text {
-    margin: 0 !important;
-    font-size: 11.5px !important;
+.sk-fed-compact-card.ce-verify-card .card-subtitle {
+    font-size: 0.875rem !important;
+}
+
+@media (min-width: 1025px) {
+    .sk-fed-compact-card {
+        max-width: 460px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 1024px) {
+    .sk-branding-section {
+        padding: 1.5rem 1rem 0.5rem !important;
+    }
+
+    .sk-fed-compact-card {
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .sk-login-card,
+    .sk-fed-compact-card {
+        padding: 1.5rem 1.25rem 1.25rem !important;
+        border-radius: 16px !important;
+    }
+
+    .sk-fed-compact-card .card-title {
+        font-size: 1.25rem !important;
+    }
 }

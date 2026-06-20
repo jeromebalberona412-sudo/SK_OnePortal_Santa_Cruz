@@ -294,8 +294,8 @@ class BatchAccountImportService
 
             if ($data['term_start'] === null) {
                 $errors[] = 'Term start date is required.';
-            } elseif ($data['term_start'] < now()->startOfYear()->toDateString()) {
-                $errors[] = 'Term start date cannot be before the current year.';
+            } elseif ($data['term_start'] < '2023-01-01') {
+                $errors[] = 'Term start date cannot be before 2023.';
             }
 
             if ($data['term_end'] === null) {
@@ -420,7 +420,7 @@ class BatchAccountImportService
 
         $aliases = [
             'chairperson' => 'Chairperson',
-            'chairman' => 'Chairman',
+            'chairman' => 'Chairperson',
             'secretary' => 'Secretary',
             'treasurer' => 'Treasurer',
             'kagawad' => 'Kagawad',

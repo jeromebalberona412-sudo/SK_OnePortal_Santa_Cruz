@@ -384,14 +384,20 @@ function attachDobAgeAutoFill(form, dobName, ageName) {
     if (!dob || !age) return;
     const update = () => {
         if (isSkOfficialsManualForm(form)) {
-            _validateSkOfficialBirthdate(form);
+            if (dob.value) {
+                age.value = calculateAge(dob.value);
+            } else {
+                age.value = '';
+            }
             return;
         }
         age.value = calculateAge(dob.value);
     };
     dob.addEventListener('change', update);
     dob.addEventListener('input', update);
-    update();
+    if (!isSkOfficialsManualForm(form)) {
+        update();
+    }
 }
 
 function setFormFieldValue(form, name, value) {
@@ -475,6 +481,7 @@ function escapeHtml(value) {
 
 // ── Inline validation helpers (light-theme forms) ─────────────
 const ACCOUNT_TERM_MAX_YEARS = 5;
+const ACCOUNT_TERM_START_MIN = '2023-01-01';
 const SK_OFFICIAL_NAME_MIN = 3;
 const SK_OFFICIAL_NAME_MAX = 50;
 const SK_OFFICIAL_SUFFIX_OTHER_MAX = 10;
@@ -515,6 +522,10 @@ function _markValid(input) {
 
 function getCurrentYearStartDate() {
     return `${new Date().getFullYear()}-01-01`;
+}
+
+function getTermStartMinDate() {
+    return ACCOUNT_TERM_START_MIN;
 }
 
 function addYearsToDateString(dateStr, years) {
@@ -818,6 +829,12 @@ function wireSkOfficialsManualValidation(form) {
         });
     });
 
+    const dob = form.querySelector('[name="date_of_birth"]');
+    if (dob) {
+        dob.addEventListener('change', () => _validateSkOfficialBirthdate(form));
+        dob.addEventListener('blur', () => _validateSkOfficialBirthdate(form));
+    }
+
     ['term_start', 'term_end'].forEach((name) => {
         const input = form.querySelector(`[name="${name}"]`);
         if (input) {
@@ -878,7 +895,7 @@ function validateTermRange(form) {
 
     const start = startInput.value;
     const end = endInput.value;
-    const yearStart = getCurrentYearStartDate();
+    const termStartMin = getTermStartMinDate();
 
     let termValid = true;
 
@@ -897,8 +914,8 @@ function validateTermRange(form) {
     }
 
     if (!termValid) return false;
-    if (start && start < yearStart) {
-        _showErr(startInput, 'Term start date cannot be before the current year');
+    if (start && start < termStartMin) {
+        _showErr(startInput, 'Term start date cannot be before 2023');
         return false;
     }
     if (start && end && end <= start) {
@@ -1022,29 +1039,32 @@ function applyTermDateConstraints(form) {
         return;
     }
 
-    const yearStart = getCurrentYearStartDate();
-    startInput.min = yearStart;
+    const termStartMin = getTermStartMinDate();
+    startInput.min = termStartMin;
+    startInput.removeAttribute('max');
     clampDateInputYear(startInput);
     clampDateInputYear(endInput);
 
     const syncEndConstraints = () => {
         const startVal = startInput.value;
-        if (startVal) {
-            endInput.min = startVal;
-            endInput.max = addYearsToDateString(startVal, ACCOUNT_TERM_MAX_YEARS);
+        if (startVal && startVal < termStartMin) {
+            startInput.value = termStartMin;
+        }
+        const effectiveStart = startInput.value;
+        if (effectiveStart) {
+            endInput.min = effectiveStart;
+            endInput.max = addYearsToDateString(effectiveStart, ACCOUNT_TERM_MAX_YEARS);
         } else {
-            endInput.min = yearStart;
+            endInput.min = termStartMin;
             endInput.removeAttribute('max');
         }
 
-        if (endInput.value && startVal && endInput.value < startVal) {
+        if (endInput.value && effectiveStart && endInput.value < effectiveStart) {
             endInput.value = '';
         }
         if (endInput.value && endInput.max && endInput.value > endInput.max) {
             endInput.value = endInput.max;
         }
-
-        validateTermRange(form);
     };
 
     startInput.addEventListener('change', syncEndConstraints);
@@ -1118,8 +1138,14 @@ window.toggleAddOfficialsSize = function () {
 
 window.openAddSkOfficialsModal = function () {
     switchAddOfficialTab('manual');
+    const form = document.getElementById('addSkOfficialsForm');
+    if (form) {
+        form.querySelectorAll('.is-invalid,.is-valid').forEach(el => el.classList.remove('is-invalid', 'is-valid'));
+        form.querySelectorAll('.validation-error').forEach(el => el.remove());
+        form.querySelectorAll('.form-error-light').forEach(el => { el.textContent = ''; });
+    }
     toggleModal('addSkOfficialsModal', true);
-    initCreateAccountFormDefaults(document.getElementById('addSkOfficialsForm'));
+    initCreateAccountFormDefaults(form);
 };
 
 window.closeAddSkOfficialsModal = function () {
@@ -1259,14 +1285,20 @@ window.toggleAddFedSize = function () {
 window.openAddAccountModal = function () {
     const type = getCurrentAccountType();
     const ids = _getModalIds(type);
+    const formId = type === 'sk_officials' ? 'addSkOfficialsForm' : 'addSkFedForm';
+    const form = document.getElementById(formId);
+    if (form) {
+        form.querySelectorAll('.is-invalid,.is-valid').forEach(el => el.classList.remove('is-invalid', 'is-valid'));
+        form.querySelectorAll('.validation-error').forEach(el => el.remove());
+        form.querySelectorAll('.form-error-light').forEach(el => { el.textContent = ''; });
+    }
     if (type === 'sk_officials') {
         switchAddOfficialTab('manual');
     } else {
         switchAddFedTab('manual');
     }
     toggleModal(ids.addModalId, true);
-    const formId = type === 'sk_officials' ? 'addSkOfficialsForm' : 'addSkFedForm';
-    initCreateAccountFormDefaults(document.getElementById(formId));
+    initCreateAccountFormDefaults(form);
 };
 
 window.closeAddAccountModal = function () {
@@ -1847,66 +1879,103 @@ document.addEventListener('DOMContentLoaded', function () {
     window.AccountsDeleteModal?.wireEvents?.();
 
     // ── Pagination ────────────────────────────────────────────
-    const recordsPerPage = 10;
+    let recordsPerPage = 10;
     let currentPage = 1;
     let allAccounts = [];
     let filteredAccounts = [];
 
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const paginationNums = document.getElementById('paginationNumbers');
+    const pageInput = document.getElementById('pageInput');
+    const totalPagesEl = document.getElementById('totalPages');
+    const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
     const paginationInfo = document.getElementById('paginationInfo');
-    const tableBody = document.querySelector('.accounts-table tbody');
+    const tableBody = document.getElementById('accountsTableBody') || document.querySelector('.accounts-table tbody');
+
+    function getPageCount() {
+        if (filteredAccounts.length === 0) return 1;
+        return Math.ceil(filteredAccounts.length / recordsPerPage);
+    }
 
     function initPagination() {
+        if (!tableBody) return;
         const rows = Array.from(tableBody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
         allAccounts = rows.map((el, i) => ({ element: el, index: i }));
         filteredAccounts = [...allAccounts];
+        currentPage = 1;
         updatePagination();
     }
 
     function updatePagination() {
-        const total = Math.ceil(filteredAccounts.length / recordsPerPage);
+        if (!tableBody) return;
+        const totalPages = getPageCount();
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
         const start = (currentPage - 1) * recordsPerPage;
         const end = Math.min(start + recordsPerPage, filteredAccounts.length);
+
         allAccounts.forEach(a => { a.element.style.display = 'none'; });
-        for (let i = start; i < end; i++) { if (filteredAccounts[i]) filteredAccounts[i].element.style.display = ''; }
-        if (paginationInfo) paginationInfo.innerHTML = `Showing <strong>${filteredAccounts.length > 0 ? start + 1 : 0}-${end}</strong> of <strong>${filteredAccounts.length}</strong> accounts`;
-        updatePageNumbers(total);
-        if (prevBtn) prevBtn.disabled = currentPage === 1;
-        if (nextBtn) nextBtn.disabled = currentPage === total || total === 0;
+        for (let i = start; i < end; i++) {
+            if (filteredAccounts[i]) filteredAccounts[i].element.style.display = '';
+        }
+
+        if (pageInput) {
+            pageInput.value = String(currentPage);
+            pageInput.min = '1';
+            pageInput.max = String(totalPages);
+        }
+        if (totalPagesEl) totalPagesEl.textContent = String(totalPages);
+        if (paginationInfo) {
+            paginationInfo.textContent = `${filteredAccounts.length} record${filteredAccounts.length === 1 ? '' : 's'}`;
+        }
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages || filteredAccounts.length === 0;
     }
 
-    function updatePageNumbers(total) {
-        if (!paginationNums) return;
-        paginationNums.innerHTML = '';
-        if (total === 0) return;
-        let s = Math.max(1, currentPage - 2), e = Math.min(total, currentPage + 2);
-        if (s > 1) { addPageBtn(1); if (s > 2) addEllipsis(); }
-        for (let i = s; i <= e; i++) addPageBtn(i);
-        if (e < total) { if (e < total - 1) addEllipsis(); addPageBtn(total); }
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage -= 1;
+                updatePagination();
+                syncPaginationSelection();
+            }
+        });
     }
 
-    function addPageBtn(n) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `pagination-btn pagination-number ${n === currentPage ? 'active' : ''}`;
-        btn.textContent = n;
-        btn.setAttribute('aria-current', n === currentPage ? 'page' : 'false');
-        btn.addEventListener('click', () => { currentPage = n; updatePagination(); syncPaginationSelection(); });
-        paginationNums.appendChild(btn);
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const totalPages = getPageCount();
+            if (currentPage < totalPages) {
+                currentPage += 1;
+                updatePagination();
+                syncPaginationSelection();
+            }
+        });
     }
 
-    function addEllipsis() {
-        const s = document.createElement('span');
-        s.className = 'pagination-ellipsis';
-        s.textContent = '...';
-        s.style.cssText = 'padding:0 0.5rem;color:var(--gray-400);font-weight:500;';
-        paginationNums.appendChild(s);
+    if (pageInput) {
+        pageInput.addEventListener('change', () => {
+            const totalPages = getPageCount();
+            let page = parseInt(pageInput.value, 10);
+            if (Number.isNaN(page) || page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            currentPage = page;
+            updatePagination();
+            syncPaginationSelection();
+        });
     }
 
-    if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updatePagination(); syncPaginationSelection(); } });
-    if (nextBtn) nextBtn.addEventListener('click', () => { const t = Math.ceil(filteredAccounts.length / recordsPerPage); if (currentPage < t) { currentPage++; updatePagination(); syncPaginationSelection(); } });
+    if (rowsPerPageSelect) {
+        recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+        rowsPerPageSelect.addEventListener('change', () => {
+            recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+            currentPage = 1;
+            updatePagination();
+            syncPaginationSelection();
+        });
+    }
+
     if (tableBody) initPagination();
 
     function syncPaginationSelection() {
@@ -1917,30 +1986,214 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     window.refreshAccountsPagination = function () {
+        if (!tableBody) return;
         const rows = Array.from(tableBody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
         allAccounts = rows.map((el, i) => ({ element: el, index: i }));
-        filteredAccounts = [...allAccounts];
-        const total = Math.ceil(filteredAccounts.length / recordsPerPage);
-        if (currentPage > total) currentPage = Math.max(1, total);
-        updatePagination();
-        syncPaginationSelection();
+        applyAccountsTableFilters();
     };
 
-    // ── Filter dropdowns ──────────────────────────────────────
+    // ── Table sorting (Fullname only) ─────────────────────────
+    const sortMenu = document.getElementById('accountsSortMenu');
+    let sortMenuAnchor = null;
+
+    function compareSortValues(a, b, type) {
+        const av = a || '';
+        const bv = b || '';
+        if (type === 'date') {
+            if (!av && !bv) return 0;
+            if (!av) return 1;
+            if (!bv) return -1;
+            return av.localeCompare(bv);
+        }
+        return av.localeCompare(bv, undefined, { sensitivity: 'base' });
+    }
+
+    function closeAccountsSortMenu() {
+        if (sortMenu) sortMenu.hidden = true;
+        sortMenuAnchor = null;
+        document.querySelectorAll('.accounts-sort-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    }
+
+    function updateSortHeaderState(key, dir) {
+        document.querySelectorAll('.accounts-th-sortable').forEach(th => {
+            th.classList.remove('is-sorted-asc', 'is-sorted-desc');
+            th.setAttribute('aria-sort', 'none');
+        });
+        const th = document.querySelector(`.accounts-th-sortable[data-sort-key="${key}"]`);
+        if (th && dir) {
+            th.classList.add(dir === 'asc' ? 'is-sorted-asc' : 'is-sorted-desc');
+            th.setAttribute('aria-sort', dir === 'asc' ? 'ascending' : 'descending');
+        }
+    }
+
+    function applyAccountsSort(key, dir, type) {
+        if (!tableBody) return;
+        const dataAttr = key === 'name' ? 'sortName' : 'sortTerm';
+        filteredAccounts.sort((rowA, rowB) => {
+            const valA = rowA.element.dataset[dataAttr] || '';
+            const valB = rowB.element.dataset[dataAttr] || '';
+            const cmp = compareSortValues(valA, valB, type);
+            return dir === 'asc' ? cmp : -cmp;
+        });
+        filteredAccounts.forEach(item => tableBody.appendChild(item.element));
+        currentPage = 1;
+        updatePagination();
+        syncPaginationSelection();
+        updateSortHeaderState(key, dir);
+    }
+
+    function openAccountsSortMenu(anchor, key, type) {
+        if (!sortMenu || !anchor) return;
+        sortMenuAnchor = anchor;
+        const th = anchor.closest('.accounts-th-sortable');
+        const currentDir = th?.classList.contains('is-sorted-asc') ? 'asc'
+            : th?.classList.contains('is-sorted-desc') ? 'desc' : null;
+
+        sortMenu.innerHTML = '';
+        [
+            { dir: 'asc', label: 'Sort ascending', hint: 'A → Z', icon: '↑' },
+            { dir: 'desc', label: 'Sort descending', hint: 'Z → A', icon: '↓' },
+        ].forEach(opt => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'accounts-sort-option' + (currentDir === opt.dir ? ' is-active' : '');
+            btn.setAttribute('role', 'menuitem');
+            btn.innerHTML = `<span class="accounts-sort-option-icon">${opt.icon}</span><span class="accounts-sort-option-text"><span class="accounts-sort-option-label">${opt.label}</span><span class="accounts-sort-option-hint">${opt.hint}</span></span>`;
+            btn.addEventListener('click', () => {
+                applyAccountsSort(key, opt.dir, type);
+                closeAccountsSortMenu();
+            });
+            sortMenu.appendChild(btn);
+        });
+
+        const rect = anchor.getBoundingClientRect();
+        sortMenu.hidden = false;
+        sortMenu.style.top = `${rect.bottom + 4}px`;
+        sortMenu.style.left = `${rect.left}px`;
+        anchor.setAttribute('aria-expanded', 'true');
+    }
+
+    document.querySelectorAll('.accounts-th-sortable .accounts-sort-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const th = btn.closest('.accounts-th-sortable');
+            if (!th) return;
+            const key = th.dataset.sortKey;
+            const type = th.dataset.sortType || 'text';
+            if (sortMenuAnchor === btn && sortMenu && !sortMenu.hidden) {
+                closeAccountsSortMenu();
+                return;
+            }
+            closeAccountsSortMenu();
+            openAccountsSortMenu(btn, key, type);
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (sortMenu && !sortMenu.hidden && !sortMenu.contains(e.target) && e.target !== sortMenuAnchor && !sortMenuAnchor?.contains(e.target)) {
+            closeAccountsSortMenu();
+        }
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAccountsSortMenu();
+    });
+
+    // ── Client-side filters (no page reload) ─────────────────
     const barangayFilter = document.getElementById('barangayFilter');
+    const positionFilter = document.getElementById('positionFilter');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const accountsFilterForm = document.getElementById('accountsFilterForm');
+
+    function applyAccountsTableFilters() {
+        const barangayId = String(barangayFilter?.value || '').trim();
+        const position = String(positionFilter?.value || '').trim();
+        const search = (searchInput?.value || '').trim().toLowerCase();
+
+        filteredAccounts = allAccounts.filter(({ element: row }) => {
+            const rowBarangayId = String(row.dataset.barangayId || '').trim();
+            const rowPosition = String(row.dataset.filterPosition || '').trim();
+
+            if (barangayId && rowBarangayId !== barangayId) {
+                return false;
+            }
+            if (position && rowPosition !== position) {
+                return false;
+            }
+            if (search && !(row.dataset.searchText || '').includes(search)) {
+                return false;
+            }
+            return true;
+        });
+
+        currentPage = 1;
+        updatePagination();
+        syncPaginationSelection();
+    }
+
+    function syncFilterUrl() {
+        const url = new URL(window.location.href);
+        const barangayId = barangayFilter?.value || '';
+        const position = positionFilter?.value || '';
+        const search = (searchInput?.value || '').trim();
+
+        if (barangayId) url.searchParams.set('barangay_id', barangayId);
+        else url.searchParams.delete('barangay_id');
+
+        if (position) url.searchParams.set('position', position);
+        else url.searchParams.delete('position');
+
+        if (search) url.searchParams.set('search', search);
+        else url.searchParams.delete('search');
+
+        window.history.replaceState({}, '', url);
+    }
+
+    function onAccountsFilterChange() {
+        applyAccountsTableFilters();
+        syncFilterUrl();
+    }
+
     if (barangayFilter) {
-        barangayFilter.addEventListener('change', function () {
-            const form = this.closest('form');
-            if (form) form.submit();
+        barangayFilter.addEventListener('change', onAccountsFilterChange);
+    }
+
+    if (positionFilter) {
+        positionFilter.addEventListener('change', onAccountsFilterChange);
+    }
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', onAccountsFilterChange);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                onAccountsFilterChange();
+            }
         });
     }
 
-    const positionFilter = document.getElementById('positionFilter');
-    if (positionFilter) {
-        positionFilter.addEventListener('change', function () {
-            const form = this.closest('form');
-            if (form) form.submit();
+    if (accountsFilterForm) {
+        accountsFilterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            onAccountsFilterChange();
         });
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (barangayFilter && urlParams.get('barangay_id')) {
+        barangayFilter.value = urlParams.get('barangay_id');
+    }
+    if (positionFilter && urlParams.get('position')) {
+        positionFilter.value = urlParams.get('position');
+    }
+    if (searchInput && urlParams.get('search')) {
+        searchInput.value = urlParams.get('search');
+    }
+    if (urlParams.get('barangay_id') || urlParams.get('position') || urlParams.get('search')) {
+        applyAccountsTableFilters();
     }
 
     // ── Add SK Officials — backend submit ───────────────────

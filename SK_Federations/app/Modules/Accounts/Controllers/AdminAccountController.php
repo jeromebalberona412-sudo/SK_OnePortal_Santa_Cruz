@@ -49,30 +49,6 @@ class AdminAccountController extends Controller
 
         $query = $this->federationRosterService->federationRosterQuery($tenantId);
 
-        if ($search = $request->string('search')->toString()) {
-            $query->where(function ($builder) use ($search) {
-                $builder->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhereHas('officialProfile', function ($profileQuery) use ($search) {
-                        $profileQuery->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('middle_name', 'like', "%{$search}%")
-                            ->orWhere('suffix', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        if ($request->filled('barangay_id')) {
-            $query->where('barangay_id', (int) $request->input('barangay_id'));
-        }
-
-        if ($request->filled('position')) {
-            $position = $request->input('position');
-            $query->whereHas('officialProfile', function ($profileQuery) use ($position) {
-                $profileQuery->where('federation_position', $position);
-            });
-        }
-
         $accounts = $query->get()
             ->sortBy(fn (User $account) => Str::lower($account->barangay?->name ?? 'zzzz'))
             ->values();
@@ -108,30 +84,7 @@ class AdminAccountController extends Controller
             })
             ->orderByDesc('created_at');
 
-        if ($search = $request->string('search')->toString()) {
-            $query->where(function ($builder) use ($search) {
-                $builder->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhereHas('officialProfile', function ($profileQuery) use ($search) {
-                        $profileQuery->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('middle_name', 'like', "%{$search}%")
-                            ->orWhere('suffix', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        if ($request->filled('barangay_id')) {
-            $query->where('barangay_id', (int) $request->input('barangay_id'));
-        }
-
-        if ($request->filled('position')) {
-            $query->whereHas('officialProfile', function ($profileQuery) use ($request) {
-                $profileQuery->where('position', $request->input('position'));
-            });
-        }
-
-        $accounts = $query->orderByDesc('created_at')->get();
+        $accounts = $query->get();
         $barangays = Barangay::query()
             ->where('tenant_id', $tenantId)
             ->orderBy('name')

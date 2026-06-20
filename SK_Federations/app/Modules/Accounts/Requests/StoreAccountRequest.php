@@ -65,7 +65,7 @@ class StoreAccountRequest extends FormRequest
         ], true);
 
         $isOfficial = $this->input('role') === User::ROLE_SK_OFFICIAL;
-        $currentYearStart = now()->startOfYear()->toDateString();
+        $termStartMin = '2023-01-01';
         $minBirthdate = Carbon::now()->subYears(30)->startOfDay()->format('Y-m-d');
         $maxBirthdate = Carbon::now()->subYears(15)->endOfDay()->format('Y-m-d');
 
@@ -129,7 +129,7 @@ class StoreAccountRequest extends FormRequest
             ]), 'not_in:'],
             'barangay_id' => ['required', 'integer', 'exists:barangays,id', 'not_in:'],
             'position' => ['required', Rule::in(OfficialProfile::positionsForRole((string) $this->input('role'))), 'not_in:'],
-            'term_start' => ['required', 'date', 'after_or_equal:'.$currentYearStart],
+            'term_start' => ['required', 'date', 'after_or_equal:'.$termStartMin],
             'term_end' => ['required', 'date', 'after:term_start'],
             'term_status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'EXPIRED', 'REPLACED'])],
         ];
@@ -196,7 +196,7 @@ class StoreAccountRequest extends FormRequest
             'age.max' => 'Age must not exceed 30.',
             'suffix_other.regex' => 'Other suffix must not contain spaces.',
             'contact_number.regex' => 'Contact number must be 11 digits starting with 09.',
-            'term_start.after_or_equal' => 'Term start date cannot be before the current year.',
+            'term_start.after_or_equal' => 'Term start date cannot be before 2023.',
             'term_end.after' => 'Term end date must be after the term start date.',
         ];
     }

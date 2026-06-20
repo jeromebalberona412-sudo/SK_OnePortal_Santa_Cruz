@@ -63,7 +63,7 @@ class UpdateAccountRequest extends FormRequest
                 Rule::in(OfficialProfile::positionsForRole($accountRole !== '' ? $accountRole : User::ROLE_SK_FED)),
             ],
             'federation_position' => ['nullable', Rule::in(OfficialProfile::FEDERATION_POSITIONS)],
-            'term_start' => ['required', 'date'],
+            'term_start' => ['required', 'date', 'after_or_equal:2023-01-01'],
             'term_end' => ['required', 'date', 'after:term_start'],
             'term_status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'EXPIRED', 'REPLACED'])],
         ];
