@@ -803,6 +803,7 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 .dash-col-5 { flex: 5; min-width: 0; }
 .dash-col-6 { flex: 6; min-width: 0; }
 .dash-col-7 { flex: 7; min-width: 0; }
+.dash-col-8 { flex: 8; min-width: 0; }
 
 /* chart row only — stretch so both cards match height */
 .dash-row.chart-row { align-items: stretch; }
@@ -1389,3 +1390,491 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 .ev-action-btn { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-size: 12px; transition: color 0.15s, background 0.15s; }
 .ev-action-btn:hover { background: #f1f5f9; color: #213F99; }
 .ev-action-del:hover { color: #d0242b; }
+
+/* ── Sex Distribution + Federation Officers ── */
+.dash-sex-chart-body {
+    height: 320px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-sex-chart-body canvas {
+    flex: 1;
+    min-height: 0;
+}
+
+.federation-officers-body { padding: 0; }
+
+.federation-officers-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.federation-officers-table thead th {
+    text-align: left;
+    padding: 12px 20px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.federation-officers-table thead th .table-col-hint {
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
+.federation-officers-table tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+}
+
+.federation-officers-table tbody tr:last-child td { border-bottom: none; }
+
+.federation-officers-table tbody tr.is-vacant td:nth-child(2) {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.stat-icon.yellow { background: #fefce8; color: #ca8a04; }
+.stat-icon.purple { background: #f5f3ff; color: #7c3aed; }
+.stat-icon.orange { background: #fff7ed; color: #ea580c; }
+
+/* ── Top 5 Barangays ── */
+.top-barangays-body { padding: 16px 20px 20px; }
+
+.top-barangay-item {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    grid-template-rows: auto auto;
+    gap: 4px 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.top-barangay-item:last-child { border-bottom: none; }
+
+.top-barangay-rank {
+    grid-row: 1 / span 2;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #213F99, #3b5fc7);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.top-barangay-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.top-barangay-count {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.top-barangay-bar-wrap {
+    grid-column: 2;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.top-barangay-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #213F99, #5b7fd9);
+    border-radius: 999px;
+}
+
+.dash-empty-note {
+    color: #94a3b8;
+    font-size: 14px;
+    text-align: center;
+    padding: 24px 0;
+}
+
+/* ── KK Profiling Chart ── */
+.kk-chart-section-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.kk-chart-section-header .card-header,
+#kk-profiling-section .card-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.kk-chart-subtitle {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.kk-chart-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.kk-barangay-select {
+    min-width: 140px;
+    max-width: 180px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #1e293b;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.kk-barangay-select:focus {
+    outline: 2px solid #213F99;
+    border-color: #213F99;
+}
+
+.kk-month-filter[hidden] { display: none !important; }
+
+.kk-export-btn {
+    height: 34px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 8px;
+    background: #213F99;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.kk-export-btn:hover { background: #1a3277; }
+
+.kk-chart-canvas-wrap {
+    height: 280px;
+    position: relative;
+}
+
+.kk-chart-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.kk-chart-filter-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+}
+
+.kk-chart-filter-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.kk-chart-filter-dot--approved { background: #22c55e; }
+.kk-chart-filter-dot--pending { background: #f59e0b; }
+.kk-chart-filter-dot--rejected { background: #ef4444; }
+
+@media (max-width: 992px) {
+    .dash-row { flex-direction: column; }
+    .dash-col-4, .dash-col-8 { flex: 1 1 auto; width: 100%; }
+    .kk-chart-header-actions { margin-left: 0; width: 100%; }
+}
+
+/* ── Dashboard Audit Logs Table ── */
+.dash-audit-card { margin-bottom: 24px; }
+
+.dash-audit-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dash-audit-subtitle {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.dash-audit-view-all {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #213F99;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.dash-audit-view-all:hover {
+    background: #1a3277;
+    color: #fff;
+}
+
+.dash-audit-body { padding: 0; }
+
+.dash-audit-table-wrap {
+    overflow-x: auto;
+}
+
+.dash-audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.dash-audit-table thead th {
+    text-align: left;
+    padding: 12px 16px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.dash-audit-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    vertical-align: middle;
+}
+
+.dash-audit-table tbody tr:hover { background: #f8fafc; }
+
+.dash-audit-table .cell-primary { font-weight: 600; }
+
+.dash-audit-cell-email {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dash-audit-col-actions { width: 72px; text-align: center; }
+
+.dash-audit-details-btn {
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #213F99;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.dash-audit-details-btn:hover {
+    background: #eff6ff;
+    border-color: #213F99;
+}
+
+.dash-audit-empty-row {
+    text-align: center;
+    color: #94a3b8;
+    padding: 32px 16px !important;
+}
+
+.dash-audit-pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.dash-audit-page-btn {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.dash-audit-page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.dash-audit-page-numbers {
+    display: flex;
+    gap: 4px;
+}
+
+.dash-audit-page-number {
+    min-width: 32px;
+    height: 32px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.dash-audit-page-number.is-active {
+    background: #213F99;
+    border-color: #213F99;
+    color: #fff;
+}
+
+.dash-audit-page-info {
+    margin-left: auto;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.dash-audit-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.dash-audit-modal[hidden] { display: none !important; }
+
+.dash-audit-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.dash-audit-modal-dialog {
+    position: relative;
+    width: min(620px, 96vw);
+    max-height: 86vh;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
+}
+
+.dash-audit-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.dash-audit-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.dash-audit-modal-header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.45;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.dash-audit-modal-close {
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.dash-audit-modal-body {
+    padding: 18px 20px 22px;
+    max-height: calc(86vh - 90px);
+    overflow-y: auto;
+}
+
+.dash-audit-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.dash-audit-detail-item {
+    display: grid;
+    grid-template-columns: minmax(120px, 150px) 1fr;
+    align-items: start;
+    gap: 8px 12px;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.dash-audit-detail-item span {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+}
+
+.dash-audit-detail-item strong {
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 600;
+    word-break: break-word;
+    line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+    .dash-audit-detail-item {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}

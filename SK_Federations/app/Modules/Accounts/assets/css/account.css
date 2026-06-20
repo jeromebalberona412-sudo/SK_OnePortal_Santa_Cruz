@@ -2960,6 +2960,19 @@ body.sidebar-collapsed .accounts-page-footer {
     color: #3b82f6;
 }
 
+.accounts-sort-btn--fullname {
+    gap: 8px;
+}
+
+.accounts-sort-btn--fullname .table-fullname-label {
+    align-items: center;
+}
+
+.accounts-sort-btn--fullname .table-col-hint {
+    margin-top: 0;
+    color: rgba(255, 255, 255, 0.78);
+}
+
 .accounts-sort-col-hint {
     font-size: 10px;
     font-weight: 500;

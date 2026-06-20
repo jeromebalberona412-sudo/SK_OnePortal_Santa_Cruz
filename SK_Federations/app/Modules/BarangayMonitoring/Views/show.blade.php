@@ -1,6 +1,6 @@
 @extends('layout::app')
 
-@section('title', '{{ $barangayData[\'name\'] }} - Barangay Monitoring')
+@section('title', ($barangayData['name'] ?? 'Barangay') . ' - Barangay Monitoring')
 
 @push('styles')
     <link rel="stylesheet" href="{{ url('/modules/barangay-monitoring/css/barangay-monitoring.css') }}">

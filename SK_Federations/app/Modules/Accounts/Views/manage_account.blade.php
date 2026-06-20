@@ -109,8 +109,11 @@
                             </th>
                             @endif
                             <th class="th-name accounts-th-sortable" data-sort-key="name" data-sort-type="text" aria-sort="none">
-                                <button type="button" class="accounts-sort-btn" aria-haspopup="menu" aria-expanded="false">
-                                    Fullname <span class="accounts-sort-col-hint">(LN, FN, MI, Suffix)</span>
+                                <button type="button" class="accounts-sort-btn accounts-sort-btn--fullname" aria-haspopup="menu" aria-expanded="false">
+                                    <span class="table-fullname-label">
+                                        Full Name
+                                        <span class="table-col-hint">LN, FN, MN, Suffix</span>
+                                    </span>
                                     <span class="accounts-sort-icon" aria-hidden="true"></span>
                                 </button>
                             </th>

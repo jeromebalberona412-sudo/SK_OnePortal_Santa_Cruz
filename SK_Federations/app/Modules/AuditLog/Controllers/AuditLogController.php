@@ -37,7 +37,9 @@ class AuditLogController extends Controller
     public function data(Request $request): JsonResponse
     {
         $tenantId = $request->user()?->tenant_id;
-        $perPage = max(5, min(100, (int) $request->integer('per_page', 15)));
+        $requestedPerPage = (int) $request->integer('per_page', 100);
+        $allowedPerPage = [100, 500, 1000];
+        $perPage = in_array($requestedPerPage, $allowedPerPage, true) ? $requestedPerPage : 100;
         $page = max(1, (int) $request->integer('page', 1));
 
         $paginator = $this->queryService->paginate(

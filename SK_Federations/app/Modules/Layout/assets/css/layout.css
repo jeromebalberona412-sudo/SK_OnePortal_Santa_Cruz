@@ -479,3 +479,42 @@ body.profile-page .account-settings-panel:not([hidden]) {
         justify-content: center;
     }
 }
+
+/* ── Shared table Full Name column header ─────────────────── */
+.table-fullname-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.15;
+}
+
+.table-col-hint {
+    display: block;
+    font-size: 9px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+    line-height: 1.2;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.accounts-table thead th .table-col-hint,
+.km-table thead th .table-col-hint,
+.dso-table thead th .table-col-hint,
+.dsf-table thead th .table-col-hint,
+.aroff-table thead th .table-col-hint,
+.arfed-table thead th .table-col-hint,
+.adrkk-table thead th .table-col-hint {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.accounts-sort-btn--fullname {
+    gap: 8px;
+}
+
+.accounts-sort-btn--fullname .table-col-hint {
+    margin-top: 0;
+}

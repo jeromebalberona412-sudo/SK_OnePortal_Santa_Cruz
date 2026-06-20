@@ -1,6 +1,6 @@
 @extends('layout::app')
 
-@section('title', '{{ $barangay }} - Kabataan Monitoring - SK OnePortal')
+@section('title', $barangay . ' - Kabataan Monitoring - SK OnePortal')
 
 @push('main-class')
     km-main
@@ -29,44 +29,6 @@
                 </div>
             </div>
 
-            {{-- Summary Cards for Barangay --}}
-            <section class="km-brgy-summary-section">
-                <div class="km-summary-grid" aria-label="Barangay summary statistics">
-                    <article class="km-summary-card km-summary-total">
-                        <div class="km-summary-icon"><i class="fas fa-users"></i></div>
-                        <div class="km-summary-body">
-                            <div class="km-summary-label">Total Kabataan</div>
-                            <div class="km-summary-value" id="km-brgy-total">0</div>
-                            <div class="km-summary-note">Registered youth profiles</div>
-                        </div>
-                    </article>
-                    <article class="km-summary-card km-summary-active">
-                        <div class="km-summary-icon"><i class="fas fa-user-check"></i></div>
-                        <div class="km-summary-body">
-                            <div class="km-summary-label">Participation Rate</div>
-                            <div class="km-summary-value" id="km-brgy-rate">0%</div>
-                            <div class="km-summary-note">Active vs total registered</div>
-                        </div>
-                    </article>
-                    <article class="km-summary-card km-summary-active">
-                        <div class="km-summary-icon"><i class="fas fa-user-check"></i></div>
-                        <div class="km-summary-body">
-                            <div class="km-summary-label">Active</div>
-                            <div class="km-summary-value" id="km-brgy-active">0</div>
-                            <div class="km-summary-note">High & moderate engagement</div>
-                        </div>
-                    </article>
-                    <article class="km-summary-card km-summary-inactive">
-                        <div class="km-summary-icon"><i class="fas fa-user-times"></i></div>
-                        <div class="km-summary-body">
-                            <div class="km-summary-label">Inactive</div>
-                            <div class="km-summary-value" id="km-brgy-inactive">0</div>
-                            <div class="km-summary-note">Needs follow-up & intervention</div>
-                        </div>
-                    </article>
-                </div>
-            </section>
-
             {{-- Masterlist Table --}}
             <section class="km-masterlist-top">
                 <div class="km-masterlist-topbar">
@@ -80,30 +42,27 @@
                         </button>
                     </div>
                 </div>
-                
+
                 {{-- Filters Row --}}
-                <div class="km-filter-row" style="padding:14px 24px;border-top:1px solid #f1f5f9;">
-                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;flex:1;">
-                        {{-- Year Filter --}}
-                        <select id="km-brgy-year-filter" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:140px;">
+                <div class="km-filter-row">
+                    <div class="km-filter-row-inner">
+                        <select id="km-brgy-year-filter" class="km-select">
                             <option value="all">All Years</option>
                             <option value="2026">2026</option>
                             <option value="2025">2025</option>
                             <option value="2024">2024</option>
                             <option value="2023">2023</option>
                         </select>
-                        
-                        {{-- Time Period Filter --}}
-                        <select id="km-period-filter" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:140px;">
+
+                        <select id="km-period-filter" class="km-select">
                             <option value="all">All</option>
                             <option value="recent">Recent</option>
                             <option value="month">This Month</option>
                         </select>
-                        
-                        {{-- Search Box --}}
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            <input type="text" id="km-brgy-search" placeholder="Search by name, barangay..." style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:250px;">
-                            <button class="km-search-btn" onclick="performBarangaySearch()" style="padding:8px 16px;background:linear-gradient(135deg,#213F99,#d0242b);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+
+                        <div class="km-search-group">
+                            <input type="text" id="km-brgy-search" class="km-search-input" placeholder="Search by name, barangay...">
+                            <button type="button" class="km-search-btn" onclick="performBarangaySearch()">
                                 <i class="fas fa-search"></i> Search
                             </button>
                         </div>
@@ -111,18 +70,29 @@
                 </div>
             </section>
 
-            {{-- Table --}}
-            <div class="km-table-wrap">
-                <table class="km-table">
-                    <thead>
-                        <tr>
-                            <th>#</th><th>Name</th><th>Age</th><th>Sex</th>
-                            <th>Civil Status</th><th>Education</th><th>Work Status</th>
-                            <th>Classification</th><th>Status</th><th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="km-table-tbody"></tbody>
-                </table>
+            <div class="km-table-card">
+                <div class="km-table-wrapper">
+                    <table class="km-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>
+                                    Full Name
+                                    <div class="table-col-hint">LN, FN, MN, Suffix</div>
+                                </th>
+                                <th>Age</th>
+                                <th>Sex</th>
+                                <th>Civil Status</th>
+                                <th>Education</th>
+                                <th>Work Status</th>
+                                <th>Classification</th>
+                                <th>Status</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="km-table-tbody"></tbody>
+                    </table>
+                </div>
             </div>
             <p id="km-empty" class="km-empty" hidden>No profiles match your current filters.</p>
 

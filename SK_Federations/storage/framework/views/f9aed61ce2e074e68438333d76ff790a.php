@@ -15,48 +15,9 @@
 <?php $__env->startSection('content'); ?>
 <div class="km-container">
 
-            <section class="km-hero">
-                <img src="<?php echo e(url('/modules/kabataan-monitoring/images/sk-fed-logo.png')); ?>" alt="SK Federation logo" class="km-hero-logo">
-                <div class="km-hero-copy">
-                    <h1>Kabataan Monitoring</h1>
-                    <p>KKK Profiling Masterlist — Track youth engagement, participation status, and support interventions across all barangays of Santa Cruz, Laguna.</p>
-                </div>
-            </section>
-
-            
-            <section class="km-summary-grid" aria-label="Summary statistics">
-                <article class="km-summary-card km-summary-total">
-                    <div class="km-summary-icon"><i class="fas fa-users"></i></div>
-                    <div class="km-summary-body">
-                        <div class="km-summary-label">Total Kabataan</div>
-                        <div class="km-summary-value" id="km-kpi-total">0</div>
-                        <div class="km-summary-note">Registered youth profiles</div>
-                    </div>
-                </article>
-                <article class="km-summary-card km-summary-active">
-                    <div class="km-summary-icon"><i class="fas fa-user-check"></i></div>
-                    <div class="km-summary-body">
-                        <div class="km-summary-label">Active Youth</div>
-                        <div class="km-summary-value" id="km-kpi-active">0</div>
-                        <div class="km-summary-note">High &amp; moderate engagement</div>
-                    </div>
-                </article>
-                <article class="km-summary-card km-summary-inactive">
-                    <div class="km-summary-icon"><i class="fas fa-user-times"></i></div>
-                    <div class="km-summary-body">
-                        <div class="km-summary-label">Inactive Youth</div>
-                        <div class="km-summary-value" id="km-kpi-inactive">0</div>
-                        <div class="km-summary-note">Needs follow-up &amp; intervention</div>
-                    </div>
-                </article>
-                <article class="km-summary-card km-summary-rate">
-                    <div class="km-summary-icon"><i class="fas fa-chart-pie"></i></div>
-                    <div class="km-summary-body">
-                        <div class="km-summary-label">Participation Rate</div>
-                        <div class="km-summary-value" id="km-kpi-rate">0%</div>
-                        <div class="km-summary-note">Active vs total registered</div>
-                    </div>
-                </article>
+            <section class="km-page-header">
+                <h1 class="km-page-title">Kabataan Monitoring</h1>
+                <p class="km-page-subtitle">KKK Profiling Masterlist — Track youth engagement, participation status, and support interventions across all barangays of Santa Cruz, Laguna.</p>
             </section>
 
             

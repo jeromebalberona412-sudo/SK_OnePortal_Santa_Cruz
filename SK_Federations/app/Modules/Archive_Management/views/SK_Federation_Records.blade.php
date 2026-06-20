@@ -41,7 +41,7 @@
             <table class="arfed-table">
                 <thead>
                     <tr>
-                        <th>Full Name<div class="arfed-col-hint">LN, FN, MN, Suffix</div></th>
+                        <th>Full Name<div class="table-col-hint">LN, FN, MN, Suffix</div></th>
                         <th>Position</th>
                         <th>Term Served</th>
                         <th>Status</th>

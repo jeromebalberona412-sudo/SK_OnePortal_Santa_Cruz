@@ -23,7 +23,28 @@
     gap: 20px;
 }
 
-/* ── Hero ── */
+/* ── Page header (no background) ── */
+.km-page-header {
+    margin-bottom: 4px;
+}
+
+.km-page-title {
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--km-text);
+    line-height: 1.15;
+}
+
+.km-page-subtitle {
+    margin: 0.35rem 0 0;
+    font-size: 0.96rem;
+    color: var(--km-muted);
+    line-height: 1.45;
+    max-width: 920px;
+}
+
+/* Legacy hero kept for profile detail pages */
 .km-hero, .km-profile-hero {
     position: relative;
     border-radius: 20px;
@@ -139,9 +160,66 @@
 
 /* ── Filters ── */
 .km-filter-row {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; padding: 14px 24px; flex-wrap: wrap;
-    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 24px;
+    flex-wrap: wrap;
+    border-top: 1px solid #f1f5f9;
+}
+
+.km-filter-row-inner {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.km-search-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    min-width: 240px;
+}
+
+.km-search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--km-text);
+}
+
+.km-search-input:focus {
+    outline: none;
+    border-color: var(--km-blue);
+    box-shadow: 0 0 0 3px rgba(33, 63, 153, 0.12);
+}
+
+.km-search-btn {
+    padding: 8px 16px;
+    background: #2c2c3e;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.km-search-btn:hover {
+    background: #3a3a4a;
 }
 
 .km-chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -159,44 +237,150 @@
 
 .km-result-count { font-size: 12px; color: var(--km-muted); font-weight: 500; }
 
-/* ── Table ── */
+/* ── Table (matches SK Officials KK Profiling Requests) ── */
+.km-table-card {
+    background: #f9fafb;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+}
+
+.km-table-wrapper {
+    max-height: 520px;
+    overflow: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .km-table-wrap {
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: #e2e8f0 transparent;
 }
-.km-table-wrap::-webkit-scrollbar { height: 4px; }
-.km-table-wrap::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
 
 .km-table {
-    width: 100%; border-collapse: collapse;
-    font-size: 13px; min-width: 900px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 980px;
+}
+
+.km-table thead {
+    background: #2c2c3e;
 }
 
 .km-table thead th {
-    position: sticky; top: 0;
-    background: #f8fafc; color: #64748b;
-    font-size: 11px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.05em;
-    padding: 12px 14px; text-align: left;
-    border-bottom: 2px solid #e2e8f0;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 10px 12px;
+    padding-bottom: 4px;
+    text-align: center;
+    border-bottom: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #2c2c3e;
+}
+
+.km-table thead th:last-child,
+.km-table tbody td:last-child {
+    border-right: none;
+}
+
+.km-table thead th .table-col-hint {
+    font-size: 9px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.75);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+    opacity: 0.9;
+}
+
+.km-table th,
+.km-table td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    vertical-align: middle;
 }
 
 .km-table tbody tr {
-    border-bottom: 1px solid #f1f5f9;
-    transition: background 0.12s;
-}
-.km-table tbody tr:hover { background: #f8fafc; }
-.km-table tbody tr:nth-child(even) { background: #fafbfd; }
-.km-table tbody tr:nth-child(even):hover { background: #f1f5f9; }
-
-.km-table td {
-    padding: 12px 14px; color: var(--km-text);
-    vertical-align: middle; white-space: nowrap;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.km-table td.km-td-name { font-weight: 600; white-space: normal; min-width: 140px; }
+.km-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.km-table tbody tr:hover {
+    background: rgba(245, 197, 24, 0.10);
+}
+
+.km-fullname-cell {
+    min-width: 140px;
+    text-align: center;
+}
+
+.km-fullname {
+    display: block;
+    font-weight: 600;
+    color: #111827;
+}
+
+.km-table .col-actions {
+    width: 80px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.km-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+}
+
+.km-btn-view {
+    background: #3a3a4a;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.km-btn-view:hover {
+    background: #2c2c3e;
+}
+
+.km-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 4px 10px;
+    white-space: nowrap;
+}
+
+.km-status-badge.active   { background: #dcfce7; color: #15803d; }
+.km-status-badge.moderate { background: #fef9c3; color: #854d0e; }
+.km-status-badge.inactive { background: #fee2e2; color: #991b1b; }
+.km-status-badge.high     { background: #dcfce7; color: #15803d; }
+.km-status-badge.low      { background: #fee2e2; color: #991b1b; }
 
 /* ── Badges ── */
 .km-badge {
@@ -384,10 +568,12 @@
 .km-bsc-stat strong { color: #1e293b; font-weight: 700; }
 
 .km-bsc-footer {
-    display: flex; align-items: center;
-    justify-content: space-between; gap: 8px;
-    padding-top: 10px;
-    border-top: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 0;
+    border-top: none;
 }
 .km-bsc-update { font-size: 11px; color: #94a3b8; }
 .km-bsc-update i { margin-right: 4px; }
@@ -499,11 +685,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px 24px;
-    background: #fff;
-    border: 1px solid var(--km-border);
-    border-top: none;
-    border-radius: 0 0 var(--km-radius) var(--km-radius);
+    padding: 16px 0;
     flex-wrap: wrap;
 }
 
@@ -583,6 +765,10 @@
 }
 
 @media (max-width: 768px) {
+    .km-table {
+        min-width: 900px;
+    }
+
     .km-pagination-wrapper {
         flex-direction: column;
         align-items: stretch;

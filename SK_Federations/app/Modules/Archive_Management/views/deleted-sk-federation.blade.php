@@ -56,7 +56,7 @@
             <table class="dsf-table">
                 <thead>
                     <tr>
-                        <th>Full Name<div class="dsf-col-hint">LN, FN, MN, Suffix</div></th>
+                        <th>Full Name<div class="table-col-hint">LN, FN, MN, Suffix</div></th>
                         <th>Position</th>
                         <th>Barangay</th>
                         <th>Municipality</th>

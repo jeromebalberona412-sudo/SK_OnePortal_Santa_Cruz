@@ -10,7 +10,7 @@
         </div>
 
         {{-- ── STAT CARDS ── --}}
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:16px;margin-bottom:24px;">
+        <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:16px;margin-bottom:24px;">
             <a href="{{ route('kabataan-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
                 <div class="stat-icon blue"><i class="fas fa-users"></i></div>
                 <div class="stat-info">
@@ -18,8 +18,22 @@
                     <div class="stat-label">Total Kabataan Registered</div>
                 </div>
             </a>
+            <a href="{{ route('accounts.officials.index') }}" class="stat-card stat-card-link stat-card-clickable">
+                <div class="stat-icon indigo"><i class="fas fa-user-tie"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ number_format($totalSkOfficials ?? 0) }}</div>
+                    <div class="stat-label">Total SK Officials</div>
+                </div>
+            </a>
+            <a href="{{ route('accounts.federation.index') }}" class="stat-card stat-card-link stat-card-clickable">
+                <div class="stat-icon teal"><i class="fas fa-crown"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ number_format($totalSkChairpersons ?? 0) }}</div>
+                    <div class="stat-label">Total SK Chairpersons</div>
+                </div>
+            </a>
             <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
-                <div class="stat-icon indigo"><i class="fas fa-calendar-alt"></i></div>
+                <div class="stat-icon yellow"><i class="fas fa-calendar-alt"></i></div>
                 <div class="stat-info">
                     <div class="stat-value">0</div>
                     <div class="stat-label">Total Programs This Year</div>
@@ -64,22 +78,22 @@
         
         <style>
             @media (max-width: 1400px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
+                .stats-grid, div[style*="grid-template-columns:repeat(9,1fr)"] {
                     grid-template-columns: repeat(4, 1fr) !important;
                 }
             }
             @media (max-width: 992px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
+                .stats-grid, div[style*="grid-template-columns:repeat(9,1fr)"] {
                     grid-template-columns: repeat(3, 1fr) !important;
                 }
             }
             @media (max-width: 768px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
+                .stats-grid, div[style*="grid-template-columns:repeat(9,1fr)"] {
                     grid-template-columns: repeat(2, 1fr) !important;
                 }
             }
             @media (max-width: 480px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
+                .stats-grid, div[style*="grid-template-columns:repeat(9,1fr)"] {
                     grid-template-columns: 1fr !important;
                 }
             }
@@ -154,425 +168,178 @@
             }
         </style>
 
-        {{-- ── ROW: Charts ── --}}
-        <div class="dash-row chart-row">
+        {{-- ── ROW: Sex Distribution + Federation Officers ── --}}
+        <div class="dash-row">
             <div class="content-card dash-col-5">
                 <div class="card-header">
-                    <h3><i class="fas fa-chart-pie" style="color:#213F99;margin-right:8px;"></i>Programs by Sector</h3>
+                    <h3><i class="fas fa-venus-mars" style="color:#213F99;margin-right:8px;"></i>Sex Distribution</h3>
                 </div>
-                <div class="card-body chart-body">
-                    <canvas id="sectorChart" height="240"></canvas>
+                <div class="card-body chart-body dash-sex-chart-body">
+                    <canvas id="sexChart"></canvas>
                 </div>
             </div>
-            <div class="content-card dash-col-7">
+
+            <div class="content-card dash-col-7" id="federation-section">
                 <div class="card-header">
-                    <h3><i class="fas fa-chart-bar" style="color:#213F99;margin-right:8px;"></i>Programs by Barangay</h3>
+                    <h3><i class="fas fa-sitemap" style="color:#213F99;margin-right:8px;"></i>Federation Officers</h3>
                 </div>
-                <div class="card-body chart-body" style="padding-bottom:0;">
-                    <canvas id="barangayChart"></canvas>
-                    <div class="pagination-bar" id="barangay-chart-pagination"></div>
+                <div class="card-body federation-officers-body">
+                    <table class="federation-officers-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>
+                                    Full Name
+                                    <div class="table-col-hint">LN, FN, MN, Suffix</div>
+                                </th>
+                                <th>Barangay</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($federationOfficers as $officer)
+                                <tr class="{{ $officer['name'] === 'Vacant' ? 'is-vacant' : '' }}">
+                                    <td>{{ $officer['position'] }}</td>
+                                    <td>{{ $officer['name'] }}</td>
+                                    <td>{{ $officer['barangay'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        {{-- ── ROW: Compliance + Kabataan Stats ── --}}
+        {{-- ── ROW: Top 5 Barangays + KK Profiling ── --}}
         <div class="dash-row">
-            {{-- Barangay Compliance Status --}}
-            <div class="content-card dash-col-6" id="barangay-monitoring">
+            <div class="content-card dash-col-4" id="top-barangays-section">
                 <div class="card-header">
-                    <h3><i class="fas fa-clipboard-check" style="color:#213F99;margin-right:8px;"></i>Barangay Compliance Status</h3>
+                    <h3><i class="fas fa-trophy" style="color:#213F99;margin-right:8px;"></i>Top 5 Barangays by Youth Population</h3>
                 </div>
-                <div class="card-body" style="padding:0;">
-                    <div class="compliance-scroll-wrap">
-                        <div class="compliance-table-head">
-                            <span class="ct-barangay">Barangay</span>
-                            <span class="ct-programs">Programs Created</span>
-                            <span class="ct-reports">Reports Submitted</span>
-                            <span class="ct-status">Status</span>
+                <div class="card-body top-barangays-body">
+                    @forelse ($topBarangays as $row)
+                        <div class="top-barangay-item">
+                            <div class="top-barangay-rank">{{ $row['rank'] }}</div>
+                            <div class="top-barangay-info">
+                                <div class="top-barangay-name">{{ $row['barangay'] }}</div>
+                                <div class="top-barangay-count">{{ number_format($row['count']) }} youth registered</div>
+                            </div>
+                            <div class="top-barangay-bar-wrap">
+                                @php
+                                    $maxCount = max(1, $topBarangays[0]['count'] ?? 1);
+                                    $width = round(($row['count'] / $maxCount) * 100);
+                                @endphp
+                                <div class="top-barangay-bar" style="width: {{ $width }}%;"></div>
+                            </div>
                         </div>
-                        <div id="compliance-list"></div>
-                    </div>
-                    <div class="pagination-bar" id="compliance-pagination"></div>
+                    @empty
+                        <p class="dash-empty-note">No youth registration data available yet.</p>
+                    @endforelse
                 </div>
             </div>
 
-            {{-- Kabataan Participation Stats --}}
-            <div class="content-card dash-col-6" id="kabataan-stats">
-                <div class="card-header">
-                    <h3><i class="fas fa-chart-line" style="color:#213F99;margin-right:8px;"></i>Kabataan Participation Stats</h3>
+            <div class="content-card dash-col-8" id="kk-profiling-section">
+                <div class="card-header kk-chart-section-header">
+                    <div>
+                        <h3><i class="fas fa-chart-line" style="color:#213F99;margin-right:8px;"></i>KK Profiling by Month</h3>
+                        <p class="kk-chart-subtitle" id="kkProfilingChartSubtitle">Approved, pending, and rejected submissions</p>
+                    </div>
+                    <div class="kk-chart-header-actions">
+                        <select id="kkProfilingBarangayFilter" class="kk-barangay-select" aria-label="Filter by barangay">
+                            <option value="all">All Barangays</option>
+                            @foreach ($barangays as $barangay)
+                                <option value="{{ $barangay->id }}">{{ $barangay->name }}</option>
+                            @endforeach
+                        </select>
+                        <select id="kkProfilingPeriodFilter" class="kk-barangay-select" aria-label="Filter by period">
+                            <option value="monthly" selected>Monthly</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                        <select id="kkProfilingMonthFilter" class="kk-barangay-select kk-month-filter" hidden aria-label="Filter by month">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <button type="button" class="kk-export-btn" id="kkProfilingExportBtn">Export CSV</button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="kab-stats-summary">
-                        <div class="kab-stat-mini blue">
-                            <div class="kab-stat-mini-value">{{ number_format($totalKabataanRegistered ?? 0) }}</div>
-                            <div class="kab-stat-mini-label">Total Kabataan Registered</div>
-                        </div>
-                        <div class="kab-stat-mini green">
-                            <div class="kab-stat-mini-value">0</div>
-                            <div class="kab-stat-mini-label">Active Participants</div>
-                        </div>
+                    <div class="kk-chart-canvas-wrap">
+                        <canvas id="kkProfilingMonthlyChart"></canvas>
                     </div>
-                    {{-- Month navigator --}}
-                    <div class="month-nav">
-                        <button class="month-nav-btn" id="month-prev" onclick="changeMonth(-1)" aria-label="Previous month">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <span class="month-nav-label" id="month-label"></span>
-                        <button class="month-nav-btn" id="month-next" onclick="changeMonth(1)" aria-label="Next month">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
+                    <div class="kk-chart-filter-row">
+                        <label class="kk-chart-filter-check kk-chart-filter-check--approved">
+                            <input type="checkbox" id="filterKkApproved" checked>
+                            <span class="kk-chart-filter-dot kk-chart-filter-dot--approved"></span>
+                            <span>Approved</span>
+                        </label>
+                        <label class="kk-chart-filter-check kk-chart-filter-check--pending">
+                            <input type="checkbox" id="filterKkPending" checked>
+                            <span class="kk-chart-filter-dot kk-chart-filter-dot--pending"></span>
+                            <span>Pending</span>
+                        </label>
+                        <label class="kk-chart-filter-check kk-chart-filter-check--rejected">
+                            <input type="checkbox" id="filterKkRejected" checked>
+                            <span class="kk-chart-filter-dot kk-chart-filter-dot--rejected"></span>
+                            <span>Rejected</span>
+                        </label>
                     </div>
-                    <canvas id="participationChart" height="200"></canvas>
                 </div>
             </div>
         </div>
+
+        {{-- ── Audit Logs Table ── --}}
+        @include('dashboard::partials.dashboard-audit-table')
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+@php
+    $kkProfilingJsVersion = @filemtime(app_path('Modules/Dashboard/assets/js/kkprofilingchart.js')) ?: time();
+    $dashAuditJsVersion = @filemtime(app_path('Modules/Dashboard/assets/js/dashboard-audit.js')) ?: time();
+@endphp
 <script>
-        // ── Charts ──
-        const fedBlue = '#213F99', fedRed = '#d0242b', fedYellow = '#F7D31E';
-        const palette = ['#213F99','#d0242b','#F7D31E','#10b981','#8b5cf6','#f97316','#06b6d4','#ec4899'];
+    window.__KK_BARANGAYS__ = @json($kkBarangayOptions);
+    window.__KK_PROFILING_DATA_URL__ = @json(route('dashboard.kk-profiling-data'));
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url('/modules/dashboard/js/kkprofilingchart.js') }}?v={{ $kkProfilingJsVersion }}"></script>
+<script src="{{ url('/modules/dashboard/js/dashboard-audit.js') }}?v={{ $dashAuditJsVersion }}"></script>
+<script>
+        const fedBlue = '#213F99', fedRed = '#d0242b';
+        const sexDistribution = @json($sexDistribution);
 
-        new Chart(document.getElementById('sectorChart'), {
-            type: 'doughnut',
+        new Chart(document.getElementById('sexChart'), {
+            type: 'pie',
             data: {
-                labels: ['Education','Anti-Drugs','Agriculture','Disaster Preparedness','Sports Development','Gender & Development','Health','Others'],
-                datasets: [{ data: [6,5,4,4,7,3,5,6], backgroundColor: palette, borderWidth: 2, borderColor: '#fff' }]
+                labels: sexDistribution.labels || ['Male', 'Female'],
+                datasets: [{
+                    data: sexDistribution.values || [0, 0],
+                    backgroundColor: [fedBlue, fedRed],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                }],
             },
             options: {
                 responsive: true,
-                plugins: { legend: { position: 'right', labels: { font: { family: 'Inter', size: 14 }, padding: 18 } } },
-                cutout: '60%',
-            }
-        });
-
-        const brgyChartData = [
-            { name:'Alipit',                active:2, completed:1 },
-            { name:'Bagumbayan',            active:1, completed:1 },
-            { name:'Bubukal',               active:2, completed:1 },
-            { name:'Calios',                active:1, completed:1 },
-            { name:'Duhat',                 active:0, completed:1 },
-            { name:'Gatid',                 active:1, completed:2 },
-            { name:'Jasaan',                active:1, completed:1 },
-            { name:'Labuin',                active:2, completed:1 },
-            { name:'Malinao',               active:1, completed:1 },
-            { name:'Oogong',                active:0, completed:1 },
-            { name:'Pagsawitan',            active:1, completed:2 },
-            { name:'Palasan',               active:1, completed:1 },
-            { name:'Patimbao',              active:1, completed:1 },
-            { name:'Brgy. I (Poblacion)',   active:3, completed:1 },
-            { name:'Brgy. II (Poblacion)',  active:2, completed:2 },
-            { name:'Brgy. III (Poblacion)', active:2, completed:1 },
-            { name:'Brgy. IV (Poblacion)',  active:1, completed:2 },
-            { name:'Brgy. V (Poblacion)',   active:1, completed:1 },
-            { name:'San Jose',              active:1, completed:1 },
-            { name:'San Juan',              active:2, completed:1 },
-            { name:'San Pablo Norte',       active:1, completed:1 },
-            { name:'San Pablo Sur',         active:1, completed:1 },
-            { name:'Santisima Cruz',        active:0, completed:1 },
-            { name:'Santo Angel Central',   active:2, completed:1 },
-            { name:'Santo Angel Norte',     active:1, completed:1 },
-            { name:'Santo Angel Sur',       active:1, completed:0 },
-        ];
-
-        const BRGY_PER_PAGE = 6;
-        let brgyPage = 1;
-        const brgyTotalPages = Math.max(1, Math.ceil(brgyChartData.length / BRGY_PER_PAGE));
-
-        const brgyChart = new Chart(document.getElementById('barangayChart'), {
-            type: 'bar',
-            data: { labels: [], datasets: [
-                { label: 'Active',    data: [], backgroundColor: fedBlue,    borderRadius: 4 },
-                { label: 'Completed', data: [], backgroundColor: '#10b981', borderRadius: 4 },
-            ]},
-            options: {
-                indexAxis: 'y', responsive: true,
-                plugins: { legend: { position: 'top', labels: { font: { family: 'Inter', size: 13 } } } },
-                scales: {
-                    x: { stacked: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 13 } } },
-                    y: { stacked: true, grid: { display: false }, ticks: { font: { family: 'Inter', size: 13 } } }
-                }
-            }
-        });
-
-        function renderBrgyChart() {
-            const start = (brgyPage - 1) * BRGY_PER_PAGE;
-            const slice = brgyChartData.slice(start, start + BRGY_PER_PAGE);
-            brgyChart.data.labels = slice.map(b => b.name);
-            brgyChart.data.datasets[0].data = slice.map(b => b.active);
-            brgyChart.data.datasets[1].data = slice.map(b => b.completed);
-            brgyChart.update();
-
-            const pEl = document.getElementById('barangay-chart-pagination');
-            const tp = Math.max(1, Math.ceil(brgyChartData.length / BRGY_PER_PAGE));
-            let html = `<div class="pg-info">Page ${brgyPage} of ${tp} &nbsp;·&nbsp; ${brgyChartData.length} barangays</div>`;
-            html += `<div class="pg-btns">`;
-            html += `<button class="pg-btn" ${brgyPage===1?'disabled':''} onclick="brgyPageGo(${brgyPage-1})"><i class="fas fa-chevron-left"></i></button>`;
-            for (let i = 1; i <= tp; i++) {
-                html += `<button class="pg-btn ${i===brgyPage?'active':''}" onclick="brgyPageGo(${i})">${i}</button>`;
-            }
-            html += `<button class="pg-btn" ${brgyPage===tp?'disabled':''} onclick="brgyPageGo(${brgyPage+1})"><i class="fas fa-chevron-right"></i></button>`;
-            html += `</div>`;
-            pEl.innerHTML = html;
-        }
-
-        window.brgyPageGo = function(p) { brgyPage = p; renderBrgyChart(); };
-        renderBrgyChart();
-
-        const monthlyData = {
-            2025: {
-                Jan:[95,88], Feb:[102,96], Mar:[110,105], Apr:[98,92], May:[120,115],
-                Jun:[135,128], Jul:[148,140], Aug:[130,122], Sep:[142,138], Oct:[155,148], Nov:[138,130], Dec:[160,152]
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { family: 'Inter', size: 13 }, padding: 16 },
+                    },
+                },
             },
-            2026: {
-                Jan:[120,110], Feb:[145,130], Mar:[160,150], Apr:[130,125], May:[175,165],
-                Jun:[190,180], Jul:[210,195], Aug:[185,170], Sep:[200,185], Oct:[220,210], Nov:[195,180], Dec:[230,215]
-            }
-        };
-        const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const today = new Date();
-        let currentYear = today.getFullYear();
-        let currentMonth = today.getMonth();
-
-        const partChart = new Chart(document.getElementById('participationChart'), {
-            type: 'bar',
-            data: { labels: ['Male','Female'], datasets: [{ data: [0,0], backgroundColor: [fedBlue, fedRed], borderRadius: 6 }] },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 13 } } },
-                    y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter' } }, beginAtZero: true }
-                }
-            }
         });
-
-        function updateMonthChart() {
-            const yearData = monthlyData[currentYear] || monthlyData[2026];
-            const key = monthNames[currentMonth];
-            const vals = yearData[key] || [0, 0];
-            partChart.data.datasets[0].data = vals;
-            partChart.update();
-
-            document.getElementById('month-label').textContent = monthNames[currentMonth] + ' ' + currentYear;
-
-            const minYear = 2025, minMonth = 0;
-            const maxYear = today.getFullYear(), maxMonth = today.getMonth();
-            document.getElementById('month-prev').disabled = (currentYear === minYear && currentMonth === minMonth);
-            document.getElementById('month-next').disabled = (currentYear === maxYear && currentMonth === maxMonth);
-        }
-
-        window.changeMonth = function(dir) {
-            currentMonth += dir;
-            if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
-            if (currentMonth > 11) { currentMonth = 0;  currentYear++; }
-            updateMonthChart();
-        };
-
-        updateMonthChart();
 </script>
 <script>
-        // ── PAGINATION DATA ──
-        const barangays = [
-            { name:'Alipit',                programs:3, reports:3, status:'compliant' },
-            { name:'Bagumbayan',            programs:2, reports:2, status:'compliant' },
-            { name:'Bubukal',               programs:3, reports:2, status:'partial' },
-            { name:'Calios',                programs:2, reports:2, status:'compliant' },
-            { name:'Duhat',                 programs:1, reports:0, status:'non-compliant' },
-            { name:'Gatid',                 programs:3, reports:3, status:'compliant' },
-            { name:'Jasaan',                programs:2, reports:1, status:'partial' },
-            { name:'Labuin',                programs:3, reports:3, status:'compliant' },
-            { name:'Malinao',               programs:2, reports:2, status:'compliant' },
-            { name:'Oogong',                programs:1, reports:0, status:'non-compliant' },
-            { name:'Pagsawitan',            programs:3, reports:2, status:'partial' },
-            { name:'Palasan',               programs:2, reports:2, status:'compliant' },
-            { name:'Patimbao',              programs:2, reports:1, status:'partial' },
-            { name:'Brgy. I (Poblacion)',   programs:4, reports:4, status:'compliant' },
-            { name:'Brgy. II (Poblacion)',  programs:4, reports:4, status:'compliant' },
-            { name:'Brgy. III (Poblacion)', programs:3, reports:3, status:'compliant' },
-            { name:'Brgy. IV (Poblacion)',  programs:3, reports:2, status:'partial' },
-            { name:'Brgy. V (Poblacion)',   programs:2, reports:2, status:'compliant' },
-            { name:'San Jose',              programs:2, reports:2, status:'compliant' },
-            { name:'San Juan',              programs:3, reports:3, status:'compliant' },
-            { name:'San Pablo Norte',       programs:2, reports:1, status:'partial' },
-            { name:'San Pablo Sur',         programs:2, reports:2, status:'compliant' },
-            { name:'Santisima Cruz',        programs:1, reports:0, status:'non-compliant' },
-            { name:'Santo Angel Central',   programs:3, reports:3, status:'compliant' },
-            { name:'Santo Angel Norte',     programs:2, reports:2, status:'compliant' },
-            { name:'Santo Angel Sur',       programs:1, reports:1, status:'compliant' },
-        ];
-
-        // ── Generic paginator ──
-        function makePaginator(data, perPage, renderFn, listId, paginationId) {
-            let page = 1;
-            const totalPages = () => Math.ceil(data.length / perPage);
-
-            function render() {
-                const start = (page - 1) * perPage;
-                const slice = data.slice(start, start + perPage);
-                document.getElementById(listId).innerHTML = renderFn(slice);
-
-                const tp = totalPages();
-                const pEl = document.getElementById(paginationId);
-                if (tp <= 1) { pEl.innerHTML = ''; return; }
-
-                let html = `<div class="pg-info">Page ${page} of ${tp} &nbsp;·&nbsp; ${data.length} total</div>`;
-                html += `<div class="pg-btns">`;
-                html += `<button class="pg-btn" ${page===1?'disabled':''} onclick="paginators['${listId}'].go(${page-1})"><i class="fas fa-chevron-left"></i></button>`;
-                for (let i = 1; i <= tp; i++) {
-                    if (tp > 7 && i > 2 && i < tp - 1 && Math.abs(i - page) > 1) {
-                        if (i === 3 || i === tp - 2) html += `<span class="pg-ellipsis">…</span>`;
-                        continue;
-                    }
-                    html += `<button class="pg-btn ${i===page?'active':''}" onclick="paginators['${listId}'].go(${i})">${i}</button>`;
-                }
-                html += `<button class="pg-btn" ${page===tp?'disabled':''} onclick="paginators['${listId}'].go(${page+1})"><i class="fas fa-chevron-right"></i></button>`;
-                html += `</div>`;
-                pEl.innerHTML = html;
-            }
-
-            return { go: (p) => { page = p; render(); }, init: render };
-        }
-
-        window.paginators = {};
-
-        // Compliance renderer
-        function renderCompliance(items) {
-            return items.map(b => {
-                const label = b.status === 'compliant' ? 'Compliant' : b.status === 'partial' ? 'Partial' : 'Non-Compliant';
-                return `<div class="compliance-item">
-                    <span class="ct-barangay compliance-name"><i class="fas fa-map-marker-alt" style="color:#94a3b8;margin-right:5px;font-size:11px;"></i>Brgy. ${b.name}</span>
-                    <span class="ct-programs compliance-count">${b.programs}</span>
-                    <span class="ct-reports compliance-count">${b.reports}</span>
-                    <span class="ct-status"><span class="compliance-badge ${b.status}">${label}</span></span>
-                </div>`;
-            }).join('');
-        }
-
-        paginators['compliance-list'] = makePaginator(barangays, 10, renderCompliance, 'compliance-list', 'compliance-pagination');
-        paginators['compliance-list'].init();
-    </script>
-
-    <script>
-        // ── QUICK ACTION MODAL ──
-        const qaForms = {
-            'new-program': {
-                title: 'New Program',
-                body: `
-                    <div class="qa-form">
-                        <div class="qa-field"><label>Program Title</label><input type="text" placeholder="e.g. Livelihood Training 2026"></div>
-                        <div class="qa-field"><label>Sector</label>
-                            <select><option>Education</option><option>Anti-Drugs</option><option>Agriculture</option>
-                            <option>Disaster Preparedness</option><option>Sports Development</option>
-                            <option>Gender & Development</option><option>Health</option><option>Others</option></select>
-                        </div>
-                        <div class="qa-row">
-                            <div class="qa-field"><label>Start Date</label><input type="date"></div>
-                            <div class="qa-field"><label>End Date</label><input type="date"></div>
-                        </div>
-                        <div class="qa-field"><label>Target Barangay</label><input type="text" placeholder="e.g. Brgy. Poblacion"></div>
-                        <div class="qa-field"><label>Expected Participants</label><input type="number" placeholder="e.g. 100"></div>
-                        <div class="qa-field"><label>Description</label><textarea rows="3" placeholder="Brief description of the program..."></textarea></div>
-                    </div>`
-            },
-            'submit-report': {
-                title: 'Submit Report',
-                body: `
-                    <div class="qa-form">
-                        <div class="qa-field"><label>Report Type</label>
-                            <select><option>Monthly Activity Report</option><option>Program Completion Report</option>
-                            <option>Barangay Compliance Report</option><option>Financial Report</option></select>
-                        </div>
-                        <div class="qa-field"><label>Reporting Period</label>
-                            <div class="qa-row">
-                                <div class="qa-field"><label>From</label><input type="date"></div>
-                                <div class="qa-field"><label>To</label><input type="date"></div>
-                            </div>
-                        </div>
-                        <div class="qa-field"><label>Barangay</label><input type="text" placeholder="e.g. Brgy. Poblacion"></div>
-                        <div class="qa-field"><label>Summary</label><textarea rows="3" placeholder="Brief summary of the report..."></textarea></div>
-                        <div class="qa-field"><label>Attach File</label><input type="file" accept=".pdf,.doc,.docx,.xlsx"></div>
-                    </div>`
-            },
-            'post-announcement': {
-                title: 'Post Announcement',
-                body: `
-                    <div class="qa-form">
-                        <div class="qa-field"><label>Title</label><input type="text" placeholder="e.g. SK General Assembly Notice"></div>
-                        <div class="qa-field"><label>Audience</label>
-                            <select><option>All Barangays</option><option>Specific Barangay</option><option>SK Officials Only</option></select>
-                        </div>
-                        <div class="qa-field"><label>Message</label><textarea rows="4" placeholder="Write your announcement here..."></textarea></div>
-                        <div class="qa-field"><label>Post Date</label><input type="date"></div>
-                        <div class="qa-field"><label>Attach Image (optional)</label><input type="file" accept="image/*"></div>
-                    </div>`
-            },
-            'schedule-event': {
-                title: 'Schedule Event',
-                body: `
-                    <div class="qa-form">
-                        <div class="qa-field"><label>Event Name</label><input type="text" placeholder="e.g. SK Sportsfest 2026"></div>
-                        <div class="qa-field"><label>Event Type</label>
-                            <select><option>Sports</option><option>Cultural</option><option>Seminar</option>
-                            <option>Assembly</option><option>Community Service</option><option>Others</option></select>
-                        </div>
-                        <div class="qa-row">
-                            <div class="qa-field"><label>Date</label><input type="date"></div>
-                            <div class="qa-field"><label>Time</label><input type="time"></div>
-                        </div>
-                        <div class="qa-field"><label>Venue</label><input type="text" placeholder="e.g. Municipal Covered Court"></div>
-                        <div class="qa-field"><label>Expected Attendees</label><input type="number" placeholder="e.g. 200"></div>
-                        <div class="qa-field"><label>Notes</label><textarea rows="2" placeholder="Additional notes..."></textarea></div>
-                    </div>`
-            },
-            'export-data': {
-                title: 'Export Data',
-                body: `
-                    <div class="qa-form">
-                        <div class="qa-field"><label>Data Type</label>
-                            <select><option>Kabataan Registry</option><option>Program List</option>
-                            <option>Barangay Compliance</option><option>Participation Stats</option><option>All Data</option></select>
-                        </div>
-                        <div class="qa-field"><label>Date Range</label>
-                            <div class="qa-row">
-                                <div class="qa-field"><label>From</label><input type="date"></div>
-                                <div class="qa-field"><label>To</label><input type="date"></div>
-                            </div>
-                        </div>
-                        <div class="qa-field"><label>Format</label>
-                            <select><option>Excel (.xlsx)</option><option>CSV (.csv)</option><option>PDF (.pdf)</option></select>
-                        </div>
-                        <div class="qa-field"><label>Include Barangay</label>
-                            <select><option>All Barangays</option><option>Specific Barangay</option></select>
-                        </div>
-                    </div>`
-            }
-        };
-
-        function showQuickActionModal(type) {
-            const form = qaForms[type];
-            if (!form) return;
-            document.getElementById('qa-modal-title').textContent = form.title;
-            document.getElementById('qa-modal-body').innerHTML = form.body;
-            document.getElementById('quickActionModal')?.classList.add('show');
-        }
-
-        function closeQuickActionModal() {
-            document.getElementById('quickActionModal')?.classList.remove('show');
-        }
-
-        document.getElementById('quickActionModal')?.addEventListener('click', function(e) {
-            if (e.target === this) closeQuickActionModal();
-        });
-
-        document.getElementById('qa-modal-submit')?.addEventListener('click', function() {
-            alert('Submitted! (Connect to backend when ready.)');
-            closeQuickActionModal();
-        });
-    </script>
-    <script>
         (() => {
             const heartbeatMs = {{ (int) config('sk_fed_auth.single_session.heartbeat_interval_seconds', 30) }} * 1000;
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';

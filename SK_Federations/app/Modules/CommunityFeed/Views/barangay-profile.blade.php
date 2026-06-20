@@ -1,6 +1,6 @@
 @extends('layout::app')
 
-@section('title', 'SK Barangay {{ $name }} - SK OnePortal')
+@section('title', 'SK Barangay ' . ($name ?? '') . ' - SK OnePortal')
 
 @push('body-attributes')style="--brgy-color: {{ $color }}"
 @endpush

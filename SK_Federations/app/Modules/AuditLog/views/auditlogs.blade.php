@@ -21,57 +21,51 @@
     ];
 @endphp
 
-<div id="mainContent" class="gov-dashboard auditlog-shell container-fluid">
-<div id="auditLogApp" data-audit-routes='@json($routes)'>
-    <div class="dash-page-header">
-        <div class="dash-page-header-left">
-            <h1 class="dash-page-title">Audit Logs</h1>
-            <p class="dash-page-welcome">Centralized activity trail across Admin, Federation, Officials, and Kabataan portals</p>
+<div id="mainContent" class="auditlog-page container-fluid">
+<div id="auditLogApp" class="auditlog-container" data-audit-routes='@json($routes)'>
+    <div class="page-header-modern-with-button">
+        <div class="page-header-top">
+            <h1 class="page-title-modern">Audit Logs</h1>
+            <p class="page-subtitle-modern">Centralized activity trail across Admin, Federation, Officials, and Kabataan portals</p>
         </div>
-    </div>
-
-    <section class="stats-grid stats-grid--top audit-stats-grid" aria-label="Audit statistics">
-        @foreach ($statCards as $card)
-            @include('dashboard::components.statcard', $card)
-        @endforeach
-    </section>
-
-    <div class="audit-layout audit-layout--full">
-            <section class="audit-filters-card" aria-label="Audit log filters">
-                <div class="audit-filters-grid">
-                    <div class="audit-filter-field audit-filter-field--search">
-                        <label for="auditSearch">Search</label>
-                        <input type="search" id="auditSearch" class="audit-input" placeholder="Search email, action, entity, IP…">
+        <div class="page-header-filters">
+            <form class="audit-filter-form" id="auditFilterForm" novalidate>
+                <div class="audit-filter-grid">
+                    <div class="search-container">
+                        <div class="search-input-wrap">
+                            <input type="search" id="auditSearch" class="search-input form-control" placeholder="Search email, action, entity, IP…" aria-label="Search audit logs">
+                            <button type="button" class="search-btn" id="auditSearchBtn" aria-label="Search">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="audit-filter-field">
-                        <label for="auditDateFrom">Date From</label>
-                        <input type="date" id="auditDateFrom" class="audit-input">
+                    <div class="filter-dropdown-container">
+                        <input type="date" id="auditDateFrom" class="filter-dropdown audit-date-input" aria-label="Date from">
                     </div>
-                    <div class="audit-filter-field">
-                        <label for="auditDateTo">Date To</label>
-                        <input type="date" id="auditDateTo" class="audit-input">
+                    <div class="filter-dropdown-container">
+                        <input type="date" id="auditDateTo" class="filter-dropdown audit-date-input" aria-label="Date to">
                     </div>
-                    <div class="audit-filter-field">
-                        <label for="auditRole">Role</label>
-                        <select id="auditRole" class="audit-input">
+                    <div class="filter-dropdown-container">
+                        <select id="auditRole" class="filter-dropdown form-select" aria-label="Filter by role">
                             <option value="">All Roles</option>
                             @foreach ($filterOptions['roles'] as $roleOption)
                                 <option value="{{ $roleOption['value'] }}">{{ $roleOption['label'] }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="audit-filter-field">
-                        <label for="auditBarangay">Barangay</label>
-                        <select id="auditBarangay" class="audit-input">
+                    <div class="filter-dropdown-container">
+                        <select id="auditBarangay" class="filter-dropdown form-select" aria-label="Filter by barangay">
                             <option value="">All Barangays</option>
                             @foreach ($filterOptions['barangays'] as $barangayOption)
                                 <option value="{{ $barangayOption['id'] }}">{{ $barangayOption['name'] }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="audit-filter-field">
-                        <label for="auditEventType">Event Type</label>
-                        <select id="auditEventType" class="audit-input">
+                    <div class="filter-dropdown-container">
+                        <select id="auditEventType" class="filter-dropdown form-select" aria-label="Filter by event type">
                             <option value="">All Event Types</option>
                             @foreach ($filterOptions['event_types'] as $eventType)
                                 <option value="{{ $eventType }}">{{ $eventType }}</option>
@@ -79,69 +73,75 @@
                         </select>
                     </div>
                 </div>
-            </section>
+            </form>
+        </div>
+    </div>
 
-            <section class="audit-table-card" aria-label="Audit logs table">
-                <div class="audit-table-header">
-                    <div>
-                        <h2 class="audit-table-title">Activity Records</h2>
-                        <p class="audit-table-subtitle" id="auditTableSubtitle">Showing audit logs</p>
-                    </div>
-                    <div class="audit-per-page">
-                        <label for="auditPerPage">Rows</label>
-                        <select id="auditPerPage" class="audit-input audit-input--compact">
-                            <option value="10">10</option>
-                            <option value="15" selected>15</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                        </select>
-                    </div>
-                </div>
+    <section class="audit-stats-grid" aria-label="Audit statistics">
+        @foreach ($statCards as $card)
+            @include('dashboard::components.statcard', $card)
+        @endforeach
+    </section>
 
-                <div class="audit-table-wrap" id="auditTableWrap">
-                    <div class="table-responsive audit-table-responsive">
-                        <table class="audit-table" id="auditLogsTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Event Type</th>
-                                    <th>IP Address</th>
-                                    <th class="audit-col-actions">View</th>
-                                </tr>
-                            </thead>
-                            <tbody id="auditLogsTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="audit-table-card" aria-label="Audit logs table">
+        <div class="audit-table-wrap" id="auditTableWrap">
+            <div class="table-responsive audit-table-responsive">
+                <table class="audit-table" id="auditLogsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Event Type</th>
+                            <th>IP Address</th>
+                            <th class="audit-col-actions">View</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLogsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <div class="audit-pagination" id="auditPagination">
-                    <button type="button" class="audit-page-btn" id="auditPrevBtn" disabled>Previous</button>
-                    <div class="audit-page-numbers" id="auditPageNumbers"></div>
-                    <button type="button" class="audit-page-btn" id="auditNextBtn" disabled>Next</button>
-                    <span class="audit-page-info" id="auditPageInfo"></span>
-                </div>
-            </section>
+<div class="audit-page-footer pagination-footer" aria-label="Table pagination">
+    <div class="pagination-footer-nav">
+        <button type="button" class="pagination-arrow" id="auditPrevBtn" disabled aria-label="Previous page">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="pagination-page-label">Page</span>
+        <input type="number" class="pagination-page-input" id="auditPageInput" value="1" min="1" aria-label="Current page">
+        <span class="pagination-page-of">of <span id="auditTotalPages">1</span></span>
+        <button type="button" class="pagination-arrow" id="auditNextBtn" disabled aria-label="Next page">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+    </div>
+    <div class="pagination-footer-right">
+        <select id="auditPerPage" class="pagination-rows-select" aria-label="Rows per page">
+            <option value="100" selected>100 rows</option>
+            <option value="500">500 rows</option>
+            <option value="1000">1000 rows</option>
+        </select>
+        <span class="pagination-record-count" id="auditPaginationInfo">0 records</span>
     </div>
 </div>
 </div>
 
-<div class="audit-modal" id="auditDetailsModal" hidden>
-    <div class="audit-modal-backdrop" data-close-modal></div>
-    <div class="audit-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="auditModalTitle">
-        <div class="audit-modal-header">
+<div class="audit-view-modal" id="auditDetailsModal" hidden>
+    <div class="audit-view-modal-backdrop" data-close-modal></div>
+    <div class="audit-view-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="auditModalTitle">
+        <div class="audit-view-modal-header">
             <div>
                 <h3 id="auditModalTitle">Audit Log Details</h3>
                 <p id="auditModalSubtitle"></p>
             </div>
-            <button type="button" class="audit-modal-close" data-close-modal aria-label="Close details">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button type="button" class="audit-view-modal-close" data-close-modal aria-label="Close details">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         </div>
-        <div class="audit-modal-body">
-            <div class="audit-detail-grid" id="auditDetailGrid"></div>
+        <div class="audit-view-modal-body">
+            <div class="audit-view-detail-grid" id="auditDetailGrid"></div>
         </div>
     </div>
 </div>

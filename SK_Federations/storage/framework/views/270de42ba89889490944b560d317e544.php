@@ -1,0 +1,48 @@
+<div class="content-card dash-audit-card" id="dashboardAuditApp" data-audit-data-url="<?php echo e(route('auditlogs.data')); ?>">
+    <div class="card-header dash-audit-header">
+        <div>
+            <h3><i class="fas fa-clipboard-list" style="color:#213F99;margin-right:8px;"></i>Recent Audit Activity</h3>
+            <p class="dash-audit-subtitle" id="dashAuditTableSubtitle">Latest activity records across the federation portal</p>
+        </div>
+        <a href="<?php echo e(route('auditlogs.index')); ?>" class="dash-audit-view-all">View All Audit Logs</a>
+    </div>
+    <div class="card-body dash-audit-body">
+        <div class="dash-audit-table-wrap">
+            <table class="dash-audit-table" id="dashAuditLogsTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Event Type</th>
+                        <th>IP Address</th>
+                        <th class="dash-audit-col-actions">View</th>
+                    </tr>
+                </thead>
+                <tbody id="dashAuditLogsTableBody">
+                    <tr><td colspan="7" class="dash-audit-empty-row">Loading audit logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="dash-audit-modal" id="dashAuditDetailsModal" hidden>
+    <div class="dash-audit-modal-backdrop" data-dash-audit-close></div>
+    <div class="dash-audit-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="dashAuditModalTitle">
+        <div class="dash-audit-modal-header">
+            <div>
+                <h3 id="dashAuditModalTitle">Audit Log Details</h3>
+                <p id="dashAuditModalSubtitle"></p>
+            </div>
+            <button type="button" class="dash-audit-modal-close" data-dash-audit-close aria-label="Close details">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="dash-audit-modal-body">
+            <div class="dash-audit-detail-grid" id="dashAuditDetailGrid"></div>
+        </div>
+    </div>
+</div>
+<?php /**PATH C:\Users\Administrator\Documents\SK_OnePortal_Santa_Cruz\SK_Federations\app\Modules\Dashboard\Providers/../Views/partials/dashboard-audit-table.blade.php ENDPATH**/ ?>

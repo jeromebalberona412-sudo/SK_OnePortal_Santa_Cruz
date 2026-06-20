@@ -15,20 +15,8 @@
         });
     }
 
-    function updateSummary(items) {
-        var total    = records.length;
-        var active   = records.filter(function(r){ return r.status === 'active'; }).length;
-        var inactive = records.filter(function(r){ return r.status === 'inactive'; }).length;
-        var rate     = total > 0 ? Math.round((active / total) * 100) : 0;
-
-        var t = document.getElementById('km-kpi-total');
-        var a = document.getElementById('km-kpi-active');
-        var i = document.getElementById('km-kpi-inactive');
-        var p = document.getElementById('km-kpi-rate');
-        if (t) t.textContent = total;
-        if (a) a.textContent = active;
-        if (i) i.textContent = inactive;
-        if (p) p.textContent = rate + '%';
+    function updateSummary() {
+        // Stats cards removed from index page.
     }
 
     function populateBrgyFilter() {
@@ -80,12 +68,6 @@
                 '<div class="km-bsc-header">' +
                     '<h3 class="km-bsc-name"><i class="fas fa-map-marker-alt"></i> ' + brgy + '</h3>' +
                     '<span class="km-badge ' + statusClass + '">' + statusText + '</span>' +
-                '</div>' +
-                '<div class="km-bsc-stats">' +
-                    '<div class="km-bsc-stat"><i class="fas fa-users"></i> <strong>' + total + '</strong> Total Kabataan</div>' +
-                    '<div class="km-bsc-stat"><i class="fas fa-chart-pie"></i> <strong>' + rate + '%</strong> Participation Rate</div>' +
-                    '<div class="km-bsc-stat"><i class="fas fa-user-check"></i> <strong>' + active + '</strong> Active</div>' +
-                    '<div class="km-bsc-stat"><i class="fas fa-user-times"></i> <strong>' + inactive + '</strong> Inactive</div>' +
                 '</div>' +
                 '<div class="km-bsc-footer">' +
                     '<span class="km-bsc-update"><i class="fas fa-clock"></i> Last update: ' + lastUpdate + '</span>' +
@@ -267,26 +249,10 @@
     // ── Barangay Detail Page ──
     function renderBarangayDetail() {
         var brgy = window.kmBarangay || '';
-        var members = records.filter(function(r){ return r.barangay === brgy; });
         var tbody = document.getElementById('km-table-tbody');
         var empty = document.getElementById('km-empty');
         var countEl = document.getElementById('km-result-count');
         if (!tbody) return;
-
-        // Update summary cards
-        var total = members.length;
-        var active = members.filter(function(r){ return r.status === 'active'; }).length;
-        var inactive = members.filter(function(r){ return r.status === 'inactive'; }).length;
-        var rate = total > 0 ? Math.round(((active + members.filter(function(r){ return r.status === 'moderate'; }).length) / total) * 100) : 0;
-
-        var totalEl = document.getElementById('km-brgy-total');
-        var rateEl = document.getElementById('km-brgy-rate');
-        var activeEl = document.getElementById('km-brgy-active');
-        var inactiveEl = document.getElementById('km-brgy-inactive');
-        if (totalEl) totalEl.textContent = total;
-        if (rateEl) rateEl.textContent = rate + '%';
-        if (activeEl) activeEl.textContent = active;
-        if (inactiveEl) inactiveEl.textContent = inactive;
 
         // Render table
         var filtered = getFiltered().filter(function(r){ return r.barangay === brgy; });
@@ -310,6 +276,15 @@
         renderPaginatedTable();
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     function renderPaginatedTable() {
         var state = window.kmPaginationState || {};
         var tbody = document.getElementById('km-table-tbody');
@@ -322,17 +297,19 @@
 
         var rows = pageItems.map(function(r, idx) {
             var rowNum = start + idx + 1;
+            var statusClass = r.status || 'inactive';
+            var statusText = statusLabel[r.status] || r.status || '-';
             return '<tr>' +
                 '<td>' + rowNum + '</td>' +
-                '<td class="km-td-name">' + r.name + '</td>' +
-                '<td>' + r.age + '</td>' +
-                '<td>' + r.sex + '</td>' +
-                '<td>' + r.civilStatus + '</td>' +
-                '<td>' + r.education + '</td>' +
-                '<td>' + r.workStatus + '</td>' +
-                '<td>' + r.youthClassification + '</td>' +
-                '<td><span class="km-badge ' + r.status + '">' + (statusLabel[r.status] || r.status) + '</span></td>' +
-                '<td><button class="km-btn" onclick="openKKPModal(\'' + r.slug.replace(/'/g, "\\'") + '\')">View <i class="fas fa-arrow-right"></i></button></td>' +
+                '<td class="km-fullname-cell"><span class="km-fullname">' + escapeHtml(r.name) + '</span></td>' +
+                '<td>' + escapeHtml(String(r.age ?? '-')) + '</td>' +
+                '<td>' + escapeHtml(r.sex || '-') + '</td>' +
+                '<td>' + escapeHtml(r.civilStatus || '-') + '</td>' +
+                '<td>' + escapeHtml(r.education || '-') + '</td>' +
+                '<td>' + escapeHtml(r.workStatus || '-') + '</td>' +
+                '<td>' + escapeHtml(r.youthClassification || '-') + '</td>' +
+                '<td><span class="km-status-badge ' + statusClass + '">' + escapeHtml(statusText) + '</span></td>' +
+                '<td><div class="km-actions"><button type="button" class="km-btn-view" onclick="openKKPModal(\'' + r.slug.replace(/'/g, "\\'") + '\')">View</button></div></td>' +
                 '</tr>';
         }).join('');
         tbody.innerHTML = rows;

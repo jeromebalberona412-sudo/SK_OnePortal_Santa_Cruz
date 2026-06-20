@@ -13,14 +13,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const state = {
         page: 1,
-        perPage: 15,
+        perPage: 100,
         rows: [],
-        meta: { total: 0, from: 0, to: 0, last_page: 1 },
+        meta: { total: 0, from: 0, to: 0, last_page: 1, current_page: 1 },
         debounceTimer: null,
     };
 
     const els = {
         search: document.getElementById('auditSearch'),
+        searchBtn: document.getElementById('auditSearchBtn'),
         dateFrom: document.getElementById('auditDateFrom'),
         dateTo: document.getElementById('auditDateTo'),
         role: document.getElementById('auditRole'),
@@ -28,11 +29,11 @@ document.addEventListener('DOMContentLoaded', function () {
         eventType: document.getElementById('auditEventType'),
         perPage: document.getElementById('auditPerPage'),
         tableBody: document.getElementById('auditLogsTableBody'),
-        tableSubtitle: document.getElementById('auditTableSubtitle'),
         prevBtn: document.getElementById('auditPrevBtn'),
         nextBtn: document.getElementById('auditNextBtn'),
-        pageNumbers: document.getElementById('auditPageNumbers'),
-        pageInfo: document.getElementById('auditPageInfo'),
+        pageInput: document.getElementById('auditPageInput'),
+        totalPages: document.getElementById('auditTotalPages'),
+        paginationInfo: document.getElementById('auditPaginationInfo'),
         modal: document.getElementById('auditDetailsModal'),
         modalSubtitle: document.getElementById('auditModalSubtitle'),
         detailGrid: document.getElementById('auditDetailGrid'),
@@ -108,39 +109,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderPagination(meta) {
-        if (els.tableSubtitle) {
-            els.tableSubtitle.textContent = meta.total
-                ? `Showing ${meta.from}-${meta.to} of ${meta.total} audit logs`
-                : 'No matching audit logs';
+        const total = meta.total || 0;
+        const currentPage = meta.current_page || 1;
+        const lastPage = meta.last_page || 1;
+
+        if (els.pageInput) {
+            els.pageInput.value = String(currentPage);
+            els.pageInput.min = '1';
+            els.pageInput.max = String(lastPage);
         }
 
-        if (els.pageInfo) {
-            els.pageInfo.textContent = `Page ${meta.current_page} of ${meta.last_page}`;
+        if (els.totalPages) {
+            els.totalPages.textContent = String(lastPage);
+        }
+
+        if (els.paginationInfo) {
+            els.paginationInfo.textContent = `${total.toLocaleString()} record${total === 1 ? '' : 's'}`;
         }
 
         if (els.prevBtn) {
-            els.prevBtn.disabled = meta.current_page <= 1;
+            els.prevBtn.disabled = currentPage <= 1;
         }
 
         if (els.nextBtn) {
-            els.nextBtn.disabled = meta.current_page >= meta.last_page;
+            els.nextBtn.disabled = currentPage >= lastPage || total === 0;
         }
-
-        if (!els.pageNumbers) {
-            return;
-        }
-
-        const current = meta.current_page;
-        const last = meta.last_page;
-        const start = Math.max(1, current - 2);
-        const end = Math.min(last, current + 2);
-        let html = '';
-
-        for (let page = start; page <= end; page += 1) {
-            html += `<button type="button" class="audit-page-number ${page === current ? 'is-active' : ''}" data-page="${page}">${page}</button>`;
-        }
-
-        els.pageNumbers.innerHTML = html;
     }
 
     function updateStatCards(stats) {
@@ -189,14 +182,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const payload = await response.json();
             state.rows = payload.data || [];
             state.meta = payload.meta || state.meta;
+            state.page = state.meta.current_page || state.page;
             renderRows(state.rows);
             renderPagination(state.meta);
         } catch (error) {
-            if (els.tableSubtitle) {
-                els.tableSubtitle.textContent = 'Unable to load audit logs. Please try again.';
-            }
             if (els.tableBody) {
-                els.tableBody.innerHTML = '';
+                els.tableBody.innerHTML = '<tr><td colspan="7" class="audit-empty-row">Unable to load audit logs. Please try again.</td></tr>';
             }
         }
     }
@@ -249,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (els.detailGrid) {
             els.detailGrid.innerHTML = detailFields.map(function ([label, value]) {
                 return `
-                    <div class="audit-detail-item">
+                    <div class="audit-view-detail-item">
                         <span>${escapeHtml(label)}</span>
                         <strong>${escapeHtml(value || '-')}</strong>
                     </div>
@@ -270,8 +261,13 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.style.overflow = '';
     }
 
+    function triggerSearch() {
+        state.page = 1;
+        fetchLogs();
+    }
+
     els.perPage?.addEventListener('change', function () {
-        state.perPage = Number(els.perPage.value || 15);
+        state.perPage = Number(els.perPage.value || 100);
         state.page = 1;
         fetchLogs();
     });
@@ -282,6 +278,15 @@ document.addEventListener('DOMContentLoaded', function () {
             state.page = 1;
             fetchLogs();
         }, 350);
+    });
+
+    els.searchBtn?.addEventListener('click', triggerSearch);
+
+    els.search?.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            triggerSearch();
+        }
     });
 
     [
@@ -311,13 +316,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    els.pageNumbers?.addEventListener('click', function (event) {
-        const button = event.target.closest('[data-page]');
-        if (!button) {
-            return;
+    els.pageInput?.addEventListener('change', function () {
+        const lastPage = state.meta.last_page || 1;
+        let page = parseInt(els.pageInput.value, 10);
+        if (Number.isNaN(page) || page < 1) {
+            page = 1;
         }
-
-        state.page = Number(button.dataset.page || 1);
+        if (page > lastPage) {
+            page = lastPage;
+        }
+        state.page = page;
         fetchLogs();
     });
 

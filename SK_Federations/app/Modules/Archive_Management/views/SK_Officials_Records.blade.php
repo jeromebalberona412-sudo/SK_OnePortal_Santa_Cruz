@@ -41,7 +41,7 @@
             <table class="aroff-table">
                 <thead>
                     <tr>
-                        <th>Full Name<div class="aroff-col-hint">LN, FN, MN, Suffix</div></th>
+                        <th>Full Name<div class="table-col-hint">LN, FN, MN, Suffix</div></th>
                         <th>Position</th>
                         <th>Term</th>
                         <th>Status</th>
