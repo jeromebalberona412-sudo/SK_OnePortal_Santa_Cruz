@@ -29,7 +29,9 @@ class KKProfilingController extends Controller
     public function showSignup(Request $request)
     {
         if ($request->boolean('clear')) {
-            app(KkRegistrationDraftService::class)->clearSessionDraft();
+            $draftService = app(KkRegistrationDraftService::class);
+            $draftService->clearSessionDraft();
+            $draftService->clearCompletedRegistration();
         }
 
         $barangays = Barangay::orderBy('name')->get(['id', 'name']);
@@ -151,27 +153,47 @@ class KKProfilingController extends Controller
         $wizard = $draftService->resolveWizard();
 
         $wizardInitialStep = 1;
-        $wizardEmailVerified = false;
         $verificationSent = false;
+        $registrationComplete = false;
+        $completedEmail = null;
+
+        $completedSession = $draftService->resolveCompletedRegistration((int) $barangayRecord->id);
+
+        if ($completedSession) {
+            $registrationComplete = true;
+            $completedEmail = $completedSession['email'];
+        }
 
         if ($wizard && (int) ($wizard['barangay_id'] ?? 0) === (int) $barangayRecord->id) {
-            $wizardInitialStep = max(1, min(4, (int) ($wizard['current_step'] ?? 1)));
-            $wizardEmailVerified = ! empty($wizard['email_verified_at']);
+            $wizardInitialStep = max(1, min(3, (int) ($wizard['current_step'] ?? 1)));
             $verificationSent = ! empty($wizard['verification_sent_at']);
             $respondentNumber = $wizard['respondent_number'] ?? $respondentNumber;
-        } else {
+
+            $wizardEmail = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));
+
+            if (! $registrationComplete && $wizardEmail !== '' && $draftService->isEmailRegistrationComplete($wizardEmail, (int) $barangayRecord->id)) {
+                $draftService->markRegistrationComplete($wizardEmail, (int) $barangayRecord->id);
+                $registrationComplete = true;
+                $completedEmail = $wizardEmail;
+            }
+        } elseif (! $registrationComplete) {
             session()->forget(['kk_wizard_step', 'kk_wizard_email_verified']);
         }
 
+        if ($registrationComplete) {
+            $wizardInitialStep = 3;
+        }
+
         return view('kkprofiling::kkprofiling', [
-            'barangay'            => $displayName,
-            'slug'                => $slug,
-            'respondentNumber'    => $respondentNumber,
-            'respondentDisplay'   => self::formatRespondentDisplay($respondentNumber),
-            'barangayLogoUrl'     => self::getBarangayLogoUrl($barangayRecord->id),
-            'wizardInitialStep'   => $wizardInitialStep,
-            'wizardEmailVerified' => $wizardEmailVerified,
-            'verificationSent'    => $verificationSent,
+            'barangay'              => $displayName,
+            'slug'                  => $slug,
+            'respondentNumber'      => $respondentNumber,
+            'respondentDisplay'     => self::formatRespondentDisplay($respondentNumber),
+            'barangayLogoUrl'       => self::getBarangayLogoUrl($barangayRecord->id),
+            'wizardInitialStep'     => $wizardInitialStep,
+            'verificationSent'      => $verificationSent,
+            'registrationComplete'  => $registrationComplete,
+            'completedEmail'        => $completedEmail,
         ]);
     }
 
@@ -342,15 +364,7 @@ class KKProfilingController extends Controller
             'facebook'              => ['required', 'string', 'min:3', 'max:35', 'regex:/^\S+$/'],
             'group_chat'            => 'required|string',
             'signature'             => 'required|string',
-            'facial_verification_completed' => 'required|in:1',
-            'verified_selfie'       => 'required|string',
         ]);
-
-        if ($request->input('facial_verification_completed') !== '1' || ! $request->filled('verified_selfie')) {
-            return $this->submitErrorResponse($request, [
-                'verified_selfie' => 'Identity verification is required. Please complete facial verification before submitting.',
-            ]);
-        }
 
         if (($validated['suffix'] ?? null) === 'Others') {
             $customSuffix = trim((string) ($validated['custom_suffix'] ?? ''));
@@ -434,26 +448,9 @@ class KKProfilingController extends Controller
             ]);
         }
 
-        $this->photoService->ensureDirectoryExists();
-
         $existingRegistration = KabataanRegistration::where('email', $validated['email'])
             ->where('barangay_id', $barangayRecord->id)
             ->first();
-
-        try {
-            $photo = $this->photoService->storeVerifiedSelfie(
-                $request->input('verified_selfie'),
-                $email
-            );
-        } catch (\Illuminate\Validation\ValidationException $exception) {
-            return $this->submitErrorResponse($request, $exception->errors());
-        }
-
-        if ($existingRegistration?->profile_photo_path) {
-            $this->photoService->deleteByPath($existingRegistration->profile_photo_path);
-        }
-
-        unset($validated['verified_selfie'], $validated['facial_verification_completed']);
 
         $registration = KabataanRegistration::updateOrCreate(
             [
@@ -467,8 +464,7 @@ class KKProfilingController extends Controller
                 'middle_name'       => $validated['middle_name'] ?? null,
                 'suffix'            => $validated['suffix'] ?? null,
                 'contact_number'    => $validated['contact_number'] ?? null,
-                'profile_photo_path' => $photo['path'],
-                'facial_verification_completed_at' => now(),
+                'profile_photo_path' => null,
                 'form_data'         => $validated,
                 'status'            => 'pending_verification',
                 'evaluation_status' => null,
@@ -785,6 +781,8 @@ class KKProfilingController extends Controller
 
         return view('kkprofiling::set_password', [
             'barangay'        => $registration->barangay->name,
+            'slug'            => $barangay,
+            'email'           => $registration->email,
             'registration'    => $registration,
             'barangayLogoUrl' => self::getBarangayLogoUrl($registration->barangay_id),
         ]);

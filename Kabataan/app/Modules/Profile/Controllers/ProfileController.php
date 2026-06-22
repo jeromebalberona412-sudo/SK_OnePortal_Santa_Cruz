@@ -56,6 +56,7 @@ class ProfileController extends Controller
             'calendarEvents' => $participation['calendar_events'],
             'abyipPrograms' => $participation['abyip_programs'],
             'participationDetails' => $participation['participation_details'],
+            'supportingDocuments' => $display['supportingDocuments'] ?? [],
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',

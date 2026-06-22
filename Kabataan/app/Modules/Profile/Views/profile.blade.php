@@ -148,6 +148,35 @@
                         </div>
                     </div>
 
+                    @if(!empty($supportingDocuments))
+                    <div class="info-card">
+                        <div class="card-header">
+                            <h2>
+                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                </svg>
+                                Supporting Documents
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="kkp-profile-docs-grid">
+                                @foreach($supportingDocuments as $document)
+                                    <article class="kkp-profile-doc-card">
+                                        <a href="{{ $document['url'] }}" target="_blank" rel="noopener noreferrer" class="kkp-profile-doc-thumb-link">
+                                            <img src="{{ $document['url'] }}" alt="{{ $document['label'] }}" class="kkp-profile-doc-thumb">
+                                        </a>
+                                        <div class="kkp-profile-doc-meta">
+                                            <p class="kkp-profile-doc-label">{{ $document['label'] }}</p>
+                                            <p class="kkp-profile-doc-name">{{ $document['display_name'] }}</p>
+                                            <a href="{{ $document['url'] }}" target="_blank" rel="noopener noreferrer" class="kkp-profile-doc-view">View full image</a>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Participation Summary Card -->
                     <div class="info-card">
                         <div class="card-header">
@@ -393,6 +422,7 @@
                             'barangayName' => $barangayName,
                             'barangayLogoUrl' => $barangayLogoUrl,
                             'profile' => $profile ?? [],
+                            'supportingDocuments' => $supportingDocuments ?? [],
                         ])
                     </div>
                 @endif

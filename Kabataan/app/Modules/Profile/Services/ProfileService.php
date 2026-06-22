@@ -6,6 +6,7 @@ use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
+use App\Services\CloudinaryService;
 
 class ProfileService
 {
@@ -52,7 +53,55 @@ class ProfileService
             'region' => $barangay?->region ?? 'Region IV-A (CALABARZON)',
             'barangayLogoUrl' => KKProfilingController::getBarangayLogoUrl($barangayId),
             'registration' => $registration,
+            'supportingDocuments' => $this->resolveSupportingDocuments($registration),
         ];
+    }
+
+    /**
+     * @return array<int, array{type: string, label: string, url: string, display_name: string}>
+     */
+    public function resolveSupportingDocuments(?KabataanRegistration $registration): array
+    {
+        if ($registration === null) {
+            return [];
+        }
+
+        $documents = $registration->form_data['supporting_documents'] ?? [];
+
+        if (! is_array($documents) || $documents === []) {
+            return [];
+        }
+
+        $cloudinary = app(CloudinaryService::class);
+
+        return collect($documents)
+            ->map(function (array $document) use ($cloudinary) {
+                $url = $document['url'] ?? null;
+
+                if (! $url) {
+                    return null;
+                }
+
+                if (($document['storage'] ?? '') === 'cloudinary' && $cloudinary->isConfigured()) {
+                    $url = $cloudinary->normalizeUrl($url) ?? $url;
+                }
+
+                $type = (string) ($document['type'] ?? 'document');
+
+                return [
+                    'type'         => $type,
+                    'label'        => match ($type) {
+                        'school_id'          => 'School ID',
+                        'barangay_clearance' => 'Barangay Clearance',
+                        default              => 'Supporting Document',
+                    },
+                    'url'          => $url,
+                    'display_name' => (string) ($document['display_name'] ?? $document['original_name'] ?? 'Document'),
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     protected function buildFullName(?KabataanRegistration $registration, User $user): string

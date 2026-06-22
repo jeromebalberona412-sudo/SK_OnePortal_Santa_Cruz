@@ -276,12 +276,6 @@
 
                     </div>
 
-                    @if ($requireFacialVerification ?? true)
-                        @include('kkprofiling::partials.kk-facial-verification')
-                    @endif
-
-
-
                     {{-- -- II. DEMOGRAPHIC CHARACTERISTICS -- --}}
 
                     <div class="kkp-section-heading" style="margin-top:10px;">II. DEMOGRAPHIC CHARACTERISTICS <span class="kkp-required">*</span></div>

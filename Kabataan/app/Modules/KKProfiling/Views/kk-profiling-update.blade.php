@@ -38,7 +38,6 @@
                         'respondentDisplay' => $kkRespondentDisplay ?? '01',
                         'submitLabel' => 'Update KK Profiling',
                         'barangayLogoUrl' => $kkBarangayLogoUrl ?? null,
-                        'requireFacialVerification' => false,
                     ])
                 </form>
             </div>

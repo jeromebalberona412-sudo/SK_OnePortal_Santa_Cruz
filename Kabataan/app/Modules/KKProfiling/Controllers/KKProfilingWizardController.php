@@ -4,10 +4,12 @@ namespace App\Modules\KKProfiling\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Barangay;
-use App\Notifications\KabataanVerifyEmail;
+use App\Models\KabataanRegistration;
+use App\Notifications\KabataanSetPasswordEmail;
 use App\Services\KkRegistrationDraftService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 
@@ -33,41 +35,11 @@ class KKProfilingWizardController extends Controller
             'success' => true,
             'token'   => $wizard['token'],
             'step'    => 2,
-            'message' => 'Step 1 saved. Continue to facial verification.',
+            'message' => 'Step 1 saved. Continue to supporting documents.',
         ]);
     }
 
     public function saveStep2(Request $request, string $barangay)
-    {
-        $this->resolveBarangay($barangay);
-
-        $request->validate([
-            'verified_selfie'               => 'required|string',
-            'facial_verification_completed' => 'required|in:1',
-        ]);
-
-        if ($request->input('facial_verification_completed') !== '1') {
-            throw ValidationException::withMessages([
-                'verified_selfie' => ['Identity verification is required.'],
-            ]);
-        }
-
-        $wizard = $this->requireWizard();
-
-        $wizard = $this->draftService->saveStep2(
-            $wizard,
-            $request->input('verified_selfie')
-        );
-
-        return response()->json([
-            'success' => true,
-            'token'   => $wizard['token'],
-            'step'    => 3,
-            'message' => 'Facial verification saved.',
-        ]);
-    }
-
-    public function saveStep3(Request $request, string $barangay)
     {
         $this->resolveBarangay($barangay);
         $wizard = $this->requireWizard();
@@ -108,15 +80,15 @@ class KKProfilingWizardController extends Controller
         $hasUpload = collect($files)->contains(fn ($file) => $file instanceof \Illuminate\Http\UploadedFile);
 
         if ($hasUpload) {
-            $wizard = $this->draftService->saveStep3($wizard, $files);
+            $wizard = $this->draftService->saveStep2($wizard, $files);
         } else {
-            $wizard = $this->draftService->skipStep3($wizard);
+            $wizard = $this->draftService->skipStep2($wizard);
         }
 
         return response()->json([
             'success' => true,
             'token'   => $wizard['token'],
-            'step'    => 4,
+            'step'    => 3,
             'message' => $hasUpload ? 'Documents saved.' : 'Continuing without documents.',
         ]);
     }
@@ -124,11 +96,16 @@ class KKProfilingWizardController extends Controller
     public function sendVerification(Request $request, string $barangay)
     {
         $barangayRecord = $this->resolveBarangay($barangay);
+
+        if ($completed = $this->completedRegistrationResponse($barangayRecord)) {
+            return $completed;
+        }
+
         $wizard = $this->requireWizard();
 
-        if (empty($wizard['step1_data']) || empty($wizard['step2_data'])) {
+        if (empty($wizard['step1_data'])) {
             throw ValidationException::withMessages([
-                'step' => ['Complete Steps 1–2 before email verification.'],
+                'step' => ['Complete Step 1 before email verification.'],
             ]);
         }
 
@@ -142,8 +119,8 @@ class KKProfilingWizardController extends Controller
 
         $this->draftService->assertEmailAvailable($email, $barangayRecord->id);
 
-        $verificationUrl = URL::temporarySignedRoute(
-            'kkprofiling.wizard.verify',
+        $setPasswordUrl = URL::temporarySignedRoute(
+            'kkprofiling.wizard.set-password',
             now()->addHours(24),
             [
                 'token' => $wizard['token'],
@@ -152,7 +129,7 @@ class KKProfilingWizardController extends Controller
         );
 
         Notification::route('mail', $email)
-            ->notify(new KabataanVerifyEmail($verificationUrl));
+            ->notify(new KabataanSetPasswordEmail($setPasswordUrl));
 
         $wizard = $this->draftService->markVerificationSent($wizard);
 
@@ -160,7 +137,7 @@ class KKProfilingWizardController extends Controller
             'success'           => true,
             'email'             => $email,
             'verification_sent' => true,
-            'message'           => 'Verification email sent. Please check your inbox.',
+            'message'           => 'Set password link sent. Please check your inbox.',
         ]);
     }
 
@@ -169,7 +146,7 @@ class KKProfilingWizardController extends Controller
         return $this->sendVerification($request, $barangay);
     }
 
-    public function verifyWizardEmail(Request $request, string $token, string $hash)
+    public function openSetPasswordFromEmail(Request $request, string $token, string $hash)
     {
         if (! URL::hasValidSignature($request)) {
             return redirect()->route('kkprofiling.signup')->withErrors([
@@ -180,9 +157,7 @@ class KKProfilingWizardController extends Controller
         $wizard = $this->draftService->loadByToken($token);
 
         if (! $wizard) {
-            return redirect()->route('kkprofiling.signup')->withErrors([
-                'verification' => 'Registration session not found or expired.',
-            ]);
+            return redirect()->route('login')->with('success', 'Your registration has already been submitted. Please wait for SK officials to verify your account before logging in.');
         }
 
         $email = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));
@@ -207,11 +182,82 @@ class KKProfilingWizardController extends Controller
         $wizard = $this->draftService->markEmailVerified($wizard);
         $this->draftService->syncWizardSession($wizard);
 
-        $slug = $this->barangaySlugFromId((int) $wizard['barangay_id']);
+        $barangayRecord = Barangay::find((int) $wizard['barangay_id']);
 
-        return redirect()
-            ->route('kkprofiling', ['barangay' => $slug])
-            ->with('success', 'Email verified! Set your password to complete registration.');
+        if (! $barangayRecord) {
+            return redirect()->route('kkprofiling.signup')->withErrors([
+                'verification' => 'Barangay not found for this registration.',
+            ]);
+        }
+
+        return view('kkprofiling::set_password', [
+            'wizardToken'     => $token,
+            'barangay'        => $barangayRecord->name,
+            'slug'            => $this->barangaySlugFromId((int) $wizard['barangay_id']),
+            'email'           => $email,
+            'emailVerified'   => true,
+            'barangayLogoUrl' => KKProfilingController::getBarangayLogoUrl($barangayRecord->id),
+        ]);
+    }
+
+    public function finalizeByToken(Request $request, string $token)
+    {
+        $wizard = $this->draftService->loadByToken($token);
+
+        if (! $wizard) {
+            throw ValidationException::withMessages([
+                'draft' => ['This registration link has expired or was already completed.'],
+            ]);
+        }
+
+        $request->validate([
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[^A-Za-z0-9]/',
+            ],
+        ], [
+            'password.regex' => 'Password must include uppercase, lowercase, number, and special character.',
+        ]);
+
+        if (empty($wizard['email_verified_at'])) {
+            $wizard = $this->draftService->markEmailVerified($wizard);
+        }
+
+        $this->draftService->commitWizard($wizard, $request->password);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registration completed! Please wait for verification/approval by SK officials before logging in.',
+        ]);
+    }
+
+    public function checkRegistrationComplete(Request $request, string $barangay)
+    {
+        $barangayRecord = $this->resolveBarangay($barangay);
+
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $email = strtolower(trim($request->input('email', '')));
+
+        $completed = KabataanRegistration::query()
+            ->where('barangay_id', $barangayRecord->id)
+            ->where('email', $email)
+            ->whereIn('status', ['password_set', 'active'])
+            ->exists();
+
+        if ($completed) {
+            $this->draftService->markRegistrationComplete($email, (int) $barangayRecord->id);
+        }
+
+        return response()->json(['completed' => $completed]);
     }
 
     public function finalize(Request $request, string $barangay)
@@ -252,14 +298,79 @@ class KKProfilingWizardController extends Controller
     public function status(string $barangay)
     {
         $barangayRecord = $this->resolveBarangay($barangay);
+
+        if ($completed = $this->draftService->resolveCompletedRegistration((int) $barangayRecord->id)) {
+            return response()->json([
+                'draft'                    => null,
+                'registration_completed'   => true,
+                'email'                    => $completed['email'],
+            ]);
+        }
+
         $wizard = $this->draftService->resolveWizard();
 
         if ($wizard && (int) ($wizard['barangay_id'] ?? 0) !== (int) $barangayRecord->id) {
             $wizard = null;
         }
 
+        if ($wizard) {
+            $email = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));
+
+            if ($email !== '' && $this->draftService->isEmailRegistrationComplete($email, (int) $barangayRecord->id)) {
+                $this->draftService->markRegistrationComplete($email, (int) $barangayRecord->id);
+
+                return response()->json([
+                    'draft'                  => null,
+                    'registration_completed' => true,
+                    'email'                  => $email,
+                ]);
+            }
+        }
+
         return response()->json([
             'draft' => $this->draftService->wizardStatusPayload($wizard),
+        ]);
+    }
+
+    public function documentPreview(string $barangay, string $type)
+    {
+        $barangayRecord = $this->resolveBarangay($barangay);
+        $wizard = $this->requireWizard();
+
+        if ((int) ($wizard['barangay_id'] ?? 0) !== (int) $barangayRecord->id) {
+            abort(404);
+        }
+
+        $document = $wizard['step2_data']['documents'][$type] ?? null;
+
+        if (! is_array($document) || empty($document['path'])) {
+            abort(404);
+        }
+
+        $disk = Storage::disk(KkRegistrationDraftService::TEMP_DISK);
+
+        if (! $disk->exists($document['path'])) {
+            abort(404);
+        }
+
+        return response()->file($disk->path($document['path']), [
+            'Content-Type' => $document['mime'] ?? 'image/jpeg',
+        ]);
+    }
+
+    private function completedRegistrationResponse(Barangay $barangayRecord): ?\Illuminate\Http\JsonResponse
+    {
+        $completed = $this->draftService->resolveCompletedRegistration((int) $barangayRecord->id);
+
+        if (! $completed) {
+            return null;
+        }
+
+        return response()->json([
+            'success'                => true,
+            'registration_completed' => true,
+            'email'                  => $completed['email'],
+            'message'                => 'Your registration has been submitted. Please wait for SK officials to verify your account.',
         ]);
     }
 

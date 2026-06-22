@@ -146,6 +146,44 @@ class CloudinaryService
     /**
      * @return array{public_id: string, url: string, version: int|null}
      */
+    public function uploadSupportingDocument(UploadedFile|string $source, string $publicId, ?string $displayName = null): array
+    {
+        $this->ensureConfigured();
+
+        $path = $source instanceof UploadedFile ? $source->getRealPath() : $source;
+        $folder = trim((string) config('services.cloudinary.supporting_docs_folder', 'Supporting_Documents'), '/');
+
+        if ($displayName === null && $source instanceof UploadedFile) {
+            $displayName = pathinfo($source->getClientOriginalName(), PATHINFO_FILENAME);
+        }
+
+        $options = [
+            'folder'          => $folder,
+            'public_id'       => $publicId,
+            'resource_type'   => 'image',
+            'overwrite'       => false,
+            'use_filename'    => false,
+            'unique_filename' => false,
+        ];
+
+        if ($displayName) {
+            $options['display_name'] = $displayName;
+        }
+
+        $result = $this->cloudinary->uploadApi()->upload($path, $options);
+
+        $version = isset($result['version']) ? (int) $result['version'] : null;
+
+        return [
+            'public_id' => $result['public_id'],
+            'url'       => $this->deliverUrl($result['public_id'], $version),
+            'version'   => $version,
+        ];
+    }
+
+    /**
+     * @return array{public_id: string, url: string, version: int|null}
+     */
     public function uploadProfileImage(UploadedFile $file, string $publicId): array
     {
         $this->ensureConfigured();

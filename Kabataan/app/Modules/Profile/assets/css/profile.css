@@ -2322,3 +2322,71 @@ body.youth-profile {
     }
 }
 
+.kkp-profile-docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.kkp-profile-docs-grid--preview {
+    margin-bottom: 14px;
+}
+
+.kkp-profile-doc-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.kkp-profile-doc-thumb-link {
+    display: block;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #dbeafe;
+}
+
+.kkp-profile-doc-thumb {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    background: #fff;
+}
+
+.kkp-profile-doc-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kkp-profile-doc-label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0450a8;
+}
+
+.kkp-profile-doc-name {
+    margin: 0;
+    font-size: 12px;
+    color: #64748b;
+    word-break: break-word;
+}
+
+.kkp-profile-doc-view {
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0450a8;
+    text-decoration: none;
+}
+
+.kkp-profile-doc-view:hover {
+    text-decoration: underline;
+}
+

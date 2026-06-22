@@ -5,17 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    @if(!empty($fvCameraConfig))
-        <meta name="kk-fv-config" content="{{ json_encode($fvCameraConfig) }}">
-    @endif
     <title>KK Profiling - {{ $barangay }} - SK OnePortal</title>
     @vite([
         'app/Modules/Homepage/assets/css/homepage.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
-        'app/Modules/KKProfiling/assets/css/facial-verification.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling-wizard.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
-        'app/Modules/KKProfiling/assets/js/facial-verification.js',
         'app/Modules/KKProfiling/assets/js/kkprofiling-wizard.js',
         'app/Modules/Shared/assets/css/loading.css',
         'app/Modules/Shared/assets/js/loading.js',
@@ -51,10 +46,12 @@
                 id="kkpRegistrationWizard"
                 class="kkp-wizard-root"
                 data-barangay-slug="{{ $slug }}"
+                data-barangay-name="{{ $barangay }}"
                 data-respondent-number="{{ $respondentNumber ?? '' }}"
                 data-initial-step="{{ $wizardInitialStep ?? 1 }}"
-                data-email-verified="{{ ($wizardEmailVerified ?? false) ? '1' : '0' }}"
                 data-verification-sent="{{ ($verificationSent ?? false) ? '1' : '0' }}"
+                data-registration-complete="{{ ($registrationComplete ?? false) ? '1' : '0' }}"
+                @if(!empty($completedEmail)) data-completed-email="{{ $completedEmail }}" @endif
                 @if($errors->has('email')) data-email-error="{{ $errors->first('email') }}" @endif
             >
                 @include('kkprofiling::partials.wizard.progress-header')
@@ -62,7 +59,7 @@
                 <div class="kkp-paper" id="kkpFormCard">
                     <div class="kkp-responsive-container">
 
-                        {{-- STEP 1: Existing KK Profiling Form (unchanged) --}}
+                        {{-- STEP 1: KK Profiling Form --}}
                         <section class="kkp-wizard-panel" id="kkpWizardStep1" data-wizard-step="1">
                             <form
                                 method="POST"
@@ -80,20 +77,14 @@
                                     'respondentDisplay' => $respondentDisplay ?? '01',
                                     'submitLabel' => 'Submit KK Profiling',
                                     'barangayLogoUrl' => $barangayLogoUrl ?? null,
-                                    'requireFacialVerification' => false,
                                 ])
                             </form>
                         </section>
 
-                        {{-- STEP 2: Facial Detection --}}
-                        <section class="kkp-wizard-panel" id="kkpWizardStep2" data-wizard-step="2" hidden>
-                            @include('kkprofiling::partials.kk-facial-verification')
-                        </section>
-
-                        {{-- STEP 3: Supporting Documents (optional) --}}
+                        {{-- STEP 2: Supporting Documents (optional) --}}
                         @include('kkprofiling::partials.wizard.step-documents')
 
-                        {{-- STEP 4: Email Verification + Account Setup --}}
+                        {{-- STEP 3: Email Verification + Account Setup --}}
                         @include('kkprofiling::partials.wizard.step-account')
 
                     </div>
@@ -101,11 +92,15 @@
 
                 <div class="kkp-wizard-nav" id="kkpWizardNav">
                     <button type="button" class="kkp-wizard-btn kkp-wizard-btn-secondary" id="kkpWizardBackBtn" hidden>
+                        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                         Back
                     </button>
-                    <button type="button" class="kkp-wizard-btn kkp-wizard-btn-primary" id="kkpWizardNextBtn">
-                        Next
-                    </button>
+                    <div class="kkp-wizard-nav-actions">
+                        <button type="button" class="kkp-wizard-btn kkp-wizard-btn-primary" id="kkpWizardNextBtn">
+                            <span id="kkpWizardNextLabel">Save &amp; Continue</span>
+                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -113,6 +108,22 @@
     </main>
 
     @include('kkprofiling::partials.kk-profiling-signature-modals')
+
+    <div class="kkp-reg-success-overlay" id="kkpRegSuccessModal" hidden aria-hidden="true">
+        <div class="kkp-reg-success-modal" role="dialog" aria-labelledby="kkpRegSuccessTitle" aria-modal="true">
+            <div class="kkp-reg-success-modal-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2 class="kkp-reg-success-modal-title" id="kkpRegSuccessTitle">Registration Submitted Successfully</h2>
+            <p class="kkp-reg-success-modal-message">
+                Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.
+            </p>
+            <a href="{{ route('login') }}" class="kkp-reg-success-modal-btn">Go to Login</a>
+        </div>
+    </div>
 
 </body>
 </html>

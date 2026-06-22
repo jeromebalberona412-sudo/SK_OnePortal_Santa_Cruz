@@ -186,7 +186,10 @@
                         <thead>
                             <tr>
                                 <th>Position</th>
-                                <th>Name</th>
+                                <th>
+                                    Full Name
+                                    <div class="table-col-hint">LN, FN, MN, Suffix</div>
+                                </th>
                                 <th>Barangay</th>
                             </tr>
                         </thead>

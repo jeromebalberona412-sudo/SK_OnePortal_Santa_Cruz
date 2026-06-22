@@ -37,6 +37,8 @@ return [
         'folder'     => env('CLOUDINARY_FOLDER', 'sk_oneportal/kabataan_posts'),
         'profile_upload_preset' => env('CLOUDINARY_PROFILE_UPLOAD_PRESET', 'kabataan_profile_images'),
         'profile_folder'        => env('CLOUDINARY_PROFILE_FOLDER', 'kabataan/profile-images'),
+        'supporting_docs_upload_preset' => env('CLOUDINARY_SUPPORTING_DOCS_UPLOAD_PRESET', 'kabataan_supporting_documents'),
+        'supporting_docs_folder'        => env('CLOUDINARY_SUPPORTING_DOCS_FOLDER', 'Supporting_Documents'),
     ],
 
     'slack' => [

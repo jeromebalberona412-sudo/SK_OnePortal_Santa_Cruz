@@ -7,6 +7,20 @@
     --brand: #0450a8;
 }
 
+.kkp-form-page.kkp-wizard-mode .kkp-main {
+    background: linear-gradient(180deg, #dfe8f2 0%, #e8ecf0 28%, #e8ecf0 100%);
+}
+
+.kkp-form-page.kkp-wizard-mode .kkp-paper {
+    border-radius: 12px;
+    border-color: #d5dde6;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.kkp-form-page.kkp-wizard-mode .kkp-page-wrap {
+    max-width: 900px;
+}
+
 /* ── PAGE ── */
 .kkp-main {
     padding-top: calc(var(--nav-h) + 36px);
@@ -1891,6 +1905,40 @@ body.homepage-body.kkp-form-page {
     margin-top: 4px;
 }
 
+.setpw-rules {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 12px;
+    text-align: left;
+}
+
+.setpw-rule {
+    color: #64748b;
+    margin: 2px 0;
+    position: relative;
+    padding-left: 18px;
+}
+
+.setpw-rule::before {
+    content: '○';
+    position: absolute;
+    left: 0;
+    color: #94a3b8;
+}
+
+.setpw-rule.ok {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.setpw-rule.ok::before {
+    content: '✓';
+    color: #16a34a;
+}
+
 .setpw-submit-btn {
     width: 100%;
     padding: 14px;
@@ -2050,6 +2098,275 @@ body.homepage-body.kkp-form-page {
 .reg-success-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(4, 80, 168, 0.4);
+}
+
+/* Registration success modal overlay */
+.kkp-reg-success-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 4000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+}
+
+.kkp-reg-success-overlay[hidden] {
+    display: none !important;
+}
+
+.kkp-reg-success-modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    animation: kkpRegSuccessPopIn 0.25s ease-out;
+}
+
+@keyframes kkpRegSuccessPopIn {
+    from { transform: scale(0.95); opacity: 0.5; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.kkp-reg-success-modal-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 1.25rem;
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
+}
+
+.kkp-reg-success-modal-icon svg {
+    width: 36px;
+    height: 36px;
+    color: #fff;
+}
+
+.kkp-reg-success-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.75rem;
+}
+
+.kkp-reg-success-modal-message {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.65;
+    margin: 0 0 1.5rem;
+}
+
+.kkp-reg-success-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 180px;
+    padding: 0.75rem 1.75rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #44a53e 0%, #5cb854 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(68, 165, 62, 0.25);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.kkp-reg-success-modal-btn:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 32px rgba(68, 165, 62, 0.35);
+}
+
+.kkp-wizard-success-modal-open {
+    overflow: hidden;
+}
+
+/* ── Set Password standalone page (login-style) ── */
+.kkp-setpw-page .logo-wrapper::before {
+    display: block;
+}
+
+.kkp-setpw-page .kkp-setpw-logo {
+    width: 220px;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid rgba(253, 192, 32, 0.6);
+    background: #fff;
+    filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.4));
+}
+
+.kkp-setpw-form .kkp-setpw-field {
+    margin-bottom: 0;
+}
+
+.kkp-setpw-form .kkp-setpw-field--confirm {
+    margin-top: 1.25rem;
+}
+
+.kkp-setpw-page .youth-main-title {
+    font-size: 3.5rem;
+}
+
+.kkp-setpw-branding-sub {
+    margin-top: 0.75rem;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+}
+
+.kkp-setpw-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #44a53e 0%, #fdc020 50%, #0450a8 100%);
+    border-radius: 28px 28px 0 0;
+}
+
+.kkp-setpw-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.kkp-setpw-email-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0 0 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: #f0f7ff;
+    border: 1px solid #cfe0f5;
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 600;
+    word-break: break-all;
+}
+
+.kkp-setpw-email-badge svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #0450a8;
+}
+
+.kkp-setpw-alert {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.kkp-setpw-alert-success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.kkp-setpw-alert-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.kkp-setpw-page .pw-rules {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 12px;
+    text-align: left;
+}
+
+.kkp-setpw-page .pw-rule {
+    color: #64748b;
+    margin: 2px 0;
+    position: relative;
+    padding-left: 18px;
+}
+
+.kkp-setpw-page .pw-rule::before {
+    content: '○';
+    position: absolute;
+    left: 0;
+    color: #94a3b8;
+}
+
+.kkp-setpw-page .pw-rule.ok {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.kkp-setpw-page .pw-rule.ok::before {
+    content: '✓';
+    color: #16a34a;
+}
+
+.kkp-setpw-field-error {
+    margin: 0.5rem 0 0;
+    font-size: 0.82rem;
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.kkp-setpw-field-error[hidden] {
+    display: none !important;
+}
+
+.kkp-setpw-page .youth-input.is-error {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+}
+
+.kkp-setpw-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: #64748b;
+}
+
+.kkp-setpw-toggle:hover {
+    color: #44a53e;
+}
+
+.kkp-setpw-toggle .pw-eye {
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 1024px) {
+    .kkp-setpw-page .youth-main-title {
+        font-size: 2.75rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .kkp-setpw-page .youth-main-title {
+        font-size: 2.25rem;
+    }
 }
 
 @media (max-width: 600px) {

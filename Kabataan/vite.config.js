@@ -78,8 +78,6 @@ export default defineConfig({
                 // KK Profiling
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling.js',
-                'app/Modules/KKProfiling/assets/css/facial-verification.css',
-                'app/Modules/KKProfiling/assets/js/facial-verification.js',
                 'app/Modules/KKProfiling/assets/css/kkprofiling-signup.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling-signup.js',
                 'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',

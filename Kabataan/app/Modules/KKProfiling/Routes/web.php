@@ -16,15 +16,24 @@ Route::post('/api/kkprofiling/resend-verification', [KKProfilingController::clas
 Route::get('/kkprofiling/{barangay}', [KKProfilingController::class, 'show'])->name('kkprofiling');
 Route::post('/kkprofiling/{barangay}', [KKProfilingController::class, 'submit'])->name('kkprofiling.submit');
 
-// Registration wizard (session + temp files — no DB commit until Step 4 finalize)
-Route::get('/kkprofiling/wizard/verify/{token}/{hash}', [KKProfilingWizardController::class, 'verifyWizardEmail'])
+// Registration wizard (session + temp files — no DB commit until finalize)
+Route::get('/kkprofiling/wizard/set-password/{token}/{hash}', [KKProfilingWizardController::class, 'openSetPasswordFromEmail'])
+    ->name('kkprofiling.wizard.set-password');
+
+Route::get('/kkprofiling/wizard/verify/{token}/{hash}', [KKProfilingWizardController::class, 'openSetPasswordFromEmail'])
     ->name('kkprofiling.wizard.verify');
+
+Route::post('/api/kkprofiling/wizard/set-password/{token}/finalize', [KKProfilingWizardController::class, 'finalizeByToken'])
+    ->name('kkprofiling.wizard.finalize-token');
 
 Route::prefix('/api/kkprofiling/{barangay}/wizard')->group(function () {
     Route::get('/status', [KKProfilingWizardController::class, 'status'])->name('kkprofiling.wizard.status');
+    Route::get('/document/{type}', [KKProfilingWizardController::class, 'documentPreview'])
+        ->where('type', 'school_id|barangay_clearance')
+        ->name('kkprofiling.wizard.document-preview');
+    Route::get('/registration-complete', [KKProfilingWizardController::class, 'checkRegistrationComplete'])->name('kkprofiling.wizard.registration-complete');
     Route::post('/step-1', [KKProfilingWizardController::class, 'saveStep1'])->name('kkprofiling.wizard.step1');
     Route::post('/step-2', [KKProfilingWizardController::class, 'saveStep2'])->name('kkprofiling.wizard.step2');
-    Route::post('/step-3', [KKProfilingWizardController::class, 'saveStep3'])->name('kkprofiling.wizard.step3');
     Route::post('/send-verification', [KKProfilingWizardController::class, 'sendVerification'])->name('kkprofiling.wizard.send-verification');
     Route::post('/resend-verification', [KKProfilingWizardController::class, 'resendVerification'])->name('kkprofiling.wizard.resend-verification');
     Route::post('/finalize', [KKProfilingWizardController::class, 'finalize'])->name('kkprofiling.wizard.finalize');

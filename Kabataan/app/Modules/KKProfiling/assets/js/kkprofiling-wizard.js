@@ -1,7 +1,5 @@
 /**
- * KK Profiling 4-step registration wizard
- * Step 1: existing form (unchanged) — draft only
- * Step 4: legacy verify-email / set-password cards (pre-wizard layout)
+ * KK Profiling 3-step registration wizard
  */
 
 (function () {
@@ -11,28 +9,45 @@
     }
 
     const slug = root.dataset.barangaySlug || '';
+    const barangayName = root.dataset.barangayName || '';
     const initialStep = parseInt(root.dataset.initialStep || '1', 10);
-    const emailVerifiedOnLoad = root.dataset.emailVerified === '1';
     const verificationSentOnLoad = root.dataset.verificationSent === '1';
 
     const apiBase = `/api/kkprofiling/${slug}/wizard`;
+
+    const STEP_META = {
+        1: {
+            title: 'Profiling Form',
+            desc: 'Complete your personal and demographic information.',
+        },
+        2: {
+            title: 'Supporting Documents',
+            desc: 'Optionally upload a School ID or Barangay Clearance to support your registration.',
+        },
+        3: {
+            title: 'Check Your Email',
+            desc: 'We sent a secure link to set your account password. Open your email to continue.',
+        },
+    };
 
     const panels = {
         1: document.getElementById('kkpWizardStep1'),
         2: document.getElementById('kkpWizardStep2'),
         3: document.getElementById('kkpWizardStep3'),
-        4: document.getElementById('kkpWizardStep4'),
     };
 
     const progressItems = document.querySelectorAll('#kkpWizardSteps .kkp-wizard-step-item');
+    const progressConnectors = document.querySelectorAll('#kkpWizardSteps .kkp-wizard-step-connector');
+    const stepTitleEl = document.getElementById('kkpWizardStepTitle');
+    const stepDescEl = document.getElementById('kkpWizardStepDesc');
+    const barangayNameEl = document.getElementById('kkpWizardBarangayName');
     const backBtn = document.getElementById('kkpWizardBackBtn');
     const nextBtn = document.getElementById('kkpWizardNextBtn');
+    const nextLabelEl = document.getElementById('kkpWizardNextLabel');
     const form = document.getElementById('kkProfilingForm');
     const navBar = document.getElementById('kkpWizardNav');
     const emailVerifyCard = document.getElementById('emailVerifyCard');
     const displayEmail = document.getElementById('displayEmail');
-    const setPasswordCard = document.getElementById('setPasswordCard');
-    const regSuccessCard = document.getElementById('regSuccessCard');
 
     const DOC_MAX_BYTES = 10 * 1024 * 1024;
     const DOC_ALLOWED_TYPES = ['image/jpeg', 'image/png'];
@@ -43,24 +58,41 @@
     const clearanceUploadPanel = document.getElementById('kkpBarangayClearanceUpload');
     const schoolIdInput = document.getElementById('kkpSchoolId');
     const clearanceInput = document.getElementById('kkpBarangayClearance');
-    const docUploadError = document.getElementById('kkpDocUploadError');
 
-    let currentStep = Math.min(Math.max(initialStep, 1), 4);
-    let emailVerified = emailVerifiedOnLoad;
+    const previewConfig = {
+        kkpSchoolId: {
+            empty: document.getElementById('kkpSchoolIdEmpty'),
+            preview: document.getElementById('kkpSchoolIdPreview'),
+            img: document.getElementById('kkpSchoolIdPreviewImg'),
+            fileName: document.getElementById('kkpSchoolIdFileName'),
+            dropzone: document.getElementById('kkpSchoolIdDropzone'),
+        },
+        kkpBarangayClearance: {
+            empty: document.getElementById('kkpBarangayClearanceEmpty'),
+            preview: document.getElementById('kkpBarangayClearancePreview'),
+            img: document.getElementById('kkpBarangayClearancePreviewImg'),
+            fileName: document.getElementById('kkpBarangayClearanceFileName'),
+            dropzone: document.getElementById('kkpBarangayClearanceDropzone'),
+        },
+    };
+
+    const previewUrls = {};
+
+    let currentStep = Math.min(Math.max(initialStep, 1), 3);
     let verificationSent = verificationSentOnLoad;
+    let registrationCompleted = root.dataset.registrationComplete === '1';
+    let registrationCompletionPoll = null;
+
+    if (barangayNameEl && barangayName) {
+        barangayNameEl.textContent = barangayName;
+    }
 
     function hideDocUploadError() {
-        if (docUploadError) {
-            docUploadError.hidden = true;
-            docUploadError.textContent = '';
-        }
+        // Document type switches clear files automatically — no inline error UI.
     }
 
     function showDocUploadError(message) {
-        if (docUploadError) {
-            docUploadError.textContent = message;
-            docUploadError.hidden = false;
-        } else {
+        if (message) {
             alert(message);
         }
     }
@@ -96,18 +128,130 @@
         return document.querySelector('input[name="document_type"]:checked')?.value || '';
     }
 
+    function getActiveDocumentFile() {
+        const documentType = getSelectedDocumentType();
+
+        if (documentType === 'school_id') {
+            return schoolIdInput?.files?.[0] || null;
+        }
+
+        if (documentType === 'barangay_clearance') {
+            return clearanceInput?.files?.[0] || null;
+        }
+
+        return null;
+    }
+
     function clearDocumentInput(input) {
         if (!input) {
             return;
         }
 
+        resetFilePreview(input.id);
         input.value = '';
+    }
+
+    function resetFilePreview(inputId) {
+        const config = previewConfig[inputId];
+
+        if (!config) {
+            return;
+        }
+
+        if (previewUrls[inputId]) {
+            URL.revokeObjectURL(previewUrls[inputId]);
+            delete previewUrls[inputId];
+        }
+
+        if (config.dropzone) {
+            config.dropzone.hidden = false;
+        }
+
+        if (config.preview) {
+            config.preview.hidden = true;
+        }
+
+        if (config.img) {
+            config.img.removeAttribute('src');
+        }
+
+        if (config.fileName) {
+            config.fileName.textContent = '';
+        }
+    }
+
+    function updateFilePreview(input) {
+        if (!input) {
+            return;
+        }
+
+        const config = previewConfig[input.id];
+        const file = input.files?.[0];
+
+        if (!config) {
+            return;
+        }
+
+        if (!file) {
+            resetFilePreview(input.id);
+            updateNavButtons(currentStep);
+            return;
+        }
+
+        const error = validateDocumentFile(file);
+
+        if (error) {
+            input.value = '';
+            resetFilePreview(input.id);
+            showDocUploadError(error);
+            updateNavButtons(currentStep);
+            return;
+        }
+
+        hideDocUploadError();
+        resetFilePreview(input.id);
+
+        const objectUrl = URL.createObjectURL(file);
+        previewUrls[input.id] = objectUrl;
+
+        if (config.img) {
+            config.img.src = objectUrl;
+        }
+
+        if (config.fileName) {
+            config.fileName.textContent = file.name;
+        }
+
+        if (config.dropzone) {
+            config.dropzone.hidden = true;
+        }
+
+        if (config.preview) {
+            config.preview.hidden = false;
+        }
+
+        updateNavButtons(currentStep);
+    }
+
+    function resetAllDocumentPreviews() {
+        Object.keys(previewConfig).forEach((inputId) => resetFilePreview(inputId));
     }
 
     function syncDocumentUploadPanels() {
         const selectedType = getSelectedDocumentType();
+        const previousType = syncDocumentUploadPanels.lastType || '';
 
         hideDocUploadError();
+
+        if (previousType && previousType !== selectedType) {
+            if (previousType === 'school_id') {
+                clearDocumentInput(schoolIdInput);
+            } else if (previousType === 'barangay_clearance') {
+                clearDocumentInput(clearanceInput);
+            }
+        }
+
+        syncDocumentUploadPanels.lastType = selectedType;
 
         if (schoolIdUploadPanel) {
             schoolIdUploadPanel.hidden = selectedType !== 'school_id';
@@ -117,14 +261,50 @@
             clearanceUploadPanel.hidden = selectedType !== 'barangay_clearance';
         }
 
-        if (selectedType === 'school_id') {
+        if (!selectedType) {
+            clearDocumentInput(schoolIdInput);
+            clearDocumentInput(clearanceInput);
+        } else if (selectedType === 'school_id') {
             clearDocumentInput(clearanceInput);
         } else if (selectedType === 'barangay_clearance') {
             clearDocumentInput(schoolIdInput);
-        } else {
-            clearDocumentInput(schoolIdInput);
-            clearDocumentInput(clearanceInput);
         }
+
+        updateNavButtons(currentStep);
+    }
+    syncDocumentUploadPanels.lastType = '';
+
+    function bindDropzone(dropzone, input) {
+        if (!dropzone || !input) {
+            return;
+        }
+
+        ['dragenter', 'dragover'].forEach((eventName) => {
+            dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                dropzone.classList.add('is-dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach((eventName) => {
+            dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                dropzone.classList.remove('is-dragover');
+            });
+        });
+
+        dropzone.addEventListener('drop', (event) => {
+            const file = event.dataTransfer?.files?.[0];
+
+            if (!file) {
+                return;
+            }
+
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            input.files = transfer.files;
+            updateFilePreview(input);
+        });
     }
 
     function bindDocumentTypeControls() {
@@ -133,16 +313,25 @@
         });
 
         [schoolIdInput, clearanceInput].forEach((input) => {
-            input?.addEventListener('change', () => {
-                const error = validateDocumentFile(input.files?.[0]);
+            input?.addEventListener('change', () => updateFilePreview(input));
+        });
 
-                if (error) {
+        bindDropzone(previewConfig.kkpSchoolId.dropzone, schoolIdInput);
+        bindDropzone(previewConfig.kkpBarangayClearance.dropzone, clearanceInput);
+
+        document.querySelectorAll('.kkp-wizard-dropzone-remove').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const inputId = button.dataset.clearInput;
+                const input = inputId ? document.getElementById(inputId) : null;
+
+                if (input) {
                     clearDocumentInput(input);
-                    showDocUploadError(error);
-                    return;
+                    hideDocUploadError();
+                    updateNavButtons(currentStep);
                 }
-
-                hideDocUploadError();
             });
         });
 
@@ -180,52 +369,285 @@
         return '';
     }
 
-    function showLegacyVerifyCard() {
+    function stopRegistrationCompletionPoll() {
+        if (registrationCompletionPoll) {
+            clearInterval(registrationCompletionPoll);
+            registrationCompletionPoll = null;
+        }
+    }
+
+    function showRegistrationCompleteState() {
+        if (registrationCompleted) {
+            return;
+        }
+
+        registrationCompleted = true;
+        stopRegistrationCompletionPoll();
+
+        if (window.kkpStopResendTimer) {
+            window.kkpStopResendTimer();
+        }
+
+        root.classList.add('kkp-wizard-registration-complete');
+        document.body.classList.add('kkp-wizard-registration-complete');
+
+        const resendBtn = document.getElementById('resendEmailBtn');
+        const verifyHelp = document.querySelector('#kkpWizardStep3 .verify-help');
+        const emailErrorEl = document.getElementById('kkpWizardEmailError');
+
+        if (resendBtn) {
+            resendBtn.disabled = true;
+            resendBtn.hidden = true;
+        }
+
+        if (verifyHelp) {
+            verifyHelp.hidden = true;
+        }
+
+        if (emailErrorEl) {
+            emailErrorEl.hidden = true;
+            emailErrorEl.textContent = '';
+        }
+
+        if (navBar) {
+            navBar.hidden = true;
+        }
+
+        const topBack = document.getElementById('kkpTopBackLink');
+        if (topBack) {
+            topBack.hidden = true;
+        }
+
+        const modal = document.getElementById('kkpRegSuccessModal');
+        if (modal) {
+            modal.hidden = false;
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('kkp-wizard-success-modal-open');
+        }
+    }
+
+    window.kkpShowRegistrationComplete = showRegistrationCompleteState;
+
+    async function pollRegistrationCompletion() {
+        if (registrationCompleted) {
+            return;
+        }
+
+        const email = getDraftEmail() || root.dataset.completedEmail || '';
+
+        if (!email || email === 'your-email@example.com') {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `${apiBase}/registration-complete?email=${encodeURIComponent(email)}`,
+                { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }
+            );
+            const data = await response.json();
+
+            if (data.completed) {
+                showRegistrationCompleteState();
+            }
+        } catch (error) {
+            // Non-blocking
+        }
+    }
+
+    function startRegistrationCompletionPoll() {
+        if (registrationCompleted) {
+            return;
+        }
+
+        stopRegistrationCompletionPoll();
+        pollRegistrationCompletion();
+        registrationCompletionPoll = setInterval(pollRegistrationCompletion, 4000);
+    }
+
+    function updateStepMeta(step) {
+        const meta = STEP_META[step];
+
+        if (!meta) {
+            return;
+        }
+
+        if (stepTitleEl) {
+            stepTitleEl.textContent = meta.title;
+        }
+
+        if (stepDescEl) {
+            stepDescEl.textContent = meta.desc;
+        }
+    }
+
+    const KKP_CHECKBOX_FIELDS = [
+        { name: 'sex', chk: 'sexChk', hiddenId: 'kkpSex' },
+        { name: 'civil_status', chk: 'civil_statusChk', hiddenId: 'kkpCivilStatus' },
+        { name: 'youth_age_group', chk: 'youth_age_groupChk', hiddenId: 'kkpYouthAgeGroup' },
+        { name: 'education', chk: 'educationChk', hiddenId: 'kkpEducation' },
+        { name: 'youth_classification', chk: 'youth_classificationChk', hiddenId: 'kkpYouthClass' },
+        { name: 'work_status', chk: 'work_statusChk', hiddenId: 'kkpWorkStatus' },
+        { name: 'sk_voter', chk: 'sk_voterChk', hiddenId: 'kkpSkVoter' },
+        { name: 'national_voter', chk: 'national_voterChk', hiddenId: 'kkpNationalVoter' },
+        { name: 'kk_assembly', chk: 'kk_assemblyChk', hiddenId: 'kkpKkAssembly' },
+        { name: 'sk_voted', chk: 'sk_votedChk', hiddenId: 'kkpSkVoted' },
+        { name: 'group_chat', chk: 'group_chatChk', hiddenId: 'kkpGroupChat' },
+    ];
+
+    function setCheckboxGroupValue(chkName, hiddenId, value) {
+        if (!value || !form) return;
+
+        const hidden = document.getElementById(hiddenId);
+        if (hidden) {
+            hidden.value = value;
+        }
+
+        form.querySelectorAll(`input[name="${chkName}"]`).forEach((input) => {
+            input.checked = input.value === value;
+        });
+
+        const matched = form.querySelector(`input[name="${chkName}"][value="${value}"]`);
+        if (matched) {
+            matched.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function populateWizardForm(step1, respondentNumber) {
+        if (!form || !step1 || typeof step1 !== 'object') {
+            return;
+        }
+
+        Object.entries(step1).forEach(([key, value]) => {
+            if (value === null || value === undefined || value === '') {
+                return;
+            }
+
+            const direct = form.querySelector(`[name="${key}"]`);
+            if (direct && direct.type !== 'hidden' && direct.type !== 'checkbox' && direct.type !== 'radio') {
+                direct.value = value;
+                direct.dispatchEvent(new Event('input', { bubbles: true }));
+                direct.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        KKP_CHECKBOX_FIELDS.forEach(({ name, chk, hiddenId }) => {
+            if (step1[name]) {
+                setCheckboxGroupValue(chk, hiddenId, step1[name]);
+            }
+        });
+
+        if (step1.suffix) {
+            const suffixSelect = document.getElementById('kkpSuffix');
+            if (suffixSelect) {
+                suffixSelect.value = step1.suffix;
+                suffixSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        if (step1.custom_suffix) {
+            const customSuffix = document.getElementById('kkpCustomSuffix');
+            if (customSuffix) {
+                customSuffix.value = step1.custom_suffix;
+            }
+        }
+
+        if (step1.kk_times) {
+            const kkTimes = document.getElementById('kkpKkTimes');
+            if (kkTimes) {
+                kkTimes.value = step1.kk_times;
+            }
+        }
+
+        if (step1.kk_reason) {
+            const kkReason = document.getElementById('kkpKkReason');
+            if (kkReason) {
+                kkReason.value = step1.kk_reason;
+            }
+        }
+
+        if (step1.signature) {
+            const sigInput = document.getElementById('kkpSignatureData');
+            if (sigInput) {
+                sigInput.value = step1.signature;
+            }
+            if (typeof window.kkpRestoreSignaturePreview === 'function') {
+                window.kkpRestoreSignaturePreview(step1.signature);
+            }
+        }
+
+        if (step1.data_agreement) {
+            const agreement = form.querySelector('[name="data_agreement"]');
+            if (agreement) {
+                agreement.checked = true;
+            }
+        }
+
+        if (respondentNumber) {
+            const respondentInput = form.querySelector('[name="respondent_number"]');
+            if (respondentInput) {
+                respondentInput.value = respondentNumber;
+            }
+            root.dataset.respondentNumber = respondentNumber;
+        }
+
+        if (typeof window.kkpRefreshSignatureName === 'function') {
+            window.kkpRefreshSignatureName();
+        }
+    }
+
+    function restoreStep2Documents(step2) {
+        if (!step2 || !step2.document_type) {
+            return;
+        }
+
+        const documentType = step2.document_type;
+        const typeRadio = document.querySelector(`input[name="document_type"][value="${documentType}"]`);
+
+        if (typeRadio) {
+            typeRadio.checked = true;
+            typeRadio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        const inputId = documentType === 'school_id' ? 'kkpSchoolId' : 'kkpBarangayClearance';
+        const config = previewConfig[inputId];
+
+        if (!config) {
+            return;
+        }
+
+        const previewUrl = `${apiBase}/document/${documentType}`;
+
+        if (config.img) {
+            config.img.src = previewUrl;
+        }
+
+        if (config.fileName && step2.original_name) {
+            config.fileName.textContent = step2.original_name;
+        }
+
+        if (config.preview) {
+            config.preview.hidden = false;
+        }
+
+        if (config.empty) {
+            config.empty.hidden = true;
+        }
+
+        if (config.dropzone) {
+            config.dropzone.hidden = true;
+        }
+
+        updateNavButtons(currentStep);
+    }
+
+    function showVerifyCard() {
         if (emailVerifyCard) {
+            emailVerifyCard.hidden = false;
             emailVerifyCard.style.display = 'block';
         }
-        if (setPasswordCard) {
-            setPasswordCard.style.display = 'none';
-        }
-        if (regSuccessCard) {
-            regSuccessCard.style.display = 'none';
-        }
     }
 
-    function showLegacySetPasswordCard() {
-        emailVerified = true;
-
-        if (emailVerifyCard) {
-            emailVerifyCard.style.display = 'none';
-        }
-        if (setPasswordCard) {
-            setPasswordCard.style.display = 'block';
-        }
-        if (regSuccessCard) {
-            regSuccessCard.style.display = 'none';
-        }
-
-        updateNavButtons(4);
-    }
-
-    function showLegacySuccessCard() {
-        if (emailVerifyCard) {
-            emailVerifyCard.style.display = 'none';
-        }
-        if (setPasswordCard) {
-            setPasswordCard.style.display = 'none';
-        }
-        if (regSuccessCard) {
-            regSuccessCard.style.display = 'block';
-        }
-
-        progressItems.forEach((item) => {
-            item.classList.add('is-complete');
-            item.classList.remove('is-active');
-        });
-    }
-
-    async function prepareStep4(options = {}) {
+    async function prepareStep3(options = {}) {
         const skipAutoSend = options.skipAutoSend === true;
         const email = getDraftEmail();
 
@@ -233,12 +655,7 @@
             displayEmail.textContent = email;
         }
 
-        if (emailVerified) {
-            showLegacySetPasswordCard();
-            return;
-        }
-
-        showLegacyVerifyCard();
+        showVerifyCard();
 
         if (!verificationSent && !skipAutoSend) {
             const sent = await sendVerificationEmail(false);
@@ -246,18 +663,27 @@
                 verificationSent = true;
                 root.dataset.verificationSent = '1';
             }
-        } else if (verificationSent && window.startResendTimer) {
-            window.startResendTimer();
+        } else if (verificationSent) {
+            if (window.restoreResendTimer) {
+                window.restoreResendTimer();
+            } else if (window.startResendTimer) {
+                window.startResendTimer();
+            }
+        }
+
+        if (!registrationCompleted) {
+            startRegistrationCompletionPoll();
         }
     }
 
     function updateNavButtons(step) {
-        const showWizardNav = step !== 4 || !emailVerified;
-        const canGoBack = step >= 2 && step <= 4 && (step !== 4 || !emailVerified);
+        const canGoBack = step >= 2;
+        const hasSelectedFile = Boolean(getActiveDocumentFile());
 
         if (navBar) {
-            navBar.hidden = !showWizardNav;
+            navBar.hidden = false;
             navBar.classList.toggle('kkp-wizard-nav--step1', step === 1);
+            navBar.classList.toggle('kkp-wizard-nav--step3', step === 3);
         }
 
         if (backBtn) {
@@ -267,8 +693,17 @@
         }
 
         if (nextBtn) {
-            nextBtn.hidden = step === 4;
-            nextBtn.textContent = 'Next';
+            nextBtn.hidden = step === 3;
+        }
+
+        if (nextLabelEl) {
+            if (step === 1) {
+                nextLabelEl.textContent = 'Save & Continue';
+            } else if (step === 2) {
+                nextLabelEl.textContent = hasSelectedFile ? 'Upload & Continue' : 'Continue';
+            } else {
+                nextLabelEl.textContent = 'Continue';
+            }
         }
     }
 
@@ -279,7 +714,15 @@
             if (!panel) {
                 return;
             }
-            panel.hidden = parseInt(key, 10) !== step;
+
+            const isActive = parseInt(key, 10) === step;
+            panel.hidden = !isActive;
+
+            if (isActive) {
+                panel.style.animation = 'none';
+                panel.offsetHeight;
+                panel.style.animation = '';
+            }
         });
 
         progressItems.forEach((item) => {
@@ -288,12 +731,18 @@
             item.classList.toggle('is-complete', itemStep < step);
         });
 
-        document.body.classList.toggle('kkp-wizard-step4-active', step === 4);
+        progressConnectors.forEach((connector) => {
+            const afterStep = parseInt(connector.dataset.afterStep, 10);
+            connector.classList.toggle('is-complete', afterStep < step);
+        });
 
+        document.body.classList.toggle('kkp-wizard-step3-active', step === 3);
+
+        updateStepMeta(step);
         updateNavButtons(step);
 
-        if (step === 4) {
-            await prepareStep4(options);
+        if (step === 3) {
+            await prepareStep3(options);
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -376,7 +825,6 @@
         }
 
         const valid = await window.validateKkProfilingForm({
-            skipFacialVerification: true,
             skipEmailExistenceCheck: true,
         });
 
@@ -405,49 +853,11 @@
     }
 
     async function saveStep2() {
-        const completed = document.getElementById('kkpFacialVerificationCompleted');
-        const selfie = document.getElementById('kkpVerifiedSelfie');
-
-        if (completed?.value !== '1' || !selfie?.value?.trim()) {
-            const section = document.getElementById('kkpIdentitySection');
-            let err = section?.querySelector('.kkp-field-error');
-
-            if (section && !err) {
-                err = document.createElement('span');
-                err.className = 'kkp-field-error';
-                err.textContent = 'Please complete facial identity verification before continuing.';
-                section.appendChild(err);
-            }
-
-            section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return false;
-        }
-
-        showLoading('Saving verification...');
-
-        try {
-            await postJson(`${apiBase}/step-2`, {
-                facial_verification_completed: '1',
-                verified_selfie: selfie.value,
-            });
-            await setStep(3);
-            return true;
-        } catch (error) {
-            alert(error.message);
-            return false;
-        } finally {
-            hideLoading();
-        }
-    }
-
-    async function saveStep3() {
         hideDocUploadError();
 
         const documentType = getSelectedDocumentType();
-        const schoolId = schoolIdInput;
-        const clearance = clearanceInput;
-        const schoolFile = schoolId?.files?.[0] || null;
-        const clearanceFile = clearance?.files?.[0] || null;
+        const schoolFile = schoolIdInput?.files?.[0] || null;
+        const clearanceFile = clearanceInput?.files?.[0] || null;
 
         if (schoolFile && clearanceFile) {
             showDocUploadError('You can only upload one supporting document at a time.');
@@ -468,7 +878,7 @@
             }
         }
 
-        showLoading('Saving documents...');
+        showLoading(schoolFile || clearanceFile ? 'Uploading document...' : 'Continuing...');
 
         let saved = false;
 
@@ -487,7 +897,7 @@
                 formData.append('barangay_clearance', clearanceFile);
             }
 
-            await postFormData(`${apiBase}/step-3`, formData);
+            await postFormData(`${apiBase}/step-2`, formData);
             verificationSent = false;
             root.dataset.verificationSent = '0';
             saved = true;
@@ -503,14 +913,14 @@
         }
 
         if (saved) {
-            await setStep(4);
+            await setStep(3);
         }
 
         return saved;
     }
 
     async function sendVerificationEmail(isResend) {
-        showLoading(isResend ? 'Resending verification email...' : 'Sending verification email...');
+        showLoading(isResend ? 'Resending set password link...' : 'Sending set password link...');
 
         const emailErrorEl = document.getElementById('kkpWizardEmailError');
 
@@ -522,6 +932,11 @@
         try {
             const endpoint = isResend ? `${apiBase}/resend-verification` : `${apiBase}/send-verification`;
             const data = await postJson(endpoint, {});
+
+            if (data.registration_completed) {
+                showRegistrationCompleteState();
+                return true;
+            }
 
             if (displayEmail && data.email) {
                 displayEmail.textContent = data.email;
@@ -536,7 +951,12 @@
 
             return true;
         } catch (error) {
-            const emailMsg = error.errors?.email?.[0] || error.message || 'Failed to send verification email.';
+            if (error.errors?.draft?.[0] && registrationCompleted) {
+                showRegistrationCompleteState();
+                return false;
+            }
+
+            const emailMsg = error.errors?.email?.[0] || error.message || 'Failed to send set password link.';
 
             if (emailErrorEl) {
                 emailErrorEl.textContent = emailMsg;
@@ -548,18 +968,17 @@
             const resendBtn = document.getElementById('resendEmailBtn');
             const timer = document.getElementById('resendTimer');
 
-            if (resendBtn) {
-                resendBtn.disabled = true;
+            if (resendBtn && !isResend) {
+                resendBtn.disabled = false;
             }
 
-            if (timer) {
-                timer.style.display = 'none';
+            if (timer && !isResend) {
+                timer.hidden = true;
                 timer.textContent = '';
             }
 
-            if (isResend) {
-                verificationSent = false;
-                root.dataset.verificationSent = '0';
+            if (isResend && resendBtn && window.restoreResendTimer) {
+                window.restoreResendTimer();
             }
 
             return false;
@@ -569,8 +988,6 @@
     }
 
     window.kkpWizardSendVerification = sendVerificationEmail;
-    window.kkpWizardShowSetPassword = showLegacySetPasswordCard;
-    window.kkpWizardShowSuccess = showLegacySuccessCard;
 
     async function handleNext() {
         if (currentStep === 1) {
@@ -580,11 +997,6 @@
 
         if (currentStep === 2) {
             await saveStep2();
-            return;
-        }
-
-        if (currentStep === 3) {
-            await saveStep3();
         }
     }
 
@@ -593,23 +1005,23 @@
             return;
         }
 
-        if (currentStep === 4 && emailVerified) {
-            return;
-        }
+        const targetStep = currentStep - 1;
+        await setStep(targetStep, { skipAutoSend: true });
 
-        if (currentStep === 4) {
-            verificationSent = false;
-            root.dataset.verificationSent = '0';
+        if (targetStep === 2) {
+            try {
+                const response = await fetch(`${apiBase}/status`, {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                const data = await response.json();
 
-            const emailErrorEl = document.getElementById('kkpWizardEmailError');
-            if (emailErrorEl) {
-                emailErrorEl.hidden = true;
-                emailErrorEl.textContent = '';
+                if (data.draft?.step2) {
+                    restoreStep2Documents(data.draft.step2);
+                }
+            } catch (error) {
+                // Non-blocking
             }
-            delete root.dataset.emailError;
         }
-
-        await setStep(currentStep - 1);
     }
 
     if (nextBtn) {
@@ -628,6 +1040,15 @@
             const data = await response.json();
             const draft = data.draft;
 
+            if (data.registration_completed) {
+                if (data.email && displayEmail) {
+                    displayEmail.textContent = data.email;
+                }
+
+                showRegistrationCompleteState();
+                return;
+            }
+
             if (!draft) {
                 return;
             }
@@ -636,13 +1057,16 @@
                 displayEmail.textContent = draft.email;
             }
 
-            if (draft.email_verified) {
-                emailVerified = true;
+            if (draft.verification_sent) {
                 verificationSent = true;
             }
 
-            if (draft.verification_sent) {
-                verificationSent = true;
+            if (draft.step1) {
+                populateWizardForm(draft.step1, draft.respondent_number);
+            }
+
+            if (draft.step2) {
+                restoreStep2Documents(draft.step2);
             }
 
             currentStep = Math.max(currentStep, parseInt(draft.current_step, 10) || 1);
@@ -653,12 +1077,18 @@
 
     async function initWizard() {
         bindDocumentTypeControls();
-        await restoreDraftState();
 
-        if (emailVerifiedOnLoad) {
-            emailVerified = true;
-            verificationSent = true;
+        if (root.dataset.completedEmail && displayEmail) {
+            displayEmail.textContent = root.dataset.completedEmail;
         }
+
+        if (registrationCompleted) {
+            await setStep(3, { skipAutoSend: true });
+            showRegistrationCompleteState();
+            return;
+        }
+
+        await restoreDraftState();
 
         if (verificationSentOnLoad) {
             verificationSent = true;
@@ -667,11 +1097,11 @@
         const serverEmailError = root.dataset.emailError;
 
         if (serverEmailError) {
-            currentStep = Math.max(currentStep, 4);
+            currentStep = Math.max(currentStep, 3);
         }
 
-        if (currentStep === 4) {
-            await setStep(4, { skipAutoSend: Boolean(serverEmailError || verificationSent) });
+        if (currentStep === 3) {
+            await setStep(3, { skipAutoSend: Boolean(serverEmailError || verificationSent || registrationCompleted) });
 
             if (serverEmailError) {
                 const emailErrorEl = document.getElementById('kkpWizardEmailError');
