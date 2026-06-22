@@ -128,8 +128,14 @@
         </section>
 
         <section class="page-content-section">
-            <div class="section-heading-row">
-                <h2 class="section-title">Registered Youth</h2>
+            <div class="kabataan-table-toolbar" id="kabataanBulkToolbar" hidden>
+                <button type="button" class="btn-float-delete" id="kabataanBulkDeleteBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span id="kabataanBulkDeleteLabel">Delete selected</span>
+                </button>
             </div>
 
             <div class="table-card">
@@ -137,6 +143,9 @@
                     <table class="kabataan-table">
                         <thead>
                             <tr>
+                                <th class="th-checkbox">
+                                    <input type="checkbox" class="kabataan-checkbox kabataan-checkbox-header" id="kabataanSelectAll" aria-label="Select all visible rows">
+                                </th>
                                 <th>Respondent #</th>
                                 <th>
                                     Full Name
@@ -152,6 +161,28 @@
                         <tbody id="kabataanTableBody">
                         </tbody>
                     </table>
+                </div>
+
+                <div class="table-pagination-footer pagination-footer" aria-label="Table pagination">
+                    <div class="pagination-footer-nav">
+                        <button type="button" class="pagination-arrow" id="kabataanPrevBtn" disabled aria-label="Previous page">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                        </button>
+                        <span class="pagination-page-label">Page</span>
+                        <input type="number" class="pagination-page-input" id="kabataanPageInput" value="1" min="1" aria-label="Current page">
+                        <span class="pagination-page-of">of <span id="kabataanTotalPages">1</span></span>
+                        <button type="button" class="pagination-arrow" id="kabataanNextBtn" disabled aria-label="Next page">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                        </button>
+                    </div>
+                    <div class="pagination-footer-right">
+                        <select id="kabataanRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
+                            <option value="10">10 rows</option>
+                            <option value="50">50 rows</option>
+                            <option value="100">100 rows</option>
+                        </select>
+                        <span class="pagination-record-count" id="kabataanPaginationInfo">0 records</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -983,13 +1014,22 @@
             <h2 class="kabataan-delete-title">Delete Record</h2>
         </div>
         <div class="kabataan-delete-body">
-            <p class="kabataan-delete-message">Are you sure you want to delete</p>
+            <p class="kabataan-delete-message" id="kabataanDeleteMessage">Are you sure you want to delete</p>
             <p class="kabataan-delete-name" id="kabataanDeleteName"></p>
             <p class="kabataan-delete-warning">This action cannot be undone.</p>
+
+            <label class="kabataan-delete-confirm-label" for="kabataanDeleteConfirmInput">Confirmation Required</label>
+            <input type="text" id="kabataanDeleteConfirmInput" class="kabataan-delete-confirm-input" placeholder="Type Delete to confirm" autocomplete="off">
+            <p class="kabataan-delete-confirm-hint kabataan-delete-confirm-hint-error" id="kabataanDeleteConfirmHintError" hidden>
+                Please type &quot;Delete&quot; exactly to continue.
+            </p>
+            <p class="kabataan-delete-confirm-hint kabataan-delete-confirm-hint-success" id="kabataanDeleteConfirmHintSuccess" hidden>
+                Confirmation text matched.
+            </p>
         </div>
         <div class="kabataan-delete-footer">
             <button type="button" class="btn kabataan-cancel-btn" id="kabataanDeleteCancelBtn">Cancel</button>
-            <button type="button" class="btn kabataan-confirm-delete-btn" id="kabataanDeleteConfirmBtn">Delete</button>
+            <button type="button" class="btn kabataan-confirm-delete-btn is-disabled" id="kabataanDeleteConfirmBtn" disabled>Confirm Delete</button>
         </div>
     </div>
 </div>

@@ -228,6 +228,47 @@ class KabataanController extends Controller
         return response()->json(['success' => true, 'message' => 'Kabataan record moved to Deleted Items.']);
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $user = Auth::user();
+        $ids = array_values(array_unique($validated['ids']));
+
+        $registrations = KabataanRegistration::forBarangay($user->barangay_id)
+            ->whereIn('id', $ids)
+            ->get();
+
+        if ($registrations->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No matching Kabataan records were found.',
+            ], 422);
+        }
+
+        foreach ($registrations as $registration) {
+            $fullName = $registration->full_name;
+            $registrationId = $registration->id;
+            $registration->delete();
+
+            $this->activityService->log(
+                $user,
+                'kabataan.delete',
+                'Deleted Kabataan record: '.$fullName,
+                ['registration_id' => $registrationId]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $registrations->count().' Kabataan record(s) moved to Deleted Items.',
+            'deleted_count' => $registrations->count(),
+        ]);
+    }
+
     private function buildFormDataFromRequest(Request $request, object $barangay, array $existing = []): array
     {
         return array_merge($existing, array_filter([

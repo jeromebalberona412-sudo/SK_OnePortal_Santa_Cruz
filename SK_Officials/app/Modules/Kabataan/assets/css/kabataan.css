@@ -3421,3 +3421,249 @@ body {
 @keyframes kabataanSpin {
     to { transform: rotate(360deg); }
 }
+
+/* ── Bulk delete toolbar ── */
+.kabataan-table-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 8px;
+    min-height: 32px;
+}
+
+.btn-float-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(220, 38, 38, 0.12);
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-float-delete:hover {
+    background: #fee2e2;
+    border-color: #f87171;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.18);
+}
+
+.btn-float-delete svg {
+    flex-shrink: 0;
+}
+
+/* ── Checkbox column ── */
+.th-checkbox,
+.td-checkbox {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    text-align: center;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.kabataan-checkbox {
+    width: 15px;
+    height: 15px;
+    accent-color: #1A365D;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* ── Table footer pagination (Supabase-style) ── */
+.table-pagination-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 6px 14px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.pagination-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.pagination-footer-nav {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pagination-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-page-label,
+.pagination-page-of {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.pagination-page-input {
+    width: 34px;
+    height: 22px;
+    padding: 0 2px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.pagination-page-input::-webkit-outer-spin-button,
+.pagination-page-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.pagination-page-input:focus {
+    outline: none;
+    border-color: #94a3b8;
+    box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+.pagination-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #64748b;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.pagination-arrow:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #374151;
+}
+
+.pagination-arrow:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.pagination-rows-select {
+    height: 22px;
+    min-width: 72px;
+    padding: 0 1.4rem 0 0.45rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.35rem center;
+    background-size: 0.75rem;
+}
+
+.pagination-record-count {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .table-pagination-footer {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 8px 10px;
+    }
+
+    .pagination-footer-nav,
+    .pagination-footer-right {
+        justify-content: center;
+    }
+}
+
+/* ── Delete type-to-confirm ── */
+.kabataan-delete-confirm-label {
+    display: block;
+    margin: 14px 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    text-align: left;
+}
+
+.kabataan-delete-confirm-input {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.55rem 0.7rem;
+    font-size: 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-sizing: border-box;
+}
+
+.kabataan-delete-confirm-input:focus {
+    outline: none;
+    border-color: #1A365D;
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.12);
+}
+
+.kabataan-delete-confirm-hint {
+    margin: 0.5rem 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: left;
+}
+
+.kabataan-delete-confirm-hint-error {
+    color: #b45309;
+}
+
+.kabataan-delete-confirm-hint-success {
+    color: #15803d;
+    font-weight: 600;
+}
+
+.kabataan-confirm-delete-btn.is-disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.kabataan-confirm-delete-btn.is-enabled {
+    background: #ef4444;
+    color: #ffffff;
+    opacity: 1;
+    cursor: pointer;
+}

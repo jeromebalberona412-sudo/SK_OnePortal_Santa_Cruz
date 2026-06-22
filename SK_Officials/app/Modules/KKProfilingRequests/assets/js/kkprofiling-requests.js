@@ -64,15 +64,32 @@ function initializeKKProfilingRequestsUI() {
         });
     }
 
+    function formatDisplaySuffix(suffix) {
+        if (!suffix) {
+            return '';
+        }
+
+        const normalized = String(suffix).trim();
+
+        if (!normalized || normalized.toLowerCase() === 'none') {
+            return '';
+        }
+
+        return normalized;
+    }
+
     function formatFullName(r) {
         const parts = [r.firstName, r.middleName].filter(Boolean);
         const firstMiddle = parts.length ? parts.join(',') : '';
         const last = r.lastName || '';
-        const suffix = r.suffix ? ',' + r.suffix : '';
+        const suffixPart = formatDisplaySuffix(r.suffix);
+        const suffix = suffixPart ? ',' + suffixPart : '';
+
         if (last && firstMiddle) return `${last},${firstMiddle}${suffix}`;
-        else if (last) return `${last}${suffix}`;
-        else if (firstMiddle) return `${firstMiddle}${suffix}`;
-        else return '-';
+        if (last) return `${last}${suffix}`;
+        if (firstMiddle) return `${firstMiddle}${suffix}`;
+
+        return '-';
     }
 
     let currentFilterStatus = 'All';
@@ -81,24 +98,76 @@ function initializeKKProfilingRequestsUI() {
     let currentVoterFilter = '';
     let activeRequestId = null;
     let currentPage = 1;
-    const recordsPerPage = 10;
+    let recordsPerPage = 10;
 
-    function renderTable() {
-        tbody.innerHTML = '';
-        const filtered = requests.filter((r) => {
+    function getFilteredRequests() {
+        return requests.filter((r) => {
             if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
                 const fullName = formatFullName(r).toLowerCase();
-                const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
+                const match = fullName.includes(q)
+                    || (r.purok && String(r.purok).toLowerCase().includes(q))
+                    || (r.contact && String(r.contact).toLowerCase().includes(q));
                 if (!match) return false;
             }
             if (currentBarangayFilter && r.purokZone !== currentBarangayFilter) return false;
             if (currentVoterFilter && r.registeredVoter !== currentVoterFilter) return false;
             return true;
         });
+    }
 
-        const totalPages = Math.ceil(filtered.length / recordsPerPage);
+    function getTotalPages(count = getFilteredRequests().length) {
+        return Math.max(1, Math.ceil(count / recordsPerPage) || 1);
+    }
+
+    function updatePaginationFooter(totalRecords) {
+        const totalPages = getTotalPages(totalRecords);
+        const pageInput = document.getElementById('kkPageInput');
+        const totalPagesEl = document.getElementById('kkTotalPages');
+        const prevBtn = document.getElementById('kkPrevBtn');
+        const nextBtn = document.getElementById('kkNextBtn');
+        const info = document.getElementById('kkPaginationInfo');
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        if (pageInput) {
+            pageInput.value = String(currentPage);
+            pageInput.min = '1';
+            pageInput.max = String(totalPages);
+        }
+
+        if (totalPagesEl) {
+            totalPagesEl.textContent = String(totalPages);
+        }
+
+        if (prevBtn) {
+            prevBtn.disabled = currentPage <= 1;
+        }
+
+        if (nextBtn) {
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        if (info) {
+            info.textContent = `${totalRecords} record${totalRecords === 1 ? '' : 's'}`;
+        }
+    }
+
+    function goToPage(page) {
+        const totalPages = getTotalPages();
+
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            renderTable();
+        }
+    }
+    function renderTable() {
+        tbody.innerHTML = '';
+        const filtered = getFilteredRequests();
+        const totalPages = getTotalPages(filtered.length);
         const startIndex = (currentPage - 1) * recordsPerPage;
         const endIndex = Math.min(startIndex + recordsPerPage, filtered.length);
         const paginatedData = filtered.slice(startIndex, endIndex);
@@ -111,7 +180,7 @@ function initializeKKProfilingRequestsUI() {
             td.textContent = 'No KK Profiling requests for this status.';
             tr.appendChild(td);
             tbody.appendChild(tr);
-            updatePaginationInfo(0, 0, 1);
+            updatePaginationFooter(0);
             return;
         }
 
@@ -177,61 +246,7 @@ function initializeKKProfilingRequestsUI() {
             tbody.appendChild(tr);
         });
 
-        updatePaginationInfo(startIndex + 1, endIndex, currentPage, totalPages);
-        updatePaginationControls(currentPage, totalPages);
-    }
-
-    function updatePaginationInfo(start, end, page, totalPages) {
-        const info = document.getElementById('kkPaginationInfo');
-        if (info) {
-            const total = requests.filter((r) => {
-                if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
-                if (currentSearchQuery) {
-                    const q = currentSearchQuery.toLowerCase();
-                    const fullName = formatFullName(r).toLowerCase();
-                    const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
-                    if (!match) return false;
-                }
-                return true;
-            }).length;
-            info.textContent = total === 0 ? 'No records found' : `Showing ${start}-${end} of ${total} records`;
-        }
-    }
-
-    function updatePaginationControls(page, totalPages) {
-        const prevBtn = document.getElementById('kkPrevBtn');
-        const nextBtn = document.getElementById('kkNextBtn');
-        const pageNumbers = document.getElementById('kkPageNumbers');
-        if (prevBtn) prevBtn.disabled = page === 1;
-        if (nextBtn) nextBtn.disabled = page === totalPages;
-        if (pageNumbers) {
-            pageNumbers.innerHTML = '';
-            let startPage = Math.max(1, page - 2);
-            let endPage = Math.min(totalPages, page + 2);
-            if (endPage - startPage < 5) { endPage = Math.min(5, totalPages); startPage = 1; }
-            if (endPage - startPage < 5 && page > totalPages - 2) { startPage = Math.max(1, totalPages - 4); endPage = totalPages; }
-            for (let i = startPage; i <= endPage; i++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.className = `page-number ${i === page ? 'active' : ''}`;
-                pageBtn.textContent = i;
-                pageBtn.onclick = () => goToPage(i);
-                pageNumbers.appendChild(pageBtn);
-            }
-        }
-    }
-
-    function goToPage(page) {
-        const totalPages = Math.ceil(requests.filter((r) => {
-            if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
-            if (currentSearchQuery) {
-                const q = currentSearchQuery.toLowerCase();
-                const fullName = formatFullName(r).toLowerCase();
-                const match = fullName.includes(q) || (r.purok && String(r.purok).toLowerCase().includes(q)) || (r.contact && String(r.contact).toLowerCase().includes(q));
-                if (!match) return false;
-            }
-            return true;
-        }).length / recordsPerPage);
-        if (page >= 1 && page <= totalPages) { currentPage = page; renderTable(); }
+        updatePaginationFooter(filtered.length);
     }
 
     function setStatusFilter(status) {
@@ -613,8 +628,29 @@ function initializeKKProfilingRequestsUI() {
 
     const prevBtn = document.getElementById('kkPrevBtn');
     const nextBtn = document.getElementById('kkNextBtn');
+    const pageInput = document.getElementById('kkPageInput');
+    const rowsPerPageSelect = document.getElementById('kkRowsPerPageSelect');
+
     if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
     if (nextBtn) nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
+
+    if (pageInput) {
+        pageInput.addEventListener('change', () => {
+            const page = parseInt(pageInput.value, 10);
+            if (!Number.isNaN(page)) {
+                goToPage(page);
+            }
+        });
+    }
+
+    if (rowsPerPageSelect) {
+        recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+        rowsPerPageSelect.addEventListener('change', () => {
+            recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+            currentPage = 1;
+            renderTable();
+        });
+    }
 
     if (statusTabsContainer) {
         statusTabsContainer.addEventListener('click', (e) => {

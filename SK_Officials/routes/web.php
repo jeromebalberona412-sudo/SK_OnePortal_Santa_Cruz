@@ -172,6 +172,7 @@ Route::middleware([
     Route::post('/kabataan', [KabataanController::class, 'store'])->name('kabataan.store');
     Route::put('/kabataan/{id}', [KabataanController::class, 'update'])->name('kabataan.update');
     Route::delete('/kabataan/{id}', [KabataanController::class, 'destroy'])->name('kabataan.destroy');
+    Route::post('/kabataan/bulk-delete', [KabataanController::class, 'bulkDestroy'])->name('kabataan.bulk-destroy');
 
     Route::get('/previous-kabataan', [PreviousKabataanController::class, 'index'])->name('previous-kabataan');
     Route::get('/previous-kabataan/data', [PreviousKabataanController::class, 'data'])->name('previous-kabataan.data');

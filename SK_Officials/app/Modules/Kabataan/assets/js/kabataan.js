@@ -213,21 +213,40 @@ function initializeKabataanUI() {
         });
     }
 
+    function formatDisplaySuffix(suffix) {
+        if (!suffix) {
+            return '';
+        }
+
+        const normalized = String(suffix).trim();
+
+        if (!normalized || normalized.toLowerCase() === 'none') {
+            return '';
+        }
+
+        return normalized;
+    }
+
     function fullNameFrom(k) {
         const parts = [k.firstName, k.middleName].filter(Boolean);
         const firstMiddle = parts.length ? parts.join(' ') : '';
         const last = k.lastName || '';
-        const suffix = k.suffix ? ' ' + k.suffix : '';
+        const suffixPart = formatDisplaySuffix(k.suffix);
+        const suffix = suffixPart ? ' ' + suffixPart : '';
 
         if (last && firstMiddle) {
             return `${last}, ${firstMiddle}${suffix}`;
-        } else if (last) {
-            return `${last}${suffix}`;
-        } else if (firstMiddle) {
-            return `${firstMiddle}${suffix}`;
-        } else {
-            return '-';
         }
+
+        if (last) {
+            return `${last}${suffix}`;
+        }
+
+        if (firstMiddle) {
+            return `${firstMiddle}${suffix}`;
+        }
+
+        return '-';
     }
 
     const defaultRecord = () => ({
@@ -285,11 +304,12 @@ function initializeKabataanUI() {
     let currentPurok = '';
     let currentEducation = '';
     let editingIndex = null;
+    let currentPage = 1;
+    let recordsPerPage = 10;
+    const selectedIds = new Set();
 
-    function render() {
-        tbody.innerHTML = '';
-
-        const filtered = kabataan.filter((k) => {
+    function getFilteredKabataan() {
+        return kabataan.filter((k) => {
             const q = currentQuery;
             const full = fullNameFrom(k).toLowerCase();
             const education = k.educationalBackground || k.highestEducation || '';
@@ -299,24 +319,121 @@ function initializeKabataanUI() {
             const matchEducation = !currentEducation || education === currentEducation;
             return matchSearch && matchGender && matchPurok && matchEducation;
         });
+    }
 
-        if (filtered.length === 0) {
-            const tr = document.createElement('tr');
-            tr.className = 'empty-state-row';
-            const td = document.createElement('td');
-            td.colSpan = 7;
-            td.textContent = 'No kabataan match current filters.';
-            tr.appendChild(td);
-            tbody.appendChild(tr);
+    function getTotalPages(count = getFilteredKabataan().length) {
+        return Math.max(1, Math.ceil(count / recordsPerPage) || 1);
+    }
+
+    function updatePaginationFooter(totalRecords) {
+        const totalPages = getTotalPages(totalRecords);
+        const pageInput = document.getElementById('kabataanPageInput');
+        const totalPagesEl = document.getElementById('kabataanTotalPages');
+        const prevBtn = document.getElementById('kabataanPrevBtn');
+        const nextBtn = document.getElementById('kabataanNextBtn');
+        const info = document.getElementById('kabataanPaginationInfo');
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        if (pageInput) {
+            pageInput.value = String(currentPage);
+            pageInput.min = '1';
+            pageInput.max = String(totalPages);
+        }
+
+        if (totalPagesEl) {
+            totalPagesEl.textContent = String(totalPages);
+        }
+
+        if (prevBtn) {
+            prevBtn.disabled = currentPage <= 1;
+        }
+
+        if (nextBtn) {
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        if (info) {
+            info.textContent = `${totalRecords} record${totalRecords === 1 ? '' : 's'}`;
+        }
+    }
+
+    function goToPage(page) {
+        const totalPages = getTotalPages();
+
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            render();
+        }
+    }
+
+    function updateBulkToolbar() {
+        const toolbar = document.getElementById('kabataanBulkToolbar');
+        const label = document.getElementById('kabataanBulkDeleteLabel');
+        const count = selectedIds.size;
+
+        if (toolbar) {
+            toolbar.hidden = count === 0;
+        }
+
+        if (label) {
+            label.textContent = `Delete ${count} row${count === 1 ? '' : 's'}`;
+        }
+    }
+
+    function syncSelectAllCheckbox() {
+        const header = document.getElementById('kabataanSelectAll');
+        if (!header) {
             return;
         }
 
-        filtered.forEach((k) => {
+        const visibleCheckboxes = Array.from(tbody.querySelectorAll('.kabataan-row-checkbox'));
+        const visibleIds = visibleCheckboxes
+            .map((checkbox) => checkbox.dataset.id)
+            .filter(Boolean);
+
+        header.checked = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+        header.indeterminate = visibleIds.some((id) => selectedIds.has(id)) && !header.checked;
+    }
+
+    function render() {
+        tbody.innerHTML = '';
+
+        const filtered = getFilteredKabataan();
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = Math.min(startIndex + recordsPerPage, filtered.length);
+        const paginatedData = filtered.slice(startIndex, endIndex);
+
+        if (paginatedData.length === 0) {
+            const tr = document.createElement('tr');
+            tr.className = 'empty-state-row';
+            const td = document.createElement('td');
+            td.colSpan = 8;
+            td.textContent = 'No kabataan match current filters.';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            updatePaginationFooter(0);
+            updateBulkToolbar();
+            syncSelectAllCheckbox();
+            return;
+        }
+
+        paginatedData.forEach((k) => {
             const index = kabataan.indexOf(k);
             const full = fullNameFrom(k);
+            const recordId = k.id ? String(k.id) : '';
             const tr = document.createElement('tr');
-            if (k.id) tr.dataset.recordId = String(k.id);
+
+            if (recordId) {
+                tr.dataset.recordId = recordId;
+            }
+
             tr.innerHTML = `
+                <td class="th-checkbox">
+                    ${recordId ? `<input type="checkbox" class="kabataan-checkbox kabataan-row-checkbox" data-id="${recordId}" aria-label="Select row" ${selectedIds.has(recordId) ? 'checked' : ''}>` : ''}
+                </td>
                 <td>${k.respondentNumber || '—'}</td>
                 <td class="kabataan-fullname-cell">
                     <span class="kabataan-fullname">${full}</span>
@@ -334,6 +451,10 @@ function initializeKabataanUI() {
             `;
             tbody.appendChild(tr);
         });
+
+        updatePaginationFooter(filtered.length);
+        updateBulkToolbar();
+        syncSelectAllCheckbox();
     }
 
     function populateViewRows(k) {
@@ -344,7 +465,7 @@ function initializeKabataanUI() {
         setVal('vLastName', k.lastName);
         setVal('vFirstName', k.firstName);
         setVal('vMiddleName', k.middleName);
-        setVal('vSuffix', k.suffix);
+        setVal('vSuffix', formatDisplaySuffix(k.suffix));
         setVal('vRegion', k.region);
         setVal('vProvince', k.province);
         setVal('vCity', k.city);
@@ -479,9 +600,76 @@ function initializeKabataanUI() {
     // Pagination event listeners
     const prevBtn = document.getElementById('kabataanPrevBtn');
     const nextBtn = document.getElementById('kabataanNextBtn');
+    const pageInput = document.getElementById('kabataanPageInput');
+    const rowsPerPageSelect = document.getElementById('kabataanRowsPerPageSelect');
+    const selectAllCheckbox = document.getElementById('kabataanSelectAll');
+    const bulkDeleteBtn = document.getElementById('kabataanBulkDeleteBtn');
 
     if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
     if (nextBtn) nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
+
+    if (pageInput) {
+        pageInput.addEventListener('change', () => {
+            const page = parseInt(pageInput.value, 10);
+            if (!Number.isNaN(page)) {
+                goToPage(page);
+            }
+        });
+    }
+
+    if (rowsPerPageSelect) {
+        recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+        rowsPerPageSelect.addEventListener('change', () => {
+            recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+            currentPage = 1;
+            render();
+        });
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', () => {
+            const visibleCheckboxes = Array.from(tbody.querySelectorAll('.kabataan-row-checkbox'));
+
+            visibleCheckboxes.forEach((checkbox) => {
+                const id = checkbox.dataset.id;
+                if (!id) {
+                    return;
+                }
+
+                if (selectAllCheckbox.checked) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+
+            updateBulkToolbar();
+            syncSelectAllCheckbox();
+        });
+    }
+
+    tbody.addEventListener('change', (e) => {
+        const checkbox = e.target.closest('.kabataan-row-checkbox');
+        if (!checkbox) {
+            return;
+        }
+
+        const id = checkbox.dataset.id;
+        if (!id) {
+            return;
+        }
+
+        if (checkbox.checked) {
+            selectedIds.add(id);
+        } else {
+            selectedIds.delete(id);
+        }
+
+        updateBulkToolbar();
+        syncSelectAllCheckbox();
+    });
 
     // Filter event listeners
     if (searchInput) {
@@ -559,22 +747,129 @@ function initializeKabataanUI() {
 
     // ── Delete confirmation modal ──
     const deleteModal = document.getElementById('kabataanDeleteModal');
+    const deleteModalMessage = document.getElementById('kabataanDeleteMessage');
     const deleteModalName = document.getElementById('kabataanDeleteName');
+    const deleteConfirmInput = document.getElementById('kabataanDeleteConfirmInput');
+    const deleteConfirmHintError = document.getElementById('kabataanDeleteConfirmHintError');
+    const deleteConfirmHintSuccess = document.getElementById('kabataanDeleteConfirmHintSuccess');
     const deleteConfirmBtn = document.getElementById('kabataanDeleteConfirmBtn');
     const deleteCancelBtn = document.getElementById('kabataanDeleteCancelBtn');
+    let deleteMode = 'single';
     let pendingDeleteIndex = null;
+    let pendingDeleteIds = [];
+
+    function resetDeleteConfirmInput() {
+        if (deleteConfirmInput) {
+            deleteConfirmInput.value = '';
+        }
+
+        if (deleteConfirmHintError) {
+            deleteConfirmHintError.hidden = true;
+        }
+
+        if (deleteConfirmHintSuccess) {
+            deleteConfirmHintSuccess.hidden = true;
+        }
+
+        if (deleteConfirmBtn) {
+            deleteConfirmBtn.disabled = true;
+            deleteConfirmBtn.classList.add('is-disabled');
+            deleteConfirmBtn.classList.remove('is-enabled');
+        }
+    }
+
+    function updateDeleteConfirmState() {
+        if (!deleteConfirmInput || !deleteConfirmBtn) {
+            return;
+        }
+
+        const matched = deleteConfirmInput.value === 'Delete';
+
+        if (deleteConfirmHintError) {
+            deleteConfirmHintError.hidden = !(deleteConfirmInput.value.length > 0 && !matched);
+        }
+
+        if (deleteConfirmHintSuccess) {
+            deleteConfirmHintSuccess.hidden = !matched;
+        }
+
+        deleteConfirmBtn.disabled = !matched;
+        deleteConfirmBtn.classList.toggle('is-disabled', !matched);
+        deleteConfirmBtn.classList.toggle('is-enabled', matched);
+    }
 
     function openDeleteConfirm(index) {
         const k = kabataan[index];
-        if (!k) return;
+        if (!k) {
+            return;
+        }
+
+        deleteMode = 'single';
         pendingDeleteIndex = index;
-        if (deleteModalName) deleteModalName.textContent = fullNameFrom(k);
-        if (deleteModal) deleteModal.style.display = 'flex';
+        pendingDeleteIds = k.id ? [String(k.id)] : [];
+
+        if (deleteModalMessage) {
+            deleteModalMessage.textContent = 'Are you sure you want to delete';
+        }
+
+        if (deleteModalName) {
+            deleteModalName.textContent = fullNameFrom(k);
+            deleteModalName.hidden = false;
+        }
+
+        resetDeleteConfirmInput();
+
+        if (deleteModal) {
+            deleteModal.style.display = 'flex';
+        }
+
+        deleteConfirmInput?.focus();
+    }
+
+    function openBulkDeleteConfirm() {
+        if (selectedIds.size === 0) {
+            return;
+        }
+
+        deleteMode = 'bulk';
+        pendingDeleteIndex = null;
+        pendingDeleteIds = Array.from(selectedIds);
+
+        if (deleteModalMessage) {
+            deleteModalMessage.textContent = 'Are you sure you want to delete the selected records?';
+        }
+
+        if (deleteModalName) {
+            deleteModalName.textContent = `${pendingDeleteIds.length} selected record${pendingDeleteIds.length === 1 ? '' : 's'}`;
+            deleteModalName.hidden = false;
+        }
+
+        resetDeleteConfirmInput();
+
+        if (deleteModal) {
+            deleteModal.style.display = 'flex';
+        }
+
+        deleteConfirmInput?.focus();
     }
 
     function closeDeleteConfirm() {
+        deleteMode = 'single';
         pendingDeleteIndex = null;
-        if (deleteModal) deleteModal.style.display = 'none';
+        pendingDeleteIds = [];
+        resetDeleteConfirmInput();
+
+        if (deleteModal) {
+            deleteModal.style.display = 'none';
+        }
+    }
+
+    if (deleteConfirmInput) {
+        deleteConfirmInput.addEventListener('input', updateDeleteConfirmState);
+    }
+
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', openBulkDeleteConfirm);
     }
 
     if (deleteModal) {
@@ -589,7 +884,50 @@ function initializeKabataanUI() {
         const deleteBtnDefaultHtml = deleteConfirmBtn.innerHTML;
 
         deleteConfirmBtn.addEventListener('click', () => {
-            if (pendingDeleteIndex === null || deleteConfirmBtn.disabled) return;
+            if (deleteConfirmBtn.disabled) {
+                return;
+            }
+
+            if (deleteMode === 'bulk' && pendingDeleteIds.length > 0) {
+                deleteConfirmBtn.disabled = true;
+                deleteConfirmBtn.innerHTML = '<span class="kabataan-delete-spinner"></span> Deleting...';
+
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+                fetch('/kabataan/bulk-delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ ids: pendingDeleteIds.map((id) => parseInt(id, 10)) }),
+                })
+                    .then((r) => r.json())
+                    .then((res) => {
+                        if (!res.success) {
+                            throw new Error(res.message || 'Bulk delete failed');
+                        }
+
+                        pendingDeleteIds.forEach((id) => selectedIds.delete(id));
+                        closeDeleteConfirm();
+                        loadData();
+                        showKabataanToast(res.message || 'Selected records moved to Deleted Items.', 'success');
+                    })
+                    .catch((err) => showKabataanToast(err.message || 'Failed to delete selected records.', 'error'))
+                    .finally(() => {
+                        deleteConfirmBtn.disabled = false;
+                        deleteConfirmBtn.innerHTML = deleteBtnDefaultHtml;
+                        updateDeleteConfirmState();
+                    });
+
+                return;
+            }
+
+            if (pendingDeleteIndex === null) {
+                return;
+            }
 
             const record = kabataan[pendingDeleteIndex];
             const recordId = record?.id;
@@ -622,6 +960,8 @@ function initializeKabataanUI() {
             .then(res => {
                 if (!res.success) throw new Error(res.message || 'Delete failed');
 
+                selectedIds.delete(String(recordId));
+
                 if (row) {
                     row.classList.add('kabataan-row-deleting');
                     setTimeout(() => loadData(), 320);
@@ -635,6 +975,7 @@ function initializeKabataanUI() {
             .finally(() => {
                 deleteConfirmBtn.disabled = false;
                 deleteConfirmBtn.innerHTML = deleteBtnDefaultHtml;
+                updateDeleteConfirmState();
             });
         });
     }
@@ -1143,6 +1484,13 @@ function initializeKabataanUI() {
             if (el('kabStatPending'))  el('kabStatPending').textContent  = stats.pending || 0;
             if (el('kabStatRejected')) el('kabStatRejected').textContent = stats.rejected || 0;
             if (el('kabStatTotal'))    el('kabStatTotal').textContent    = stats.total || 0;
+
+            const validIds = new Set(kabataan.map((k) => (k.id ? String(k.id) : '')).filter(Boolean));
+            Array.from(selectedIds).forEach((id) => {
+                if (!validIds.has(id)) {
+                    selectedIds.delete(id);
+                }
+            });
 
             sortKabataanAlphabetically();
             render();
