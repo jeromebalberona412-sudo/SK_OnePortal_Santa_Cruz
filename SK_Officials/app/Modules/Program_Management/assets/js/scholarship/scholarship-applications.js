@@ -68,6 +68,9 @@ function mapApiRecord(app) {
         approved_at: app.reviewed_at
             ? new Date(app.reviewed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
             : undefined,
+        schedule_start_date: app.schedule_start_date,
+        schedule_end_date: app.schedule_end_date,
+        can_review: app.can_review !== false,
     };
 }
 
@@ -1015,8 +1018,22 @@ function initScholarshipRequests() {
             </div>
         `;
         viewModal.style.display = 'flex';
-        if (approveBtn) approveBtn.style.display = r.status === 'Pending' ? 'inline-flex' : 'none';
-        if (rejectBtn) rejectBtn.style.display = r.status === 'Pending' ? 'inline-flex' : 'none';
+        const canReview = r.can_review !== false;
+        if (approveBtn) approveBtn.style.display = (r.status === 'Pending' && canReview) ? 'inline-flex' : 'none';
+        if (rejectBtn) rejectBtn.style.display = (r.status === 'Pending' && canReview) ? 'inline-flex' : 'none';
+
+        const reviewNotice = document.getElementById('scholReviewScheduleNotice');
+        if (reviewNotice) {
+            if (r.status === 'Pending' && !canReview) {
+                const endLabel = r.schedule_end_date
+                    ? new Date(r.schedule_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                    : 'the application period ends';
+                reviewNotice.textContent = `Approve and reject are available only after the application schedule ends on ${endLabel}.`;
+                reviewNotice.style.display = 'block';
+            } else {
+                reviewNotice.style.display = 'none';
+            }
+        }
     }
 
     function closeViewModal() {
@@ -1049,6 +1066,10 @@ function initScholarshipRequests() {
         approveBtn.addEventListener('click', async () => {
             if (!viewTargetId) return;
             const record = records.find(r => r.id === viewTargetId);
+            if (record && record.can_review === false) {
+                showScholToast('Applications can only be approved after the application schedule has ended.', 'error');
+                return;
+            }
             const name = record ? `${record.first_name} ${record.last_name}` : 'Applicant';
             try {
                 if (typeof window.showLoading === 'function') window.showLoading();
@@ -1074,6 +1095,12 @@ function initScholarshipRequests() {
     // Confirm Rejection with Reasons
     if (rejectReasonConfirm) {
         rejectReasonConfirm.addEventListener('click', async () => {
+            const record = records.find(r => r.id === rejectTargetId);
+            if (record && record.can_review === false) {
+                showScholToast('Applications can only be rejected after the application schedule has ended.', 'error');
+                return;
+            }
+
             const selectedReasons = [];
             document.querySelectorAll('.reject-reason-checkbox:checked').forEach(cb => {
                 selectedReasons.push(cb.value);
@@ -1091,7 +1118,6 @@ function initScholarshipRequests() {
                 return;
             }
 
-            const record = records.find(r => r.id === rejectTargetId);
             const name = record ? `${record.first_name} ${record.last_name}` : 'Applicant';
             try {
                 if (typeof window.showLoading === 'function') window.showLoading();

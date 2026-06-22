@@ -157,7 +157,19 @@ function initProfileAvatarChange() {
     const profileAvatar = document.getElementById('profileAvatar');
     const fileInput = document.getElementById('photoUpload');
     const lockModal = document.getElementById('profilePictureLockModal');
+    const uploadInstructionsModal = document.getElementById('profilePictureUploadModal');
+    const uploadContinueBtn = document.getElementById('profilePictureUploadContinueBtn');
+    const permissionModal = document.getElementById('profilePicturePermissionModal');
+    const permissionAllowBtn = document.getElementById('profilePicturePermissionAllowBtn');
+    const permissionDenyBtn = document.getElementById('profilePicturePermissionDenyBtn');
     const lockDateEl = document.getElementById('profilePictureLockDate');
+    const confirmModal = document.getElementById('profilePictureConfirmModal');
+    const confirmPreview = document.getElementById('profilePictureConfirmPreview');
+    const confirmCancelBtn = document.getElementById('profilePictureConfirmCancelBtn');
+    const confirmSubmitBtn = document.getElementById('profilePictureConfirmSubmitBtn');
+    let photoAccessGranted = false;
+    let pendingProfileFile = null;
+    let pendingPreviewUrl = null;
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     const maxBytes = 10 * 1024 * 1024;
@@ -203,6 +215,89 @@ function initProfileAvatarChange() {
         }
     };
 
+    window.closeProfilePictureUploadModal = function() {
+        if (uploadInstructionsModal) {
+            uploadInstructionsModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
+
+    window.closeProfilePicturePermissionModal = function() {
+        if (permissionModal) {
+            permissionModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
+
+    function showPermissionModal() {
+        if (permissionModal) {
+            permissionModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function openPhotoPicker() {
+        if (!fileInput || fileInput.disabled) {
+            return;
+        }
+
+        // Must run synchronously inside the user click handler (no modal close before this).
+        fileInput.click();
+    }
+
+    function closeModalsForUpload() {
+        if (uploadInstructionsModal) {
+            uploadInstructionsModal.style.display = 'none';
+        }
+        if (permissionModal) {
+            permissionModal.style.display = 'none';
+        }
+        if (confirmModal) {
+            confirmModal.style.display = 'none';
+        }
+        document.body.style.overflow = 'auto';
+    }
+
+    function clearPendingProfileFile() {
+        if (pendingPreviewUrl) {
+            URL.revokeObjectURL(pendingPreviewUrl);
+            pendingPreviewUrl = null;
+        }
+        pendingProfileFile = null;
+        if (confirmPreview) {
+            confirmPreview.removeAttribute('src');
+        }
+    }
+
+    window.closeProfilePictureConfirmModal = function() {
+        clearPendingProfileFile();
+        if (confirmModal) {
+            confirmModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
+
+    function showConfirmModal(file) {
+        clearPendingProfileFile();
+        pendingProfileFile = file;
+        pendingPreviewUrl = URL.createObjectURL(file);
+
+        if (confirmPreview) {
+            confirmPreview.src = pendingPreviewUrl;
+        }
+        if (confirmModal) {
+            confirmModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function showUploadInstructionsModal() {
+        if (uploadInstructionsModal) {
+            uploadInstructionsModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
     function validateFile(file) {
         if (!file) {
             return 'Please select an image file.';
@@ -233,55 +328,65 @@ function initProfileAvatarChange() {
             return;
         }
 
+        closeModalsForUpload();
+        clearPendingProfileFile();
+
         const formData = new FormData();
         formData.append('profile_picture', file);
         formData.append('_token', csrfToken);
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', uploadUrl, true);
-        xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
-        xhr.setRequestHeader('Accept', 'application/json');
+        wrapper.classList.add('is-uploading');
+        if (confirmSubmitBtn) {
+            confirmSubmitBtn.disabled = true;
+            confirmSubmitBtn.textContent = 'Uploading...';
+        }
 
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== 4) return;
+        fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            },
+            body: formData,
+            credentials: 'same-origin',
+        })
+            .then(async (response) => {
+                let payload = {};
+                try {
+                    payload = await response.json();
+                } catch (error) {
+                    throw new Error('Unexpected server response. Please try again.');
+                }
 
-            let payload = null;
-            try {
-                payload = JSON.parse(xhr.responseText || '{}');
-            } catch (error) {
+                if (response.ok && payload.success) {
+                    updateAvatarImages(payload.picture_url);
+                    const message = payload.message || 'Profile picture uploaded successfully.';
+                    if (typeof window.showProfileToast === 'function') {
+                        window.showProfileToast(message, 'success');
+                    }
+                    if (payload.next_change_display) {
+                        lockUpload(payload.next_change_display);
+                    }
+                    return;
+                }
+
+                const message = payload.message
+                    || (payload.errors && Object.values(payload.errors).flat()[0])
+                    || 'Failed to upload profile picture.';
+                throw new Error(message);
+            })
+            .catch((error) => {
                 if (typeof window.showProfileToast === 'function') {
-                    window.showProfileToast('Unexpected server response. Please try again.', 'error');
+                    window.showProfileToast(error.message || 'Network error while uploading. Please try again.', 'error');
                 }
-                return;
-            }
-
-            if (xhr.status >= 200 && xhr.status < 300 && payload.success) {
-                updateAvatarImages(payload.picture_url);
-                const message = payload.message || 'Profile picture uploaded successfully.';
-                if (typeof window.showProfileToast === 'function') {
-                    window.showProfileToast(message, 'success');
+            })
+            .finally(() => {
+                wrapper.classList.remove('is-uploading');
+                if (confirmSubmitBtn) {
+                    confirmSubmitBtn.disabled = false;
+                    confirmSubmitBtn.textContent = 'Confirm & Save';
                 }
-                if (payload.next_change_display) {
-                    lockUpload(payload.next_change_display);
-                }
-                return;
-            }
-
-            const message = payload.message
-                || (payload.errors && Object.values(payload.errors).flat()[0])
-                || 'Failed to upload profile picture.';
-            if (typeof window.showProfileToast === 'function') {
-                window.showProfileToast(message, 'error');
-            }
-        };
-
-        xhr.onerror = function() {
-            if (typeof window.showProfileToast === 'function') {
-                window.showProfileToast('Network error while uploading. Please try again.', 'error');
-            }
-        };
-
-        xhr.send(formData);
+            });
     }
 
     function handleAvatarClick(event) {
@@ -290,8 +395,49 @@ function initProfileAvatarChange() {
             showLockModal();
             return;
         }
-        fileInput?.click();
+        showUploadInstructionsModal();
     }
+
+    uploadContinueBtn?.addEventListener('click', () => {
+        if (photoAccessGranted) {
+            if (uploadInstructionsModal) {
+                uploadInstructionsModal.style.display = 'none';
+            }
+            document.body.style.overflow = 'auto';
+            openPhotoPicker();
+            return;
+        }
+        window.closeProfilePictureUploadModal();
+        showPermissionModal();
+    });
+
+    permissionAllowBtn?.addEventListener('click', () => {
+        photoAccessGranted = true;
+        if (permissionModal) {
+            permissionModal.style.display = 'none';
+        }
+        document.body.style.overflow = 'auto';
+        openPhotoPicker();
+    });
+
+    permissionDenyBtn?.addEventListener('click', () => {
+        window.closeProfilePicturePermissionModal();
+        if (typeof window.showProfileToast === 'function') {
+            window.showProfileToast('Photo access was not granted. You can allow access when you are ready to upload.', 'error');
+        }
+    });
+
+    permissionModal?.addEventListener('click', (event) => {
+        if (event.target === permissionModal) {
+            window.closeProfilePicturePermissionModal();
+        }
+    });
+
+    uploadInstructionsModal?.addEventListener('click', (event) => {
+        if (event.target === uploadInstructionsModal) {
+            window.closeProfilePictureUploadModal();
+        }
+    });
 
     wrapper.addEventListener('click', handleAvatarClick);
     wrapper.addEventListener('keydown', (event) => {
@@ -302,8 +448,46 @@ function initProfileAvatarChange() {
 
     fileInput?.addEventListener('change', (event) => {
         const file = event.target.files?.[0];
-        if (file) uploadFile(file);
         event.target.value = '';
+
+        if (!file) {
+            return;
+        }
+
+        const validationError = validateFile(file);
+        if (validationError) {
+            if (typeof window.showProfileToast === 'function') {
+                window.showProfileToast(validationError, 'error');
+            }
+            return;
+        }
+
+        closeModalsForUpload();
+        showConfirmModal(file);
+    });
+
+    confirmCancelBtn?.addEventListener('click', () => {
+        window.closeProfilePictureConfirmModal();
+        openPhotoPicker();
+    });
+
+    confirmSubmitBtn?.addEventListener('click', () => {
+        if (!pendingProfileFile) {
+            window.closeProfilePictureConfirmModal();
+            return;
+        }
+        const file = pendingProfileFile;
+        uploadFile(file);
+    });
+
+    confirmModal?.addEventListener('click', (event) => {
+        if (event.target === confirmModal) {
+            window.closeProfilePictureConfirmModal();
+        }
+    });
+
+    fileInput?.addEventListener('click', (event) => {
+        event.stopPropagation();
     });
 
     lockModal?.addEventListener('click', (event) => {

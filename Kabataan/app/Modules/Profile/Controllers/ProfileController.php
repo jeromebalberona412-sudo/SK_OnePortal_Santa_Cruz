@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -418,6 +419,11 @@ class ProfileController extends Controller
                 'errors' => $exception->errors(),
             ], 422);
         } catch (\Throwable $exception) {
+            Log::error('Kabataan profile picture upload failed', [
+                'user_id' => $user->id,
+                'error'   => $exception->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload profile picture. Please try again.',

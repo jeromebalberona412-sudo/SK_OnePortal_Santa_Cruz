@@ -252,27 +252,6 @@
 
     <div class="kkp-thankyou">Thank you for your participation!</div>
 
-    @php
-        $supportingDocuments = $supportingDocuments ?? [];
-    @endphp
-
-    @if(!empty($supportingDocuments))
-        <div class="kkp-section-heading" style="margin-top:14px;">III. SUPPORTING DOCUMENTS</div>
-        <div class="kkp-profile-docs-grid kkp-profile-docs-grid--preview">
-            @foreach($supportingDocuments as $document)
-                <article class="kkp-profile-doc-card">
-                    <a href="{{ $document['url'] }}" target="_blank" rel="noopener noreferrer" class="kkp-profile-doc-thumb-link">
-                        <img src="{{ $document['url'] }}" alt="{{ $document['label'] }}" class="kkp-profile-doc-thumb">
-                    </a>
-                    <div class="kkp-profile-doc-meta">
-                        <p class="kkp-profile-doc-label">{{ $document['label'] }}</p>
-                        <p class="kkp-profile-doc-name">{{ $document['display_name'] }}</p>
-                    </div>
-                </article>
-            @endforeach
-        </div>
-    @endif
-
     <div class="kkp-sig-section kkp-sig-section-left">
         <div class="kkp-sig-container">
             @if(filled($kkData['signature'] ?? null))

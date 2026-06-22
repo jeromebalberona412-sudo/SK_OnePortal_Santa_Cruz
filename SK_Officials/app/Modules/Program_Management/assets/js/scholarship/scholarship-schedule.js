@@ -323,6 +323,8 @@ function openFormPreview(programId) {
     const viewProgramModal = document.getElementById('viewProgramModal');
     if (!program || !viewProgramBody || !viewProgramModal) return;
 
+    resetViewProgramModalSize();
+
     const status = resolveProgramStatus(program);
     const statusColors = {
         open: { bg: '#dcfce7', text: '#166534', label: 'Open' },
@@ -415,6 +417,23 @@ function openFormPreview(programId) {
     `;
 
     viewProgramModal.style.display = 'flex';
+}
+
+function resetViewProgramModalSize() {
+    const viewProgramBox = document.getElementById('viewProgramBox');
+    const viewProgramModal = document.getElementById('viewProgramModal');
+    const viewProgramMaximize = document.getElementById('viewProgramMaximize');
+
+    if (viewProgramBox) {
+        viewProgramBox.classList.remove('schol-modal-maximized');
+    }
+    if (viewProgramModal) {
+        viewProgramModal.classList.remove('schol-modal-overlay-maximized');
+    }
+    if (viewProgramMaximize) {
+        viewProgramMaximize.textContent = '□';
+        viewProgramMaximize.title = 'Maximize';
+    }
 }
 
 function openDeleteProgramModal(programId) {
@@ -593,14 +612,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const viewProgramClose = document.getElementById('viewProgramClose');
+    const viewProgramMaximize = document.getElementById('viewProgramMaximize');
+    const viewProgramBox = document.getElementById('viewProgramBox');
     const viewProgramModal = document.getElementById('viewProgramModal');
+
+    if (viewProgramMaximize && viewProgramBox) {
+        viewProgramMaximize.addEventListener('click', (event) => {
+            event.stopPropagation();
+            viewProgramBox.classList.toggle('schol-modal-maximized');
+            const isMax = viewProgramBox.classList.contains('schol-modal-maximized');
+            viewProgramMaximize.textContent = isMax ? '⧉' : '□';
+            viewProgramMaximize.title = isMax ? 'Restore Down' : 'Maximize';
+            if (viewProgramModal) {
+                viewProgramModal.classList.toggle('schol-modal-overlay-maximized', isMax);
+            }
+        });
+    }
+
     if (viewProgramClose && viewProgramModal) {
         viewProgramClose.addEventListener('click', () => {
             viewProgramModal.style.display = 'none';
+            resetViewProgramModalSize();
         });
         viewProgramModal.addEventListener('click', (event) => {
             if (event.target === viewProgramModal) {
                 viewProgramModal.style.display = 'none';
+                resetViewProgramModalSize();
             }
         });
     }

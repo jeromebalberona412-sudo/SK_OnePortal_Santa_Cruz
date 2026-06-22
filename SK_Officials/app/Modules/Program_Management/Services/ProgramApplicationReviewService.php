@@ -82,6 +82,15 @@ class ProgramApplicationReviewService
             ]);
         }
 
+        if (! $isRevoke && ! $this->canReviewApplication($application)) {
+            $schedule = $application->scheduleProgram;
+            $endDate = $schedule?->end_date?->format('F j, Y') ?? 'the scheduled end date';
+
+            throw ValidationException::withMessages([
+                'status' => ["Applications can only be approved or rejected after the application period ends on {$endDate}."],
+            ]);
+        }
+
         $payload = [
             'status' => $status,
             'reviewed_by' => $user->id,
@@ -248,6 +257,9 @@ class ProgramApplicationReviewService
             'payment_status' => $application->payment_status,
             'rejection_reason' => $application->rejection_reason,
             'rejection_reasons' => $application->rejection_reasons ?? [],
+            'schedule_start_date' => $application->scheduleProgram?->start_date?->toDateString(),
+            'schedule_end_date' => $application->scheduleProgram?->end_date?->toDateString(),
+            'can_review' => $this->canReviewApplication($application),
             'documents_count' => count($normalizedDocs = $this->normalizeRequiredDocuments($application->required_documents ?? [])),
             'document_labels' => collect($normalizedDocs)
                 ->map(fn (array $doc) => (string) ($doc['question_label'] ?? $doc['label'] ?? $doc['original_name'] ?? 'Uploaded PDF'))
@@ -294,10 +306,17 @@ class ProgramApplicationReviewService
         return $formatted;
     }
 
-    /**
-     * @param  list<string>  $fields
-     * @return array<string, string>
-     */
+    protected function canReviewApplication(ProgramApplication $application): bool
+    {
+        $schedule = $application->scheduleProgram;
+
+        if ($schedule === null || $schedule->end_date === null) {
+            return true;
+        }
+
+        return now()->startOfDay()->gt($schedule->end_date);
+    }
+
     /**
      * @return list<array<string, mixed>>
      */

@@ -48,8 +48,10 @@ class CloudinaryService
             $options['invalidate'] = true;
         }
 
+        $path = $file->getRealPath() ?: $file->getPathname();
+
         $result = $this->cloudinary->uploadApi()->upload(
-            $file->getRealPath(),
+            $path,
             $options
         );
 
@@ -150,7 +152,9 @@ class CloudinaryService
     {
         $this->ensureConfigured();
 
-        $path = $source instanceof UploadedFile ? $source->getRealPath() : $source;
+        $path = $source instanceof UploadedFile
+            ? ($source->getRealPath() ?: $source->getPathname())
+            : $source;
         $folder = trim((string) config('services.cloudinary.supporting_docs_folder', 'Supporting_Documents'), '/');
 
         if ($displayName === null && $source instanceof UploadedFile) {
@@ -188,17 +192,20 @@ class CloudinaryService
     {
         $this->ensureConfigured();
 
-        $preset = (string) config('services.cloudinary.profile_upload_preset', 'kabataan_profile_images');
-        $folder = (string) config('services.cloudinary.profile_folder', 'kabataan/profile-images');
+        $folder = trim((string) config('services.cloudinary.profile_folder', 'kabataan/profile-images'), '/');
+        $fullPublicId = $folder . '/' . ltrim($publicId, '/');
+        $path = $file->getRealPath() ?: $file->getPathname();
 
         $result = $this->cloudinary->uploadApi()->upload(
-            $file->getRealPath(),
+            $path,
             [
-                'upload_preset' => $preset,
-                'folder'        => $folder,
-                'public_id'     => $publicId,
-                'display_name'  => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
-                'resource_type' => 'image',
+                'public_id'       => $fullPublicId,
+                'display_name'    => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                'resource_type'   => 'image',
+                'overwrite'       => true,
+                'invalidate'      => true,
+                'use_filename'    => false,
+                'unique_filename' => false,
             ]
         );
 

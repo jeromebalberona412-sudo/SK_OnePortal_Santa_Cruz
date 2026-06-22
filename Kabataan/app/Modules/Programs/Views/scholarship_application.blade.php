@@ -82,9 +82,6 @@
             <div class="gf-pdf-modal-header">
                 <h3 id="pdfPreviewTitle">PDF Preview</h3>
                 <div class="gf-pdf-modal-actions">
-                    <button type="button" class="gf-pdf-zoom-btn" id="pdfPreviewZoomOut" title="Zoom out">−</button>
-                    <button type="button" class="gf-pdf-zoom-btn" id="pdfPreviewZoomIn" title="Zoom in">+</button>
-                    <a href="#" class="gf-pdf-download-btn" id="pdfPreviewDownload" download>Download PDF</a>
                     <button type="button" class="gf-pdf-close-btn" id="pdfPreviewClose" aria-label="Close preview">×</button>
                 </div>
             </div>

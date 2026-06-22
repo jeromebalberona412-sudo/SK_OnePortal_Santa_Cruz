@@ -14,6 +14,7 @@ use App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController;
 use App\Modules\PreviousKabataan\Controllers\PreviousKabataanController;
 use App\Modules\Profile\Controllers\ProfileController;
 use App\Modules\Program_Management\Controllers\ProgramApplicationController;
+use App\Modules\Program_Management\Controllers\ProgramEvaluationController;
 use App\Modules\Program_Management\Controllers\ProgramSurveyController;
 use App\Modules\Program_Management\Controllers\ScheduleProgramController;
 use App\Modules\Programs\Controllers\ProgramController;
@@ -259,6 +260,14 @@ Route::middleware([
         Route::put('/{id}/payment', [ProgramApplicationController::class, 'updatePaymentStatus'])->whereNumber('id')->name('api.program-applications.update-payment');
     });
 
+    Route::prefix('api/program-evaluations')->group(function () {
+        Route::get('/', [ProgramEvaluationController::class, 'index'])->name('api.program-evaluations.index');
+        Route::get('/{id}', [ProgramEvaluationController::class, 'show'])->whereNumber('id')->name('api.program-evaluations.show');
+        Route::post('/', [ProgramEvaluationController::class, 'store'])->name('api.program-evaluations.store');
+        Route::put('/{id}', [ProgramEvaluationController::class, 'update'])->whereNumber('id')->name('api.program-evaluations.update');
+        Route::delete('/{id}', [ProgramEvaluationController::class, 'destroy'])->whereNumber('id')->name('api.program-evaluations.destroy');
+    });
+
     Route::prefix('api/program-surveys/{committee}')->group(function () {
         Route::get('/meta', [ProgramSurveyController::class, 'meta'])->name('api.program-surveys.meta');
         Route::get('/responses', [ProgramSurveyController::class, 'responses'])->name('api.program-surveys.responses');
@@ -304,7 +313,7 @@ Route::middleware([
 
     Route::redirect('/scholar-list', '/approved-scholars');
 
-    // ── Scholar Evaluation route (pure front-end, no DB) ──
+    // ── Scholar Evaluation route ──
     Route::get('/scholar-evaluation', function () {
         return view('Program_Management::scholarship.evaluation');
     })->name('scholar.evaluation');

@@ -25,12 +25,9 @@ const closeSuccessModal = document.getElementById('closeSuccessModal');
 const pdfPreviewModal = document.getElementById('pdfPreviewModal');
 const pdfPreviewPages = document.getElementById('pdfPreviewPages');
 const pdfPreviewTitle = document.getElementById('pdfPreviewTitle');
-const pdfPreviewDownload = document.getElementById('pdfPreviewDownload');
 const pdfPreviewClose = document.getElementById('pdfPreviewClose');
-const pdfPreviewZoomIn = document.getElementById('pdfPreviewZoomIn');
-const pdfPreviewZoomOut = document.getElementById('pdfPreviewZoomOut');
 
-let pdfPreviewScale = 1.2;
+const PDF_PREVIEW_SCALE = 1.2;
 let currentPreviewDocument = null;
 
 function getCsrfToken() {
@@ -77,16 +74,38 @@ function loadKKProfileData() {
 
 function renderFileCard(documentMeta) {
     const statusText = documentMeta.status === 'uploaded' ? 'Uploaded Successfully' : (documentMeta.status || 'Uploaded');
+    const sizeText = documentMeta.size_display || formatFileSize(documentMeta.size);
+    const questionId = escapeHtml(documentMeta.question_id);
+
     return `
-        <button type="button" class="gf-file-card" data-preview-document="${escapeHtml(documentMeta.question_id)}">
-            <span class="gf-file-card-icon" aria-hidden="true">📄</span>
-            <span class="gf-file-card-body">
-                <span class="gf-file-card-name">${escapeHtml(documentMeta.original_name)}</span>
-                <span class="gf-file-card-meta">${escapeHtml(documentMeta.size_display || formatFileSize(documentMeta.size))}</span>
-                <span class="gf-file-card-status">${escapeHtml(statusText)}</span>
-                ${documentMeta.uploaded_at_display ? `<span class="gf-file-card-time">${escapeHtml(documentMeta.uploaded_at_display)}</span>` : ''}
-            </span>
-        </button>
+        <div class="gf-file-uploaded-card">
+            <button type="button" class="gf-file-card" data-preview-document="${questionId}">
+                <span class="gf-file-card-icon-wrap" aria-hidden="true">
+                    <svg class="gf-file-card-icon-svg" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    <span class="gf-file-card-badge">PDF</span>
+                </span>
+                <span class="gf-file-card-body">
+                    <span class="gf-file-card-name">${escapeHtml(documentMeta.original_name)}</span>
+                    <span class="gf-file-card-meta-row">
+                        <span class="gf-file-card-meta">${escapeHtml(sizeText)}</span>
+                        <span class="gf-file-card-status">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            ${escapeHtml(statusText)}
+                        </span>
+                    </span>
+                    ${documentMeta.uploaded_at_display ? `<span class="gf-file-card-time">${escapeHtml(documentMeta.uploaded_at_display)}</span>` : ''}
+                </span>
+                <span class="gf-file-card-preview-label">Preview</span>
+            </button>
+            ${isReadOnly ? '' : `<button type="button" class="gf-file-replace-btn" data-replace-document="${questionId}">Replace file</button>`}
+        </div>
     `;
 }
 
@@ -252,10 +271,27 @@ function hydrateExistingAnswers() {
 
 function renderDocumentCard(questionId, documentMeta) {
     const list = document.querySelector(`[data-file-card-list="${questionId}"]`);
+    const uploadWrapper = document.querySelector(`[data-file-upload="${questionId}"]`);
     if (!list || !documentMeta) return;
 
     list.innerHTML = renderFileCard(documentMeta);
+    if (uploadWrapper) {
+        uploadWrapper.hidden = true;
+    }
     bindPreviewButtons(list);
+    bindReplaceButtons(list);
+}
+
+function showUploadArea(questionId) {
+    const uploadWrapper = document.querySelector(`[data-file-upload="${questionId}"]`);
+    const list = document.querySelector(`[data-file-card-list="${questionId}"]`);
+    if (uploadWrapper) {
+        uploadWrapper.hidden = false;
+    }
+    if (list) {
+        list.innerHTML = '';
+    }
+    setUploadState(questionId, 'idle');
 }
 
 function setUploadState(questionId, state, message = '') {
@@ -381,14 +417,23 @@ function bindPreviewButtons(root) {
     });
 }
 
+function bindReplaceButtons(root) {
+    root.querySelectorAll('[data-replace-document]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const questionId = button.getAttribute('data-replace-document');
+            if (!questionId || isReadOnly) return;
+            delete uploadedDocuments[questionId];
+            showUploadArea(questionId);
+        });
+    });
+}
+
 async function openPdfPreview(documentMeta) {
     if (!pdfPreviewModal || !pdfPreviewPages) return;
 
     currentPreviewDocument = documentMeta;
-    pdfPreviewScale = 1.2;
     pdfPreviewTitle.textContent = documentMeta.original_name || 'PDF Preview';
-    pdfPreviewDownload.href = documentMeta.download_url;
-    pdfPreviewDownload.setAttribute('download', documentMeta.original_name || 'document.pdf');
     pdfPreviewModal.hidden = false;
     document.body.style.overflow = 'hidden';
     pdfPreviewPages.innerHTML = '<p class="gf-pdf-loading">Loading PDF preview...</p>';
@@ -403,7 +448,7 @@ async function openPdfPreview(documentMeta) {
 
         for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
             const page = await pdf.getPage(pageNumber);
-            const viewport = page.getViewport({ scale: pdfPreviewScale });
+            const viewport = page.getViewport({ scale: PDF_PREVIEW_SCALE });
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
 
@@ -415,14 +460,9 @@ async function openPdfPreview(documentMeta) {
             await page.render({ canvasContext: context, viewport }).promise;
         }
     } catch (error) {
-        pdfPreviewPages.innerHTML = '<p class="gf-pdf-error">Unable to preview this PDF. You can still download the file.</p>';
+        pdfPreviewPages.innerHTML = '<p class="gf-pdf-error">Unable to preview this PDF right now.</p>';
         console.error(error);
     }
-}
-
-async function rerenderPdfPreview() {
-    if (!currentPreviewDocument) return;
-    await openPdfPreview(currentPreviewDocument);
 }
 
 function closePdfPreview() {
@@ -623,20 +663,6 @@ if (pdfPreviewModal) {
         if (event.target === pdfPreviewModal || event.target.classList.contains('gf-pdf-modal-overlay')) {
             closePdfPreview();
         }
-    });
-}
-
-if (pdfPreviewZoomIn) {
-    pdfPreviewZoomIn.addEventListener('click', async () => {
-        pdfPreviewScale = Math.min(pdfPreviewScale + 0.2, 2.4);
-        await rerenderPdfPreview();
-    });
-}
-
-if (pdfPreviewZoomOut) {
-    pdfPreviewZoomOut.addEventListener('click', async () => {
-        pdfPreviewScale = Math.max(pdfPreviewScale - 0.2, 0.8);
-        await rerenderPdfPreview();
     });
 }
 

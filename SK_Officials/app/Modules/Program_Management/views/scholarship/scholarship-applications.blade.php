@@ -120,6 +120,7 @@
             </div>
         </div>
         <div class="schol-modal-body" id="scholViewBody" style="background:#f0f1f5;"></div>
+        <p id="scholReviewScheduleNotice" class="schol-review-schedule-notice" style="display:none;"></p>
         <!-- Footer: Approve + Reject only, no Close -->
         <div class="schol-modal-footer">
             <button type="button" class="schol-btn schol-btn-approve" id="scholApproveBtn">

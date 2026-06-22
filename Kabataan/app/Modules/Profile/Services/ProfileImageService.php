@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Services\CloudinaryService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class ProfileImageService
@@ -91,7 +91,7 @@ class ProfileImageService
         $oldPublicId = $user->profile_image_public_id;
         $publicId    = 'user_' . $user->id;
 
-        $result = $this->cloudinary->uploadProfileImage($file, $publicId);
+        $result = $this->uploadToCloudOrLocal($user, $file, $publicId);
 
         $uploadedAt   = now();
         $nextChangeAt = $uploadedAt->copy()->addDays(30);
@@ -104,15 +104,7 @@ class ProfileImageService
         ])->save();
 
         if ($oldPublicId) {
-            try {
-                $this->cloudinary->delete($oldPublicId);
-            } catch (\Throwable $exception) {
-                Log::warning('Failed to delete previous Kabataan profile image from Cloudinary', [
-                    'user_id'   => $user->id,
-                    'public_id' => $oldPublicId,
-                    'error'     => $exception->getMessage(),
-                ]);
-            }
+            $this->deleteStoredImage($oldPublicId);
         }
 
         $fresh = $user->fresh();
@@ -123,6 +115,66 @@ class ProfileImageService
             'next_change_display'    => $nextChangeAt->format('F j, Y'),
             'can_change'             => false,
         ];
+    }
+
+    /**
+     * @return array{public_id: string, url: string}
+     */
+    private function uploadToCloudOrLocal(User $user, UploadedFile $file, string $publicId): array
+    {
+        if ($this->cloudinary->isConfigured()) {
+            try {
+                return $this->cloudinary->uploadProfileImage($file, $publicId);
+            } catch (\Throwable $exception) {
+                Log::warning('Cloudinary profile upload failed, falling back to local storage', [
+                    'user_id' => $user->id,
+                    'error'   => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return $this->uploadToLocalStorage($user, $file);
+    }
+
+    /**
+     * @return array{public_id: string, url: string}
+     */
+    private function uploadToLocalStorage(User $user, UploadedFile $file): array
+    {
+        $extension = strtolower((string) ($file->guessExtension() ?: 'jpg'));
+        $filename  = 'user_' . $user->id . '.' . $extension;
+        $directory = 'profile-images';
+
+        Storage::disk('public')->putFileAs($directory, $file, $filename);
+
+        $publicId = $directory . '/' . $filename;
+
+        return [
+            'public_id' => $publicId,
+            'url'       => Storage::disk('public')->url($publicId),
+        ];
+    }
+
+    private function deleteStoredImage(string $publicId): void
+    {
+        if (str_starts_with($publicId, 'profile-images/')) {
+            Storage::disk('public')->delete($publicId);
+
+            return;
+        }
+
+        if (! $this->cloudinary->isConfigured()) {
+            return;
+        }
+
+        try {
+            $this->cloudinary->delete($publicId);
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to delete previous Kabataan profile image from Cloudinary', [
+                'public_id' => $publicId,
+                'error'     => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function assertValidFile(UploadedFile $file): void

@@ -58,6 +58,10 @@
             if (e.key === 'Escape') {
                 closeScheduleModal();
                 closeProfilePictureLockModal();
+                closeProfilePictureUploadModal();
+                closeProfilePicturePermissionModal();
+                closeProfilePictureConfirmModal();
+                closeSupportingDocsModal();
                 if (typeof closeKkPreviewModal === 'function') {
                     closeKkPreviewModal();
                 }
@@ -107,8 +111,14 @@
                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
                             </svg>
                         </span>
-                        <input type="file" id="photoUpload" accept="image/jpeg,image/jpg,image/png,image/webp" hidden @if(!$canChangeProfileImage) disabled @endif>
                     </div>
+                    <input
+                        type="file"
+                        id="photoUpload"
+                        class="profile-photo-input-sr-only"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        @if(!$canChangeProfileImage) disabled @endif
+                    >
                     <div class="profile-header-info">
                         <h1 class="profile-name">{{ $fullName ?? strtoupper($user->name) }}</h1>
                         <p class="profile-location">
@@ -124,58 +134,44 @@
             <div class="profile-content-grid">
                 <!-- Left Column - Personal Information -->
                 <div class="profile-left-column">
-                    <!-- Personal Information Card -->
-                    <div class="info-card">
-                        <div class="card-header">
-                            <h2>
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                </svg>
-                                Personal Information
-                            </h2>
-                        </div>
-                        <div class="card-body">
-                            @if($kabataanRegistration)
+                    <div class="info-card kk-profile-combined-card">
+                        <div class="card-body kk-profile-combined-body">
+                            <section class="kk-profile-section">
+                                <h2 class="kk-profile-section-title">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Personal Information
+                                </h2>
+                                @if($kabataanRegistration)
+                                    <div class="kkp-preview-toolbar">
+                                        <button type="button" class="btn-primary kkp-preview-btn" onclick="openKkPreviewModal()">View Personal Information</button>
+                                    </div>
+                                @else
+                                    <div class="empty-state kk-profile-empty-state">
+                                        <h3>No KK Profiling Record</h3>
+                                        <p>Wala pang completed KK Profiling form para sa account na ito.</p>
+                                    </div>
+                                @endif
+                            </section>
+
+                            @if(!empty($supportingDocuments))
+                            <div class="kk-profile-section-divider" role="separator" aria-hidden="true"></div>
+                            <section class="kk-profile-section">
+                                <h2 class="kk-profile-section-title">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Supporting Documents
+                                </h2>
+                                <p class="kkp-docs-summary">{{ count($supportingDocuments) }} document{{ count($supportingDocuments) === 1 ? '' : 's' }} on file from your KK Profiling registration.</p>
                                 <div class="kkp-preview-toolbar">
-                                    <button type="button" class="btn-primary kkp-preview-btn" onclick="openKkPreviewModal()">View Personal Information</button>
+                                    <button type="button" class="btn-primary kkp-preview-btn" onclick="openSupportingDocsModal()">View Supporting Documents</button>
                                 </div>
-                            @else
-                                <div class="empty-state">
-                                    <h3>No KK Profiling Record</h3>
-                                    <p>Wala pang completed KK Profiling form para sa account na ito.</p>
-                                </div>
+                            </section>
                             @endif
                         </div>
                     </div>
-
-                    @if(!empty($supportingDocuments))
-                    <div class="info-card">
-                        <div class="card-header">
-                            <h2>
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
-                                </svg>
-                                Supporting Documents
-                            </h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="kkp-profile-docs-grid">
-                                @foreach($supportingDocuments as $document)
-                                    <article class="kkp-profile-doc-card">
-                                        <a href="{{ $document['url'] }}" target="_blank" rel="noopener noreferrer" class="kkp-profile-doc-thumb-link">
-                                            <img src="{{ $document['url'] }}" alt="{{ $document['label'] }}" class="kkp-profile-doc-thumb">
-                                        </a>
-                                        <div class="kkp-profile-doc-meta">
-                                            <p class="kkp-profile-doc-label">{{ $document['label'] }}</p>
-                                            <p class="kkp-profile-doc-name">{{ $document['display_name'] }}</p>
-                                            <a href="{{ $document['url'] }}" target="_blank" rel="noopener noreferrer" class="kkp-profile-doc-view">View full image</a>
-                                        </div>
-                                    </article>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    @endif
 
                     <!-- Participation Summary Card -->
                     <div class="info-card">
@@ -380,7 +376,71 @@
         </div>
     </main>
 
-    {{-- Profile picture lock notice --}}
+    {{-- Profile picture upload instructions --}}
+    <div class="modal-backdrop kabataan-modal-backdrop profile-picture-upload-modal" id="profilePictureUploadModal" style="display: none;">
+        <div class="kabataan-modal-box profile-picture-upload-modal__box" role="dialog" aria-labelledby="profilePictureUploadTitle" aria-modal="true">
+            <div class="modal-header">
+                <h2 class="modal-title" id="profilePictureUploadTitle">Profile Picture Guidelines</h2>
+                <button type="button" class="modal-close" onclick="closeProfilePictureUploadModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body kabataan-modal-body profile-picture-upload-modal__body">
+                <p class="profile-picture-upload-modal__intro">Before you upload, make sure your photo meets these requirements:</p>
+                <ul class="profile-picture-upload-modal__list">
+                    <li>Use a clear, recent photo of yourself (face visible, good lighting).</li>
+                    <li>Accepted formats: JPG, JPEG, PNG, or WEBP.</li>
+                    <li>Maximum file size: 10MB.</li>
+                    <li>Avoid blurry, dark, group, or inappropriate images.</li>
+                    <li>Profile pictures can only be changed once every 30 days.</li>
+                </ul>
+                <div class="profile-picture-upload-modal__actions">
+                    <button type="button" class="btn-secondary profile-picture-upload-modal__cancel" onclick="closeProfilePictureUploadModal()">Cancel</button>
+                    <button type="button" class="btn-primary profile-picture-upload-modal__continue" id="profilePictureUploadContinueBtn">Choose Photo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop kabataan-modal-backdrop profile-picture-permission-modal" id="profilePicturePermissionModal" style="display: none;">
+        <div class="kabataan-modal-box profile-picture-permission-modal__box" role="dialog" aria-labelledby="profilePicturePermissionTitle" aria-modal="true">
+            <div class="modal-header">
+                <h2 class="modal-title" id="profilePicturePermissionTitle">Allow Photo Access</h2>
+                <button type="button" class="modal-close" onclick="closeProfilePicturePermissionModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body kabataan-modal-body profile-picture-permission-modal__body">
+                <p class="profile-picture-permission-modal__message">
+                    SK OnePortal needs permission to access photos on your device so you can choose a profile picture.
+                </p>
+                <p class="profile-picture-permission-modal__hint">You can change this later in your browser or device settings.</p>
+                <div class="profile-picture-upload-modal__actions">
+                    <button type="button" class="btn-secondary profile-picture-upload-modal__cancel" id="profilePicturePermissionDenyBtn">Not Now</button>
+                    <button type="button" class="btn-primary profile-picture-upload-modal__continue" id="profilePicturePermissionAllowBtn">Allow Access</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop kabataan-modal-backdrop profile-picture-confirm-modal" id="profilePictureConfirmModal" style="display: none;">
+        <div class="kabataan-modal-box profile-picture-confirm-modal__box" role="dialog" aria-labelledby="profilePictureConfirmTitle" aria-modal="true">
+            <div class="modal-header">
+                <h2 class="modal-title" id="profilePictureConfirmTitle">Confirm Profile Picture</h2>
+                <button type="button" class="modal-close" onclick="closeProfilePictureConfirmModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body kabataan-modal-body profile-picture-confirm-modal__body">
+                <p class="profile-picture-confirm-modal__intro">Review your selected photo before saving it as your profile picture.</p>
+                <div class="profile-picture-confirm-modal__preview-wrap">
+                    <img src="" alt="Selected profile picture preview" class="profile-picture-confirm-modal__preview" id="profilePictureConfirmPreview">
+                </div>
+                <p class="profile-picture-confirm-modal__notice">
+                    Once you confirm, this photo will be used as your profile picture and can only be changed again after <strong>30 days</strong>.
+                </p>
+                <div class="profile-picture-upload-modal__actions">
+                    <button type="button" class="btn-secondary profile-picture-upload-modal__cancel" id="profilePictureConfirmCancelBtn">Choose Different Photo</button>
+                    <button type="button" class="btn-primary profile-picture-upload-modal__continue" id="profilePictureConfirmSubmitBtn">Confirm &amp; Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-backdrop kabataan-modal-backdrop profile-picture-lock-modal" id="profilePictureLockModal" style="display: none;">
         <div class="kabataan-modal-box profile-picture-lock-modal__box" role="dialog" aria-labelledby="profilePictureLockTitle" aria-modal="true">
             <div class="modal-header">
@@ -404,6 +464,52 @@
         </div>
     </div>
 
+    @if(!empty($supportingDocuments))
+    <div class="modal-backdrop kabataan-modal-backdrop" id="supportingDocsModal" style="display: none;">
+        <div class="modal-box kabataan-modal-box kkp-docs-modal-container" id="supportingDocsModalPanel">
+            <div class="modal-header">
+                <h2 class="modal-title">Supporting Documents</h2>
+                <div class="modal-window-controls">
+                    <button type="button" class="modal-close" onclick="closeSupportingDocsModal()" aria-label="Close">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body kabataan-modal-body kkp-docs-modal-body">
+                <div class="kkp-docs-modal-layout">
+                    <div class="kkp-docs-modal-sidebar" role="tablist" aria-label="Supporting documents">
+                        @foreach($supportingDocuments as $index => $document)
+                            <button
+                                type="button"
+                                class="kkp-docs-select-btn{{ $index === 0 ? ' is-active' : '' }}"
+                                data-doc-url="{{ $document['url'] }}"
+                                data-doc-label="{{ $document['label'] }}"
+                                data-doc-name="{{ $document['display_name'] }}"
+                                aria-selected="{{ $index === 0 ? 'true' : 'false' }}"
+                            >
+                                <span class="kkp-docs-select-label">{{ $document['label'] }}</span>
+                                <span class="kkp-docs-select-name">{{ $document['display_name'] }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                    <div class="kkp-docs-modal-preview">
+                        <div class="kkp-docs-preview-meta">
+                            <p class="kkp-docs-preview-label" id="supportingDocPreviewLabel">{{ $supportingDocuments[0]['label'] ?? '' }}</p>
+                            <p class="kkp-docs-preview-name" id="supportingDocPreviewName">{{ $supportingDocuments[0]['display_name'] ?? '' }}</p>
+                        </div>
+                        <div class="kkp-docs-preview-frame">
+                            <img
+                                id="supportingDocPreviewImage"
+                                src="{{ $supportingDocuments[0]['url'] ?? '' }}"
+                                alt="{{ $supportingDocuments[0]['label'] ?? 'Supporting document' }}"
+                                class="kkp-docs-preview-image"
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="modal-backdrop kabataan-modal-backdrop" id="kkPreviewModal" style="display: none;">
         <div class="modal-box kabataan-modal-box kk-preview-modal-container" id="kkPreviewModalPanel">
             <div class="modal-header">
@@ -422,7 +528,6 @@
                             'barangayName' => $barangayName,
                             'barangayLogoUrl' => $barangayLogoUrl,
                             'profile' => $profile ?? [],
-                            'supportingDocuments' => $supportingDocuments ?? [],
                         ])
                     </div>
                 @endif
@@ -1224,6 +1329,67 @@
             resetKkPreviewModalState();
         }
     }
+
+    function openSupportingDocsModal() {
+        const modal = document.getElementById('supportingDocsModal');
+        if (modal) {
+            const firstBtn = modal.querySelector('.kkp-docs-select-btn');
+            if (firstBtn) {
+                showSupportingDocumentPreview(firstBtn);
+            }
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function showSupportingDocumentPreview(button) {
+        if (!button) return;
+
+        const modal = document.getElementById('supportingDocsModal');
+        const image = document.getElementById('supportingDocPreviewImage');
+        const label = document.getElementById('supportingDocPreviewLabel');
+        const name = document.getElementById('supportingDocPreviewName');
+
+        modal?.querySelectorAll('.kkp-docs-select-btn').forEach((btn) => {
+            const isActive = btn === button;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        const url = button.dataset.docUrl || '';
+        const docLabel = button.dataset.docLabel || 'Supporting document';
+        const docName = button.dataset.docName || '';
+
+        if (image) {
+            image.src = url;
+            image.alt = docLabel;
+        }
+        if (label) label.textContent = docLabel;
+        if (name) name.textContent = docName;
+    }
+
+    function closeSupportingDocsModal() {
+        const modal = document.getElementById('supportingDocsModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    window.openSupportingDocsModal = openSupportingDocsModal;
+    window.closeSupportingDocsModal = closeSupportingDocsModal;
+
+    document.getElementById('supportingDocsModal')?.addEventListener('click', function (event) {
+        if (event.target === this) {
+            closeSupportingDocsModal();
+        }
+    });
+
+    document.querySelectorAll('#supportingDocsModal .kkp-docs-select-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            showSupportingDocumentPreview(button);
+        });
+    });
 
     document.getElementById('kkPreviewFullscreenBtn')?.addEventListener('click', function () {
         const backdrop = document.getElementById('kkPreviewModal');
