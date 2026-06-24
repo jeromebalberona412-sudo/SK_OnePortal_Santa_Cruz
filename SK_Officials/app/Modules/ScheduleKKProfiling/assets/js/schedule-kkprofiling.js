@@ -19,15 +19,6 @@ function showToast(message, type) {
 }
 
 // ── Format helpers ─────────────────────────────────────────────────────────
-function formatTime(timeStr) {
-    if (!timeStr) return '—';
-    const [h, m] = timeStr.split(':');
-    const hour = parseInt(h, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${m} ${ampm}`;
-}
-
 function formatDate(dateStr) {
     if (!dateStr) return '—';
     const d = new Date(`${dateStr}T00:00:00`);
@@ -51,17 +42,22 @@ async function apiFetch(url, options = {}) {
     });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `HTTP ${res.status}`);
+        const firstFieldError = err.errors
+            ? Object.values(err.errors).flat()[0]
+            : null;
+        throw new Error(firstFieldError || err.message || `HTTP ${res.status}`);
     }
     return res.json();
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
 function initializeScheduleKKProfiling() {
+    const SCHEDULE_YEAR = new Date().getFullYear();
+
     let schedules = [];
     let activeId = null;
     let currentPage = 1;
-    const perPage = 10;
+    let recordsPerPage = 10;
 
     let filterStatus = '';
     let filterSearch = '';
@@ -82,11 +78,8 @@ function initializeScheduleKKProfiling() {
     const viewModal     = document.getElementById('skkpViewModal');
     const viewRestoreBtn = document.getElementById('skkpViewRestoreBtn');
 
-    const deleteModal      = document.getElementById('skkpDeleteModal');
-    const deleteCancelBtn  = document.getElementById('skkpDeleteCancelBtn');
-    const deleteConfirmBtn = document.getElementById('skkpDeleteConfirmBtn');
-    const dateStartInput = document.getElementById('skkpFormDateStart');
-    const dateExpiryInput = document.getElementById('skkpFormDateExpiry');
+    const dateStartMdInput = document.getElementById('skkpFormDateStartMd');
+    const dateExpiryMdInput = document.getElementById('skkpFormDateExpiryMd');
     const dateStartError = document.getElementById('skkpDateStartError');
     const dateExpiryError = document.getElementById('skkpDateExpiryError');
     const MAX_RANGE_DAYS = 366;
@@ -113,20 +106,71 @@ function initializeScheduleKKProfiling() {
         return Math.floor(ms / 86400000);
     }
 
+    function ymdToMd(ymd) {
+        if (!ymd) return '';
+        const parts = ymd.split('-');
+        if (parts.length !== 3) return '';
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        if (!month || !day) return '';
+        return `${month}/${day}`;
+    }
+
+    function mdToYmd(mdStr) {
+        if (!mdStr) return '';
+        const match = String(mdStr).trim().match(/^(\d{1,2})\/(\d{1,2})$/);
+        if (!match) return '';
+        const month = parseInt(match[1], 10);
+        const day = parseInt(match[2], 10);
+        if (month < 1 || month > 12 || day < 1 || day > 31) return '';
+        const monthStr = String(month).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        const candidate = `${SCHEDULE_YEAR}-${monthStr}-${dayStr}`;
+        const parsed = parseYmdToLocalDate(candidate);
+        if (!parsed || parsed.getMonth() + 1 !== month || parsed.getDate() !== day) return '';
+        return candidate;
+    }
+
+    function formatMdInput(raw) {
+        const digits = String(raw).replace(/\D/g, '').slice(0, 4);
+        if (digits.length <= 2) return digits;
+        return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+
     function showFieldError(el, message) {
         if (!el) return;
         el.textContent = message || '';
         el.style.display = message ? 'block' : 'none';
     }
 
+    function getDateStartYmd() {
+        return mdToYmd(dateStartMdInput?.value || '');
+    }
+
+    function getDateExpiryYmd() {
+        return mdToYmd(dateExpiryMdInput?.value || '');
+    }
+
     function validateDateWindow() {
         const today = localDateString();
-        const dateStart = dateStartInput?.value || '';
-        const dateExpiry = dateExpiryInput?.value || '';
+        const dateStart = getDateStartYmd();
+        const dateExpiry = getDateExpiryYmd();
+        const startMd = dateStartMdInput?.value?.trim() || '';
+        const expiryMd = dateExpiryMdInput?.value?.trim() || '';
         let valid = true;
 
         showFieldError(dateStartError, '');
         showFieldError(dateExpiryError, '');
+
+        if (startMd && !dateStart) {
+            showFieldError(dateStartError, 'Enter a valid date as MM/DD.');
+            valid = false;
+        }
+
+        if (expiryMd && !dateExpiry) {
+            showFieldError(dateExpiryError, 'Enter a valid date as MM/DD.');
+            valid = false;
+        }
 
         if (dateStart && dateStart < today) {
             showFieldError(dateStartError, 'Past dates are not allowed.');
@@ -151,20 +195,21 @@ function initializeScheduleKKProfiling() {
         return valid;
     }
 
-    function refreshDateBounds() {
-        const today = localDateString();
-        if (dateStartInput) dateStartInput.min = today;
-        if (dateExpiryInput) {
-            const startVal = dateStartInput?.value || '';
-            dateExpiryInput.min = startVal || today;
-            if (startVal) {
-                const maxDate = parseYmdToLocalDate(startVal);
-                maxDate.setFullYear(maxDate.getFullYear() + 1);
-                dateExpiryInput.max = localDateString(maxDate);
-            } else {
-                dateExpiryInput.removeAttribute('max');
-            }
-        }
+    function hasScheduleForCurrentYear(excludeId = null) {
+        return schedules.some((s) => {
+            if (excludeId && s.id === excludeId) return false;
+            const year = parseInt((s.dateStart || '').split('-')[0], 10);
+            return year === SCHEDULE_YEAR;
+        });
+    }
+
+    function updateCreateBtnState() {
+        if (!createBtn) return;
+        const blocked = hasScheduleForCurrentYear();
+        createBtn.disabled = blocked;
+        createBtn.title = blocked
+            ? `A schedule for ${SCHEDULE_YEAR} already exists.`
+            : '';
     }
 
     // ── API ─────────────────────────────────────────────────────────────────
@@ -179,6 +224,7 @@ function initializeScheduleKKProfiling() {
                 status:      s.status,
             }));
             renderTable();
+            updateCreateBtnState();
         } catch (e) {
             showToast('Failed to load schedules.', 'error');
         }
@@ -198,13 +244,53 @@ function initializeScheduleKKProfiling() {
         });
     }
 
+    function getTotalPages(count = getFiltered().length) {
+        return Math.max(1, Math.ceil(count / recordsPerPage) || 1);
+    }
+
+    function updatePaginationFooter(totalRecords) {
+        const totalPages = getTotalPages(totalRecords);
+        const pageInput = document.getElementById('skkpPageInput');
+        const totalPagesEl = document.getElementById('skkpTotalPages');
+        const prevBtn = document.getElementById('skkpPrevBtn');
+        const nextBtn = document.getElementById('skkpNextBtn');
+        const info = document.getElementById('skkpPaginationInfo');
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        if (pageInput) {
+            pageInput.value = String(currentPage);
+            pageInput.min = '1';
+            pageInput.max = String(totalPages);
+        }
+
+        if (totalPagesEl) {
+            totalPagesEl.textContent = String(totalPages);
+        }
+
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+        if (info) {
+            info.textContent = `${totalRecords} record${totalRecords === 1 ? '' : 's'}`;
+        }
+    }
+
+    function goToPage(page) {
+        const totalPages = getTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            renderTable();
+        }
+    }
+
     function renderTable() {
         const filtered = getFiltered();
-        const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-        if (currentPage > totalPages) currentPage = totalPages;
-
-        const start = (currentPage - 1) * perPage;
-        const end   = Math.min(start + perPage, filtered.length);
+        const totalPages = getTotalPages(filtered.length);
+        const start = (currentPage - 1) * recordsPerPage;
+        const end   = Math.min(start + recordsPerPage, filtered.length);
         const page  = filtered.slice(start, end);
 
         tbody.innerHTML = '';
@@ -231,9 +317,8 @@ function initializeScheduleKKProfiling() {
                     <td><span class="skkp-status-badge ${statusClass}">${s.status}</span></td>
                     <td>
                         <div class="skkp-actions">
-                            <button class="skkp-btn skkp-btn-view"   data-action="view"   data-id="${s.id}">View</button>
-                            <button class="skkp-btn skkp-btn-edit"   data-action="edit"   data-id="${s.id}">Edit</button>
-                            <button class="skkp-btn skkp-btn-delete" data-action="delete" data-id="${s.id}">Delete</button>
+                            <button class="skkp-btn skkp-btn-view" data-action="view" data-id="${s.id}">View</button>
+                            <button class="skkp-btn skkp-btn-edit" data-action="edit" data-id="${s.id}">Edit</button>
                         </div>
                     </td>
                 `;
@@ -241,44 +326,18 @@ function initializeScheduleKKProfiling() {
             });
         }
 
-        updatePagination(filtered.length, start + 1, end, totalPages);
+        updatePaginationFooter(filtered.length);
         updateStats();
     }
 
     function updateStats() {
-        const counts = { Upcoming: 0, Ongoing: 0, Completed: 0, Cancelled: 0, Rescheduled: 0 };
+        const counts = { Upcoming: 0, Ongoing: 0, Completed: 0, Cancelled: 0 };
         schedules.forEach(s => { if (counts[s.status] !== undefined) counts[s.status]++; });
-        document.getElementById('skkpStatUpcoming').textContent    = counts.Upcoming;
-        document.getElementById('skkpStatOngoing').textContent     = counts.Ongoing;
-        document.getElementById('skkpStatCompleted').textContent   = counts.Completed;
-        document.getElementById('skkpStatCancelled').textContent   = counts.Cancelled;
-        document.getElementById('skkpStatRescheduled').textContent = counts.Rescheduled;
-    }
-
-    function updatePagination(total, start, end, totalPages) {
-        const info = document.getElementById('skkpPaginationInfo');
-        if (info) {
-            info.textContent = total === 0
-                ? 'No records found'
-                : `Showing ${start}–${end} of ${total} records`;
-        }
-        const prevBtn  = document.getElementById('skkpPrevBtn');
-        const nextBtn  = document.getElementById('skkpNextBtn');
-        const pageNums = document.getElementById('skkpPageNumbers');
-        if (prevBtn) prevBtn.disabled = currentPage === 1;
-        if (nextBtn) nextBtn.disabled = currentPage === totalPages;
-        if (pageNums) {
-            pageNums.innerHTML = '';
-            const s = Math.max(1, currentPage - 2);
-            const e = Math.min(totalPages, currentPage + 2);
-            for (let i = s; i <= e; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'page-number' + (i === currentPage ? ' active' : '');
-                btn.textContent = i;
-                btn.onclick = () => { currentPage = i; renderTable(); };
-                pageNums.appendChild(btn);
-            }
-        }
+        const el = (id) => document.getElementById(id);
+        if (el('skkpStatUpcoming'))  el('skkpStatUpcoming').textContent  = counts.Upcoming;
+        if (el('skkpStatOngoing'))   el('skkpStatOngoing').textContent   = counts.Ongoing;
+        if (el('skkpStatCompleted')) el('skkpStatCompleted').textContent = counts.Completed;
+        if (el('skkpStatCancelled')) el('skkpStatCancelled').textContent = counts.Cancelled;
     }
 
     // ── Modal helpers ───────────────────────────────────────────────────────
@@ -344,7 +403,7 @@ function initializeScheduleKKProfiling() {
         });
     }
 
-    [formModal, viewModal, deleteModal].forEach(modal => {
+    [formModal, viewModal].forEach(modal => {
         if (!modal) return;
         modal.addEventListener('click', e => {
             if (e.target === modal || e.target.hasAttribute('data-modal-close')) {
@@ -358,21 +417,22 @@ function initializeScheduleKKProfiling() {
     // ── Form helpers ────────────────────────────────────────────────────────
     const getFormField = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
     const setFormField = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+
     function clearForm() {
-        ['skkpFormDateStart', 'skkpFormDateExpiry', 'skkpFormLink'].forEach(id => setFormField(id, ''));
+        setFormField('skkpFormDateStartMd', '');
+        setFormField('skkpFormDateExpiryMd', '');
+        setFormField('skkpFormLink', '');
         setFormField('skkpFormStatus', 'Upcoming');
         showFieldError(dateStartError, '');
         showFieldError(dateExpiryError, '');
-        refreshDateBounds();
     }
 
     // ── Status hint ─────────────────────────────────────────────────────────
     const statusHints = {
-        Upcoming:    { cls: 'hint-info',    msg: 'Scheduled but not yet open. Kabataan will see the date range but cannot sign up yet.' },
-        Ongoing:     { cls: 'hint-success', msg: 'Sign-up is currently open. Kabataan can select this barangay and submit the form.' },
-        Completed:   { cls: 'hint-warning', msg: 'Profiling is done. Sign-up will be closed for this barangay.' },
-        Cancelled:   { cls: 'hint-danger',  msg: 'Profiling is cancelled. Sign-up will be closed for this barangay.' },
-        Rescheduled: { cls: 'hint-warning', msg: 'Profiling has been moved. Update the dates to reflect the new schedule.' },
+        Upcoming:  { cls: 'hint-info',    msg: 'Scheduled but not yet open. Kabataan will see the date range but cannot sign up yet.' },
+        Ongoing:   { cls: 'hint-success', msg: 'Sign-up is currently open. Kabataan can select this barangay and submit the form.' },
+        Completed: { cls: 'hint-warning', msg: 'Profiling is done. Sign-up will be closed for this barangay.' },
+        Cancelled: { cls: 'hint-danger',  msg: 'Profiling is cancelled. Sign-up will be closed for this barangay.' },
     };
 
     const statusHintEl = document.getElementById('skkpStatusHint');
@@ -392,6 +452,10 @@ function initializeScheduleKKProfiling() {
     // ── Create ──────────────────────────────────────────────────────────────
     if (createBtn) {
         createBtn.addEventListener('click', () => {
+            if (hasScheduleForCurrentYear()) {
+                showToast(`A schedule for ${SCHEDULE_YEAR} already exists.`, 'error');
+                return;
+            }
             editIdInput.value = '';
             formTitle.textContent = 'Create Schedule';
             formSaveBtn.textContent = 'Save Schedule';
@@ -409,16 +473,22 @@ function initializeScheduleKKProfiling() {
 
     if (formSaveBtn) {
         formSaveBtn.addEventListener('click', async () => {
-            const dateStart  = getFormField('skkpFormDateStart');
-            const dateExpiry = getFormField('skkpFormDateExpiry');
+            const dateStart  = getDateStartYmd();
+            const dateExpiry = getDateExpiryYmd();
             const link       = getFormField('skkpFormLink');
             const status     = getFormField('skkpFormStatus') || 'Upcoming';
+            const id = editIdInput.value ? parseInt(editIdInput.value, 10) : null;
 
             if (!dateStart || !dateExpiry || !status) {
-                showToast('Please fill in all required fields.', 'error');
+                showToast('Please fill in all required fields (MM/DD).', 'error');
+                validateDateWindow();
                 return;
             }
             if (!validateDateWindow()) {
+                return;
+            }
+            if (!id && hasScheduleForCurrentYear()) {
+                showToast(`A schedule for ${SCHEDULE_YEAR} already exists.`, 'error');
                 return;
             }
             if (link && !isValidUrl(link)) {
@@ -426,11 +496,13 @@ function initializeScheduleKKProfiling() {
                 return;
             }
 
-            const id = editIdInput.value ? parseInt(editIdInput.value, 10) : null;
             const payload = { date_start: dateStart, date_expiry: dateExpiry, link: link || null, status };
 
             try {
                 formSaveBtn.disabled = true;
+                if (typeof showLoading === 'function') {
+                    showLoading(id ? 'Updating schedule' : 'Creating schedule');
+                }
                 if (id) {
                     await apiFetch(`/api/schedule-kk-profiling/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
                     showToast('Schedule updated successfully!', 'success');
@@ -445,6 +517,9 @@ function initializeScheduleKKProfiling() {
                 showToast(e.message || 'Failed to save schedule.', 'error');
             } finally {
                 formSaveBtn.disabled = false;
+                if (typeof hideLoading === 'function') {
+                    hideLoading();
+                }
             }
         });
     }
@@ -473,7 +548,6 @@ function initializeScheduleKKProfiling() {
             let startVal = sched.dateStart || '';
             let expiryVal = sched.dateExpiry || '';
 
-            // When editing old records, keep the form usable by snapping past start dates to today.
             if (startVal && startVal < today) {
                 startVal = today;
             }
@@ -484,17 +558,14 @@ function initializeScheduleKKProfiling() {
                 expiryVal = startVal || today;
             }
 
-            setFormField('skkpFormDateStart', startVal);
-            setFormField('skkpFormDateExpiry', expiryVal);
-            setFormField('skkpFormLink',       sched.link);
-            setFormField('skkpFormStatus',     sched.status);
+            setFormField('skkpFormDateStartMd', ymdToMd(startVal));
+            setFormField('skkpFormDateExpiryMd', ymdToMd(expiryVal));
+            setFormField('skkpFormLink', sched.link);
+            setFormField('skkpFormStatus', sched.status);
             updateStatusHint(sched.status);
             showFieldError(dateStartError, '');
             showFieldError(dateExpiryError, '');
-            refreshDateBounds();
             openModal(formModal);
-        } else if (action === 'delete') {
-            openModal(deleteModal);
         }
     });
 
@@ -516,24 +587,6 @@ function initializeScheduleKKProfiling() {
         }
     }
 
-    // ── Delete ──────────────────────────────────────────────────────────────
-    if (deleteCancelBtn) deleteCancelBtn.addEventListener('click', () => closeModal(deleteModal));
-    if (deleteConfirmBtn) {
-        deleteConfirmBtn.addEventListener('click', async () => {
-            try {
-                deleteConfirmBtn.disabled = true;
-                await apiFetch(`/api/schedule-kk-profiling/${activeId}`, { method: 'DELETE' });
-                closeModal(deleteModal);
-                showToast('Schedule deleted successfully!', 'success');
-                await loadData();
-            } catch (e) {
-                showToast('Failed to delete schedule.', 'error');
-            } finally {
-                deleteConfirmBtn.disabled = false;
-            }
-        });
-    }
-
     // ── Filters ─────────────────────────────────────────────────────────────
     if (searchInput) {
         searchInput.addEventListener('input', () => { filterSearch = searchInput.value.trim(); currentPage = 1; renderTable(); });
@@ -545,22 +598,50 @@ function initializeScheduleKKProfiling() {
     // ── Pagination ──────────────────────────────────────────────────────────
     const prevBtn = document.getElementById('skkpPrevBtn');
     const nextBtn = document.getElementById('skkpNextBtn');
-    if (prevBtn) prevBtn.addEventListener('click', () => { currentPage--; renderTable(); });
-    if (nextBtn) nextBtn.addEventListener('click', () => { currentPage++; renderTable(); });
+    const pageInput = document.getElementById('skkpPageInput');
+    const rowsPerPageSelect = document.getElementById('skkpRowsPerPageSelect');
+
+    if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
+
+    if (pageInput) {
+        pageInput.addEventListener('change', () => {
+            const page = parseInt(pageInput.value, 10);
+            if (!Number.isNaN(page)) {
+                goToPage(page);
+            }
+        });
+    }
+
+    if (rowsPerPageSelect) {
+        recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+        rowsPerPageSelect.addEventListener('change', () => {
+            recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+            currentPage = 1;
+            renderTable();
+        });
+    }
+
+    // ── Date input formatting ───────────────────────────────────────────────
+    function bindMdInput(input) {
+        if (!input) return;
+        input.addEventListener('input', () => {
+            const pos = input.selectionStart;
+            const before = input.value;
+            input.value = formatMdInput(input.value);
+            if (input.value.length < before.length && pos !== null) {
+                input.setSelectionRange(pos, pos);
+            }
+            validateDateWindow();
+        });
+        input.addEventListener('blur', validateDateWindow);
+    }
+
+    bindMdInput(dateStartMdInput);
+    bindMdInput(dateExpiryMdInput);
 
     // ── Utility ─────────────────────────────────────────────────────────────
     function isValidUrl(str) { try { new URL(str); return true; } catch { return false; } }
-
-    if (dateStartInput) {
-        dateStartInput.addEventListener('input', () => {
-            refreshDateBounds();
-            validateDateWindow();
-        });
-    }
-    if (dateExpiryInput) {
-        dateExpiryInput.addEventListener('input', validateDateWindow);
-    }
-    refreshDateBounds();
 
     // ── Boot ────────────────────────────────────────────────────────────────
     loadData();

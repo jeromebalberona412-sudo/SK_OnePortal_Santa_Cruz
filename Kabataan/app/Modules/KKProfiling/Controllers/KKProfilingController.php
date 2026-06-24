@@ -7,6 +7,8 @@ use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Notifications\KabataanVerifyEmail;
+use App\Rules\FacebookProfileUrl;
+use App\Services\BarangayZoneService;
 use App\Services\KabataanPhotoService;
 use App\Services\KkRegistrationDraftService;
 use App\Services\KkSurveyResponseService;
@@ -17,11 +19,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\Rule;
 
 class KKProfilingController extends Controller
 {
     public function __construct(
-        protected KabataanPhotoService $photoService
+        protected KabataanPhotoService $photoService,
+        protected BarangayZoneService $barangayZoneService,
     ) {}
     /**
      * Display signup page with barangay selector
@@ -190,6 +194,7 @@ class KKProfilingController extends Controller
             'respondentNumber'      => $respondentNumber,
             'respondentDisplay'     => self::formatRespondentDisplay($respondentNumber),
             'barangayLogoUrl'       => self::getBarangayLogoUrl($barangayRecord->id),
+            'barangayZones'         => $this->barangayZoneService->activeZonesForBarangay((int) $barangayRecord->id),
             'wizardInitialStep'     => $wizardInitialStep,
             'verificationSent'      => $verificationSent,
             'registrationComplete'  => $registrationComplete,
@@ -242,7 +247,7 @@ class KKProfilingController extends Controller
             'middle_name'           => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
             'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
             'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:30', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
-            'purok_zone'            => ['required', 'string', 'max:100', 'regex:/^(?!\s).+/'],
+            'purok_zone'            => $this->barangayZoneService->purokZoneRules((int) $registration->barangay_id),
             'sex'                   => 'required|in:Male,Female',
             'age'                   => 'required|integer|min:15|max:30',
             'birthday'              => 'required|date|before_or_equal:today',
@@ -259,8 +264,20 @@ class KKProfilingController extends Controller
             'kk_assembly'           => 'required|string|in:Yes,No',
             'kk_times'              => 'required_if:kk_assembly,Yes|nullable|string',
             'kk_reason'             => 'required_if:kk_assembly,No|nullable|string',
-            'facebook'              => ['required', 'string', 'min:3', 'max:35', 'regex:/^\S+$/'],
-            'group_chat'            => 'required|string',
+            'facebook_profile_url'  => [
+                'nullable',
+                Rule::requiredIf(fn () => in_array((string) $this->input('group_chat'), ['Yes', 'No'], true)),
+                'string',
+                'min:3',
+                'max:50',
+                new FacebookProfileUrl(),
+            ],
+            'group_chat'            => [
+                'nullable',
+                Rule::requiredIf(fn () => trim((string) $this->input('facebook_profile_url', '')) !== ''),
+                'string',
+                Rule::in(['Yes', 'No']),
+            ],
             'signature'             => 'required|string',
         ]);
 
@@ -309,7 +326,7 @@ class KKProfilingController extends Controller
         $validated['kk_assembly'] = $request->input('kk_assembly');
         $validated['kk_times'] = $request->input('kk_assembly') === 'Yes' ? $request->input('kk_times') : null;
         $validated['kk_reason'] = $request->input('kk_assembly') === 'No' ? $request->input('kk_reason') : null;
-        $validated['facebook'] = $request->input('facebook');
+        $validated['facebook_profile_url'] = trim((string) $request->input('facebook_profile_url', '')) ?: null;
         $validated['group_chat'] = $request->input('group_chat');
         $validated['signature_name'] = $request->input('signature_name');
 
@@ -338,13 +355,26 @@ class KKProfilingController extends Controller
             'data' => $request->all()
         ]);
 
+        $slug = $this->normalizeSlug($barangay);
+        $barangayName = $this->getBarangayName($slug);
+
+        if (!$barangayName) {
+            abort(404);
+        }
+
+        $barangayRecord = Barangay::where('name', $barangayName)->first();
+
+        if (!$barangayRecord) {
+            abort(404);
+        }
+
         $validated = $request->validate([
             'last_name'             => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z.\-]{3,50}$/'],
             'first_name'            => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
             'middle_name'           => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
             'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
             'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:30', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
-            'purok_zone'            => ['required', 'string', 'max:100', 'regex:/^(?!\s).+/'],
+            'purok_zone'            => $this->barangayZoneService->purokZoneRules((int) $barangayRecord->id),
             'sex'                   => 'required|in:Male,Female',
             'age'                   => 'required|integer|min:15|max:30',
             'birthday'              => 'required|date|before_or_equal:today',
@@ -361,8 +391,20 @@ class KKProfilingController extends Controller
             'kk_assembly'           => 'required|string|in:Yes,No',
             'kk_times'              => 'required_if:kk_assembly,Yes|nullable|string',
             'kk_reason'             => 'required_if:kk_assembly,No|nullable|string',
-            'facebook'              => ['required', 'string', 'min:3', 'max:35', 'regex:/^\S+$/'],
-            'group_chat'            => 'required|string',
+            'facebook_profile_url'  => [
+                'nullable',
+                Rule::requiredIf(fn () => in_array((string) $this->input('group_chat'), ['Yes', 'No'], true)),
+                'string',
+                'min:3',
+                'max:50',
+                new FacebookProfileUrl(),
+            ],
+            'group_chat'            => [
+                'nullable',
+                Rule::requiredIf(fn () => trim((string) $this->input('facebook_profile_url', '')) !== ''),
+                'string',
+                Rule::in(['Yes', 'No']),
+            ],
             'signature'             => 'required|string',
         ]);
 
@@ -411,26 +453,10 @@ class KKProfilingController extends Controller
         $validated['kk_assembly'] = $request->input('kk_assembly');
         $validated['kk_times'] = $request->input('kk_assembly') === 'Yes' ? $request->input('kk_times') : null;
         $validated['kk_reason'] = $request->input('kk_assembly') === 'No' ? $request->input('kk_reason') : null;
-        $validated['facebook'] = $request->input('facebook');
+        $validated['facebook_profile_url'] = trim((string) $request->input('facebook_profile_url', '')) ?: null;
         $validated['group_chat'] = $request->input('group_chat');
 
         \Log::info('Validation passed');
-
-        // Get barangay from slug
-        $slug = $this->normalizeSlug($barangay);
-        $barangayName = $this->getBarangayName($slug);
-        
-        if (!$barangayName) {
-            abort(404);
-        }
-
-        $barangayRecord = Barangay::where('name', $barangayName)->first();
-        
-        if (!$barangayRecord) {
-            return $this->submitErrorResponse($request, [
-                'barangay' => 'Barangay not found in database.',
-            ]);
-        }
 
         $email = strtolower(trim($validated['email']));
         $existingUser = User::where('email', $email)

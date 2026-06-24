@@ -6,23 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Notifications\KabataanSetPasswordEmail;
+use App\Rules\FacebookProfileUrl;
+use App\Services\BarangayZoneService;
 use App\Services\KkRegistrationDraftService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class KKProfilingWizardController extends Controller
 {
     public function __construct(
-        protected KkRegistrationDraftService $draftService
+        protected KkRegistrationDraftService $draftService,
+        protected BarangayZoneService $barangayZoneService,
     ) {}
 
     public function saveStep1(Request $request, string $barangay)
     {
         $barangayRecord = $this->resolveBarangay($barangay);
-        $validated = $this->validateStep1($request);
+        $validated = $this->validateStep1($request, (int) $barangayRecord->id);
         $payload = $this->normalizeStep1Payload($request, $validated);
 
         $wizard = $this->draftService->createOrUpdateStep1(
@@ -387,7 +391,7 @@ class KKProfilingWizardController extends Controller
         return $wizard;
     }
 
-    private function validateStep1(Request $request): array
+    private function validateStep1(Request $request, int $barangayId): array
     {
         $validated = $request->validate([
             'last_name'             => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z.\-]{3,50}$/'],
@@ -395,7 +399,7 @@ class KKProfilingWizardController extends Controller
             'middle_name'           => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
             'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
             'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:30', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
-            'purok_zone'            => ['required', 'string', 'max:100', 'regex:/^(?!\s).+/'],
+            'purok_zone'            => $this->barangayZoneService->purokZoneRules($barangayId),
             'sex'                   => 'required|in:Male,Female',
             'age'                   => 'required|integer|min:15|max:30',
             'birthday'              => 'required|date|before_or_equal:today',
@@ -412,8 +416,20 @@ class KKProfilingWizardController extends Controller
             'kk_assembly'           => 'required|string|in:Yes,No',
             'kk_times'              => 'required_if:kk_assembly,Yes|nullable|string',
             'kk_reason'             => 'required_if:kk_assembly,No|nullable|string',
-            'facebook'              => ['required', 'string', 'min:3', 'max:35', 'regex:/^\S+$/'],
-            'group_chat'            => 'required|string',
+            'facebook_profile_url'  => [
+                'nullable',
+                Rule::requiredIf(fn () => in_array((string) $this->input('group_chat'), ['Yes', 'No'], true)),
+                'string',
+                'min:3',
+                'max:50',
+                new FacebookProfileUrl(),
+            ],
+            'group_chat'            => [
+                'nullable',
+                Rule::requiredIf(fn () => trim((string) $this->input('facebook_profile_url', '')) !== ''),
+                'string',
+                Rule::in(['Yes', 'No']),
+            ],
             'signature'             => 'required|string',
             'data_agreement'        => 'accepted',
         ]);
@@ -468,7 +484,7 @@ class KKProfilingWizardController extends Controller
         $validated['kk_assembly']          = $request->input('kk_assembly');
         $validated['kk_times']           = $request->input('kk_assembly') === 'Yes' ? $request->input('kk_times') : null;
         $validated['kk_reason']            = $request->input('kk_assembly') === 'No' ? $request->input('kk_reason') : null;
-        $validated['facebook']             = $request->input('facebook');
+        $validated['facebook_profile_url'] = trim((string) $request->input('facebook_profile_url', '')) ?: null;
         $validated['group_chat']           = $request->input('group_chat');
         $validated['signature_name']       = $request->input('signature_name');
 

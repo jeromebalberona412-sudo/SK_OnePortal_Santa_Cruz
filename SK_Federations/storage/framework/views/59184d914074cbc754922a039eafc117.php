@@ -8,7 +8,7 @@
         : 'Assign federation positions to SK Chairpersons from each barangay';
     $addLabel = $isOfficials ? 'Add SK Official' : 'Add Federation Member';
     $positionFilterLabel = $isOfficials ? 'Position' : 'Federation Position';
-    $tableColspan = $isOfficials ? 7 : 6;
+    $tableColspan = $isOfficials ? 8 : 6;
     $accountCssVersion = @filemtime(app_path('Modules/Accounts/assets/css/account.css')) ?: time();
     $accountJsVersion = @filemtime(app_path('Modules/Accounts/assets/js/account.js')) ?: time();
     $batchTemplateType = $isOfficials ? 'officials' : 'federation';
@@ -123,6 +123,7 @@
                             <?php endif; ?>
                             <th class="th-position"><?php echo e($isOfficials ? 'Position' : 'SK Position'); ?></th>
                             <?php if($isOfficials): ?>
+                                <th class="th-term">Term Start</th>
                                 <th class="th-term">Term End</th>
                             <?php else: ?>
                                 <th class="th-federation-position">Federation Position</th>
@@ -193,6 +194,7 @@
                                     <?php endif; ?>
                                 </td>
                                 <?php if($isOfficials): ?>
+                                    <td class="td-term"><?php echo e($term?->term_start?->format('m/d/Y') ?? '—'); ?></td>
                                     <td class="td-term"><?php echo e($term?->term_end?->format('m/d/Y') ?? '—'); ?></td>
                                 <?php else: ?>
                                     <td class="td-federation-position">

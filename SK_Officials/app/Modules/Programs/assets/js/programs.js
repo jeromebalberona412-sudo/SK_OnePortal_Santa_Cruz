@@ -68,11 +68,6 @@ function initializeProgramsUI() {
     const editStartDate      = document.getElementById('editStartDate');
     const editEndDate        = document.getElementById('editEndDate');
 
-    const summaryTotal = document.getElementById('summaryTotalPrograms');
-    const summaryPlanned = document.getElementById('summaryPlanned');
-    const summaryOngoing = document.getElementById('summaryOngoing');
-    const summaryCompleted = document.getElementById('summaryCompleted');
-
     // Modal maximize/minimize (restore) controls
     function resetModalMaximize(backdropEl) {
         if (!backdropEl) return;
@@ -204,19 +199,10 @@ function initializeProgramsUI() {
     }
 
     function updateSummary(list) {
-        if (!summaryTotal) return;
-
         const total = list.length;
-        const planned = list.filter((p) => p.status === 'planned').length;
         const ongoing = list.filter((p) => p.status === 'ongoing').length;
         const completed = list.filter((p) => p.status === 'completed').length;
 
-        summaryTotal.textContent = total;
-        if (summaryPlanned) summaryPlanned.textContent = planned;
-        if (summaryOngoing) summaryOngoing.textContent = ongoing;
-        if (summaryCompleted) summaryCompleted.textContent = completed;
-
-        // Update stat cards
         const statTotal = document.getElementById('progStatTotal');
         const statOngoing = document.getElementById('progStatOngoing');
         const statCompleted = document.getElementById('progStatCompleted');

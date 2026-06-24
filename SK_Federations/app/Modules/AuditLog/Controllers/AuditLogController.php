@@ -38,7 +38,7 @@ class AuditLogController extends Controller
     {
         $tenantId = $request->user()?->tenant_id;
         $requestedPerPage = (int) $request->integer('per_page', 100);
-        $allowedPerPage = [100, 500, 1000];
+        $allowedPerPage = [10, 25, 50, 100, 500, 1000];
         $perPage = in_array($requestedPerPage, $allowedPerPage, true) ? $requestedPerPage : 100;
         $page = max(1, (int) $request->integer('page', 1));
 

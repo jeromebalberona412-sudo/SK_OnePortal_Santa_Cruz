@@ -79,6 +79,8 @@ window.AccountsDeleteModal = (function () {
     function els() {
         return {
             modal: document.getElementById('deleteAccountModal'),
+            panel: document.getElementById('deleteModalPanel'),
+            loading: document.getElementById('deleteModalLoading'),
             title: document.getElementById('deleteModalTitle'),
             message: document.getElementById('deleteModalMessage'),
             input: document.getElementById('deleteConfirmationInput'),
@@ -87,6 +89,19 @@ window.AccountsDeleteModal = (function () {
             confirmBtn: document.getElementById('deleteModalConfirmBtn'),
             cancelBtn: document.getElementById('deleteModalCancelBtn'),
         };
+    }
+
+    function csrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+    }
+
+    function setModalLoading(isLoading) {
+        const { panel, loading, confirmBtn, cancelBtn, input } = els();
+        if (panel) panel.hidden = isLoading;
+        if (loading) loading.hidden = !isLoading;
+        if (confirmBtn) confirmBtn.disabled = isLoading || confirmBtn.classList.contains('is-disabled');
+        if (cancelBtn) cancelBtn.disabled = isLoading;
+        if (input) input.disabled = isLoading;
     }
 
     function updateConfirmState() {
@@ -106,6 +121,7 @@ window.AccountsDeleteModal = (function () {
 
     function resetForm() {
         const { input, hintError, hintSuccess, confirmBtn } = els();
+        setModalLoading(false);
         if (input) input.value = '';
         if (hintError) hintError.style.display = 'none';
         if (hintSuccess) hintSuccess.style.display = 'none';
@@ -139,21 +155,29 @@ window.AccountsDeleteModal = (function () {
         const { input } = els();
         if (!input || input.value !== 'Delete') return;
 
-        showLoadingOverlay('Deleting...');
+        const token = csrfToken();
+        if (!token) {
+            alert('Session expired. Please refresh the page and try again.');
+            return;
+        }
+
+        setModalLoading(true);
 
         try {
             if (mode === 'bulk') {
                 const response = await fetch('/accounts/bulk-deactivate', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-CSRF-TOKEN': token,
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                     },
-                    body: JSON.stringify({ account_ids: bulkIds }),
+                    body: JSON.stringify({ account_ids: bulkIds, _token: token }),
                 });
                 const data = await response.json().catch(() => ({}));
-                hideLoadingOverlay();
+                setModalLoading(false);
 
                 if (!response.ok || !data.success) {
                     alert(data.message || 'Failed to delete selected accounts.');
@@ -181,16 +205,22 @@ window.AccountsDeleteModal = (function () {
 
             const response = await fetch(`/accounts/${targetId}/deactivate`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-CSRF-TOKEN': token,
                     'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({ _token: token }),
             });
             const data = await response.json().catch(() => ({}));
-            hideLoadingOverlay();
+            setModalLoading(false);
 
             if (!response.ok || !data.success) {
-                alert(data.message || 'Failed to delete account.');
+                const message = data.message
+                    || (response.status === 419 ? 'Session expired. Please refresh the page and try again.' : 'Failed to delete account.');
+                alert(message);
                 return;
             }
 
@@ -211,7 +241,7 @@ window.AccountsDeleteModal = (function () {
             closeModal();
             showAccountToast('Account deleted successfully!', 'delete');
         } catch (error) {
-            hideLoadingOverlay();
+            setModalLoading(false);
             alert('An unexpected error occurred. Please try again.');
         }
     }
@@ -485,8 +515,8 @@ const ACCOUNT_TERM_START_MIN = '2023-01-01';
 const SK_OFFICIAL_NAME_MIN = 3;
 const SK_OFFICIAL_NAME_MAX = 50;
 const SK_OFFICIAL_SUFFIX_OTHER_MAX = 10;
-const SK_OFFICIAL_AGE_MIN = 15;
-const SK_OFFICIAL_AGE_MAX = 30;
+const SK_OFFICIAL_AGE_MIN = 18;
+const SK_OFFICIAL_AGE_MAX = 24;
 const SK_OFFICIAL_GMAIL_REGEX = /^[a-z0-9._%+-]{6,30}@gmail\.com$/i;
 const SK_OFFICIAL_MAX_MSG = 'Maximum of 50 characters reached';
 
@@ -655,6 +685,96 @@ function _validateSkOfficialSuffix(form) {
 
     _markValid(suffixSelect);
     return true;
+}
+
+function isSkFedManualForm(form) {
+    return form?.id === 'addSkFedForm' || form?.id === 'editAccountForm';
+}
+
+function getSkFedBirthdateBounds() {
+    const today = new Date();
+    const maxDob = new Date(today.getFullYear() - SK_OFFICIAL_AGE_MIN, today.getMonth(), today.getDate());
+    const minDob = new Date(today.getFullYear() - SK_OFFICIAL_AGE_MAX, today.getMonth(), today.getDate());
+    return {
+        min: minDob.toISOString().slice(0, 10),
+        max: maxDob.toISOString().slice(0, 10),
+    };
+}
+
+function applySkFedDobConstraints(form) {
+    if (!isSkFedManualForm(form)) return;
+    const dob = form.querySelector('[name="date_of_birth"]');
+    if (!dob) return;
+    const bounds = getSkFedBirthdateBounds();
+    dob.min = bounds.min;
+    dob.max = bounds.max;
+}
+
+function _validateSkFedBirthdate(form) {
+    const dob = form.querySelector('[name="date_of_birth"]');
+    const age = form.querySelector('[name="age"]');
+    if (!dob) return true;
+
+    const val = dob.value;
+    if (!val) {
+        _showErr(dob, 'Birthdate is required');
+        if (age) age.value = '';
+        return false;
+    }
+
+    const bounds = getSkFedBirthdateBounds();
+    if (val < bounds.min || val > bounds.max) {
+        _showErr(dob, `Birthdate must correspond to age ${SK_OFFICIAL_AGE_MIN}–${SK_OFFICIAL_AGE_MAX}`);
+        if (age) age.value = '';
+        return false;
+    }
+
+    const computedAge = calculateAge(val);
+    if (age) age.value = computedAge;
+    const ageNum = parseInt(computedAge, 10);
+    if (Number.isNaN(ageNum) || ageNum < SK_OFFICIAL_AGE_MIN || ageNum > SK_OFFICIAL_AGE_MAX) {
+        _showErr(dob, `Age must be between ${SK_OFFICIAL_AGE_MIN} and ${SK_OFFICIAL_AGE_MAX}`);
+        return false;
+    }
+
+    _markValid(dob);
+    if (age) _markValid(age);
+    return true;
+}
+
+function wireSkFedManualValidation(form) {
+    if (!isSkFedManualForm(form)) return;
+    if (form.dataset.fedValidationWired === '1') return;
+    form.dataset.fedValidationWired = '1';
+
+    applySkFedDobConstraints(form);
+
+    const dob = form.querySelector('[name="date_of_birth"]');
+    if (dob) {
+        dob.addEventListener('change', () => _validateSkFedBirthdate(form));
+        dob.addEventListener('blur', () => _validateSkFedBirthdate(form));
+    }
+
+    ['term_start', 'term_end'].forEach((name) => {
+        const input = form.querySelector(`[name="${name}"]`);
+        if (input) {
+            input.addEventListener('change', () => validateTermRange(form));
+            input.addEventListener('blur', () => validateTermRange(form));
+        }
+    });
+}
+
+function validateSkFedManualForm(form) {
+    let valid = true;
+    form.querySelectorAll('[required]').forEach((el) => {
+        if (el.name === 'date_of_birth') {
+            if (!_validateSkFedBirthdate(form)) valid = false;
+            return;
+        }
+        if (!_validateField(el)) valid = false;
+    });
+    if (!validateTermRange(form)) valid = false;
+    return valid;
 }
 
 function getSkOfficialBirthdateBounds() {
@@ -1097,6 +1217,9 @@ function wireCreateAccountForm(form) {
 
     if (isSkOfficialsManualForm(form)) {
         wireSkOfficialsManualValidation(form);
+    } else if (isSkFedManualForm(form)) {
+        wireSkFedManualValidation(form);
+        form.querySelectorAll('[name="first_name"], [name="last_name"], [name="middle_name"]').forEach(applyUppercaseNameInput);
     } else {
         form.querySelectorAll('[name="first_name"], [name="last_name"], [name="middle_name"]').forEach(applyUppercaseNameInput);
     }
@@ -1105,9 +1228,10 @@ function wireCreateAccountForm(form) {
     applyTermDateConstraints(form);
     applyFutureOnlyDateConstraints(form);
     applySkOfficialDobConstraints(form);
+    applySkFedDobConstraints(form);
     initCreateAccountFormDefaults(form);
 
-    if (!isSkOfficialsManualForm(form)) {
+    if (!isSkOfficialsManualForm(form) && !isSkFedManualForm(form)) {
         form.querySelectorAll('[required]').forEach((el) => {
             el.addEventListener('blur', () => _validateField(el));
         });
@@ -2271,13 +2395,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
 
             // Validate all required fields first
-            let valid = true;
-            fedForm.querySelectorAll('[required]').forEach(el => {
-                if (!_validateField(el)) valid = false;
-            });
-            if (!validateTermRange(fedForm)) valid = false;
-
-            if (!valid) {
+            if (!validateSkFedManualForm(fedForm)) {
                 const first = fedForm.querySelector('.is-invalid');
                 if (first) first.focus();
                 return;
@@ -2422,8 +2540,151 @@ document.addEventListener('DOMContentLoaded', function () {
     function openEditWithData(btn) {
         const d = btn.dataset;
         const isOfficials = getCurrentAccountType() === 'sk_officials';
-        if (isOfficials) { populateEditForm(officialsEditForm, d); openEditSkOfficialsModal(); return; }
-        populateEditForm(fedEditForm, d); openEditModal();
+        if (!isOfficials) {
+            openAssignFederationPositionWithData(btn);
+            return;
+        }
+        populateEditForm(officialsEditForm, d);
+        openEditSkOfficialsModal();
+    }
+
+    function getTakenFederationPositions() {
+        const root = document.getElementById('mainContent');
+        if (!root?.dataset.takenFederationPositions) {
+            return [];
+        }
+        try {
+            return JSON.parse(root.dataset.takenFederationPositions) || [];
+        } catch {
+            return [];
+        }
+    }
+
+    function refreshFederationPositionOptions(currentPosition = '') {
+        const select = document.getElementById('assign_federation_position');
+        if (!select) return;
+
+        const taken = getTakenFederationPositions().filter((pos) => pos && pos !== currentPosition);
+        Array.from(select.options).forEach((option) => {
+            if (!option.value) {
+                option.disabled = false;
+                return;
+            }
+            option.disabled = taken.includes(option.value);
+        });
+    }
+
+    window.openAssignFederationPositionWithData = function (btn) {
+        const form = document.getElementById('assignFederationPositionForm');
+        const modal = document.getElementById('assignFederationPositionModal');
+        if (!form || !modal) return;
+
+        const d = btn.dataset;
+        const displayName = [d.firstName, d.middleName, d.lastName].filter(Boolean).join(' ').trim() || 'Member';
+        form.dataset.accountId = d.accountId || '';
+        document.getElementById('assignFedDisplayName').textContent = displayName;
+        document.getElementById('assignFedBarangayName').textContent = d.barangayName || '—';
+
+        const positionSelect = document.getElementById('assign_federation_position');
+        const currentPosition = d.federationPosition || '';
+        if (positionSelect) {
+            positionSelect.value = currentPosition;
+            refreshFederationPositionOptions(currentPosition);
+        }
+
+        const confirmInput = document.getElementById('assign_position_confirm');
+        if (confirmInput) {
+            confirmInput.value = '';
+            _clearErr(confirmInput);
+        }
+
+        const positionError = positionSelect?.parentNode?.querySelector('.form-error-light');
+        if (positionError) positionError.textContent = '';
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeAssignFederationPositionModal = function () {
+        const modal = document.getElementById('assignFederationPositionModal');
+        if (!modal) return;
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    };
+
+    const assignFederationForm = document.getElementById('assignFederationPositionForm');
+    if (assignFederationForm) {
+        assignFederationForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const accountId = assignFederationForm.dataset.accountId || '';
+            const positionSelect = document.getElementById('assign_federation_position');
+            const confirmInput = document.getElementById('assign_position_confirm');
+            const federationPosition = positionSelect?.value ?? '';
+            const confirmValue = (confirmInput?.value || '').trim().toUpperCase();
+
+            let valid = true;
+            if (confirmValue !== 'ASSIGN') {
+                _showErr(confirmInput, 'Please type ASSIGN to confirm this position assignment');
+                valid = false;
+            } else {
+                _markValid(confirmInput);
+            }
+
+            if (federationPosition) {
+                const taken = getTakenFederationPositions();
+                const currentRowPosition = positionSelect?.querySelector(`option[value="${federationPosition}"]`)?.disabled;
+                if (taken.includes(federationPosition) && currentRowPosition) {
+                    _showErr(positionSelect, 'This federation position is already assigned to another member.');
+                    valid = false;
+                } else {
+                    _clearErr(positionSelect);
+                }
+            }
+
+            if (!valid || !accountId) {
+                if (!accountId) alert('Missing account id. Please refresh and try again.');
+                return;
+            }
+
+            showLoadingOverlay('Assigning position...');
+            fetch(`/accounts/${accountId}/federation-position`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ federation_position: federationPosition || null }),
+            })
+                .then(async (r) => {
+                    const data = r.headers.get('content-type')?.includes('application/json') ? await r.json() : {};
+                    return { ok: r.ok, data };
+                })
+                .then(({ ok, data }) => {
+                    hideLoadingOverlay();
+                    if (!ok || !data.success) {
+                        const message = data.errors?.federation_position?.[0]
+                            || data.message
+                            || Object.values(data.errors || {}).flat()[0]
+                            || 'Failed to assign federation position.';
+                        if (data.errors?.federation_position && positionSelect) {
+                            _showErr(positionSelect, message);
+                        } else {
+                            alert(message);
+                        }
+                        return;
+                    }
+
+                    closeAssignFederationPositionModal();
+                    showAccountToast(data.message || 'Federation position updated successfully.', 'edit');
+                    window.setTimeout(() => window.location.reload(), 900);
+                })
+                .catch(() => {
+                    hideLoadingOverlay();
+                    alert('An unexpected error occurred. Please try again.');
+                });
+        });
     }
 
     function resetAccountActionsDropdownPosition(menu) {
@@ -2571,7 +2832,6 @@ document.addEventListener('DOMContentLoaded', function () {
         sections.push(viewProfileGroup('fa-calendar-check', 'Term Information', [
             ['Term Start', d.termStart ? formatDate(d.termStart) : ''],
             ['Term End', d.termEnd ? formatDate(d.termEnd) : ''],
-            ['Term Status', d.termStatus || 'ACTIVE'],
         ]));
 
         document.getElementById('viewAccountBody').innerHTML = `

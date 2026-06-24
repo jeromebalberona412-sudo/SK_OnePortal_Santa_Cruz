@@ -5,6 +5,7 @@ namespace App\Modules\Dashboard\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
+use App\Services\BarangayZoneService;
 use App\Modules\Dashboard\Services\BarangaySkProfileService;
 use App\Modules\Programs\Services\KabataanProgramService;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class DashboardController extends Controller
     public function __construct(
         private readonly KabataanProgramService $programService,
         private readonly BarangaySkProfileService $barangaySkProfileService,
+        private readonly BarangayZoneService $barangayZoneService,
     ) {
     }
 
@@ -51,6 +53,15 @@ class DashboardController extends Controller
             'kkRespondentNumber'  => $respondentNumber ?? '',
             'kkRespondentDisplay' => KKProfilingController::formatRespondentDisplay($respondentNumber),
             'kkBarangayLogoUrl'   => KKProfilingController::getBarangayLogoUrl($registration?->barangay_id),
+            'kkBarangayZones'     => $registration
+                ? $this->barangayZoneService->activeZonesForBarangay((int) $registration->barangay_id)
+                : collect(),
+            'kkSelectedPurokZone' => is_array($formData['purok_zone'] ?? null)
+                ? ($formData['purok_zone'][0] ?? '')
+                : ($formData['purok_zone'] ?? ''),
+            'kkSelectedFacebookProfileUrl' => is_array($formData['facebook_profile_url'] ?? null)
+                ? ($formData['facebook_profile_url'][0] ?? '')
+                : ($formData['facebook_profile_url'] ?? ($formData['facebook'] ?? '')),
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma'        => 'no-cache',

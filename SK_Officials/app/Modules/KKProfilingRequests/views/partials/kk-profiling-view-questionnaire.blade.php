@@ -230,7 +230,7 @@
                             <label class="kkp-chk-lbl kkp-view-chk"><input type="checkbox" class="kkp-sq-chk" id="kkViewKKTimes_5" disabled> 5 and above</label>
                         </div>
                     </div>
-                    <div class="kkp-demo-block">
+                    <div class="kkp-demo-block" id="kkViewAssemblyNoCell">
                         <div class="kkp-demo-block-label">If No, Why?</div>
                         <div class="kkp-demo-block-options">
                             <label class="kkp-chk-lbl kkp-view-chk"><input type="checkbox" class="kkp-sq-chk" id="kkViewVR_NoKK" disabled> There was no KK Assembly Meeting</label>

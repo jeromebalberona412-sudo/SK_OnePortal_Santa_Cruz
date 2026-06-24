@@ -125,7 +125,7 @@ class KKProfilingRequestsController extends Controller
                 'kk_assembly'     => $val('kk_assembly'),
                 'kk_times'        => $val('kk_times'),
                 'kk_reason'       => $val('kk_reason'),
-                'facebook'        => $val('facebook'),
+                'facebook'        => $val('facebook_profile_url') ?: $val('facebook'),
                 'group_chat'      => $val('group_chat'),
                 'signature'       => $formData['signature'] ?? '—',
                 'status'          => $r->status,
@@ -170,25 +170,6 @@ class KKProfilingRequestsController extends Controller
 
             DB::transaction(function () use ($registration, $user) {
                 app(RespondentNumberService::class)->ensureAssigned($registration);
-
-                if ($registration->evaluation_status === 'Not Profiled') {
-                    $prevKabataan = \App\Models\PreviousKabataan::create([
-                        'kabataan_registration_id' => $registration->id,
-                        'tenant_id'                => $registration->tenant_id,
-                        'barangay_id'              => $registration->barangay_id,
-                        'moved_by_user_id'         => $user->id,
-                        'last_name'                => $registration->last_name,
-                        'first_name'               => $registration->first_name,
-                        'middle_name'              => $registration->middle_name,
-                        'suffix'                   => $registration->suffix,
-                        'email'                    => $registration->email,
-                        'contact_number'           => $registration->contact_number,
-                        'form_data'                => $registration->form_data,
-                        'profiling_year'           => now()->year,
-                        'moved_at'                 => now(),
-                    ]);
-                    \Log::info('Created PreviousKabataan record', ['prev_id' => $prevKabataan->id]);
-                }
 
                 $registration->update([
                     'status'              => 'active',

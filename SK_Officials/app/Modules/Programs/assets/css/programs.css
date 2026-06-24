@@ -300,6 +300,10 @@ body {
     width: 100%;
 }
 
+.content-wrapper--full {
+    grid-template-columns: 1fr;
+}
+
 .main-content-area {
     background: #ffffff;
     border-radius: 18px;

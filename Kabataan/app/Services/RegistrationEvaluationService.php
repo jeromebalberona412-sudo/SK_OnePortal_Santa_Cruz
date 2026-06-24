@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class RegistrationEvaluationService
 {
     /**
-     * Evaluate a registration against previous_kabataan and active users.
+     * Evaluate a registration against approved KK survey history and active users.
      * Returns true if auto-approved.
      */
     public function evaluate(KabataanRegistration $registration): bool
@@ -34,9 +34,10 @@ class RegistrationEvaluationService
             return false;
         }
 
-        // 2. Search previous_kabataan — NAME must be similar first
-        $previous = DB::table('previous_kabataan')
+        // 2. Search approved KK survey responses in the same barangay
+        $previous = DB::table('kk_survey_responses')
             ->where('barangay_id', $registration->barangay_id)
+            ->where('status', 'approved')
             ->get();
 
         $bestMatch      = null;
@@ -44,58 +45,42 @@ class RegistrationEvaluationService
         $bestNameScore  = 0;
 
         foreach ($previous as $prev) {
-            $fd = is_string($prev->form_data)
-                ? json_decode($prev->form_data, true)
-                : (array) $prev->form_data;
+            $prevLast  = strtoupper(trim($prev->last_name ?? ''));
+            $prevFirst = strtoupper(trim($prev->first_name ?? ''));
 
-            // Parse previous name — could be single NAME field or split
-            $prevName = strtoupper(trim($fd['name'] ?? ''));
-            if ($prevName) {
-                // Single name field — require last name AND first name both appear in it
-                // with meaningful length (avoid single-letter false matches)
-                $nameSimilar = strlen($subLast) >= 3
-                    && strlen($subFirst) >= 2
-                    && (
-                        $this->isSimilar(trim("$subLast $subFirst"), $prevName)
-                        || (str_contains($prevName, $subLast) && str_contains($prevName, $subFirst))
-                    );
-            } else {
-                $prevLast  = strtoupper(trim($prev->last_name ?? ''));
-                $prevFirst = strtoupper(trim($prev->first_name ?? ''));
-                $nameSimilar = strlen($subLast) >= 3
-                    && strlen($subFirst) >= 2
-                    && $this->isSimilar($subLast, $prevLast)
-                    && $this->isSimilar($subFirst, $prevFirst);
+            $nameSimilar = strlen($subLast) >= 3
+                && strlen($subFirst) >= 2
+                && $this->isSimilar($subLast, $prevLast)
+                && $this->isSimilar($subFirst, $prevFirst);
+
+            if (!$nameSimilar) {
+                continue;
             }
 
-            // Name must be similar — skip if not
-            if (!$nameSimilar) continue;
-
-            // Name matched — now check other fields for mismatches
             $mismatches = [];
 
-            $subAge      = (string) ($registration->form_data['age'] ?? '');
-            $prevAge     = (string) ($fd['age'] ?? '');
+            $subAge  = (string) ($registration->form_data['age'] ?? '');
+            $prevAge = (string) ($prev->age ?? '');
             if ($subAge && $prevAge && !$this->isSimilar($subAge, $prevAge)) {
                 $mismatches[] = ['field' => 'age', 'submitted' => $subAge, 'previous' => $prevAge];
             }
 
             $subBday  = $this->normalizeDate($registration->form_data['birthday'] ?? '');
-            $prevBday = $this->normalizeDate($fd['birthday'] ?? '');
+            $prevBday = $this->normalizeDate($prev->birthdate ?? '');
             if ($subBday && $prevBday && !$this->isSimilar($subBday, $prevBday)) {
                 $mismatches[] = ['field' => 'birthday', 'submitted' => $subBday, 'previous' => $prevBday];
             }
 
             $subSex  = strtoupper($registration->form_data['sex'] ?? '');
-            $prevSex = strtoupper($fd['sex'] ?? '');
+            $prevSex = strtoupper($prev->sex_assigned_at_birth ?? '');
             if ($subSex && $prevSex && !$this->isSimilar($subSex, $prevSex)) {
                 $mismatches[] = ['field' => 'sex', 'submitted' => $subSex, 'previous' => $prevSex];
             }
 
-            // Track best match (fewest mismatches)
-            $nameScore = $prevName
-                ? similar_text($prevName, strtoupper(trim("$subLast $subFirst $subMid")))
-                : 0;
+            $nameScore = similar_text(
+                strtoupper(trim("$prevLast $prevFirst")),
+                strtoupper(trim("$subLast $subFirst $subMid"))
+            );
 
             if ($bestMatch === null || count($mismatches) < count($bestMismatches) || $nameScore > $bestNameScore) {
                 $bestMatch      = $prev;
@@ -106,10 +91,9 @@ class RegistrationEvaluationService
 
         // 3. Evaluate result
         if ($bestMatch !== null && count($bestMismatches) === 0) {
-            // Perfect match — auto approve
             $registration->update([
                 'evaluation_status' => 'Auto Approved',
-                'evaluation_notes'  => ['message' => 'Matched previous kabataan record.'],
+                'evaluation_notes'  => ['message' => 'Matched an approved KK profiling record.'],
                 'status'            => 'active',
                 'reviewed_at'       => now(),
             ]);
@@ -125,21 +109,19 @@ class RegistrationEvaluationService
         }
 
         if ($bestMatch !== null && count($bestMismatches) <= 2) {
-            // Name matched but ≤2 other fields differ — Wrong Credentials
             $registration->update([
                 'evaluation_status' => 'Wrong Credentials',
                 'evaluation_notes'  => [
-                    'message'    => 'Similar name found in previous kabataan but some fields do not match.',
+                    'message'    => 'Similar name found in KK profiling history but some fields do not match.',
                     'mismatches' => $bestMismatches,
                 ],
             ]);
             return false;
         }
 
-        // No name match at all — Not Profiled
         $registration->update([
             'evaluation_status' => 'Not Profiled',
-            'evaluation_notes'  => ['message' => 'No matching name found in previous kabataan records.'],
+            'evaluation_notes'  => ['message' => 'No matching name found in KK profiling history.'],
         ]);
         return false;
     }

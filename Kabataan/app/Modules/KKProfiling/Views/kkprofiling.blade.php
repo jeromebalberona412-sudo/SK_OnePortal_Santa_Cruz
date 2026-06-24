@@ -77,6 +77,7 @@
                                     'respondentDisplay' => $respondentDisplay ?? '01',
                                     'submitLabel' => 'Submit KK Profiling',
                                     'barangayLogoUrl' => $barangayLogoUrl ?? null,
+                                    'barangayZones' => $barangayZones ?? collect(),
                                 ])
                             </form>
                         </section>

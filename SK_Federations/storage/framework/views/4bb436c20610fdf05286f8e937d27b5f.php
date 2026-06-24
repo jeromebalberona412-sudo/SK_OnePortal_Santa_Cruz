@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="<?php echo e(url('/shared/css/loading.css')); ?>">
 </head>
 <body>
+    <?php echo $__env->make('partials.loading', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
     <script>
         (function() {
             <?php if(auth()->guard()->check()): ?>

@@ -23,7 +23,7 @@ Route::get('/modules/reports/{type}/{file}', function (string $type, string $fil
 
 Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trusted.device', 'prevent.back'])
     ->group(function () {
-        Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+        Route::redirect('/reports', '/barangay-monitoring')->name('reports');
         Route::get('/api/reports', [ReportsController::class, 'list'])->name('api.reports.index');
         Route::get('/api/reports/{id}/download', [ReportsController::class, 'download'])->name('api.reports.download');
     });

@@ -14,6 +14,7 @@
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body>
 
@@ -22,7 +23,7 @@
 @include('layout::sidebar')
 
 <main class="main-content">
-    <div class="page-container kkprofiling-page">
+    <div class="page-container kkprofiling-page has-table-page-footer">
 
         <section class="page-header-section">
             <div class="page-header-left">
@@ -88,22 +89,6 @@
             </div>
             <div class="filters-row">
                 <div class="filter-item">
-                    <label for="kkStatusFilter" class="filter-label">Kabataan Status</label>
-                    <select id="kkStatusFilter" class="filter-select" onchange="document.querySelectorAll('.status-tab').forEach(t=>t.classList.remove('active')); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.classList.add('active'); document.querySelector('[data-status-filter=\'' + this.value + '\']')?.click();">
-                        <option value="All">All Pending</option>
-                        <option value="Not Profiled">Not Profiled</option>
-                        <option value="Wrong Credentials">Wrong Credentials</option>
-                        <option value="Duplicate">Duplicate</option>
-                    </select>
-                    {{-- Hidden tabs still used by JS logic --}}
-                    <div class="status-tabs d-none" id="kkStatusTabs" style="display:none!important;">
-                        <button type="button" class="status-tab active" data-status-filter="All">All Pending</button>
-                        <button type="button" class="status-tab" data-status-filter="Not Profiled">Not Profiled</button>
-                        <button type="button" class="status-tab" data-status-filter="Wrong Credentials">Wrong Credentials</button>
-                        <button type="button" class="status-tab" data-status-filter="Duplicate">Duplicate</button>
-                    </div>
-                </div>
-                <div class="filter-item">
                     <label for="kkBarangayFilter" class="filter-label">Purok/Sitio</label>
                     <select id="kkBarangayFilter" class="filter-select">
                         <option value="">All</option>
@@ -140,11 +125,11 @@
                                     FULLNAME
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
+                                <th>Email</th>
                                 <th>Age</th>
                                 <th>Barangay</th>
                                 <th>Purok/Zone</th>
                                 <th>Registered Voter</th>
-                                <th>Status</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -152,27 +137,27 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
 
-                <div class="table-pagination-footer pagination-footer" aria-label="Table pagination">
-                    <div class="pagination-footer-nav">
-                        <button type="button" class="pagination-arrow" id="kkPrevBtn" disabled aria-label="Previous page">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-                        </button>
-                        <span class="pagination-page-label">Page</span>
-                        <input type="number" class="pagination-page-input" id="kkPageInput" value="1" min="1" aria-label="Current page">
-                        <span class="pagination-page-of">of <span id="kkTotalPages">1</span></span>
-                        <button type="button" class="pagination-arrow" id="kkNextBtn" disabled aria-label="Next page">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-                        </button>
-                    </div>
-                    <div class="pagination-footer-right">
-                        <select id="kkRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
-                            <option value="10">10 rows</option>
-                            <option value="50">50 rows</option>
-                            <option value="100">100 rows</option>
-                        </select>
-                        <span class="pagination-record-count" id="kkPaginationInfo">0 records</span>
-                    </div>
+            <div class="kk-page-footer table-page-footer pagination-footer" aria-label="Table pagination">
+                <div class="pagination-footer-nav">
+                    <button type="button" class="pagination-arrow" id="kkPrevBtn" disabled aria-label="Previous page">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <span class="pagination-page-label">Page</span>
+                    <input type="number" class="pagination-page-input" id="kkPageInput" value="1" min="1" aria-label="Current page">
+                    <span class="pagination-page-of">of <span id="kkTotalPages">1</span></span>
+                    <button type="button" class="pagination-arrow" id="kkNextBtn" disabled aria-label="Next page">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                </div>
+                <div class="pagination-footer-right">
+                    <select id="kkRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
+                        <option value="10">10 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100">100 rows</option>
+                    </select>
+                    <span class="pagination-record-count" id="kkPaginationInfo">0 records</span>
                 </div>
             </div>
         </section>

@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
+    @include('partials.loading')
+
     <script>
         (function() {
             @auth

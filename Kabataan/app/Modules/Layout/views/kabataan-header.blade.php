@@ -49,27 +49,38 @@
                     <img src="{{ $avatarUrl }}" alt="{{ $userName }}">
                 </button>
                 <div class="kabataan-header__dropdown user-dropdown">
-                    <div class="kabataan-header__dropdown-head dropdown-header">
-                        <img src="{{ $avatarUrl }}" alt="">
-                        <div>
-                            <p class="user-name">{{ $userName }}</p>
-                            <p class="user-email">{{ $userEmail }}</p>
+                    <div class="kabataan-header__dropdown-user-card">
+                        <img src="{{ $avatarUrl }}" alt="{{ $userName }}" class="kabataan-header__dropdown-avatar">
+                        <div class="kabataan-header__dropdown-user-info">
+                            <span class="kabataan-header__dropdown-name">{{ $userName }}</span>
+                            <span class="kabataan-header__dropdown-role">{{ $userEmail }}</span>
                         </div>
                     </div>
+
                     <div class="dropdown-divider"></div>
+
                     <a href="{{ route('profile') }}" class="kabataan-header__dropdown-link dropdown-item">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
-                        My Profile
+                        <span class="kabataan-header__dropdown-icon kabataan-header__dropdown-icon--profile">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+                        </span>
+                        View Profile
                     </a>
+
                     <a href="{{ route('change-password') }}" class="kabataan-header__dropdown-link dropdown-item">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                        <span class="kabataan-header__dropdown-icon kabataan-header__dropdown-icon--password">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </span>
                         Change Password
                     </a>
+
                     <div class="dropdown-divider"></div>
+
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="kabataan-header__dropdown-link dropdown-item logout-btn">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+                        <button type="submit" class="kabataan-header__dropdown-link dropdown-item kabataan-header__dropdown-link--logout logout-btn">
+                            <span class="kabataan-header__dropdown-icon kabataan-header__dropdown-icon--logout">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            </span>
                             Logout
                         </button>
                     </form>

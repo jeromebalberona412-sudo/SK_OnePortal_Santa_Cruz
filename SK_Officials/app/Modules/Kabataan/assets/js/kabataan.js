@@ -313,7 +313,10 @@ function initializeKabataanUI() {
             const q = currentQuery;
             const full = fullNameFrom(k).toLowerCase();
             const education = k.educationalBackground || k.highestEducation || '';
-            const matchSearch = !q || full.includes(q) || (k.barangay && k.barangay.toLowerCase().includes(q)) || (education && education.toLowerCase().includes(q));
+            const matchSearch = !q || full.includes(q)
+                || (k.email && String(k.email).toLowerCase().includes(q))
+                || (k.barangay && k.barangay.toLowerCase().includes(q))
+                || (education && education.toLowerCase().includes(q));
             const matchGender = !currentGender || k.sex === currentGender;
             const matchPurok = !currentPurok || k.purokZone === currentPurok;
             const matchEducation = !currentEducation || education === currentEducation;
@@ -410,7 +413,7 @@ function initializeKabataanUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 8;
+            td.colSpan = 9;
             td.textContent = 'No kabataan match current filters.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -438,6 +441,7 @@ function initializeKabataanUI() {
                 <td class="kabataan-fullname-cell">
                     <span class="kabataan-fullname">${full}</span>
                 </td>
+                <td class="kabataan-email-cell">${k.email || k.emailAddress || '—'}</td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
                 <td>${k.purokZone || '-'}</td>
@@ -1103,7 +1107,7 @@ function initializeKabataanUI() {
         const votingFrequency = get('votingfrequency') || get('howmanytimes') || '';
         const votingReason = get('votingreason') || get('ifnowhy') || '';
         const attendedKKAssembly = get('attendedkkassembly') || get('kkassembly') || 'Yes';
-        const facebookAccount = get('facebook') || get('fbaccount') || '';
+        const facebookAccount = get('facebook_profile_url') || get('facebook') || get('fbaccount') || '';
         const willingToJoinGroupChat = get('willingtojoin') || get('groupchat') || 'Yes';
         const signature = get('signature') || '';
         return {

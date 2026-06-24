@@ -99,7 +99,7 @@
                             </div>
                             <div class="form-group-light">
                                 <label class="form-label-light required">Age</label>
-                                <input type="number" name="age" id="official_age" class="form-input-light" min="15" max="30" readonly tabindex="-1">
+                                <input type="number" name="age" id="official_age" class="form-input-light" min="18" max="24" readonly tabindex="-1">
                                 <span class="form-error-light"></span>
                             </div>
                             <div class="form-group-light">

@@ -27,6 +27,7 @@ class AccountService
         private readonly TermRecordsArchiveService $termRecordsArchiveService,
         private readonly ChairpersonFederationSyncService $chairpersonFederationSyncService,
         private readonly FederationRosterService $federationRosterService,
+        private readonly SkOfficialRosterLimitsService $skOfficialRosterLimitsService,
     ) {
     }
 
@@ -216,10 +217,13 @@ class AccountService
         }
 
         if (($normalizedData['role'] ?? '') === User::ROLE_SK_OFFICIAL) {
-            $this->federationRosterService->assertSingleChairPerBarangay(
+            $barangayId = (int) $normalizedData['barangay_id'];
+            $position = (string) $normalizedData['position'];
+
+            $this->skOfficialRosterLimitsService->assertRosterLimits(
                 (int) $admin->tenant_id,
-                (int) $normalizedData['barangay_id'],
-                (string) $normalizedData['position'],
+                $barangayId,
+                $position,
             );
         }
 
@@ -331,7 +335,7 @@ class AccountService
         $normalizedData = $this->withNormalizedMiddleName($data);
 
         if ($account->role === User::ROLE_SK_OFFICIAL) {
-            $this->federationRosterService->assertSingleChairPerBarangay(
+            $this->skOfficialRosterLimitsService->assertRosterLimits(
                 (int) $admin->tenant_id,
                 (int) ($normalizedData['barangay_id'] ?? $account->barangay_id),
                 (string) ($normalizedData['position'] ?? $account->officialProfile?->position ?? ''),

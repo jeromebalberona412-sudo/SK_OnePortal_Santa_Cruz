@@ -250,8 +250,13 @@
                     <p id="applicationViewMeta" class="sl-view-modal-meta"></p>
                 </div>
                 <div class="sl-view-modal-header-actions">
-                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationViewMaximize" title="Maximize" aria-label="Maximize">□</button>
-                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationViewClose" aria-label="Close">×</button>
+                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationViewMaximize" title="Maximize" aria-label="Maximize">
+                        <svg class="sl-modal-icon-maximize" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                        <svg class="sl-modal-icon-restore" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                    </button>
+                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationViewClose" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
                 </div>
             </div>
             <div class="sl-view-modal-body">
@@ -264,11 +269,11 @@
                     <div id="applicationViewAnswers" class="sl-view-answers"></div>
                 </section>
                 <div id="applicationViewCancelledInfo" class="sl-view-cancelled-info" hidden>
-                    <h3>Cancellation Reason</h3>
+                    <h3>Cancellation Details</h3>
+                    <p id="applicationViewCancelledType" class="sl-view-cancelled-type"></p>
                     <p id="applicationViewCancelledReason"></p>
                 </div>
             </div>
-            <button type="button" class="sl-view-cancel-fab" id="applicationCancelFab" hidden>Cancel Application</button>
         </div>
     </div>
 
@@ -277,11 +282,20 @@
         <div class="sl-cancel-modal-box" id="applicationCancelModalBox">
             <div class="sl-cancel-modal-header">
                 <h3>Cancel Application</h3>
-                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationCancelMaximize" title="Maximize">□</button>
-                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationCancelClose" aria-label="Close">×</button>
+                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationCancelClose" aria-label="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             </div>
             <div class="sl-cancel-modal-body">
-                <p class="sl-view-cancel-note">Provide a reason if you want to cancel and submit again later.</p>
+                <p class="sl-view-cancel-note">Please select a cancel type and provide a reason before confirming cancellation.</p>
+                <label class="sl-view-cancel-label" for="applicationCancelType">Cancel Type</label>
+                <select id="applicationCancelType" class="sl-view-cancel-select">
+                    <option value="">Select cancel type</option>
+                    <option value="Voluntary Withdrawal">Voluntary Withdrawal</option>
+                    <option value="Incorrect Information">Incorrect Information</option>
+                    <option value="Wrong Program Applied">Wrong Program Applied</option>
+                    <option value="Other">Other</option>
+                </select>
                 <label class="sl-view-cancel-label" for="applicationCancelReason">Cancel Reason</label>
                 <textarea id="applicationCancelReason" class="sl-view-cancel-input" rows="4" maxlength="500" placeholder="Type your reason for cancelling this application..."></textarea>
                 <p id="applicationCancelCharCount" class="sl-view-cancel-char-count">0 / 500 characters</p>

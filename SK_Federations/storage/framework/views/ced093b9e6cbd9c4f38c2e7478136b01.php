@@ -31,24 +31,42 @@
         </div>
 
         <div class="profile-dropdown-wrapper">
-            <button class="profile-btn" onclick="toggleProfileDropdown(event)" aria-label="Profile menu">
+            <button class="profile-btn" onclick="toggleProfileDropdown(event)" aria-label="Profile menu" aria-expanded="false" aria-haspopup="true">
                 <img src="<?php echo e($avatar); ?>" alt="Profile" class="nav-avatar">
                 <i class="fas fa-chevron-down nav-chevron"></i>
             </button>
 
             <div class="profile-dropdown" id="profileDropdown">
-                <div class="profile-dropdown-header">
-                    <div class="dd-name"><?php echo e($user->name ?? 'User'); ?></div>
-                    <div class="dd-email"><?php echo e($user->email ?? ''); ?></div>
+                <div class="profile-dropdown-user-card">
+                    <img src="<?php echo e($avatar); ?>" alt="<?php echo e($user->name ?? 'User'); ?>" class="profile-dropdown-avatar">
+                    <div class="profile-dropdown-user-info">
+                        <span class="profile-dropdown-name"><?php echo e($user->name ?? 'User'); ?></span>
+                        <span class="profile-dropdown-role"><?php echo e($formattedRole ?? 'SK Federation'); ?></span>
+                    </div>
                 </div>
-                <a href="<?php echo e(route('profile')); ?>" class="dd-item" id="nav-profile-link">
-                    <i class="fas fa-user"></i> Profile
+
+                <div class="profile-dropdown-divider"></div>
+
+                <a href="<?php echo e(route('profile')); ?>" class="profile-dropdown-item" id="nav-profile-link">
+                    <span class="profile-dropdown-icon profile-dropdown-icon--profile">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+                    </span>
+                    View Profile
                 </a>
-                <a href="<?php echo e(route('change-password')); ?>" class="dd-item" id="nav-change-pw-link">
-                    <i class="fas fa-lock"></i> Change Password
+
+                <a href="<?php echo e(route('change-password')); ?>" class="profile-dropdown-item" id="nav-change-pw-link">
+                    <span class="profile-dropdown-icon profile-dropdown-icon--password">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </span>
+                    Change Password
                 </a>
-                <div class="dd-divider"></div>
-                <button type="button" class="dd-item danger" onclick="showLogoutModal()">
+
+                <div class="profile-dropdown-divider"></div>
+
+                <button type="button" class="profile-dropdown-item profile-dropdown-item--logout" onclick="showLogoutModal()">
+                    <span class="profile-dropdown-icon profile-dropdown-icon--logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </span>
                     Logout
                 </button>
             </div>

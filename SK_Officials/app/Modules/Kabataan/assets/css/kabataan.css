@@ -3478,7 +3478,14 @@ body {
     vertical-align: middle;
 }
 
-/* ── Table footer pagination (Supabase-style) ── */
+/* ── Table footer pagination — see /shared/css/table-page-footer.css ── */
+.kabataan-email-cell {
+    font-size: 12px;
+    color: #374151;
+    max-width: 200px;
+    word-break: break-word;
+}
+
 .table-pagination-footer {
     display: flex;
     align-items: center;

@@ -38,6 +38,7 @@
     </style>
 </head>
 <body class="youth-login-page">
+    @include('dashboard::loading')
     
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
@@ -236,10 +237,39 @@
 
 
 
-            // Only validate on submit, not on blur/input
+            // Validate on submit — only show loading when form will actually submit
             form.addEventListener('submit', (e) => {
-                // Show loading screen on successful validation
-                if (typeof showLoading !== 'undefined') {
+                let isValid = true;
+
+                clearError(emailInput, emailError);
+                clearError(passwordInput, passwordError);
+
+                if (!emailInput.value.trim()) {
+                    showError(emailInput, emailError, 'Email is required');
+                    isValid = false;
+                } else if (!validateEmail(emailInput.value.trim())) {
+                    showError(emailInput, emailError, 'Please enter a valid email address');
+                    isValid = false;
+                }
+
+                if (!passwordInput.value) {
+                    showError(passwordInput, passwordError, 'Password is required');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    const label = submitBtn.querySelector('span');
+                    if (label) label.textContent = 'Signing In...';
+                }
+
+                if (typeof showLoading === 'function') {
                     showLoading('Signing In');
                 }
             });

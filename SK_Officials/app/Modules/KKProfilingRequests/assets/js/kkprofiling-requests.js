@@ -36,7 +36,6 @@ function showToast(message, type) {
 
 function initializeKKProfilingRequestsUI() {
     const tbody = document.getElementById('kkRequestsTableBody');
-    const statusTabsContainer = document.getElementById('kkStatusTabs');
     const searchInput = document.getElementById('kkSearch');
     const barangayFilter = document.getElementById('kkBarangayFilter');
     const voterFilter = document.getElementById('kkVoterFilter');
@@ -92,7 +91,6 @@ function initializeKKProfilingRequestsUI() {
         return '-';
     }
 
-    let currentFilterStatus = 'All';
     let currentSearchQuery = '';
     let currentBarangayFilter = '';
     let currentVoterFilter = '';
@@ -102,11 +100,11 @@ function initializeKKProfilingRequestsUI() {
 
     function getFilteredRequests() {
         return requests.filter((r) => {
-            if (currentFilterStatus !== 'All' && r.status !== currentFilterStatus) return false;
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
                 const fullName = formatFullName(r).toLowerCase();
                 const match = fullName.includes(q)
+                    || (r.emailAddress && String(r.emailAddress).toLowerCase().includes(q))
                     || (r.purok && String(r.purok).toLowerCase().includes(q))
                     || (r.contact && String(r.contact).toLowerCase().includes(q));
                 if (!match) return false;
@@ -177,7 +175,7 @@ function initializeKKProfilingRequestsUI() {
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
             td.colSpan = 8;
-            td.textContent = 'No KK Profiling requests for this status.';
+            td.textContent = 'No KK Profiling requests found.';
             tr.appendChild(td);
             tbody.appendChild(tr);
             updatePaginationFooter(0);
@@ -186,15 +184,8 @@ function initializeKKProfilingRequestsUI() {
 
         paginatedData.forEach((r) => {
             const tr = document.createElement('tr');
-            const statusClass = r.status === 'active' || r.status === 'Auto Approved' ? 'approved'
-                : r.status === 'rejected' ? 'rejected'
-                : r.status === 'Duplicate' ? 'duplicate'
-                : r.status === 'Wrong Credentials' ? 'rejected'
-                : r.status === 'Not Profiled' ? 'pending'
-                : r.status === 'email_verified' ? 'duplicate'
-                : r.status === 'password_set' ? 'new-applicant'
-                : 'pending';
             const fullName = formatFullName(r);
+            const email = r.emailAddress || '—';
             const voterStatus = r.registeredVoter || 'No';
             const purokZone = r.purokZone || '—';
 
@@ -236,28 +227,17 @@ function initializeKKProfilingRequestsUI() {
                     <span class="kk-fullname">${fullName}</span>
                     ${dupLinkBadge}
                 </td>
+                <td class="kk-email-cell">${email}</td>
                 <td>${r.age}</td>
                 <td>${r.barangay}</td>
                 <td>${purokZone}</td>
                 <td>${voterStatus}</td>
-                <td><span class="kk-status-pill ${statusClass}">${r.status}</span></td>
                 <td><div class="kk-actions"><button type="button" class="kk-btn-view" data-action="view" data-id="${r.id}">View</button></div></td>
             `;
             tbody.appendChild(tr);
         });
 
         updatePaginationFooter(filtered.length);
-    }
-
-    function setStatusFilter(status) {
-        currentFilterStatus = status;
-        currentPage = 1;
-        if (!statusTabsContainer) return;
-        const tabs = statusTabsContainer.querySelectorAll('.status-tab');
-        tabs.forEach((tab) => {
-            tab.classList.toggle('active', tab.getAttribute('data-status-filter') === status);
-        });
-        renderTable();
     }
 
     function openModal(modalElement) { if (modalElement) modalElement.style.display = 'flex'; }
@@ -652,14 +632,6 @@ function initializeKKProfilingRequestsUI() {
         });
     }
 
-    if (statusTabsContainer) {
-        statusTabsContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('.status-tab');
-            if (!btn) return;
-            setStatusFilter(btn.getAttribute('data-status-filter') || 'All');
-        });
-    }
-
     function resetModalMaximize(backdropEl) {
         if (!backdropEl) return;
         backdropEl.classList.remove('modal-maximized');
@@ -892,7 +864,6 @@ function initializeKKProfilingRequestsUI() {
     // Load data from API then render
     function loadData(params = {}) {
         const url = new URL('/kk-profiling-requests/data', window.location.origin);
-        if (params.status && params.status !== 'All') url.searchParams.set('status', params.status);
         if (params.search) url.searchParams.set('search', params.search);
         if (params.purok) url.searchParams.set('purok', params.purok);
         if (params.voter) url.searchParams.set('voter', params.voter);
@@ -954,10 +925,10 @@ function initializeKKProfilingRequestsUI() {
             if (el('kkStatRejected'))  el('kkStatRejected').textContent  = stats.rejected || 0;
             if (el('kkStatTotal'))     el('kkStatTotal').textContent     = stats.total || 0;
 
-            setStatusFilter('All');
+            renderTable();
         })
         .catch(() => {
-            setStatusFilter('All');
+            renderTable();
         });
     }
 

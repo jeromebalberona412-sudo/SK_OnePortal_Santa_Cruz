@@ -84,8 +84,7 @@ body.sidebar-collapsed .sidebar-profile {
 .sidebar-submenu {
     max-height: 0;
     overflow: hidden;
-    padding-left: 20px;
-    border-left: 2px solid #e2e8f0;
+    padding-left: 8px;
     margin-left: 10px;
     transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -99,7 +99,7 @@ class KabataanController extends Controller
                 'kk_times'       => $val($fd, 'kk_times'),
                 'kk_assembly'    => $val($fd, 'kk_assembly'),
                 'kk_reason'      => $val($fd, 'kk_reason'),
-                'facebook'       => $val($fd, 'facebook'),
+                'facebook'       => $val($fd, 'facebook_profile_url') ?: $val($fd, 'facebook'),
                 'group_chat'     => $val($fd, 'group_chat'),
                 'signature'      => $fd['signature'] ?? null,
                 'submitted_at'   => $r->submitted_at?->format('m/d/Y'),

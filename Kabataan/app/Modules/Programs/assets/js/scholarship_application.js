@@ -18,14 +18,27 @@ const uploadedDocuments = { ...(program.uploaded_documents || {}) };
 const form = document.getElementById('scholarshipApplicationForm');
 const kkProfileFieldsContainer = document.getElementById('kkProfileFieldsContainer');
 const customQuestionsContainer = document.getElementById('customQuestionsContainer');
-const submitBtn = document.getElementById('submitBtn');
+const nextStepBtn = document.getElementById('nextStepBtn');
+const prevStepBtn = document.getElementById('prevStepBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const successModal = document.getElementById('successModal');
-const closeSuccessModal = document.getElementById('closeSuccessModal');
+const confirmSubmitModal = document.getElementById('confirmSubmitModal');
+const backToReviewBtn = document.getElementById('backToReviewBtn');
+const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+const goToDashboardBtn = document.getElementById('goToDashboardBtn');
+const reviewStepContainer = document.getElementById('reviewStepContainer');
+const reviewStatusList = document.getElementById('reviewStatusList');
+const confirmInfoTrue = document.getElementById('confirmInfoTrue');
+const confirmDocsValid = document.getElementById('confirmDocsValid');
+const confirmFalseInfo = document.getElementById('confirmFalseInfo');
 const pdfPreviewModal = document.getElementById('pdfPreviewModal');
 const pdfPreviewPages = document.getElementById('pdfPreviewPages');
 const pdfPreviewTitle = document.getElementById('pdfPreviewTitle');
 const pdfPreviewClose = document.getElementById('pdfPreviewClose');
+
+const TOTAL_STEPS = 4;
+let currentStep = 1;
+let submittedApplication = null;
 
 const PDF_PREVIEW_SCALE = 1.2;
 let currentPreviewDocument = null;
@@ -360,7 +373,12 @@ async function uploadPdfFile(questionId, file, questionLabel) {
         const progressBar = document.querySelector(`[data-file-progress-bar="${questionId}"]`);
         if (progressBar) progressBar.style.width = '100%';
 
-        setTimeout(() => setUploadState(questionId, 'idle'), 1200);
+        setTimeout(() => {
+            setUploadState(questionId, 'idle');
+            if (currentStep === TOTAL_STEPS) {
+                updateSubmitButtonState();
+            }
+        }, 1200);
     } catch (error) {
         setUploadState(questionId, 'error', error.message || 'Unable to upload PDF.');
     }
@@ -579,6 +597,253 @@ async function submitApplication() {
     return data;
 }
 
+function getKkProfileValue(field) {
+    const kkProfile = program.kk_profile || {};
+    return kkProfile[field] ?? '';
+}
+
+function getFullName() {
+    const fullName = String(getKkProfileValue('full_name') || '').trim();
+    if (fullName) return fullName;
+
+    return [getKkProfileValue('first_name'), getKkProfileValue('middle_name'), getKkProfileValue('last_name'), getKkProfileValue('suffix')]
+        .map((part) => String(part || '').trim())
+        .filter(Boolean)
+        .join(' ');
+}
+
+function getReviewPersonalFields() {
+    const address = getKkProfileValue('home_address')
+        || [getKkProfileValue('purok_zone'), getKkProfileValue('barangay'), getKkProfileValue('city_municipality') || getKkProfileValue('city')]
+            .map((part) => String(part || '').trim())
+            .filter(Boolean)
+            .join(', ');
+
+    return [
+        ['Full Name', getFullName()],
+        ['Birth Date', getKkProfileValue('birthday')],
+        ['Age', getKkProfileValue('age')],
+        ['Address', address],
+        ['Contact Number', getKkProfileValue('contact_number')],
+    ];
+}
+
+function isPersonalInfoComplete() {
+    return getReviewPersonalFields().every(([, value]) => String(value || '').trim() !== '');
+}
+
+function getFileQuestions() {
+    return (program.custom_questions || []).filter((question) => question.type === 'file');
+}
+
+function getCompletionItems() {
+    const items = [
+        { label: 'Personal Information', complete: isPersonalInfoComplete() },
+    ];
+
+    getFileQuestions().forEach((question) => {
+        const uploaded = Boolean(uploadedDocuments[question.id]);
+        const required = Boolean(question.required);
+        items.push({
+            label: question.label || 'Document',
+            complete: !required || uploaded,
+            required,
+        });
+    });
+
+    return items;
+}
+
+function isApplicationComplete() {
+    return getCompletionItems().every((item) => item.complete);
+}
+
+function renderReviewStep() {
+    if (!reviewStepContainer || !reviewStatusList) return;
+
+    const completionItems = getCompletionItems();
+    reviewStatusList.innerHTML = completionItems.map((item) => `
+        <div class="gf-review-status-item ${item.complete ? '' : 'is-missing'}">
+            <span>${escapeHtml(item.label)}</span>
+            <span>${item.complete ? '✅ Complete' : '❌ Missing'}</span>
+        </div>
+    `).join('');
+
+    const personalFields = getReviewPersonalFields();
+    const personalHtml = personalFields.map(([label, value]) => `
+        <div class="gf-review-field">
+            <span class="gf-review-field-label">${escapeHtml(label)}</span>
+            <span class="gf-review-field-value">${escapeHtml(value || '—')}</span>
+        </div>
+    `).join('');
+
+    const fileQuestions = getFileQuestions();
+    const documentsHtml = fileQuestions.length
+        ? fileQuestions.map((question) => {
+            const doc = uploadedDocuments[question.id];
+            const isUploaded = Boolean(doc);
+            return `
+                <div class="gf-review-doc">
+                    <div class="gf-review-doc-header">
+                        <span class="gf-review-doc-title">${escapeHtml(question.label || 'Document')}</span>
+                        <span class="gf-review-doc-status ${isUploaded ? '' : 'is-missing'}">
+                            ${isUploaded ? '✅ Uploaded Successfully' : '❌ Missing'}
+                        </span>
+                    </div>
+                    ${isUploaded ? `
+                        <div class="gf-review-doc-preview">
+                            <button type="button" data-preview-document="${escapeHtml(question.id)}">📷 Preview document</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('')
+        : '<p class="gf-review-intro">No document uploads required for this program.</p>';
+
+    const answers = collectAnswers().filter((answer) => answer.question_type !== 'file' && String(answer.answer || '').trim() !== '');
+    const answersHtml = answers.length
+        ? `
+            <div class="gf-review-section">
+                <h3>Additional Responses</h3>
+                <div class="gf-review-grid">
+                    ${answers.map((answer) => `
+                        <div class="gf-review-field">
+                            <span class="gf-review-field-label">${escapeHtml(answer.question_label || 'Answer')}</span>
+                            <span class="gf-review-field-value">${escapeHtml(Array.isArray(answer.answer) ? answer.answer.join(', ') : answer.answer)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `
+        : '';
+
+    reviewStepContainer.innerHTML = `
+        <div class="gf-review-section">
+            <h3>Personal Information</h3>
+            <div class="gf-review-grid">${personalHtml}</div>
+        </div>
+        <div class="gf-review-section">
+            <h3>Uploaded Requirements</h3>
+            ${documentsHtml}
+        </div>
+        ${answersHtml}
+    `;
+
+    bindPreviewButtons(reviewStepContainer);
+}
+
+function updateStepUI() {
+    document.querySelectorAll('.gf-step-panel').forEach((panel) => {
+        const step = Number(panel.dataset.step);
+        panel.hidden = step !== currentStep;
+        panel.classList.toggle('is-active', step === currentStep);
+    });
+
+    document.querySelectorAll('[data-step-item]').forEach((item) => {
+        const step = Number(item.dataset.stepItem);
+        item.classList.toggle('is-active', step === currentStep);
+        item.classList.toggle('is-done', step < currentStep);
+    });
+
+    if (prevStepBtn) prevStepBtn.hidden = currentStep <= 1;
+
+    if (nextStepBtn) {
+        if (isReadOnly) {
+            nextStepBtn.textContent = 'Already Applied';
+            nextStepBtn.disabled = true;
+            nextStepBtn.hidden = false;
+        } else if (currentStep === TOTAL_STEPS) {
+            nextStepBtn.textContent = 'Submit Application';
+            nextStepBtn.hidden = false;
+            updateSubmitButtonState();
+        } else {
+            nextStepBtn.textContent = 'Continue';
+            nextStepBtn.disabled = false;
+            nextStepBtn.hidden = false;
+        }
+    }
+
+    if (currentStep === TOTAL_STEPS && !isReadOnly) {
+        updateSubmitButtonState();
+    }
+
+    if (currentStep === 3) {
+        renderReviewStep();
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateSubmitButtonState() {
+    if (!nextStepBtn || currentStep !== TOTAL_STEPS || isReadOnly) return;
+
+    const allConfirmed = [confirmInfoTrue, confirmDocsValid, confirmFalseInfo].every((input) => input?.checked);
+    const complete = isApplicationComplete();
+    nextStepBtn.disabled = !allConfirmed || !complete;
+}
+
+function goToStep(step) {
+    currentStep = Math.max(1, Math.min(TOTAL_STEPS, step));
+    updateStepUI();
+}
+
+function validateCurrentStep() {
+    if (currentStep === 1) {
+        if (!isPersonalInfoComplete()) {
+            alert('Your KK Profiling information is incomplete. Please update your KK Profile before applying.');
+            return false;
+        }
+        return true;
+    }
+
+    if (currentStep === 2) {
+        return validateForm();
+    }
+
+    if (currentStep === 3) {
+        if (!isApplicationComplete()) {
+            alert('Please complete all required sections before continuing.');
+            renderReviewStep();
+            return false;
+        }
+        return true;
+    }
+
+    return true;
+}
+
+function formatReferenceNumber(applicationId) {
+    const year = new Date().getFullYear();
+    const padded = String(applicationId || 0).padStart(6, '0');
+    return `KK-${year}-${padded}`;
+}
+
+function showSuccessModal(application) {
+    submittedApplication = application;
+    const referenceEl = document.getElementById('successReferenceNumber');
+    if (referenceEl) {
+        referenceEl.textContent = formatReferenceNumber(application?.id);
+    }
+    if (successModal) {
+        successModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function openConfirmSubmitModal() {
+    if (!confirmSubmitModal) return;
+    confirmSubmitModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+}
+
+function closeConfirmSubmitModal() {
+    if (!confirmSubmitModal) return;
+    confirmSubmitModal.hidden = true;
+    if (!successModal || successModal.hidden) {
+        document.body.style.overflow = '';
+    }
+}
+
 function updateHeader() {
     const title = document.getElementById('gfProgramTitle');
     const description = document.getElementById('gfProgramDescription');
@@ -594,41 +859,79 @@ function updateHeader() {
     }
 }
 
+async function handleFinalSubmit() {
+    if (isReadOnly) {
+        alert('You have already applied for this program.');
+        return;
+    }
+
+    if (nextStepBtn) nextStepBtn.disabled = true;
+    if (confirmSubmitBtn) confirmSubmitBtn.disabled = true;
+
+    if (typeof showLoading === 'function') {
+        showLoading('Submitting application...');
+    }
+
+    try {
+        const data = await submitApplication();
+        if (typeof hideLoading === 'function') {
+            hideLoading();
+        }
+        closeConfirmSubmitModal();
+        showSuccessModal(data.application || data);
+    } catch (error) {
+        if (typeof hideLoading === 'function') {
+            hideLoading();
+        }
+        alert(error.message || 'Unable to submit application.');
+        updateSubmitButtonState();
+        if (confirmSubmitBtn) confirmSubmitBtn.disabled = false;
+    }
+}
+
 if (form) {
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', (event) => {
         event.preventDefault();
+    });
+}
 
-        if (isReadOnly) {
-            alert('You have already applied for this program.');
+if (nextStepBtn) {
+    nextStepBtn.addEventListener('click', () => {
+        if (isReadOnly) return;
+
+        if (currentStep === TOTAL_STEPS) {
+            if (!validateCurrentStep() || !isApplicationComplete()) {
+                alert('Please complete all required sections and confirmations before submitting.');
+                updateSubmitButtonState();
+                return;
+            }
+            openConfirmSubmitModal();
             return;
         }
 
-        if (!validateForm()) {
-            alert('Please complete all required fields and upload all required PDF documents.');
-            return;
-        }
+        if (!validateCurrentStep()) return;
+        goToStep(currentStep + 1);
+    });
+}
 
-        if (submitBtn) submitBtn.disabled = true;
-        if (typeof showLoading === 'function') {
-            showLoading('Submitting application...');
-        }
+[confirmInfoTrue, confirmDocsValid, confirmFalseInfo].forEach((input) => {
+    input?.addEventListener('change', updateSubmitButtonState);
+});
 
-        try {
-            await submitApplication();
-            if (typeof hideLoading === 'function') {
-                hideLoading();
-            }
-            if (successModal) {
-                successModal.hidden = false;
-                document.body.style.overflow = 'hidden';
-            }
-        } catch (error) {
-            if (typeof hideLoading === 'function') {
-                hideLoading();
-            }
-            alert(error.message || 'Unable to submit application.');
-            if (submitBtn) submitBtn.disabled = false;
-        }
+if (backToReviewBtn) {
+    backToReviewBtn.addEventListener('click', () => {
+        closeConfirmSubmitModal();
+        goToStep(3);
+    });
+}
+
+if (confirmSubmitBtn) {
+    confirmSubmitBtn.addEventListener('click', handleFinalSubmit);
+}
+
+if (confirmSubmitModal) {
+    confirmSubmitModal.querySelectorAll('[data-close-confirm-modal]').forEach((el) => {
+        el.addEventListener('click', closeConfirmSubmitModal);
     });
 }
 
@@ -640,17 +943,9 @@ if (cancelBtn) {
     });
 }
 
-if (closeSuccessModal) {
-    closeSuccessModal.addEventListener('click', () => {
-        window.location.href = `/scholarship/apply?schedule=${encodeURIComponent(scheduleProgramId)}`;
-    });
-}
-
-if (successModal) {
-    successModal.addEventListener('click', (event) => {
-        if (event.target === successModal) {
-            window.location.href = `/scholarship/apply?schedule=${encodeURIComponent(scheduleProgramId)}`;
-        }
+if (goToDashboardBtn) {
+    goToDashboardBtn.addEventListener('click', () => {
+        window.location.href = window.__dashboardUrl || '/dashboard';
     });
 }
 
@@ -672,15 +967,14 @@ function init() {
     updateHeader();
     loadKKProfileData();
     renderCustomQuestions();
+    updateStepUI();
 
     if (isReadOnly && form) {
-        form.querySelectorAll('input, select, textarea, button[type="submit"]').forEach((element) => {
-            element.disabled = true;
+        form.querySelectorAll('input, select, textarea, button').forEach((element) => {
+            if (element.id !== 'goToDashboardBtn') {
+                element.disabled = true;
+            }
         });
-        if (submitBtn) {
-            const label = submitBtn.querySelector('.gf-btn-label');
-            if (label) label.textContent = 'Already Applied';
-        }
     }
 }
 

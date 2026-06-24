@@ -2,23 +2,33 @@
 
 namespace App\Modules\BarangayMonitoring\Controllers;
 
+use App\Modules\BarangayMonitoring\Services\AbyipSubmissionScheduleService;
+use App\Modules\BarangayMonitoring\Services\BarangayMonitoringService;
 use App\Modules\Shared\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BarangayMonitoringController extends Controller
 {
+    public function __construct(
+        private readonly BarangayMonitoringService $monitoringService,
+        private readonly AbyipSubmissionScheduleService $scheduleService,
+    ) {
+    }
+
     public function index(Request $request): View
     {
         $barangays = array_values($this->barangayCatalog());
-
         $stats = $this->buildStats($barangays);
 
         return view('barangay_monitoring::index', [
             'user' => $request->user(),
             'barangays' => $barangays,
             'stats' => $stats,
+            'abyipSchedule' => $this->scheduleService->currentSchedule(),
+            'abyipSchedules' => $this->scheduleService->listSchedules()->values()->all(),
         ]);
     }
 
@@ -31,9 +41,15 @@ class BarangayMonitoringController extends Controller
             abort(404);
         }
 
+        $barangayId = $this->monitoringService->resolveBarangayId($barangay);
         $barangayData = array_merge($catalog[$barangay], $detail[$barangay]);
-        
-        // Calculate compliance status based on report submissions
+        $barangayData['barangay_id'] = $barangayId;
+        $barangayData['abyip']['reports'] = $this->monitoringService->getAbyipReports($barangayId);
+        $barangayData['accomplishments'] = $this->monitoringService->getApprovedAccomplishments($barangayId);
+        $barangayData['accomplishment_years'] = $this->monitoringService->accomplishmentYears($barangayId);
+        $barangayData['accomplishment_terms'] = $this->monitoringService->accomplishmentTerms($barangayId);
+        $barangayData['abyip_schedule'] = $this->scheduleService->currentSchedule();
+
         $complianceStatus = $this->calculateComplianceStatus($barangayData);
         $barangayData['compliance_status'] = $complianceStatus['status'];
         $barangayData['compliance_details'] = $complianceStatus['details'];
@@ -42,6 +58,96 @@ class BarangayMonitoringController extends Controller
         return view('barangay_monitoring::show', [
             'user' => $request->user(),
             'barangayData' => $barangayData,
+        ]);
+    }
+
+    public function scheduleList(): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->scheduleService->listSchedules()->values(),
+            'current' => $this->scheduleService->currentSchedule(),
+        ]);
+    }
+
+    public function scheduleStore(Request $request): JsonResponse
+    {
+        try {
+            $schedule = $this->scheduleService->create($request->user(), $request->all());
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => collect($exception->errors())->flatten()->first(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'ABYIP submission schedule created.',
+            'data' => $schedule,
+        ], 201);
+    }
+
+    public function scheduleUpdate(Request $request, int $id): JsonResponse
+    {
+        try {
+            $schedule = $this->scheduleService->update($request->user(), $id, $request->all());
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => collect($exception->errors())->flatten()->first(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'ABYIP submission schedule updated.',
+            'data' => $schedule,
+        ]);
+    }
+
+    public function scheduleExtend(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'new_deadline' => ['required', 'date'],
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        try {
+            $schedule = $this->scheduleService->extendDeadline(
+                $request->user(),
+                $id,
+                $validated['new_deadline'],
+                $validated['reason'] ?? null
+            );
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => collect($exception->errors())->flatten()->first(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'ABYIP submission deadline extended.',
+            'data' => $schedule,
+        ]);
+    }
+
+    public function scheduleCancel(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        try {
+            $schedule = $this->scheduleService->cancel($request->user(), $id, $validated['reason'] ?? null);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => collect($exception->errors())->flatten()->first(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'ABYIP submission schedule cancelled.',
+            'data' => $schedule,
         ]);
     }
 
@@ -68,10 +174,13 @@ class BarangayMonitoringController extends Controller
 
     private function barangayCatalog(): array
     {
-        return [
-            'alipit' => [
-                'slug' => 'alipit',
-                'name' => 'Alipit',
+        $map = $this->monitoringService->slugToNameMap();
+        $catalog = [];
+
+        foreach ($map as $slug => $name) {
+            $catalog[$slug] = [
+                'slug' => $slug,
+                'name' => $name,
                 'status' => 'non-compliant',
                 'reports' => 0,
                 'on_time' => 0,
@@ -80,296 +189,10 @@ class BarangayMonitoringController extends Controller
                 'last_update' => 'No updates yet',
                 'sk_chairman' => 'Not assigned',
                 'report_rate' => 0,
-            ],
-            'bagumbayan' => [
-                'slug' => 'bagumbayan',
-                'name' => 'Bagumbayan',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'calios' => [
-                'slug' => 'calios',
-                'name' => 'Calios',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'duhat' => [
-                'slug' => 'duhat',
-                'name' => 'Duhat',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'gatid' => [
-                'slug' => 'gatid',
-                'name' => 'Gatid',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'jasaan' => [
-                'slug' => 'jasaan',
-                'name' => 'Jasaan',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'labuin' => [
-                'slug' => 'labuin',
-                'name' => 'Labuin',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'malinao' => [
-                'slug' => 'malinao',
-                'name' => 'Malinao',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'oogong' => [
-                'slug' => 'oogong',
-                'name' => 'Oogong',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'pagsawitan' => [
-                'slug' => 'pagsawitan',
-                'name' => 'Pagsawitan',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'palasan' => [
-                'slug' => 'palasan',
-                'name' => 'Palasan',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'patimbao' => [
-                'slug' => 'patimbao',
-                'name' => 'Patimbao',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'brgy-1-poblacion' => [
-                'slug' => 'brgy-1-poblacion',
-                'name' => 'Poblacion I',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'brgy-2-poblacion' => [
-                'slug' => 'brgy-2-poblacion',
-                'name' => 'Poblacion II',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'brgy-3-poblacion' => [
-                'slug' => 'brgy-3-poblacion',
-                'name' => 'Poblacion III',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'brgy-4-poblacion' => [
-                'slug' => 'brgy-4-poblacion',
-                'name' => 'Poblacion IV',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'brgy-5-poblacion' => [
-                'slug' => 'brgy-5-poblacion',
-                'name' => 'Poblacion V',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'san-jose' => [
-                'slug' => 'san-jose',
-                'name' => 'San Jose',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'san-juan' => [
-                'slug' => 'san-juan',
-                'name' => 'San Juan',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'san-pablo-norte' => [
-                'slug' => 'san-pablo-norte',
-                'name' => 'San Pablo Norte',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'san-pablo-sur' => [
-                'slug' => 'san-pablo-sur',
-                'name' => 'San Pablo Sur',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'santisima-cruz' => [
-                'slug' => 'santisima-cruz',
-                'name' => 'Santisima Cruz',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'santo-angel-central' => [
-                'slug' => 'santo-angel-central',
-                'name' => 'Santo Angel Central',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'santo-angel-norte' => [
-                'slug' => 'santo-angel-norte',
-                'name' => 'Santo Angel Norte',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-            'santo-angel-sur' => [
-                'slug' => 'santo-angel-sur',
-                'name' => 'Santo Angel Sur',
-                'status' => 'non-compliant',
-                'reports' => 0,
-                'on_time' => 0,
-                'active_programs' => 0,
-                'participation_rate' => 0,
-                'last_update' => 'No updates yet',
-                'sk_chairman' => 'Not assigned',
-                'report_rate' => 0,
-            ],
-        ];
+            ];
+        }
+
+        return $catalog;
     }
 
     private function barangayDetails(): array
@@ -399,22 +222,25 @@ class BarangayMonitoringController extends Controller
                     'top_issue' => 'No data available',
                 ],
                 'program_stats' => [
-                    'total_youth_population'  => 0,
-                    'total_programs_created'  => 0,
-                    'total_ongoing'           => 0,
-                    'total_completed'         => 0,
-                    'total_participants'      => 0,
-                    'overall_performance'     => 'No data',
+                    'total_youth_population' => 0,
+                    'total_programs_created' => 0,
+                    'total_ongoing' => 0,
+                    'total_completed' => 0,
+                    'total_participants' => 0,
+                    'overall_performance' => 'No data',
                 ],
                 'performance_summary' => [
-                    'completion_rate'         => 0,
-                    'attendance_rate'         => 0,
-                    'budget_efficiency'       => 0,
-                    'most_active_sector'      => 'N/A',
+                    'completion_rate' => 0,
+                    'attendance_rate' => 0,
+                    'budget_efficiency' => 0,
+                    'most_active_sector' => 'N/A',
                     'most_successful_program' => 'N/A',
                     'low_participation_count' => 0,
                 ],
                 'program_list' => [],
+                'accomplishments' => [],
+                'accomplishment_years' => [],
+                'accomplishment_terms' => [],
                 'abyip' => [
                     'budget_utilization' => 0,
                     'remaining_balance' => 0,
@@ -427,32 +253,26 @@ class BarangayMonitoringController extends Controller
         return $details;
     }
 
+    /**
+     * @param  array<string, mixed>  $barangayData
+     * @return array<string, mixed>
+     */
     private function calculateComplianceStatus(array $barangayData): array
     {
-        $currentYear = date('Y');
+        $currentYear = (int) date('Y');
         $abyipReports = $barangayData['abyip']['reports'] ?? [];
-        $accomplishmentReports = $barangayData['program_list'] ?? [];
-        
-        // Check if ABYIP reports exist and are from current year
-        $abyipSubmittedThisYear = false;
-        foreach ($abyipReports as $report) {
-            $reportYear = date('Y', strtotime($report['date_submitted'] ?? ''));
-            if ($reportYear == $currentYear) {
-                $abyipSubmittedThisYear = true;
-                break;
-            }
-        }
-        
-        // Check if Accomplishment reports exist and are from current year
-        $accomplishmentSubmittedThisYear = false;
-        foreach ($accomplishmentReports as $report) {
-            $reportYear = date('Y', strtotime($report['timeline'] ?? ''));
-            if ($reportYear == $currentYear) {
-                $accomplishmentSubmittedThisYear = true;
-                break;
-            }
-        }
-        
+        $accomplishmentReports = $barangayData['accomplishments'] ?? [];
+
+        $abyipSubmittedThisYear = collect($abyipReports)->contains(function ($report) use ($currentYear) {
+            $reportYear = (int) date('Y', strtotime((string) ($report['date_submitted'] ?? '')));
+
+            return $reportYear === $currentYear || (int) ($report['fiscal_year'] ?? 0) === $currentYear;
+        });
+
+        $accomplishmentSubmittedThisYear = collect($accomplishmentReports)->contains(function ($report) use ($currentYear) {
+            return (int) ($report['year'] ?? 0) === $currentYear;
+        });
+
         if ($abyipSubmittedThisYear && $accomplishmentSubmittedThisYear) {
             $status = 'compliant';
             $details = 'Both ABYIP and Accomplishment reports submitted this year';
@@ -463,7 +283,7 @@ class BarangayMonitoringController extends Controller
             $status = 'non-compliant';
             $details = 'No reports submitted this year';
         }
-        
+
         return [
             'status' => $status,
             'details' => $details,
@@ -472,11 +292,15 @@ class BarangayMonitoringController extends Controller
         ];
     }
 
+    /**
+     * @param  array<string, mixed>  $barangayData
+     * @return list<array<string, mixed>>
+     */
     private function getWarningsForBarangay(array $barangayData): array
     {
         $warnings = [];
         $complianceStatus = $barangayData['compliance_status'] ?? 'compliant';
-        
+
         if ($complianceStatus === 'non-compliant') {
             $warnings[] = [
                 'type' => 'critical',
@@ -505,7 +329,7 @@ class BarangayMonitoringController extends Controller
                 'default_reason' => $barangayData['compliance_details'] ?? 'Missing Report',
             ];
         }
-        
+
         return $warnings;
     }
 }

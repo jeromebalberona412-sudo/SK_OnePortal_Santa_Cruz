@@ -38,6 +38,9 @@
                         'respondentDisplay' => $kkRespondentDisplay ?? '01',
                         'submitLabel' => 'Update KK Profiling',
                         'barangayLogoUrl' => $kkBarangayLogoUrl ?? null,
+                        'barangayZones' => $kkBarangayZones ?? collect(),
+                        'selectedPurokZone' => $kkSelectedPurokZone ?? '',
+                        'selectedFacebookProfileUrl' => $kkSelectedFacebookProfileUrl ?? '',
                     ])
                 </form>
             </div>

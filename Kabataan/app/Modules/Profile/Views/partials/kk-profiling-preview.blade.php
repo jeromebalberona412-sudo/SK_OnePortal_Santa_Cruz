@@ -240,8 +240,13 @@
 
     <div class="kkp-footer-row">
         <div class="kkp-footer-fb">
-            <label class="kkp-inline-label">FB Account:</label>
-            <input type="text" class="kkp-uline kkp-uline-fb" value="{{ $read('facebook', '-') }}" readonly>
+            <div class="kkp-footer-fb-label-col">
+                <label class="kkp-inline-label">FB Account:</label>
+                <span class="kkp-optional-label">(Optional)</span>
+            </div>
+            <div class="kkp-footer-fb-field">
+                <input type="text" class="kkp-uline kkp-uline-fb" value="{{ $read('facebook_profile_url', $read('facebook', '-')) }}" readonly>
+            </div>
         </div>
         <div class="kkp-footer-chat">
             <span class="kkp-inline-label">Willing to join the group chat?</span>

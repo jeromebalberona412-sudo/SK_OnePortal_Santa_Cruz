@@ -372,9 +372,10 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(135deg, #213F99 0%, #2d52b8 100%);
+    color: #fff;
 }
 
 .sl-view-modal-header-main {
@@ -389,41 +390,53 @@
     flex-shrink: 0;
 }
 
-.sl-view-modal-icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid #dadce0;
-    border-radius: 8px;
-    background: #fff;
-    color: #5f6368;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.sl-view-modal-icon-btn:hover {
-    background: #e8f0fe;
-    color: #1a73e8;
-    border-color: #d2e3fc;
-}
-
 .sl-view-modal-header h2 {
     margin: 0;
-    font-size: 20px;
-    color: #202124;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
 }
 
 .sl-view-modal-meta {
     margin: 6px 0 0;
     font-size: 13px;
-    color: #5f6368;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.sl-view-modal-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sl-view-modal-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+}
+
+.sl-view-modal-maximize-btn .sl-modal-icon-restore {
+    display: none;
+}
+
+.sl-view-modal-container.is-fullscreen .sl-view-modal-maximize-btn .sl-modal-icon-maximize {
+    display: none;
+}
+
+.sl-view-modal-container.is-fullscreen .sl-view-modal-maximize-btn .sl-modal-icon-restore {
+    display: block;
 }
 
 .sl-view-modal-close {
-    font-size: 24px;
-    line-height: 1;
+    font-size: 0;
 }
 
 .sl-view-modal-body {
@@ -452,31 +465,36 @@
 .sl-view-personal-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 20px;
-    padding: 16px;
+    gap: 12px 16px;
+    padding: 18px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 10px;
 }
 
 .sl-view-personal-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     min-width: 0;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #e8eaed;
+    border-radius: 8px;
 }
 
 .sl-view-personal-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    color: #5f6368;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.35px;
 }
 
 .sl-view-personal-value {
     font-size: 14px;
-    color: #202124;
+    font-weight: 500;
+    color: #1e293b;
     word-break: break-word;
 }
 
@@ -667,17 +685,50 @@
 .sl-cancel-modal-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
-    padding: 18px 20px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(135deg, #213F99 0%, #2d52b8 100%);
 }
 
 .sl-cancel-modal-header h3 {
     margin: 0;
     flex: 1;
-    font-size: 18px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.sl-cancel-modal-header .sl-view-modal-icon-btn {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.sl-view-cancel-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
     color: #202124;
+    background: #fff;
+    margin-bottom: 14px;
+}
+
+.sl-view-cancel-select:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+}
+
+.sl-view-cancelled-type {
+    font-size: 13px;
+    font-weight: 600;
+    color: #b3261e;
+    margin-bottom: 6px;
 }
 
 .sl-cancel-modal-body {

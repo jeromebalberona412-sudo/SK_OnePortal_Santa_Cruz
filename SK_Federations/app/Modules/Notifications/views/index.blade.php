@@ -12,11 +12,8 @@
         <div class="notif-page-list">
             @foreach($notifications as $notification)
                 <article class="notif-page-item {{ ($notification['unread'] ?? false) ? 'notif-unread' : '' }}">
-                    <div class="notif-icon">
-                        <i class="fas {{ $notification['icon'] ?? 'fa-bell' }}"></i>
-                    </div>
                     <div class="notif-content">
-                        <h3 class="notif-item-title">{{ $notification['title'] }}</h3>
+                        <div class="notif-item-title">{{ $notification['title'] }}</div>
                         <p class="notif-item-text">{{ $notification['text'] }}</p>
                         <div class="notif-item-time">{{ $notification['time'] }}</div>
                     </div>

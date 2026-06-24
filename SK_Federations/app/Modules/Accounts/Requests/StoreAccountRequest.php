@@ -65,9 +65,12 @@ class StoreAccountRequest extends FormRequest
         ], true);
 
         $isOfficial = $this->input('role') === User::ROLE_SK_OFFICIAL;
+        $isFederation = $this->input('role') === User::ROLE_SK_FED;
         $termStartMin = '2023-01-01';
-        $minBirthdate = Carbon::now()->subYears(30)->startOfDay()->format('Y-m-d');
-        $maxBirthdate = Carbon::now()->subYears(15)->endOfDay()->format('Y-m-d');
+        $ageMin = ($isOfficial || $isFederation) ? 18 : 15;
+        $ageMax = ($isOfficial || $isFederation) ? 24 : 30;
+        $minBirthdate = Carbon::now()->subYears($ageMax)->startOfDay()->format('Y-m-d');
+        $maxBirthdate = Carbon::now()->subYears($ageMin)->endOfDay()->format('Y-m-d');
 
         $nameRules = $isOfficial
             ? ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Z\-']+$/u']
@@ -77,12 +80,12 @@ class StoreAccountRequest extends FormRequest
             ? ['nullable', 'string', 'min:3', 'max:50', 'regex:/^[A-Z\-']+$/u']
             : ['nullable', 'string', 'max:100', 'regex:/^[A-Z\s\-\']*$/u'];
 
-        $dateOfBirthRules = $isOfficial
+        $dateOfBirthRules = ($isOfficial || $isFederation)
             ? ['required', 'date', 'after_or_equal:'.$minBirthdate, 'before_or_equal:'.$maxBirthdate]
             : [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'];
 
-        $ageRules = $isOfficial
-            ? ['required', 'integer', 'min:15', 'max:30']
+        $ageRules = ($isOfficial || $isFederation)
+            ? ['required', 'integer', 'min:'.$ageMin, 'max:'.$ageMax]
             : ['nullable', 'integer', 'min:0', 'max:150'];
 
         $emailRules = [
@@ -190,10 +193,10 @@ class StoreAccountRequest extends FormRequest
             'middle_name.min' => 'Middle name must be at least 3 characters when provided.',
             'middle_name.max' => 'Middle name must not exceed 50 characters.',
             'email.regex' => 'Email must be a @gmail.com address with 6-30 characters before @.',
-            'date_of_birth.after_or_equal' => 'Age must be between 15 and 30 years old.',
-            'date_of_birth.before_or_equal' => 'Age must be between 15 and 30 years old.',
-            'age.min' => 'Age must be at least 15.',
-            'age.max' => 'Age must not exceed 30.',
+            'date_of_birth.after_or_equal' => 'Age must be between 18 and 24 years old.',
+            'date_of_birth.before_or_equal' => 'Age must be between 18 and 24 years old.',
+            'age.min' => 'Age must be at least 18.',
+            'age.max' => 'Age must not exceed 24.',
             'suffix_other.regex' => 'Other suffix must not contain spaces.',
             'contact_number.regex' => 'Contact number must be 11 digits starting with 09.',
             'term_start.after_or_equal' => 'Term start date cannot be before 2023.',

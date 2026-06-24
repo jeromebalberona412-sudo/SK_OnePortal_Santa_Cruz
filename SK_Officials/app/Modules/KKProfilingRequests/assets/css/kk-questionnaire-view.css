@@ -113,6 +113,33 @@
     margin: 0;
 }
 
+/* Fix long checkbox labels in "If No, Why?" section */
+#kkViewAssemblyNoCell {
+    overflow: visible;
+}
+
+#kkViewAssemblyNoCell .kkp-demo-block-options {
+    overflow: visible;
+    padding: 3px 4px;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#kkViewAssemblyNoCell .kkp-chk-lbl {
+    white-space: normal;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    font-size: 10px;
+    line-height: 1.3;
+    width: 100%;
+    max-width: 100%;
+}
+
+#kkViewAssemblyNoCell .kkp-sq-chk {
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
 @media (max-width: 640px) {
     .kk-view-modal-wide {
         max-width: 98vw !important;

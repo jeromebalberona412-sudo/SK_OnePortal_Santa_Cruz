@@ -3236,7 +3236,20 @@ body {
     min-width: 110px;
 }
 
-/* ── Table footer pagination (Supabase-style) ── */
+/* ── Table footer pagination — see /shared/css/table-page-footer.css ── */
+.kk-email-cell {
+    font-size: 12px;
+    color: #374151;
+    max-width: 200px;
+    word-break: break-word;
+}
+
+@media (max-width: 1024px) {
+    .kk-email-cell {
+        max-width: 160px;
+    }
+}
+
 .table-pagination-footer {
     display: flex;
     align-items: center;

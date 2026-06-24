@@ -186,9 +186,23 @@
 
                         <div class="kkp-loc-col">
 
-                            <input type="text" name="purok_zone" class="kkp-uline" placeholder=" " required maxlength="100">
+                            @php
+                                $zones = $barangayZones ?? collect();
+                                $selectedPurok = old('purok_zone', $selectedPurokZone ?? '');
+                            @endphp
 
-                            <label class="kkp-col-label">Purok/Zone <span class="kkp-required">*</span></label>
+                            <select name="purok_zone" id="kkpPurokZone" class="kkp-uline kkp-uline-select" required>
+                                <option value="" disabled {{ $selectedPurok === '' ? 'selected' : '' }}>Select</option>
+                                @forelse ($zones as $zone)
+                                    <option value="{{ $zone->name }}" {{ $selectedPurok === $zone->name ? 'selected' : '' }}>
+                                        {{ $zone->name }}
+                                    </option>
+                                @empty
+                                    <option value="" disabled>No zones configured for this barangay</option>
+                                @endforelse
+                            </select>
+
+                            <label class="kkp-col-label" for="kkpPurokZone">Purok/Sitio/Zone <span class="kkp-required">*</span></label>
 
                         </div>
 
@@ -581,17 +595,32 @@
 
                         <div class="kkp-footer-fb">
 
-                            <label class="kkp-inline-label" for="kkpFacebook">FB Account: <span class="kkp-required">*</span></label>
+                            <div class="kkp-footer-fb-label-col">
+                                <label class="kkp-inline-label" for="kkpFacebook">FB Account:</label>
+                                <span class="kkp-optional-label" id="kkpFacebookOptional">(Optional)</span>
+                                <span class="kkp-required" id="kkpFacebookRequired" hidden>*</span>
+                            </div>
 
                             <div class="kkp-footer-fb-field">
-                                <input type="text" name="facebook" id="kkpFacebook" class="kkp-uline kkp-uline-fb" placeholder=" " minlength="3" maxlength="35" required>
+                                <input
+                                    type="text"
+                                    name="facebook_profile_url"
+                                    id="kkpFacebook"
+                                    class="kkp-uline kkp-uline-fb"
+                                    placeholder="Paste your Facebook profile link here"
+                                    minlength="3"
+                                    maxlength="50"
+                                    value="{{ old('facebook_profile_url', $selectedFacebookProfileUrl ?? '') }}"
+                                    autocomplete="url"
+                                    spellcheck="false"
+                                >
                             </div>
 
                         </div>
 
-                        <div class="kkp-footer-chat">
+                        <div class="kkp-footer-chat" id="kkpFooterChat">
 
-                            <span class="kkp-inline-label">Willing to join the group chat? <span class="kkp-required">*</span></span>
+                            <span class="kkp-inline-label">Willing to join the group chat? <span class="kkp-required" id="kkpGroupChatRequired" hidden>*</span></span>
 
                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="group_chatChk" value="Yes" onchange="kkpSingleCheck(this,'kkpGroupChat')"> Yes</label>
 

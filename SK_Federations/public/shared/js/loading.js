@@ -1,7 +1,16 @@
 /**
  * Global Loading Screen Manager
- * Supports both #globalLoadingOverlay (module pages) and #globalLoadingScreen (dynamic overlay).
+ * Supports #globalLoadingOverlay (blade) and #globalLoadingScreen (dynamic fallback).
+ * Blocks all page interaction while visible.
  */
+
+const MESSAGES = {
+    login: 'Signing In',
+    register: 'Creating your account',
+    logout: 'Logging out',
+    redirect: 'Redirecting',
+    loading: 'Loading',
+};
 
 const LoadingScreen = {
     element: null,
@@ -24,7 +33,7 @@ const LoadingScreen = {
         }
 
         const loadingHTML = `
-            <div id="globalLoadingScreen" class="global-loading-screen">
+            <div id="globalLoadingScreen" class="global-loading-screen" aria-hidden="true">
                 <div class="loading-content">
                     <div class="loading-spinner">
                         <div class="spinner-circle"></div>
@@ -51,17 +60,17 @@ const LoadingScreen = {
         }
         if (this.element) {
             this.element.classList.add('active');
+            this.element.setAttribute('aria-hidden', 'false');
         }
-        document.body.style.overflow = 'hidden';
+        setTimeout(lockPageInteraction, 0);
     },
 
     hide() {
         if (this.element) {
             this.element.classList.remove('active');
+            this.element.setAttribute('aria-hidden', 'true');
         }
-        if (!document.body.classList.contains('gl-loading-active')) {
-            document.body.style.overflow = '';
-        }
+        unlockPageInteraction();
     },
 
     showWithDelay(message, subtext, delay = 200) {
@@ -79,8 +88,72 @@ const LoadingScreen = {
     },
 };
 
+function getOverlay() {
+    return document.getElementById('globalLoadingOverlay');
+}
+
+function lockPageInteraction() {
+    document.body.classList.add('gl-loading-active');
+    document.body.style.overflow = 'hidden';
+
+    document.querySelectorAll('input, textarea, select, button, a[href]').forEach((el) => {
+        if (el.closest('#globalLoadingOverlay') || el.closest('#globalLoadingScreen')) {
+            return;
+        }
+
+        if (el.tagName === 'INPUT' && el.type === 'hidden') {
+            return;
+        }
+
+        if (!el.hasAttribute('data-gl-locked')) {
+            el.setAttribute('data-gl-locked', '1');
+            el.setAttribute('data-gl-was-disabled', el.disabled ? '1' : '0');
+            el.setAttribute('data-gl-was-readonly', el.readOnly ? '1' : '0');
+
+            if (el.tagName === 'A') {
+                el.setAttribute('aria-disabled', 'true');
+                el.style.pointerEvents = 'none';
+                el.style.cursor = 'not-allowed';
+            } else if (
+                el.tagName === 'TEXTAREA' ||
+                (el.tagName === 'INPUT' &&
+                    ['text', 'email', 'password', 'search', 'tel', 'url', 'number'].includes(el.type))
+            ) {
+                el.readOnly = true;
+            } else {
+                el.disabled = true;
+            }
+        }
+    });
+}
+
+function unlockPageInteraction() {
+    document.body.classList.remove('gl-loading-active');
+    document.body.style.overflow = '';
+
+    document.querySelectorAll('[data-gl-locked]').forEach((el) => {
+        if (el.getAttribute('data-gl-was-disabled') === '0') {
+            el.disabled = false;
+        }
+
+        if (el.getAttribute('data-gl-was-readonly') === '0') {
+            el.readOnly = false;
+        }
+
+        if (el.tagName === 'A') {
+            el.removeAttribute('aria-disabled');
+            el.style.pointerEvents = '';
+            el.style.cursor = '';
+        }
+
+        el.removeAttribute('data-gl-locked');
+        el.removeAttribute('data-gl-was-disabled');
+        el.removeAttribute('data-gl-was-readonly');
+    });
+}
+
 function showLoading(message = 'Loading', subtext = 'Please wait') {
-    const overlay = document.getElementById('globalLoadingOverlay');
+    const overlay = getOverlay();
     if (overlay) {
         const messageEl = overlay.querySelector('.gl-message');
         const subtextEl = overlay.querySelector('.gl-sub');
@@ -92,8 +165,7 @@ function showLoading(message = 'Loading', subtext = 'Please wait') {
         }
         overlay.classList.add('gl-visible');
         overlay.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('gl-loading-active');
-        document.body.style.overflow = 'hidden';
+        setTimeout(lockPageInteraction, 0);
         return;
     }
 
@@ -101,13 +173,12 @@ function showLoading(message = 'Loading', subtext = 'Please wait') {
 }
 
 function hideLoading() {
-    const overlay = document.getElementById('globalLoadingOverlay');
+    const overlay = getOverlay();
     if (overlay) {
         overlay.classList.remove('gl-visible');
         overlay.setAttribute('aria-hidden', 'true');
     }
 
-    document.body.classList.remove('gl-loading-active');
     LoadingScreen.hideImmediate();
 }
 
@@ -127,6 +198,12 @@ const NetworkNotification = {
     },
 
     create() {
+        if (document.getElementById('networkNotification')) {
+            this.element = document.getElementById('networkNotification');
+            this.textElement = document.getElementById('networkNotificationText');
+            return;
+        }
+
         const notifHTML = `
             <div id="networkNotification" class="network-notification">
                 <div class="network-notification-content">
@@ -207,6 +284,26 @@ window.LoadingScreen = {
 };
 window.NetworkNotification = NetworkNotification;
 
+document.addEventListener('DOMContentLoaded', () => {
+    ensureLoadingHidden();
+
+    const loginForm = document.querySelector('form[action*="login"]:not([action*="logout"])');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            if (e.defaultPrevented) return;
+
+            const emailInput = loginForm.querySelector('input[type="email"], input[name="email"]');
+            const passwordInput = loginForm.querySelector('input[type="password"], input[name="password"]');
+            const emailFilled = emailInput && emailInput.value.trim() !== '';
+            const passwordFilled = passwordInput && passwordInput.value !== '';
+
+            if (emailFilled && passwordFilled) {
+                showLoading(MESSAGES.login, 'Verifying your credentials...');
+            }
+        });
+    }
+});
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', ensureLoadingHidden);
 } else {
@@ -215,13 +312,13 @@ if (document.readyState === 'loading') {
 
 window.addEventListener('load', ensureLoadingHidden);
 
-window.addEventListener('pageshow', function (event) {
+window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
         ensureLoadingHidden();
     }
 });
 
-document.addEventListener('visibilitychange', function () {
+document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
         ensureLoadingHidden();
     }

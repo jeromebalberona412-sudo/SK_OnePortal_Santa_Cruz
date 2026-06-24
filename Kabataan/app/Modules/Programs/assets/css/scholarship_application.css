@@ -761,6 +761,339 @@
     margin-bottom: 24px;
 }
 
+/* Step Progress */
+.gf-step-progress {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px;
+    padding: 0;
+}
+
+.gf-step-item {
+    flex: 1 1 140px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #5f6368;
+}
+
+.gf-step-item.is-active {
+    border-color: #1a73e8;
+    background: #e8f0fe;
+    color: #1a73e8;
+    font-weight: 600;
+}
+
+.gf-step-item.is-done {
+    border-color: #34a853;
+    color: #137333;
+}
+
+.gf-step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #f1f3f4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.gf-step-item.is-active .gf-step-num {
+    background: #1a73e8;
+    color: #fff;
+}
+
+.gf-step-item.is-done .gf-step-num {
+    background: #34a853;
+    color: #fff;
+}
+
+.gf-step-panel[hidden] {
+    display: none !important;
+}
+
+.gf-step-actions {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gf-step-nav {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.gf-btn-secondary {
+    background: #fff;
+    color: #1a73e8;
+    border: 1px solid #1a73e8;
+}
+
+.gf-btn-secondary:hover {
+    background: #e8f0fe;
+}
+
+/* Review Step */
+.gf-review-intro {
+    font-size: 14px;
+    color: #5f6368;
+    margin: 8px 0 20px;
+}
+
+.gf-review-status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e8eaed;
+}
+
+.gf-review-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #202124;
+}
+
+.gf-review-status-item.is-missing {
+    color: #d93025;
+}
+
+.gf-review-section {
+    margin-bottom: 24px;
+}
+
+.gf-review-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #202124;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e8eaed;
+}
+
+.gf-review-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.gf-review-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gf-review-field-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #5f6368;
+    font-weight: 500;
+}
+
+.gf-review-field-value {
+    font-size: 14px;
+    color: #202124;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dadce0;
+}
+
+.gf-review-doc {
+    padding: 14px;
+    border: 1px solid #e8eaed;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background: #fff;
+}
+
+.gf-review-doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.gf-review-doc-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #202124;
+}
+
+.gf-review-doc-status {
+    font-size: 13px;
+    color: #137333;
+    font-weight: 500;
+}
+
+.gf-review-doc-status.is-missing {
+    color: #d93025;
+}
+
+.gf-review-doc-preview {
+    margin-top: 8px;
+}
+
+.gf-review-doc-preview button {
+    padding: 8px 14px;
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    background: #fff;
+    color: #1a73e8;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* Confirmation Checklist */
+.gf-confirm-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.gf-confirm-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 14px;
+    color: #202124;
+    cursor: pointer;
+    line-height: 1.5;
+}
+
+.gf-confirm-item input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.gf-confirm-box {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #dadce0;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    background: #fff;
+}
+
+.gf-confirm-item input:checked + .gf-confirm-box {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E");
+    background-size: 14px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Confirm Submit Modal */
+.gf-confirm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.gf-confirm-modal[hidden] {
+    display: none !important;
+}
+
+.gf-confirm-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(32, 33, 36, 0.55);
+}
+
+.gf-confirm-modal-card {
+    position: relative;
+    width: min(480px, 100%);
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+
+.gf-confirm-modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #202124;
+    margin: 0 0 12px;
+}
+
+.gf-confirm-modal-text {
+    font-size: 14px;
+    color: #5f6368;
+    line-height: 1.6;
+    margin: 0 0 24px;
+}
+
+.gf-confirm-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.gf-success-details {
+    text-align: left;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.gf-success-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    padding: 6px 0;
+}
+
+.gf-success-detail-label {
+    color: #5f6368;
+}
+
+.gf-success-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.gf-success-card {
+    max-width: 480px;
+}
+
+.gf-success-icon {
+    font-size: 40px;
+    width: auto;
+    height: auto;
+    background: none;
+    color: inherit;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .gf-container {

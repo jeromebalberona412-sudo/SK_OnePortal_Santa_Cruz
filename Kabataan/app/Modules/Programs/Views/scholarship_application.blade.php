@@ -53,25 +53,76 @@
             </div>
         </div>
 
-        <div class="gf-card">
-            <div class="gf-kk-notice">
-                <p class="gf-kk-notice-text">Your KK Profiling information has been included in this scholarship application. The information below is automatically retrieved from your KK Profile and cannot be edited here.</p>
-            </div>
-            <div class="gf-kk-section">
-                <div class="gf-section-header">
-                    <h2 class="gf-section-title">KK Profiling Information</h2>
-                    <span class="gf-badge gf-badge-autofill">Auto-Filled from KK Profile</span>
-                </div>
-                <div class="gf-kk-fields" id="kkProfileFieldsContainer"></div>
-            </div>
-        </div>
+        <ol class="gf-step-progress" id="applicationStepProgress" aria-label="Application steps">
+            <li class="gf-step-item is-active" data-step-item="1"><span class="gf-step-num">1</span><span class="gf-step-label">Personal Information</span></li>
+            <li class="gf-step-item" data-step-item="2"><span class="gf-step-num">2</span><span class="gf-step-label">Upload Requirements</span></li>
+            <li class="gf-step-item" data-step-item="3"><span class="gf-step-num">3</span><span class="gf-step-label">Review Application</span></li>
+            <li class="gf-step-item" data-step-item="4"><span class="gf-step-num">4</span><span class="gf-step-label">Confirmation</span></li>
+        </ol>
 
         <form id="scholarshipApplicationForm" class="gf-form" novalidate>
-            <div id="customQuestionsContainer"></div>
+            {{-- Step 1: Personal Information --}}
+            <div class="gf-step-panel is-active" data-step="1" id="stepPersonal">
+                <div class="gf-card">
+                    <div class="gf-kk-notice">
+                        <p class="gf-kk-notice-text">Your KK Profiling information has been included in this scholarship application. The information below is automatically retrieved from your KK Profile and cannot be edited here.</p>
+                    </div>
+                    <div class="gf-kk-section">
+                        <div class="gf-section-header">
+                            <h2 class="gf-section-title">Personal Information</h2>
+                            <span class="gf-badge gf-badge-autofill">Auto-Filled from KK Profile</span>
+                        </div>
+                        <div class="gf-kk-fields" id="kkProfileFieldsContainer"></div>
+                    </div>
+                </div>
+            </div>
 
-            <div class="gf-actions">
+            {{-- Step 2: Upload Requirements --}}
+            <div class="gf-step-panel" data-step="2" id="stepUpload" hidden>
+                <div id="customQuestionsContainer"></div>
+            </div>
+
+            {{-- Step 3: Review Application --}}
+            <div class="gf-step-panel" data-step="3" id="stepReview" hidden>
+                <div class="gf-card">
+                    <h2 class="gf-section-title">Review Application</h2>
+                    <p class="gf-review-intro">Please review all information before proceeding to confirmation.</p>
+                    <div id="reviewStatusList" class="gf-review-status-list"></div>
+                    <div id="reviewStepContainer" class="gf-review-content"></div>
+                </div>
+            </div>
+
+            {{-- Step 4: Confirmation --}}
+            <div class="gf-step-panel" data-step="4" id="stepConfirm" hidden>
+                <div class="gf-card">
+                    <h2 class="gf-section-title">Confirmation</h2>
+                    <p class="gf-review-intro">Please confirm the following before submitting your application.</p>
+                    <div class="gf-confirm-checklist">
+                        <label class="gf-confirm-item">
+                            <input type="checkbox" id="confirmInfoTrue" name="confirm_info_true">
+                            <span class="gf-confirm-box"></span>
+                            <span>I confirm that all information provided is true and correct.</span>
+                        </label>
+                        <label class="gf-confirm-item">
+                            <input type="checkbox" id="confirmDocsValid" name="confirm_docs_valid">
+                            <span class="gf-confirm-box"></span>
+                            <span>I confirm that all uploaded documents are clear and valid.</span>
+                        </label>
+                        <label class="gf-confirm-item">
+                            <input type="checkbox" id="confirmFalseInfo" name="confirm_false_info">
+                            <span class="gf-confirm-box"></span>
+                            <span>I understand that false information may result in rejection.</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gf-actions gf-step-actions">
                 <button type="button" class="gf-btn gf-btn-cancel" id="cancelBtn">Cancel</button>
-                <button type="submit" class="gf-btn gf-btn-submit" id="submitBtn">Submit Application</button>
+                <div class="gf-step-nav">
+                    <button type="button" class="gf-btn gf-btn-secondary" id="prevStepBtn" hidden>Back</button>
+                    <button type="button" class="gf-btn gf-btn-primary" id="nextStepBtn">Continue</button>
+                </div>
             </div>
         </form>
     </div>
@@ -89,20 +140,36 @@
         </div>
     </div>
 
+    <div id="confirmSubmitModal" class="gf-confirm-modal" hidden>
+        <div class="gf-confirm-modal-overlay" data-close-confirm-modal></div>
+        <div class="gf-confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmSubmitTitle">
+            <h2 id="confirmSubmitTitle" class="gf-confirm-modal-title">Confirm Application Submission</h2>
+            <p class="gf-confirm-modal-text">Please review your information carefully. After submission, editing may no longer be allowed.</p>
+            <div class="gf-confirm-modal-actions">
+                <button type="button" class="gf-btn gf-btn-secondary" id="backToReviewBtn">Back to Review</button>
+                <button type="button" class="gf-btn gf-btn-submit" id="confirmSubmitBtn">Submit Application</button>
+            </div>
+        </div>
+    </div>
+
     <div id="successModal" class="gf-success-modal" hidden>
         <div class="gf-success-card">
-            <div class="gf-success-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-            </div>
+            <div class="gf-success-icon">🎉</div>
             <h2 class="gf-success-title">Application Submitted Successfully</h2>
-            <div class="gf-success-status">
-                <span class="gf-status-badge gf-status-pending">Pending</span>
+            <div class="gf-success-details">
+                <div class="gf-success-detail-row">
+                    <span class="gf-success-detail-label">Reference Number:</span>
+                    <strong id="successReferenceNumber">—</strong>
+                </div>
+                <div class="gf-success-detail-row">
+                    <span class="gf-success-detail-label">Status:</span>
+                    <span class="gf-status-badge gf-status-pending" id="successStatusBadge">Pending Review</span>
+                </div>
             </div>
-            <p class="gf-success-message">Your application has been submitted successfully and is currently awaiting review by the SK Officials.</p>
-            <button type="button" class="gf-btn gf-btn-primary" id="closeSuccessModal">View Application Status</button>
+            <p class="gf-success-message">You will be notified once your application has been processed.</p>
+            <div class="gf-success-actions">
+                <button type="button" class="gf-btn gf-btn-primary" id="goToDashboardBtn">Go to Dashboard</button>
+            </div>
         </div>
     </div>
 
@@ -110,6 +177,7 @@
         window.__scheduleProgramId = @json($scheduleProgramId);
         window.__scheduleProgram = @json($program);
         window.__kkFieldLabels = @json($kkFieldLabels);
+        window.__dashboardUrl = @json(route('dashboard'));
     </script>
 </body>
 </html>

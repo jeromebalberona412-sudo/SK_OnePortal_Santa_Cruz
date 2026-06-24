@@ -11,10 +11,8 @@
     const applicationViewContainer = document.getElementById('applicationViewContainer');
     const applicationViewClose = document.getElementById('applicationViewClose');
     const applicationViewMaximize = document.getElementById('applicationViewMaximize');
-    const applicationCancelFab = document.getElementById('applicationCancelFab');
     const applicationCancelModal = document.getElementById('applicationCancelModal');
     const applicationCancelModalBox = document.getElementById('applicationCancelModalBox');
-    const applicationCancelMaximize = document.getElementById('applicationCancelMaximize');
     const applicationCancelClose = document.getElementById('applicationCancelClose');
     const applicationCancelDismissBtn = document.getElementById('applicationCancelDismissBtn');
     const applicationViewTitle = document.getElementById('applicationViewTitle');
@@ -22,7 +20,9 @@
     const applicationViewPersonalInfo = document.getElementById('applicationViewPersonalInfo');
     const applicationViewAnswers = document.getElementById('applicationViewAnswers');
     const applicationViewCancelledInfo = document.getElementById('applicationViewCancelledInfo');
+    const applicationViewCancelledType = document.getElementById('applicationViewCancelledType');
     const applicationViewCancelledReason = document.getElementById('applicationViewCancelledReason');
+    const applicationCancelType = document.getElementById('applicationCancelType');
     const applicationCancelReason = document.getElementById('applicationCancelReason');
     const applicationCancelCharCount = document.getElementById('applicationCancelCharCount');
     const applicationCancelError = document.getElementById('applicationCancelError');
@@ -198,6 +198,18 @@
         }).join('');
     }
 
+    function parseCancelDetails(cancelReason) {
+        const raw = String(cancelReason || '').trim();
+        const match = raw.match(/^\[([^\]]+)\]\s*(.*)$/s);
+        if (!match) {
+            return { type: 'Cancelled', reason: raw || 'No reason provided.' };
+        }
+        return {
+            type: match[1] || 'Cancelled',
+            reason: match[2]?.trim() || 'No reason provided.',
+        };
+    }
+
     function renderPreviousApplications(applications) {
         if (!previousApplicationsTable) return;
 
@@ -209,22 +221,37 @@
             return;
         }
 
-        previousApplicationsTable.innerHTML = applications.map((app) => `
+        previousApplicationsTable.innerHTML = applications.map((app) => {
+            const canCancel = app.status === 'pending' && app.can_cancel;
+            return `
             <tr>
                 <td>${escapeHtml(app.program_name || 'Program')}</td>
                 <td>${escapeHtml(app.submitted_at || '—')}</td>
                 <td><span class="sl-status-badge ${getStatusClass(app.status)}">${escapeHtml(app.status_display || app.status)}</span></td>
                 <td>
-                    <button type="button" class="sl-btn-action sl-btn-view" data-view-application="${app.id}">View</button>
+                    <div class="sl-table-actions">
+                        <button type="button" class="sl-btn-action sl-btn-view" data-view-application="${app.id}">View</button>
+                        ${canCancel ? `<button type="button" class="sl-btn-action sl-btn-cancel" data-cancel-application="${app.id}">Cancel</button>` : ''}
+                    </div>
                 </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
 
         previousApplicationsTable.querySelectorAll('[data-view-application]').forEach((button) => {
             button.addEventListener('click', () => {
                 const applicationId = Number(button.getAttribute('data-view-application'));
                 if (!applicationId) return;
                 openApplicationView(applicationId);
+            });
+        });
+
+        previousApplicationsTable.querySelectorAll('[data-cancel-application]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const applicationId = Number(button.getAttribute('data-cancel-application'));
+                if (!applicationId) return;
+                activeViewApplicationId = applicationId;
+                openCancelReasonModal();
             });
         });
 
@@ -235,18 +262,20 @@
         if (!applicationViewContainer) return;
         applicationViewContainer.classList.toggle('is-fullscreen', isMaximized);
         if (applicationViewMaximize) {
-            applicationViewMaximize.textContent = isMaximized ? '⧉' : '□';
             applicationViewMaximize.title = isMaximized ? 'Restore Down' : 'Maximize';
+            applicationViewMaximize.setAttribute('aria-label', isMaximized ? 'Restore Down' : 'Maximize');
         }
     }
 
-    function setCancelModalMaximized(isMaximized) {
-        if (!applicationCancelModalBox) return;
-        applicationCancelModalBox.classList.toggle('is-fullscreen', isMaximized);
-        if (applicationCancelMaximize) {
-            applicationCancelMaximize.textContent = isMaximized ? '⧉' : '□';
-            applicationCancelMaximize.title = isMaximized ? 'Restore Down' : 'Maximize';
+    function openCancelReasonModal() {
+        if (applicationCancelType) applicationCancelType.value = '';
+        if (applicationCancelReason) applicationCancelReason.value = '';
+        updateCancelReasonCharCount();
+        if (applicationCancelError) {
+            applicationCancelError.hidden = true;
+            applicationCancelError.textContent = '';
         }
+        if (applicationCancelModal) applicationCancelModal.hidden = false;
     }
 
     function updateCancelReasonCharCount() {
@@ -256,19 +285,7 @@
         applicationCancelCharCount.classList.toggle('is-limit', length >= CANCEL_REASON_MAX);
     }
 
-    function openCancelReasonModal() {
-        if (applicationCancelReason) applicationCancelReason.value = '';
-        updateCancelReasonCharCount();
-        if (applicationCancelError) {
-            applicationCancelError.hidden = true;
-            applicationCancelError.textContent = '';
-        }
-        setCancelModalMaximized(false);
-        if (applicationCancelModal) applicationCancelModal.hidden = false;
-    }
-
     function closeCancelReasonModal() {
-        setCancelModalMaximized(false);
         if (applicationCancelModal) applicationCancelModal.hidden = true;
     }
 
@@ -280,7 +297,6 @@
             applicationCancelError.textContent = '';
         }
         setViewModalMaximized(false);
-        if (applicationCancelFab) applicationCancelFab.hidden = true;
 
         if (applicationViewAnswers) {
             applicationViewAnswers.innerHTML = '<p class="sl-view-empty">Loading application details...</p>';
@@ -309,14 +325,17 @@
                     applicationViewAnswers.innerHTML = renderAnswerItems(application.answers || []);
                 }
 
-                if (applicationCancelFab) {
-                    applicationCancelFab.hidden = !application.can_cancel;
-                }
                 if (applicationViewCancelledInfo) {
                     const isCancelled = application.status === 'cancelled';
                     applicationViewCancelledInfo.hidden = !isCancelled;
-                    if (applicationViewCancelledReason) {
-                        applicationViewCancelledReason.textContent = application.cancel_reason || 'No reason provided.';
+                    if (isCancelled) {
+                        const details = parseCancelDetails(application.cancel_reason);
+                        if (applicationViewCancelledType) {
+                            applicationViewCancelledType.textContent = `Cancel Type: ${details.type}`;
+                        }
+                        if (applicationViewCancelledReason) {
+                            applicationViewCancelledReason.textContent = details.reason;
+                        }
                     }
                 }
             })
@@ -359,7 +378,17 @@
     async function handleCancelApplication() {
         if (!activeViewApplicationId || !applicationCancelReason) return;
 
+        const cancelType = applicationCancelType?.value?.trim() || '';
         const reason = applicationCancelReason.value.trim();
+
+        if (!cancelType) {
+            if (applicationCancelError) {
+                applicationCancelError.textContent = 'Please select a cancel type.';
+                applicationCancelError.hidden = false;
+            }
+            return;
+        }
+
         if (reason.length < 3) {
             if (applicationCancelError) {
                 applicationCancelError.textContent = 'Please type your cancel reason (at least 3 characters).';
@@ -375,6 +404,8 @@
             return;
         }
 
+        const payloadReason = `[${cancelType}] ${reason}`;
+
         if (applicationCancelBtn) {
             applicationCancelBtn.disabled = true;
             applicationCancelBtn.textContent = 'Cancelling...';
@@ -384,9 +415,11 @@
         }
 
         try {
-            await cancelApplication(activeViewApplicationId, reason);
+            await cancelApplication(activeViewApplicationId, payloadReason);
             closeCancelReasonModal();
-            closeApplicationView();
+            if (applicationViewModal && !applicationViewModal.hidden) {
+                closeApplicationView();
+            }
             await init();
         } catch (error) {
             if (applicationCancelError) {
@@ -445,10 +478,6 @@
             applicationViewModal.querySelector('.sl-view-modal-overlay')?.addEventListener('click', closeApplicationView);
         }
 
-        if (applicationCancelFab) {
-            applicationCancelFab.addEventListener('click', openCancelReasonModal);
-        }
-
         if (applicationCancelBtn) {
             applicationCancelBtn.addEventListener('click', handleCancelApplication);
         }
@@ -463,14 +492,6 @@
 
         if (applicationCancelDismissBtn) {
             applicationCancelDismissBtn.addEventListener('click', closeCancelReasonModal);
-        }
-
-        if (applicationCancelMaximize) {
-            applicationCancelMaximize.addEventListener('click', (event) => {
-                event.stopPropagation();
-                const isMaximized = applicationCancelModalBox?.classList.contains('is-fullscreen');
-                setCancelModalMaximized(!isMaximized);
-            });
         }
 
         if (applicationCancelModal) {

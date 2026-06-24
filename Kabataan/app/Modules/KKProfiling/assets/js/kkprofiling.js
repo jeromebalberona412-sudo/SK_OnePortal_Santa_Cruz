@@ -205,31 +205,59 @@ function kkpValidateEmail(value, touched) {
 }
 
 function kkpValidateFacebook(value, touched) {
-    const v = (value || '').trim();
+    const raw = value || '';
+    const v = raw.trim();
+
+    if (raw.length > 50) {
+        return 'Maximum 50 characters allowed.';
+    }
+
     if (!v) {
-        return touched ? 'FB Account is required.' : null;
+        if (kkpIsGroupChatFilled() && touched) {
+            return 'FB Account is required when you answer the group chat question.';
+        }
+        return null;
     }
     if (v.length < 3) {
-        return 'Minimum 3 characters required.';
+        return touched ? 'Minimum 3 characters required.' : null;
     }
-    if (v.length > 35) {
-        return 'Maximum 35 characters allowed.';
+    if (v.length > 50) {
+        return 'Maximum 50 characters allowed.';
     }
-    if (kkpHasAnySpace(v)) {
-        return 'No spaces allowed.';
+    try {
+        const parsed = new URL(v);
+        if (!/^https?:$/i.test(parsed.protocol)) {
+            return 'Please enter a valid Facebook profile link.';
+        }
+    } catch {
+        return 'Please enter a valid Facebook profile link.';
+    }
+    if (!/^https?:\/\/(www\.|m\.)?(facebook\.com|fb\.com)\//i.test(v)) {
+        return 'Link must be a Facebook profile URL (e.g. https://www.facebook.com/yourprofile).';
     }
     return null;
+}
+
+function kkpIsFacebookFilled() {
+    const el = document.getElementById('kkpFacebook');
+    return Boolean((el?.value || '').trim());
+}
+
+function kkpIsGroupChatFilled() {
+    const hidden = document.getElementById('kkpGroupChat');
+    return Boolean((hidden?.value || '').trim());
 }
 
 function kkpValidatePurok(value, touched) {
     const v = (value || '').trim();
     if (!v) {
-        return touched ? 'Purok/Zone is required.' : null;
-    }
-    if (/^\s+$/.test(value || '')) {
-        return 'Cannot be spaces only.';
+        return touched ? 'Purok/Sitio/Zone is required.' : null;
     }
     return null;
+}
+
+function kkpPurokField() {
+    return document.querySelector('select[name="purok_zone"]') || document.querySelector('input[name="purok_zone"]');
 }
 
 function kkpValidateContact(value, touched) {
@@ -652,21 +680,106 @@ function kkpValidateContact(value, touched) {
     });
 
     const facebookInput = document.getElementById('kkpFacebook');
+    const KKP_FB_MAX_LEN = 50;
+
+    function validateGroupChat(touched) {
+        if (!kkpIsFacebookFilled()) {
+            return null;
+        }
+        const hidden = document.getElementById('kkpGroupChat');
+        if (!hidden || !(hidden.value || '').trim()) {
+            return touched ? 'Please select Yes or No.' : null;
+        }
+        return null;
+    }
+
+    function runGroupChatValidation(touched) {
+        const chat = document.getElementById('kkpFooterChat') || document.querySelector('.kkp-footer-chat');
+        if (!chat) {
+            return;
+        }
+
+        chat.querySelectorAll('.kkp-field-error').forEach((node) => node.remove());
+
+        const message = validateGroupChat(touched);
+        if (message) {
+            footerChatError(message);
+        }
+    }
+
+    function updateFooterFieldRequirements() {
+        const fbFilled = kkpIsFacebookFilled();
+        const chatFilled = kkpIsGroupChatFilled();
+        const groupChatRequired = document.getElementById('kkpGroupChatRequired');
+        const fbRequired = document.getElementById('kkpFacebookRequired');
+        const fbOptional = document.getElementById('kkpFacebookOptional');
+
+        if (groupChatRequired) {
+            groupChatRequired.hidden = !fbFilled;
+        }
+        if (fbRequired) {
+            fbRequired.hidden = !chatFilled;
+        }
+        if (fbOptional) {
+            fbOptional.hidden = chatFilled;
+        }
+
+        if (facebookInput) {
+            const fbTouched = chatFilled || fbFilled;
+            const fbMsg = kkpValidateFacebook(facebookInput.value, fbTouched);
+            if (fbMsg) {
+                showFieldError(facebookInput, fbMsg);
+            } else {
+                clearFieldError(facebookInput);
+            }
+        }
+
+        runGroupChatValidation(fbFilled);
+    }
+
     if (facebookInput) {
         facebookInput.addEventListener('input', function () {
-            this.value = this.value.replace(/\s/g, '').slice(0, 35);
+            const cleaned = this.value.replace(/\s/g, '');
+            const exceeded = cleaned.length > KKP_FB_MAX_LEN;
+            this.value = cleaned.slice(0, KKP_FB_MAX_LEN);
+
+            const message = exceeded
+                ? 'Maximum 50 characters allowed.'
+                : kkpValidateFacebook(this.value, true);
+
+            if (message) {
+                showFieldError(this, message);
+            } else {
+                clearFieldError(this);
+            }
+
+            updateFooterFieldRequirements();
         });
 
         facebookInput.addEventListener('blur', function () {
-            this.value = this.value.trim();
+            this.value = this.value.trim().slice(0, KKP_FB_MAX_LEN);
+            const message = kkpValidateFacebook(this.value, true);
+            if (message) {
+                showFieldError(this, message);
+            } else {
+                clearFieldError(this);
+            }
+            updateFooterFieldRequirements();
         });
     }
 
+    document.querySelectorAll('input[name="group_chatChk"]').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+            updateFooterFieldRequirements();
+        });
+    });
+
+    updateFooterFieldRequirements();
+
     bindRealtimeField(firstNameEl, kkpValidateFirstName);
     bindRealtimeField(middleNameEl, kkpValidateMiddleName);
-    bindRealtimeField(document.querySelector('input[name="purok_zone"]'), kkpValidatePurok);
+    bindRealtimeField(kkpPurokField(), kkpValidatePurok);
     bindRealtimeField(contactInput, kkpValidateContact);
-    bindRealtimeField(facebookInput, kkpValidateFacebook);
 
     if (emailInput) {
         let emailTouched = false;
@@ -743,8 +856,11 @@ function kkpValidateContact(value, touched) {
         }
 
         if (hiddenId === 'kkpGroupChat') {
-            const chat = document.querySelector('.kkp-footer-chat');
+            const chat = document.getElementById('kkpFooterChat') || document.querySelector('.kkp-footer-chat');
             chat?.querySelectorAll('.kkp-field-error').forEach((node) => node.remove());
+            if (typeof updateFooterFieldRequirements === 'function') {
+                updateFooterFieldRequirements();
+            }
         }
     };
 
@@ -971,13 +1087,10 @@ window.validateKkProfilingForm = async function (options = {}) {
     }
 
     // ── 3. Purok/Zone ──
-    const purok = document.querySelector('input[name="purok_zone"]');
+    const purok = kkpPurokField();
     if (!purok || !purok.value.trim()) {
-        errors.push('Purok/Zone is required.');
-        fieldError(purok, 'Purok/Zone is required.');
-    } else if (/^\s+$/.test(purok.value)) {
-        errors.push('Purok/Zone cannot be spaces only.');
-        fieldError(purok, 'Cannot be spaces only.');
+        errors.push('Purok/Sitio/Zone is required.');
+        fieldError(purok, 'Purok/Sitio/Zone is required.');
     }
 
     // ── 3b. Suffix ──
@@ -1134,17 +1247,17 @@ window.validateKkProfilingForm = async function (options = {}) {
     }
 
     // ── 18. FB Account ──
-    const facebook = document.querySelector('input[name="facebook"]');
+    const facebook = document.querySelector('input[name="facebook_profile_url"]');
     const facebookMsg = kkpValidateFacebook(facebook?.value, true);
     if (facebookMsg) {
         errors.push(facebookMsg);
         fieldError(facebook, facebookMsg);
     }
 
-    // ── 19. Willing to join group chat ──
-    if (!hiddenVal('kkpGroupChat')) {
-        errors.push('Willing to join the group chat is required.');
-        footerChatError('Required.');
+    // ── 19. Willing to join group chat (required only when FB profile link is provided) ──
+    if (kkpIsFacebookFilled() && !hiddenVal('kkpGroupChat')) {
+        errors.push('Willing to join the group chat is required when FB Account is provided.');
+        footerChatError('Please select Yes or No.');
     }
 
     // ── 20. Signature ──
@@ -2016,7 +2129,7 @@ function showEmailVerification(email) {
         }
 
         // Check other required fields
-        const purok = document.querySelector('input[name="purok_zone"]');
+        const purok = document.querySelector('select[name="purok_zone"]') || document.querySelector('input[name="purok_zone"]');
         if (!purok || !purok.value.trim()) {
             errors.push('- Purok/Zone is required');
         }
@@ -2102,14 +2215,15 @@ function showEmailVerification(email) {
             }
         }
 
-        const facebook = document.querySelector('input[name="facebook"]');
-        if (!facebook || !facebook.value.trim()) {
-            errors.push('- FB Account is required');
+        const facebook = document.querySelector('input[name="facebook_profile_url"]');
+        const facebookMsg = kkpValidateFacebook(facebook?.value, true);
+        if (facebookMsg) {
+            errors.push(`- ${facebookMsg}`);
         }
 
         const groupChat = document.getElementById('kkpGroupChat');
-        if (!groupChat || !groupChat.value.trim()) {
-            errors.push('- Willing to join group chat is required');
+        if (kkpIsFacebookFilled() && (!groupChat || !groupChat.value.trim())) {
+            errors.push('- Willing to join group chat is required when FB Account is provided');
         }
 
         return errors;

@@ -79,7 +79,17 @@
 }
 
 body.gl-loading-active {
-    overflow: hidden;
+    overflow: hidden !important;
+    user-select: none;
+    touch-action: none;
+}
+
+body.gl-loading-active input,
+body.gl-loading-active textarea,
+body.gl-loading-active select,
+body.gl-loading-active button,
+body.gl-loading-active a {
+    pointer-events: none !important;
 }
 
 @media (max-width: 640px) {
@@ -111,6 +121,7 @@ body.gl-loading-active {
 .global-loading-screen.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .loading-content {

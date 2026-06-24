@@ -2,7 +2,7 @@
     <div class="card-header dash-audit-header">
         <div>
             <h3><i class="fas fa-clipboard-list" style="color:#213F99;margin-right:8px;"></i>Recent Audit Activity</h3>
-            <p class="dash-audit-subtitle" id="dashAuditTableSubtitle">Latest activity records across the federation portal</p>
+            <p class="dash-audit-subtitle" id="dashAuditTableSubtitle">Latest 10 activity records across the federation portal</p>
         </div>
         <a href="<?php echo e(route('auditlogs.index')); ?>" class="dash-audit-view-all">View All Audit Logs</a>
     </div>

@@ -254,7 +254,8 @@
     <div class="kkp-footer-row">
         <div class="kkp-footer-fb">
             <span class="kkp-inline-label">FB Account:</span>
-            <span class="kkp-uline kkp-uline-fb kkp-view-value">{{ $form['facebook'] }}</span>
+            <span class="kkp-inline-label">Facebook Profile Link</span>
+            <span class="kkp-uline kkp-uline-fb kkp-view-value">{{ $form['facebook_profile_url'] ?? $form['facebook'] ?? '—' }}</span>
         </div>
         <div class="kkp-footer-chat">
             <span class="kkp-inline-label">Willing to join the group chat?</span>

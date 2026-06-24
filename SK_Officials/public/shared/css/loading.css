@@ -15,12 +15,14 @@
     z-index: 100000;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 #globalLoadingOverlay.gl-visible {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .gl-content {
@@ -93,6 +95,20 @@
 }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
+body.gl-loading-active {
+    overflow: hidden !important;
+    user-select: none;
+    touch-action: none;
+}
+
+body.gl-loading-active input,
+body.gl-loading-active textarea,
+body.gl-loading-active select,
+body.gl-loading-active button,
+body.gl-loading-active a {
+    pointer-events: none !important;
+}
+
 /* Hide header dropdowns / SKai panel while global loading is active */
 body.gl-loading-active .ai-assistant-modal,
 body.gl-loading-active .notif-dropdown,

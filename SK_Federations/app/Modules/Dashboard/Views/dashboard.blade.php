@@ -133,10 +133,6 @@
                         <i class="fas fa-users"></i>
                         <span>Kabataan Monitoring</span>
                     </a>
-                    <a href="{{ route('reports') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#06b6d4;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(6,182,212,0.3);">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Reports</span>
-                    </a>
                     <a href="{{ route('community-feed') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(16,185,129,0.3);">
                         <i class="fas fa-rss"></i>
                         <span>SK Community Feed</span>

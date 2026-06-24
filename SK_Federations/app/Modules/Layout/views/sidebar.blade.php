@@ -40,19 +40,11 @@
             <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
         </a>
 
-        <a href="{{ route('reports') }}" class="menu-item {{ request()->routeIs('reports') ? 'active' : '' }}" data-tooltip="Reports">
-            <i class="fas fa-chart-bar"></i><span>Reports</span>
-        </a>
-
-        <a href="{{ route('barangay.abyip') }}" class="menu-item {{ request()->routeIs('barangay.abyip') ? 'active' : '' }}" data-tooltip="Barangay ABYIP">
-            <i class="fas fa-file-invoice-dollar"></i><span>Barangay ABYIP</span>
-        </a>
-
         <a href="{{ route('barangay-logos.index') }}" class="menu-item {{ request()->routeIs('barangay-logos*') ? 'active' : '' }}" data-nav-key="barangay-logos" data-tooltip="Barangay Logos">
             <i class="fas fa-image"></i><span>Barangay Logos</span>
         </a>
 
-        <button type="button" class="menu-item menu-dropdown-toggle {{ $accountsOpen ? 'active' : '' }}" data-submenu-toggle="accountsSubmenu" data-tooltip="Accounts" aria-expanded="{{ $accountsOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
+        <button type="button" class="menu-item menu-dropdown-toggle" data-submenu-toggle="accountsSubmenu" data-tooltip="Accounts" aria-expanded="{{ $accountsOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
             <i class="fas fa-user-cog"></i><span>Manage Accounts</span>
             <i class="fas fa-chevron-down menu-dropdown-chevron {{ $accountsOpen ? 'is-open' : '' }}" id="accountsChevron"></i>
         </button>
@@ -70,27 +62,27 @@
             <i class="fas fa-clipboard-list"></i><span>Audit Logs</span>
         </a>
 
-        <button type="button" class="menu-item menu-dropdown-toggle {{ $archiveManagementOpen ? 'active' : '' }}" data-submenu-toggle="archiveManagementSubmenu" data-tooltip="Archive Management" aria-expanded="{{ $archiveManagementOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
+        <button type="button" class="menu-item menu-dropdown-toggle" data-submenu-toggle="archiveManagementSubmenu" data-tooltip="Archive Management" aria-expanded="{{ $archiveManagementOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
             <i class="fas fa-box-archive"></i><span>Archive Management</span>
             <i class="fas fa-chevron-down menu-dropdown-chevron {{ $archiveManagementOpen ? 'is-open' : '' }}" id="archiveManagementChevron"></i>
         </button>
 
         <div id="archiveManagementSubmenu" class="sidebar-submenu {{ $archiveManagementOpen ? 'is-open' : '' }}">
-            <a href="{{ route('archived.deleted-sk-federation') }}" class="menu-item submenu-item {{ request()->routeIs('archived.deleted-sk-federation') ? 'active' : '' }}">
-                <i class="fas fa-user-slash"></i><span>Deleted SK Federation</span>
+            <a href="{{ route('archived.deleted-sk-federation') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-sk-federation') ? 'active' : '' }}">
+                <span>Deleted SK Federation</span>
             </a>
-            <a href="{{ route('archived.deleted-sk-officials') }}" class="menu-item submenu-item {{ request()->routeIs('archived.deleted-sk-officials') ? 'active' : '' }}">
-                <i class="fas fa-user-times"></i><span>Deleted SK Officials</span>
+            <a href="{{ route('archived.deleted-sk-officials') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-sk-officials') ? 'active' : '' }}">
+                <span>Deleted SK Officials</span>
             </a>
-            <a href="{{ route('archived.sk-federation-records') }}" class="menu-item submenu-item {{ request()->routeIs('archived.sk-federation-records') ? 'active' : '' }}">
-                <i class="fas fa-folder-open"></i><span>SK Federation Records</span>
+            <a href="{{ route('archived.sk-federation-records') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.sk-federation-records') ? 'active' : '' }}">
+                <span>SK Federation Records</span>
             </a>
-            <a href="{{ route('archived.sk-officials-records') }}" class="menu-item submenu-item {{ request()->routeIs('archived.sk-officials-records') ? 'active' : '' }}">
-                <i class="fas fa-folder"></i><span>SK Officials Records</span>
+            <a href="{{ route('archived.sk-officials-records') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.sk-officials-records') ? 'active' : '' }}">
+                <span>SK Officials Records</span>
             </a>
         </div>
 
-        <button type="button" class="menu-item menu-dropdown-toggle {{ $archiveReportsOpen ? 'active' : '' }}" data-submenu-toggle="archiveSubmenu" data-tooltip="Archive" aria-expanded="{{ $archiveReportsOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
+        <button type="button" class="menu-item menu-dropdown-toggle" data-submenu-toggle="archiveSubmenu" data-tooltip="Archive" aria-expanded="{{ $archiveReportsOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
             <i class="fas fa-archive"></i><span>Archive</span>
             <i class="fas fa-chevron-down menu-dropdown-chevron {{ $archiveReportsOpen ? 'is-open' : '' }}" id="archiveChevron"></i>
         </button>

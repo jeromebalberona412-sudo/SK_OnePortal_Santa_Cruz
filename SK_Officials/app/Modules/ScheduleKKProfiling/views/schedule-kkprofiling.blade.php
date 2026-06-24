@@ -13,6 +13,7 @@
         'app/Modules/ScheduleKKProfiling/assets/css/schedule-kkprofiling.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body>
 
@@ -21,7 +22,7 @@
 @include('layout::sidebar')
 
 <main class="main-content">
-    <div class="page-container schedule-kkp-page">
+    <div class="page-container schedule-kkp-page has-table-page-footer">
 
         <section class="page-header-section">
             <div class="page-header-left">
@@ -70,15 +71,6 @@
                 </div>
                 <span class="stat-card-label">Cancelled</span>
             </div>
-            <div class="stat-card stat-card-purple">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="skkpStatRescheduled">0</span>
-                    <div class="stat-card-icon stat-icon-purple">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Rescheduled</span>
-            </div>
         </div>
 
         <!-- ── Action Bar ── -->
@@ -122,21 +114,31 @@
                     </table>
                 </div>
             </div>
+
+            <div class="skkp-page-footer table-page-footer pagination-footer" aria-label="Table pagination">
+                <div class="pagination-footer-nav">
+                    <button type="button" class="pagination-arrow" id="skkpPrevBtn" disabled aria-label="Previous page">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <span class="pagination-page-label">Page</span>
+                    <input type="number" class="pagination-page-input" id="skkpPageInput" value="1" min="1" aria-label="Current page">
+                    <span class="pagination-page-of">of <span id="skkpTotalPages">1</span></span>
+                    <button type="button" class="pagination-arrow" id="skkpNextBtn" disabled aria-label="Next page">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                </div>
+                <div class="pagination-footer-right">
+                    <select id="skkpRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
+                        <option value="10">10 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100">100 rows</option>
+                    </select>
+                    <span class="pagination-record-count" id="skkpPaginationInfo">0 records</span>
+                </div>
+            </div>
         </section>
     </div>
 </main>
-
-<!-- Pagination -->
-<div class="pagination-container">
-    <div class="pagination-info">
-        <span id="skkpPaginationInfo">No records found</span>
-    </div>
-    <div class="pagination-controls">
-        <button type="button" id="skkpPrevBtn" class="pagination-btn" disabled>Previous</button>
-        <div class="pagination-numbers" id="skkpPageNumbers"></div>
-        <button type="button" id="skkpNextBtn" class="pagination-btn">Next</button>
-    </div>
-</div>
 
 <!-- ── Create / Edit Schedule Modal ── -->
 <div class="modal-backdrop skkp-modal-backdrop" id="skkpFormModal" style="display:none;">
@@ -154,13 +156,19 @@
             <input type="hidden" id="skkpEditId">
             <div class="skkp-form-grid">
                 <div class="modal-field">
-                    <label for="skkpFormDateStart">Date Start <span class="required">*</span></label>
-                    <input type="date" id="skkpFormDateStart" class="skkp-input" required>
+                    <label for="skkpFormDateStartMd">Date Start <span class="required">*</span></label>
+                    <div class="skkp-date-composite">
+                        <span class="skkp-date-year" id="skkpScheduleYear">{{ date('Y') }}</span>
+                        <input type="text" id="skkpFormDateStartMd" class="skkp-input skkp-date-md" placeholder="MM/DD" maxlength="5" autocomplete="off" inputmode="numeric" aria-label="Date Start month and day">
+                    </div>
                     <span class="skkp-field-error" id="skkpDateStartError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field">
-                    <label for="skkpFormDateExpiry">Date Expiry <span class="required">*</span></label>
-                    <input type="date" id="skkpFormDateExpiry" class="skkp-input" required>
+                    <label for="skkpFormDateExpiryMd">Date Expiry <span class="required">*</span></label>
+                    <div class="skkp-date-composite">
+                        <span class="skkp-date-year" id="skkpScheduleYearExpiry">{{ date('Y') }}</span>
+                        <input type="text" id="skkpFormDateExpiryMd" class="skkp-input skkp-date-md" placeholder="MM/DD" maxlength="5" autocomplete="off" inputmode="numeric" aria-label="Date Expiry month and day">
+                    </div>
                     <span class="skkp-field-error" id="skkpDateExpiryError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field modal-field-full">
@@ -175,7 +183,6 @@
                         <option value="Ongoing">Ongoing</option>
                         <option value="Completed">Completed</option>
                         <option value="Cancelled">Cancelled</option>
-                        <option value="Rescheduled">Rescheduled</option>
                     </select>
                     <div id="skkpStatusHint" class="skkp-status-hint"></div>
                 </div>
@@ -219,23 +226,6 @@
                     <span class="skkp-view-value" id="skkpViewStatus">—</span>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- ── Delete Confirmation Modal ── -->
-<div class="modal-backdrop skkp-modal-backdrop" id="skkpDeleteModal" style="display:none;">
-    <div class="modal-box skkp-delete-modal-box skkp-modal-animate-small">
-        <div class="modal-header skkp-delete-header">
-            <h2 class="modal-title">Delete Schedule</h2>
-            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p class="skkp-delete-msg">Are you sure you want to delete this schedule? This action cannot be undone.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-cancel-form" id="skkpDeleteCancelBtn">Cancel</button>
-            <button type="button" class="btn btn-danger" id="skkpDeleteConfirmBtn">Delete</button>
         </div>
     </div>
 </div>

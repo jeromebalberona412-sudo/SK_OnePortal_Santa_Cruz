@@ -16,8 +16,8 @@
                 Review and approve ABYIP uploads from barangay SK Officials
             </p>
         </div>
-        <a href="{{ route('reports') }}" class="back-button">
-            <i class="fas fa-arrow-left"></i> Back to Reports
+        <a href="{{ route('barangay-monitoring') }}" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Barangay Monitoring
         </a>
     </div>
 

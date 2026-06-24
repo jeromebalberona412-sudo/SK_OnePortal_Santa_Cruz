@@ -11,7 +11,7 @@
                     Set the federation role for <strong id="assignFedDisplayName">—</strong>
                     from <strong id="assignFedBarangayName">—</strong>.
                 </p>
-                <p class="form-hint-light">SK Chairperson accounts are added from Manage SK Officials. Each federation position can only be assigned to one member.</p>
+                <p class="form-hint-light">Each federation position can only be assigned to one member (President, Vice President, Secretary, Treasurer, Sgt. at Arms, PIO, etc.).</p>
                 <div class="form-group-light">
                     <label for="assign_federation_position" class="form-label-light">Federation Position</label>
                     <select id="assign_federation_position" name="federation_position" class="form-input-light">
@@ -22,11 +22,17 @@
                     </select>
                     <span class="form-error-light"></span>
                 </div>
+                <div class="form-group-light">
+                    <label for="assign_position_confirm" class="form-label-light required">Type to confirm</label>
+                    <input type="text" id="assign_position_confirm" name="assign_position_confirm" class="form-input-light" placeholder="Type ASSIGN to confirm" autocomplete="off">
+                    <span class="form-hint-light">Please type <strong>ASSIGN</strong> to confirm this position assignment.</span>
+                    <span class="form-error-light"></span>
+                </div>
             </form>
         </div>
         <div class="modal-footer account-modal-footer">
             <button type="button" class="btn-cancel-light" onclick="closeAssignFederationPositionModal()">Cancel</button>
-            <button type="submit" form="assignFederationPositionForm" class="btn-submit-light">Save Position</button>
+            <button type="submit" form="assignFederationPositionForm" class="btn-submit-light" id="assignFederationPositionSubmitBtn">Save Position</button>
         </div>
     </div>
 </div>

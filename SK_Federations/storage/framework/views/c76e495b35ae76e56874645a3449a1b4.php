@@ -1,6 +1,12 @@
 
 <div id="deleteAccountModal" class="modal-overlay delete-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
     <div class="modal-content delete-confirm-modal">
+        <div class="delete-confirm-loading" id="deleteModalLoading" hidden aria-live="polite" aria-busy="true">
+            <div class="delete-confirm-spinner" aria-hidden="true"></div>
+            <p class="delete-confirm-loading-text">Deleting account...</p>
+            <p class="delete-confirm-loading-sub">Please wait</p>
+        </div>
+        <div class="delete-confirm-panel" id="deleteModalPanel">
         <div class="delete-confirm-header">
             <h3 id="deleteModalTitle">Delete Account</h3>
         </div>
@@ -24,6 +30,7 @@
         <div class="delete-confirm-footer">
             <button type="button" class="btn-cancel-delete" id="deleteModalCancelBtn">Cancel</button>
             <button type="button" class="btn-confirm-delete is-disabled" id="deleteModalConfirmBtn" disabled>Confirm Delete</button>
+        </div>
         </div>
     </div>
 </div>

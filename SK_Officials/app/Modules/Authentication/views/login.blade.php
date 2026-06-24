@@ -275,6 +275,10 @@
                     const label = submitBtn.querySelector('span');
                     if (label) label.textContent = 'Signing In...';
                 }
+
+                if (typeof showLoading === 'function') {
+                    showLoading('Signing In');
+                }
             });
         })();
     </script>

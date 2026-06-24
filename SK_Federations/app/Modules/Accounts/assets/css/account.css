@@ -3218,6 +3218,53 @@ body.sidebar-collapsed .accounts-page-footer {
     max-width: 420px;
     border-radius: 14px;
     overflow: hidden;
+    position: relative;
+}
+
+.delete-confirm-panel[hidden] {
+    display: none !important;
+}
+
+.delete-confirm-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 220px;
+    padding: 2rem 1.25rem;
+    background: #ffffff;
+    text-align: center;
+}
+
+.delete-confirm-loading[hidden] {
+    display: none !important;
+}
+
+.delete-confirm-spinner {
+    width: 42px;
+    height: 42px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #dc2626;
+    border-radius: 50%;
+    animation: delete-confirm-spin 0.8s linear infinite;
+}
+
+.delete-confirm-loading-text {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.delete-confirm-loading-sub {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+@keyframes delete-confirm-spin {
+    to { transform: rotate(360deg); }
 }
 
 .delete-confirm-header {

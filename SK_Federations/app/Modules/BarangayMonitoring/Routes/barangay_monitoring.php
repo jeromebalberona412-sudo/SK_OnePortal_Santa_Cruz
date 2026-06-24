@@ -30,4 +30,12 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
     ->group(function () {
         Route::get('/barangay-monitoring', [BarangayMonitoringController::class, 'index'])->name('barangay-monitoring');
         Route::get('/barangay-monitoring/{barangay}', [BarangayMonitoringController::class, 'show'])->name('barangay-monitoring.show');
+
+        Route::prefix('api/barangay-monitoring')->group(function () {
+            Route::get('/abyip-schedules', [BarangayMonitoringController::class, 'scheduleList'])->name('api.barangay-monitoring.schedules');
+            Route::post('/abyip-schedules', [BarangayMonitoringController::class, 'scheduleStore'])->name('api.barangay-monitoring.schedules.store');
+            Route::put('/abyip-schedules/{id}', [BarangayMonitoringController::class, 'scheduleUpdate'])->name('api.barangay-monitoring.schedules.update');
+            Route::post('/abyip-schedules/{id}/extend', [BarangayMonitoringController::class, 'scheduleExtend'])->name('api.barangay-monitoring.schedules.extend');
+            Route::post('/abyip-schedules/{id}/cancel', [BarangayMonitoringController::class, 'scheduleCancel'])->name('api.barangay-monitoring.schedules.cancel');
+        });
     });

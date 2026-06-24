@@ -30,11 +30,10 @@ class ScheduleKKProfilingController extends Controller
             ->get(['id', 'date_start', 'date_expiry', 'link', 'status', 'created_at']);
 
         $stats = [
-            'Upcoming'    => $schedules->where('status', 'Upcoming')->count(),
-            'Ongoing'     => $schedules->where('status', 'Ongoing')->count(),
-            'Completed'   => $schedules->where('status', 'Completed')->count(),
-            'Cancelled'   => $schedules->where('status', 'Cancelled')->count(),
-            'Rescheduled' => $schedules->where('status', 'Rescheduled')->count(),
+            'Upcoming'  => $schedules->where('status', 'Upcoming')->count(),
+            'Ongoing'   => $schedules->where('status', 'Ongoing')->count(),
+            'Completed' => $schedules->where('status', 'Completed')->count(),
+            'Cancelled' => $schedules->where('status', 'Cancelled')->count(),
         ];
 
         return response()->json(['data' => $schedules, 'stats' => $stats]);
@@ -48,10 +47,12 @@ class ScheduleKKProfilingController extends Controller
             'date_start'  => 'required|date',
             'date_expiry' => 'required|date|after_or_equal:date_start',
             'link'        => 'nullable|url|max:300',
-            'status'      => 'required|in:Upcoming,Ongoing,Completed,Cancelled,Rescheduled',
+            'status'      => 'required|in:Upcoming,Ongoing,Completed,Cancelled',
         ]);
 
         $this->validateScheduleDateWindow($validated['date_start'], $validated['date_expiry']);
+        $this->validateCurrentYear($validated['date_start'], $validated['date_expiry']);
+        $this->validateOneSchedulePerYear($user->barangay_id, $validated['date_start']);
 
         $schedule = KKProfilingSchedule::create([
             'tenant_id'   => $user->tenant_id,
@@ -78,10 +79,12 @@ class ScheduleKKProfilingController extends Controller
             'date_start'  => 'required|date',
             'date_expiry' => 'required|date|after_or_equal:date_start',
             'link'        => 'nullable|url|max:300',
-            'status'      => 'required|in:Upcoming,Ongoing,Completed,Cancelled,Rescheduled',
+            'status'      => 'required|in:Upcoming,Ongoing,Completed,Cancelled',
         ]);
 
         $this->validateScheduleDateWindow($validated['date_start'], $validated['date_expiry']);
+        $this->validateCurrentYear($validated['date_start'], $validated['date_expiry']);
+        $this->validateOneSchedulePerYear($user->barangay_id, $validated['date_start'], $schedule->id);
 
         $schedule->update($validated);
 
@@ -103,8 +106,7 @@ class ScheduleKKProfilingController extends Controller
     private function emptyStats(): array
     {
         return [
-            'Upcoming' => 0, 'Ongoing' => 0, 'Completed' => 0,
-            'Cancelled' => 0, 'Rescheduled' => 0,
+            'Upcoming' => 0, 'Ongoing' => 0, 'Completed' => 0, 'Cancelled' => 0,
         ];
     }
 
@@ -130,6 +132,38 @@ class ScheduleKKProfilingController extends Controller
         if ($start->diffInDays($expiry) > self::MAX_RANGE_DAYS) {
             throw ValidationException::withMessages([
                 'date_expiry' => 'Date range cannot exceed one year.',
+            ]);
+        }
+    }
+
+    private function validateCurrentYear(string $dateStart, string $dateExpiry): void
+    {
+        $tz = config('app.timezone', 'Asia/Manila');
+        $currentYear = Carbon::now($tz)->year;
+        $startYear = Carbon::parse($dateStart, $tz)->year;
+        $expiryYear = Carbon::parse($dateExpiry, $tz)->year;
+
+        if ($startYear !== $currentYear || $expiryYear !== $currentYear) {
+            throw ValidationException::withMessages([
+                'date_start' => 'Schedule dates must be within the current year.',
+            ]);
+        }
+    }
+
+    private function validateOneSchedulePerYear(int $barangayId, string $dateStart, ?int $excludeId = null): void
+    {
+        $year = Carbon::parse($dateStart)->year;
+
+        $query = KKProfilingSchedule::where('barangay_id', $barangayId)
+            ->whereYear('date_start', $year);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'date_start' => "A KK Profiling schedule for {$year} already exists.",
             ]);
         }
     }

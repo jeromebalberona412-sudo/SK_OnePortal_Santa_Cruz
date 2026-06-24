@@ -11,7 +11,6 @@ use App\Modules\Dashboard\Controllers\DashboardController;
 use App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController;
 use App\Modules\Kabataan\Controllers\KabataanController;
 use App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController;
-use App\Modules\PreviousKabataan\Controllers\PreviousKabataanController;
 use App\Modules\Profile\Controllers\ProfileController;
 use App\Modules\Program_Management\Controllers\ProgramApplicationController;
 use App\Modules\Program_Management\Controllers\ProgramEvaluationController;
@@ -174,11 +173,6 @@ Route::middleware([
     Route::put('/kabataan/{id}', [KabataanController::class, 'update'])->name('kabataan.update');
     Route::delete('/kabataan/{id}', [KabataanController::class, 'destroy'])->name('kabataan.destroy');
     Route::post('/kabataan/bulk-delete', [KabataanController::class, 'bulkDestroy'])->name('kabataan.bulk-destroy');
-
-    Route::get('/previous-kabataan', [PreviousKabataanController::class, 'index'])->name('previous-kabataan');
-    Route::get('/previous-kabataan/data', [PreviousKabataanController::class, 'data'])->name('previous-kabataan.data');
-    Route::post('/previous-kabataan/upload', [PreviousKabataanController::class, 'upload'])->name('previous-kabataan.upload');
-    Route::post('/previous-kabataan/move/{id}', [PreviousKabataanController::class, 'moveFromActive'])->name('previous-kabataan.move');
 
     Route::get('/deleted-kabataan', [DeletedKabataanController::class, 'index'])->name('deleted-kabataan');
     Route::get('/deleted-kabataan/data', [DeletedKabataanController::class, 'data'])->name('deleted-kabataan.data');

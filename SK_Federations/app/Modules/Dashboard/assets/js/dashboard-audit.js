@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const dataUrl = shell.dataset.auditDataUrl || '';
     const state = {
         page: 1,
-        perPage: 5,
+        perPage: 10,
         rows: [],
         meta: { total: 0, from: 0, to: 0, last_page: 1, current_page: 1 },
     };
@@ -64,8 +64,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderTableSubtitle(meta) {
         if (els.tableSubtitle) {
+            const shown = state.rows.length;
             els.tableSubtitle.textContent = meta.total
-                ? `Showing ${meta.from}-${meta.to} of ${meta.total} audit logs`
+                ? `Showing latest ${shown} of ${meta.total} audit logs`
                 : 'No audit logs available';
         }
     }
@@ -94,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const payload = await response.json();
-            state.rows = payload.data || [];
+            state.rows = (payload.data || []).slice(0, state.perPage);
             state.meta = payload.meta || state.meta;
             renderRows(state.rows);
             renderTableSubtitle(state.meta);

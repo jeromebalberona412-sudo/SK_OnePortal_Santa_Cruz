@@ -193,7 +193,7 @@ class RejectedKKProfilingController extends Controller
             'kk_assembly'         => $val('kk_assembly'),
             'kk_times'            => $val('kk_times'),
             'kk_reason'           => $val('kk_reason'),
-            'facebook'            => $val('facebook'),
+            'facebook'            => $val('facebook_profile_url') ?: $val('facebook'),
             'group_chat'          => $val('group_chat'),
             'signature'           => $formData['signature'] ?? null,
             'status'              => $r->status,

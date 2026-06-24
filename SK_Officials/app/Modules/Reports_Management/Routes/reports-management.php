@@ -9,8 +9,7 @@ Route::middleware([
     'sk_official.access',
     'must.change.password',
 ])->group(function () {
-    Route::get('/reports-management', [ReportsManagementController::class, 'index'])
-        ->name('reports-management');
+    Route::redirect('/reports-management', '/programs')->name('reports-management');
 
     Route::get('/api/reports-management', [ReportsManagementController::class, 'list'])
         ->name('api.reports-management.index');

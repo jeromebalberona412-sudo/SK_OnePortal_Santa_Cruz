@@ -113,8 +113,7 @@
         </section>
 
         <section class="page-content-section">
-            <div class="content-wrapper">
-                {{-- LEFT: Programs Table --}}
+            <div class="content-wrapper content-wrapper--full">
                 <div class="main-content-area">
                     <div class="table-wrapper">
                         <table class="programs-table">
@@ -134,61 +133,6 @@
                         </table>
                     </div>
                 </div>
-
-                {{-- RIGHT: Program Overview Sidebar --}}
-                <aside class="programs-sidebar">
-                    <div class="sidebar-card">
-                        <h2 class="sidebar-title">Program Overview</h2>
-                        <p class="sidebar-subtitle">Summary of all SK programs</p>
-                        <div class="program-summary">
-                            <div class="summary-item">
-                                <div class="summary-icon total">
-                                    <svg viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 100 4h2a2 2 0 100 4h2a1 1 0 100 2 2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clip-rule="evenodd"/>
-                                    </svg>
-                                </div>
-                                <div class="summary-content">
-                                    <h3>Total Programs</h3>
-                                    <p class="summary-value" id="summaryTotalPrograms">0</p>
-                                </div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-icon planned">
-                                    <svg viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                                    </svg>
-                                </div>
-                                <div class="summary-content">
-                                    <h3>Planned</h3>
-                                    <p class="summary-value" id="summaryPlanned">0</p>
-                                </div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-icon ongoing">
-                                    <svg viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                                    </svg>
-                                </div>
-                                <div class="summary-content">
-                                    <h3>Ongoing</h3>
-                                    <p class="summary-value" id="summaryOngoing">0</p>
-                                </div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-icon completed">
-                                    <svg viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                </div>
-                                <div class="summary-content">
-                                    <h3>Completed</h3>
-                                    <p class="summary-value" id="summaryCompleted">0</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
             </div>
         </section>
     </div>
