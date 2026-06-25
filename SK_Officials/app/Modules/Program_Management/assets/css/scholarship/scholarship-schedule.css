@@ -393,3 +393,201 @@
     background: #f1f5f9;
 }
 
+/* Tabbed scholarship program builder */
+.schol-program-builder-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0 !important;
+    max-height: calc(100vh - 180px);
+    overflow: hidden;
+}
+
+.sch-program-builder-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px 20px 0;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f8fafc;
+    flex-shrink: 0;
+}
+
+.sch-program-tab {
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+
+.sch-program-tab:hover {
+    color: #1e293b;
+    background: #eef2ff;
+}
+
+.sch-program-tab.is-active {
+    color: #1d4ed8;
+    background: #fff;
+    box-shadow: inset 0 -2px 0 #2563eb;
+}
+
+.sch-program-tab-panels {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.sch-program-tab-panel {
+    display: none;
+}
+
+.sch-program-tab-panel.is-active {
+    display: block;
+}
+
+.sch-program-tab-panel > .schol-schedule-card + .schol-schedule-card,
+.sch-program-tab-panel > .schol-schedule-card + .schol-details-card {
+    margin-top: 16px;
+}
+
+.schol-schedule-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.schol-field-full {
+    grid-column: 1 / -1;
+}
+
+.schol-textarea {
+    min-height: 88px;
+    resize: vertical;
+}
+
+.schol-application-type-group {
+    margin-top: 20px;
+}
+
+.schol-radio-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+}
+
+.schol-radio-label,
+.schol-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+}
+
+.schol-system-template-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    border: 1px solid #bfdbfe;
+    background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+}
+
+.schol-system-template-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.schol-system-template-banner p {
+    margin: 0;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.sch-doc-req-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.sch-doc-req-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 16px;
+    background: #fafafa;
+}
+
+.sch-doc-req-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.sch-doc-req-head strong {
+    font-size: 14px;
+    color: #111827;
+}
+
+.sch-program-preview-panel {
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 12px;
+    background: #f8fafc;
+}
+
+.sch-qg-official-simple-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #334155;
+    line-height: 1.8;
+    font-size: 14px;
+}
+
+.sch-view-value-pre {
+    white-space: pre-wrap;
+}
+
+#scholarProgramModal.schol-modal-maximized .schol-program-builder-body {
+    max-height: none;
+}
+
+@media (max-width: 768px) {
+    .schol-schedule-grid,
+    .schol-schedule-grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .sch-program-builder-tabs {
+        padding: 10px 12px 0;
+    }
+
+    .sch-program-tab {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    .sch-program-tab-panels {
+        padding: 14px;
+    }
+}
+

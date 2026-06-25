@@ -2,15 +2,25 @@
 
 namespace App\Modules\CommunityFeed\Controllers;
 
+use App\Modules\CommunityFeed\Services\CommunityFeedService;
 use App\Modules\Shared\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CommunityFeedController extends Controller
 {
+    public function __construct(private readonly CommunityFeedService $feedService)
+    {
+    }
+
     public function index(Request $request): View
     {
-        return view('community_feed::index', ['user' => $request->user()]);
+        $tenantId = $request->user()?->tenant_id;
+
+        return view('community_feed::index', [
+            'user' => $request->user(),
+            'barangayProfiles' => $this->feedService->listBarangayProfiles($tenantId),
+        ]);
     }
 
     public function skFedProfile(Request $request): View
@@ -25,24 +35,15 @@ class CommunityFeedController extends Controller
     }
     public function barangayProfile(Request $request, string $slug): View
     {
-        $barangays = [
-            'alipit'         => ['name' => 'Alipit',         'color' => '#4CAF50'],
-            'bagumbayan'     => ['name' => 'Bagumbayan',     'color' => '#2196F3'],
-            'bubukal'        => ['name' => 'Bubukal',        'color' => '#9C27B0'],
-            'duhat'          => ['name' => 'Duhat',          'color' => '#FF9800'],
-            'gatid'          => ['name' => 'Gatid',          'color' => '#009688'],
-            'labuin'         => ['name' => 'Labuin',         'color' => '#f44336'],
-            'pagsawitan'     => ['name' => 'Pagsawitan',     'color' => '#673AB7'],
-            'san-jose'       => ['name' => 'San Jose',       'color' => '#0450a8'],
-            'santisima-cruz' => ['name' => 'Santisima Cruz', 'color' => '#FF5722'],
-        ];
+        $tenantId = $request->user()?->tenant_id;
+        $profile = $this->feedService->resolveBarangayProfile($slug, $tenantId);
 
-        if (!isset($barangays[$slug])) {
+        if ($profile === null) {
             abort(404);
         }
 
-        $name  = $barangays[$slug]['name'];
-        $color = $barangays[$slug]['color'];
+        $name = $profile['name'];
+        $color = $profile['color'];
 
         $officers = [
             'chairman'   => '[SK Chairman]',
@@ -89,6 +90,7 @@ class CommunityFeedController extends Controller
             'slug'     => $slug,
             'name'     => $name,
             'color'    => $color,
+            'profile'  => $profile,
             'officers' => $officers,
             'posts'    => $posts,
         ]);

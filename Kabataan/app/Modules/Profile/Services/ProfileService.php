@@ -4,6 +4,7 @@ namespace App\Modules\Profile\Services;
 
 use App\Models\Barangay;
 use App\Models\KabataanRegistration;
+use App\Models\KkSurveyResponse;
 use App\Models\User;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
 use App\Services\CloudinaryService;
@@ -66,7 +67,15 @@ class ProfileService
             return [];
         }
 
-        $documents = $registration->form_data['supporting_documents'] ?? [];
+        $surveyResponse = KkSurveyResponse::query()
+            ->where('kabataan_registration_id', $registration->id)
+            ->first();
+
+        $documents = $surveyResponse?->supporting_documents;
+
+        if (! is_array($documents) || $documents === []) {
+            $documents = $registration->form_data['supporting_documents'] ?? [];
+        }
 
         if (! is_array($documents) || $documents === []) {
             return [];

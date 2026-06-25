@@ -19,6 +19,10 @@
         'app/Modules/Programs/assets/css/scholarship_landing.css',
         'app/Modules/Programs/assets/css/scholarship_application_preview.css',
         'app/Modules/Programs/assets/css/scholarship_application.css',
+        'app/Modules/Programs/assets/css/scholarship-quick-guidelines.css',
+        'app/Modules/Programs/assets/js/scholarship-quick-guidelines.js',
+        'app/Modules/Programs/assets/css/scholarship-data-privacy.css',
+        'app/Modules/Programs/assets/js/scholarship-data-privacy.js',
         'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Programs/assets/js/scholarship-system-fields.js',
         'app/Modules/Programs/assets/js/scholarship_application_preview.js',
@@ -35,26 +39,6 @@
     <div id="scholarshipPreviewShell" hidden></div>
     <div id="scholarshipWizardShell" hidden></div>
 
-    <div id="schProgramInfoModal" class="program-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-container large">
-            <div class="modal-header">
-                <h2>Education Programs</h2>
-                <button type="button" class="modal-close" id="schProgramInfoClose" aria-label="Close">
-                    <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body sch-program-info-body">
-                <div id="schProgramInfoBody"></div>
-                <div class="sch-program-info-actions">
-                    <button type="button" class="apply-now-button enabled" id="schProgramInfoContinue">Continue to Application</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     @if(!$scheduleProgramId)
     <div id="scholarshipLandingContent" class="sl-container">
         <!-- Header -->
@@ -66,57 +50,10 @@
                 </a>
             </div>
             <h1 class="sl-title">Scholarship Application</h1>
-        </div>
-
-        <!-- Program Information Card -->
-        <div class="sl-card sl-card-program">
-            <div class="sl-card-header">
-                <h2 class="sl-card-title">Program Information</h2>
-                <span class="sl-status-badge sl-status-open" id="slProgramStatusBadge">Open</span>
-            </div>
-            <div class="sl-card-body">
-                <h3 class="sl-program-name" id="slProgramName">Loading program…</h3>
-                <p class="sl-program-description" id="slProgramDescription">Please wait while program details are loaded.</p>
-                
-                <div class="sl-info-grid">
-                    <div class="sl-info-item">
-                        <span class="sl-info-label">Application Period:</span>
-                        <span class="sl-info-value" id="slApplicationPeriod">—</span>
-                    </div>
-                    <div class="sl-info-item">
-                        <span class="sl-info-label">Available Slots:</span>
-                        <span class="sl-info-value" id="slAvailableSlots">—</span>
-                    </div>
-                    <div class="sl-info-item">
-                        <span class="sl-info-label">Committee:</span>
-                        <span class="sl-info-value" id="slCommittee">—</span>
-                    </div>
-                </div>
-
-                <div class="sl-section">
-                    <h4 class="sl-section-title">Announcement</h4>
-                    <p class="sl-program-description" id="slAnnouncement">—</p>
-                </div>
-
-                <div class="sl-section">
-                    <h4 class="sl-section-title">Eligibility Requirements</h4>
-                    <ul class="sl-list">
-                        <li>Must be a registered Kabataan member of Barangay Santa Cruz</li>
-                        <li>Must be currently enrolled in an educational institution</li>
-                        <li>Must maintain a GPA of 85% or higher</li>
-                        <li>Must submit all required documents</li>
-                    </ul>
-                </div>
-
-                <div class="sl-section">
-                    <h4 class="sl-section-title">Terms and Conditions</h4>
-                    <ul class="sl-list">
-                        <li>Scholarship is valid for one academic year</li>
-                        <li>Recipients must maintain good academic standing</li>
-                        <li>False information may result in disqualification</li>
-                    </ul>
-                </div>
-            </div>
+            <button type="button" class="sch-quick-guidelines-btn" data-open-sch-quick-guidelines style="margin-top:12px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Quick Guidelines
+            </button>
         </div>
 
         <!-- Previous Applications Card -->
@@ -315,23 +252,45 @@
         <div class="sl-cancel-modal-box" id="applicationCancelModalBox">
             <div class="sl-cancel-modal-header">
                 <h3>Cancel Application</h3>
-                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationCancelClose" aria-label="Close">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
+                <div class="sl-cancel-modal-controls">
+                    <button type="button" class="modal-toggle-btn" id="applicationCancelMaximize" aria-label="Maximize">□</button>
+                    <button type="button" class="modal-close sl-cancel-close-btn" id="applicationCancelClose" aria-label="Close">&times;</button>
+                </div>
             </div>
             <div class="sl-cancel-modal-body">
-                <p class="sl-view-cancel-note">Please select a cancel type and provide a reason before confirming cancellation.</p>
-                <label class="sl-view-cancel-label" for="applicationCancelType">Cancel Type</label>
-                <select id="applicationCancelType" class="sl-view-cancel-select">
-                    <option value="">Select cancel type</option>
-                    <option value="Voluntary Withdrawal">Voluntary Withdrawal</option>
-                    <option value="Incorrect Information">Incorrect Information</option>
-                    <option value="Wrong Program Applied">Wrong Program Applied</option>
-                    <option value="Other">Other</option>
-                </select>
-                <label class="sl-view-cancel-label" for="applicationCancelReason">Cancel Reason</label>
-                <textarea id="applicationCancelReason" class="sl-view-cancel-input" rows="4" maxlength="500" placeholder="Type your reason for cancelling this application..."></textarea>
-                <p id="applicationCancelCharCount" class="sl-view-cancel-char-count">0 / 500 characters</p>
+                <p class="sl-view-cancel-note">Please select a cancel reason and type <strong>Confirm</strong> before cancelling your scholarship application.</p>
+                <fieldset class="sl-cancel-reason-group">
+                    <legend class="sl-view-cancel-label">Cancel Reason</legend>
+                    <label class="sl-cancel-reason-option">
+                        <input type="checkbox" name="applicationCancelReasonType" value="Voluntary Withdrawal" data-cancel-reason-option>
+                        <span class="sl-cancel-reason-check" aria-hidden="true"></span>
+                        <span class="sl-cancel-reason-text">Voluntary Withdrawal</span>
+                    </label>
+                    <label class="sl-cancel-reason-option">
+                        <input type="checkbox" name="applicationCancelReasonType" value="Incorrect Information" data-cancel-reason-option>
+                        <span class="sl-cancel-reason-check" aria-hidden="true"></span>
+                        <span class="sl-cancel-reason-text">Incorrect Information</span>
+                    </label>
+                    <label class="sl-cancel-reason-option">
+                        <input type="checkbox" name="applicationCancelReasonType" value="Wrong Program Applied" data-cancel-reason-option>
+                        <span class="sl-cancel-reason-check" aria-hidden="true"></span>
+                        <span class="sl-cancel-reason-text">Wrong Program Applied</span>
+                    </label>
+                    <label class="sl-cancel-reason-option">
+                        <input type="checkbox" name="applicationCancelReasonType" value="Other" data-cancel-reason-option data-cancel-reason-other>
+                        <span class="sl-cancel-reason-check" aria-hidden="true"></span>
+                        <span class="sl-cancel-reason-text">Other</span>
+                    </label>
+                </fieldset>
+                <div id="applicationCancelOtherWrap" class="sl-cancel-other-wrap" hidden>
+                    <label class="sl-view-cancel-label" for="applicationCancelReason">Please specify your reason</label>
+                    <textarea id="applicationCancelReason" class="sl-view-cancel-input sl-view-cancel-input-no-resize" rows="4" maxlength="500" placeholder="Type your reason for cancelling this application..."></textarea>
+                    <p id="applicationCancelCharCount" class="sl-view-cancel-char-count">0 / 500 characters</p>
+                </div>
+                <div class="sl-cancel-confirm-wrap">
+                    <label class="sl-view-cancel-label" for="applicationCancelConfirm">Type <strong>Confirm</strong> to cancel your scholarship application</label>
+                    <input type="text" id="applicationCancelConfirm" class="sl-view-cancel-confirm-input" placeholder="Confirm" autocomplete="off" spellcheck="false">
+                </div>
                 <p id="applicationCancelError" class="sl-view-cancel-error" hidden></p>
             </div>
             <div class="sl-cancel-modal-footer">
@@ -366,13 +325,8 @@
 
     <div id="successModal" class="gf-success-modal" hidden>
         <div class="gf-success-card">
-            <div class="gf-success-icon">🎉</div>
             <h2 class="gf-success-title">Application Submitted Successfully</h2>
             <div class="gf-success-details">
-                <div class="gf-success-detail-row">
-                    <span class="gf-success-detail-label">Reference Number:</span>
-                    <strong id="successReferenceNumber">—</strong>
-                </div>
                 <div class="gf-success-detail-row">
                     <span class="gf-success-detail-label">Status:</span>
                     <span class="gf-status-badge gf-status-pending">Pending Review</span>
@@ -390,5 +344,7 @@
         window.__kkFieldLabels = @json($kkFieldLabels);
         window.__dashboardUrl = @json(route('dashboard'));
     </script>
+
+    @include('programs::scholarship.partials.data-privacy-modal')
 </body>
 </html>

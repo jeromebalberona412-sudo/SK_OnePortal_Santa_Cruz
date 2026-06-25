@@ -1,5 +1,4 @@
 @php
-    $archiveReportsOpen = request()->routeIs('archive');
     $archiveManagementOpen = request()->routeIs('archived.*');
     $accountsOpen = request()->routeIs('accounts.*');
     $isFederationAccountsActive = request()->routeIs('accounts.federation.index') || (request()->routeIs('accounts.manage') && (request('account_type', 'sk_federation') === 'sk_federation'));
@@ -79,20 +78,6 @@
             </a>
             <a href="{{ route('archived.sk-officials-records') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.sk-officials-records') ? 'active' : '' }}">
                 <span>SK Officials Records</span>
-            </a>
-        </div>
-
-        <button type="button" class="menu-item menu-dropdown-toggle" data-submenu-toggle="archiveSubmenu" data-tooltip="Archive" aria-expanded="{{ $archiveReportsOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
-            <i class="fas fa-archive"></i><span>Archive</span>
-            <i class="fas fa-chevron-down menu-dropdown-chevron {{ $archiveReportsOpen ? 'is-open' : '' }}" id="archiveChevron"></i>
-        </button>
-
-        <div id="archiveSubmenu" class="sidebar-submenu {{ $archiveReportsOpen ? 'is-open' : '' }}">
-            <a href="{{ route('archive') }}" class="menu-item submenu-item {{ request()->routeIs('archive') ? 'active' : '' }}">
-                <i class="fas fa-trash"></i><span>Deleted Reports</span>
-            </a>
-            <a href="{{ route('archive') }}" class="menu-item submenu-item {{ request()->routeIs('archive') ? 'active' : '' }}">
-                <i class="fas fa-box"></i><span>Archived Reports</span>
             </a>
         </div>
 

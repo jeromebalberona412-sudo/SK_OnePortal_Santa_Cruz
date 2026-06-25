@@ -3,7 +3,7 @@
 @section('title', 'SK Federation Profile')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ url('/modules/community_feed/css/community-feed.css') }}">
+    <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}">
 @endpush
 
 @push('navbar-center')

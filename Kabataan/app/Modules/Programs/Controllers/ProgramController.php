@@ -203,11 +203,9 @@ class ProgramController extends Controller
             abort(404);
         }
 
-        return view('programs::scholarship_application', [
+        return view('programs::sports-registration', [
             'scheduleProgramId' => $scheduleId,
             'program' => $program,
-            'kkFieldLabels' => $this->programService->kkFieldLabels(),
-            'pageTitle' => 'Sports Application',
             'backRoute' => route('sports.apply', ['schedule' => $scheduleId]),
         ]);
     }

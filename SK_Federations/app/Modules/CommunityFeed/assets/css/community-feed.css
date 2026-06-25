@@ -212,6 +212,57 @@
 .view-details-btn svg { width: 15px; height: 15px; }
 
 /* Post Actions */
+.post-stats-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 2px 10px;
+    min-height: 28px;
+    font-size: 13px;
+    color: #65676b;
+}
+
+.post-stats-comments {
+    color: #65676b;
+    font-weight: 500;
+}
+
+.post-stats-likes {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #65676b;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.2s;
+}
+
+.post-stats-likes:hover { color: var(--fed-blue); }
+
+.post-like-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #1877f2;
+    color: #fff;
+    box-shadow: 0 0 0 2px #fff;
+}
+
+.post-like-badge svg {
+    width: 12px;
+    height: 12px;
+}
+
 .post-actions {
     display: flex; gap: 8px;
     padding-top: 12px; border-top: 1px solid #e8ecf0;
@@ -227,6 +278,171 @@
 .action-btn svg { width: 16px; height: 16px; }
 .action-btn:hover { background: #f5f7fa; color: var(--fed-blue); }
 .action-btn.liked { color: var(--fed-red); }
+.action-btn.liked svg { color: var(--fed-red); }
+
+/* Likes modal */
+.cf-likes-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.cf-likes-modal.active { display: flex; }
+
+.cf-likes-dialog {
+    position: relative;
+    width: min(100%, 420px);
+    max-height: min(80vh, 560px);
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: cfModalIn 0.25s ease;
+}
+
+.cf-likes-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 16px 48px;
+    border-bottom: 1px solid #e8ecf0;
+}
+
+.cf-likes-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1c1e21;
+}
+
+.cf-likes-header .modal-close {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.cf-likes-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 16px;
+    border-bottom: 1px solid #e8ecf0;
+    overflow-x: auto;
+}
+
+.cf-likes-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 10px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: none;
+    color: #65676b;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.cf-likes-tab.active {
+    color: var(--fed-blue);
+    border-bottom-color: var(--fed-blue);
+}
+
+.cf-likes-tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1877f2;
+    color: #fff;
+}
+
+.cf-likes-tab-icon svg { width: 11px; height: 11px; }
+
+.cf-likes-list {
+    overflow-y: auto;
+    padding: 8px 0;
+    min-height: 120px;
+}
+
+.cf-likes-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    transition: background 0.15s;
+}
+
+.cf-likes-item:hover { background: #f5f7fa; }
+
+.cf-likes-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.cf-likes-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #eef1f8;
+}
+
+.cf-likes-reaction-badge {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #1877f2;
+    color: #fff;
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cf-likes-reaction-badge svg { width: 10px; height: 10px; }
+
+.cf-likes-user {
+    flex: 1;
+    min-width: 0;
+}
+
+.cf-likes-name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1c1e21;
+    line-height: 1.3;
+}
+
+.cf-likes-role {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #65676b;
+}
+
+.cf-likes-empty,
+.cf-likes-loading {
+    padding: 32px 20px;
+    text-align: center;
+    color: #65676b;
+    font-size: 14px;
+}
 
 /* Post Options */
 .post-options-btn {
@@ -337,6 +553,85 @@
 .category-content h3 { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 1px; transition: color 0.25s; }
 .category-content p  { font-size: 11px; color: #999; transition: color 0.25s; }
 .chevron { width: 16px; height: 16px; color: #bbb; transition: color 0.25s; flex-shrink: 0; }
+
+/* Barangay profile sidebar list */
+.cf-barangay-profiles-card { margin-top: 16px; }
+
+.cf-barangay-profiles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.cf-barangay-profile-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #f5f7fa;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.cf-barangay-profile-link:hover { background: #eef1fb; }
+
+.cf-barangay-profile-logo,
+.cf-barangay-profile-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.cf-barangay-profile-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    background: var(--brgy-color, var(--fed-blue));
+}
+
+.cf-barangay-profile-text { flex: 1; min-width: 0; }
+
+.cf-barangay-profile-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1d25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.cf-barangay-profile-sub {
+    font-size: 11px;
+    color: #999;
+    margin: 2px 0 0;
+}
+
+.cf-barangay-profiles-empty {
+    font-size: 13px;
+    color: #999;
+    text-align: center;
+    padding: 12px 8px;
+    margin: 0;
+}
+
+.post-like-count-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.action-btn.liked .post-like-count-link { color: var(--fed-red); }
 
 /* ── COMPOSE MODAL ── */
 .compose-author-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }

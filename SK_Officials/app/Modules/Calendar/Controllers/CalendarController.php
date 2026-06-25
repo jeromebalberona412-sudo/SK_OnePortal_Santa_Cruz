@@ -137,8 +137,17 @@ class CalendarController extends Controller
 
     protected function assertCanModifyDate(string $date): void
     {
+        $noteDate = \Carbon\Carbon::parse($date)->startOfDay();
+        $today = now()->startOfDay();
+
+        if ($noteDate->lt($today)) {
+            throw ValidationException::withMessages([
+                'note_date' => ['No past dates to add note.'],
+            ]);
+        }
+
         $currentYear = (int) now()->year;
-        $noteYear = (int) \Carbon\Carbon::parse($date)->year;
+        $noteYear = (int) $noteDate->year;
 
         if ($noteYear < $currentYear) {
             throw ValidationException::withMessages([

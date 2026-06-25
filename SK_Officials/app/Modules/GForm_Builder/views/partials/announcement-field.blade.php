@@ -1,12 +1,17 @@
 @php
-    $required = $required ?? true;
-    $hint = $hint ?? 'This message will be shown to Kabataan members when they open the application form.';
+    $required = $required ?? false;
+    $hint = $hint ?? null;
 @endphp
 <div class="spfb-announcement-section gform-announcement-field">
     <label class="spfb-announcement-label" for="spfbAnnouncement">
-        Announcement @if($required)<span style="color:#ef4444;">*</span>@endif
+        Announcement
+        @if($required)
+            <span style="color:#ef4444;"> *</span>
+        @endif
     </label>
+    @if($hint)
     <p class="spfb-announcement-hint">{{ $hint }}</p>
+    @endif
     <textarea
         id="spfbAnnouncement"
         class="spfb-announcement-textarea"

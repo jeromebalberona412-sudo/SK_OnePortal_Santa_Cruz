@@ -257,8 +257,7 @@
                     
                     <!-- Announcement Section -->
                     <div style="background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Announcement <span style="color:#dc2626;">*</span></label>
-                        <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">This message will be shown to Kabataan members when they open the application form.</div>
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Announcement</label>
                         <div style="font-size:15px;color:#374151;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;min-height:80px;white-space:pre-wrap;">${escapeHtml(p.announcement || 'No announcement set')}</div>
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 // Profile Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
     initProfileAvatarChange();
+    initProfileSupportingDocuments();
 
     // ── Toast Notification ──────────────────────────────────────────────────
     function showToast(message, type = 'info') {
@@ -159,30 +160,49 @@ function initProfileAvatarChange() {
     const lockModal = document.getElementById('profilePictureLockModal');
     const uploadInstructionsModal = document.getElementById('profilePictureUploadModal');
     const uploadContinueBtn = document.getElementById('profilePictureUploadContinueBtn');
-    const permissionModal = document.getElementById('profilePicturePermissionModal');
-    const permissionAllowBtn = document.getElementById('profilePicturePermissionAllowBtn');
-    const permissionDenyBtn = document.getElementById('profilePicturePermissionDenyBtn');
     const lockDateEl = document.getElementById('profilePictureLockDate');
     const confirmModal = document.getElementById('profilePictureConfirmModal');
     const confirmPreview = document.getElementById('profilePictureConfirmPreview');
     const confirmCancelBtn = document.getElementById('profilePictureConfirmCancelBtn');
     const confirmSubmitBtn = document.getElementById('profilePictureConfirmSubmitBtn');
-    let photoAccessGranted = false;
     let pendingProfileFile = null;
     let pendingPreviewUrl = null;
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     const maxBytes = 10 * 1024 * 1024;
 
+    if (profileAvatar) {
+        profileAvatar.addEventListener('error', () => {
+            const fallback = profileAvatar.dataset.fallback || wrapper.dataset.fallbackAvatar;
+            if (fallback && profileAvatar.src !== fallback) {
+                profileAvatar.src = fallback;
+            }
+        });
+    }
+
     function isUploadAllowed() {
         return wrapper.dataset.canChange === '1';
     }
 
+    function normalizeAvatarUrl(url) {
+        if (!url) return url;
+        const storageMatch = url.match(/\/storage\/.+$/);
+        if (storageMatch) return storageMatch[0];
+        return url;
+    }
+
     function updateAvatarImages(url) {
-        if (profileAvatar) profileAvatar.src = url;
+        const resolved = normalizeAvatarUrl(url);
+        if (profileAvatar) {
+            profileAvatar.onerror = () => {
+                profileAvatar.onerror = null;
+                profileAvatar.src = profileAvatar.dataset.fallback || wrapper.dataset.fallbackAvatar || '';
+            };
+            profileAvatar.src = resolved;
+        }
 
         document.querySelectorAll('.kabataan-header__avatar-btn img, .kabataan-header__dropdown-head img').forEach((img) => {
-            img.src = url;
+            img.src = resolved;
         });
     }
 
@@ -222,20 +242,6 @@ function initProfileAvatarChange() {
         }
     };
 
-    window.closeProfilePicturePermissionModal = function() {
-        if (permissionModal) {
-            permissionModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    };
-
-    function showPermissionModal() {
-        if (permissionModal) {
-            permissionModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-    }
-
     function openPhotoPicker() {
         if (!fileInput || fileInput.disabled) {
             return;
@@ -248,9 +254,6 @@ function initProfileAvatarChange() {
     function closeModalsForUpload() {
         if (uploadInstructionsModal) {
             uploadInstructionsModal.style.display = 'none';
-        }
-        if (permissionModal) {
-            permissionModal.style.display = 'none';
         }
         if (confirmModal) {
             confirmModal.style.display = 'none';
@@ -335,7 +338,10 @@ function initProfileAvatarChange() {
         formData.append('profile_picture', file);
         formData.append('_token', csrfToken);
 
-        wrapper.classList.add('is-uploading');
+        if (typeof showLoading === 'function') {
+            showLoading('Uploading profile picture');
+        }
+
         if (confirmSubmitBtn) {
             confirmSubmitBtn.disabled = true;
             confirmSubmitBtn.textContent = 'Uploading...';
@@ -381,7 +387,9 @@ function initProfileAvatarChange() {
                 }
             })
             .finally(() => {
-                wrapper.classList.remove('is-uploading');
+                if (typeof hideLoading === 'function') {
+                    hideLoading();
+                }
                 if (confirmSubmitBtn) {
                     confirmSubmitBtn.disabled = false;
                     confirmSubmitBtn.textContent = 'Confirm & Save';
@@ -399,38 +407,8 @@ function initProfileAvatarChange() {
     }
 
     uploadContinueBtn?.addEventListener('click', () => {
-        if (photoAccessGranted) {
-            if (uploadInstructionsModal) {
-                uploadInstructionsModal.style.display = 'none';
-            }
-            document.body.style.overflow = 'auto';
-            openPhotoPicker();
-            return;
-        }
         window.closeProfilePictureUploadModal();
-        showPermissionModal();
-    });
-
-    permissionAllowBtn?.addEventListener('click', () => {
-        photoAccessGranted = true;
-        if (permissionModal) {
-            permissionModal.style.display = 'none';
-        }
-        document.body.style.overflow = 'auto';
         openPhotoPicker();
-    });
-
-    permissionDenyBtn?.addEventListener('click', () => {
-        window.closeProfilePicturePermissionModal();
-        if (typeof window.showProfileToast === 'function') {
-            window.showProfileToast('Photo access was not granted. You can allow access when you are ready to upload.', 'error');
-        }
-    });
-
-    permissionModal?.addEventListener('click', (event) => {
-        if (event.target === permissionModal) {
-            window.closeProfilePicturePermissionModal();
-        }
     });
 
     uploadInstructionsModal?.addEventListener('click', (event) => {
@@ -495,4 +473,262 @@ function initProfileAvatarChange() {
             window.closeProfilePictureLockModal();
         }
     });
+}
+
+function initProfileSupportingDocuments() {
+    const section = document.getElementById('profileSupportingDocsSection');
+    const uploadModal = document.getElementById('supportingDocsModal');
+    if (!section || !uploadModal) {
+        return;
+    }
+
+    const uploadUrl = section.dataset.uploadUrl || '';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const submitBtn = document.getElementById('profileSupportingDocSubmitBtn');
+    const errorEl = document.getElementById('profileSupportingDocUploadError');
+    const schoolIdPanel = document.getElementById('profileSchoolIdUpload');
+    const clearancePanel = document.getElementById('profileBarangayClearanceUpload');
+    const schoolIdInput = document.getElementById('profileSchoolIdFile');
+    const clearanceInput = document.getElementById('profileBarangayClearanceFile');
+    const docTypeRadios = uploadModal.querySelectorAll('input[name="profile_document_type"]');
+    const maxBytes = 10 * 1024 * 1024;
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+
+    const previewConfig = {
+        school_id: {
+            input: schoolIdInput,
+            preview: document.getElementById('profileSchoolIdPreview'),
+            previewImg: document.getElementById('profileSchoolIdPreviewImg'),
+            fileName: document.getElementById('profileSchoolIdFileName'),
+            dropzone: schoolIdPanel?.querySelector('.kkp-wizard-dropzone'),
+        },
+        barangay_clearance: {
+            input: clearanceInput,
+            preview: document.getElementById('profileBarangayClearancePreview'),
+            previewImg: document.getElementById('profileBarangayClearancePreviewImg'),
+            fileName: document.getElementById('profileBarangayClearanceFileName'),
+            dropzone: clearancePanel?.querySelector('.kkp-wizard-dropzone'),
+        },
+    };
+
+    let selectedType = '';
+    let pendingFile = null;
+
+    function showError(message) {
+        if (!errorEl) {
+            return;
+        }
+        if (!message) {
+            errorEl.hidden = true;
+            errorEl.textContent = '';
+            return;
+        }
+        errorEl.hidden = false;
+        errorEl.textContent = message;
+    }
+
+    function selectedDocumentType() {
+        const checked = uploadModal.querySelector('input[name="profile_document_type"]:checked');
+        return checked ? checked.value : '';
+    }
+
+    function updatePanels() {
+        const type = selectedDocumentType();
+        selectedType = type;
+        if (schoolIdPanel) schoolIdPanel.hidden = type !== 'school_id';
+        if (clearancePanel) clearancePanel.hidden = type !== 'barangay_clearance';
+        clearPendingFile();
+        updateSubmitState();
+    }
+
+    function clearFilePreview(type) {
+        const config = previewConfig[type];
+        if (!config?.input) return;
+        config.input.value = '';
+        if (config.preview) config.preview.hidden = true;
+        if (config.dropzone) config.dropzone.hidden = false;
+        if (config.previewImg) config.previewImg.removeAttribute('src');
+        if (config.fileName) config.fileName.textContent = '';
+    }
+
+    function clearPendingFile() {
+        pendingFile = null;
+        clearFilePreview('school_id');
+        clearFilePreview('barangay_clearance');
+        showError('');
+    }
+
+    function updateSubmitState() {
+        if (!submitBtn) return;
+        submitBtn.disabled = !(selectedDocumentType() && pendingFile);
+    }
+
+    function validateFile(file) {
+        if (!file) {
+            return 'Please select an image file.';
+        }
+        if (!allowedTypes.includes(file.type)) {
+            return 'Only JPG and PNG images are allowed.';
+        }
+        if (file.size > maxBytes) {
+            return 'Supporting document must be 10MB or smaller.';
+        }
+        return null;
+    }
+
+    function setPendingFile(type, file) {
+        const validationError = validateFile(file);
+        if (validationError) {
+            showError(validationError);
+            return;
+        }
+
+        const config = previewConfig[type];
+        if (!config) return;
+
+        pendingFile = file;
+        showError('');
+
+        if (type === 'school_id') {
+            clearFilePreview('barangay_clearance');
+        } else {
+            clearFilePreview('school_id');
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            if (config.previewImg && event.target?.result) {
+                config.previewImg.src = event.target.result;
+            }
+            if (config.fileName) {
+                config.fileName.textContent = file.name;
+            }
+            if (config.preview) config.preview.hidden = false;
+            if (config.dropzone) config.dropzone.hidden = true;
+        };
+        reader.readAsDataURL(file);
+        updateSubmitState();
+    }
+
+    function resetUploadModal() {
+        docTypeRadios.forEach((radio) => {
+            radio.checked = false;
+        });
+        selectedType = '';
+        if (schoolIdPanel) schoolIdPanel.hidden = true;
+        if (clearancePanel) clearancePanel.hidden = true;
+        clearPendingFile();
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Upload Document';
+        }
+    }
+
+    function uploadDocument() {
+        const documentType = selectedDocumentType();
+        if (!documentType || !pendingFile || !uploadUrl) {
+            showError('Please select a document type and file.');
+            return;
+        }
+
+        const validationError = validateFile(pendingFile);
+        if (validationError) {
+            showError(validationError);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('document_type', documentType);
+        formData.append('_token', csrfToken);
+        formData.append(documentType, pendingFile);
+
+        if (typeof showLoading === 'function') {
+            showLoading('Uploading supporting document');
+        }
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading...';
+        }
+
+        fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            },
+            body: formData,
+            credentials: 'same-origin',
+        })
+            .then(async (response) => {
+                let payload = {};
+                try {
+                    payload = await response.json();
+                } catch (error) {
+                    throw new Error('Unexpected server response. Please try again.');
+                }
+
+                if (response.ok && payload.success) {
+                    if (typeof window.showProfileToast === 'function') {
+                        window.showProfileToast(payload.message || 'Supporting document uploaded successfully.', 'success');
+                    }
+                    window.closeSupportingDocsModal?.();
+                    window.location.reload();
+                    return;
+                }
+
+                const message = payload.message
+                    || (payload.errors && Object.values(payload.errors).flat()[0])
+                    || 'Failed to upload supporting document.';
+                throw new Error(message);
+            })
+            .catch((error) => {
+                showError(error.message || 'Network error while uploading. Please try again.');
+                if (typeof window.showProfileToast === 'function') {
+                    window.showProfileToast(error.message || 'Failed to upload supporting document.', 'error');
+                }
+            })
+            .finally(() => {
+                if (typeof hideLoading === 'function') {
+                    hideLoading();
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = !(selectedDocumentType() && pendingFile);
+                    submitBtn.textContent = 'Upload Document';
+                }
+            });
+    }
+
+    window.resetProfileSupportingDocUpload = resetUploadModal;
+
+    docTypeRadios.forEach((radio) => {
+        radio.addEventListener('change', updatePanels);
+    });
+
+    schoolIdInput?.addEventListener('change', function () {
+        if (this.files?.[0]) {
+            setPendingFile('school_id', this.files[0]);
+        }
+    });
+
+    clearanceInput?.addEventListener('change', function () {
+        if (this.files?.[0]) {
+            setPendingFile('barangay_clearance', this.files[0]);
+        }
+    });
+
+    uploadModal.querySelectorAll('[data-clear-profile-doc]').forEach((button) => {
+        button.addEventListener('click', function () {
+            const inputId = button.getAttribute('data-clear-profile-doc');
+            if (inputId === 'profileSchoolIdFile') {
+                clearFilePreview('school_id');
+            } else if (inputId === 'profileBarangayClearanceFile') {
+                clearFilePreview('barangay_clearance');
+            }
+            pendingFile = null;
+            updateSubmitState();
+        });
+    });
+
+    submitBtn?.addEventListener('click', uploadDocument);
 }

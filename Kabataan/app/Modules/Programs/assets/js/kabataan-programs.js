@@ -66,6 +66,143 @@
             .replace(/"/g, '&quot;');
     }
 
+    function formatIsoDateDisplay(iso) {
+        if (!iso) return '';
+        const date = new Date(`${iso}T00:00:00`);
+        if (Number.isNaN(date.getTime())) return String(iso);
+        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatPeriodRange(period, schedule) {
+        if (!period) return '';
+        const start = period.start_display || formatIsoDateDisplay(period.start || schedule?.start_date);
+        const end = period.end_display || formatIsoDateDisplay(period.end || schedule?.end_date);
+        if (start && end) return `${start} – ${end}`;
+        return start || end || '';
+    }
+
+    function renderAnnouncementCard(title, bodyHtml) {
+        if (!title && !bodyHtml) return '';
+        return `
+            <div class="sch-program-announcement-card">
+                <div class="sch-program-announcement-card__title">${escapeHtml(title || 'Announcement')}</div>
+                <div class="sch-program-announcement-card__body">${bodyHtml}</div>
+            </div>`;
+    }
+
+    function renderScholarshipDetailsSections(schedule) {
+        const details = schedule?.scholarship_details || {};
+        const groups = Array.isArray(details.requirement_groups) ? details.requirement_groups : [];
+        let html = '';
+
+        if (schedule?.announcement) {
+            html += renderAnnouncementCard(
+                'Announcement',
+                `<p class="description-text">${escapeHtml(schedule.announcement)}</p>`
+            );
+        }
+
+        groups.forEach((group) => {
+            const items = (group.items || []).filter((item) => String(item || '').trim());
+            if (!group.title && !items.length) return;
+            const listHtml = items.length
+                ? `<ul class="sch-program-req-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+                : '<p class="description-text">No requirements listed.</p>';
+            html += renderAnnouncementCard(group.title || 'Requirements', listHtml);
+        });
+
+        const submissionLabel = formatPeriodRange(details.submission_period, schedule);
+        const verificationLabel = formatPeriodRange(details.verification_period, schedule);
+
+        if (submissionLabel) {
+            html += `
+                <div class="program-description-section sch-program-period-section">
+                    <h4 class="section-heading">Period for the Submission of Requirements</h4>
+                    <p class="description-text sch-program-period-value">${escapeHtml(submissionLabel)}</p>
+                </div>`;
+        }
+
+        if (verificationLabel) {
+            html += `
+                <div class="program-description-section sch-program-period-section">
+                    <h4 class="section-heading">Period for the Assessment/Verification of Scholar Profile and Requirements</h4>
+                    <p class="description-text sch-program-period-value">${escapeHtml(verificationLabel)}</p>
+                </div>`;
+        }
+
+        return html;
+    }
+
+    function renderScheduleInfoSections(schedule) {
+        const max = schedule.participation_quantity;
+        const remaining = schedule.available_slots;
+        const remainingNum = remaining != null ? Number(remaining) : null;
+        const remainingClass = remainingNum === 0 ? 'sch-program-slots-full' : 'sch-program-slots-remaining';
+
+        return `
+            <div class="program-description-section sch-program-info-section">
+                <h4 class="section-heading">Program Information</h4>
+                <div class="program-details-grid sch-program-info-grid">
+                    <div class="detail-card">
+                        <div class="detail-content">
+                            <span class="detail-label">Program</span>
+                            <span class="detail-value">${escapeHtml(schedule.program_name || '—')}</span>
+                        </div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-content">
+                            <span class="detail-label">Max Participation Limit</span>
+                            <span class="detail-value">${max != null ? escapeHtml(String(max)) : '—'}</span>
+                        </div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-content">
+                            <span class="detail-label">Remaining Slots</span>
+                            <span class="detail-value ${remaining != null ? remainingClass : ''}">${remaining != null ? escapeHtml(String(remaining)) : '—'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="program-description-section sch-program-window-section">
+                <h4 class="section-heading">Application Window Schedule</h4>
+                <div class="program-details-grid">
+                    <div class="detail-card">
+                        <div class="detail-content">
+                            <span class="detail-label">Start Date</span>
+                            <span class="detail-value">${escapeHtml(schedule.start_date_display || formatIsoDateDisplay(schedule.start_date) || '—')}</span>
+                        </div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-content">
+                            <span class="detail-label">End Date</span>
+                            <span class="detail-value">${escapeHtml(schedule.end_date_display || formatIsoDateDisplay(schedule.end_date) || '—')}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ${renderScholarshipDetailsSections(schedule)}
+            ${renderCustomQuestionsSection(schedule)}`;
+    }
+
+    function renderCustomQuestionsSection(schedule) {
+        const questions = Array.isArray(schedule?.custom_questions) ? schedule.custom_questions : [];
+        if (!questions.length) return '';
+
+        const items = questions.map((question, index) => `
+            <li>
+                <strong>${index + 1}. ${escapeHtml(question.label || 'Requirement')}</strong>
+                ${question.required ? ' <span class="sch-program-required">*</span>' : ''}
+                <span class="sch-program-q-type">PDF upload</span>
+            </li>
+        `).join('');
+
+        return `
+            <div class="program-description-section">
+                <h4 class="section-heading">Uploading of Requirements</h4>
+                <ul class="sch-program-req-list sch-program-upload-list">${items}</ul>
+            </div>`;
+    }
+
     function getCsrfToken() {
         return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     }
@@ -173,16 +310,34 @@
         }
     }
 
+    const EDUCATION_HEADER_GRADIENT = 'linear-gradient(135deg, #1a56db 0%, #1e40af 100%)';
+    const SPORTS_HEADER_GRADIENT = 'linear-gradient(135deg, #1a56db 0%, #1e40af 100%)';
+    const EMPTY_SCHEDULE_MESSAGE = 'No open scheduled programs from SK Officials yet.';
+
+    function renderProgramsEmptyState(message) {
+        return `
+            <div class="programs-modal-empty">
+                <p>${escapeHtml(message)}</p>
+            </div>`;
+    }
+
     function renderEducationModalBody(program) {
         const container = document.getElementById('educationProgramsContainer');
         if (!container) return;
 
+        const quickGuidelinesBtn = document.querySelector('#educationModal [data-open-sch-quick-guidelines]');
         const schedules = schedulesForAbyipProgram(program);
-        const cards = schedules.length
-            ? schedules.map((schedule) => renderScheduleCard(program, schedule)).join('')
-            : renderAbyipOnlyCard(program, 'No open scheduled programs from SK Officials yet.');
 
-        container.innerHTML = cards || '<p style="text-align:center;color:#64748b;padding:24px;">No programs available.</p>';
+        if (!schedules.length) {
+            container.innerHTML = renderProgramsEmptyState(EMPTY_SCHEDULE_MESSAGE);
+            if (quickGuidelinesBtn) quickGuidelinesBtn.hidden = true;
+            return;
+        }
+
+        if (quickGuidelinesBtn) quickGuidelinesBtn.hidden = false;
+        container.innerHTML = schedules
+            .map((schedule) => renderScheduleCard(program, schedule, EDUCATION_HEADER_GRADIENT, true))
+            .join('');
         bindScheduleCardActions(container);
     }
 
@@ -192,22 +347,47 @@
         if (!body) return;
 
         const schedules = schedulesForAbyipProgram(program);
-        body.innerHTML = schedules.length
-            ? schedules.map((schedule) => renderScheduleCard(program, schedule, '#ea580c')).join('')
-            : renderAbyipOnlyCard(program, 'No open sports programs scheduled yet.', '#ea580c');
+        if (!schedules.length) {
+            body.innerHTML = renderProgramsEmptyState(EMPTY_SCHEDULE_MESSAGE);
+            return;
+        }
 
+        body.innerHTML = schedules
+            .map((schedule) => renderScheduleCard(program, schedule, SPORTS_HEADER_GRADIENT, true))
+            .join('');
         bindScheduleCardActions(body);
     }
 
     function renderAbyipModalBody(modal, program) {
         const body = modal?.querySelector('.modal-body');
         if (!body) return;
-        body.innerHTML = renderSurveyProgramCard(program);
-        bindSurveyCardActions(body);
+
+        const schedules = schedulesForAbyipProgram(program);
+        const survey = program.survey || {};
+        const hasSurveyAction = Boolean(survey.can_respond || survey.has_responded);
+
+        if (schedules.length) {
+            body.innerHTML = schedules
+                .map((schedule) => renderScheduleCard(program, schedule, EDUCATION_HEADER_GRADIENT, true))
+                .join('');
+            bindScheduleCardActions(body);
+            return;
+        }
+
+        if (hasSurveyAction) {
+            body.innerHTML = renderSurveyProgramCard(program, null, EDUCATION_HEADER_GRADIENT, true);
+            bindSurveyCardActions(body);
+            return;
+        }
+
+        body.innerHTML = renderProgramsEmptyState(EMPTY_SCHEDULE_MESSAGE);
     }
 
-    function renderSurveyProgramCard(program, emptyNote, gradient) {
-        const headerGradient = gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    function renderSurveyProgramCard(program, emptyNote, gradient, hideEmoji = false) {
+        const headerGradient = gradient || EDUCATION_HEADER_GRADIENT;
+        const categoryTag = hideEmoji
+            ? escapeHtml(program.short_label)
+            : `${escapeHtml(program.emoji)} ${escapeHtml(program.short_label)}`;
         const survey = program.survey;
         const canRespond = Boolean(survey?.can_respond);
         const hasOpenSurvey = Boolean(survey?.is_open || canRespond);
@@ -233,7 +413,7 @@
                 <div class="program-card-header" style="background:${headerGradient};">
                     <div class="program-title-row">
                         <div>
-                            <span class="program-category-tag">${escapeHtml(program.emoji)} ${escapeHtml(program.short_label)}</span>
+                            <span class="program-category-tag">${categoryTag}</span>
                             <h3 class="program-card-title">${escapeHtml(program.title)}</h3>
                         </div>
                         <span class="program-status-badge status-active"><span class="status-dot"></span>${escapeHtml(statusLabel)}</span>
@@ -291,6 +471,119 @@
         }, 650);
     }
 
+    function resetProgramModalMaximize(modal) {
+        if (!modal) return;
+        const container = modal.querySelector('.program-modal-container');
+        const toggleBtn = modal.querySelector('.program-modal-toggle-btn');
+        container?.classList.remove('is-maximized');
+        modal.classList.remove('is-maximized');
+        if (toggleBtn) {
+            toggleBtn.textContent = '□';
+            toggleBtn.setAttribute('aria-label', 'Maximize');
+        }
+    }
+
+    function closeChromeProgramModal(modal, closeFnName) {
+        resetProgramModalMaximize(modal);
+        if (closeFnName && typeof window[closeFnName] === 'function') {
+            window[closeFnName]();
+            return;
+        }
+        modal.classList.remove('active');
+    }
+
+    function bindProgramModalOverlay(modal, closeFnName) {
+        const overlay = modal.querySelector('.modal-overlay');
+        if (!overlay || overlay.dataset.chromeBound === '1') return;
+
+        const freshOverlay = overlay.cloneNode(true);
+        overlay.replaceWith(freshOverlay);
+        freshOverlay.dataset.chromeBound = '1';
+        freshOverlay.addEventListener('click', () => closeChromeProgramModal(modal, closeFnName));
+    }
+
+    function initProgramModalChrome() {
+        const skip = new Set(['educationModal', 'programSuccessModal']);
+
+        document.querySelectorAll('.program-modal').forEach((modal) => {
+            if (skip.has(modal.id) || modal.dataset.chromeEnhanced === '1') return;
+
+            const container = modal.querySelector('.modal-container');
+            const header = modal.querySelector('.modal-header');
+            if (!container || !header || header.querySelector('.program-modal-toggle-btn')) return;
+
+            const oldClose = header.querySelector('.modal-close');
+            const closeHandler = oldClose?.getAttribute('onclick') || '';
+            const closeFnName = closeHandler.replace(/\(\).*/, '').trim();
+            const titleText = header.querySelector('h2')?.textContent?.trim() || 'Programs';
+
+            container.classList.add('program-modal-container');
+            if (!container.id) {
+                container.id = `${modal.id}Container`;
+            }
+
+            const body = modal.querySelector('.modal-body');
+            if (body) {
+                body.classList.add('program-modal-body');
+            }
+
+            modal.dataset.chromeEnhanced = '1';
+            modal.classList.add('program-modal--chrome');
+            header.innerHTML = `
+                <h2>${escapeHtml(titleText)}</h2>
+                <div class="modal-header-actions">
+                    <button type="button" class="modal-toggle-btn education-modal-toggle-btn program-modal-toggle-btn" id="${escapeHtml(modal.id)}Maximize" aria-label="Maximize">□</button>
+                    <button type="button" class="modal-close education-modal-close-btn program-modal-close-btn" aria-label="Close">&times;</button>
+                </div>`;
+
+            const toggleBtn = header.querySelector('.program-modal-toggle-btn');
+            const closeBtn = header.querySelector('.program-modal-close-btn');
+
+            closeBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                closeChromeProgramModal(modal, closeFnName);
+            });
+
+            toggleBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const isMax = !container.classList.contains('is-maximized');
+                container.classList.toggle('is-maximized', isMax);
+                modal.classList.toggle('is-maximized', isMax);
+                toggleBtn.textContent = isMax ? '⧉' : '□';
+                toggleBtn.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
+            });
+
+            bindProgramModalOverlay(modal, closeFnName);
+        });
+
+        wrapProgramModalCloseHandlers();
+    }
+
+    const PROGRAM_MODAL_CLOSE_MAP = {
+        closeAntiDrugsModal: 'antiDrugsModal',
+        closeAgricultureModal: 'agricultureModal',
+        closeDisasterModal: 'disasterModal',
+        closeSportsModal: 'sportsModal',
+        closeGenderModal: 'genderModal',
+        closeHealthModal: 'healthModal',
+        closeOthersModal: 'othersModal',
+    };
+
+    function wrapProgramModalCloseHandlers() {
+        Object.entries(PROGRAM_MODAL_CLOSE_MAP).forEach(([closeFn, modalId]) => {
+            if (window[`__${closeFn}Wrapped`]) return;
+
+            const original = window[closeFn];
+            if (typeof original !== 'function') return;
+
+            window[closeFn] = function (...args) {
+                resetProgramModalMaximize(document.getElementById(modalId));
+                return original.apply(this, args);
+            };
+            window[`__${closeFn}Wrapped`] = true;
+        });
+    }
+
     function renderAbyipOnlyCard(program, emptyNote, gradient) {
         const headerGradient = gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         const activities = (program.activities || [])
@@ -318,131 +611,91 @@
         `;
     }
 
-    function renderScheduleCard(abyipProgram, schedule, gradient) {
+    function isScholarshipSchedule(schedule) {
+        return String(schedule?.program_letter || '').toUpperCase() !== 'I';
+    }
+
+    function renderScheduleCard(abyipProgram, schedule, gradient, hideEmoji = false) {
         const headerGradient = gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         const statusLabel = schedule.status === 'open' ? 'Open' : 'Closed';
         const applied = schedule.has_applied;
+        const canApply = schedule.can_apply !== false;
+        const openAndEligible = !applied && schedule.status === 'open' && canApply;
+        const scholarship = isScholarshipSchedule(schedule);
+        const categoryTag = hideEmoji
+            ? escapeHtml(abyipProgram.short_label)
+            : `${escapeHtml(abyipProgram.emoji)} ${escapeHtml(abyipProgram.short_label)}`;
         const statusBadge = applied
             ? `<span class="program-status-badge status-active">Applied — ${escapeHtml((schedule.application_status || 'pending').charAt(0).toUpperCase() + (schedule.application_status || 'pending').slice(1))}</span>`
             : `<span class="program-status-badge status-active"><span class="status-dot"></span>${escapeHtml(statusLabel)}</span>`;
 
-        const agreeId = `agreeTermsSchedule${schedule.id}`;
-        const termsId = `termsContentSchedule${schedule.id}`;
-        const toggleId = `termsToggleSchedule${schedule.id}`;
+        let actionButton = '';
+        if (applied) {
+            const viewLabel = scholarship ? 'View My Scholar Application Form' : 'View My Application';
+            actionButton = `
+                    <button type="button" class="apply-now-button enabled apply-view-btn" data-view-schedule-application="${schedule.id}" data-program-letter="${schedule.program_letter || ''}">
+                        ${viewLabel}
+                    </button>`;
+        } else {
+            actionButton = `
+                    <button type="button" class="apply-now-button ${openAndEligible ? 'enabled' : ''}" data-apply-schedule="${schedule.id}" data-program-letter="${schedule.program_letter || ''}" title="${!canApply ? escapeHtml(schedule.eligibility_message || 'Not eligible for this program') : ''}" ${schedule.status !== 'open' || !canApply ? 'disabled' : ''}>
+                        ${!canApply ? 'Not Eligible' : 'Apply Now'}
+                    </button>`;
+        }
 
         return `
             <div class="modern-program-card" data-schedule-id="${schedule.id}" style="margin-bottom:24px;">
                 <div class="program-card-header" style="background:${headerGradient};">
                     <div class="program-title-row">
                         <div>
-                            <span class="program-category-tag">${escapeHtml(abyipProgram.emoji)} ${escapeHtml(abyipProgram.short_label)}</span>
+                            <span class="program-category-tag">${categoryTag}</span>
                             <h3 class="program-card-title">${escapeHtml(schedule.program_name)}</h3>
                         </div>
                         ${statusBadge}
                     </div>
                 </div>
-                <div class="program-details-grid">
-                    <div class="detail-card">
-                        <div class="detail-content">
-                            <span class="detail-label">Committee</span>
-                            <span class="detail-value">${escapeHtml(schedule.committee)}</span>
-                        </div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-content">
-                            <span class="detail-label">Participation Limit</span>
-                            <span class="detail-value">${schedule.available_slots ?? schedule.participation_quantity ? escapeHtml(String(schedule.available_slots ?? schedule.participation_quantity)) : '—'}</span>
-                        </div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-content">
-                            <span class="detail-label">Start Date</span>
-                            <span class="detail-value">${escapeHtml(schedule.start_date_display)}</span>
-                        </div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-content">
-                            <span class="detail-label">End Date</span>
-                            <span class="detail-value">${escapeHtml(schedule.end_date_display)}</span>
-                        </div>
-                    </div>
-                </div>
-                ${schedule.announcement ? `
-                    <div class="program-description-section">
-                        <h4 class="section-heading">Announcement</h4>
-                        <p class="description-text">${escapeHtml(schedule.announcement)}</p>
-                    </div>
-                ` : ''}
-                <div class="terms-section">
-                    <button class="terms-toggle" type="button" id="${toggleId}">
-                        <div class="terms-toggle-header">
-                            <h4 class="section-heading">Terms & Conditions</h4>
-                            <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                    </button>
-                    <div class="terms-content" id="${termsId}">
-                        <ul class="terms-list">
-                            <li>You must be a registered Kabataan member of this barangay.</li>
-                            <li>All information submitted must be accurate and complete.</li>
-                            <li>False information may result in disqualification.</li>
-                        </ul>
-                        <div class="terms-agreement">
-                            <label class="agreement-checkbox">
-                                <input type="checkbox" id="${agreeId}" data-schedule-id="${schedule.id}">
-                                <span class="checkbox-custom"></span>
-                                <span class="agreement-text">I have read and agree to the Terms & Conditions</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                ${renderScheduleInfoSections(schedule)}
                 <div class="program-action">
-                    <button class="apply-now-button" data-apply-schedule="${schedule.id}" data-program-letter="${schedule.program_letter || ''}" disabled>
-                        ${applied ? 'Already Applied' : 'Apply Now'}
-                    </button>
-                    <p class="apply-note">Please read and agree to the Terms & Conditions to continue</p>
+                    ${actionButton}
                 </div>
             </div>
         `;
     }
 
+    function requestScholarshipApply(scheduleId, programLetter) {
+        const proceed = () => goToScheduleApplication(scheduleId, programLetter);
+
+        if (isScholarshipSchedule({ program_letter: programLetter }) && window.ScholarshipDataPrivacy) {
+            window.ScholarshipDataPrivacy.requestConsent(scheduleId, proceed);
+            return;
+        }
+
+        proceed();
+    }
+
     function bindScheduleCardActions(container) {
-        container.querySelectorAll('.terms-toggle').forEach((toggle) => {
-            toggle.addEventListener('click', (event) => {
-                event.stopPropagation();
-                const content = toggle.nextElementSibling;
-                const chevron = toggle.querySelector('.chevron-icon');
-                if (!content) return;
-                content.classList.toggle('expanded');
-                if (chevron) {
-                    chevron.style.transform = content.classList.contains('expanded') ? 'rotate(180deg)' : 'rotate(0deg)';
-                }
-            });
-        });
-
-        container.querySelectorAll('input[type="checkbox"][data-schedule-id]').forEach((checkbox) => {
-            checkbox.addEventListener('change', () => {
-                const scheduleId = checkbox.getAttribute('data-schedule-id');
-                const card = checkbox.closest('.modern-program-card');
-                const applyBtn = card?.querySelector(`[data-apply-schedule="${scheduleId}"]`);
-                const note = applyBtn?.nextElementSibling;
-                if (!applyBtn || applyBtn.textContent === 'Already Applied') return;
-
-                applyBtn.disabled = !checkbox.checked;
-                applyBtn.classList.toggle('enabled', checkbox.checked);
-                if (note) note.style.display = checkbox.checked ? 'none' : '';
+        container.querySelectorAll('[data-view-schedule-application]').forEach((button) => {
+            button.addEventListener('click', () => {
+                goToScheduleApplication(
+                    button.getAttribute('data-view-schedule-application'),
+                    button.getAttribute('data-program-letter')
+                );
             });
         });
 
         container.querySelectorAll('[data-apply-schedule]').forEach((button) => {
             button.addEventListener('click', () => {
-                if (button.disabled || button.textContent === 'Already Applied') return;
-                const scheduleId = button.getAttribute('data-apply-schedule');
-                const programLetter = button.getAttribute('data-program-letter');
-                goToScheduleApplication(scheduleId, programLetter);
+                if (button.disabled) return;
+                requestScholarshipApply(
+                    button.getAttribute('data-apply-schedule'),
+                    button.getAttribute('data-program-letter')
+                );
             });
         });
+
+        if (window.ScholarshipQuickGuidelines) {
+            window.ScholarshipQuickGuidelines.bindTriggers(container);
+        }
     }
 
     function goToScheduleApplication(scheduleId, programLetter) {
@@ -459,6 +712,8 @@
     }
 
     async function init() {
+        initProgramModalChrome();
+
         try {
             programsData = await fetchPrograms();
         } catch (error) {

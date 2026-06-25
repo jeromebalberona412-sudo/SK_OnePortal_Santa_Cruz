@@ -24,11 +24,11 @@
 </head>
 <body class="sr-body kabataan-app-page">
     @include('dashboard::loading')
-    @include('layout::kabataan-header', ['showSearch' => true])
+    @include('layout::kabataan-header')
 
     <main class="sr-main">
         <div class="sr-back-link">
-            <a href="{{ route('sports.apply') }}">
+            <a href="{{ $backRoute ?? route('sports.apply') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                 <span>Back</span>
             </a>
@@ -289,5 +289,9 @@
 
     @include('programs::sports.partials.terms-modal')
     @include('programs::sports.partials.success-modal')
+
+    <script>
+        window.__scheduleProgramId = @json($scheduleProgramId ?? null);
+    </script>
 </body>
 </html>

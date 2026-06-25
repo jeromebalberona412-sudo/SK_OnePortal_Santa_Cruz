@@ -275,6 +275,19 @@ body.youth-dashboard {
 .feed-section::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
 .feed-section::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 
+.feed-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 4px;
+}
+
+.feed-header__intro {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
 .feed-header h1 {
     font-size: 24px;
     font-weight: 800;
@@ -284,6 +297,44 @@ body.youth-dashboard {
 }
 
 .feed-header p { color: var(--text-muted); font-size: 14px; }
+
+.feed-header__search {
+    position: relative;
+    flex: 0 0 280px;
+    max-width: 100%;
+}
+
+.feed-header__search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.feed-header__search-input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--surface);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.feed-header__search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.feed-header__search-input::placeholder {
+    color: #94a3b8;
+}
 
 /* ── POST CARD ── */
 .post-card {
@@ -312,6 +363,8 @@ body.youth-dashboard {
     height: 44px;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid #dbeafe;
+    background: #eff6ff;
 }
 
 .post-info { flex: 1; }
@@ -440,8 +493,47 @@ body.youth-dashboard {
     font-family: inherit;
 }
 
-.action-btn svg { width: 17px; height: 17px; }
+.action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 .action-btn:hover { background: var(--bg); color: var(--brand-mid); }
+.action-btn.liked { color: #1a56db; }
+.action-btn.liked svg { color: #1a56db; }
+
+/* ── FEED REACTIONS (Facebook-style) ── */
+.feed-reactions-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 2px 4px;
+    min-height: 32px;
+}
+
+.feed-reactions-avatars {
+    display: flex;
+    align-items: center;
+    padding-left: 4px;
+}
+
+.feed-reactor-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    margin-left: calc(var(--stack, 0) * -10px);
+    box-shadow: 0 0 0 1px #dbeafe;
+    background: #eff6ff;
+}
+
+.feed-reactions-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.feed-reactions-label:hover {
+    color: var(--brand-mid);
+    cursor: default;
+}
 
 /* ── COMMENTS ── */
 .comments-section {
@@ -451,7 +543,7 @@ body.youth-dashboard {
 }
 
 .comment-item { display: flex; gap: 10px; margin-bottom: 14px; }
-.comment-item img { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; }
+.comment-item img { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; object-fit: cover; border: 1px solid #dbeafe; background: #eff6ff; }
 
 .comment-content {
     flex: 1;
@@ -465,7 +557,7 @@ body.youth-dashboard {
 .comment-time   { font-size: 12px; color: #94a3b8; }
 
 .comment-input-wrapper { display: flex; align-items: center; gap: 10px; }
-.comment-input-wrapper img { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; }
+.comment-input-wrapper img { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; object-fit: cover; border: 1px solid #dbeafe; background: #eff6ff; }
 
 .comment-input {
     flex: 1;
@@ -628,16 +720,289 @@ body.youth-dashboard {
 
 .modal-container.large { max-width: 800px; }
 
-/* Education Modal - Allow scrolling */
-#educationModal .modal-container {
+/* Education Modal */
+#educationModal .education-modal-container {
     max-width: 900px;
+    width: 92%;
 }
 
-#educationModal .modal-body {
+#educationModal.is-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+#educationModal .education-modal-container.is-maximized {
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+}
+
+#educationModal .modal-header {
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+    color: #fff;
+    border-bottom: none;
+}
+
+#educationModal .modal-header h2 {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+#educationModal .modal-header-actions {
+    gap: 4px;
+}
+
+#educationModal .modal-header-btn-guide {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #fff;
+}
+
+#educationModal .modal-header-btn-guide:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+}
+
+#educationModal .education-modal-toggle-btn,
+#educationModal .education-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+    padding: 4px 8px;
+    line-height: 1;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+}
+
+#educationModal .education-modal-toggle-btn:hover,
+#educationModal .education-modal-close-btn:hover {
+    opacity: 0.85;
+    background: none;
+}
+
+#educationModal .education-modal-close-btn svg {
+    display: none;
+}
+
+#educationModal .education-modal-body {
+    padding: 28px 32px;
     overflow-y: auto;
-    max-height: calc(90vh - 80px);
-    /* Prevent layout shift */
+    max-height: calc(90vh - 72px);
     min-height: 400px;
+}
+
+.programs-modal-empty,
+.education-programs-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.programs-modal-empty p,
+.education-programs-empty p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #64748b;
+    max-width: 420px;
+}
+
+#educationModal .education-modal-container.is-maximized .education-modal-body {
+    max-height: calc(100vh - 56px);
+}
+
+/* Standard program modals — blue header + fullscreen (match Education modal) */
+.program-modal.program-modal--chrome .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+    color: #fff;
+    border-bottom: none;
+}
+
+.program-modal.program-modal--chrome .modal-header h2 {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.program-modal.program-modal--chrome .modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.program-modal.program-modal--chrome .program-modal-container {
+    max-width: 900px;
+    width: 92%;
+}
+
+.program-modal.program-modal--chrome.active.is-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.program-modal.program-modal--chrome .program-modal-container.is-maximized {
+    position: fixed;
+    inset: 0;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0;
+    border-radius: 0;
+    z-index: 2;
+}
+
+.program-modal.program-modal--chrome .education-modal-toggle-btn,
+.program-modal.program-modal--chrome .education-modal-close-btn,
+.program-modal.program-modal--chrome .program-modal-toggle-btn,
+.program-modal.program-modal--chrome .program-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+    padding: 4px 8px;
+    line-height: 1;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    border-radius: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+}
+
+.program-modal.program-modal--chrome .education-modal-toggle-btn:hover,
+.program-modal.program-modal--chrome .education-modal-close-btn:hover,
+.program-modal.program-modal--chrome .program-modal-toggle-btn:hover,
+.program-modal.program-modal--chrome .program-modal-close-btn:hover {
+    opacity: 0.85;
+    background: none;
+    color: #fff;
+}
+
+.program-modal.program-modal--chrome .education-modal-close-btn svg,
+.program-modal.program-modal--chrome .program-modal-close-btn svg {
+    display: none;
+}
+
+.program-modal.program-modal--chrome .program-modal-body {
+    overflow-y: auto;
+    max-height: calc(90vh - 72px);
+}
+
+.program-modal.program-modal--chrome .program-modal-container.is-maximized .program-modal-body {
+    max-height: calc(100vh - 56px);
+}
+
+.modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.modal-header-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: #1a73e8;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.modal-header-btn:hover {
+    background: #e8f0fe;
+    border-color: #1a73e8;
+}
+
+.modal-header-btn-guide span {
+    white-space: nowrap;
+}
+
+.modal-maximize-btn {
+    width: 34px;
+    padding: 0;
+    color: #475569;
+}
+
+.modal-maximize-btn:hover {
+    color: #1a73e8;
+}
+
+.modal-icon-restore {
+    display: none;
+}
+
+.education-modal-container.is-maximized .modal-icon-maximize {
+    display: none;
+}
+
+.education-modal-container.is-maximized .modal-icon-restore {
+    display: block;
+}
+
+.sch-program-info-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.sch-program-slots-sep {
+    color: #94a3b8;
+    margin: 0 4px;
+}
+
+.sch-program-slots-remaining {
+    color: #1a73e8;
+    font-weight: 700;
+}
+
+.sch-program-slots-full {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .modal-header-btn-guide span {
+        display: none;
+    }
+
+    #educationModal .education-modal-body {
+        padding: 20px 16px;
+    }
 }
 
 @keyframes modalIn {
@@ -829,6 +1194,14 @@ body.youth-dashboard {
     .navbar-right { gap: 6px; }
     .nav-icon-btn { width: 34px; height: 34px; }
     .feed-header h1 { font-size: 18px; }
+    .feed-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .feed-header__search {
+        flex-basis: auto;
+        width: 100%;
+    }
     .post-title { font-size: 15px; }
     .post-actions { flex-direction: column; }
 }
@@ -872,7 +1245,7 @@ body.youth-dashboard {
     width: 36px; height: 36px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 800; color: white; flex-shrink: 0;
-    background: #1a1d25;
+    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
     overflow: hidden;
 }
 
@@ -904,7 +1277,7 @@ body.youth-dashboard {
 /* ── FEED FILTER TABS ── */
 .feed-filter-bar {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     margin-bottom: 12px;
     border-bottom: 2px solid var(--border);
     padding-bottom: 0;
@@ -928,14 +1301,70 @@ body.youth-dashboard {
     text-align: center;
 }
 
+.feed-tab--icon {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 8px 12px;
+    min-width: 48px;
+}
+
+.feed-tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.feed-tab-icon svg {
+    width: 22px;
+    height: 22px;
+    color: #1a56db;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.feed-tab-text {
+    font-size: 0;
+    line-height: 1.2;
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    white-space: nowrap;
+    color: #1e40af;
+    font-weight: 600;
+    transition: font-size 0.2s ease, opacity 0.2s ease, max-width 0.2s ease;
+}
+
 .feed-tab:hover {
     color: var(--brand-mid);
     background: var(--bg);
 }
 
+.feed-tab--icon:hover .feed-tab-icon svg,
+.feed-tab--icon:focus-visible .feed-tab-icon svg {
+    color: #1e40af;
+    transform: translateY(-1px);
+}
+
 .feed-tab.active {
     color: var(--brand-mid);
     border-bottom-color: var(--brand-mid);
+}
+
+.feed-tab--icon.active .feed-tab-icon svg {
+    color: #1e40af;
+}
+
+@media (min-width: 769px) {
+    .feed-tab--icon:hover .feed-tab-text,
+    .feed-tab--icon:focus-visible .feed-tab-text,
+    .feed-tab--icon.active .feed-tab-text {
+        font-size: 11px;
+        max-width: 120px;
+        opacity: 1;
+    }
 }
 
 @media (max-width: 768px) {
@@ -952,6 +1381,15 @@ body.youth-dashboard {
         padding: 8px 14px;
         font-size: 13px;
         white-space: nowrap;
+    }
+
+    .feed-tab--icon {
+        padding: 10px 12px 12px;
+        min-width: 44px;
+    }
+
+    .feed-tab-text {
+        display: none;
     }
 }
 
@@ -1343,4 +1781,72 @@ body.youth-dashboard {
     margin-top: 12px;
     margin-bottom: 0;
     font-style: italic;
+}
+
+/* Scholarship schedule details in Education Programs modal */
+.sch-program-announcement-card {
+    margin: 0 24px 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.sch-program-announcement-card__title {
+    background: #c41e3a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 12px 16px;
+    line-height: 1.4;
+}
+
+.sch-program-announcement-card__body {
+    padding: 16px 20px 18px;
+}
+
+.sch-program-req-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.sch-program-req-list li {
+    margin-bottom: 6px;
+}
+
+.sch-program-kk-note {
+    margin-bottom: 12px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.sch-program-period-section {
+    padding-top: 0;
+}
+
+.sch-program-period-value {
+    font-weight: 600;
+}
+
+.sch-program-required {
+    color: #dc2626;
+}
+
+.sch-program-q-type {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.sch-program-upload-list li {
+    margin-bottom: 12px;
+}
+
+.sch-program-info-grid {
+    margin-top: 4px;
 }

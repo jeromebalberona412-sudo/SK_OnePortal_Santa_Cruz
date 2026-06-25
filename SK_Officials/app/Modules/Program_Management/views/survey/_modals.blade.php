@@ -30,7 +30,6 @@
                 <div class="schol-form-group survey-status-group">
                     <label class="schol-label" for="surveyStatus">Status</label>
                     <select id="surveyStatus" class="schol-input">
-                        <option value="scheduled">Scheduled</option>
                         <option value="open">Open</option>
                         <option value="closed">Closed</option>
                     </select>
@@ -67,9 +66,6 @@
         <div class="schol-modal-header">
             <h3>Kabataan Response</h3>
             <div class="schol-modal-header-actions">
-                <select id="viewResponsePicker" class="schol-input view-response-picker" aria-label="Select response">
-                    <option value="">Select response…</option>
-                </select>
                 <button type="button" class="schol-modal-close" id="viewResponseMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
                 <button type="button" class="schol-modal-close" id="viewResponseClose" aria-label="Close">&times;</button>
             </div>

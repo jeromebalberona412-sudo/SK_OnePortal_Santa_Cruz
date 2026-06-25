@@ -21,27 +21,56 @@ class ProfileImageService
         'image/webp',
     ];
 
-    public function __construct(private readonly CloudinaryService $cloudinary)
-    {
-    }
+    public function __construct(private readonly CloudinaryService $cloudinary) {}
 
     public function defaultAvatarUrl(User $user, ?string $displayName = null): string
     {
         $name = $displayName ?: ($user->name ?: 'Youth User');
 
-        return 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&size=150&background=667eea&color=fff';
+        return 'https://ui-avatars.com/api/?name='.urlencode($name).'&size=150&background=667eea&color=fff';
     }
 
     public function resolveDisplayUrl(User $user, ?string $displayName = null): string
     {
         if ($user->profile_image_url) {
+            $url = $this->normalizeStoredProfileImageUrl($user->profile_image_url);
+
             return CloudinaryService::cacheBust(
-                $user->profile_image_url,
+                $url,
                 $user->profile_image_uploaded_at
             );
         }
 
         return $this->defaultAvatarUrl($user, $displayName);
+    }
+
+    private function normalizeStoredProfileImageUrl(string $url): string
+    {
+        $url = trim($url);
+
+        if ($url === '') {
+            return $url;
+        }
+
+        if (preg_match('#/storage/(.+)$#', $url, $matches)) {
+            return '/storage/'.$matches[1];
+        }
+
+        if (str_starts_with($url, 'storage/')) {
+            return '/'.$url;
+        }
+
+        if (str_starts_with($url, 'profile-images/')) {
+            return '/storage/'.$url;
+        }
+
+        if (str_starts_with($url, '/storage/')) {
+            return $url;
+        }
+
+        $normalized = $this->cloudinary->normalizeUrl($url);
+
+        return $normalized ?: $url;
     }
 
     public function canChangeProfileImage(User $user): bool
@@ -89,31 +118,68 @@ class ProfileImageService
         }
 
         $oldPublicId = $user->profile_image_public_id;
-        $publicId    = 'user_' . $user->id;
+        $publicId = 'user_'.$user->id;
+
+        if ($this->cloudinary->isConfigured()) {
+            $folder = trim((string) config('services.cloudinary.profile_folder', 'kabataan_profile_images'), '/');
+            $targetPublicId = $folder.'/'.$publicId;
+
+            if ($oldPublicId) {
+                $this->deleteStoredImage($oldPublicId);
+            } else {
+                try {
+                    $this->cloudinary->delete($targetPublicId);
+                } catch (\Throwable) {
+                    // No existing Cloudinary asset for this user yet.
+                }
+            }
+        }
 
         $result = $this->uploadToCloudOrLocal($user, $file, $publicId);
 
-        $uploadedAt   = now();
+        $uploadedAt = now();
         $nextChangeAt = $uploadedAt->copy()->addDays(30);
 
-        $user->forceFill([
-            'profile_image_url'                 => $result['url'],
-            'profile_image_public_id'           => $result['public_id'],
-            'profile_image_uploaded_at'         => $uploadedAt,
+        $saved = $user->forceFill([
+            'profile_image_url' => $result['url'],
+            'profile_image_public_id' => $result['public_id'],
+            'profile_image_uploaded_at' => $uploadedAt,
             'profile_image_change_available_at' => $nextChangeAt,
         ])->save();
 
-        if ($oldPublicId) {
-            $this->deleteStoredImage($oldPublicId);
+        if (! $saved) {
+            Log::error('Kabataan profile image database save failed', ['user_id' => $user->id]);
+            throw ValidationException::withMessages([
+                'profile_picture' => ['Failed to save profile picture. Please try again.'],
+            ]);
         }
 
         $fresh = $user->fresh();
 
+        if (! $fresh?->profile_image_url) {
+            Log::error('Kabataan profile image URL missing after save', [
+                'user_id' => $user->id,
+                'public_id' => $result['public_id'],
+            ]);
+            throw ValidationException::withMessages([
+                'profile_picture' => ['Failed to save profile picture. Please try again.'],
+            ]);
+        }
+
+        if ($oldPublicId && $oldPublicId !== $result['public_id']) {
+            $this->deleteStoredImage($oldPublicId);
+        }
+
+        Log::info('Kabataan profile image saved', [
+            'user_id' => $user->id,
+            'public_id' => $fresh->profile_image_public_id,
+        ]);
+
         return [
-            'picture_url'              => $this->resolveDisplayUrl($fresh),
+            'picture_url' => $this->resolveDisplayUrl($fresh),
             'next_change_available_at' => $nextChangeAt->toIso8601String(),
-            'next_change_display'    => $nextChangeAt->format('F j, Y'),
-            'can_change'             => false,
+            'next_change_display' => $nextChangeAt->format('F j, Y'),
+            'can_change' => false,
         ];
     }
 
@@ -128,7 +194,7 @@ class ProfileImageService
             } catch (\Throwable $exception) {
                 Log::warning('Cloudinary profile upload failed, falling back to local storage', [
                     'user_id' => $user->id,
-                    'error'   => $exception->getMessage(),
+                    'error' => $exception->getMessage(),
                 ]);
             }
         }
@@ -142,16 +208,16 @@ class ProfileImageService
     private function uploadToLocalStorage(User $user, UploadedFile $file): array
     {
         $extension = strtolower((string) ($file->guessExtension() ?: 'jpg'));
-        $filename  = 'user_' . $user->id . '.' . $extension;
+        $filename = 'user_'.$user->id.'.'.$extension;
         $directory = 'profile-images';
 
         Storage::disk('public')->putFileAs($directory, $file, $filename);
 
-        $publicId = $directory . '/' . $filename;
+        $publicId = $directory.'/'.$filename;
 
         return [
             'public_id' => $publicId,
-            'url'       => Storage::disk('public')->url($publicId),
+            'url' => '/storage/'.$publicId,
         ];
     }
 
@@ -172,7 +238,7 @@ class ProfileImageService
         } catch (\Throwable $exception) {
             Log::warning('Failed to delete previous Kabataan profile image from Cloudinary', [
                 'public_id' => $publicId,
-                'error'     => $exception->getMessage(),
+                'error' => $exception->getMessage(),
             ]);
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\BarangayLogoUrlService;
+use App\Services\SkOfficialsNotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
@@ -52,6 +53,16 @@ class AppServiceProvider extends ServiceProvider
                 'userDisplayName' => $userDisplayName,
                 'userAvatarUrl'   => $barangayLogoUrl ?: asset('images/SK_OnePortal_logo.png'),
                 'userAvatarAlt'   => ($barangayName ?? 'SK OnePortal') . ' Logo',
+            ]);
+        });
+
+        View::composer(['layout::header'], function ($view) {
+            $user = Auth::user();
+            $notificationService = app(SkOfficialsNotificationService::class);
+
+            $view->with([
+                'headerNotifications' => $notificationService->recentForUser($user, 5),
+                'unreadNotificationCount' => $notificationService->unreadCountForUser($user),
             ]);
         });
     }

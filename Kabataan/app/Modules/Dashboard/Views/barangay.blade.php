@@ -183,7 +183,7 @@
     @include('dashboard::loading')
 
     {{-- KABATAAN HEADER (consistent across all pages) --}}
-    @include('layout::kabataan-header', ['showSearch' => true])
+    @include('layout::kabataan-header')
 
     {{-- MAIN --}}
     <main class="profile-main">

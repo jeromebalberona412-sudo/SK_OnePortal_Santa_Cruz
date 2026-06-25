@@ -21,7 +21,6 @@ let chartInstances = [];
 let committeeContext = { programs: [] };
 let surveys = [];
 let responses = [];
-let viewResponseList = [];
 
 function getPageProgramConfig() {
     const el = document.getElementById('surveyProgramConfig');
@@ -60,7 +59,90 @@ async function apiFetch(url, options = {}) {
     return data;
 }
 
+function getCurrentYear() {
+    return new Date().getFullYear();
+}
+
+function getYearDefaultDates(year = getCurrentYear()) {
+    return {
+        open: `${year}-01-01`,
+        close: `${year}-12-31`,
+    };
+}
+
+function resolveSkTermLabel(year) {
+    const start = 2023 + Math.floor(Math.max(0, year - 2023) / 3) * 3;
+    return `${start}-${start + 2}`;
+}
+
+function getSurveyYear(survey) {
+    if (survey?.survey_year) return Number(survey.survey_year);
+    const date = survey?.openDate || survey?.open_date;
+    if (!date) return getCurrentYear();
+    return new Date(date).getFullYear();
+}
+
+function populateYearTermFilters() {
+    const years = [...new Set(surveys.map(getSurveyYear))].sort((a, b) => b - a);
+    const currentYear = getCurrentYear();
+    if (!years.includes(currentYear)) years.unshift(currentYear);
+
+    const terms = [...new Set(years.map(resolveSkTermLabel))].sort().reverse();
+
+    ['formsYearFilter', 'responsesYearFilter'].forEach((id) => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '<option value="">All Years</option>'
+            + years.map((y) => `<option value="${y}">${y}</option>`).join('');
+        if (current) sel.value = current;
+    });
+
+    ['formsTermFilter', 'responsesTermFilter'].forEach((id) => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '<option value="">All Terms</option>'
+            + terms.map((t) => `<option value="${t}">SK Term ${t}</option>`).join('');
+        if (current) sel.value = current;
+    });
+}
+
+function passesYearTermFilter(itemYear, prefix) {
+    const yearFilter = document.getElementById(`${prefix}YearFilter`)?.value || '';
+    const termFilter = document.getElementById(`${prefix}TermFilter`)?.value || '';
+    if (yearFilter && String(itemYear) !== String(yearFilter)) return false;
+    if (termFilter && resolveSkTermLabel(itemYear) !== termFilter) return false;
+    return true;
+}
+
+function hasSurveyForYear(year) {
+    return surveys.some((s) => getSurveyYear(s) === year);
+}
+
+function updateCreateButtonState() {
+    const btn = document.getElementById('btnCreateSurvey');
+    if (!btn) return;
+    const exists = hasSurveyForYear(getCurrentYear());
+    btn.disabled = exists;
+    btn.title = exists
+        ? `A survey form for ${getCurrentYear()} already exists. Only one survey per year is allowed.`
+        : '';
+    btn.style.opacity = exists ? '0.55' : '';
+    btn.style.cursor = exists ? 'not-allowed' : '';
+}
+
+function getResponseYear(response) {
+    const survey = response.survey
+        || surveys.find((s) => String(s.id) === String(response.surveyId || response.survey_id));
+    if (survey) return getSurveyYear(survey);
+    const submitted = response.submittedAt || response.submitted_at;
+    return submitted ? new Date(submitted).getFullYear() : getCurrentYear();
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    if (typeof showLoading === 'function') showLoading('Loading surveys');
+
     const page = getPageProgramConfig();
     committee = document.body.dataset.committee || page.committee || 'environmental';
     activeTab = document.body.dataset.surveyTab || page.activeTab || 'forms';
@@ -72,11 +154,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await loadCommitteeContext();
         await loadSurveys();
+        populateYearTermFilters();
+        updateCreateButtonState();
         if (activeTab === 'results' || activeTab === 'analytics') {
             await loadResponses();
         }
     } catch (error) {
         showToast(error.message || 'Failed to load survey data.', 'error');
+    } finally {
+        if (typeof hideLoading === 'function') hideLoading();
     }
 
     if (activeTab === 'forms') renderFormsTable();
@@ -224,6 +310,9 @@ function bindFormsTab() {
     document.getElementById('surveyFormCancel')?.addEventListener('click', closeSurveyModal);
     document.getElementById('surveyFormSave')?.addEventListener('click', saveSurveyForm);
     document.getElementById('formsSearch')?.addEventListener('input', renderFormsTable);
+    ['formsYearFilter', 'formsTermFilter'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('change', renderFormsTable);
+    });
     document.getElementById('viewSurveyClose')?.addEventListener('click', () => {
         document.getElementById('viewSurveyModal').style.display = 'none';
     });
@@ -237,23 +326,24 @@ function bindFormsTab() {
             surveyDescCount.textContent = surveyDesc.value.length;
         });
     }
-
-    const today = new Date().toISOString().split('T')[0];
-    const openDateInput = document.getElementById('surveyOpenDate');
-    const closeDateInput = document.getElementById('surveyCloseDate');
-    if (openDateInput) openDateInput.setAttribute('min', today);
-    if (closeDateInput) closeDateInput.setAttribute('min', today);
 }
 
 function openSurveyModal(survey) {
+    if (!survey && hasSurveyForYear(getCurrentYear())) {
+        showToast(`A survey form for ${getCurrentYear()} already exists. Only one per year is allowed.`, 'error');
+        return;
+    }
+
     editingSurveyId = survey?.id || null;
     renderAutoProgram(survey?.abyip_program_id || survey?.abyipProgramId);
 
     document.getElementById('surveyFormModalTitle').textContent = survey ? 'Edit Survey Form' : 'Create Survey Form';
     document.getElementById('surveyDescription').value = survey?.announcement || survey?.description || '';
-    document.getElementById('surveyOpenDate').value = survey?.openDate || survey?.open_date || '';
-    document.getElementById('surveyCloseDate').value = survey?.closeDate || survey?.close_date || '';
-    document.getElementById('surveyStatus').value = survey?.status || 'scheduled';
+
+    const defaults = getYearDefaultDates();
+    document.getElementById('surveyOpenDate').value = survey?.openDate || survey?.open_date || defaults.open;
+    document.getElementById('surveyCloseDate').value = survey?.closeDate || survey?.close_date || defaults.close;
+    document.getElementById('surveyStatus').value = survey?.status === 'closed' ? 'closed' : 'open';
 
     const surveyDescCount = document.getElementById('surveyDescCount');
     if (surveyDescCount) {
@@ -308,7 +398,7 @@ async function saveSurveyForm() {
         announcement: document.getElementById('surveyDescription')?.value?.trim() || '',
         open_date: openDate,
         close_date: closeDate,
-        status: document.getElementById('surveyStatus')?.value || 'scheduled',
+        status: document.getElementById('surveyStatus')?.value || 'open',
         questions,
     };
 
@@ -329,6 +419,8 @@ async function saveSurveyForm() {
         }
 
         await loadSurveys();
+        populateYearTermFilters();
+        updateCreateButtonState();
         closeSurveyModal();
         renderFormsTable();
         showToast('Survey saved successfully.');
@@ -362,11 +454,13 @@ function renderFormsTable() {
         );
     }
 
+    rows = rows.filter((s) => passesYearTermFilter(getSurveyYear(s), 'forms'));
+
     if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="6" class="saf-table-empty">
             <div class="survey-empty-state">
                 <p><strong>No survey forms yet</strong></p>
-                <p>Create questions for <em>${escapeHtml(getConfig().title)}</em>. Kabataan responses appear under Survey Results and Survey Analytics.</p>
+                <p>Create questions for <em>${escapeHtml(getConfig().title)}</em>. Kabataan responses appear under Survey Response and Survey Analytics.</p>
             </div>
         </td></tr>`;
         return;
@@ -419,6 +513,8 @@ function renderFormsTable() {
             try {
                 await apiFetch(`${apiBase()}/${btn.dataset.deleteSurvey}`, { method: 'DELETE' });
                 await loadSurveys();
+                populateYearTermFilters();
+                updateCreateButtonState();
                 renderFormsTable();
                 showToast('Deleted successfully.');
             } catch (error) {
@@ -430,7 +526,6 @@ function renderFormsTable() {
 
 function getStatusClass(status) {
     switch (status) {
-        case 'scheduled': return 'schol-pill-scheduled';
         case 'open': return 'schol-pill-approved';
         case 'closed': return 'schol-pill-rejected';
         default: return 'schol-pill-rejected';
@@ -439,10 +534,10 @@ function getStatusClass(status) {
 
 function getStatusLabel(status) {
     switch (status) {
-        case 'scheduled': return 'Scheduled';
         case 'open': return 'Open';
         case 'closed': return 'Closed';
-        default: return 'Unknown';
+        case 'scheduled': return 'Open';
+        default: return 'Closed';
     }
 }
 
@@ -521,7 +616,7 @@ function toggleSurveyFormMaximize() {
 // ── Results Tab ───────────────────────────────────────────────────────────
 
 function bindResultsTab() {
-    ['resultsSurveyFilter', 'resultsDateFrom', 'resultsDateTo', 'resultsSearch'].forEach(id => {
+    ['responsesYearFilter', 'responsesTermFilter', 'resultsDateFrom', 'resultsDateTo', 'resultsSearch'].forEach((id) => {
         document.getElementById(id)?.addEventListener('change', renderResultsTable);
         document.getElementById(id)?.addEventListener('input', renderResultsTable);
     });
@@ -530,39 +625,15 @@ function bindResultsTab() {
         document.getElementById('viewResponseModal').style.display = 'none';
     });
     document.getElementById('viewResponseMaximize')?.addEventListener('click', toggleViewResponseMaximize);
-    document.getElementById('viewResponsePicker')?.addEventListener('change', (event) => {
-        const responseId = event.target.value;
-        if (!responseId) return;
-        const response = viewResponseList.find(r => String(r.id) === String(responseId));
-        const survey = response?.survey || surveys.find(s => String(s.id) === String(response?.surveyId || response?.survey_id));
-        if (response && survey) {
-            renderResponseModalContent(response, survey);
-        }
-    });
-}
-
-function populateSurveyFilters(selectId) {
-    const sel = document.getElementById(selectId);
-    if (!sel) return;
-    const current = sel.value;
-    const first = selectId === 'analyticsSurveyFilter'
-        ? '<option value="">Select survey…</option>'
-        : '<option value="">All Surveys</option>';
-    sel.innerHTML = first + surveys.map(s =>
-        `<option value="${s.id}">${escapeHtml(s.title || s.program_name || 'Survey')}</option>`
-    ).join('');
-    if (current) sel.value = current;
 }
 
 function filterResponses() {
-    const surveyId = document.getElementById('resultsSurveyFilter')?.value || '';
     const from = document.getElementById('resultsDateFrom')?.value || '';
     const to = document.getElementById('resultsDateTo')?.value || '';
     const search = (document.getElementById('resultsSearch')?.value || '').toLowerCase();
 
-    return responses.filter(r => {
-        const rSurveyId = String(r.surveyId || r.survey_id || '');
-        if (surveyId && rSurveyId !== String(surveyId)) return false;
+    return responses.filter((r) => {
+        if (!passesYearTermFilter(getResponseYear(r), 'responses')) return false;
         const d = new Date(r.submittedAt || r.submitted_at);
         if (from && d < new Date(`${from}T00:00:00`)) return false;
         if (to && d > new Date(`${to}T23:59:59`)) return false;
@@ -576,7 +647,6 @@ function filterResponses() {
 }
 
 async function renderResultsTable() {
-    populateSurveyFilters('resultsSurveyFilter');
     const tbody = document.getElementById('surveyResultsTableBody');
     if (!tbody) return;
 
@@ -591,31 +661,20 @@ async function renderResultsTable() {
     const rows = filterResponses();
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="saf-table-empty">No survey responses yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="saf-table-empty">No survey responses yet.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = rows.map(r => {
+    tbody.innerHTML = rows.map((r) => {
         const survey = r.survey || surveys.find(s => String(s.id) === String(r.surveyId || r.survey_id));
         const date = formatSurveyDate(r.submittedAt || r.submitted_at);
         const answerPreview = getResponseAnswerPreview(r, survey);
-        const responseNumber = r.responseNumber ?? r.response_number;
-        const responseBadge = responseNumber
-            ? `<span class="survey-response-seq" title="Response #${responseNumber} for this survey">#${responseNumber}</span>`
-            : '';
 
         return `
             <tr>
-                <td class="survey-col-title">
-                    <div class="survey-respondent-row">
-                        ${responseBadge}
-                        <div class="survey-respondent-info">
-                            <div class="survey-cell-title">${escapeHtml(r.respondentName || r.respondent_name)}</div>
-                            <div class="survey-cell-meta">${escapeHtml(formatBarangay(r.barangay))}</div>
-                        </div>
-                    </div>
+                <td class="survey-col-title" data-label="Full Name">
+                    <div class="survey-cell-title">${escapeHtml(r.respondentName || r.respondent_name)}</div>
                 </td>
-                <td data-label="Survey">${escapeHtml(survey?.title || survey?.program_name || '—')}</td>
                 <td data-label="Barangay">${escapeHtml(formatBarangay(r.barangay))}</td>
                 <td data-label="Answer"><span class="survey-answer-pill">${escapeHtml(answerPreview)}</span></td>
                 <td data-label="Date Submitted">${date}</td>
@@ -648,8 +707,6 @@ function getResponseAnswerPreview(response, survey) {
 
 function renderResponseModalContent(response, survey) {
     const body = document.getElementById('viewResponseBody');
-    const picker = document.getElementById('viewResponsePicker');
-    const responseNumber = response.responseNumber ?? response.response_number;
     const answersHtml = (survey.questions || []).map((q, i) => {
         let ans = getResponseAnswer(response, q.id);
         if (Array.isArray(ans)) ans = ans.join(', ');
@@ -663,7 +720,7 @@ function renderResponseModalContent(response, survey) {
 
     body.innerHTML = `
         <div class="gform-preview-header">
-            <h4>${responseNumber ? `#${responseNumber} — ` : ''}${escapeHtml(response.respondentName || response.respondent_name)}</h4>
+            <h4>${escapeHtml(response.respondentName || response.respondent_name)}</h4>
             <div class="gform-preview-info">
                 <div><strong>Survey:</strong> ${escapeHtml(survey.title || survey.program_name || '—')}</div>
                 <div><strong>Barangay:</strong> ${escapeHtml(formatBarangay(response.barangay))}</div>
@@ -671,25 +728,9 @@ function renderResponseModalContent(response, survey) {
             </div>
         </div>
         ${answersHtml}`;
-
-    if (picker) {
-        picker.value = String(response.id);
-    }
 }
 
 function openResponseModal(response, survey) {
-    viewResponseList = filterResponses();
-    const picker = document.getElementById('viewResponsePicker');
-    if (picker) {
-        picker.innerHTML = viewResponseList.map(r => {
-            const seq = r.responseNumber ?? r.response_number;
-            const label = seq
-                ? `#${seq} — ${r.respondentName || r.respondent_name}`
-                : (r.respondentName || r.respondent_name);
-            return `<option value="${r.id}">${escapeHtml(label)}</option>`;
-        }).join('');
-    }
-
     renderResponseModalContent(response, survey);
     document.getElementById('viewResponseModal').style.display = 'flex';
 }
@@ -823,24 +864,36 @@ async function renderAnalytics() {
 
     requestAnimationFrame(() => {
         questions.forEach((q, idx) => {
-            if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
-                initChartsForQuestion(q, survey, filtered, idx);
-            }
+            initChartsForQuestion(q, survey, filtered, idx);
         });
     });
 }
 
-function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
+const CHOICE_QUESTION_TYPES = ['radio', 'checkbox', 'dropdown'];
+
+function questionTypeLabel(type) {
+    const map = {
+        radio: 'Multiple Choice',
+        checkbox: 'Checkboxes',
+        dropdown: 'Dropdown',
+        text: 'Short Answer',
+        paragraph: 'Paragraph',
+        number: 'Number',
+        date: 'Date',
+    };
+    return map[type] || 'Response';
+}
+
+function getResponsesWithAnswer(survey, responseRows, questionId) {
     const surveyResponses = responseRows.filter(r => String(r.surveyId || r.survey_id) === String(survey.id));
-    const withAnswer = surveyResponses.filter(r => {
-        const a = getResponseAnswer(r, q.id);
+    return surveyResponses.filter(r => {
+        const a = getResponseAnswer(r, questionId);
         return a !== undefined && a !== null && a !== '' && !(Array.isArray(a) && !a.length);
     });
+}
 
-    const total = withAnswer.length;
-    const chartKey = `q${q.id}`;
-
-    if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
+function buildAnswerCounts(q, withAnswer) {
+    if (CHOICE_QUESTION_TYPES.includes(q.type)) {
         const counts = {};
         (q.options || []).forEach(opt => { counts[opt] = 0; });
         withAnswer.forEach(r => {
@@ -851,61 +904,65 @@ function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
                 counts[val] = (counts[val] || 0) + 1;
             }
         });
-
-        const typeLabel = q.type === 'checkbox' ? 'Checkboxes' : (q.type === 'dropdown' ? 'Dropdown' : 'Multiple Choice');
-        const rows = Object.entries(counts).map(([opt, count]) => {
-            const pct = total ? Math.round((count / total) * 100) : 0;
-            return `
-                <div class="analytics-choice-row">
-                    <div class="analytics-choice-label">${escapeHtml(opt)}</div>
-                    <div class="analytics-choice-bar-wrap">
-                        <div class="analytics-choice-bar" style="width:${pct}%"></div>
-                    </div>
-                    <div class="analytics-choice-stats"><span class="analytics-choice-count">${count}</span> <span class="analytics-choice-pct">(${pct}%)</span></div>
-                </div>`;
-        }).join('');
-
-        const chartEmptyNote = total === 0
-            ? '<p class="analytics-chart-empty">No responses yet for this question.</p>'
-            : '';
-
-        return `
-            <article class="analytics-question-block">
-                <header class="analytics-question-head">
-                    <div class="analytics-question-head-main">
-                        <span class="analytics-q-badge">Q${idx + 1}</span>
-                        <h4 class="analytics-question-title">${escapeHtml(q.label)}</h4>
-                    </div>
-                    <div class="analytics-question-meta">
-                        <span class="analytics-meta-pill">${typeLabel}</span>
-                        <span class="analytics-meta-text">${total} response${total === 1 ? '' : 's'}</span>
-                    </div>
-                </header>
-                <div class="analytics-choices">${rows}</div>
-                <div class="analytics-charts-row">
-                    <div class="analytics-chart-box">
-                        <h5>Bar Chart</h5>
-                        <div class="analytics-chart-canvas-wrap">
-                            ${chartEmptyNote}
-                            <canvas id="chartBar_${chartKey}"></canvas>
-                        </div>
-                    </div>
-                    <div class="analytics-chart-box">
-                        <h5>Pie Chart — Response Distribution</h5>
-                        <div class="analytics-chart-canvas-wrap">
-                            ${chartEmptyNote}
-                            <canvas id="chartPie_${chartKey}"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </article>`;
+        return counts;
     }
 
-    const textAnswers = withAnswer.map(r => {
-        let a = getResponseAnswer(r, q.id);
-        if (Array.isArray(a)) a = a.join(', ');
-        return `<div class="analytics-text-answer-item">${escapeHtml(String(a))}</div>`;
-    }).join('') || '<p style="color:#9ca3af;font-size:14px;">No text responses yet.</p>';
+    const counts = {};
+    withAnswer.forEach(r => {
+        let val = getResponseAnswer(r, q.id);
+        if (Array.isArray(val)) val = val.join(', ');
+        const key = String(val ?? '').trim() || '(empty)';
+        counts[key] = (counts[key] || 0) + 1;
+    });
+    return counts;
+}
+
+function buildAnalyticsChartsHtml(chartKey, total) {
+    const chartEmptyNote = total === 0
+        ? '<p class="analytics-chart-empty">No responses yet for this question.</p>'
+        : '';
+
+    return `
+        <div class="analytics-charts-row">
+            <div class="analytics-chart-box">
+                <h5>Bar Chart</h5>
+                <div class="analytics-chart-canvas-wrap">
+                    ${chartEmptyNote}
+                    <canvas id="chartBar_${chartKey}"></canvas>
+                </div>
+            </div>
+            <div class="analytics-chart-box">
+                <h5>Pie Chart — Response Distribution</h5>
+                <div class="analytics-chart-canvas-wrap">
+                    ${chartEmptyNote}
+                    <canvas id="chartPie_${chartKey}"></canvas>
+                </div>
+            </div>
+        </div>`;
+}
+
+function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
+    const withAnswer = getResponsesWithAnswer(survey, responseRows, q.id);
+    const total = withAnswer.length;
+    const chartKey = `q${q.id}`;
+    const counts = buildAnswerCounts(q, withAnswer);
+    const typeLabel = questionTypeLabel(q.type);
+
+    const rows = Object.entries(counts).map(([opt, count]) => {
+        const pct = total ? Math.round((count / total) * 100) : 0;
+        return `
+            <div class="analytics-choice-row">
+                <div class="analytics-choice-label">${escapeHtml(opt)}</div>
+                <div class="analytics-choice-bar-wrap">
+                    <div class="analytics-choice-bar" style="width:${pct}%"></div>
+                </div>
+                <div class="analytics-choice-stats"><span class="analytics-choice-count">${count}</span> <span class="analytics-choice-pct">(${pct}%)</span></div>
+            </div>`;
+    }).join('');
+
+    const detailSection = CHOICE_QUESTION_TYPES.includes(q.type)
+        ? `<div class="analytics-choices">${rows}</div>`
+        : `<div class="analytics-choices">${rows || '<p style="color:#9ca3af;font-size:14px;">No responses yet.</p>'}</div>`;
 
     return `
         <article class="analytics-question-block">
@@ -915,32 +972,23 @@ function buildQuestionAnalyticsBlock(q, survey, responseRows, idx) {
                     <h4 class="analytics-question-title">${escapeHtml(q.label)}</h4>
                 </div>
                 <div class="analytics-question-meta">
-                    <span class="analytics-meta-pill">Text</span>
+                    <span class="analytics-meta-pill">${typeLabel}</span>
                     <span class="analytics-meta-text">${total} response${total === 1 ? '' : 's'}</span>
                 </div>
             </header>
-            <div class="analytics-text-answers">${textAnswers}</div>
+            ${detailSection}
+            ${buildAnalyticsChartsHtml(chartKey, total)}
         </article>`;
 }
 
 function initChartsForQuestion(q, survey, responseRows, idx) {
-    const surveyResponses = responseRows.filter(r => String(r.surveyId || r.survey_id) === String(survey.id));
-    const labels = q.options || [];
+    const withAnswer = getResponsesWithAnswer(survey, responseRows, q.id);
+    const counts = buildAnswerCounts(q, withAnswer);
+    const labels = Object.keys(counts);
+    const countValues = labels.map(label => counts[label] || 0);
     const chartKey = `q${q.id}`;
-    const counts = labels.map(opt => {
-        let c = 0;
-        surveyResponses.forEach(r => {
-            const val = getResponseAnswer(r, q.id);
-            if (q.type === 'checkbox' && Array.isArray(val)) {
-                if (val.includes(opt)) c++;
-            } else if (val === opt) {
-                c++;
-            }
-        });
-        return c;
-    });
 
-    const totalCount = counts.reduce((sum, count) => sum + count, 0);
+    const totalCount = countValues.reduce((sum, count) => sum + count, 0);
     if (totalCount === 0) return;
 
     const colors = ['#213F99', '#4f6fd6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
@@ -948,7 +996,10 @@ function initChartsForQuestion(q, survey, responseRows, idx) {
 
     const barCanvas = document.getElementById(`chartBar_${chartKey}`);
     const barWrap = barCanvas?.closest('.analytics-chart-canvas-wrap');
-    if (barWrap) barWrap.style.height = `${chartHeight}px`;
+    if (barWrap) {
+        barWrap.style.height = `${chartHeight}px`;
+        barWrap.querySelector('.analytics-chart-empty')?.remove();
+    }
     if (barCanvas) {
         chartInstances.push(new Chart(barCanvas, {
             type: 'bar',
@@ -956,24 +1007,38 @@ function initChartsForQuestion(q, survey, responseRows, idx) {
                 labels,
                 datasets: [{
                     label: 'Responses',
-                    data: counts,
+                    data: countValues,
                     backgroundColor: colors.slice(0, labels.length),
                     borderRadius: 6,
                     maxBarThickness: 48,
                 }],
             },
             options: {
+                indexAxis: labels.length > 6 ? 'y' : 'x',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: (ctx) => `${ctx.parsed.y} response${ctx.parsed.y === 1 ? '' : 's'}`,
+                            label: (ctx) => {
+                                const value = labels.length > 6 ? ctx.parsed.x : ctx.parsed.y;
+                                return `${value} response${value === 1 ? '' : 's'}`;
+                            },
                         },
                     },
                 },
-                scales: {
+                scales: labels.length > 6 ? {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0 },
+                        grid: { color: '#eef2f7' },
+                    },
+                    y: {
+                        ticks: { autoSkip: false, font: { size: 12 } },
+                        grid: { display: false },
+                    },
+                } : {
                     x: {
                         ticks: { autoSkip: false, font: { size: 12 } },
                         grid: { display: false },
@@ -990,14 +1055,17 @@ function initChartsForQuestion(q, survey, responseRows, idx) {
 
     const pieCanvas = document.getElementById(`chartPie_${chartKey}`);
     const pieWrap = pieCanvas?.closest('.analytics-chart-canvas-wrap');
-    if (pieWrap) pieWrap.style.height = '260px';
+    if (pieWrap) {
+        pieWrap.style.height = '260px';
+        pieWrap.querySelector('.analytics-chart-empty')?.remove();
+    }
     if (pieCanvas) {
         chartInstances.push(new Chart(pieCanvas, {
             type: 'doughnut',
             data: {
                 labels,
                 datasets: [{
-                    data: counts,
+                    data: countValues,
                     backgroundColor: colors.slice(0, labels.length),
                     borderColor: '#fff',
                     borderWidth: 2,

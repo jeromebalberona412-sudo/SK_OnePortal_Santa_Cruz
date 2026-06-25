@@ -138,212 +138,203 @@
                 <button type="button" class="schol-modal-close" id="scholarProgramClose" title="Close">&times;</button>
             </div>
         </div>
-        <div class="schol-modal-body" style="background:#f0f1f5;max-height:calc(100vh - 180px);overflow-y:auto;">
-            
-            <!-- Program Information Section -->
-            <div class="schol-schedule-card" style="margin-bottom:20px;">
-                <h4 class="schol-schedule-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Program Information
-                </h4>
-                <div class="schol-schedule-grid">
-                    <div class="schol-field schol-field-program-type">
-                        <label for="programType">Program Type</label>
-                        <input type="text" id="programType" class="schol-input schol-input-program-type" value="" readonly placeholder="Loading from ABYIP...">
+        <div class="schol-modal-body schol-program-builder-body">
+            <nav class="sch-program-builder-tabs" id="schProgramBuilderTabs" aria-label="Scholarship program builder">
+                <button type="button" class="sch-program-tab is-active" data-sch-tab="details">Program Details</button>
+                <button type="button" class="sch-program-tab" data-sch-tab="eligibility">Eligibility</button>
+                <button type="button" class="sch-program-tab" data-sch-tab="application-form">Application Form</button>
+                <button type="button" class="sch-program-tab" data-sch-tab="custom-questions">Custom Questions</button>
+                <button type="button" class="sch-program-tab" data-sch-tab="requirements">Requirements</button>
+                <button type="button" class="sch-program-tab" data-sch-tab="preview">Preview</button>
+            </nav>
+
+            <div class="sch-program-tab-panels">
+                {{-- Program Details --}}
+                <div class="sch-program-tab-panel is-active" data-sch-panel="details">
+                    <div class="schol-schedule-card">
+                        <h4 class="schol-schedule-title">Program Details</h4>
+                        <div class="schol-schedule-grid schol-schedule-grid-2">
+                            <div class="schol-field schol-field-full">
+                                <label for="programName">Program Name <span class="schol-req">*</span></label>
+                                <input type="text" id="programName" class="schol-input" readonly placeholder="Loading from ABYIP...">
+                            </div>
+                            <div class="schol-field">
+                                <label for="programType">Program Type <span class="schol-req">*</span></label>
+                                <input type="text" id="programType" class="schol-input schol-input-program-type" readonly>
+                            </div>
+                            <div class="schol-field">
+                                <label for="programCommittee">Committee <span class="schol-req">*</span></label>
+                                <input type="text" id="programCommittee" class="schol-input" readonly>
+                            </div>
+                            <div class="schol-field">
+                                <label for="schoolYear">School Year <span class="schol-req">*</span></label>
+                                <select id="schoolYear" class="schol-input" required>
+                                    <option value="">Select school year</option>
+                                    @php
+                                        $baseYear = (int) date('Y');
+                                        for ($i = 0; $i < 5; $i++) {
+                                            $y = $baseYear + $i;
+                                            echo '<option value="' . $y . '-' . ($y + 1) . '">' . $y . '-' . ($y + 1) . '</option>';
+                                        }
+                                    @endphp
+                                </select>
+                            </div>
+                            <div class="schol-field">
+                                <label for="programSemester">Semester <span class="schol-req">*</span></label>
+                                <select id="programSemester" class="schol-input" required>
+                                    <option value="">Select semester</option>
+                                    <option value="1st Semester">1st Semester</option>
+                                    <option value="2nd Semester">2nd Semester</option>
+                                </select>
+                            </div>
+                            <div class="schol-field">
+                                <label for="schedStartDate">Application Start Date <span class="schol-req">*</span></label>
+                                <input type="date" id="schedStartDate" class="schol-input" required>
+                            </div>
+                            <div class="schol-field">
+                                <label for="schedEndDate">Application End Date <span class="schol-req">*</span></label>
+                                <input type="date" id="schedEndDate" class="schol-input" required>
+                            </div>
+                            <div class="schol-field">
+                                <label for="participationQty">Maximum Beneficiaries</label>
+                                <input type="number" id="participationQty" class="schol-input" placeholder="e.g. 100" min="0" max="500" step="1">
+                            </div>
+                            <div class="schol-field">
+                                <label for="programStatus">Status</label>
+                                <select id="programStatus" class="schol-input">
+                                    <option value="open" selected>Open</option>
+                                    <option value="closed">Closed</option>
+                                </select>
+                            </div>
+                            <div class="schol-field schol-field-full">
+                                <label for="programDescription">Program Description</label>
+                                <textarea id="programDescription" class="schol-input schol-textarea" rows="3" placeholder="Describe this scholarship program for Kabataan applicants..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="schol-field schol-field-full schol-application-type-group">
+                            <label>Application Type <span class="schol-req">*</span></label>
+                            <div class="schol-radio-row">
+                                <label class="schol-radio-label"><input type="radio" name="applicationType" value="new_only" checked> New Applicants Only</label>
+                                <label class="schol-radio-label"><input type="radio" name="applicationType" value="renewal_only"> Renewal Only</label>
+                                <label class="schol-radio-label"><input type="radio" name="applicationType" value="both"> New Applicants + Renewal</label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="schol-field">
-                        <label for="programCommittee">Committee</label>
-                        <input type="text" id="programCommittee" class="schol-input" value="" readonly placeholder="Loading from committees...">
+
+                    @include('GForm_Builder::partials.announcement-field')
+
+                    <div class="schol-schedule-card schol-details-card">
+                        <h4 class="schol-schedule-title">Program Announcements</h4>
+                        <p class="schol-details-hint">Requirement lists and important dates shown on the Kabataan apply page.</p>
+                        <div id="schReqGroupsContainer" class="sch-req-groups"></div>
+                        <button type="button" class="schol-btn schol-btn-secondary" id="schAddReqGroupBtn">+ Add Requirement Group</button>
+                        <div class="schol-schedule-grid schol-schedule-grid-2" style="margin-top:16px;">
+                            <div class="schol-field">
+                                <label for="schSubmissionStart">Submission Period — Start</label>
+                                <input type="date" id="schSubmissionStart" class="schol-input">
+                            </div>
+                            <div class="schol-field">
+                                <label for="schSubmissionEnd">Submission Period — End</label>
+                                <input type="date" id="schSubmissionEnd" class="schol-input">
+                            </div>
+                            <div class="schol-field">
+                                <label for="schVerificationStart">Assessment/Verification — Start</label>
+                                <input type="date" id="schVerificationStart" class="schol-input">
+                            </div>
+                            <div class="schol-field">
+                                <label for="schVerificationEnd">Assessment/Verification — End</label>
+                                <input type="date" id="schVerificationEnd" class="schol-input">
+                            </div>
+                        </div>
                     </div>
-                    <div class="schol-field">
-                        <label for="participationQty">Participation Quantity</label>
-                        <input type="number" id="participationQty" class="schol-input" placeholder="Number of participants" min="0" max="500" step="1">
+                </div>
+
+                {{-- Eligibility --}}
+                <div class="sch-program-tab-panel" data-sch-panel="eligibility" hidden>
+                    <div class="schol-schedule-card">
+                        <h4 class="schol-schedule-title">Eligibility Criteria</h4>
+                        <p class="schol-details-hint">Only Senior High School and College students may apply. Use filters below to limit who can apply.</p>
+                        <div class="schol-eligibility-group">
+                            <label class="schol-eligibility-group-title">Youth Classification</label>
+                            <div class="schol-eligibility-grid">
+                                @foreach (['In School Youth', 'Out of School Youth', 'Working Youth', 'Person w/ Disability', 'Children in Conflict w/ Law', 'Indigenous People'] as $item)
+                                    <label class="schol-eligibility-label"><input type="checkbox" class="sch-eligibility-classification" value="{{ $item }}"><span>{{ $item }}</span></label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="schol-eligibility-group">
+                            <label class="schol-eligibility-group-title">Youth Age Group</label>
+                            <div class="schol-eligibility-grid">
+                                @foreach (['Child Youth (15-17 yrs old)', 'Core Youth (18-24 yrs old)', 'Young Adult (15-30 yrs old)'] as $item)
+                                    <label class="schol-eligibility-label"><input type="checkbox" class="sch-eligibility-age-group" value="{{ $item }}"><span>{{ $item }}</span></label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="schol-eligibility-group">
+                            <label class="schol-eligibility-group-title">Educational Background</label>
+                            <div class="schol-eligibility-grid">
+                                <label class="schol-eligibility-label"><input type="checkbox" class="sch-eligibility-education" value="High School Level"><span>Senior High School</span></label>
+                                <label class="schol-eligibility-label"><input type="checkbox" class="sch-eligibility-education" value="College Level"><span>College Level</span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Application Form (locked template) --}}
+                <div class="sch-program-tab-panel" data-sch-panel="application-form" hidden>
+                    <div class="schol-system-template-banner">
+                        <span class="schol-system-template-badge">SYSTEM TEMPLATE — LOCKED</span>
+                        <p>Default scholarship application sections. KK Profile fields auto-fill Personal Information. System-required fields cannot be removed.</p>
+                    </div>
+                    <div id="scholSystemFieldsBuilder" class="schol-system-fields-builder"></div>
+                </div>
+
+                {{-- Custom Questions --}}
+                <div class="sch-program-tab-panel" data-sch-panel="custom-questions" hidden>
+                    <div class="schol-schedule-card">
+                        <p class="schol-details-hint">Add optional questions after the default application form. File uploads belong in the <strong>Requirements</strong> tab.</p>
+                        @include('GForm_Builder::partials.custom-questions-builder', [
+                            'sectionTitle' => 'Custom Questions',
+                            'hint' => 'Supported: Text, Textarea, Number, Radio, Checkbox, Dropdown, Date.',
+                            'emptyMessage' => 'No custom questions yet. Click <strong>Add Question</strong> to add one.',
+                        ])
+                    </div>
+                </div>
+
+                {{-- Document Requirements --}}
+                <div class="sch-program-tab-panel" data-sch-panel="requirements" hidden>
+                    <div class="schol-schedule-card">
+                        <h4 class="schol-schedule-title">Upload Requirements</h4>
+                        <p class="schol-details-hint">Documents Kabataan must upload when applying. At least one requirement is required.</p>
+                        <div id="schDocReqContainer" class="sch-doc-req-list"></div>
+                        <button type="button" class="schol-btn schol-btn-secondary" id="schAddDocReqBtn">+ Add Requirement</button>
+                    </div>
+                </div>
+
+                {{-- Preview --}}
+                <div class="sch-program-tab-panel" data-sch-panel="preview" hidden>
+                    <div class="schol-schedule-card">
+                        <h4 class="schol-schedule-title">Applicant Preview</h4>
+                        <p class="schol-details-hint">How Kabataan will see this scholarship program.</p>
+                        <div id="schProgramPreviewPanel" class="sch-program-preview-panel">
+                            <p class="sch-view-muted">Open this tab to generate a preview.</p>
+                        </div>
+                    </div>
+                    <div class="schol-schedule-card schol-quick-guidelines-card">
+                        <h4 class="schol-schedule-title">Quick Guidelines</h4>
+                        <p class="schol-details-hint">Built-in system guide — shown to all applicants (not editable).</p>
+                        <ol class="sch-qg-official-simple-list">
+                            <li>Complete the scholarship application form.</li>
+                            <li>Upload all required documents.</li>
+                            <li>Review your information.</li>
+                            <li>Submit your application.</li>
+                            <li>Wait for evaluation.</li>
+                            <li>Monitor your application status.</li>
+                        </ol>
                     </div>
                 </div>
             </div>
-
-            <!-- Schedule Section -->
-            <div class="schol-schedule-card" style="margin-bottom:20px;">
-                <h4 class="schol-schedule-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Application Window Schedule
-                </h4>
-                <div class="schol-schedule-grid">
-                    <div class="schol-field">
-                        <label for="schedStartDate">Start Date <span class="schol-req">*</span></label>
-                        <input type="date" id="schedStartDate" class="schol-input" required>
-                    </div>
-                    <div class="schol-field">
-                        <label for="schedEndDate">End Date <span class="schol-req">*</span></label>
-                        <input type="date" id="schedEndDate" class="schol-input" required>
-                    </div>
-                    <div class="schol-field">
-                        <label for="programStatus">Status</label>
-                        <select id="programStatus" class="schol-input">
-                            <option value="open" selected>Open</option>
-                            <option value="closed">Closed</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Application Form Section -->
-            <div class="schol-schedule-card">
-                <h4 class="schol-schedule-title" style="margin-bottom:16px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Application Form Builder
-                </h4>
-                
-                @include('GForm_Builder::partials.announcement-field')
-
-                <div class="schol-schedule-card schol-details-card" style="margin-bottom:20px;">
-                    <h4 class="schol-schedule-title">Program Announcements &amp; Requirements</h4>
-                    <p class="schol-details-hint">These details appear on the Kabataan apply page — requirement lists and important dates.</p>
-                    <div id="schReqGroupsContainer" class="sch-req-groups"></div>
-                    <button type="button" class="schol-btn schol-btn-secondary" id="schAddReqGroupBtn" style="margin-bottom:20px;">
-                        + Add Requirement Group
-                    </button>
-                    <div class="schol-schedule-grid">
-                        <div class="schol-field">
-                            <label for="schSubmissionStart">Submission Period — Start</label>
-                            <input type="date" id="schSubmissionStart" class="schol-input">
-                        </div>
-                        <div class="schol-field">
-                            <label for="schSubmissionEnd">Submission Period — End</label>
-                            <input type="date" id="schSubmissionEnd" class="schol-input">
-                        </div>
-                        <div class="schol-field">
-                            <label for="schVerificationStart">Assessment/Verification — Start</label>
-                            <input type="date" id="schVerificationStart" class="schol-input">
-                        </div>
-                        <div class="schol-field">
-                            <label for="schVerificationEnd">Assessment/Verification — End</label>
-                            <input type="date" id="schVerificationEnd" class="schol-input">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="scholSystemFieldsBuilder" class="schol-system-fields-builder"></div>
-                
-                <!-- KK Profiling Integration Section -->
-                <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:20px;margin-bottom:20px;">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                        <h5 style="margin:0;font-size:16px;font-weight:700;color:#0369a1;">1. Personal Information (KK Profiling)</h5>
-                    </div>
-                    <p style="font-size:13px;color:#475569;margin-bottom:16px;line-height:1.6;">
-                        Select KK Profiling fields to automatically include in scholarship applications. Selected fields will be auto-filled from the applicant's KK Profile and displayed as read-only.
-                    </p>
-                    
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="last_name" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Last Name</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="first_name" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>First Name</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="middle_name" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Middle Name</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="suffix" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Suffix</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="birthday" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Birthday</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="age" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Age</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="sex" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Sex</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="civil_status" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Civil Status</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="contact_number" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Contact Number</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="email" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Email Address</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="region" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Region</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="province" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Province</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="city" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>City/Municipality</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="barangay" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Barangay</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="purok_zone" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Purok/Zone</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="youth_classification" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Youth Classification</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="youth_age_group" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Youth Age Group</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="education" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Educational Attainment</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="current_school" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Current School</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="course_strand" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Course / Strand</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="work_status" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Work Status</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="sk_voter" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Registered SK Voter</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
-                            <input type="checkbox" class="kk-profiling-field" value="sk_voted" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
-                            <span>Voted Last Election</span>
-                        </label>
-                    </div>
-                    
-                    <div style="margin-top:16px;display:flex;gap:12px;">
-                        <button type="button" id="selectAllKKFields" style="padding:8px 16px;font-size:13px;font-weight:600;color:#0369a1;background:#e0f2fe;border:1px solid #0ea5e9;border-radius:6px;cursor:pointer;transition:all 0.2s;">Select All</button>
-                        <button type="button" id="clearAllKKFields" style="padding:8px 16px;font-size:13px;font-weight:600;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;transition:all 0.2s;">Clear All</button>
-                    </div>
-                </div>
-                
-                @include('GForm_Builder::partials.custom-questions-builder', [
-                    'sectionTitle' => '5. Uploading of Requirements',
-                    'hint' => 'Add PDF file upload requirements only. Each question becomes a document Kabataan must submit (max 5MB per file).',
-                    'emptyMessage' => 'No requirements yet. Click <strong>Add Question</strong> and choose <strong>File Upload</strong>.',
-                ])
-
-            </div>
-
         </div>
         <div class="schol-modal-footer">
             <button type="button" class="schol-btn schol-btn-outline" id="btnCancelProgram">Cancel</button>
@@ -517,6 +508,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     if (window.GFormBuilder) {
         window.GFormBuilder.init({
+            excludeTypes: ['file'],
             showToast: (msg, type) => {
                 const toast = document.getElementById('safToast');
                 if (toast) {

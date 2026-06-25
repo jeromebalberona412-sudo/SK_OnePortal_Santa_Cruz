@@ -7,7 +7,7 @@
 
     const YEAR_LEVEL_OPTIONS = ['Grade 11', 'Grade 12', '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Other'];
     const GRADUATING_OPTIONS = ['Yes', 'No'];
-    const SEMESTER_OPTIONS = ['1st Semester', '2nd Semester', 'Summer', 'N/A'];
+    const SEMESTER_OPTIONS = ['1st Semester', '2nd Semester', 'N/A'];
 
     const COLLEGE_TRACK = ['College Level', 'College Grad', 'Vocational Grad', 'Masters Level', 'Masters Grad', 'Doctorate Level', 'Doctorate Graduate'];
     const HIGH_SCHOOL_TRACK = ['High School Grad', 'High School Level'];

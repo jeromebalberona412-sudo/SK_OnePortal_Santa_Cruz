@@ -274,6 +274,18 @@ body {
     box-shadow: 0 4px 12px rgba(245, 197, 24, 0.2);
 }
 
+.calendar-day.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.calendar-day.is-disabled:hover {
+    background: #f9fafb;
+    border-color: #e5e7eb;
+    box-shadow: none;
+    transform: none;
+}
+
 
 .calendar-day-number {
     font-size: 14px;

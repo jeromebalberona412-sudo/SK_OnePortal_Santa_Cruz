@@ -9,7 +9,13 @@
 
 @section('survey_content')
     <div class="survey-panel">
-        <div class="survey-toolbar">
+        <div class="survey-toolbar survey-toolbar-filters">
+            <select id="formsYearFilter" class="schol-input" aria-label="Filter by year">
+                <option value="">All Years</option>
+            </select>
+            <select id="formsTermFilter" class="schol-input" aria-label="Filter by SK term">
+                <option value="">All Terms</option>
+            </select>
             <input type="search" id="formsSearch" class="schol-input survey-search" placeholder="Search by program name…" aria-label="Search surveys">
         </div>
         <div class="saf-forms-table-card survey-table-card">

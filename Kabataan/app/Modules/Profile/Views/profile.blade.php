@@ -59,7 +59,6 @@
                 closeScheduleModal();
                 closeProfilePictureLockModal();
                 closeProfilePictureUploadModal();
-                closeProfilePicturePermissionModal();
                 closeProfilePictureConfirmModal();
                 closeSupportingDocsModal();
                 if (typeof closeKkPreviewModal === 'function') {
@@ -83,16 +82,14 @@
 </head>
 <body class="youth-profile kabataan-app-page">
     @include('dashboard::loading')
-    @include('layout::kabataan-header', ['user' => $user, 'showSearch' => true, 'pageBadge' => 'My Profile'])
+    @include('layout::kabataan-header', ['user' => $user, 'pageBadge' => 'My Profile'])
 
     <!-- Main Content -->
     <main class="profile-main">
         <div class="profile-container">
             <!-- Profile Header Card -->
             <div class="profile-header-card">
-                <div class="profile-cover">
-                    <div class="cover-gradient"></div>
-                </div>
+                <div class="profile-cover"></div>
                 <div class="profile-info-section">
                     <div
                         class="profile-avatar-wrapper profile-avatar-wrapper--interactive"
@@ -100,12 +97,19 @@
                         data-upload-url="{{ route('profile.upload-picture') }}"
                         data-can-change="{{ $canChangeProfileImage ? '1' : '0' }}"
                         data-next-change="{{ $profileImageNextChangeDisplay ?? '' }}"
+                        data-fallback-avatar="{{ $profileImageFallbackUrl }}"
                         role="button"
                         tabindex="0"
                         aria-label="{{ $canChangeProfileImage ? 'Change profile picture' : 'Profile picture update locked' }}"
                         title="{{ $canChangeProfileImage ? 'Click to change profile picture' : 'Profile picture update locked' }}"
                     >
-                        <img src="{{ $profileImageUrl }}" alt="Profile" class="profile-avatar" id="profileAvatar">
+                        <img
+                            src="{{ $profileImageUrl }}"
+                            alt="Profile"
+                            class="profile-avatar"
+                            id="profileAvatar"
+                            data-fallback="{{ $profileImageFallbackUrl }}"
+                        >
                         <span class="profile-avatar-overlay" aria-hidden="true">
                             <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
@@ -155,18 +159,32 @@
                                 @endif
                             </section>
 
-                            @if(!empty($supportingDocuments))
+                            @if($kabataanRegistration)
                             <div class="kk-profile-section-divider" role="separator" aria-hidden="true"></div>
-                            <section class="kk-profile-section">
+                            <section
+                                class="kk-profile-section"
+                                id="profileSupportingDocsSection"
+                                data-upload-url="{{ route('profile.upload-supporting-document') }}"
+                                data-has-documents="{{ !empty($supportingDocuments) ? '1' : '0' }}"
+                            >
                                 <h2 class="kk-profile-section-title">
                                     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
                                     </svg>
                                     Supporting Documents
+                                    <span class="kkp-profile-docs-optional">Optional</span>
                                 </h2>
-                                <p class="kkp-docs-summary">{{ count($supportingDocuments) }} document{{ count($supportingDocuments) === 1 ? '' : 's' }} on file from your KK Profiling registration.</p>
+                                @if(!empty($supportingDocuments))
+                                    <p class="kkp-docs-summary" id="profileSupportingDocsSummary">
+                                        {{ count($supportingDocuments) }} document{{ count($supportingDocuments) === 1 ? '' : 's' }} on file from your KK Profiling registration.
+                                    </p>
+                                @else
+                                    <p class="kkp-docs-summary" id="profileSupportingDocsSummary">
+                                        No supporting documents on file yet. You may upload one optional document (School ID or Barangay Clearance) to help SK officials verify your registration.
+                                    </p>
+                                @endif
                                 <div class="kkp-preview-toolbar">
-                                    <button type="button" class="btn-primary kkp-preview-btn" onclick="openSupportingDocsModal()">View Supporting Documents</button>
+                                    <button type="button" class="btn-primary kkp-preview-btn" onclick="openSupportingDocsModal()">Supporting Documents</button>
                                 </div>
                             </section>
                             @endif
@@ -400,25 +418,6 @@
         </div>
     </div>
 
-    <div class="modal-backdrop kabataan-modal-backdrop profile-picture-permission-modal" id="profilePicturePermissionModal" style="display: none;">
-        <div class="kabataan-modal-box profile-picture-permission-modal__box" role="dialog" aria-labelledby="profilePicturePermissionTitle" aria-modal="true">
-            <div class="modal-header">
-                <h2 class="modal-title" id="profilePicturePermissionTitle">Allow Photo Access</h2>
-                <button type="button" class="modal-close" onclick="closeProfilePicturePermissionModal()" aria-label="Close">&times;</button>
-            </div>
-            <div class="modal-body kabataan-modal-body profile-picture-permission-modal__body">
-                <p class="profile-picture-permission-modal__message">
-                    SK OnePortal needs permission to access photos on your device so you can choose a profile picture.
-                </p>
-                <p class="profile-picture-permission-modal__hint">You can change this later in your browser or device settings.</p>
-                <div class="profile-picture-upload-modal__actions">
-                    <button type="button" class="btn-secondary profile-picture-upload-modal__cancel" id="profilePicturePermissionDenyBtn">Not Now</button>
-                    <button type="button" class="btn-primary profile-picture-upload-modal__continue" id="profilePicturePermissionAllowBtn">Allow Access</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="modal-backdrop kabataan-modal-backdrop profile-picture-confirm-modal" id="profilePictureConfirmModal" style="display: none;">
         <div class="kabataan-modal-box profile-picture-confirm-modal__box" role="dialog" aria-labelledby="profilePictureConfirmTitle" aria-modal="true">
             <div class="modal-header">
@@ -464,16 +463,18 @@
         </div>
     </div>
 
-    @if(!empty($supportingDocuments))
+    @if($kabataanRegistration)
     <div class="modal-backdrop kabataan-modal-backdrop" id="supportingDocsModal" style="display: none;">
         <div class="modal-box kabataan-modal-box kkp-docs-modal-container" id="supportingDocsModalPanel">
             <div class="modal-header">
                 <h2 class="modal-title">Supporting Documents</h2>
                 <div class="modal-window-controls">
+                    <button type="button" class="modal-toggle-btn" id="supportingDocsFullscreenBtn" aria-label="Maximize">□</button>
                     <button type="button" class="modal-close" onclick="closeSupportingDocsModal()" aria-label="Close">&times;</button>
                 </div>
             </div>
             <div class="modal-body kabataan-modal-body kkp-docs-modal-body">
+                @if(!empty($supportingDocuments))
                 <div class="kkp-docs-modal-layout">
                     <div class="kkp-docs-modal-sidebar" role="tablist" aria-label="Supporting documents">
                         @foreach($supportingDocuments as $index => $document)
@@ -503,6 +504,113 @@
                                 class="kkp-docs-preview-image"
                             >
                         </div>
+                    </div>
+                </div>
+                <div class="kkp-docs-modal-divider" role="separator" aria-hidden="true"></div>
+                @endif
+
+                <div class="kkp-docs-upload-section">
+                    <h3 class="kkp-docs-upload-heading">{{ !empty($supportingDocuments) ? 'Replace document' : 'Upload document' }}</h3>
+                    <p class="kkp-docs-upload-intro">
+                        Upload <strong>one</strong> optional supporting image — School ID or Barangay Clearance. JPG or PNG, max 10MB.
+                    </p>
+
+                    <fieldset class="kkp-wizard-doc-type-fieldset" id="profileDocTypeFieldset">
+                        <legend class="kkp-wizard-doc-type-legend">Select document type</legend>
+                        <div class="kkp-wizard-doc-type-options" role="radiogroup" aria-label="Document type">
+                            <label class="kkp-wizard-doc-type-option">
+                                <input type="radio" name="profile_document_type" value="school_id" id="profileDocTypeSchoolId">
+                                <span class="kkp-wizard-doc-type-card">
+                                    <span class="kkp-wizard-doc-type-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                            <circle cx="8" cy="12" r="2"></circle>
+                                            <path d="M14 10h5M14 14h5"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="kkp-wizard-doc-type-text">
+                                        <span class="kkp-wizard-doc-type-name">School ID</span>
+                                        <span class="kkp-wizard-doc-type-desc">Valid school identification card</span>
+                                    </span>
+                                </span>
+                            </label>
+                            <label class="kkp-wizard-doc-type-option">
+                                <input type="radio" name="profile_document_type" value="barangay_clearance" id="profileDocTypeBarangayClearance">
+                                <span class="kkp-wizard-doc-type-card">
+                                    <span class="kkp-wizard-doc-type-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                            <polyline points="9 12 11 14 15 10"></polyline>
+                                        </svg>
+                                    </span>
+                                    <span class="kkp-wizard-doc-type-text">
+                                        <span class="kkp-wizard-doc-type-name">Barangay Clearance</span>
+                                        <span class="kkp-wizard-doc-type-desc">Barangay-issued clearance certificate</span>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <div class="kkp-wizard-upload-panel" id="profileSchoolIdUpload" hidden>
+                        <div class="kkp-wizard-upload-shell">
+                            <label class="kkp-wizard-dropzone" for="profileSchoolIdFile">
+                                <input type="file" id="profileSchoolIdFile" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="kkp-wizard-file-input">
+                                <span class="kkp-wizard-dropzone-empty">
+                                    <span class="kkp-wizard-dropzone-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                    </span>
+                                    <span class="kkp-wizard-dropzone-title">Drag &amp; drop your School ID here</span>
+                                    <span class="kkp-wizard-dropzone-sub">or <span class="kkp-wizard-dropzone-link">browse files</span></span>
+                                    <span class="kkp-wizard-dropzone-hint">JPG or PNG · max 10MB</span>
+                                </span>
+                            </label>
+                            <div class="kkp-wizard-dropzone-preview" id="profileSchoolIdPreview" hidden>
+                                <img id="profileSchoolIdPreviewImg" alt="School ID preview">
+                                <div class="kkp-wizard-dropzone-filemeta">
+                                    <span class="kkp-wizard-dropzone-filename" id="profileSchoolIdFileName"></span>
+                                    <button type="button" class="kkp-wizard-dropzone-remove" data-clear-profile-doc="profileSchoolIdFile" aria-label="Remove School ID file">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kkp-wizard-upload-panel" id="profileBarangayClearanceUpload" hidden>
+                        <div class="kkp-wizard-upload-shell">
+                            <label class="kkp-wizard-dropzone" for="profileBarangayClearanceFile">
+                                <input type="file" id="profileBarangayClearanceFile" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="kkp-wizard-file-input">
+                                <span class="kkp-wizard-dropzone-empty">
+                                    <span class="kkp-wizard-dropzone-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                    </span>
+                                    <span class="kkp-wizard-dropzone-title">Drag &amp; drop your Barangay Clearance here</span>
+                                    <span class="kkp-wizard-dropzone-sub">or <span class="kkp-wizard-dropzone-link">browse files</span></span>
+                                    <span class="kkp-wizard-dropzone-hint">JPG or PNG · max 10MB</span>
+                                </span>
+                            </label>
+                            <div class="kkp-wizard-dropzone-preview" id="profileBarangayClearancePreview" hidden>
+                                <img id="profileBarangayClearancePreviewImg" alt="Barangay Clearance preview">
+                                <div class="kkp-wizard-dropzone-filemeta">
+                                    <span class="kkp-wizard-dropzone-filename" id="profileBarangayClearanceFileName"></span>
+                                    <button type="button" class="kkp-wizard-dropzone-remove" data-clear-profile-doc="profileBarangayClearanceFile" aria-label="Remove Barangay Clearance file">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="kkp-docs-upload-error" id="profileSupportingDocUploadError" hidden></p>
+
+                    <div class="kkp-docs-upload-actions">
+                        <button type="button" class="btn-secondary" onclick="closeSupportingDocsModal()">Cancel</button>
+                        <button type="button" class="btn-primary" id="profileSupportingDocSubmitBtn" disabled>Upload Document</button>
                     </div>
                 </div>
             </div>
@@ -1330,9 +1438,22 @@
         }
     }
 
+    function resetSupportingDocsModalState() {
+        const backdrop = document.getElementById('supportingDocsModal');
+        const panel = document.getElementById('supportingDocsModalPanel');
+        const toggleBtn = document.getElementById('supportingDocsFullscreenBtn');
+        if (backdrop) backdrop.classList.remove('modal-maximized');
+        if (panel) panel.classList.remove('modal-maximized');
+        if (toggleBtn) {
+            toggleBtn.textContent = '□';
+            toggleBtn.setAttribute('aria-label', 'Maximize');
+        }
+    }
+
     function openSupportingDocsModal() {
         const modal = document.getElementById('supportingDocsModal');
         if (modal) {
+            resetSupportingDocsModalState();
             const firstBtn = modal.querySelector('.kkp-docs-select-btn');
             if (firstBtn) {
                 showSupportingDocumentPreview(firstBtn);
@@ -1373,6 +1494,10 @@
         if (modal) {
             modal.style.display = 'none';
             document.body.style.overflow = 'auto';
+            resetSupportingDocsModalState();
+            if (typeof window.resetProfileSupportingDocUpload === 'function') {
+                window.resetProfileSupportingDocUpload();
+            }
         }
     }
 
@@ -1389,6 +1514,17 @@
         button.addEventListener('click', function () {
             showSupportingDocumentPreview(button);
         });
+    });
+
+    document.getElementById('supportingDocsFullscreenBtn')?.addEventListener('click', function () {
+        const backdrop = document.getElementById('supportingDocsModal');
+        const panel = document.getElementById('supportingDocsModalPanel');
+        if (!backdrop || !panel) return;
+        const isMax = !backdrop.classList.contains('modal-maximized');
+        backdrop.classList.toggle('modal-maximized', isMax);
+        panel.classList.toggle('modal-maximized', isMax);
+        this.textContent = isMax ? '⧉' : '□';
+        this.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
     });
 
     document.getElementById('kkPreviewFullscreenBtn')?.addEventListener('click', function () {

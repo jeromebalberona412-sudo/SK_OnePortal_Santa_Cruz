@@ -3,6 +3,169 @@ let programMeta = null;
 let editingProgramId = null;
 let pendingDeleteProgramId = null;
 let reqGroupCounter = 0;
+let docReqCounter = 0;
+
+function switchBuilderTab(tabId) {
+    document.querySelectorAll('.sch-program-tab').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.schTab === tabId);
+    });
+    document.querySelectorAll('.sch-program-tab-panel').forEach((panel) => {
+        const active = panel.dataset.schPanel === tabId;
+        panel.hidden = !active;
+        panel.classList.toggle('is-active', active);
+    });
+    if (tabId === 'preview') {
+        renderInlineProgramPreview();
+    }
+}
+
+function bindBuilderTabs() {
+    document.querySelectorAll('.sch-program-tab').forEach((btn) => {
+        btn.addEventListener('click', () => switchBuilderTab(btn.dataset.schTab));
+    });
+}
+
+function createDocRequirementCard(req = {}) {
+    const id = req.id || `doc_req_${++docReqCounter}`;
+    const name = req.name || '';
+    const fileType = req.file_type || 'pdf';
+    const maxSize = req.max_size_mb ?? 5;
+    const description = req.description || '';
+    const required = req.required !== false;
+
+    return `
+        <div class="sch-doc-req-card" data-doc-req="${id}">
+            <div class="sch-doc-req-head">
+                <strong>Document Requirement</strong>
+                <button type="button" class="sch-req-remove-group sch-doc-req-remove">Remove</button>
+            </div>
+            <div class="schol-schedule-grid schol-schedule-grid-2">
+                <div class="schol-field schol-field-full">
+                    <label>Requirement Name <span class="schol-req">*</span></label>
+                    <input type="text" class="schol-input sch-doc-req-name" value="${escapeHtml(name)}" placeholder="e.g. Certificate of Enrollment">
+                </div>
+                <div class="schol-field">
+                    <label>Requirement Type</label>
+                    <select class="schol-input sch-doc-req-type">
+                        <option value="pdf" ${fileType === 'pdf' ? 'selected' : ''}>PDF</option>
+                        <option value="image" ${fileType === 'image' ? 'selected' : ''}>Image</option>
+                        <option value="pdf_or_image" ${fileType === 'pdf_or_image' ? 'selected' : ''}>PDF or Image</option>
+                    </select>
+                </div>
+                <div class="schol-field">
+                    <label>Max File Size (MB)</label>
+                    <input type="number" class="schol-input sch-doc-req-size" value="${escapeHtml(String(maxSize))}" min="1" max="10" step="1">
+                </div>
+                <div class="schol-field schol-field-full">
+                    <label>Description</label>
+                    <input type="text" class="schol-input sch-doc-req-desc" value="${escapeHtml(description)}" placeholder="Optional instructions for applicants">
+                </div>
+                <div class="schol-field">
+                    <label class="schol-checkbox-label"><input type="checkbox" class="sch-doc-req-required" ${required ? 'checked' : ''}> Required</label>
+                </div>
+            </div>
+        </div>`;
+}
+
+function renderDocumentRequirements(list = []) {
+    const container = document.getElementById('schDocReqContainer');
+    if (!container) return;
+    docReqCounter = 0;
+    const items = list.length ? list : [{ name: '', file_type: 'pdf', required: true, max_size_mb: 5 }];
+    container.innerHTML = items.map((item) => createDocRequirementCard(item)).join('');
+    bindDocumentRequirementEvents(container);
+}
+
+function bindDocumentRequirementEvents(container) {
+    container.querySelectorAll('.sch-doc-req-remove').forEach((btn) => {
+        btn.onclick = () => {
+            const cards = container.querySelectorAll('[data-doc-req]');
+            if (cards.length <= 1) {
+                showToast('At least one requirement card must remain.', 'error');
+                return;
+            }
+            btn.closest('[data-doc-req]')?.remove();
+        };
+    });
+}
+
+function collectDocumentRequirements() {
+    const items = [];
+    document.querySelectorAll('#schDocReqContainer [data-doc-req]').forEach((card) => {
+        const name = card.querySelector('.sch-doc-req-name')?.value?.trim() || '';
+        if (!name) return;
+        items.push({
+            id: card.dataset.docReq || `doc_req_${Date.now()}`,
+            name,
+            file_type: card.querySelector('.sch-doc-req-type')?.value || 'pdf',
+            max_size_mb: Number(card.querySelector('.sch-doc-req-size')?.value || 5),
+            required: Boolean(card.querySelector('.sch-doc-req-required')?.checked),
+            description: card.querySelector('.sch-doc-req-desc')?.value?.trim() || '',
+        });
+    });
+    return items;
+}
+
+function documentRequirementsToFileQuestions(requirements) {
+    return requirements.map((req) => ({
+        id: req.id || `q_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        label: req.name,
+        type: 'file',
+        required: req.required !== false,
+        options: [],
+        file_type: req.file_type || 'pdf',
+        max_size_mb: req.max_size_mb || 5,
+        description: req.description || '',
+    }));
+}
+
+function fileQuestionsToDocumentRequirements(questions) {
+    return (questions || []).filter((q) => q.type === 'file').map((q) => ({
+        id: q.id,
+        name: q.label || q.name || 'Document',
+        file_type: q.file_type || 'pdf',
+        required: q.required !== false,
+        max_size_mb: q.max_size_mb || 5,
+        description: q.description || '',
+    }));
+}
+
+function getApplicationTypeValue() {
+    return document.querySelector('input[name="applicationType"]:checked')?.value || 'new_only';
+}
+
+function setApplicationTypeValue(value) {
+    const radio = document.querySelector(`input[name="applicationType"][value="${value}"]`);
+    if (radio) radio.checked = true;
+}
+
+function renderInlineProgramPreview() {
+    const panel = document.getElementById('schProgramPreviewPanel');
+    if (!panel) return;
+
+    let customNonFile = [];
+    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
+        customNonFile = window.SpfbFormBuilder.getQuestions().filter((question) => question.type !== 'file');
+    }
+
+    const documentRequirements = collectDocumentRequirements();
+    const fakeProgram = {
+        program_name: document.getElementById('programName')?.value || programMeta?.program_name || 'Scholarship Program',
+        program_type: document.getElementById('programType')?.value || '',
+        committee: document.getElementById('programCommittee')?.value || '',
+        participation_quantity: document.getElementById('participationQty')?.value || '',
+        start_date: document.getElementById('schedStartDate')?.value || '',
+        end_date: document.getElementById('schedEndDate')?.value || '',
+        announcement: document.getElementById('spfbAnnouncement')?.value || '',
+        kk_profiling_fields: Array.from(document.querySelectorAll('.kk-profiling-field:checked')).map((el) => el.value),
+        custom_questions: [
+            ...documentRequirementsToFileQuestions(documentRequirements),
+            ...customNonFile,
+        ],
+        scholarship_details: collectScholarshipDetails(),
+    };
+    panel.innerHTML = renderProgramViewHtml(fakeProgram);
+}
 
 function createRequirementGroupCard(group = {}) {
     const groupId = `req_group_${++reqGroupCounter}`;
@@ -71,6 +234,14 @@ function bindRequirementGroupEvents(container) {
     });
 }
 
+function collectCheckedValues(selector) {
+    const values = [];
+    document.querySelectorAll(`${selector}:checked`).forEach((checkbox) => {
+        values.push(checkbox.value);
+    });
+    return values;
+}
+
 function collectScholarshipDetails() {
     const groups = [];
     document.querySelectorAll('#schReqGroupsContainer [data-req-group]').forEach((card) => {
@@ -99,10 +270,34 @@ function collectScholarshipDetails() {
         details.verification_period = { start: verificationStart || null, end: verificationEnd || null };
     }
 
+    const youthClassifications = collectCheckedValues('.sch-eligibility-classification');
+    const youthAgeGroups = collectCheckedValues('.sch-eligibility-age-group');
+    const educationLevels = collectCheckedValues('.sch-eligibility-education');
+
+    if (youthClassifications.length || youthAgeGroups.length || educationLevels.length) {
+        details.eligibility = {
+            youth_classifications: youthClassifications,
+            youth_age_groups: youthAgeGroups,
+            education_levels: educationLevels,
+        };
+    }
+
+    const schoolYear = document.getElementById('schoolYear')?.value?.trim() || '';
+    const semester = document.getElementById('programSemester')?.value?.trim() || '';
+    const applicationType = getApplicationTypeValue();
+    const programDescription = document.getElementById('programDescription')?.value?.trim() || '';
+    const documentRequirements = collectDocumentRequirements();
+
+    if (schoolYear) details.school_year = schoolYear;
+    if (semester) details.semester = semester;
+    if (applicationType) details.application_type = applicationType;
+    if (programDescription) details.program_description = programDescription;
+    if (documentRequirements.length) details.document_requirements = documentRequirements;
+
     return details;
 }
 
-function populateScholarshipDetails(details) {
+function populateScholarshipDetails(details, customQuestions = []) {
     const data = details || {};
     renderRequirementGroups(data.requirement_groups || []);
 
@@ -115,6 +310,31 @@ function populateScholarshipDetails(details) {
     setDate('schSubmissionEnd', data.submission_period?.end);
     setDate('schVerificationStart', data.verification_period?.start);
     setDate('schVerificationEnd', data.verification_period?.end);
+
+    const eligibility = data.eligibility || {};
+    const setEligibility = (selector, values) => {
+        const allowed = new Set(Array.isArray(values) ? values : []);
+        document.querySelectorAll(selector).forEach((checkbox) => {
+            checkbox.checked = allowed.has(checkbox.value);
+        });
+    };
+
+    setEligibility('.sch-eligibility-classification', eligibility.youth_classifications);
+    setEligibility('.sch-eligibility-age-group', eligibility.youth_age_groups);
+    setEligibility('.sch-eligibility-education', eligibility.education_levels);
+
+    const schoolYearEl = document.getElementById('schoolYear');
+    const semesterEl = document.getElementById('programSemester');
+    const descEl = document.getElementById('programDescription');
+    if (schoolYearEl) schoolYearEl.value = data.school_year || '';
+    if (semesterEl) semesterEl.value = data.semester || '';
+    if (descEl) descEl.value = data.program_description || '';
+    setApplicationTypeValue(data.application_type || 'new_only');
+
+    const docReqs = data.document_requirements?.length
+        ? data.document_requirements
+        : fileQuestionsToDocumentRequirements(customQuestions);
+    renderDocumentRequirements(docReqs);
 }
 
 function resetScholarshipDetailsForm() {
@@ -123,6 +343,17 @@ function resetScholarshipDetailsForm() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    document.querySelectorAll('.sch-eligibility-classification, .sch-eligibility-age-group, .sch-eligibility-education').forEach((checkbox) => {
+        checkbox.checked = false;
+    });
+    const schoolYearEl = document.getElementById('schoolYear');
+    const semesterEl = document.getElementById('programSemester');
+    const descEl = document.getElementById('programDescription');
+    if (schoolYearEl) schoolYearEl.value = '';
+    if (semesterEl) semesterEl.value = '';
+    if (descEl) descEl.value = '';
+    setApplicationTypeValue('new_only');
+    renderDocumentRequirements([]);
 }
 
 const KK_FIELD_LABELS = {
@@ -236,10 +467,14 @@ async function loadProgramMeta() {
     programMeta = response.data || null;
 
     const typeEl = document.getElementById('programType');
+    const nameEl = document.getElementById('programName');
     const committeeEl = document.getElementById('programCommittee');
 
     if (typeEl) {
         typeEl.value = programMeta?.program_type || 'Equitable Access to Quality Education';
+    }
+    if (nameEl) {
+        nameEl.value = programMeta?.program_name || programMeta?.program_type || '';
     }
     if (committeeEl) {
         committeeEl.value = programMeta?.committee || 'Education Committee';
@@ -282,10 +517,14 @@ function resetModalForm() {
 
     if (programMeta) {
         const typeEl = document.getElementById('programType');
+        const nameEl = document.getElementById('programName');
         const committeeEl = document.getElementById('programCommittee');
         if (typeEl) typeEl.value = programMeta.program_type || '';
+        if (nameEl) nameEl.value = programMeta.program_name || programMeta.program_type || '';
         if (committeeEl) committeeEl.value = programMeta.committee || '';
     }
+
+    switchBuilderTab('details');
 }
 
 function openModal(forEditId) {
@@ -409,6 +648,7 @@ function editProgram(programId) {
     const endDate = document.getElementById('schedEndDate');
     const status = document.getElementById('programStatus');
     const typeEl = document.getElementById('programType');
+    const nameEl = document.getElementById('programName');
     const committeeEl = document.getElementById('programCommittee');
     const announcementEl = document.getElementById('spfbAnnouncement');
     const announcementCountEl = document.getElementById('spfbAnnouncementCount');
@@ -419,22 +659,28 @@ function editProgram(programId) {
     if (endDate) endDate.value = program.end_date || '';
     if (status) status.value = resolveProgramStatus(program);
     if (typeEl) typeEl.value = program.program_type || '';
+    if (nameEl) nameEl.value = program.program_name || '';
     if (committeeEl) committeeEl.value = program.committee || '';
     if (announcementEl) {
         announcementEl.value = program.announcement || '';
         if (announcementCountEl) announcementCountEl.textContent = String(announcementEl.value.length);
     }
 
+    const allQuestions = program.custom_questions || [];
+    const customOnly = allQuestions.filter((question) => question.type !== 'file');
+
+    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
+        window.SpfbFormBuilder.setQuestions(customOnly);
+    }
+
+    populateScholarshipDetails(program.scholarship_details || null, allQuestions);
+
     const kkFields = program.kk_profiling_fields || [];
     document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
         checkbox.checked = kkFields.includes(checkbox.value);
     });
 
-    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
-        window.SpfbFormBuilder.setQuestions(program.custom_questions || []);
-    }
-
-    populateScholarshipDetails(program.scholarship_details || null);
+    switchBuilderTab('details');
 
     if (modalTitle) {
         modalTitle.innerHTML = `
@@ -444,14 +690,42 @@ function editProgram(programId) {
     }
 }
 
-function openFormPreview(programId) {
-    const program = schedulePrograms.find((item) => String(item.id) === String(programId));
-    const viewProgramBody = document.getElementById('viewProgramBody');
-    const viewProgramModal = document.getElementById('viewProgramModal');
-    if (!program || !viewProgramBody || !viewProgramModal) return;
+function formatIsoDateDisplay(iso) {
+    if (!iso) return '—';
+    const date = new Date(`${iso}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return escapeHtml(iso);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
 
-    resetViewProgramModalSize();
+function formatPeriodRange(period, program) {
+    if (!period) return '';
+    const start = formatIsoDateDisplay(period.start || program?.start_date);
+    const end = formatIsoDateDisplay(period.end || program?.end_date);
+    if (start !== '—' && end !== '—') return `${start} – ${end}`;
+    return start !== '—' ? start : end;
+}
 
+function renderViewAnnouncementCard(title, bodyHtml) {
+    return `
+        <div class="sch-view-announcement-card">
+            <div class="sch-view-announcement-card__title">${escapeHtml(title || 'Announcement')}</div>
+            <div class="sch-view-announcement-card__body">${bodyHtml}</div>
+        </div>`;
+}
+
+const APPLICATION_TYPE_LABELS = {
+    new_only: 'New Applicants Only',
+    renewal_only: 'Renewal Only',
+    both: 'New Applicants + Renewal',
+};
+
+const FILE_TYPE_LABELS = {
+    pdf: 'PDF',
+    image: 'Image',
+    pdf_or_image: 'PDF or Image',
+};
+
+function renderProgramViewHtml(program) {
     const status = resolveProgramStatus(program);
     const statusColors = {
         open: { bg: '#dcfce7', text: '#166534', label: 'Open' },
@@ -459,90 +733,205 @@ function openFormPreview(programId) {
     };
     const statusStyle = statusColors[status] || statusColors.open;
     const kkFields = program.kk_profiling_fields || [];
-    const customQuestions = program.custom_questions || [];
+    const allQuestions = program.custom_questions || [];
+    const details = program.scholarship_details || {};
+    const groups = Array.isArray(details.requirement_groups) ? details.requirement_groups : [];
+    const fileQuestions = allQuestions.filter((question) => question.type === 'file');
+    const customQuestions = allQuestions.filter((question) => question.type !== 'file');
+    const documentRequirements = details.document_requirements?.length
+        ? details.document_requirements
+        : fileQuestionsToDocumentRequirements(fileQuestions);
 
-    viewProgramBody.innerHTML = `
-        <div style="padding:24px;background:#f0f1f5;">
-            <div class="schol-schedule-card" style="margin-bottom:20px;">
+    const kkList = kkFields.length
+        ? `<ul class="sch-view-req-list">${kkFields.map((field) => `<li>${escapeHtml(KK_FIELD_LABELS[field] || field)}</li>`).join('')}</ul>`
+        : '<p class="sch-view-muted">No KK Profiling fields selected.</p>';
+
+    let announcementsHtml = '';
+    if (program.announcement) {
+        announcementsHtml += renderViewAnnouncementCard(
+            'Announcement',
+            `<p class="sch-view-announcement-text">${escapeHtml(program.announcement)}</p>`
+        );
+    }
+
+    groups.forEach((group) => {
+        const items = (group.items || []).filter((item) => String(item || '').trim());
+        if (!group.title && !items.length) return;
+        const listHtml = items.length
+            ? `<ul class="sch-view-req-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+            : '<p class="sch-view-muted">No requirements listed.</p>';
+        announcementsHtml += renderViewAnnouncementCard(group.title || 'Requirements', listHtml);
+    });
+
+    const submissionLabel = formatPeriodRange(details.submission_period, program);
+    const verificationLabel = formatPeriodRange(details.verification_period, program);
+    const eligibility = details.eligibility || {};
+    const eligibilityClassifications = (eligibility.youth_classifications || []).filter(Boolean);
+    const eligibilityAgeGroups = (eligibility.youth_age_groups || []).filter(Boolean);
+    const eligibilityEducation = (eligibility.education_levels || []).filter(Boolean);
+    const formatEligibilityList = (items, fallback) => items.length
+        ? `<ul class="sch-view-req-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+        : `<p class="sch-view-muted">${fallback}</p>`;
+
+    const questionsHtml = documentRequirements.length
+        ? documentRequirements.map((req, index) => `
+            <div class="sch-view-question-card">
+                <div class="sch-view-question-label">
+                    ${index + 1}. ${escapeHtml(req.name)}
+                    ${req.required !== false ? '<span class="sch-view-required">*</span>' : ''}
+                </div>
+                <div class="sch-view-question-type">Type: ${escapeHtml(FILE_TYPE_LABELS[req.file_type] || req.file_type || 'PDF')}${req.max_size_mb ? ` · Max ${escapeHtml(String(req.max_size_mb))} MB` : ''}</div>
+                ${req.description ? `<div class="sch-view-muted">${escapeHtml(req.description)}</div>` : ''}
+            </div>
+        `).join('')
+        : '<div class="sch-view-empty-box">No upload requirements added.</div>';
+
+    const customQuestionsHtml = customQuestions.length
+        ? customQuestions.map((question, index) => `
+            <div class="sch-view-question-card">
+                <div class="sch-view-question-label">
+                    ${index + 1}. ${escapeHtml(question.label)}
+                    ${question.required ? '<span class="sch-view-required">*</span>' : ''}
+                </div>
+                <div class="sch-view-question-type">Type: ${escapeHtml(getTypeLabel(question.type))}</div>
+            </div>
+        `).join('')
+        : '';
+
+    const quickGuidelinesHtml = `
+        <div class="schol-schedule-card sch-view-section">
+            <h4 class="schol-schedule-title">Quick Guidelines</h4>
+            <p class="sch-view-muted">Built-in 6-step guide shown to all applicants.</p>
+            <ol class="sch-qg-official-simple-list">
+                <li>Complete the scholarship application form.</li>
+                <li>Upload all required documents.</li>
+                <li>Review your information.</li>
+                <li>Submit your application.</li>
+                <li>Wait for evaluation.</li>
+                <li>Monitor your application status.</li>
+            </ol>
+        </div>`;
+
+    return `
+        <div class="sch-view-program-wrap">
+            <div class="schol-schedule-card sch-view-section">
                 <h4 class="schol-schedule-title">Program Information</h4>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                    <div style="grid-column:1/-1;">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.program_name)}</div>
+                <div class="sch-view-grid">
+                    <div class="sch-view-field sch-view-field-full">
+                        <label>Program</label>
+                        <div class="sch-view-value">${escapeHtml(program.program_name)}</div>
                     </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program Type</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.program_type)}</div>
+                    <div class="sch-view-field">
+                        <label>Program Type</label>
+                        <div class="sch-view-value">${escapeHtml(program.program_type)}</div>
                     </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Committee</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.committee)}</div>
+                    <div class="sch-view-field">
+                        <label>Committee</label>
+                        <div class="sch-view-value">${escapeHtml(program.committee || '—')}</div>
                     </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Participation Quantity</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.participation_quantity ?? 'N/A')}</div>
+                    <div class="sch-view-field">
+                        <label>School Year</label>
+                        <div class="sch-view-value">${escapeHtml(details.school_year || '—')}</div>
                     </div>
+                    <div class="sch-view-field">
+                        <label>Semester</label>
+                        <div class="sch-view-value">${escapeHtml(details.semester || '—')}</div>
+                    </div>
+                    <div class="sch-view-field">
+                        <label>Application Type</label>
+                        <div class="sch-view-value">${escapeHtml(APPLICATION_TYPE_LABELS[details.application_type] || details.application_type || '—')}</div>
+                    </div>
+                    <div class="sch-view-field">
+                        <label>Maximum Beneficiaries</label>
+                        <div class="sch-view-value">${escapeHtml(program.participation_quantity ?? 'N/A')}</div>
+                    </div>
+                    ${details.program_description ? `
+                    <div class="sch-view-field sch-view-field-full">
+                        <label>Program Description</label>
+                        <div class="sch-view-value sch-view-value-pre">${escapeHtml(details.program_description)}</div>
+                    </div>` : ''}
                 </div>
             </div>
 
-            <div class="schol-schedule-card" style="margin-bottom:20px;">
+            <div class="schol-schedule-card sch-view-section">
                 <h4 class="schol-schedule-title">Application Window Schedule</h4>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Start Date</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.start_date)}</div>
+                <div class="sch-view-grid">
+                    <div class="sch-view-field">
+                        <label>Start Date</label>
+                        <div class="sch-view-value">${formatIsoDateDisplay(program.start_date)}</div>
                     </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">End Date</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.end_date)}</div>
+                    <div class="sch-view-field">
+                        <label>End Date</label>
+                        <div class="sch-view-value">${formatIsoDateDisplay(program.end_date)}</div>
                     </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Status</label>
-                        <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;background:${statusStyle.bg};color:${statusStyle.text};">${statusStyle.label}</span>
+                    <div class="sch-view-field">
+                        <label>Status</label>
+                        <span class="sch-view-status" style="background:${statusStyle.bg};color:${statusStyle.text};">${statusStyle.label}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="schol-schedule-card">
-                <h4 class="schol-schedule-title">Application Form Builder</h4>
-                <div style="background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;border:2px solid #e5e7eb;">
-                    <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Announcement</label>
-                    <div style="font-size:15px;color:#374151;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;min-height:80px;white-space:pre-wrap;">${escapeHtml(program.announcement || 'No announcement set')}</div>
-                </div>
-
-                <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:20px;margin-bottom:20px;">
-                    <h5 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#0369a1;">Include KK Profiling Data</h5>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
-                        ${Object.entries(KK_FIELD_LABELS).map(([value, label]) => `
-                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid ${kkFields.includes(value) ? '#0ea5e9' : '#e2e8f0'};border-radius:6px;">
-                                <input type="checkbox" ${kkFields.includes(value) ? 'checked' : ''} disabled style="width:18px;height:18px;">
-                                <span>${label}</span>
-                            </label>
-                        `).join('')}
+            <div class="schol-schedule-card sch-view-section">
+                <h4 class="schol-schedule-title">Applicant Eligibility</h4>
+                <div class="sch-view-grid">
+                    <div class="sch-view-field sch-view-field-full">
+                        <label>Youth Classification</label>
+                        ${formatEligibilityList(eligibilityClassifications, 'Any classification (Senior High and College only).')}
+                    </div>
+                    <div class="sch-view-field sch-view-field-full">
+                        <label>Youth Age Group</label>
+                        ${formatEligibilityList(eligibilityAgeGroups, 'Any age group (Senior High and College only).')}
+                    </div>
+                    <div class="sch-view-field sch-view-field-full">
+                        <label>Educational Background</label>
+                        ${formatEligibilityList(eligibilityEducation, 'Senior High School and College Level.')}
                     </div>
                 </div>
-
-                ${customQuestions.length ? `
-                    <div style="background:#f8f9fa;border-radius:12px;padding:24px;border:2px solid #e5e7eb;">
-                        ${customQuestions.map((question, index) => `
-                            <div style="background:white;border-radius:8px;padding:24px;margin-bottom:16px;border:1px solid #e5e7eb;">
-                                <div style="font-size:15px;color:#202124;font-weight:500;margin-bottom:10px;">
-                                    ${index + 1}. ${escapeHtml(question.label)}
-                                    ${question.required ? '<span style="color:#d93025;">*</span>' : ''}
-                                </div>
-                                <div style="font-size:13px;color:#5f6368;font-style:italic;">Type: ${escapeHtml(getTypeLabel(question.type))}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : `
-                    <div style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:24px;text-align:center;">
-                        <div style="font-size:16px;color:#856404;font-weight:600;">No custom questions added</div>
-                    </div>
-                `}
             </div>
-        </div>
-    `;
 
+            <div class="schol-schedule-card sch-view-section">
+                <h4 class="schol-schedule-title">1. Personal Information (KK Profiling)</h4>
+                <p class="sch-view-kk-note">Selected fields are auto-filled from the applicant's KK Profile and displayed as read-only.</p>
+                ${kkList}
+            </div>
+
+            ${announcementsHtml ? `<div class="sch-view-announcements">${announcementsHtml}</div>` : ''}
+
+            ${submissionLabel ? `
+                <div class="schol-schedule-card sch-view-section">
+                    <h4 class="schol-schedule-title">Period for the Submission of Requirements</h4>
+                    <div class="sch-view-value">${escapeHtml(submissionLabel)}</div>
+                </div>` : ''}
+
+            ${verificationLabel ? `
+                <div class="schol-schedule-card sch-view-section">
+                    <h4 class="schol-schedule-title">Period for the Assessment/Verification of Scholar Profile and Requirements</h4>
+                    <div class="sch-view-value">${escapeHtml(verificationLabel)}</div>
+                </div>` : ''}
+
+            <div class="schol-schedule-card sch-view-section">
+                <h4 class="schol-schedule-title">Uploading of Requirements</h4>
+                <div class="sch-view-questions">${questionsHtml}</div>
+            </div>
+
+            ${customQuestionsHtml ? `
+            <div class="schol-schedule-card sch-view-section">
+                <h4 class="schol-schedule-title">Custom Questions</h4>
+                <div class="sch-view-questions">${customQuestionsHtml}</div>
+            </div>` : ''}
+
+            ${quickGuidelinesHtml}
+        </div>`;
+}
+
+function openFormPreview(programId) {
+    const program = schedulePrograms.find((item) => String(item.id) === String(programId));
+    const viewProgramBody = document.getElementById('viewProgramBody');
+    const viewProgramModal = document.getElementById('viewProgramModal');
+    if (!program || !viewProgramBody || !viewProgramModal) return;
+
+    resetViewProgramModalSize();
+    viewProgramBody.innerHTML = renderProgramViewHtml(program);
     viewProgramModal.style.display = 'flex';
 }
 
@@ -612,9 +1001,24 @@ async function handleSave() {
     const status = document.getElementById('programStatus')?.value || 'open';
     const participationQtyRaw = document.getElementById('participationQty')?.value?.trim();
     const announcement = document.getElementById('spfbAnnouncement')?.value?.trim() || '';
+    const schoolYear = document.getElementById('schoolYear')?.value?.trim();
+    const semester = document.getElementById('programSemester')?.value?.trim();
+
+    if (!schoolYear) {
+        showToast('Please select a school year.', 'error');
+        switchBuilderTab('details');
+        return;
+    }
+
+    if (!semester) {
+        showToast('Please select a semester (1st or 2nd only).', 'error');
+        switchBuilderTab('details');
+        return;
+    }
 
     if (!startDate || !endDate) {
-        showToast('Please select start and end dates.', 'error');
+        showToast('Please select application start and end dates.', 'error');
+        switchBuilderTab('details');
         return;
     }
 
@@ -622,21 +1026,26 @@ async function handleSave() {
     if (participationQtyRaw !== '') {
         const qtyNum = parseInt(participationQtyRaw, 10);
         if (Number.isNaN(qtyNum) || qtyNum < 0) {
-            showToast('Participation quantity cannot be negative.', 'error');
+            showToast('Maximum beneficiaries cannot be negative.', 'error');
             return;
         }
         participationQuantity = qtyNum;
     }
 
-    let customQuestions = [];
-    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
-        customQuestions = window.SpfbFormBuilder.getQuestions().filter((question) => question.type === 'file');
-    }
-
-    if (!customQuestions.length) {
-        showToast('Add at least one file upload requirement in section 5.', 'error');
+    const documentRequirements = collectDocumentRequirements();
+    if (!documentRequirements.length) {
+        showToast('Add at least one document requirement in the Requirements tab.', 'error');
+        switchBuilderTab('requirements');
         return;
     }
+
+    let customQuestionsNonFile = [];
+    if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
+        customQuestionsNonFile = window.SpfbFormBuilder.getQuestions().filter((question) => question.type !== 'file');
+    }
+
+    const fileQuestions = documentRequirementsToFileQuestions(documentRequirements);
+    const customQuestions = [...fileQuestions, ...customQuestionsNonFile];
 
     const kkProfilingFields = [];
     document.querySelectorAll('.kk-profiling-field:checked').forEach((checkbox) => {
@@ -686,6 +1095,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     renderRequirementGroups([]);
+
+    bindBuilderTabs();
+    renderDocumentRequirements([]);
+
+    const addDocReqBtn = document.getElementById('schAddDocReqBtn');
+    if (addDocReqBtn) {
+        addDocReqBtn.addEventListener('click', () => {
+            const container = document.getElementById('schDocReqContainer');
+            if (!container) return;
+            container.insertAdjacentHTML('beforeend', createDocRequirementCard({ name: '', file_type: 'pdf', required: true, max_size_mb: 5 }));
+            bindDocumentRequirementEvents(container);
+        });
+    }
 
     const tableBody = document.getElementById('safFormsTableBody');
     if (!tableBody) return;

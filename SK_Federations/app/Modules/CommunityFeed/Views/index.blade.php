@@ -7,7 +7,11 @@
 @endpush
 
 @push('styles')
-    <link rel="stylesheet" href="{{ url('/modules/community_feed/css/community-feed.css') }}">
+    @php
+        $communityFeedCssPath = app_path('Modules/CommunityFeed/assets/css/community-feed.css');
+        $communityFeedCssVersion = file_exists($communityFeedCssPath) ? filemtime($communityFeedCssPath) : time();
+    @endphp
+    <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}?v={{ $communityFeedCssVersion }}">
 @endpush
 
 @push('navbar-center')
@@ -22,18 +26,6 @@
 
             {{-- ── CENTER: Feed ── --}}
             <div class="feed-section">
-
-                {{-- SK Federation Info Card --}}
-                <div class="sk-fed-card" style="cursor:pointer;" onclick="window.location.href='{{ route('sk-fed-profile') }}'">
-                    <div class="sk-fed-card-banner">
-                        <img src="{{ asset('Images/SK_OnePortal.png') }}" alt="SK OnePortal Logo" class="sk-fed-card-logo">
-                        <div class="sk-fed-card-info">
-                            <h2 class="sk-fed-card-name">SK Federation Santa Cruz</h2>
-                            <p class="sk-fed-card-sub">Sangguniang Kabataan Federation · Santa Cruz, Laguna</p>
-                            <p style="font-size:11px;color:#ffffff;font-weight:600;margin-top:4px;">View Profile →</p>
-                        </div>
-                    </div>
-                </div>
 
                 {{-- Compose Post --}}
                 <div class="post-card compose-card">
@@ -70,13 +62,6 @@
 
                 {{-- Feed Posts --}}
                 <div id="feed-posts"></div>
-
-                <div style="text-align:center;padding:8px 0 16px;">
-                    <button class="load-more-btn" id="load-more-btn" onclick="loadMorePosts()">
-                        <svg viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
-                        Load More
-                    </button>
-                </div>
             </div>
 
             {{-- ── RIGHT: Program Categories Sidebar ── --}}
@@ -129,39 +114,30 @@
                 </div>
 
                 {{-- Barangay SK Profiles --}}
-                <div class="sidebar-card" style="margin-top:16px;">
+                <div class="sidebar-card cf-barangay-profiles-card">
                     <h2 class="sidebar-title">Barangay SK Profiles</h2>
-                    <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
-                    <div style="display:flex;flex-direction:column;gap:8px;">
-                        @php
-                        $brgyList = [
-                            ['name'=>'Alipit',        'slug'=>'alipit',        'color'=>'#4CAF50'],
-                            ['name'=>'Bagumbayan',    'slug'=>'bagumbayan',    'color'=>'#2196F3'],
-                            ['name'=>'Bubukal',       'slug'=>'bubukal',       'color'=>'#9C27B0'],
-                            ['name'=>'Duhat',         'slug'=>'duhat',         'color'=>'#FF9800'],
-                            ['name'=>'Gatid',         'slug'=>'gatid',         'color'=>'#009688'],
-                            ['name'=>'Labuin',        'slug'=>'labuin',        'color'=>'#f44336'],
-                            ['name'=>'Pagsawitan',    'slug'=>'pagsawitan',    'color'=>'#673AB7'],
-                            ['name'=>'San Jose',      'slug'=>'san-jose',      'color'=>'#0450a8'],
-                            ['name'=>'Santisima Cruz','slug'=>'santisima-cruz','color'=>'#FF5722'],
-                        ];
-                        @endphp
-                        @foreach($brgyList as $brgy)
-                        <a href="{{ route('skfed.barangay-profile', ['slug' => $brgy['slug']]) }}"
-                           style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f5f7fa;border-radius:12px;text-decoration:none;transition:background 0.2s;"
-                           onmouseover="this.style.background='#eef1fb'" onmouseout="this.style.background='#f5f7fa'">
-                            <div style="width:38px;height:38px;border-radius:50%;background:{{ $brgy['color'] }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;">
-                                {{ strtoupper(substr($brgy['name'], 0, 2)) }}
+                    <p class="sidebar-subtitle">Browse SK officials from each barangay ({{ count($barangayProfiles ?? []) }} barangays).</p>
+                    <div class="cf-barangay-profiles-list">
+                        @forelse($barangayProfiles ?? [] as $brgy)
+                        <a href="{{ route('skfed.barangay-profile', ['slug' => $brgy['slug']]) }}" class="cf-barangay-profile-link">
+                            @if(!empty($brgy['logo_url']))
+                                <img src="{{ $brgy['logo_url'] }}" alt="Brgy. {{ $brgy['name'] }}" class="cf-barangay-profile-logo">
+                            @else
+                                <div class="cf-barangay-profile-avatar" style="--brgy-color: {{ $brgy['color'] }};">
+                                    {{ $brgy['initials'] }}
+                                </div>
+                            @endif
+                            <div class="cf-barangay-profile-text">
+                                <p class="cf-barangay-profile-name">Brgy. {{ $brgy['name'] }}</p>
+                                <p class="cf-barangay-profile-sub">SK Officials</p>
                             </div>
-                            <div style="flex:1;min-width:0;">
-                                <p style="font-size:13px;font-weight:700;color:#1a1d25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Brgy. {{ $brgy['name'] }}</p>
-                                <p style="font-size:11px;color:#999;">SK Officials</p>
-                            </div>
-                            <svg style="width:14px;height:14px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor">
+                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
                             </svg>
                         </a>
-                        @endforeach
+                        @empty
+                        <p class="cf-barangay-profiles-empty">No barangay profiles available.</p>
+                        @endforelse
                     </div>
                 </div>
             </aside>
@@ -361,6 +337,40 @@
 
     
 
+    {{-- ── LIKES MODAL ── --}}
+    <div id="likesModal" class="cf-likes-modal" aria-hidden="true">
+        <div class="modal-overlay" onclick="closeLikesModal()"></div>
+        <div class="cf-likes-dialog" role="dialog" aria-labelledby="likesModalTitle">
+            <div class="cf-likes-header">
+                <h3 id="likesModalTitle">Reactions</h3>
+                <button type="button" class="modal-close" onclick="closeLikesModal()" aria-label="Close">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+            </div>
+            <div class="cf-likes-tabs">
+                <button type="button" class="cf-likes-tab active" aria-current="true">
+                    All <span id="likesModalCount">0</span>
+                </button>
+                <button type="button" class="cf-likes-tab" tabindex="-1" aria-hidden="true" style="cursor:default;">
+                    <span class="cf-likes-tab-icon">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>
+                    </span>
+                    Like
+                </button>
+            </div>
+            <div class="cf-likes-list" id="likesModalList">
+                <div class="cf-likes-loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.currentAvatar = @json($avatar ?? '');
+    </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-<script src="{{ url('/modules/community_feed/js/community-feed.js') }}?v={{ filemtime(public_path('modules/community_feed/js/community-feed.js')) }}"></script>
+    @php
+        $communityFeedJsPath = app_path('Modules/CommunityFeed/assets/js/community-feed.js');
+        $communityFeedJsVersion = file_exists($communityFeedJsPath) ? filemtime($communityFeedJsPath) : time();
+    @endphp
+    <script src="{{ url('/modules/community-feed/js/community-feed.js') }}?v={{ $communityFeedJsVersion }}"></script>
 @endpush

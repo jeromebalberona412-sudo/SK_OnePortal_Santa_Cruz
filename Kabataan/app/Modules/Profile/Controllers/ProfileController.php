@@ -9,6 +9,7 @@ use App\Modules\Profile\Services\PasswordChangeService;
 use App\Modules\Profile\Services\ProfileImageService;
 use App\Modules\Profile\Services\ProfileParticipationService;
 use App\Modules\Profile\Services\ProfileService;
+use App\Modules\Profile\Services\ProfileSupportingDocumentsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ class ProfileController extends Controller
         private readonly PasswordChangeService $passwordChangeService,
         private readonly ProfileParticipationService $participationService,
         private readonly ProfileImageService $profileImageService,
+        private readonly ProfileSupportingDocumentsService $supportingDocumentsService,
     ) {}
 
     public function index(Request $request): View|RedirectResponse
@@ -47,6 +49,7 @@ class ProfileController extends Controller
             'barangayLogoUrl' => $display['barangayLogoUrl'],
             'fullName' => $display['fullName'],
             'profileImageUrl' => $this->profileImageService->resolveDisplayUrl($freshUser, $display['fullName']),
+            'profileImageFallbackUrl' => $this->profileImageService->defaultAvatarUrl($freshUser, $display['fullName']),
             'canChangeProfileImage' => $this->profileImageService->canChangeProfileImage($freshUser),
             'profileImageNextChangeDisplay' => $this->profileImageService->nextChangeDisplayDate($freshUser),
             'programs' => collect($participation['programs']),
@@ -386,6 +389,63 @@ class ProfileController extends Controller
             ->with('status', 'Password changed successfully for '.$user->email.'. Please sign in with your new password.');
     }
 
+    public function uploadSupportingDocument(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'document_type' => ['required', 'in:school_id,barangay_clearance'],
+            'school_id' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'barangay_clearance' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+        ]);
+
+        $documentType = (string) $request->input('document_type');
+        $file = $documentType === 'school_id'
+            ? $request->file('school_id')
+            : $request->file('barangay_clearance');
+
+        if (! $file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please select a document image to upload.',
+                'errors' => ['document' => ['Please select a document image to upload.']],
+            ], 422);
+        }
+
+        try {
+            $result = $this->supportingDocumentsService->upload($user, $file, $documentType);
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'documents' => $result['documents'],
+            ]);
+        } catch (ValidationException $exception) {
+            $message = collect($exception->errors())->flatten()->first()
+                ?? 'Unable to upload supporting document.';
+
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'errors' => $exception->errors(),
+            ], 422);
+        } catch (\Throwable $exception) {
+            Log::error('Kabataan supporting document upload failed', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload supporting document. Please try again.',
+            ], 500);
+        }
+    }
+
     public function uploadProfilePicture(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -421,7 +481,7 @@ class ProfileController extends Controller
         } catch (\Throwable $exception) {
             Log::error('Kabataan profile picture upload failed', [
                 'user_id' => $user->id,
-                'error'   => $exception->getMessage(),
+                'error' => $exception->getMessage(),
             ]);
 
             return response()->json([

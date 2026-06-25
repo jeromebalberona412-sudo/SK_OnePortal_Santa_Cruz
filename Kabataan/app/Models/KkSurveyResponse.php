@@ -73,6 +73,7 @@ class KkSurveyResponse extends Model
         'facebook_profile_url',
         'willing_to_join_group_chat',
         'participant_signature',
+        'supporting_documents',
         'consent_given',
         'status',
     ];
@@ -82,6 +83,7 @@ class KkSurveyResponse extends Model
         return [
             'survey_date' => 'date',
             'birthdate' => 'date',
+            'supporting_documents' => 'array',
         ];
     }
 

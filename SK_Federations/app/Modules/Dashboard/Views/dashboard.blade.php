@@ -10,7 +10,7 @@
         </div>
 
         {{-- ── STAT CARDS ── --}}
-        <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:16px;margin-bottom:24px;">
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:16px;margin-bottom:24px;">
             <a href="{{ route('kabataan-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
                 <div class="stat-icon blue"><i class="fas fa-users"></i></div>
                 <div class="stat-info">
@@ -53,20 +53,6 @@
                     <div class="stat-label">Completed Programs</div>
                 </div>
             </a>
-            <a href="{{ route('archive') }}" class="stat-card stat-card-link stat-card-clickable">
-                <div class="stat-icon purple"><i class="fas fa-archive"></i></div>
-                <div class="stat-info">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Archived Reports</div>
-                </div>
-            </a>
-            <a href="{{ route('archive') }}" class="stat-card stat-card-link stat-card-clickable">
-                <div class="stat-icon red"><i class="fas fa-trash-alt"></i></div>
-                <div class="stat-info">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Deleted Reports</div>
-                </div>
-            </a>
             <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
                 <div class="stat-icon orange"><i class="fas fa-map-marker-alt"></i></div>
                 <div class="stat-info">
@@ -78,22 +64,22 @@
         
         <style>
             @media (max-width: 1400px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(9,1fr)"] {
+                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
                     grid-template-columns: repeat(4, 1fr) !important;
                 }
             }
             @media (max-width: 992px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(9,1fr)"] {
+                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
                     grid-template-columns: repeat(3, 1fr) !important;
                 }
             }
             @media (max-width: 768px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(9,1fr)"] {
+                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
                     grid-template-columns: repeat(2, 1fr) !important;
                 }
             }
             @media (max-width: 480px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(9,1fr)"] {
+                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
                     grid-template-columns: 1fr !important;
                 }
             }
@@ -136,10 +122,6 @@
                     <a href="{{ route('community-feed') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(16,185,129,0.3);">
                         <i class="fas fa-rss"></i>
                         <span>SK Community Feed</span>
-                    </a>
-                    <a href="{{ route('archive') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#f59e0b;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(245,158,11,0.3);">
-                        <i class="fas fa-archive"></i>
-                        <span>Archive</span>
                     </a>
                 </div>
             </div>

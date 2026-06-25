@@ -25,6 +25,7 @@ Route::middleware('web')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::post('/upload-profile-picture', [ProfileController::class, 'uploadProfilePicture'])->name('profile.upload-picture');
+        Route::post('/upload-supporting-document', [ProfileController::class, 'uploadSupportingDocument'])->name('profile.upload-supporting-document');
 
         Route::get('/change-email', [ProfileController::class, 'showChangeEmail'])->name('change-email');
         Route::post('/change-email', [ProfileController::class, 'requestChangeEmail'])->name('change-email.request');

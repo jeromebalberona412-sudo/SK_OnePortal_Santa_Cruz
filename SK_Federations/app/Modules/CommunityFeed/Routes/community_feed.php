@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
             Route::post('/upload-image', [CommunityFeedPostController::class, 'uploadImage'])->name('api.community-feed.upload-image');
             Route::put('/{id}',          [CommunityFeedPostController::class, 'update'])->name('api.community-feed.update');
             Route::delete('/{id}',       [CommunityFeedPostController::class, 'destroy'])->name('api.community-feed.destroy');
+            Route::get('/{id}/likes',    [CommunityFeedPostController::class, 'likes'])->name('api.community-feed.likes');
             Route::post('/{id}/react',   [CommunityFeedPostController::class, 'react'])->name('api.community-feed.react');
             Route::post('/{id}/comment', [CommunityFeedPostController::class, 'comment'])->name('api.community-feed.comment');
         });

@@ -11,6 +11,7 @@ use App\Modules\Dashboard\Controllers\DashboardController;
 use App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController;
 use App\Modules\Kabataan\Controllers\KabataanController;
 use App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController;
+use App\Modules\Profile\Controllers\NotificationController;
 use App\Modules\Profile\Controllers\ProfileController;
 use App\Modules\Program_Management\Controllers\ProgramApplicationController;
 use App\Modules\Program_Management\Controllers\ProgramEvaluationController;
@@ -75,9 +76,10 @@ Route::middleware([
     Route::post('/change-email/resend', [ProfileController::class, 'resendChangeEmail'])->name('change-email.resend');
     Route::post('/change-email/cancel', [ProfileController::class, 'cancelChangeEmail'])->name('change-email.cancel');
 
-    Route::get('/notifications', function () {
-        return view('Profile::notification');
-    })->name('notifications');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
+    Route::get('/api/sk-officials/notifications', [NotificationController::class, 'list'])->name('api.sk-officials.notifications');
+    Route::post('/api/sk-officials/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('api.sk-officials.notifications.read');
+    Route::post('/api/sk-officials/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('api.sk-officials.notifications.read-all');
 
     Route::get('/calendar', function () {
         return view('Calendar::calendar');
@@ -334,7 +336,7 @@ Route::middleware([
 
     $surveyTabViews = [
         'forms' => ['view' => 'survey.survey-forms', 'title' => 'Survey Forms', 'subtitle' => 'Create and manage survey questions for Kabataan members.'],
-        'results' => ['view' => 'survey.survey-results', 'title' => 'Survey Results', 'subtitle' => 'View Kabataan who answered your surveys and read each response.'],
+        'results' => ['view' => 'survey.survey-results', 'title' => 'Survey Response', 'subtitle' => 'View Kabataan who answered your surveys and read each response.'],
         'analytics' => ['view' => 'survey.survey-analytics', 'title' => 'Survey Analytics', 'subtitle' => 'Charts and counts per question — see how many chose each answer.'],
     ];
 

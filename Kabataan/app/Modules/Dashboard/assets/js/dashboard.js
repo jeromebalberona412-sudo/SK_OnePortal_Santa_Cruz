@@ -137,10 +137,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Program modals are now handled by the programs module
 
-    // Modal close buttons
-    const modalCloseButtons = document.querySelectorAll('.modal-close');
-    modalCloseButtons.forEach(button => {
-        button.addEventListener('click', function() {
+    // Modal close buttons (static modals only — dynamic chrome modals handle their own close)
+    document.querySelectorAll('.program-modal:not(.program-modal--chrome) .modal-close').forEach((button) => {
+        button.addEventListener('click', function () {
             const modal = this.closest('.program-modal');
             if (modal) {
                 modal.classList.remove('active');
@@ -148,10 +147,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Close modal when clicking overlay
-    const modalOverlays = document.querySelectorAll('.modal-overlay');
-    modalOverlays.forEach(overlay => {
-        overlay.addEventListener('click', function() {
+    // Close modal when clicking overlay (skip chrome-enhanced modals — they replace overlay listeners)
+    document.querySelectorAll('.program-modal:not(.program-modal--chrome) .modal-overlay').forEach((overlay) => {
+        overlay.addEventListener('click', function () {
             const modal = this.closest('.program-modal');
             if (modal) {
                 modal.classList.remove('active');

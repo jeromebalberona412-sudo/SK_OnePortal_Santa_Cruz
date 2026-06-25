@@ -10,6 +10,7 @@ use RuntimeException;
 class CloudinaryService
 {
     private Cloudinary $cloudinary;
+
     private string $folder;
 
     public function __construct()
@@ -18,7 +19,7 @@ class CloudinaryService
         $this->cloudinary = new Cloudinary([
             'cloud' => [
                 'cloud_name' => config('services.cloudinary.cloud_name'),
-                'api_key'    => config('services.cloudinary.api_key'),
+                'api_key' => config('services.cloudinary.api_key'),
                 'api_secret' => config('services.cloudinary.api_secret'),
             ],
         ]);
@@ -39,8 +40,8 @@ class CloudinaryService
         $this->ensureConfigured();
 
         $options = [
-            'public_id'     => $this->folder . '/' . $publicId,
-            'overwrite'     => true,
+            'public_id' => $this->folder.'/'.$publicId,
+            'overwrite' => true,
             'resource_type' => 'image',
         ];
 
@@ -59,8 +60,8 @@ class CloudinaryService
 
         return [
             'public_id' => $result['public_id'],
-            'url'       => $this->deliverUrl($result['public_id'], $version),
-            'version'   => $version,
+            'url' => $this->deliverUrl($result['public_id'], $version),
+            'version' => $version,
         ];
     }
 
@@ -88,11 +89,11 @@ class CloudinaryService
 
     public function normalizeUrl(?string $url): ?string
     {
-        if (!$url || !$this->isConfigured()) {
+        if (! $url || ! $this->isConfigured()) {
             return $url;
         }
 
-        if (!str_contains($url, 'res.cloudinary.com')) {
+        if (! str_contains($url, 'res.cloudinary.com')) {
             return $url;
         }
 
@@ -106,11 +107,19 @@ class CloudinaryService
     public function extractPublicIdFromUrl(string $url): ?string
     {
         $path = parse_url($url, PHP_URL_PATH);
-        if (!is_string($path) || !str_contains($path, '/sk_oneportal/')) {
+        if (! is_string($path)) {
             return null;
         }
 
-        if (!preg_match('#(/sk_oneportal/.+)$#', $path, $matches)) {
+        if (preg_match('#/image/upload/(?:v\d+/)?(.+)$#', $path, $matches)) {
+            return preg_replace('/\.[a-zA-Z0-9]+$/', '', $matches[1]) ?: null;
+        }
+
+        if (! str_contains($path, '/sk_oneportal/')) {
+            return null;
+        }
+
+        if (! preg_match('#(/sk_oneportal/.+)$#', $path, $matches)) {
             return null;
         }
 
@@ -120,7 +129,7 @@ class CloudinaryService
     public function extractVersionFromUrl(string $url): ?int
     {
         $path = parse_url($url, PHP_URL_PATH);
-        if (!is_string($path) || !preg_match('#/v(\d+)/#', $path, $matches)) {
+        if (! is_string($path) || ! preg_match('#/v(\d+)/#', $path, $matches)) {
             return null;
         }
 
@@ -135,14 +144,14 @@ class CloudinaryService
 
         $token = match (true) {
             $updatedAt instanceof DateTimeInterface => $updatedAt->getTimestamp(),
-            is_int($updatedAt)                        => $updatedAt,
+            is_int($updatedAt) => $updatedAt,
             is_string($updatedAt) && $updatedAt !== '' => strtotime($updatedAt) ?: time(),
-            default                                   => time(),
+            default => time(),
         };
 
         $separator = str_contains($url, '?') ? '&' : '?';
 
-        return $url . $separator . 'cb=' . $token;
+        return $url.$separator.'cb='.$token;
     }
 
     /**
@@ -156,17 +165,18 @@ class CloudinaryService
             ? ($source->getRealPath() ?: $source->getPathname())
             : $source;
         $folder = trim((string) config('services.cloudinary.supporting_docs_folder', 'Supporting_Documents'), '/');
+        $preset = trim((string) config('services.cloudinary.supporting_docs_upload_preset', 'Supporting_Documents'));
 
         if ($displayName === null && $source instanceof UploadedFile) {
             $displayName = pathinfo($source->getClientOriginalName(), PATHINFO_FILENAME);
         }
 
         $options = [
-            'folder'          => $folder,
-            'public_id'       => $publicId,
-            'resource_type'   => 'image',
-            'overwrite'       => false,
-            'use_filename'    => false,
+            'folder' => $folder,
+            'public_id' => ltrim($publicId, '/'),
+            'resource_type' => 'image',
+            'overwrite' => false,
+            'use_filename' => false,
             'unique_filename' => false,
         ];
 
@@ -174,14 +184,23 @@ class CloudinaryService
             $options['display_name'] = $displayName;
         }
 
+        if ($preset !== '') {
+            $options['upload_preset'] = $preset;
+        }
+
         $result = $this->cloudinary->uploadApi()->upload($path, $options);
 
         $version = isset($result['version']) ? (int) $result['version'] : null;
+        $deliveryUrl = (string) ($result['secure_url'] ?? $result['url'] ?? '');
+
+        if ($deliveryUrl === '') {
+            $deliveryUrl = $this->deliverUrl($result['public_id'], $version);
+        }
 
         return [
             'public_id' => $result['public_id'],
-            'url'       => $this->deliverUrl($result['public_id'], $version),
-            'version'   => $version,
+            'url' => $deliveryUrl,
+            'version' => $version,
         ];
     }
 
@@ -192,35 +211,44 @@ class CloudinaryService
     {
         $this->ensureConfigured();
 
-        $folder = trim((string) config('services.cloudinary.profile_folder', 'kabataan/profile-images'), '/');
-        $fullPublicId = $folder . '/' . ltrim($publicId, '/');
+        $folder = trim((string) config('services.cloudinary.profile_folder', 'kabataan_profile_images'), '/');
+        $preset = trim((string) config('services.cloudinary.profile_upload_preset', 'kabataan_profile_images'));
         $path = $file->getRealPath() ?: $file->getPathname();
+        $displayName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
 
-        $result = $this->cloudinary->uploadApi()->upload(
-            $path,
-            [
-                'public_id'       => $fullPublicId,
-                'display_name'    => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
-                'resource_type'   => 'image',
-                'overwrite'       => true,
-                'invalidate'      => true,
-                'use_filename'    => false,
-                'unique_filename' => false,
-            ]
-        );
+        $options = [
+            'folder' => $folder,
+            'public_id' => ltrim($publicId, '/'),
+            'resource_type' => 'image',
+            'overwrite' => false,
+            'use_filename' => false,
+            'unique_filename' => false,
+            'display_name' => $displayName !== '' ? $displayName : $publicId,
+        ];
+
+        if ($preset !== '') {
+            $options['upload_preset'] = $preset;
+        }
+
+        $result = $this->cloudinary->uploadApi()->upload($path, $options);
 
         $version = isset($result['version']) ? (int) $result['version'] : null;
+        $deliveryUrl = (string) ($result['secure_url'] ?? $result['url'] ?? '');
+
+        if ($deliveryUrl === '') {
+            $deliveryUrl = $this->deliverUrl($result['public_id'], $version);
+        }
 
         return [
             'public_id' => $result['public_id'],
-            'url'       => $this->deliverUrl($result['public_id'], $version),
-            'version'   => $version,
+            'url' => $deliveryUrl,
+            'version' => $version,
         ];
     }
 
     private function ensureConfigured(): void
     {
-        if (!$this->isConfigured()) {
+        if (! $this->isConfigured()) {
             throw new RuntimeException(
                 'Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in .env.'
             );

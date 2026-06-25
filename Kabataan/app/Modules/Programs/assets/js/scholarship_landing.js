@@ -22,7 +22,10 @@
     const applicationViewCancelledInfo = document.getElementById('applicationViewCancelledInfo');
     const applicationViewCancelledType = document.getElementById('applicationViewCancelledType');
     const applicationViewCancelledReason = document.getElementById('applicationViewCancelledReason');
-    const applicationCancelType = document.getElementById('applicationCancelType');
+    const applicationCancelMaximize = document.getElementById('applicationCancelMaximize');
+    const applicationCancelOtherWrap = document.getElementById('applicationCancelOtherWrap');
+    const applicationCancelConfirm = document.getElementById('applicationCancelConfirm');
+    const applicationCancelReasonOptions = () => document.querySelectorAll('[data-cancel-reason-option]');
     const applicationCancelReason = document.getElementById('applicationCancelReason');
     const applicationCancelCharCount = document.getElementById('applicationCancelCharCount');
     const applicationCancelError = document.getElementById('applicationCancelError');
@@ -97,29 +100,6 @@
         return data.application;
     }
 
-    function renderProgramInfo(program) {
-        const nameEl = document.getElementById('slProgramName');
-        const descEl = document.getElementById('slProgramDescription');
-        const periodEl = document.getElementById('slApplicationPeriod');
-        const slotsEl = document.getElementById('slAvailableSlots');
-        const announcementEl = document.getElementById('slAnnouncement');
-        const committeeEl = document.getElementById('slCommittee');
-        const statusBadge = document.getElementById('slProgramStatusBadge');
-
-        const availableSlots = program.available_slots ?? program.participation_quantity;
-
-        if (nameEl) nameEl.textContent = program.program_name || 'Scholarship Program';
-        if (committeeEl) committeeEl.textContent = program.committee || '—';
-        if (descEl) descEl.textContent = program.announcement || program.program_type || 'Educational assistance program for qualified Kabataan members.';
-        if (periodEl) periodEl.textContent = `${program.start_date_display || '—'} - ${program.end_date_display || '—'}`;
-        if (slotsEl) slotsEl.textContent = availableSlots !== null && availableSlots !== undefined ? String(availableSlots) : '—';
-        if (announcementEl) announcementEl.textContent = program.announcement || 'No announcement posted.';
-        if (statusBadge) {
-            statusBadge.textContent = program.status === 'open' ? 'Open' : 'Closed';
-            statusBadge.className = `sl-status-badge ${program.status === 'open' ? 'sl-status-open' : 'sl-status-closed'}`;
-        }
-    }
-
     function updateStartButton(applications) {
         if (!startApplicationBtn) return;
 
@@ -175,7 +155,7 @@
                     <div class="sl-answer-item">
                         <p class="sl-info-label">${escapeHtml(answer.question_label || 'Document')}</p>
                         <a href="${escapeHtml(file.preview_url || file.download_url || '#')}" target="_blank" rel="noopener" class="sl-file-card-link">
-                            <span class="sl-file-icon">📄</span>
+                            <span class="sl-file-icon">PDF</span>
                             <span>
                                 <span class="sl-file-name">${escapeHtml(file.original_name || 'Uploaded PDF')}</span>
                                 <span class="sl-file-meta">${escapeHtml(file.size_display || '')}</span>
@@ -267,15 +247,63 @@
         }
     }
 
-    function openCancelReasonModal() {
-        if (applicationCancelType) applicationCancelType.value = '';
+    function setCancelModalMaximized(isMaximized) {
+        if (!applicationCancelModalBox) return;
+        applicationCancelModalBox.classList.toggle('is-fullscreen', isMaximized);
+        if (applicationCancelModal) {
+            applicationCancelModal.classList.toggle('modal-maximized', isMaximized);
+        }
+        if (applicationCancelMaximize) {
+            applicationCancelMaximize.textContent = isMaximized ? '⧉' : '□';
+            applicationCancelMaximize.setAttribute('aria-label', isMaximized ? 'Restore down' : 'Maximize');
+        }
+    }
+
+    function getSelectedCancelReasonType() {
+        const selected = Array.from(applicationCancelReasonOptions()).find((input) => input.checked);
+        return selected?.value?.trim() || '';
+    }
+
+    function syncCancelReasonOptions(changedInput) {
+        if (changedInput?.checked) {
+            applicationCancelReasonOptions().forEach((input) => {
+                if (input !== changedInput) {
+                    input.checked = false;
+                }
+            });
+        }
+
+        const isOther = getSelectedCancelReasonType() === 'Other';
+        if (applicationCancelOtherWrap) {
+            applicationCancelOtherWrap.hidden = !isOther;
+        }
+        if (!isOther && applicationCancelReason) {
+            applicationCancelReason.value = '';
+            updateCancelReasonCharCount();
+        }
+    }
+
+    function resetCancelReasonForm() {
+        applicationCancelReasonOptions().forEach((input) => {
+            input.checked = false;
+        });
         if (applicationCancelReason) applicationCancelReason.value = '';
+        if (applicationCancelConfirm) applicationCancelConfirm.value = '';
+        if (applicationCancelOtherWrap) applicationCancelOtherWrap.hidden = true;
         updateCancelReasonCharCount();
+        setCancelModalMaximized(false);
         if (applicationCancelError) {
             applicationCancelError.hidden = true;
             applicationCancelError.textContent = '';
         }
-        if (applicationCancelModal) applicationCancelModal.hidden = false;
+    }
+
+    function openCancelReasonModal() {
+        resetCancelReasonForm();
+        if (applicationCancelModal) {
+            applicationCancelModal.hidden = false;
+            document.body.style.overflow = 'hidden';
+        }
     }
 
     window.openScholarshipCancelModal = function (applicationId) {
@@ -291,7 +319,11 @@
     }
 
     function closeCancelReasonModal() {
+        resetCancelReasonForm();
         if (applicationCancelModal) applicationCancelModal.hidden = true;
+        if (!applicationViewModal || applicationViewModal.hidden) {
+            document.body.style.overflow = '';
+        }
     }
 
     function openApplicationView(applicationId) {
@@ -381,35 +413,49 @@
     }
 
     async function handleCancelApplication() {
-        if (!activeViewApplicationId || !applicationCancelReason) return;
+        if (!activeViewApplicationId) return;
 
-        const cancelType = applicationCancelType?.value?.trim() || '';
-        const reason = applicationCancelReason.value.trim();
+        const cancelType = getSelectedCancelReasonType();
+        const isOther = cancelType === 'Other';
+        const otherReason = applicationCancelReason?.value?.trim() || '';
+        const confirmText = applicationCancelConfirm?.value?.trim() || '';
 
         if (!cancelType) {
             if (applicationCancelError) {
-                applicationCancelError.textContent = 'Please select a cancel type.';
+                applicationCancelError.textContent = 'Please select a cancel reason.';
                 applicationCancelError.hidden = false;
             }
             return;
         }
 
-        if (reason.length < 3) {
-            if (applicationCancelError) {
-                applicationCancelError.textContent = 'Please type your cancel reason (at least 3 characters).';
-                applicationCancelError.hidden = false;
+        if (isOther) {
+            if (otherReason.length < 3) {
+                if (applicationCancelError) {
+                    applicationCancelError.textContent = 'Please specify your reason (at least 3 characters).';
+                    applicationCancelError.hidden = false;
+                }
+                return;
             }
-            return;
+            if (otherReason.length > CANCEL_REASON_MAX) {
+                if (applicationCancelError) {
+                    applicationCancelError.textContent = `Cancel reason must not exceed ${CANCEL_REASON_MAX} characters.`;
+                    applicationCancelError.hidden = false;
+                }
+                return;
+            }
         }
-        if (reason.length > CANCEL_REASON_MAX) {
+
+        if (confirmText !== 'Confirm') {
             if (applicationCancelError) {
-                applicationCancelError.textContent = `Cancel reason must not exceed ${CANCEL_REASON_MAX} characters.`;
+                applicationCancelError.textContent = 'Please type Confirm to cancel your scholarship application.';
                 applicationCancelError.hidden = false;
             }
             return;
         }
 
-        const payloadReason = `[${cancelType}] ${reason}`;
+        const payloadReason = isOther
+            ? `[${cancelType}] ${otherReason}`
+            : `[${cancelType}]`;
 
         if (applicationCancelBtn) {
             applicationCancelBtn.disabled = true;
@@ -471,23 +517,54 @@
             fetchApplications(),
         ]);
 
-        if (program && !scheduleProgramId) {
-            renderProgramInfo(program);
-        }
-
         const currentApplication = scheduleProgramId
             ? applications.find((app) => Number(app.schedule_program_id) === scheduleProgramId)
             : null;
 
         if (scheduleProgramId && isActiveApplication(currentApplication)) {
-            await showSubmittedPreview(currentApplication.id, program);
+            const showPreview = async () => {
+                await showSubmittedPreview(currentApplication.id, program);
+            };
+
+            if (window.ScholarshipDataPrivacy) {
+                window.ScholarshipDataPrivacy.requestConsent(
+                    scheduleProgramId,
+                    showPreview,
+                    () => {
+                        window.location.href = window.__dashboardUrl || '/dashboard';
+                    },
+                    { force: true, mode: 'view' }
+                );
+            } else {
+                await showPreview();
+            }
             return;
         }
 
         if (scheduleProgramId && program && window.ScholarshipApplyWizard) {
-            const landing = document.getElementById('scholarshipLandingContent');
-            if (landing) landing.hidden = true;
-            window.ScholarshipApplyWizard.init(program);
+            if (program.can_apply === false) {
+                alert(program.eligibility_message || 'You are not eligible to apply for this scholarship program.');
+                window.location.href = '/dashboard';
+                return;
+            }
+
+            const startWizard = () => {
+                const landing = document.getElementById('scholarshipLandingContent');
+                if (landing) landing.hidden = true;
+                window.ScholarshipApplyWizard.init(program);
+            };
+
+            if (window.ScholarshipDataPrivacy) {
+                window.ScholarshipDataPrivacy.requestConsent(
+                    scheduleProgramId,
+                    startWizard,
+                    () => {
+                        window.location.href = window.__dashboardUrl || '/dashboard';
+                    }
+                );
+            } else {
+                startWizard();
+            }
             return;
         }
 
@@ -496,7 +573,17 @@
 
     function handleStartApplication() {
         if (!scheduleProgramId) return;
-        window.location.href = `/scholarship/apply?schedule=${encodeURIComponent(scheduleProgramId)}`;
+
+        const proceed = () => {
+            window.location.href = `/scholarship/apply?schedule=${encodeURIComponent(scheduleProgramId)}`;
+        };
+
+        if (window.ScholarshipDataPrivacy) {
+            window.ScholarshipDataPrivacy.requestConsent(scheduleProgramId, proceed);
+            return;
+        }
+
+        proceed();
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -528,6 +615,18 @@
 
         if (applicationCancelReason) {
             applicationCancelReason.addEventListener('input', updateCancelReasonCharCount);
+        }
+
+        applicationCancelReasonOptions().forEach((input) => {
+            input.addEventListener('change', () => syncCancelReasonOptions(input));
+        });
+
+        if (applicationCancelMaximize) {
+            applicationCancelMaximize.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const isMaximized = applicationCancelModalBox?.classList.contains('is-fullscreen');
+                setCancelModalMaximized(!isMaximized);
+            });
         }
 
         if (applicationCancelClose) {

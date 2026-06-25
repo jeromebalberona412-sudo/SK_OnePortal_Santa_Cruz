@@ -21,6 +21,7 @@ it('registers archive management routes in sk federation', function () {
     expect(Route::has('archived.deleted-sk-officials'))->toBeTrue();
     expect(Route::has('archived.sk-federation-records'))->toBeTrue();
     expect(Route::has('archived.sk-officials-records'))->toBeTrue();
+    expect(Route::has('archive'))->toBeFalse();
 });
 
 it('redirects guests away from migrated module pages', function () {

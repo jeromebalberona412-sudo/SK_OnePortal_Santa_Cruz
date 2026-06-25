@@ -118,7 +118,6 @@ class AbyipSubmissionScheduleService
                 'date_start' => $validated['date_start'],
                 'deadline' => $validated['deadline'],
                 'status' => $this->resolveStatus($validated['date_start'], $validated['deadline'], $schedule),
-                'allow_late_extension' => (bool) ($validated['allow_late_extension'] ?? false),
                 'updated_by_user_id' => $user->id,
             ]);
 
@@ -129,7 +128,7 @@ class AbyipSubmissionScheduleService
                 $schedule->deadline,
                 $oldStart,
                 $schedule->date_start,
-                $validated['reason'] ?? 'Schedule updated.',
+                'Schedule updated.',
                 $user
             );
 
@@ -137,7 +136,6 @@ class AbyipSubmissionScheduleService
                 'action' => 'updated',
                 'old_deadline' => $oldDeadline?->format('M j, Y'),
                 'new_deadline' => $schedule->deadline?->format('M j, Y'),
-                'reason' => $validated['reason'] ?? null,
             ]);
 
             return $this->formatSchedule($schedule->fresh(['creator', 'updater', 'histories.updater']), includeHistory: true);
@@ -279,15 +277,6 @@ class AbyipSubmissionScheduleService
                 'schedule' => ['Cancelled schedules cannot be extended.'],
             ]);
         }
-
-        $tz = config('app.timezone', 'Asia/Manila');
-        $today = Carbon::now($tz)->startOfDay();
-
-        if ($today->gt($schedule->deadline) && ! $schedule->allow_late_extension) {
-            throw ValidationException::withMessages([
-                'schedule' => ['Deadline has passed. Enable "Allow extension after deadline" to extend.'],
-            ]);
-        }
     }
 
     /**
@@ -332,8 +321,6 @@ class AbyipSubmissionScheduleService
             'title' => $title,
             'date_start' => $start->toDateString(),
             'deadline' => $end->toDateString(),
-            'allow_late_extension' => (bool) ($data['allow_late_extension'] ?? false),
-            'reason' => isset($data['reason']) ? trim((string) $data['reason']) : null,
         ];
     }
 

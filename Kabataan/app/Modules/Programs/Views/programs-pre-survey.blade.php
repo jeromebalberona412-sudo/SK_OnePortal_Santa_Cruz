@@ -24,7 +24,7 @@
 </head>
 <body class="pps-body kabataan-app-page" data-program-slug="{{ $slug }}" data-program-title="{{ $program['title'] }}">
     @include('dashboard::loading')
-    @include('layout::kabataan-header', ['user' => auth()->user(), 'showSearch' => true])
+    @include('layout::kabataan-header', ['user' => auth()->user()])
 
     <main class="pps-main">
         <div class="pps-shell">

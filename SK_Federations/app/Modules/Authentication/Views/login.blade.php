@@ -93,7 +93,7 @@
                                 class="form-control @error('email') is-invalid @enderror"
                                 value="{{ old('email') }}"
                                 required
-                                autocomplete="email"
+                                autocomplete="off"
                                 autofocus
                                 placeholder="Enter your email"
                                 maxlength="150"
@@ -257,36 +257,12 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            localStorage.removeItem('sk_fed_remember_email');
+            localStorage.removeItem('sk_fed_remember_enabled');
+
             document.querySelectorAll('.invalid-feedback').forEach(function(el) {
                 el.setAttribute('data-server-error', 'true');
             });
-
-            const rememberCheckbox = document.getElementById('remember');
-            const REMEMBER_EMAIL_KEY = 'sk_fed_remember_email';
-            const REMEMBER_FLAG_KEY = 'sk_fed_remember_enabled';
-
-            if (localStorage.getItem(REMEMBER_FLAG_KEY) === '1') {
-                const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY) || '';
-                if (savedEmail && emailInput && !emailInput.value) {
-                    emailInput.value = savedEmail;
-                }
-                if (rememberCheckbox) {
-                    rememberCheckbox.checked = true;
-                }
-            }
-
-            loginForm.addEventListener('submit', function() {
-                if (!rememberCheckbox) {
-                    return;
-                }
-                if (rememberCheckbox.checked) {
-                    localStorage.setItem(REMEMBER_FLAG_KEY, '1');
-                    localStorage.setItem(REMEMBER_EMAIL_KEY, emailInput.value.trim());
-                } else {
-                    localStorage.removeItem(REMEMBER_FLAG_KEY);
-                    localStorage.removeItem(REMEMBER_EMAIL_KEY);
-                }
-            }, { capture: true });
         });
         })();
     </script>

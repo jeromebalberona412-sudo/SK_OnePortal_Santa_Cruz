@@ -7,7 +7,7 @@
 
     const YEAR_LEVEL_OPTIONS = ['Grade 11', 'Grade 12', '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Other'];
     const GRADUATING_OPTIONS = ['Yes', 'No'];
-    const SEMESTER_OPTIONS = ['1st Semester', '2nd Semester', 'Summer', 'N/A'];
+    const SEMESTER_OPTIONS = ['1st Semester', '2nd Semester', 'N/A'];
 
     const COLLEGE_TRACK = ['College Level', 'College Grad', 'Vocational Grad', 'Masters Level', 'Masters Grad', 'Doctorate Level', 'Doctorate Graduate'];
     const HIGH_SCHOOL_TRACK = ['High School Grad', 'High School Level'];
@@ -23,7 +23,34 @@
         'last_name', 'first_name', 'middle_name', 'suffix', 'birthday', 'age', 'sex',
         'civil_status', 'contact_number', 'email', 'region', 'province', 'city',
         'barangay', 'purok_zone', 'youth_classification', 'youth_age_group', 'education',
+        'current_school', 'course_strand', 'work_status', 'sk_voter', 'sk_voted',
     ];
+
+    const KK_FIELD_LABELS = {
+        last_name: 'Last Name',
+        first_name: 'First Name',
+        middle_name: 'Middle Name',
+        suffix: 'Suffix',
+        birthday: 'Birthday',
+        age: 'Age',
+        sex: 'Sex',
+        civil_status: 'Civil Status',
+        contact_number: 'Contact Number',
+        email: 'Email Address',
+        region: 'Region',
+        province: 'Province',
+        city: 'City/Municipality',
+        barangay: 'Barangay',
+        purok_zone: 'Purok/Zone',
+        youth_classification: 'Youth Classification',
+        youth_age_group: 'Youth Age Group',
+        education: 'Educational Attainment',
+        current_school: 'Current School',
+        course_strand: 'Course / Strand',
+        work_status: 'Work Status',
+        sk_voter: 'Registered SK Voter',
+        sk_voted: 'Voted Last Election',
+    };
 
     const SECTIONS = [
         {
@@ -238,13 +265,24 @@
         if (!container) return;
 
         const editableSections = SECTIONS.filter((s) => !s.kkProfiling && !s.customFileUploads);
+        const kkCheckboxes = Object.entries(KK_FIELD_LABELS).map(([key, label]) => `
+            <label class="schol-kk-field-label">
+                <input type="checkbox" class="kk-profiling-field" value="${escapeHtml(key)}">
+                <span>${escapeHtml(label)}</span>
+            </label>
+        `).join('');
+
         container.innerHTML = `
             <div class="schol-system-section schol-system-section-kk">
                 <div class="schol-system-section-head">
-                    <h5>1. Personal Information</h5>
-                    <span class="schol-system-lock-badge">KK Profiling · Auto-filled</span>
+                    <h5>1. Personal Information (KK Profiling)</h5>
                 </div>
-                <p class="schol-system-section-desc">Pulled from the applicant's KK Profiling record. Select which fields to display on the Kabataan application form.</p>
+                <p class="schol-system-section-desc">Select KK Profiling fields to automatically include in scholarship applications. Selected fields will be auto-filled from the applicant's KK Profile and displayed as read-only.</p>
+                <div class="schol-kk-fields-grid">${kkCheckboxes}</div>
+                <div class="schol-kk-fields-actions">
+                    <button type="button" id="selectAllKKFields" class="schol-btn schol-btn-secondary schol-btn-sm">Select All</button>
+                    <button type="button" id="clearAllKKFields" class="schol-btn schol-btn-secondary schol-btn-sm">Clear All</button>
+                </div>
             </div>
             ${editableSections.map((section, index) => `
                 <div class="schol-system-section" data-section="${section.id}">

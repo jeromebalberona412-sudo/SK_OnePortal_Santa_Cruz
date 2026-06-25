@@ -8,7 +8,10 @@ use App\Models\KkSurveyResponse;
 use App\Models\ProgramApplication;
 use App\Models\ScheduleProgram;
 use App\Models\User;
+use App\Modules\KKProfiling\Controllers\KKProfilingController;
+use App\Modules\Profile\Services\ProfileImageService;
 use App\Services\ScholarshipSystemFieldsService;
+use App\Services\SkOfficialsNotificationDispatcher;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -18,10 +21,31 @@ class KabataanProgramService
         private readonly ProgramDocumentService $documentService,
         private readonly KabataanProgramSurveyService $surveyService,
         private readonly ScholarshipSystemFieldsService $scholarshipSystemFields,
+        private readonly ProfileImageService $profileImageService,
     ) {}
 
     /** @var list<string> */
     private const YOUTH_PROGRAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+
+    /** @var list<string> */
+    private const SCHOLARSHIP_EDUCATION_LEVELS = ['High School Level', 'College Level'];
+
+    /** @var list<string> */
+    private const ELIGIBILITY_YOUTH_CLASSIFICATIONS = [
+        'In School Youth',
+        'Out of School Youth',
+        'Working Youth',
+        'Person w/ Disability',
+        'Children in Conflict w/ Law',
+        'Indigenous People',
+    ];
+
+    /** @var list<string> */
+    private const ELIGIBILITY_YOUTH_AGE_GROUPS = [
+        'Child Youth (15-17 yrs old)',
+        'Core Youth (18-24 yrs old)',
+        'Young Adult (15-30 yrs old)',
+    ];
 
     /**
      * @var array<string, array{category_key: string, modal_key: string, type: string, emoji: string, short_label: string}>
@@ -154,6 +178,10 @@ class KabataanProgramService
         $application = $this->findUserApplication($user->id, $scheduleProgramId);
         $formatted = $this->formatScheduleProgram($program, $user, true);
         $formatted['kk_profile'] = $this->resolveKkProfile($user, $program->kk_profiling_fields ?? []);
+        $formatted['profile_image_url'] = $this->profileImageService->resolveDisplayUrl(
+            $user,
+            $formatted['kk_profile']['full_name'] ?? null
+        );
         $formatted['application'] = $this->formatUserApplication($application, true, $user);
         $formatted['uploaded_documents'] = $this->resolveUploadedDocuments(
             $user,
@@ -161,6 +189,10 @@ class KabataanProgramService
             $program->custom_questions ?? [],
             $application,
         );
+
+        $eligibility = $this->evaluateEligibility($user, $program);
+        $formatted['can_apply'] = $eligibility['eligible'];
+        $formatted['eligibility_message'] = $eligibility['message'];
 
         return $formatted;
     }
@@ -275,6 +307,13 @@ class KabataanProgramService
             ]);
         }
 
+        $eligibility = $this->evaluateEligibility($user, $program);
+        if (! $eligibility['eligible']) {
+            throw ValidationException::withMessages([
+                'schedule_program_id' => [$eligibility['message']],
+            ]);
+        }
+
         $activeApplication = $this->findUserApplication($user->id, $scheduleProgramId);
         if ($activeApplication !== null) {
             throw ValidationException::withMessages([
@@ -347,6 +386,17 @@ class KabataanProgramService
         }
 
         $application->load(['scheduleProgram']);
+
+        try {
+            (new SkOfficialsNotificationDispatcher())->notifyProgramApplication(
+                (int) ($user->barangay_id ?? $program->barangay_id ?? 0),
+                (string) ($registration->full_name ?? $user->name ?? 'A Kabataan member'),
+                (string) ($program->program_name ?? 'a program'),
+                $program->program_letter ?? null,
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return $this->formatUserApplication($application, true);
     }
@@ -515,15 +565,16 @@ class KabataanProgramService
             'status' => $program->status,
             'announcement' => $program->announcement,
             'scholarship_details' => $program->scholarship_details,
+            'kk_profiling_fields' => $program->kk_profiling_fields ?? [],
+            'custom_questions' => $program->custom_questions ?? [],
             'has_applied' => $application !== null,
             'application_status' => $application?->status,
             'application_id' => $application?->id,
         ];
 
-        if ($includeQuestions) {
-            $payload['kk_profiling_fields'] = $program->kk_profiling_fields ?? [];
-            $payload['custom_questions'] = $program->custom_questions ?? [];
-        }
+        $eligibility = $this->evaluateEligibility($user, $program);
+        $payload['can_apply'] = $eligibility['eligible'];
+        $payload['eligibility_message'] = $eligibility['message'];
 
         return $payload;
     }
@@ -563,6 +614,14 @@ class KabataanProgramService
         if ($withAnswers) {
             if ($user !== null) {
                 $payload['personal_info'] = $this->formatApplicationPersonalInfo($application, $user);
+                $registration = KabataanRegistration::query()
+                    ->where('user_id', $user->id)
+                    ->latest()
+                    ->first();
+                $respondentNumber = $registration?->respondent_number
+                    ?? ($registration?->form_data['respondent_number'] ?? null);
+                $payload['respondent_number'] = $respondentNumber;
+                $payload['respondent_display'] = KKProfilingController::formatRespondentDisplay($respondentNumber);
             }
 
             $documents = $this->documentService->listApplicationDocuments($application);
@@ -632,6 +691,87 @@ class KabataanProgramService
     }
 
     /**
+     * @return array{eligible: bool, message: string}
+     */
+    private function evaluateEligibility(User $user, ScheduleProgram $program): array
+    {
+        if (strtoupper((string) $program->program_letter) !== 'A') {
+            return ['eligible' => true, 'message' => ''];
+        }
+
+        $profile = $this->resolveKkProfile($user, ['education', 'youth_classification', 'youth_age_group']);
+        $education = $this->normalizeScholarshipEducation((string) ($profile['education'] ?? ''));
+
+        if ($education === '' || ! in_array($education, self::SCHOLARSHIP_EDUCATION_LEVELS, true)) {
+            return [
+                'eligible' => false,
+                'message' => 'Scholarship applications are only open to Senior High School and College students.',
+            ];
+        }
+
+        $details = is_array($program->scholarship_details) ? $program->scholarship_details : [];
+        $criteria = is_array($details['eligibility'] ?? null) ? $details['eligibility'] : [];
+
+        $allowedClassifications = array_values(array_intersect(
+            self::ELIGIBILITY_YOUTH_CLASSIFICATIONS,
+            array_map(fn ($value) => trim((string) $value), (array) ($criteria['youth_classifications'] ?? []))
+        ));
+
+        $allowedAgeGroups = array_values(array_intersect(
+            self::ELIGIBILITY_YOUTH_AGE_GROUPS,
+            array_map(fn ($value) => trim((string) $value), (array) ($criteria['youth_age_groups'] ?? []))
+        ));
+
+        $allowedEducationLevels = array_values(array_intersect(
+            self::SCHOLARSHIP_EDUCATION_LEVELS,
+            array_map(fn ($value) => trim((string) $value), (array) ($criteria['education_levels'] ?? []))
+        ));
+
+        if ($allowedEducationLevels !== [] && ! in_array($education, $allowedEducationLevels, true)) {
+            return [
+                'eligible' => false,
+                'message' => 'Your educational background does not meet this scholarship program\'s eligibility requirements.',
+            ];
+        }
+
+        $userClassification = trim((string) ($profile['youth_classification'] ?? ''));
+        if ($allowedClassifications !== [] && ! in_array($userClassification, $allowedClassifications, true)) {
+            return [
+                'eligible' => false,
+                'message' => 'Your youth classification does not meet this scholarship program\'s eligibility requirements.',
+            ];
+        }
+
+        $userAgeGroup = trim((string) ($profile['youth_age_group'] ?? ''));
+        if ($allowedAgeGroups !== [] && ! in_array($userAgeGroup, $allowedAgeGroups, true)) {
+            return [
+                'eligible' => false,
+                'message' => 'Your youth age group does not meet this scholarship program\'s eligibility requirements.',
+            ];
+        }
+
+        return ['eligible' => true, 'message' => ''];
+    }
+
+    private function normalizeScholarshipEducation(string $value): string
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        if (strcasecmp($trimmed, 'High school level') === 0 || strcasecmp($trimmed, 'High School Level') === 0) {
+            return 'High School Level';
+        }
+
+        if (strcasecmp($trimmed, 'College Level') === 0) {
+            return 'College Level';
+        }
+
+        return $trimmed;
+    }
+
+    /**
      * @param  list<string>  $selectedFields
      * @return array<string, string>
      */
@@ -685,7 +825,7 @@ class KabataanProgramService
             $registration?->middle_name ?? ($formData['middle_name'] ?? ''),
             $registration?->last_name ?? ($formData['last_name'] ?? ''),
             $this->resolveSuffixFromRegistration($registration, $formData),
-        ], fn ($part) => trim((string) $part) !== '')));
+        ], fn ($part) => $this->isMeaningfulNamePart($part))));
 
         $mapped = [
             'last_name' => $registration?->last_name ?? ($formData['last_name'] ?? ''),
@@ -934,10 +1074,20 @@ class KabataanProgramService
         $suffix = trim((string) ($registration?->suffix ?? ($formData['suffix'] ?? '')));
 
         if ($suffix === 'Others') {
-            return trim((string) ($formData['custom_suffix'] ?? ''));
+            $suffix = trim((string) ($formData['custom_suffix'] ?? ''));
         }
 
-        return $suffix;
+        return $this->isMeaningfulNamePart($suffix) ? $suffix : '';
+    }
+
+    private function isMeaningfulNamePart(mixed $value): bool
+    {
+        $part = trim((string) $value);
+        if ($part === '') {
+            return false;
+        }
+
+        return ! in_array(strtolower($part), ['none', 'n/a', 'na', 'null', '-', '—'], true);
     }
 
     /**

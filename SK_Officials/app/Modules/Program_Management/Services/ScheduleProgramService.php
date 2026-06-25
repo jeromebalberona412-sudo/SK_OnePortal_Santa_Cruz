@@ -17,6 +17,49 @@ class ScheduleProgramService
 
     public const LETTER_SPORTS = 'I';
 
+    /** @var list<string> */
+    private const ELIGIBILITY_YOUTH_CLASSIFICATIONS = [
+        'In School Youth',
+        'Out of School Youth',
+        'Working Youth',
+        'Person w/ Disability',
+        'Children in Conflict w/ Law',
+        'Indigenous People',
+    ];
+
+    /** @var list<string> */
+    private const ELIGIBILITY_YOUTH_AGE_GROUPS = [
+        'Child Youth (15-17 yrs old)',
+        'Core Youth (18-24 yrs old)',
+        'Young Adult (15-30 yrs old)',
+    ];
+
+    /** @var list<string> */
+    private const ELIGIBILITY_EDUCATION_LEVELS = [
+        'High School Level',
+        'College Level',
+    ];
+
+    /** @var list<string> */
+    private const ALLOWED_SEMESTERS = [
+        '1st Semester',
+        '2nd Semester',
+    ];
+
+    /** @var list<string> */
+    private const ALLOWED_APPLICATION_TYPES = [
+        'new_only',
+        'renewal_only',
+        'both',
+    ];
+
+    /** @var list<string> */
+    private const ALLOWED_DOCUMENT_FILE_TYPES = [
+        'pdf',
+        'image',
+        'pdf_or_image',
+    ];
+
     /** @var array<string, array{default_type: string, default_committee: string, committee_like: string}> */
     private const LETTER_CONFIG = [
         self::LETTER_EDUCATION => [
@@ -313,13 +356,30 @@ class ScheduleProgramService
 
         $customQuestions = $this->sanitizeCustomQuestions((array) ($data['custom_questions'] ?? []));
 
+        $scholarshipDetails = $this->sanitizeScholarshipDetails($data['scholarship_details'] ?? null);
+
+        if (isset($data['scholarship_details']) && is_array($data['scholarship_details'])) {
+            if (empty($scholarshipDetails['school_year']) || empty($scholarshipDetails['semester'])) {
+                throw ValidationException::withMessages([
+                    'scholarship_details' => ['School year and semester are required for scholarship programs.'],
+                ]);
+            }
+
+            $hasFileRequirement = collect($customQuestions)->contains(fn ($question) => ($question['type'] ?? '') === 'file');
+            if (! $hasFileRequirement) {
+                throw ValidationException::withMessages([
+                    'custom_questions' => ['At least one document requirement is required.'],
+                ]);
+            }
+        }
+
         return [
             'participation_quantity' => $participationQuantity,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'status' => $status,
             'announcement' => $this->nullableString($data['announcement'] ?? null),
-            'scholarship_details' => $this->sanitizeScholarshipDetails($data['scholarship_details'] ?? null),
+            'scholarship_details' => $scholarshipDetails,
             'kk_profiling_fields' => $kkFields,
             'custom_questions' => $customQuestions,
         ];
@@ -358,15 +418,167 @@ class ScheduleProgramService
 
         $submission = $this->sanitizePeriod($raw['submission_period'] ?? null);
         $verification = $this->sanitizePeriod($raw['verification_period'] ?? null);
+        $eligibility = $this->sanitizeEligibility($raw['eligibility'] ?? null);
+        $schoolYear = $this->sanitizeSchoolYear($raw['school_year'] ?? null);
+        $semester = $this->sanitizeSemester($raw['semester'] ?? null);
+        $applicationType = $this->sanitizeApplicationType($raw['application_type'] ?? null);
+        $programDescription = $this->nullableString($raw['program_description'] ?? null);
+        $documentRequirements = $this->sanitizeDocumentRequirements($raw['document_requirements'] ?? null);
 
-        if ($groups === [] && $submission === null && $verification === null) {
+        if (
+            $groups === []
+            && $submission === null
+            && $verification === null
+            && $eligibility === null
+            && $schoolYear === null
+            && $semester === null
+            && $applicationType === null
+            && $programDescription === null
+            && $documentRequirements === []
+        ) {
+            return null;
+        }
+
+        $payload = [
+            'requirement_groups' => $groups,
+            'submission_period' => $submission,
+            'verification_period' => $verification,
+        ];
+
+        if ($eligibility !== null) {
+            $payload['eligibility'] = $eligibility;
+        }
+
+        if ($schoolYear !== null) {
+            $payload['school_year'] = $schoolYear;
+        }
+
+        if ($semester !== null) {
+            $payload['semester'] = $semester;
+        }
+
+        if ($applicationType !== null) {
+            $payload['application_type'] = $applicationType;
+        }
+
+        if ($programDescription !== null) {
+            $payload['program_description'] = $programDescription;
+        }
+
+        if ($documentRequirements !== []) {
+            $payload['document_requirements'] = $documentRequirements;
+        }
+
+        return $payload;
+    }
+
+    protected function sanitizeSchoolYear(mixed $value): ?string
+    {
+        $schoolYear = trim((string) $value);
+        if ($schoolYear === '' || ! preg_match('/^\d{4}-\d{4}$/', $schoolYear)) {
+            return null;
+        }
+
+        [$startYear, $endYear] = array_map('intval', explode('-', $schoolYear));
+        if ($endYear !== $startYear + 1) {
+            return null;
+        }
+
+        return $schoolYear;
+    }
+
+    protected function sanitizeSemester(mixed $value): ?string
+    {
+        $semester = trim((string) $value);
+
+        return in_array($semester, self::ALLOWED_SEMESTERS, true) ? $semester : null;
+    }
+
+    protected function sanitizeApplicationType(mixed $value): ?string
+    {
+        $type = trim((string) $value);
+
+        return in_array($type, self::ALLOWED_APPLICATION_TYPES, true) ? $type : null;
+    }
+
+    /**
+     * @return list<array{id: string, name: string, file_type: string, required: bool, max_size_mb: int, description: string}>
+     */
+    protected function sanitizeDocumentRequirements(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $requirements = [];
+        foreach ($raw as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $name = trim((string) ($item['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+
+            $fileType = (string) ($item['file_type'] ?? 'pdf');
+            if (! in_array($fileType, self::ALLOWED_DOCUMENT_FILE_TYPES, true)) {
+                $fileType = 'pdf';
+            }
+
+            $maxSize = (int) ($item['max_size_mb'] ?? 5);
+            if ($maxSize < 1) {
+                $maxSize = 1;
+            }
+            if ($maxSize > 10) {
+                $maxSize = 10;
+            }
+
+            $requirements[] = [
+                'id' => trim((string) ($item['id'] ?? ('doc_req_'.uniqid()))),
+                'name' => $name,
+                'file_type' => $fileType,
+                'required' => (bool) ($item['required'] ?? true),
+                'max_size_mb' => $maxSize,
+                'description' => trim((string) ($item['description'] ?? '')),
+            ];
+        }
+
+        return $requirements;
+    }
+
+    /**
+     * @return array{youth_classifications: list<string>, youth_age_groups: list<string>, education_levels: list<string>}|null
+     */
+    protected function sanitizeEligibility(mixed $raw): ?array
+    {
+        if (! is_array($raw)) {
+            return null;
+        }
+
+        $classifications = array_values(array_intersect(
+            self::ELIGIBILITY_YOUTH_CLASSIFICATIONS,
+            array_map(fn ($value) => trim((string) $value), (array) ($raw['youth_classifications'] ?? []))
+        ));
+
+        $ageGroups = array_values(array_intersect(
+            self::ELIGIBILITY_YOUTH_AGE_GROUPS,
+            array_map(fn ($value) => trim((string) $value), (array) ($raw['youth_age_groups'] ?? []))
+        ));
+
+        $educationLevels = array_values(array_intersect(
+            self::ELIGIBILITY_EDUCATION_LEVELS,
+            array_map(fn ($value) => trim((string) $value), (array) ($raw['education_levels'] ?? []))
+        ));
+
+        if ($classifications === [] && $ageGroups === [] && $educationLevels === []) {
             return null;
         }
 
         return [
-            'requirement_groups' => $groups,
-            'submission_period' => $submission,
-            'verification_period' => $verification,
+            'youth_classifications' => $classifications,
+            'youth_age_groups' => $ageGroups,
+            'education_levels' => $educationLevels,
         ];
     }
 
@@ -412,7 +624,7 @@ class ScheduleProgramService
      */
     protected function sanitizeCustomQuestions(array $questions): array
     {
-        $allowedTypes = ['text', 'paragraph', 'number', 'checkbox', 'radio', 'file'];
+        $allowedTypes = ['text', 'paragraph', 'number', 'checkbox', 'radio', 'dropdown', 'date', 'file'];
         $sanitized = [];
 
         foreach ($questions as $question) {
@@ -431,7 +643,7 @@ class ScheduleProgramService
             }
 
             $options = [];
-            if (in_array($type, ['checkbox', 'radio'], true)) {
+            if (in_array($type, ['checkbox', 'radio', 'dropdown'], true)) {
                 $options = array_values(array_filter(array_map(
                     fn ($option) => trim((string) $option),
                     (array) ($question['options'] ?? [])
@@ -441,13 +653,34 @@ class ScheduleProgramService
                 }
             }
 
-            $sanitized[] = [
+            $entry = [
                 'id' => (string) ($question['id'] ?? ('q_'.uniqid())),
                 'label' => $label,
                 'type' => $type,
                 'options' => $options,
                 'required' => (bool) ($question['required'] ?? false),
             ];
+
+            if ($type === 'file') {
+                $fileType = (string) ($question['file_type'] ?? 'pdf');
+                if (! in_array($fileType, self::ALLOWED_DOCUMENT_FILE_TYPES, true)) {
+                    $fileType = 'pdf';
+                }
+
+                $maxSize = (int) ($question['max_size_mb'] ?? 5);
+                if ($maxSize < 1) {
+                    $maxSize = 1;
+                }
+                if ($maxSize > 10) {
+                    $maxSize = 10;
+                }
+
+                $entry['file_type'] = $fileType;
+                $entry['max_size_mb'] = $maxSize;
+                $entry['description'] = trim((string) ($question['description'] ?? ''));
+            }
+
+            $sanitized[] = $entry;
         }
 
         return $sanitized;

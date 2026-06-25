@@ -28,7 +28,7 @@ class ProgramSurveyService
     ];
 
     /** @var list<string> */
-    private const ALLOWED_STATUSES = ['scheduled', 'open', 'closed'];
+    private const ALLOWED_STATUSES = ['open', 'closed'];
 
     /** @var list<string> */
     private const ALLOWED_INPUT_TYPES = [
@@ -448,7 +448,7 @@ class ProgramSurveyService
 
         $programId = (int) ($data['abyip_program_id'] ?? $data['abyipProgramId'] ?? 0);
 
-        $status = strtolower(trim((string) ($data['status'] ?? 'scheduled')));
+        $status = strtolower(trim((string) ($data['status'] ?? 'open')));
         if (! in_array($status, self::ALLOWED_STATUSES, true)) {
             throw ValidationException::withMessages([
                 'status' => 'Invalid survey status.',
@@ -511,21 +511,15 @@ class ProgramSurveyService
     private function resolveStatus(string $requestedStatus, string $openDate, string $closeDate): string
     {
         $requestedStatus = strtolower(trim($requestedStatus));
-        $now = Carbon::now()->startOfDay();
-        $open = Carbon::parse($openDate)->startOfDay();
+        if (! in_array($requestedStatus, self::ALLOWED_STATUSES, true)) {
+            $requestedStatus = 'open';
+        }
+
+        $now = Carbon::now();
         $close = Carbon::parse($closeDate)->endOfDay();
 
         if ($requestedStatus === 'closed' || $now->gt($close)) {
             return 'closed';
-        }
-
-        // Honor explicit Open from SK Officials even before the scheduled open date.
-        if ($requestedStatus === 'open') {
-            return 'open';
-        }
-
-        if ($now->lt($open)) {
-            return 'scheduled';
         }
 
         return 'open';
@@ -552,6 +546,8 @@ class ProgramSurveyService
             'close_date' => $survey->close_date->format('Y-m-d'),
             'closeDate' => $survey->close_date->format('Y-m-d'),
             'status' => $survey->status,
+            'survey_year' => (int) $survey->open_date->format('Y'),
+            'sk_term' => $this->resolveSkTermLabel((int) $survey->open_date->format('Y')),
             'response_count' => (int) ($survey->responses_count ?? $survey->responses()->count()),
             'questions' => $survey->questions
                 ->map(fn (ProgramSurveyQuestion $question) => [
@@ -650,5 +646,12 @@ class ProgramSurveyService
         }
 
         return $value;
+    }
+
+    private function resolveSkTermLabel(int $year): string
+    {
+        $start = 2023 + (int) floor(max(0, $year - 2023) / 3) * 3;
+
+        return $start.'-'.($start + 2);
     }
 }

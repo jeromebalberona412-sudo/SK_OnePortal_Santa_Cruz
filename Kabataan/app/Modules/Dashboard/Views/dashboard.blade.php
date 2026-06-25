@@ -22,6 +22,10 @@
         'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Dashboard/assets/js/dashboard.js',
         'app/Modules/Programs/assets/js/programs.js',
+        'app/Modules/Programs/assets/css/scholarship-quick-guidelines.css',
+        'app/Modules/Programs/assets/js/scholarship-quick-guidelines.js',
+        'app/Modules/Programs/assets/css/scholarship-data-privacy.css',
+        'app/Modules/Programs/assets/js/scholarship-data-privacy.js',
         'app/Modules/Programs/assets/js/kabataan-programs.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
@@ -37,7 +41,7 @@
 </head>
 <body class="youth-dashboard">
     @include('dashboard::loading')
-    @include('layout::kabataan-header', ['user' => $user ?? auth()->user(), 'showSearch' => true])
+    @include('layout::kabataan-header', ['user' => $user ?? auth()->user()])
 
     <!-- Main Content -->
     <main class="dashboard-main">
@@ -67,18 +71,56 @@
                 @endif
                 
                 <div class="feed-header">
-                    <div>
+                    <div class="feed-header__intro">
                         <h1>SK Community Feed</h1>
                         <p>Posts, events, and programs from your barangay SK.</p>
+                    </div>
+                    <div class="feed-header__search">
+                        <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                        </svg>
+                        <input
+                            type="search"
+                            id="feedSearchInput"
+                            class="feed-header__search-input"
+                            placeholder="Search posts, programs, announcements..."
+                            autocomplete="off"
+                            aria-label="Search community feed"
+                        >
                     </div>
                 </div>
 
                 <div class="feed-filter-bar">
-                    <button type="button" class="feed-tab active" data-feed-filter="all">All</button>
-                    <button type="button" class="feed-tab" data-feed-filter="announcement">Announcements</button>
-                    <button type="button" class="feed-tab" data-feed-filter="event">Events</button>
-                    <button type="button" class="feed-tab" data-feed-filter="activity">Activities</button>
-                    <button type="button" class="feed-tab" data-feed-filter="program">Programs</button>
+                    <button type="button" class="feed-tab feed-tab--icon active" data-feed-filter="all" aria-label="All">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        </span>
+                        <span class="feed-tab-text">All</span>
+                    </button>
+                    <button type="button" class="feed-tab feed-tab--icon" data-feed-filter="announcement" aria-label="Announcements">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11 13v8a2 2 0 004 0v-6"/></svg>
+                        </span>
+                        <span class="feed-tab-text">Announcements</span>
+                    </button>
+                    <button type="button" class="feed-tab feed-tab--icon" data-feed-filter="event" aria-label="Events">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        </span>
+                        <span class="feed-tab-text">Events</span>
+                    </button>
+                    <button type="button" class="feed-tab feed-tab--icon" data-feed-filter="activity" aria-label="Activities">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg>
+                        </span>
+                        <span class="feed-tab-text">Activities</span>
+                    </button>
+                    <button type="button" class="feed-tab feed-tab--icon" data-feed-filter="program" aria-label="Programs">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                        </span>
+                        <span class="feed-tab-text">Programs</span>
+                    </button>
                 </div>
 
                 <div id="feed-posts"></div>
@@ -129,16 +171,19 @@
 
     <div id="educationModal" class="program-modal">
         <div class="modal-overlay"></div>
-        <div class="modal-container" style="max-width: 900px;">
+        <div class="modal-container education-modal-container" id="educationModalContainer">
             <div class="modal-header">
                 <h2>Education Programs</h2>
-                <button class="modal-close" onclick="closeEducationModal()">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                    </svg>
-                </button>
+                <div class="modal-header-actions">
+                    <button type="button" class="modal-header-btn modal-header-btn-guide" data-open-sch-quick-guidelines title="Quick Guidelines">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <span>Quick Guidelines</span>
+                    </button>
+                    <button type="button" class="modal-toggle-btn education-modal-toggle-btn" id="educationModalMaximize" aria-label="Maximize">□</button>
+                    <button type="button" class="modal-close education-modal-close-btn" onclick="closeEducationModal()" aria-label="Close">&times;</button>
+                </div>
             </div>
-            <div class="modal-body" style="padding: 32px; overflow-y: auto; max-height: calc(90vh - 80px);">
+            <div class="modal-body education-modal-body">
                 <div id="educationProgramsContainer">
                     <p style="text-align:center;color:#64748b;padding:32px;">Loading programs…</p>
                 </div>
@@ -296,7 +341,20 @@
     };
 
     window.closeEducationModal = function() {
-        document.getElementById('educationModal').classList.remove('active');
+        const modal = document.getElementById('educationModal');
+        const container = document.getElementById('educationModalContainer');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.classList.remove('is-maximized');
+        }
+        if (container) {
+            container.classList.remove('is-maximized');
+            const maxBtn = document.getElementById('educationModalMaximize');
+            if (maxBtn) {
+                maxBtn.textContent = '□';
+                maxBtn.setAttribute('aria-label', 'Maximize');
+            }
+        }
         
         // Reset terms agreement when closing
         const checkbox = document.getElementById('agreeTerms');
@@ -710,6 +768,19 @@
     if (educationModal) {
         educationModal.querySelector('.modal-overlay')?.addEventListener('click', closeEducationModal);
     }
+
+    const educationModalMaximize = document.getElementById('educationModalMaximize');
+    const educationModalContainer = document.getElementById('educationModalContainer');
+    if (educationModalMaximize && educationModalContainer && educationModal) {
+        educationModalMaximize.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isMax = !educationModalContainer.classList.contains('is-maximized');
+            educationModalContainer.classList.toggle('is-maximized', isMax);
+            educationModal.classList.toggle('is-maximized', isMax);
+            educationModalMaximize.textContent = isMax ? '⧉' : '□';
+            educationModalMaximize.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
+        });
+    }
     </script>
 
     <script>
@@ -720,9 +791,11 @@
     <script>
     // ── Community Feed ────────────────────────────────────────────────────────
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const FEED_USER_AVATAR = @json($userAvatarUrl ?? '');
     let feedPage = 1;
     let feedLastPage = 1;
     let feedFilter = 'all';
+    let feedSearch = '';
     let feedLoading = false;
     let feedRequestToken = 0;
     const renderedPostIds = new Set();
@@ -750,6 +823,9 @@
         }
 
         const params = new URLSearchParams({ page: feedPage, filter: feedFilter });
+        if (feedSearch) {
+            params.set('search', feedSearch);
+        }
 
         try {
             const data = await apiFeed(`/api/feed?${params}`);
@@ -807,41 +883,82 @@
         btn.addEventListener('click', () => setFeedFilter(btn, btn.dataset.feedFilter || 'all'));
     });
 
-    function buildFeedPost(p) {
-        const escape = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent('SK ' + (p.barangay_name ?? ''))}&background=0450a8&color=fff`;
-        const media  = p.image_url ? `<div class="post-image"><img src="${escape(p.image_url)}" loading="lazy" alt=""></div>` : '';
-        const link   = p.link_url  ? `<a href="${escape(p.link_url)}" target="_blank" rel="noopener" class="post-link-preview">${escape(p.link_url)}</a>` : '';
-        const comments = (p.comments ?? []).map(c =>
-            `<div class="comment-item">
-               <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.author_name)}&background=667eea&color=fff" alt="${c.author_name}">
-               <div class="comment-content">
-                 <p class="comment-author">${c.author_name}</p>
-                 <p class="comment-text">${c.body}</p>
-                 <span class="comment-time">${c.time}</span>
-               </div>
-             </div>`
+    const feedSearchInput = document.getElementById('feedSearchInput');
+    let feedSearchTimer = null;
+    feedSearchInput?.addEventListener('input', function () {
+        clearTimeout(feedSearchTimer);
+        feedSearchTimer = setTimeout(() => {
+            feedSearch = this.value.trim();
+            loadFeed(true);
+        }, 300);
+    });
+
+    function feedEscape(v) {
+        return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function feedAvatarUrl(url, name) {
+        if (url) return url;
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=1a56db&color=fff&size=80`;
+    }
+
+    function renderReactionsSummary(post) {
+        const summary = post.reactions_summary;
+        if (!summary || !summary.count) return '';
+
+        const avatars = (summary.reactors || []).slice(0, 3).map((reactor, index) =>
+            `<img src="${feedEscape(feedAvatarUrl(reactor.avatar_url, reactor.name))}" alt="${feedEscape(reactor.name)}" class="feed-reactor-avatar" style="--stack:${index}">`
         ).join('');
+
+        return `
+          <div class="feed-reactions-summary" id="feed-reactions-${post.id}">
+            <div class="feed-reactions-avatars">${avatars}</div>
+            <span class="feed-reactions-label">${feedEscape(summary.names_label)}</span>
+          </div>`;
+    }
+
+    function renderCommentItem(comment) {
+        const avatar = feedAvatarUrl(comment.author_avatar_url, comment.author_name);
+        return `
+            <div class="comment-item">
+               <img src="${feedEscape(avatar)}" alt="${feedEscape(comment.author_name)}">
+               <div class="comment-content">
+                 <p class="comment-author">${feedEscape(comment.author_name)}</p>
+                 <p class="comment-text">${feedEscape(comment.body)}</p>
+                 <span class="comment-time">${feedEscape(comment.time)}</span>
+               </div>
+             </div>`;
+    }
+
+    function buildFeedPost(p) {
+        const avatar = feedAvatarUrl(p.author_avatar_url, p.author_name);
+        const media  = p.image_url ? `<div class="post-image"><img src="${feedEscape(p.image_url)}" loading="lazy" alt=""></div>` : '';
+        const link   = p.link_url  ? `<a href="${feedEscape(p.link_url)}" target="_blank" rel="noopener" class="post-link-preview">${feedEscape(p.link_url)}</a>` : '';
+        const comments = (p.comments ?? []).map(renderCommentItem).join('');
+        const reactionsSummary = renderReactionsSummary(p);
+        const commentAvatar = feedEscape(feedAvatarUrl(FEED_USER_AVATAR, 'You'));
+
         return `
           <div class="post-header">
-            <img src="${avatar}" alt="${p.barangay_name}" class="post-avatar">
+            <img src="${feedEscape(avatar)}" alt="${feedEscape(p.author_name)}" class="post-avatar">
             <div class="post-info">
-              <h3 class="post-author">${p.author_name ?? ('SK Brgy. ' + (p.barangay_name ?? ''))}</h3>
+              <h3 class="post-author">${feedEscape(p.author_name ?? ('SK Brgy. ' + (p.barangay_name ?? '')))}</h3>
               <p class="post-meta">
-                <span class="post-type ${p.type}">${p.type}</span>
-                <span class="post-time">${p.time}</span>
+                <span class="post-type ${p.type}">${feedEscape(p.type)}</span>
+                <span class="post-time">${feedEscape(p.time)}</span>
               </p>
             </div>
           </div>
           <div class="post-content">
-            ${p.title ? `<h2 class="post-title">${p.title}</h2>` : ''}
-            <p class="post-text">${p.body}</p>
+            ${p.title ? `<h2 class="post-title">${feedEscape(p.title)}</h2>` : ''}
+            <p class="post-text">${feedEscape(p.body)}</p>
             ${media}${link}
           </div>
+          ${reactionsSummary}
           <div class="post-actions">
             <button class="action-btn${p.liked ? ' liked' : ''}" onclick="feedToggleLike(${p.id}, this)">
               <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>
-              <span id="feed-like-${p.id}">Like (${p.likes})</span>
+              <span id="feed-like-${p.id}">Like${p.likes ? ` (${p.likes})` : ''}</span>
             </button>
             <button class="action-btn comment-btn" onclick="feedToggleComments(${p.id})">
               <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
@@ -851,7 +968,7 @@
           <div class="comments-section" id="feed-comments-${p.id}" style="display:none;">
             <div id="feed-comments-list-${p.id}">${comments}</div>
             <div class="comment-input-wrapper">
-              <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=667eea&color=fff" alt="You">
+              <img src="${commentAvatar}" alt="You">
               <input type="text" class="comment-input" placeholder="Write a comment..."
                      onkeydown="if(event.key==='Enter')feedSubmitComment(${p.id},this)">
               <button class="send-comment-btn" onclick="feedSubmitComment(${p.id},this.previousElementSibling)">
@@ -861,12 +978,31 @@
           </div>`;
     }
 
+    function updateReactionsSummary(postId, summary) {
+        const existing = document.getElementById(`feed-reactions-${postId}`);
+        if (!summary || !summary.count) {
+            existing?.remove();
+            return;
+        }
+
+        const html = renderReactionsSummary({ id: postId, reactions_summary: summary });
+        if (existing) {
+            existing.outerHTML = html;
+            return;
+        }
+
+        const card = document.querySelector(`[data-post-id="${postId}"]`);
+        const actions = card?.querySelector('.post-actions');
+        if (actions) actions.insertAdjacentHTML('beforebegin', html);
+    }
+
     async function feedToggleLike(id, btn) {
         const data = await apiFeed(`/api/feed/${id}/react`, { method: 'POST' }).catch(() => null);
         if (!data) return;
         btn.classList.toggle('liked', data.liked);
         const el = document.getElementById(`feed-like-${id}`);
-        if (el) el.textContent = `Like (${data.count})`;
+        if (el) el.textContent = `Like${data.count ? ` (${data.count})` : ''}`;
+        if (data.reactions_summary) updateReactionsSummary(id, data.reactions_summary);
     }
 
     function feedToggleComments(id) {
@@ -885,16 +1021,7 @@
         if (!c) return;
         input.value = '';
         const list = document.getElementById(`feed-comments-list-${id}`);
-        if (list) list.insertAdjacentHTML('beforeend',
-            `<div class="comment-item">
-               <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.author_name)}&background=667eea&color=fff" alt="${c.author_name}">
-               <div class="comment-content">
-                 <p class="comment-author">${c.author_name}</p>
-                 <p class="comment-text">${c.body}</p>
-                 <span class="comment-time">${c.time}</span>
-               </div>
-             </div>`
-        );
+        if (list) list.insertAdjacentHTML('beforeend', renderCommentItem(c));
         const cnt = document.getElementById(`feed-comment-count-${id}`);
         if (cnt) { const n = parseInt(cnt.textContent.match(/\d+/)?.[0] ?? '0'); cnt.textContent = `Comment (${n + 1})`; }
     }
@@ -909,5 +1036,7 @@
         window.__SHOW_KK_UPDATE_MODAL = @json($showKkUpdateModal ?? false);
         window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => []]);
     </script>
+
+    @include('programs::scholarship.partials.data-privacy-modal')
 </body>
 </html>

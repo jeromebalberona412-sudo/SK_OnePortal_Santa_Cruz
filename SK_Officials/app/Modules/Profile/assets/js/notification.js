@@ -1,48 +1,58 @@
 /**
  * SK Officials — Notifications Page JS
- * Handles: filter tabs, mark as read, mark all as read, stats update
  */
 
 document.addEventListener('DOMContentLoaded', function () {
     initNotificationPage();
 });
 
+function getNotificationCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
+
+async function postNotificationAction(url) {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': getNotificationCsrfToken(),
+        },
+        credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+        throw new Error('Notification request failed.');
+    }
+
+    return response.json();
+}
+
 function initNotificationPage() {
-    const list        = document.getElementById('notifPageList');
-    const markAllBtn  = document.getElementById('pageMarkAllBtn');
-    const emptyState  = document.getElementById('notifPageEmpty');
-    const filterBtns  = document.querySelectorAll('.notif-filter-btn');
-    const totalEl     = document.getElementById('totalCount');
-    const unreadEl    = document.getElementById('unreadCount');
-    const readEl      = document.getElementById('readCount');
+    const list = document.getElementById('notifPageList');
+    const markAllBtn = document.getElementById('pageMarkAllBtn');
+    const emptyState = document.getElementById('notifPageEmpty');
+    const filterBtns = document.querySelectorAll('.notif-filter-btn');
+    const totalEl = document.getElementById('totalCount');
+    const unreadEl = document.getElementById('unreadCount');
+    const readEl = document.getElementById('readCount');
 
     let currentFilter = 'all';
 
-    /* ── Update stats ────────────────────────────────────── */
     function updateStats() {
         if (!list) return;
-        const all    = list.querySelectorAll('.notif-page-item');
+        const all = list.querySelectorAll('.notif-page-item');
         const unread = list.querySelectorAll('.notif-page-unread');
-        const read   = all.length - unread.length;
+        const read = all.length - unread.length;
 
-        if (totalEl)  totalEl.textContent  = all.length;
+        if (totalEl) totalEl.textContent = all.length;
         if (unreadEl) unreadEl.textContent = unread.length;
-        if (readEl)   readEl.textContent   = read;
+        if (readEl) readEl.textContent = read;
 
-        /* Also sync header badge */
-        const headerBadge    = document.getElementById('notifBadge');
-        const headerCountPill = document.getElementById('notifCountPill');
-        if (headerBadge) {
-            headerBadge.textContent = unread.length;
-            headerBadge.style.display = unread.length > 0 ? 'flex' : 'none';
-        }
-        if (headerCountPill) {
-            headerCountPill.textContent = unread.length;
-            headerCountPill.style.display = unread.length > 0 ? 'inline' : 'none';
+        if (window.HeaderFunctions?.updateNotificationBadge) {
+            window.HeaderFunctions.updateNotificationBadge(unread.length);
         }
     }
 
-    /* ── Apply filter ────────────────────────────────────── */
     function applyFilter(filter) {
         if (!list) return;
         const items = list.querySelectorAll('.notif-page-item');
@@ -52,9 +62,9 @@ function initNotificationPage() {
             const isUnread = item.classList.contains('notif-page-unread');
             let show = false;
 
-            if (filter === 'all')    show = true;
+            if (filter === 'all') show = true;
             if (filter === 'unread') show = isUnread;
-            if (filter === 'read')   show = !isUnread;
+            if (filter === 'read') show = !isUnread;
 
             item.style.display = show ? 'flex' : 'none';
             if (show) visible++;
@@ -65,16 +75,13 @@ function initNotificationPage() {
         }
     }
 
-    /* ── Mark single item as read ────────────────────────── */
-    function markAsRead(item) {
+    function markAsReadUi(item) {
         if (!item.classList.contains('notif-page-unread')) return;
         item.classList.remove('notif-page-unread');
 
-        /* Remove dot */
         const dot = item.querySelector('.notif-page-dot');
         if (dot) dot.remove();
 
-        /* Update read button */
         const btn = item.querySelector('.notif-page-read-btn');
         if (btn) {
             btn.classList.add('notif-read-done');
@@ -86,7 +93,24 @@ function initNotificationPage() {
         applyFilter(currentFilter);
     }
 
-    /* ── Filter tab clicks ───────────────────────────────── */
+    async function markAsRead(item) {
+        const id = item?.dataset?.id;
+        if (!id || !item.classList.contains('notif-page-unread')) return;
+
+        try {
+            await postNotificationAction(`/api/sk-officials/notifications/${id}/read`);
+            markAsReadUi(item);
+        } catch {
+            markAsReadUi(item);
+        }
+    }
+
+    function navigateToNotification(item) {
+        const url = item?.dataset?.actionUrl;
+        if (!url) return;
+        window.location.href = url;
+    }
+
     filterBtns.forEach(function (btn) {
         btn.addEventListener('click', function () {
             filterBtns.forEach(function (b) { b.classList.remove('active'); });
@@ -96,33 +120,49 @@ function initNotificationPage() {
         });
     });
 
-    /* ── Mark all as read ────────────────────────────────── */
     if (markAllBtn) {
-        markAllBtn.addEventListener('click', function () {
+        markAllBtn.addEventListener('click', async function () {
             if (!list) return;
-            const unreadItems = list.querySelectorAll('.notif-page-unread');
-            unreadItems.forEach(function (item) { markAsRead(item); });
+            try {
+                await postNotificationAction('/api/sk-officials/notifications/read-all');
+            } catch {
+                // Continue with UI update even if request fails.
+            }
+            list.querySelectorAll('.notif-page-unread').forEach(function (item) {
+                markAsReadUi(item);
+            });
         });
     }
 
-    /* ── Individual read button clicks ──────────────────── */
     if (list) {
-        list.addEventListener('click', function (e) {
+        list.addEventListener('click', async function (e) {
             const readBtn = e.target.closest('.notif-page-read-btn');
             if (readBtn && !readBtn.disabled) {
                 const item = readBtn.closest('.notif-page-item');
-                if (item) markAsRead(item);
+                if (item) {
+                    await markAsRead(item);
+                    navigateToNotification(item);
+                }
                 e.stopPropagation();
                 return;
             }
 
-            /* Click anywhere on item also marks it read */
             const item = e.target.closest('.notif-page-item');
-            if (item) markAsRead(item);
+            if (!item) return;
+            await markAsRead(item);
+            navigateToNotification(item);
+        });
+
+        list.addEventListener('keydown', async function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const item = e.target.closest('.notif-page-item');
+            if (!item) return;
+            e.preventDefault();
+            await markAsRead(item);
+            navigateToNotification(item);
         });
     }
 
-    /* ── Init ────────────────────────────────────────────── */
     updateStats();
     applyFilter('all');
 }

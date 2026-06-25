@@ -11,7 +11,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
     const MAX_FILE_BYTES = 5 * 1024 * 1024;
     const ACCEPTED_MIME = 'application/pdf';
-    const TOTAL_STEPS = 7;
+    const TOTAL_STEPS = 6;
     const PDF_PREVIEW_SCALE = 1.2;
 
     const STEPS = [
@@ -20,8 +20,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         { num: 3, title: 'Background Information', nav: 'Background Information' },
         { num: 4, title: 'Additional Information', nav: 'Additional Information' },
         { num: 5, title: 'Uploading of Requirements', nav: 'Uploading of Requirements' },
-        { num: 6, title: 'Review Application', nav: 'Review' },
-        { num: 7, title: 'Confirmation', nav: 'Confirm' },
+        { num: 6, title: 'Review & Confirm', nav: 'Review' },
     ];
 
     let program = {};
@@ -66,12 +65,21 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         return String(getKkProfileValue('education') || '').trim();
     }
 
+    function isEmptyDisplayValue(value) {
+        const v = String(value ?? '').trim();
+        if (!v) return true;
+        const lower = v.toLowerCase();
+        return ['none', 'n/a', 'na', '—', '-', 'null'].includes(lower);
+    }
+
     function getFullName() {
         const fullName = String(getKkProfileValue('full_name') || '').trim();
-        if (fullName) return fullName;
+        if (fullName) {
+            return fullName.split(/\s+/).filter((part) => !isEmptyDisplayValue(part)).join(' ');
+        }
         return [getKkProfileValue('first_name'), getKkProfileValue('middle_name'), getKkProfileValue('last_name'), getKkProfileValue('suffix')]
             .map((p) => String(p || '').trim())
-            .filter(Boolean)
+            .filter((p) => p && !isEmptyDisplayValue(p))
             .join(' ');
     }
 
@@ -80,6 +88,18 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         if (!parts.length) return '?';
         if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
         return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+
+    function getProfileImageUrl() {
+        return String(program.profile_image_url || '').trim();
+    }
+
+    function renderProfileAvatarHtml(name) {
+        const imageUrl = getProfileImageUrl();
+        if (imageUrl) {
+            return `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(name)}" class="sch-preview-avatar sch-preview-avatar-img">`;
+        }
+        return `<div class="sch-preview-avatar">${escapeHtml(getInitials(name))}</div>`;
     }
 
     function loadDraft() {
@@ -124,152 +144,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         return start || end || '';
     }
 
-    function resolveScholarshipAnnouncements(prog) {
-        const details = prog?.scholarship_details || {};
-        let groups = Array.isArray(details.requirement_groups) ? details.requirement_groups : [];
-
-        if (!groups.length) {
-            const fileLabels = (prog?.custom_questions || [])
-                .filter((q) => q.type === 'file')
-                .map((q) => String(q.label || '').trim())
-                .filter(Boolean);
-            if (fileLabels.length) {
-                groups = [{ title: 'Required Documents', items: fileLabels }];
-            }
-        }
-
-        let submission = details.submission_period || null;
-        if (!submission?.start && !submission?.end) {
-            submission = {
-                start: prog?.start_date,
-                end: prog?.end_date,
-                start_display: prog?.start_date_display,
-                end_display: prog?.end_date_display,
-            };
-        }
-
-        return {
-            announcement: String(prog?.announcement || '').trim(),
-            groups,
-            submission,
-            verification: details.verification_period || null,
-        };
-    }
-
-    function renderProgramInfoCardHtml(prog) {
-        const info = resolveScholarshipAnnouncements(prog);
-        const statusLabel = prog?.status === 'open' ? 'Open' : 'Closed';
-        const slots = prog?.available_slots ?? prog?.participation_quantity;
-        const submissionLabel = formatPeriodRange(info.submission, prog);
-        const verificationLabel = formatPeriodRange(info.verification, prog);
-
-        const groupsHtml = info.groups.map((group) => {
-            const items = (group.items || []).filter((item) => String(item || '').trim());
-            if (!group.title && !items.length) return '';
-            return `
-                <div class="program-description-section">
-                    ${group.title ? `<h4 class="section-heading">${escapeHtml(group.title)}</h4>` : ''}
-                    ${items.length ? `<ul class="terms-list sch-program-req-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
-                </div>`;
-        }).join('');
-
-        return `
-            <div class="modern-program-card sch-apply-program-card">
-                <div class="program-card-header" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <div class="program-title-row">
-                        <div>
-                            <span class="program-category-tag">📚 Education</span>
-                            <h3 class="program-card-title">${escapeHtml(prog?.program_name || 'Scholarship Program')}</h3>
-                        </div>
-                        <span class="program-status-badge status-active"><span class="status-dot"></span>${escapeHtml(statusLabel)}</span>
-                    </div>
-                </div>
-                <div class="program-details-grid">
-                    <div class="detail-card">
-                        <div class="detail-content">
-                            <span class="detail-label">Committee</span>
-                            <span class="detail-value">${escapeHtml(prog?.committee || '—')}</span>
-                        </div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-content">
-                            <span class="detail-label">Participation Limit</span>
-                            <span class="detail-value">${slots !== null && slots !== undefined ? escapeHtml(String(slots)) : '—'}</span>
-                        </div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-content">
-                            <span class="detail-label">Start Date</span>
-                            <span class="detail-value">${escapeHtml(prog?.start_date_display || formatIsoDateDisplay(prog?.start_date) || '—')}</span>
-                        </div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-content">
-                            <span class="detail-label">End Date</span>
-                            <span class="detail-value">${escapeHtml(prog?.end_date_display || formatIsoDateDisplay(prog?.end_date) || '—')}</span>
-                        </div>
-                    </div>
-                </div>
-                ${info.announcement ? `
-                    <div class="program-description-section">
-                        <h4 class="section-heading">Announcement</h4>
-                        <p class="description-text">${escapeHtml(info.announcement)}</p>
-                    </div>` : ''}
-                ${groupsHtml}
-                ${submissionLabel ? `
-                    <div class="program-description-section sch-program-period-section">
-                        <h4 class="section-heading">Period for the Submission of Requirements</h4>
-                        <p class="description-text sch-program-period-value">${escapeHtml(submissionLabel)}</p>
-                    </div>` : ''}
-                ${verificationLabel ? `
-                    <div class="program-description-section sch-program-period-section">
-                        <h4 class="section-heading">Period for the Assessment/Verification of Scholar Profile and Requirements</h4>
-                        <p class="description-text sch-program-period-value">${escapeHtml(verificationLabel)}</p>
-                    </div>` : ''}
-            </div>`;
-    }
-
-    function openProgramInfoModal(prog, onContinue) {
-        const modal = document.getElementById('schProgramInfoModal');
-        const body = document.getElementById('schProgramInfoBody');
-        if (!modal || !body) {
-            if (typeof onContinue === 'function') onContinue();
-            return;
-        }
-
-        body.innerHTML = renderProgramInfoCardHtml(prog || program);
-
-        const handleContinue = () => {
-            closeProgramInfoModal();
-            if (typeof onContinue === 'function') onContinue();
-        };
-
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-
-        const continueBtn = document.getElementById('schProgramInfoContinue');
-        const closeBtn = document.getElementById('schProgramInfoClose');
-
-        if (continueBtn) {
-            continueBtn.textContent = typeof onContinue === 'function' ? 'Continue to Application' : 'Close';
-            continueBtn.onclick = handleContinue;
-        }
-        if (closeBtn) {
-            closeBtn.onclick = handleContinue;
-        }
-    }
-
-    function closeProgramInfoModal() {
-        const modal = document.getElementById('schProgramInfoModal');
-        if (!modal) return;
-        modal.classList.remove('active');
-        const success = document.getElementById('successModal');
-        const confirm = document.getElementById('confirmSubmitModal');
-        if ((!success || success.hidden) && (!confirm || confirm.hidden)) {
-            document.body.style.overflow = '';
-        }
-    }
-
     function renderShell() {
         const container = document.getElementById('scholarshipWizardShell');
         if (!container) return null;
@@ -295,9 +169,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                     <div class="sch-wizard-top-row">
                         <div>
                             <h1 id="schWizardProgramTitle">${escapeHtml(program.program_name || 'Scholarship Application')}</h1>
-                            <p class="sch-preview-subtitle">Complete each section below. Your progress is saved when you click Save.</p>
+                            <p class="sch-preview-subtitle">Complete each section below before submitting your application.</p>
                         </div>
-                        <button type="button" class="sch-wizard-info-btn" id="schWizardViewProgramBtn">Program Information</button>
+                        <button type="button" class="sch-wizard-qg-link" data-open-sch-quick-guidelines>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Quick Guidelines
+                        </button>
                     </div>
                 </div>
                 <div class="sch-preview-layout sch-wizard-layout">
@@ -305,7 +182,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                         <p class="sch-wizard-sidebar-title">Application Form</p>
                         <p class="sch-wizard-sidebar-sub">Fill in your responses step by step.</p>
                         <div class="sch-preview-profile">
-                            <div class="sch-preview-avatar">${escapeHtml(getInitials(name))}</div>
+                            ${renderProfileAvatarHtml(name)}
                             <p class="sch-preview-profile-name">${escapeHtml(name)}</p>
                         </div>
                         <ul class="sch-preview-nav sch-wizard-nav" id="schWizardSideNav">${navHtml}</ul>
@@ -336,14 +213,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                                     <div id="customQuestionsContainer"></div>
                                 </div>
                                 <div class="sch-wizard-step-panel" data-step="6" hidden>
-                                    <h2 class="sch-wizard-section-title">Review Application</h2>
+                                    <h2 class="sch-wizard-section-title">Review &amp; Confirm</h2>
                                     <div id="reviewStatusList" class="gf-review-status-list"></div>
                                     <div id="reviewStepContainer" class="gf-review-content"></div>
-                                </div>
-                                <div class="sch-wizard-step-panel" data-step="7" hidden>
-                                    <h2 class="sch-wizard-section-title">Confirmation</h2>
-                                    <p class="sch-wizard-upload-intro">Please confirm the following before submitting your application.</p>
-                                    <div class="gf-confirm-checklist">
+                                    <div class="gf-confirm-checklist sch-wizard-confirm-block">
+                                        <p class="sch-wizard-upload-intro">Please confirm the following before submitting your application.</p>
                                         <label class="gf-confirm-item">
                                             <input type="checkbox" id="confirmInfoTrue">
                                             <span class="gf-confirm-box"></span>
@@ -363,7 +237,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                                 </div>
                                 <div class="sch-wizard-footer">
                                     <button type="button" class="sch-wizard-btn sch-wizard-btn-secondary" id="schWizardPrevBtn" hidden>Previous</button>
-                                    <button type="button" class="sch-wizard-btn sch-wizard-btn-save" id="schWizardSaveBtn" hidden>Save</button>
                                     <button type="button" class="sch-wizard-btn sch-wizard-btn-primary" id="schWizardNextBtn">Next: Educational Background →</button>
                                 </div>
                             </div>
@@ -380,13 +253,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
         container.hidden = false;
         return container;
-    }
-
-    function isEmptyDisplayValue(value) {
-        const v = String(value ?? '').trim();
-        if (!v) return true;
-        const lower = v.toLowerCase();
-        return ['none', 'n/a', 'na', '—', '-', 'null'].includes(lower);
     }
 
     function personalFieldHtml(label, value) {
@@ -472,7 +338,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                         <span class="gf-file-card-name">${escapeHtml(documentMeta.original_name)}</span>
                         <span class="gf-file-card-meta-row">
                             <span class="gf-file-card-meta">${escapeHtml(sizeText)}</span>
-                            <span class="gf-file-card-status">✓ ${escapeHtml(statusText)}</span>
+                            <span class="gf-file-card-status">${escapeHtml(statusText)}</span>
                         </span>
                     </span>
                     <span class="gf-file-card-preview-label">Preview</span>
@@ -755,7 +621,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         reviewStatusList.innerHTML = getCompletionItems().map((item) => `
             <div class="gf-review-status-item ${item.complete ? '' : 'is-missing'}">
                 <span>${escapeHtml(item.label)}</span>
-                <span>${item.complete ? '✅ Complete' : '❌ Missing'}</span>
+                <span>${item.complete ? 'Complete' : 'Missing'}</span>
             </div>
         `).join('');
 
@@ -780,7 +646,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                     <div class="gf-review-doc">
                         <div class="gf-review-doc-header">
                             <span class="gf-review-doc-title">${escapeHtml(q.label || 'Document')}</span>
-                            <span class="gf-review-doc-status ${doc ? '' : 'is-missing'}">${doc ? '✅ Uploaded' : '❌ Missing'}</span>
+                            <span class="gf-review-doc-status ${doc ? '' : 'is-missing'}">${doc ? 'Uploaded' : 'Missing'}</span>
                         </div>
                         ${doc ? `<button type="button" class="sch-wizard-preview-link" data-preview-document="${escapeHtml(q.id)}">Preview document</button>` : ''}
                     </div>`;
@@ -825,26 +691,23 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
         const prevBtn = shell?.querySelector('#schWizardPrevBtn');
         const nextBtn = shell?.querySelector('#schWizardNextBtn');
-        const saveBtn = shell?.querySelector('#schWizardSaveBtn');
 
         if (prevBtn) prevBtn.hidden = currentStep <= 1;
-        if (saveBtn) saveBtn.hidden = currentStep > 5;
 
         if (nextBtn) {
             if (currentStep === TOTAL_STEPS) {
                 nextBtn.textContent = 'Submit Application';
                 updateSubmitButtonState();
-            } else if (currentStep === 6) {
-                nextBtn.textContent = 'Next: Confirmation →';
-                nextBtn.disabled = false;
             } else {
                 nextBtn.textContent = getNextLabel();
                 nextBtn.disabled = false;
             }
         }
 
-        if (currentStep === 6) renderReviewStep();
-        if (currentStep === 7) updateSubmitButtonState();
+        if (currentStep === 6) {
+            renderReviewStep();
+            updateSubmitButtonState();
+        }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -893,8 +756,14 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         if (currentStep === 5) return validateRequirements();
         if (currentStep === 6) {
             if (!isApplicationComplete()) {
-                alert('Please complete all required sections before continuing.');
+                alert('Please complete all required sections before submitting.');
                 renderReviewStep();
+                return false;
+            }
+            const checks = ['confirmInfoTrue', 'confirmDocsValid', 'confirmFalseInfo'].map((id) => shell?.querySelector(`#${id}`)?.checked);
+            if (!checks.every(Boolean)) {
+                alert('Please confirm all statements before submitting your application.');
+                updateSubmitButtonState();
                 return false;
             }
             return true;
@@ -938,13 +807,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         }
     }
 
-    function showSuccessModal(application) {
+    function showSuccessModal() {
         const modal = document.getElementById('successModal');
-        const ref = document.getElementById('successReferenceNumber');
-        if (ref) {
-            const year = new Date().getFullYear();
-            ref.textContent = `APP-${year}-${String(application?.id || 0).padStart(6, '0')}`;
-        }
         if (modal) { modal.hidden = false; document.body.style.overflow = 'hidden'; }
         localStorage.removeItem(draftKey());
     }
@@ -958,7 +822,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
             const data = await submitApplication();
             if (typeof global.hideLoading === 'function') global.hideLoading();
             closeConfirmModal();
-            showSuccessModal(data.application || data);
+            showSuccessModal();
         } catch (error) {
             if (typeof global.hideLoading === 'function') global.hideLoading();
             alert(error.message || 'Unable to submit application.');
@@ -969,7 +833,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
     function bindEvents() {
         shell?.querySelector('#schWizardPrevBtn')?.addEventListener('click', () => goToStep(currentStep - 1));
-        shell?.querySelector('#schWizardSaveBtn')?.addEventListener('click', () => saveDraft());
 
         shell?.querySelector('#schWizardNextBtn')?.addEventListener('click', () => {
             if (currentStep === TOTAL_STEPS) {
@@ -982,7 +845,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                 return;
             }
             if (!validateCurrentStep()) return;
-            if (currentStep <= 5) saveDraft();
             goToStep(currentStep + 1);
         });
 
@@ -991,10 +853,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                 const step = Number(btn.dataset.wizardNav);
                 if (step >= 1 && step <= TOTAL_STEPS) goToStep(step);
             });
-        });
-
-        shell?.querySelector('#schWizardViewProgramBtn')?.addEventListener('click', () => {
-            openProgramInfoModal(program);
         });
 
         ['confirmInfoTrue', 'confirmDocsValid', 'confirmFalseInfo'].forEach((id) => {
@@ -1012,7 +870,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         });
     }
 
-    function init(programData, options = {}) {
+    function init(programData) {
         program = programData || {};
         scheduleProgramId = Number(program.id || global.__scheduleProgramId || 0);
         kkFieldLabels = global.__kkFieldLabels || {};
@@ -1020,30 +878,32 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
         const draft = loadDraft();
         if (draft?.savedAt) draftSavedAt = draft.savedAt;
-        if (draft?.step && draft.step >= 1 && draft.step <= TOTAL_STEPS) {
-            currentStep = draft.step;
+        if (draft?.step && draft.step >= 1) {
+            currentStep = Math.min(TOTAL_STEPS, draft.step);
+        }
+
+        if (program.can_apply === false) {
+            const message = program.eligibility_message || 'You are not eligible to apply for this scholarship program.';
+            alert(message);
+            window.location.href = global.__dashboardUrl || '/dashboard';
+            return;
         }
 
         const landing = document.getElementById('scholarshipLandingContent');
         if (landing) landing.hidden = true;
 
-        const startWizard = () => {
-            shell = renderShell();
-            form = shell?.querySelector('#scholarshipWizardForm');
-            loadPersonalStep();
-            loadSystemFields();
-            renderCustomQuestions();
-            bindEvents();
-            updateStepUI();
-        };
+        shell = renderShell();
+        form = shell?.querySelector('#scholarshipWizardForm');
+        loadPersonalStep();
+        loadSystemFields();
+        renderCustomQuestions();
+        bindEvents();
+        updateStepUI();
 
-        if (!options.skipInfoModal) {
-            openProgramInfoModal(program, () => startWizard());
-            return;
+        if (global.ScholarshipQuickGuidelines) {
+            global.ScholarshipQuickGuidelines.bindTriggers(shell || document);
         }
-
-        startWizard();
     }
 
-    global.ScholarshipApplyWizard = { init, openProgramInfoModal, closeProgramInfoModal };
+    global.ScholarshipApplyWizard = { init };
 })(window);

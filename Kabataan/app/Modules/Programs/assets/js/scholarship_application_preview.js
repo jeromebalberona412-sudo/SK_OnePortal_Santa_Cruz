@@ -22,9 +22,21 @@
             .replace(/"/g, '&quot;');
     }
 
-    function formatReferenceNumber(applicationId) {
-        const year = new Date().getFullYear();
-        return `APP-${year}-${String(applicationId || 0).padStart(6, '0')}`;
+    function formatRespondentDisplay(application) {
+        if (application?.respondent_display) {
+            return String(application.respondent_display);
+        }
+
+        const respondentNumber = application?.respondent_number;
+        if (respondentNumber) {
+            const match = String(respondentNumber).match(/(\d+)$/);
+            if (match) {
+                const n = (parseInt(match[1], 10) % 100) || 1;
+                return String(n).padStart(2, '0');
+            }
+        }
+
+        return '—';
     }
 
     function formatCurrency(value) {
@@ -58,12 +70,12 @@
             </div>`;
     }
 
-    function sectionCard(title, icon, bodyHtml, sectionId) {
+    function sectionCard(title, bodyHtml, sectionId) {
         return `
             <article class="sch-preview-section-card" ${sectionId ? `id="${sectionId}"` : ''}>
                 <div class="sch-preview-section-head">
-                    <h2>${icon ? `<span aria-hidden="true">${icon}</span>` : ''}${escapeHtml(title)}</h2>
-                    <span class="sch-preview-section-badge">✓ Completed</span>
+                    <h2>${escapeHtml(title)}</h2>
+                    <span class="sch-preview-section-badge">Completed</span>
                 </div>
                 <div class="sch-preview-section-body">${bodyHtml}</div>
             </article>`;
@@ -110,7 +122,7 @@
 
         const extraGrid = extra.map((item) => fieldHtml(item.label, item.value)).join('');
 
-        return sectionCard('Personal Information', '👤', `
+        return sectionCard('Personal Information', `
             ${fullName ? `<p style="font-size:15px;font-weight:700;color:#111827;margin:0 0 16px;">${escapeHtml(fullName)}</p>` : ''}
             <div class="sch-preview-grid">${grid || '<p class="sch-preview-empty-section">No personal information recorded.</p>'}${extraGrid}</div>
             <div class="sch-preview-note">These information are automatically taken from your approved KK Profiling.</div>
@@ -147,7 +159,7 @@
             blocks.push('<p class="sch-preview-empty-section">No educational background entries for your profile level.</p>');
         }
 
-        return sectionCard('Educational Background', '🎓', blocks.join(''), 'schPreviewEducation');
+        return sectionCard('Educational Background', blocks.join(''), 'schPreviewEducation');
     }
 
     function renderBackgroundSection(systemFields) {
@@ -183,7 +195,7 @@
 
         const income = formatCurrency(systemFields.annual_family_gross_income);
 
-        return sectionCard('Background Information', '👨‍👩‍👧', `
+        return sectionCard('Background Information', `
             ${groupHtml || '<p class="sch-preview-empty-section">No family background recorded.</p>'}
             <div class="sch-preview-subsection" style="margin-top:16px;">
                 <div class="sch-preview-grid">
@@ -210,7 +222,7 @@
         });
 
         if (!visibleFields.length) {
-            return sectionCard('Additional Information', '📋',
+            return sectionCard('Additional Information',
                 '<p class="sch-preview-empty-section">No additional information required for your education level.</p>',
                 'schPreviewAdditional');
         }
@@ -222,14 +234,14 @@
             return fieldHtml(getSystemLabel(id), value);
         }).join('');
 
-        return sectionCard('Additional Information', '📋', `<div class="sch-preview-grid">${grid}</div>`, 'schPreviewAdditional');
+        return sectionCard('Additional Information', `<div class="sch-preview-grid">${grid}</div>`, 'schPreviewAdditional');
     }
 
     function renderRequirementsSection(answers) {
         const files = (answers || []).filter((a) => a.question_type === 'file' && a.answer);
 
         if (!files.length) {
-            return sectionCard('Requirements', '📎',
+            return sectionCard('Requirements',
                 '<p class="sch-preview-empty-section">No uploaded requirements found.</p>',
                 'schPreviewRequirements');
         }
@@ -247,20 +259,7 @@
                 </a>`;
         }).join('');
 
-        return sectionCard('Requirements', '📎', `<div class="sch-preview-files">${list}</div>`, 'schPreviewRequirements');
-    }
-
-    function renderStepper(activeStep) {
-        return STEPS.map((step, index) => {
-            const num = index + 1;
-            const isActive = step.id === activeStep;
-            const isDone = num < STEPS.findIndex((s) => s.id === activeStep) + 1 || activeStep === 'review';
-            return `
-                <div class="sch-preview-step ${isActive ? 'is-active' : ''} ${isDone ? 'is-done' : ''}">
-                    <span class="sch-preview-step-num">${num}</span>
-                    <span class="sch-preview-step-label">${escapeHtml(step.label)}</span>
-                </div>`;
-        }).join('');
+        return sectionCard('Requirements', `<div class="sch-preview-files">${list}</div>`, 'schPreviewRequirements');
     }
 
     function renderNav(activeSection) {
@@ -287,9 +286,16 @@
         const answers = application.answers || [];
         const personalMapData = personalMap(personalInfo);
         const fullName = personalMapData['Full Name']
-            || [personalMapData['First Name'], personalMapData['Last Name']].filter(Boolean).join(' ');
+            || [personalMapData['First Name'], personalMapData['Middle Name'], personalMapData['Last Name'], personalMapData['Suffix']]
+                .map((part) => String(part || '').trim())
+                .filter((part) => part && !['none', 'n/a', 'na', 'null', '-', '—'].includes(part.toLowerCase()))
+                .join(' ');
+        const profileImageUrl = String(program?.profile_image_url || '').trim();
+        const avatarHtml = profileImageUrl
+            ? `<img src="${escapeHtml(profileImageUrl)}" alt="${escapeHtml(fullName || 'Applicant')}" class="sch-preview-avatar sch-preview-avatar-img">`
+            : `<div class="sch-preview-avatar">${escapeHtml(getInitials(fullName))}</div>`;
         const kkEducation = getKkEducation(personalInfo, systemFields);
-        const refNo = formatReferenceNumber(application.id);
+        const respondentNo = formatRespondentDisplay(application);
 
         shell.innerHTML = `
             <div class="sch-preview-shell">
@@ -302,15 +308,14 @@
                     </div>
                     <h1>Scholarship Application – Preview</h1>
                     <p class="sch-preview-subtitle">Review of your submitted application for ${escapeHtml(application.program_name || program?.program_name || 'this program')}.</p>
-                    <div class="sch-preview-stepper" aria-label="Application steps">${renderStepper('review')}</div>
                 </div>
 
                 <div class="sch-preview-layout">
                     <aside class="sch-preview-sidebar">
                         <div class="sch-preview-profile">
-                            <div class="sch-preview-avatar">${escapeHtml(getInitials(fullName))}</div>
+                            ${avatarHtml}
                             <div class="sch-preview-profile-name">${escapeHtml(fullName || 'Kabataan Applicant')}</div>
-                            <div class="sch-preview-profile-id">${escapeHtml(refNo)}</div>
+                            <div class="sch-preview-profile-id">Respondent No. ${escapeHtml(respondentNo)}</div>
                         </div>
                         <ul class="sch-preview-nav" id="schPreviewNav">${renderNav('schPreviewPersonal')}</ul>
                     </aside>
@@ -331,8 +336,8 @@
                                 <span class="sch-preview-summary-value">${escapeHtml(application.program_name || '—')}</span>
                             </div>
                             <div class="sch-preview-summary-row">
-                                <span class="sch-preview-summary-label">Application ID</span>
-                                <span class="sch-preview-summary-value">${escapeHtml(refNo)}</span>
+                                <span class="sch-preview-summary-label">Respondent Number</span>
+                                <span class="sch-preview-summary-value">${escapeHtml(respondentNo)}</span>
                             </div>
                             <div class="sch-preview-summary-row">
                                 <span class="sch-preview-summary-label">Date Submitted</span>
@@ -348,10 +353,6 @@
                             ${application.can_cancel ? `<button type="button" class="sch-preview-action-btn is-danger" id="schPreviewCancelBtn">Cancel Application</button>` : ''}
                         </div>
                     </aside>
-                </div>
-
-                <div class="sch-preview-footer-actions">
-                    <a href="/dashboard" class="sch-preview-action-btn">← Back to Dashboard</a>
                 </div>
             </div>`;
 
@@ -402,5 +403,5 @@
         }
     }
 
-    global.ScholarshipApplicationPreview = { render, formatReferenceNumber };
+    global.ScholarshipApplicationPreview = { render, formatRespondentDisplay };
 })(window);

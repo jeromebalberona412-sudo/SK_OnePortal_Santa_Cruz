@@ -282,6 +282,17 @@ class KkRegistrationDraftService
             $evaluator = new RegistrationEvaluationService();
             $autoApproved = $evaluator->evaluate($registration->fresh());
 
+            if (! $autoApproved) {
+                try {
+                    (new SkOfficialsNotificationDispatcher())->notifyKkProfilingSubmission(
+                        (int) $barangay->id,
+                        $registration->full_name,
+                    );
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+
             try {
                 (new KkSurveyResponseService())->syncFromRegistration(
                     $registration->fresh(),

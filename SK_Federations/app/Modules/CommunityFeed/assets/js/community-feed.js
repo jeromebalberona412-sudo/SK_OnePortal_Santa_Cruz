@@ -2,7 +2,6 @@
 'use strict';
 
 let currentFilter = 'all';
-let currentPage   = 1;
 let editingPostId = null;
 let pendingImageDataUrl = null;
 let pendingLinkUrl = null;
@@ -13,7 +12,6 @@ const FED_AVATAR = 'https://ui-avatars.com/api/?name=SK+Federation&background=21
 
 /* ── API STATE ── */
 let posts      = [];
-let lastPage   = 1;
 let isLoading  = false;
 
 function csrfToken() {
@@ -37,23 +35,21 @@ function loadPosts(reset) {
     isLoading = true;
 
     var container = document.getElementById('feed-posts');
-    if (reset) { posts = []; currentPage = 1; container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Loading...</div>'; }
+    if (reset) { posts = []; container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Loading...</div>'; }
 
-    var url = '/api/community-feed?page=' + currentPage + (currentFilter !== 'all' ? '&filter=' + currentFilter : '');
+    var url = '/api/community-feed?per_page=100&page=1' + (currentFilter !== 'all' ? '&filter=' + currentFilter : '');
 
     apiFetch(url, { method: 'GET' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (reset) container.innerHTML = '';
-            lastPage = data.last_page || 1;
 
-            var newPosts = data.data || [];
-            posts = reset ? newPosts : posts.concat(newPosts);
+            posts = data.data || [];
 
             if (!posts.length) {
                 container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">No posts found.</div>';
             } else {
-                newPosts.forEach(function(p) {
+                posts.forEach(function(p) {
                     var el = document.createElement('div');
                     el.className = 'post-card';
                     el.dataset.postId = p.id;
@@ -61,9 +57,6 @@ function loadPosts(reset) {
                     container.appendChild(el);
                 });
             }
-
-            var btn = document.getElementById('load-more-btn');
-            if (btn) btn.style.display = currentPage >= lastPage ? 'none' : 'inline-flex';
         })
         .catch(function() {
             if (reset) container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Failed to load posts.</div>';
@@ -75,6 +68,79 @@ function loadPosts(reset) {
 function renderPosts(reset) {
     loadPosts(reset);
 }
+
+function escapeHtml(v) {
+    return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+const LIKE_THUMB_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>';
+
+function formatLikeCountLabel(postId, count) {
+    var total = count || 0;
+    if (total > 0) {
+        return 'Like (<span class="post-like-count-link" onclick="event.stopPropagation();openLikesModal(' + postId + ')">' + total + '</span>)';
+    }
+    return 'Like (0)';
+}
+
+function updateLikeCountLabel(postId, count) {
+    var el = document.getElementById('like-count-' + postId);
+    if (el) el.innerHTML = formatLikeCountLabel(postId, count);
+}
+
+function openLikesModal(postId) {
+    var modal = document.getElementById('likesModal');
+    var list = document.getElementById('likesModalList');
+    var countEl = document.getElementById('likesModalCount');
+    if (!modal || !list) return;
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    list.innerHTML = '<div class="cf-likes-loading">Loading...</div>';
+    if (countEl) countEl.textContent = '0';
+
+    apiFetch('/api/community-feed/' + postId + '/likes', { method: 'GET' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (countEl) countEl.textContent = String(data.count || 0);
+            renderLikesList(data.reactors || []);
+        })
+        .catch(function () {
+            list.innerHTML = '<div class="cf-likes-empty">Could not load likes.</div>';
+        });
+}
+
+function renderLikesList(reactors) {
+    var list = document.getElementById('likesModalList');
+    if (!list) return;
+
+    if (!reactors.length) {
+        list.innerHTML = '<div class="cf-likes-empty">No likes yet.</div>';
+        return;
+    }
+
+    list.innerHTML = reactors.map(function (r) {
+        return '<div class="cf-likes-item">'
+            + '<div class="cf-likes-avatar-wrap">'
+            + '<img src="' + escapeHtml(r.avatar_url) + '" alt="' + escapeHtml(r.name) + '" class="cf-likes-avatar">'
+            + '<span class="cf-likes-reaction-badge">' + LIKE_THUMB_SVG + '</span>'
+            + '</div>'
+            + '<div class="cf-likes-user">'
+            + '<p class="cf-likes-name">' + escapeHtml(r.name) + '</p>'
+            + '<p class="cf-likes-role">' + escapeHtml(r.role_label || 'Member') + '</p>'
+            + '</div>'
+            + '</div>';
+    }).join('');
+}
+
+function closeLikesModal() {
+    var modal = document.getElementById('likesModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+window.openLikesModal = openLikesModal;
+window.closeLikesModal = closeLikesModal;
 
 function buildPost(p) {
     var liked = p.liked || false;
@@ -124,7 +190,8 @@ function buildPost(p) {
             + '</div></div>';
     }
 
-    var commentsHtml = showComments ? buildComments(p) : '';
+    var commentsHtml = buildComments(p);
+    var commentCount = (p.comments || []).length;
 
     return '<div class="post-header">'
         + '<img src="' + avatar + '" alt="' + p.author_name + '" class="post-avatar">'
@@ -139,11 +206,11 @@ function buildPost(p) {
         + '</div>'
         + '<div class="post-actions">'
         + '<button class="action-btn' + (liked ? ' liked' : '') + '" onclick="toggleLike(' + p.id + ', this)">'
-        + '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>'
-        + '<span id="like-count-' + p.id + '">Like (' + p.likes + ')</span></button>'
+        + LIKE_THUMB_SVG
+        + '<span id="like-count-' + p.id + '">' + formatLikeCountLabel(p.id, p.likes || 0) + '</span></button>'
         + '<button class="action-btn comment-btn" onclick="toggleComments(' + p.id + ')">'
         + '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>'
-        + '<span id="comment-count-' + p.id + '">Comment (' + (p.comments ? p.comments.length : 0) + ')</span></button>'
+        + '<span id="comment-count-' + p.id + '">Comment (' + commentCount + ')</span></button>'
         + '</div>'
         + '<div class="comments-section" id="comments-' + p.id + '" style="' + (showComments ? '' : 'display:none;') + '">'
         + commentsHtml + '</div>';
@@ -173,29 +240,33 @@ function buildComments(p) {
 /* ── INTERACTIONS ── */
 function toggleLike(id, btn) {
     apiFetch('/api/community-feed/' + id + '/react', { method: 'POST' })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            var el = document.getElementById('like-count-' + id);
-            if (el) el.textContent = 'Like (' + data.count + ')';
-            if (data.liked) btn.classList.add('liked'); else btn.classList.remove('liked');
-            var p = posts.find(function(x) { return x.id === id; });
-            if (p) { p.likes = data.count; p.liked = data.liked; }
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.liked) btn.classList.add('liked');
+            else btn.classList.remove('liked');
+
+            var p = posts.find(function (x) { return x.id === id; });
+            if (p) {
+                p.likes = data.count;
+                p.liked = data.liked;
+                if (data.reactions_summary) p.reactions_summary = data.reactions_summary;
+                updateLikeCountLabel(id, data.count);
+            }
         });
 }
 
 function toggleComments(id) {
     var section = document.getElementById('comments-' + id);
     if (!section) return;
-    var p = posts.find(function(x) { return x.id === id; });
-    if (!p) return;
 
     if (commentSections.has(id)) {
         commentSections.delete(id);
         section.style.display = 'none';
     } else {
         commentSections.add(id);
-        section.innerHTML = buildComments(p);
         section.style.display = 'block';
+        var input = section.querySelector('.comment-input');
+        if (input) input.focus();
     }
 }
 
@@ -232,11 +303,6 @@ function setFeedFilter(btn, filter) {
     document.querySelectorAll('.feed-tab').forEach(function(t) { t.classList.remove('active'); });
     btn.classList.add('active');
     renderPosts(true);
-}
-
-function loadMorePosts() {
-    currentPage++;
-    renderPosts(false);
 }
 
 function togglePostOptions(id, e) {
@@ -460,14 +526,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.innerHTML = buildPost(p);
                 container.appendChild(el);
             });
-            var btn = document.getElementById('load-more-btn');
-            if (btn) btn.style.display = 'none';
         });
     }
 
     // Close post option menus on outside click
     document.addEventListener('click', function(e) {
         document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeLikesModal();
     });
 
     // Programs drawer (mobile FAB)

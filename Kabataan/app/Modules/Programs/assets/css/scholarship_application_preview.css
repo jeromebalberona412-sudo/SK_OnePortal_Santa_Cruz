@@ -125,6 +125,12 @@
     margin: 0 auto 12px;
 }
 
+.sch-preview-avatar-img {
+    object-fit: cover;
+    display: block;
+    background: #e5e7eb;
+}
+
 .sch-preview-profile-name {
     font-size: 14px;
     font-weight: 700;

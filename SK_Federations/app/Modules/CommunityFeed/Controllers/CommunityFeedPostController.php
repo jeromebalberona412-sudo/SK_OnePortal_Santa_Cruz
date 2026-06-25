@@ -9,6 +9,7 @@ use App\Modules\Shared\Models\AnnouncementComment;
 use App\Modules\Shared\Models\AnnouncementReaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Throwable;
@@ -23,15 +24,22 @@ class CommunityFeedPostController extends Controller
     public function feed(Request $request): JsonResponse
     {
         $user  = Auth::user();
-        $query = Announcement::with(['barangay', 'comments', 'user'])
+        $query = Announcement::with([
+            'barangay',
+            'comments',
+            'user',
+            'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
+        ])
             ->withCount('reactions')
             ->orderByDesc('created_at');
+
+        $perPage = min(100, max(1, (int) $request->get('per_page', 100)));
 
         if ($request->filter && $request->filter !== 'all') {
             $query->where('type', $request->filter);
         }
 
-        $posts = $query->paginate(10);
+        $posts = $query->paginate($perPage);
 
         return response()->json([
             'data'         => collect($posts->items())->map(fn($p) => $this->formatPost($p, $user->id)),
@@ -60,7 +68,11 @@ class CommunityFeedPostController extends Controller
             'is_federation_wide' => true,
         ]));
 
-        return response()->json($this->formatPost($post->load(['comments', 'user']), $user->id), 201);
+        return response()->json($this->formatPost(
+            $post->load(['comments', 'user', 'reactions' => fn ($q) => $q->with('user')->latest()->limit(12)])
+                ->loadCount('reactions'),
+            $user->id
+        ), 201);
     }
 
     // PUT /api/community-feed/{id}
@@ -81,7 +93,11 @@ class CommunityFeedPostController extends Controller
 
         $post->update($validated);
 
-        return response()->json($this->formatPost($post->load(['barangay', 'comments', 'user']), Auth::id()));
+        return response()->json($this->formatPost(
+            $post->load(['barangay', 'comments', 'user', 'reactions' => fn ($q) => $q->with('user')->latest()->limit(12)])
+                ->loadCount('reactions'),
+            Auth::id()
+        ));
     }
 
     // DELETE /api/community-feed/{id}
@@ -94,6 +110,29 @@ class CommunityFeedPostController extends Controller
             ->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    // GET /api/community-feed/{id}/likes
+    public function likes(int $id): JsonResponse
+    {
+        Announcement::query()->findOrFail($id);
+
+        $reactions = AnnouncementReaction::query()
+            ->with('user')
+            ->where('announcement_id', $id)
+            ->latest()
+            ->get();
+
+        $reactors = $reactions->map(fn (AnnouncementReaction $reaction) => [
+            'name' => $this->resolveReactorName($reaction),
+            'avatar_url' => $this->resolveReactorAvatar($reaction),
+            'role_label' => $this->resolveReactorRoleLabel($reaction),
+        ])->values();
+
+        return response()->json([
+            'count' => $reactors->count(),
+            'reactors' => $reactors,
+        ]);
     }
 
     // POST /api/community-feed/{id}/react
@@ -118,8 +157,19 @@ class CommunityFeedPostController extends Controller
             $liked = true;
         }
 
+        $reactions = AnnouncementReaction::with('user')
+            ->where('announcement_id', $id)
+            ->latest()
+            ->limit(12)
+            ->get();
+
         $count = AnnouncementReaction::where('announcement_id', $id)->count();
-        return response()->json(['liked' => $liked, 'count' => $count]);
+
+        return response()->json([
+            'liked' => $liked,
+            'count' => $count,
+            'reactions_summary' => $this->formatReactionsSummary($reactions, $count),
+        ]);
     }
 
     // POST /api/community-feed/{id}/comment
@@ -184,6 +234,10 @@ class CommunityFeedPostController extends Controller
             'likes'              => $post->reactions_count ?? $post->reactions()->count(),
             'liked'              => $liked,
             'time'               => $post->created_at->diffForHumans(),
+            'reactions_summary'  => $this->formatReactionsSummary(
+                $post->relationLoaded('reactions') ? $post->reactions : collect(),
+                (int) ($post->reactions_count ?? 0),
+            ),
             'comments'           => $post->comments->map(fn($c) => [
                 'id'          => $c->id,
                 'author_name' => $c->author_name,
@@ -191,5 +245,45 @@ class CommunityFeedPostController extends Controller
                 'time'        => $c->created_at->diffForHumans(),
             ])->values(),
         ];
+    }
+
+    /**
+     * @param  Collection<int, AnnouncementReaction>  $reactions
+     * @return array{count: int, reactors: list<array{name: string, avatar_url: string, role_label: string}>}
+     */
+    private function formatReactionsSummary(Collection $reactions, int $totalCount): array
+    {
+        $reactors = $reactions->map(fn (AnnouncementReaction $reaction) => [
+            'name' => $this->resolveReactorName($reaction),
+            'avatar_url' => $this->resolveReactorAvatar($reaction),
+            'role_label' => $this->resolveReactorRoleLabel($reaction),
+        ])->values();
+
+        return [
+            'count' => max(0, $totalCount),
+            'reactors' => $reactors->take(8)->all(),
+        ];
+    }
+
+    private function resolveReactorName(AnnouncementReaction $reaction): string
+    {
+        return $reaction->user?->name ?: 'Member';
+    }
+
+    private function resolveReactorAvatar(AnnouncementReaction $reaction): string
+    {
+        $name = $this->resolveReactorName($reaction);
+
+        return 'https://ui-avatars.com/api/?name='.urlencode($name).'&background=213F99&color=fff&size=80';
+    }
+
+    private function resolveReactorRoleLabel(AnnouncementReaction $reaction): string
+    {
+        return match ($reaction->user_type) {
+            'sk_fed' => 'SK Federation',
+            'sk_official' => 'SK Official',
+            'kabataan' => 'Kabataan Member',
+            default => 'Member',
+        };
     }
 }

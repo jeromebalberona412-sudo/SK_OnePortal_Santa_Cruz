@@ -87,8 +87,24 @@ class KkSurveyResponseService
             'facebook_profile_url' => $value('facebook_profile_url') ?: $value('facebook'),
             'willing_to_join_group_chat' => $yesNo($value('group_chat')),
             'participant_signature' => $value('signature'),
+            'supporting_documents' => $this->resolveSupportingDocuments($formData),
             'consent_given' => true,
             'status' => $status,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $formData
+     * @return array<int, array<string, mixed>>|null
+     */
+    private function resolveSupportingDocuments(array $formData): ?array
+    {
+        $documents = $formData['supporting_documents'] ?? null;
+
+        if (! is_array($documents) || $documents === []) {
+            return null;
+        }
+
+        return array_values($documents);
     }
 }

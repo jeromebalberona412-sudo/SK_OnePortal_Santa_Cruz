@@ -7,6 +7,7 @@
     let spfbQuestions = [];
     let spfbEditingId = null;
     let showToast = function (msg) { if (msg) console.warn(msg); };
+    let excludedQuestionTypes = [];
     const QUESTION_TYPES = [
         { value: 'text',      label: 'Short Answer'    },
         { value: 'paragraph', label: 'Paragraph'       },
@@ -239,7 +240,7 @@
     }
 
     function buildEditCard(q, idx) {
-        const typeOptions = `<option value="" disabled>Select input type</option>` + QUESTION_TYPES.map(t =>
+        const typeOptions = `<option value="" disabled>Select input type</option>` + QUESTION_TYPES.filter((t) => !excludedQuestionTypes.includes(t.value)).map(t =>
             `<option value="${t.value}" ${q.type === t.value ? 'selected' : ''}>${t.label}</option>`
         ).join('');
 
@@ -398,6 +399,7 @@
     function init(options) {
         options = options || {};
         if (typeof options.showToast === 'function') showToast = options.showToast;
+        excludedQuestionTypes = Array.isArray(options.excludeTypes) ? options.excludeTypes : [];
         const spfbAddBtn = document.getElementById('spfbAddQuestionBtn');
         if (spfbAddBtn && !spfbAddBtn.dataset.spfbBound) {
             spfbAddBtn.dataset.spfbBound = '1';

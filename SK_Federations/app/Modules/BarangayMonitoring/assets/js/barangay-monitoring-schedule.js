@@ -13,6 +13,32 @@
         });
     }
 
+    function formatDateInput(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function defaultCreateDates() {
+        const start = new Date();
+        const end = new Date();
+        end.setDate(end.getDate() + 30);
+        return {
+            start: formatDateInput(start),
+            end: formatDateInput(end),
+        };
+    }
+
+    function extractErrorMessage(payload) {
+        if (payload?.message) return payload.message;
+        if (payload?.errors) {
+            const flat = Object.values(payload.errors).flat().filter(Boolean);
+            if (flat.length) return flat.join(' ');
+        }
+        return 'Request failed.';
+    }
+
     async function apiRequest(url, method, body) {
         const response = await fetch(url, {
             method: method,
@@ -31,7 +57,7 @@
         });
 
         if (!response.ok) {
-            throw new Error(payload.message || 'Request failed.');
+            throw new Error(extractErrorMessage(payload));
         }
 
         return payload;
@@ -40,19 +66,24 @@
     function openScheduleModal(mode) {
         const modal = document.getElementById('scheduleModal');
         const title = document.getElementById('scheduleModalTitle');
-        const reasonWrap = document.getElementById('scheduleReasonWrap');
         const schedule = config.currentSchedule || {};
+        const defaults = defaultCreateDates();
 
         document.getElementById('scheduleId').value = mode === 'edit' ? (schedule.id || '') : '';
-        document.getElementById('scheduleFiscalYear').value = mode === 'edit' ? (schedule.fiscal_year || new Date().getFullYear()) : new Date().getFullYear();
-        document.getElementById('scheduleTitle').value = mode === 'edit' ? (schedule.title || 'ABYIP Submission') : 'ABYIP Submission';
-        document.getElementById('scheduleDateStart').value = mode === 'edit' ? (schedule.date_start_raw || '') : '';
-        document.getElementById('scheduleDeadline').value = mode === 'edit' ? (schedule.deadline_raw || '') : '';
-        document.getElementById('scheduleAllowLateExtension').checked = !!schedule.allow_late_extension;
-        document.getElementById('scheduleReason').value = '';
+        document.getElementById('scheduleFiscalYear').value = mode === 'edit'
+            ? (schedule.fiscal_year || new Date().getFullYear())
+            : new Date().getFullYear();
+        document.getElementById('scheduleTitle').value = mode === 'edit'
+            ? (schedule.title || 'ABYIP Submission')
+            : 'ABYIP Submission';
+        document.getElementById('scheduleDateStart').value = mode === 'edit'
+            ? (schedule.date_start_raw || '')
+            : defaults.start;
+        document.getElementById('scheduleDeadline').value = mode === 'edit'
+            ? (schedule.deadline_raw || '')
+            : defaults.end;
 
         if (title) title.textContent = mode === 'edit' ? 'Edit ABYIP Schedule' : 'Create ABYIP Schedule';
-        if (reasonWrap) reasonWrap.hidden = mode !== 'edit';
         if (modal) modal.hidden = false;
     }
 
@@ -61,38 +92,57 @@
         const modal = document.getElementById('extendModal');
         document.getElementById('extendScheduleId').value = schedule.id || '';
         document.getElementById('extendNewDeadline').value = '';
-        document.getElementById('extendReason').value = '';
         if (modal) modal.hidden = false;
     }
 
     async function saveSchedule() {
+        const saveBtn = document.getElementById('scheduleSaveBtn');
         const id = document.getElementById('scheduleId').value;
+        const fiscalYear = parseInt(document.getElementById('scheduleFiscalYear').value, 10);
+        const title = document.getElementById('scheduleTitle').value.trim();
+        const dateStart = document.getElementById('scheduleDateStart').value;
+        const deadline = document.getElementById('scheduleDeadline').value;
+
+        if (!title) throw new Error('Title is required.');
+        if (!dateStart || !deadline) throw new Error('Start date and deadline are required.');
+        if (!Number.isFinite(fiscalYear)) throw new Error('Fiscal year is required.');
+
         const payload = {
-            fiscal_year: parseInt(document.getElementById('scheduleFiscalYear').value, 10),
-            title: document.getElementById('scheduleTitle').value.trim(),
-            date_start: document.getElementById('scheduleDateStart').value,
-            deadline: document.getElementById('scheduleDeadline').value,
-            allow_late_extension: document.getElementById('scheduleAllowLateExtension').checked,
-            reason: document.getElementById('scheduleReason').value.trim() || null,
+            fiscal_year: fiscalYear,
+            title: title,
+            date_start: dateStart,
+            deadline: deadline,
         };
 
-        if (id) {
-            await apiRequest(config.updateUrl + '/' + id, 'PUT', payload);
-        } else {
-            await apiRequest(config.storeUrl, 'POST', payload);
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
         }
 
-        window.location.reload();
+        try {
+            if (id) {
+                await apiRequest(config.updateUrl + '/' + id, 'PUT', payload);
+            } else {
+                await apiRequest(config.storeUrl, 'POST', payload);
+            }
+            window.location.reload();
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Schedule';
+            }
+        }
     }
 
     async function extendSchedule() {
         const id = document.getElementById('extendScheduleId').value;
-        const payload = {
-            new_deadline: document.getElementById('extendNewDeadline').value,
-            reason: document.getElementById('extendReason').value.trim() || null,
-        };
+        const newDeadline = document.getElementById('extendNewDeadline').value;
 
-        await apiRequest(config.updateUrl + '/' + id + '/extend', 'POST', payload);
+        if (!newDeadline) throw new Error('New deadline is required.');
+
+        await apiRequest(config.updateUrl + '/' + id + '/extend', 'POST', {
+            new_deadline: newDeadline,
+        });
         window.location.reload();
     }
 

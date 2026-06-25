@@ -210,13 +210,6 @@
                     <input type="date" id="scheduleDeadline">
                 </label>
             </div>
-            <label class="bm-checkbox-label">
-                <input type="checkbox" id="scheduleAllowLateExtension">
-                Allow extension even after deadline
-            </label>
-            <label id="scheduleReasonWrap" hidden>Reason
-                <textarea id="scheduleReason" rows="3" placeholder="Reason for update or extension..."></textarea>
-            </label>
         </div>
         <div class="bm-modal-footer">
             <button type="button" class="bm-btn-secondary" data-schedule-close>Cancel</button>
@@ -236,9 +229,6 @@
             <input type="hidden" id="extendScheduleId">
             <label>New Deadline
                 <input type="date" id="extendNewDeadline">
-            </label>
-            <label>Reason
-                <textarea id="extendReason" rows="3" placeholder="e.g. Requested extension by barangays."></textarea>
             </label>
         </div>
         <div class="bm-modal-footer">

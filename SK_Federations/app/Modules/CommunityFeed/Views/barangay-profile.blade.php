@@ -6,7 +6,7 @@
 @endpush
 
 @push('styles')
-    <link rel="stylesheet" href="{{ url('/modules/community_feed/css/community-feed.css') }}">
+    <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}">
 @endpush
 
 @push('navbar-center')
@@ -29,7 +29,11 @@
                 <div class="bfp-cover"></div>
                 <div class="bfp-info-row">
                     <div class="bfp-avatar-wrap">
-                        <div class="bfp-avatar">{{ strtoupper(substr($name, 0, 2)) }}</div>
+                        @if(!empty($profile['logo_url']))
+                            <img src="{{ $profile['logo_url'] }}" alt="Brgy. {{ $name }}" class="bfp-avatar-img">
+                        @else
+                            <div class="bfp-avatar">{{ $profile['initials'] ?? strtoupper(substr($name, 0, 2)) }}</div>
+                        @endif
                     </div>
                     <div class="bfp-meta">
                         <div class="bfp-badge"><i class="fas fa-check-circle" style="font-size:10px;"></i> Sangguniang Kabataan</div>

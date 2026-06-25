@@ -287,6 +287,18 @@ class KabataanProgramSurveyService
 
             $response->load(['survey.abyipProgram', 'answers.question']);
 
+            try {
+                $program = $response->survey?->abyipProgram;
+                (new SkOfficialsNotificationDispatcher())->notifySurveyResponse(
+                    (int) $survey->barangay_id,
+                    (string) ($registration->full_name ?? 'A Kabataan member'),
+                    (string) ($program?->program_name ?? 'a program survey'),
+                    $program?->program_letter,
+                );
+            } catch (\Throwable $e) {
+                report($e);
+            }
+
             return $this->formatResponseDetail($response);
         });
     }
@@ -297,13 +309,7 @@ class KabataanProgramSurveyService
 
         return $this->scopedSurveyQuery($user)
             ->whereDate('close_date', '>=', $today)
-            ->where(function ($query) use ($today) {
-                $query->where('status', 'open')
-                    ->orWhere(function ($inner) use ($today) {
-                        $inner->where('status', 'scheduled')
-                            ->whereDate('open_date', '<=', $today);
-                    });
-            });
+            ->where('status', 'open');
     }
 
     private function scopedSurveyQuery(User $user)

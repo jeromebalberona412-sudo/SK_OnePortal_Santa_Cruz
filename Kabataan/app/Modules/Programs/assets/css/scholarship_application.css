@@ -741,6 +741,9 @@
     align-items: center;
     justify-content: center;
     margin: 0 auto 20px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
 }
 
 .gf-success-title {
@@ -962,6 +965,12 @@
 }
 
 /* Confirmation Checklist */
+.sch-wizard-confirm-block {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
 .gf-confirm-checklist {
     display: flex;
     flex-direction: column;

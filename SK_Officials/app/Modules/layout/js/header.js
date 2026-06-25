@@ -249,22 +249,66 @@ function initializeNotifications() {
 
     /* ── Mark individual item as read on click ── */
     if (notifList) {
-        notifList.addEventListener('click', function (e) {
+        notifList.addEventListener('click', async function (e) {
             const item = e.target.closest('.notif-item');
             if (!item) return;
-            if (item.classList.contains('notif-unread')) {
+
+            const id = item.dataset.id;
+            const actionUrl = item.dataset.actionUrl || '';
+
+            if (item.classList.contains('notif-unread') && id) {
+                try {
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+                    await fetch(`/api/sk-officials/notifications/${id}/read`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                        },
+                        credentials: 'same-origin',
+                    });
+                } catch {
+                    // Continue with local UI update.
+                }
+
                 item.classList.remove('notif-unread');
                 const dot = item.querySelector('.notif-unread-dot');
                 if (dot) dot.remove();
                 updateUnreadCount();
             }
+
+            if (actionUrl) {
+                window.location.href = actionUrl;
+            }
+        });
+
+        notifList.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const item = e.target.closest('.notif-item');
+            if (!item) return;
+            e.preventDefault();
+            item.click();
         });
     }
 
     /* ── Mark all as read ── */
     if (markAllBtn) {
-        markAllBtn.addEventListener('click', function (e) {
+        markAllBtn.addEventListener('click', async function (e) {
             e.stopPropagation();
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+                await fetch('/api/sk-officials/notifications/read-all', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                    },
+                    credentials: 'same-origin',
+                });
+            } catch {
+                // Continue with local UI update.
+            }
+
             const unreadItems = notifList ? notifList.querySelectorAll('.notif-unread') : [];
             unreadItems.forEach(function (item) {
                 item.classList.remove('notif-unread');
@@ -290,6 +334,7 @@ function initializeNotifications() {
         if (notifEmpty && notifList) {
             const hasItems = notifList.querySelectorAll('.notif-item').length > 0;
             notifEmpty.style.display = hasItems ? 'none' : 'flex';
+            notifList.style.display = hasItems ? '' : 'none';
         }
     }
 }

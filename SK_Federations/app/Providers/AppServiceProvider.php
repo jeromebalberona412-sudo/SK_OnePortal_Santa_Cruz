@@ -45,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer([
             'layout::header',
             'layout::sidebar',
+            'community_feed::*',
         ], function ($view): void {
             $user = Auth::user();
 
