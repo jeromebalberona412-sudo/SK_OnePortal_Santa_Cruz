@@ -8,6 +8,7 @@ use App\Models\KkSurveyResponse;
 use App\Models\ProgramApplication;
 use App\Models\ScheduleProgram;
 use App\Models\User;
+use App\Services\ScholarshipSystemFieldsService;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -16,8 +17,9 @@ class KabataanProgramService
     public function __construct(
         private readonly ProgramDocumentService $documentService,
         private readonly KabataanProgramSurveyService $surveyService,
-    ) {
-    }
+        private readonly ScholarshipSystemFieldsService $scholarshipSystemFields,
+    ) {}
+
     /** @var list<string> */
     private const YOUTH_PROGRAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
@@ -152,7 +154,7 @@ class KabataanProgramService
         $application = $this->findUserApplication($user->id, $scheduleProgramId);
         $formatted = $this->formatScheduleProgram($program, $user, true);
         $formatted['kk_profile'] = $this->resolveKkProfile($user, $program->kk_profiling_fields ?? []);
-        $formatted['application'] = $this->formatUserApplication($application, true);
+        $formatted['application'] = $this->formatUserApplication($application, true, $user);
         $formatted['uploaded_documents'] = $this->resolveUploadedDocuments(
             $user,
             $scheduleProgramId,
@@ -255,7 +257,7 @@ class KabataanProgramService
      * @param  list<array<string, mixed>>  $answers
      * @return array<string, mixed>
      */
-    public function submitApplication(User $user, int $scheduleProgramId, array $answers): array
+    public function submitApplication(User $user, int $scheduleProgramId, array $answers, array $systemFieldAnswers = []): array
     {
         $program = $this->scheduleProgramsQuery($user)
             ->where('id', $scheduleProgramId)
@@ -280,8 +282,8 @@ class KabataanProgramService
             ]);
         }
 
-        $questions = collect($program->custom_questions ?? []);
-        $this->validateAnswers($questions->all(), $answers);
+        $questions = collect($program->custom_questions ?? [])->filter(fn ($q) => ($q['type'] ?? '') === 'file');
+        $this->validateAnswers($questions->values()->all(), $answers);
 
         $registration = KabataanRegistration::query()
             ->with('barangay')
@@ -299,6 +301,9 @@ class KabataanProgramService
 
         $customAnswers = $this->buildCustomAnswersPayload($answers, $questions);
         $profileData = $this->buildApplicationProfileData($user, $registration);
+        $kkEducation = trim((string) ($this->resolveKkProfile($user, ['education'])['education'] ?? ''));
+        $validatedSystemFields = $this->scholarshipSystemFields->validate($systemFieldAnswers, $kkEducation);
+        $profileData = $this->mergeSystemFieldsIntoProfile($profileData, $validatedSystemFields);
         $existingRecord = $this->findUserApplicationRecord($user->id, $scheduleProgramId);
         $isResubmit = $existingRecord !== null
             && $existingRecord->status === ProgramApplication::STATUS_CANCELLED;
@@ -313,6 +318,7 @@ class KabataanProgramService
             'program_id' => $program->id,
             'kabataan_id' => $user->id,
             'custom_answers' => $customAnswers,
+            'system_field_answers' => $validatedSystemFields,
             'status' => ProgramApplication::STATUS_PENDING,
             'cancel_reason' => null,
             'rejection_reason' => null,
@@ -508,6 +514,7 @@ class KabataanProgramService
             'end_date_display' => $this->formatDate($program->end_date),
             'status' => $program->status,
             'announcement' => $program->announcement,
+            'scholarship_details' => $program->scholarship_details,
             'has_applied' => $application !== null,
             'application_status' => $application?->status,
             'application_id' => $application?->id,
@@ -561,7 +568,7 @@ class KabataanProgramService
             $documents = $this->documentService->listApplicationDocuments($application);
 
             $payload['answers'] = collect($application->custom_answers ?? [])
-                ->map(function (array $answer) use ($documents, $application) {
+                ->map(function (array $answer) use ($documents) {
                     $questionId = (string) ($answer['question_id'] ?? '');
                     $decoded = $answer['answer'] ?? null;
                     if (is_string($decoded)) {
@@ -586,6 +593,7 @@ class KabataanProgramService
                 ->all();
 
             $payload['uploaded_documents'] = $documents;
+            $payload['system_field_answers'] = $application->system_field_answers ?? [];
         }
 
         return $payload;
@@ -1087,6 +1095,48 @@ class KabataanProgramService
     private function formatDate(?Carbon $date): string
     {
         return $date?->format('F j, Y') ?? '—';
+    }
+
+    /**
+     * @param  array<string, mixed>  $profileData
+     * @param  array<string, mixed>  $systemFields
+     * @return array<string, mixed>
+     */
+    private function mergeSystemFieldsIntoProfile(array $profileData, array $systemFields): array
+    {
+        $motherName = trim(implode(' ', array_filter([
+            $systemFields['mother_first_name'] ?? '',
+            $systemFields['mother_middle_name'] ?? '',
+            $systemFields['mother_last_name'] ?? '',
+            $systemFields['mother_suffix'] ?? '',
+        ], fn ($part) => trim((string) $part) !== '')));
+
+        $fatherName = trim(implode(' ', array_filter([
+            $systemFields['father_first_name'] ?? '',
+            $systemFields['father_middle_name'] ?? '',
+            $systemFields['father_last_name'] ?? '',
+            $systemFields['father_suffix'] ?? '',
+        ], fn ($part) => trim((string) $part) !== '')));
+
+        $guardianName = trim(implode(' ', array_filter([
+            $systemFields['guardian_first_name'] ?? '',
+            $systemFields['guardian_middle_name'] ?? '',
+            $systemFields['guardian_last_name'] ?? '',
+            $systemFields['guardian_suffix'] ?? '',
+        ], fn ($part) => trim((string) $part) !== '')));
+
+        $parentName = $motherName !== '' ? $motherName : ($fatherName !== '' ? $fatherName : $guardianName);
+        $parentOccupation = $systemFields['mother_occupation'] ?? ($systemFields['father_occupation'] ?? null);
+        $incomeDigits = preg_replace('/\D+/', '', (string) ($systemFields['annual_family_gross_income'] ?? '')) ?: null;
+
+        $profileData['parent_guardian_name'] = $this->nullableString($parentName);
+        $profileData['parent_occupation'] = $this->nullableString($parentOccupation);
+        $profileData['parent_income'] = $incomeDigits !== null ? (float) $incomeDigits : null;
+        $profileData['school_name'] = $this->nullableString($systemFields['school_name'] ?? $profileData['school_name'] ?? null);
+        $profileData['grade_level'] = $this->nullableString($systemFields['year_level'] ?? $profileData['grade_level'] ?? null);
+        $profileData['course'] = $this->nullableString($systemFields['strand'] ?? $profileData['course'] ?? null);
+
+        return $profileData;
     }
 
     /**

@@ -9,6 +9,24 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    public const ROLE_KABATAAN = 'kabataan';
+
+    public const ROLE_USER = 'user';
+
+    public const ROLE_SK_FED = 'sk_fed';
+
+    public const ROLE_SK_OFFICIAL = 'sk_official';
+
+    public const ROLE_ADMIN = 'admin';
+
+    public const STATUS_ACTIVE = 'ACTIVE';
+
+    public const STATUS_PENDING_APPROVAL = 'PENDING_APPROVAL';
+
+    public const STATUS_REJECTED = 'REJECTED';
+
+    public const STATUS_INACTIVE = 'INACTIVE';
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
@@ -71,5 +89,29 @@ class User extends Authenticatable
             'profile_image_uploaded_at' => 'datetime',
             'profile_image_change_available_at' => 'datetime',
         ];
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        $userRole = strtolower(trim((string) $this->role));
+
+        foreach ($roles as $role) {
+            if ($userRole === strtolower(trim($role))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isKabataanAccount(): bool
+    {
+        $allowedRoles = config('kabataan_auth.allowed_roles', [self::ROLE_KABATAAN, self::ROLE_USER]);
+
+        if (! is_array($allowedRoles) || $allowedRoles === []) {
+            return false;
+        }
+
+        return $this->hasRole(...$allowedRoles);
     }
 }

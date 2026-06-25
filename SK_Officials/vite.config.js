@@ -84,6 +84,7 @@ export default defineConfig({
                 'app/Modules/Program_Management/assets/css/scholarship/scholar_evaluation.css',
                 'app/Modules/Program_Management/assets/css/scholarship/scholar_report.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship-schedule.css',
+        'app/Modules/Program_Management/assets/js/scholarship/scholarship-system-fields.js',
         'app/Modules/Program_Management/assets/js/scholarship/scholarship-schedule.js',
         'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
         'app/Modules/Program_Management/assets/js/scholarship/scholarship-applications.js',

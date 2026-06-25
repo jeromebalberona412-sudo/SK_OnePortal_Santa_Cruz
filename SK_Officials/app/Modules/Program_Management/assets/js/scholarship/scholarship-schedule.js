@@ -2,6 +2,128 @@ let schedulePrograms = [];
 let programMeta = null;
 let editingProgramId = null;
 let pendingDeleteProgramId = null;
+let reqGroupCounter = 0;
+
+function createRequirementGroupCard(group = {}) {
+    const groupId = `req_group_${++reqGroupCounter}`;
+    const items = Array.isArray(group.items) ? group.items : [''];
+    const itemsHtml = items.map((item, index) => `
+        <div class="sch-req-item-row" data-req-item>
+            <input type="text" class="schol-input sch-req-item-input" value="${escapeHtml(item)}" placeholder="Requirement ${index + 1}">
+            <button type="button" class="sch-req-remove-item" title="Remove item">&times;</button>
+        </div>
+    `).join('');
+
+    return `
+        <div class="sch-req-group-card" data-req-group="${groupId}">
+            <div class="sch-req-group-head">
+                <input type="text" class="schol-input sch-req-group-title" value="${escapeHtml(group.title || '')}" placeholder="e.g. Scholarship Grant for 1st Semester 2025 - 2026 Requirements">
+                <button type="button" class="sch-req-remove-group" title="Remove group">Remove</button>
+            </div>
+            <div class="sch-req-items" data-req-items>${itemsHtml}</div>
+            <button type="button" class="sch-req-add-item">+ Add requirement item</button>
+        </div>`;
+}
+
+function renderRequirementGroups(groups = []) {
+    const container = document.getElementById('schReqGroupsContainer');
+    if (!container) return;
+    reqGroupCounter = 0;
+    const list = groups.length ? groups : [{ title: '', items: [''] }];
+    container.innerHTML = list.map((group) => createRequirementGroupCard(group)).join('');
+    bindRequirementGroupEvents(container);
+}
+
+function bindRequirementGroupEvents(container) {
+    if (!container) return;
+
+    container.querySelectorAll('.sch-req-add-item').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const itemsWrap = btn.closest('[data-req-group]')?.querySelector('[data-req-items]');
+            if (!itemsWrap) return;
+            const row = document.createElement('div');
+            row.className = 'sch-req-item-row';
+            row.setAttribute('data-req-item', '');
+            row.innerHTML = `
+                <input type="text" class="schol-input sch-req-item-input" placeholder="Requirement item">
+                <button type="button" class="sch-req-remove-item" title="Remove item">&times;</button>`;
+            itemsWrap.appendChild(row);
+            bindRequirementGroupEvents(container);
+        });
+    });
+
+    container.querySelectorAll('.sch-req-remove-item').forEach((btn) => {
+        btn.onclick = () => {
+            const row = btn.closest('[data-req-item]');
+            const itemsWrap = btn.closest('[data-req-items]');
+            if (row && itemsWrap && itemsWrap.querySelectorAll('[data-req-item]').length > 1) {
+                row.remove();
+            }
+        };
+    });
+
+    container.querySelectorAll('.sch-req-remove-group').forEach((btn) => {
+        btn.onclick = () => {
+            const card = btn.closest('[data-req-group]');
+            const all = container.querySelectorAll('[data-req-group]');
+            if (card && all.length > 1) card.remove();
+        };
+    });
+}
+
+function collectScholarshipDetails() {
+    const groups = [];
+    document.querySelectorAll('#schReqGroupsContainer [data-req-group]').forEach((card) => {
+        const title = card.querySelector('.sch-req-group-title')?.value?.trim() || '';
+        const items = [];
+        card.querySelectorAll('.sch-req-item-input').forEach((input) => {
+            const value = input.value?.trim();
+            if (value) items.push(value);
+        });
+        if (title || items.length) {
+            groups.push({ title: title || 'Requirements', items });
+        }
+    });
+
+    const submissionStart = document.getElementById('schSubmissionStart')?.value?.trim() || '';
+    const submissionEnd = document.getElementById('schSubmissionEnd')?.value?.trim() || '';
+    const verificationStart = document.getElementById('schVerificationStart')?.value?.trim() || '';
+    const verificationEnd = document.getElementById('schVerificationEnd')?.value?.trim() || '';
+
+    const details = { requirement_groups: groups };
+
+    if (submissionStart || submissionEnd) {
+        details.submission_period = { start: submissionStart || null, end: submissionEnd || null };
+    }
+    if (verificationStart || verificationEnd) {
+        details.verification_period = { start: verificationStart || null, end: verificationEnd || null };
+    }
+
+    return details;
+}
+
+function populateScholarshipDetails(details) {
+    const data = details || {};
+    renderRequirementGroups(data.requirement_groups || []);
+
+    const setDate = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+    };
+
+    setDate('schSubmissionStart', data.submission_period?.start);
+    setDate('schSubmissionEnd', data.submission_period?.end);
+    setDate('schVerificationStart', data.verification_period?.start);
+    setDate('schVerificationEnd', data.verification_period?.end);
+}
+
+function resetScholarshipDetailsForm() {
+    renderRequirementGroups([]);
+    ['schSubmissionStart', 'schSubmissionEnd', 'schVerificationStart', 'schVerificationEnd'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+}
 
 const KK_FIELD_LABELS = {
     last_name: 'Last Name',
@@ -148,12 +270,15 @@ function resetModalForm() {
     if (announcementCount) announcementCount.textContent = '0';
 
     document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-        checkbox.checked = false;
+        const defaults = window.ScholarshipSystemFields?.DEFAULT_KK_FIELDS || [];
+        checkbox.checked = defaults.includes(checkbox.value);
     });
 
     if (window.SpfbFormBuilder) {
         window.SpfbFormBuilder.reset();
     }
+
+    resetScholarshipDetailsForm();
 
     if (programMeta) {
         const typeEl = document.getElementById('programType');
@@ -308,6 +433,8 @@ function editProgram(programId) {
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
         window.SpfbFormBuilder.setQuestions(program.custom_questions || []);
     }
+
+    populateScholarshipDetails(program.scholarship_details || null);
 
     if (modalTitle) {
         modalTitle.innerHTML = `
@@ -503,7 +630,12 @@ async function handleSave() {
 
     let customQuestions = [];
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
-        customQuestions = window.SpfbFormBuilder.getQuestions();
+        customQuestions = window.SpfbFormBuilder.getQuestions().filter((question) => question.type === 'file');
+    }
+
+    if (!customQuestions.length) {
+        showToast('Add at least one file upload requirement in section 5.', 'error');
+        return;
     }
 
     const kkProfilingFields = [];
@@ -517,6 +649,7 @@ async function handleSave() {
         status,
         participation_quantity: participationQuantity,
         announcement,
+        scholarship_details: collectScholarshipDetails(),
         kk_profiling_fields: kkProfilingFields,
         custom_questions: customQuestions,
     };
@@ -548,6 +681,12 @@ async function handleSave() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    if (window.ScholarshipSystemFields) {
+        window.ScholarshipSystemFields.renderBuilder(document.getElementById('scholSystemFieldsBuilder'));
+    }
+
+    renderRequirementGroups([]);
+
     const tableBody = document.getElementById('safFormsTableBody');
     if (!tableBody) return;
 
@@ -563,6 +702,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
     if (saveBtn) saveBtn.addEventListener('click', handleSave);
+
+    const addReqGroupBtn = document.getElementById('schAddReqGroupBtn');
+    if (addReqGroupBtn) {
+        addReqGroupBtn.addEventListener('click', () => {
+            const container = document.getElementById('schReqGroupsContainer');
+            if (!container) return;
+            container.insertAdjacentHTML('beforeend', createRequirementGroupCard({ title: '', items: [''] }));
+            bindRequirementGroupEvents(container);
+        });
+    }
 
     if (modal) {
         modal.addEventListener('click', (event) => {

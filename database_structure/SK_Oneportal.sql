@@ -1107,6 +1107,8 @@ CREATE TABLE IF NOT EXISTS program_applications (
   course VARCHAR(255) NULL,
   gwa NUMERIC(5, 2) NULL,
   custom_answers JSON NULL,
+  system_field_answers JSON NULL,
+  scholar_status VARCHAR(50) NULL,
   required_documents JSON NULL,
   purpose TEXT NULL,
   remarks TEXT NULL,
@@ -1125,6 +1127,39 @@ CREATE TABLE IF NOT EXISTS program_applications (
 
 CREATE UNIQUE INDEX IF NOT EXISTS program_applications_kabataan_program_unique
   ON program_applications (kabataan_id, program_id);
+
+CREATE TABLE IF NOT EXISTS scholars (
+  id BIGSERIAL NOT NULL,
+  scholar_id VARCHAR(20) NOT NULL,
+  kabataan_id BIGINT NOT NULL,
+  program_application_id BIGINT NULL,
+  scholar_status VARCHAR(50) NOT NULL DEFAULT 'FOR REVIEW',
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT scholars_pkey PRIMARY KEY (id),
+  CONSTRAINT scholars_scholar_id_unique UNIQUE (scholar_id),
+  CONSTRAINT scholars_kabataan_id_unique UNIQUE (kabataan_id),
+  CONSTRAINT scholars_kabataan_id_foreign FOREIGN KEY (kabataan_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT scholars_program_application_id_foreign FOREIGN KEY (program_application_id) REFERENCES program_applications (id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS scholar_educational_histories (
+  id BIGSERIAL NOT NULL,
+  scholar_id BIGINT NOT NULL,
+  academic_year SMALLINT NOT NULL,
+  educational_level VARCHAR(100) NULL,
+  grade_year_level VARCHAR(100) NULL,
+  course_program VARCHAR(255) NULL,
+  school_name VARCHAR(255) NULL,
+  snapshot JSON NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  CONSTRAINT scholar_educational_histories_pkey PRIMARY KEY (id),
+  CONSTRAINT scholar_educational_histories_scholar_id_foreign FOREIGN KEY (scholar_id) REFERENCES scholars (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS scholar_educational_histories_scholar_id_academic_year_index
+  ON scholar_educational_histories (scholar_id, academic_year);
 
 CREATE TABLE IF NOT EXISTS rejected_scholarships (
   id BIGSERIAL NOT NULL,

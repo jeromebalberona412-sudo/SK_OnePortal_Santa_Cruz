@@ -1131,3 +1131,49 @@
         justify-content: center;
     }
 }
+
+.gf-step-progress-scholarship {
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.gf-step-progress-scholarship .gf-step-label {
+    font-size: 11px;
+}
+
+.gf-system-section {
+    margin-bottom: 16px;
+}
+
+.gf-system-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.schol-system-group {
+    margin-bottom: 20px;
+}
+
+.schol-system-group-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #374151;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.gf-requirements-intro {
+    margin-bottom: 12px;
+}
+
+.gf-requirement-card {
+    margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+    .gf-system-grid {
+        grid-template-columns: 1fr;
+    }
+}

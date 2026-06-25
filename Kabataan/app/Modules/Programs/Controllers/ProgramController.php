@@ -8,6 +8,7 @@ use App\Modules\Programs\Services\KabataanProgramService;
 use App\Modules\Programs\Services\KabataanProgramSurveyService;
 use App\Modules\Programs\Services\ProgramDocumentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -20,8 +21,7 @@ class ProgramController extends Controller
         private readonly KabataanProgramService $programService,
         private readonly ProgramDocumentService $documentService,
         private readonly KabataanProgramSurveyService $surveyService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -123,6 +123,7 @@ class ProgramController extends Controller
             'answers.*.question_type' => ['nullable', 'string'],
             'answers.*.question_label' => ['nullable', 'string'],
             'answers.*.answer' => ['nullable'],
+            'system_field_answers' => ['required', 'array'],
         ]);
 
         $user = Auth::user();
@@ -130,6 +131,7 @@ class ProgramController extends Controller
             $user,
             (int) $validated['schedule_program_id'],
             $validated['answers'],
+            $validated['system_field_answers'],
         );
 
         return response()->json([
@@ -157,25 +159,15 @@ class ProgramController extends Controller
         ]);
     }
 
-    public function scholarshipForm(Request $request): View
+    public function scholarshipForm(Request $request): RedirectResponse
     {
-        $user = Auth::user();
         $scheduleId = (int) $request->query('schedule', 0);
 
         if ($scheduleId <= 0) {
             abort(404);
         }
 
-        $program = $this->programService->getScheduleProgramForUser($scheduleId, $user);
-        if ($program === null) {
-            abort(404);
-        }
-
-        return view('programs::scholarship_application', [
-            'scheduleProgramId' => $scheduleId,
-            'program' => $program,
-            'kkFieldLabels' => $this->programService->kkFieldLabels(),
-        ]);
+        return redirect()->route('scholarship.apply', ['schedule' => $scheduleId]);
     }
 
     public function sportsLanding(Request $request): View

@@ -195,12 +195,41 @@
                 </h4>
                 
                 @include('GForm_Builder::partials.announcement-field')
+
+                <div class="schol-schedule-card schol-details-card" style="margin-bottom:20px;">
+                    <h4 class="schol-schedule-title">Program Announcements &amp; Requirements</h4>
+                    <p class="schol-details-hint">These details appear on the Kabataan apply page — requirement lists and important dates.</p>
+                    <div id="schReqGroupsContainer" class="sch-req-groups"></div>
+                    <button type="button" class="schol-btn schol-btn-secondary" id="schAddReqGroupBtn" style="margin-bottom:20px;">
+                        + Add Requirement Group
+                    </button>
+                    <div class="schol-schedule-grid">
+                        <div class="schol-field">
+                            <label for="schSubmissionStart">Submission Period — Start</label>
+                            <input type="date" id="schSubmissionStart" class="schol-input">
+                        </div>
+                        <div class="schol-field">
+                            <label for="schSubmissionEnd">Submission Period — End</label>
+                            <input type="date" id="schSubmissionEnd" class="schol-input">
+                        </div>
+                        <div class="schol-field">
+                            <label for="schVerificationStart">Assessment/Verification — Start</label>
+                            <input type="date" id="schVerificationStart" class="schol-input">
+                        </div>
+                        <div class="schol-field">
+                            <label for="schVerificationEnd">Assessment/Verification — End</label>
+                            <input type="date" id="schVerificationEnd" class="schol-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="scholSystemFieldsBuilder" class="schol-system-fields-builder"></div>
                 
                 <!-- KK Profiling Integration Section -->
                 <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:20px;margin-bottom:20px;">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                        <h5 style="margin:0;font-size:16px;font-weight:700;color:#0369a1;">Include KK Profiling Data</h5>
+                        <h5 style="margin:0;font-size:16px;font-weight:700;color:#0369a1;">1. Personal Information (KK Profiling)</h5>
                     </div>
                     <p style="font-size:13px;color:#475569;margin-bottom:16px;line-height:1.6;">
                         Select KK Profiling fields to automatically include in scholarship applications. Selected fields will be auto-filled from the applicant's KK Profile and displayed as read-only.
@@ -307,7 +336,11 @@
                     </div>
                 </div>
                 
-                @include('GForm_Builder::partials.custom-questions-builder')
+                @include('GForm_Builder::partials.custom-questions-builder', [
+                    'sectionTitle' => '5. Uploading of Requirements',
+                    'hint' => 'Add PDF file upload requirements only. Each question becomes a document Kabataan must submit (max 5MB per file).',
+                    'emptyMessage' => 'No requirements yet. Click <strong>Add Question</strong> and choose <strong>File Upload</strong>.',
+                ])
 
             </div>
 
@@ -473,6 +506,7 @@
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/GForm_Builder/assets/js/gform-builder.js',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-system-fields.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-schedule.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholar_schedule.js'

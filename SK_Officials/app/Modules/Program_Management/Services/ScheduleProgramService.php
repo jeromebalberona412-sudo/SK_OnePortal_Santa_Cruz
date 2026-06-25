@@ -200,6 +200,7 @@ class ScheduleProgramService
             'end_date' => $validated['end_date'],
             'status' => $validated['status'],
             'announcement' => $validated['announcement'],
+            'scholarship_details' => $validated['scholarship_details'],
             'kk_profiling_fields' => $validated['kk_profiling_fields'],
             'custom_questions' => $validated['custom_questions'],
         ]);
@@ -227,6 +228,7 @@ class ScheduleProgramService
             'end_date' => $validated['end_date'],
             'status' => $validated['status'],
             'announcement' => $validated['announcement'],
+            'scholarship_details' => $validated['scholarship_details'],
             'kk_profiling_fields' => $validated['kk_profiling_fields'],
             'custom_questions' => $validated['custom_questions'],
         ]);
@@ -317,9 +319,91 @@ class ScheduleProgramService
             'end_date' => $endDate,
             'status' => $status,
             'announcement' => $this->nullableString($data['announcement'] ?? null),
+            'scholarship_details' => $this->sanitizeScholarshipDetails($data['scholarship_details'] ?? null),
             'kk_profiling_fields' => $kkFields,
             'custom_questions' => $customQuestions,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function sanitizeScholarshipDetails(mixed $raw): ?array
+    {
+        if (! is_array($raw)) {
+            return null;
+        }
+
+        $groups = [];
+        foreach ((array) ($raw['requirement_groups'] ?? []) as $group) {
+            if (! is_array($group)) {
+                continue;
+            }
+
+            $title = trim((string) ($group['title'] ?? ''));
+            $items = array_values(array_filter(array_map(
+                fn ($item) => trim((string) $item),
+                (array) ($group['items'] ?? [])
+            )));
+
+            if ($title === '' && $items === []) {
+                continue;
+            }
+
+            $groups[] = [
+                'title' => $title !== '' ? $title : 'Requirements',
+                'items' => $items,
+            ];
+        }
+
+        $submission = $this->sanitizePeriod($raw['submission_period'] ?? null);
+        $verification = $this->sanitizePeriod($raw['verification_period'] ?? null);
+
+        if ($groups === [] && $submission === null && $verification === null) {
+            return null;
+        }
+
+        return [
+            'requirement_groups' => $groups,
+            'submission_period' => $submission,
+            'verification_period' => $verification,
+        ];
+    }
+
+    /**
+     * @return array{start: ?string, end: ?string}|null
+     */
+    protected function sanitizePeriod(mixed $raw): ?array
+    {
+        if (! is_array($raw)) {
+            return null;
+        }
+
+        $start = $this->nullableDateString($raw['start'] ?? null);
+        $end = $this->nullableDateString($raw['end'] ?? null);
+
+        if ($start === null && $end === null) {
+            return null;
+        }
+
+        if ($start !== null && $end !== null && $end < $start) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => ['Period end date cannot be before start date.'],
+            ]);
+        }
+
+        return ['start' => $start, 'end' => $end];
+    }
+
+    protected function nullableDateString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $value);
+
+        return $trimmed !== '' ? $trimmed : null;
     }
 
     /**
@@ -404,6 +488,7 @@ class ScheduleProgramService
             'endDate' => $program->end_date?->toDateString(),
             'status' => $program->status,
             'announcement' => $program->announcement,
+            'scholarship_details' => $program->scholarship_details,
             'kk_profiling_fields' => $program->kk_profiling_fields ?? [],
             'kkProfilingFields' => $program->kk_profiling_fields ?? [],
             'custom_questions' => $program->custom_questions ?? [],

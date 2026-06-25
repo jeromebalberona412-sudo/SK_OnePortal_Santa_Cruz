@@ -4,6 +4,7 @@ namespace App\Modules\Authentication\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\KabataanAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -12,10 +13,20 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly KabataanAuthService $kabataanAuthService,
+    ) {}
+
     public function showLogin()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            if ($this->kabataanAuthService->canAccessPortal(Auth::user())) {
+                return redirect()->route('dashboard');
+            }
+
+            Auth::logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
         }
 
         return view('authentication::login');
@@ -24,16 +35,20 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
         $user = User::where('email', $credentials['email'])->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (
+            ! $user
+            || ! Hash::check($credentials['password'], $user->password)
+            || ! $this->kabataanAuthService->canAccessPortal($user)
+        ) {
             return back()
                 ->withInput($request->only('email'))
-                ->with('login_error', 'Invalid Email or Password');
+                ->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
         }
 
         if ($user->status === 'PENDING_APPROVAL') {
@@ -46,12 +61,12 @@ class AuthController extends Controller
             // Fetch rejection reason from registration
             $registration = \App\Models\KabataanRegistration::where('user_id', $user->id)->latest()->first();
             $reason = $registration?->review_notes
-                ? 'Reason: ' . $registration->review_notes
+                ? 'Reason: '.$registration->review_notes
                 : 'Please contact your SK officials for more information.';
 
             return back()
                 ->withInput($request->only('email'))
-                ->with('login_error', 'Your KK Profiling registration has been rejected. ' . $reason);
+                ->with('login_error', 'Your KK Profiling registration has been rejected. '.$reason);
         }
 
         if ($user->status === 'INACTIVE') {
@@ -76,8 +91,8 @@ class AuthController extends Controller
         return redirect()->route('login')
             ->withHeaders([
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-                'Pragma'        => 'no-cache',
-                'Expires'       => 'Sat, 01 Jan 2000 00:00:00 GMT',
+                'Pragma' => 'no-cache',
+                'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT',
             ]);
     }
 
@@ -94,7 +109,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user || ! $this->kabataanAuthService->canAccessPortal($user)) {
             return back()
                 ->withInput($request->only('email'))
                 ->with('forgot_password_error', 'No account found with this email address. Please check your email and try again.');
@@ -122,15 +137,27 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'token'    => ['required'],
-            'email'    => ['required', 'email'],
+            'token' => ['required'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user || ! $this->kabataanAuthService->canAccessPortal($user)) {
+            throw ValidationException::withMessages([
+                'email' => 'We could not reset the password for this account.',
+            ]);
+        }
+
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user, string $password) {
-                $user->forceFill(['password' => Hash::make($password)])->save();
+            function (User $resetUser, string $password) {
+                if (! $this->kabataanAuthService->canAccessPortal($resetUser)) {
+                    return;
+                }
+
+                $resetUser->forceFill(['password' => Hash::make($password)])->save();
             }
         );
 

@@ -278,6 +278,11 @@
         if (applicationCancelModal) applicationCancelModal.hidden = false;
     }
 
+    window.openScholarshipCancelModal = function (applicationId) {
+        activeViewApplicationId = applicationId;
+        openCancelReasonModal();
+    };
+
     function updateCancelReasonCharCount() {
         if (!applicationCancelCharCount || !applicationCancelReason) return;
         const length = applicationCancelReason.value.length;
@@ -420,6 +425,13 @@
             if (applicationViewModal && !applicationViewModal.hidden) {
                 closeApplicationView();
             }
+            const previewShell = document.getElementById('scholarshipPreviewShell');
+            if (previewShell && !previewShell.hidden) {
+                const landing = document.getElementById('scholarshipLandingContent');
+                if (landing) landing.hidden = false;
+                previewShell.hidden = true;
+                previewShell.innerHTML = '';
+            }
             await init();
         } catch (error) {
             if (applicationCancelError) {
@@ -437,14 +449,46 @@
         }
     }
 
+    async function showSubmittedPreview(applicationId, program) {
+        try {
+            const application = await fetchApplication(applicationId);
+            if (window.ScholarshipApplicationPreview) {
+                window.ScholarshipApplicationPreview.render(application, program);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     async function init() {
+        if (scheduleProgramId) {
+            const landing = document.getElementById('scholarshipLandingContent');
+            if (landing) landing.hidden = true;
+        }
+
         const [program, applications] = await Promise.all([
             scheduleProgramId ? fetchScheduleProgram() : Promise.resolve(null),
             fetchApplications(),
         ]);
 
-        if (program) {
+        if (program && !scheduleProgramId) {
             renderProgramInfo(program);
+        }
+
+        const currentApplication = scheduleProgramId
+            ? applications.find((app) => Number(app.schedule_program_id) === scheduleProgramId)
+            : null;
+
+        if (scheduleProgramId && isActiveApplication(currentApplication)) {
+            await showSubmittedPreview(currentApplication.id, program);
+            return;
+        }
+
+        if (scheduleProgramId && program && window.ScholarshipApplyWizard) {
+            const landing = document.getElementById('scholarshipLandingContent');
+            if (landing) landing.hidden = true;
+            window.ScholarshipApplyWizard.init(program);
+            return;
         }
 
         renderPreviousApplications(applications);
@@ -452,7 +496,7 @@
 
     function handleStartApplication() {
         if (!scheduleProgramId) return;
-        window.location.href = `/scholarship/apply/form?schedule=${encodeURIComponent(scheduleProgramId)}`;
+        window.location.href = `/scholarship/apply?schedule=${encodeURIComponent(scheduleProgramId)}`;
     }
 
     document.addEventListener('DOMContentLoaded', function () {

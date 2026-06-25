@@ -17,6 +17,12 @@
         'app/Modules/Dashboard/assets/css/notif.css',
         'app/Modules/Dashboard/assets/js/notif.js',
         'app/Modules/Programs/assets/css/scholarship_landing.css',
+        'app/Modules/Programs/assets/css/scholarship_application_preview.css',
+        'app/Modules/Programs/assets/css/scholarship_application.css',
+        'app/Modules/Dashboard/assets/css/dashboard.css',
+        'app/Modules/Programs/assets/js/scholarship-system-fields.js',
+        'app/Modules/Programs/assets/js/scholarship_application_preview.js',
+        'app/Modules/Programs/assets/js/scholarship_apply_wizard.js',
         'app/Modules/Programs/assets/js/scholarship_landing.js',
         'app/Modules/Shared/assets/css/loading.css',
         'app/Modules/Shared/assets/js/loading.js',
@@ -26,7 +32,31 @@
     @include('dashboard::loading')
     @include('layout::kabataan-header', ['showSearch' => false, 'pageBadge' => null])
 
-    <div class="sl-container">
+    <div id="scholarshipPreviewShell" hidden></div>
+    <div id="scholarshipWizardShell" hidden></div>
+
+    <div id="schProgramInfoModal" class="program-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container large">
+            <div class="modal-header">
+                <h2>Education Programs</h2>
+                <button type="button" class="modal-close" id="schProgramInfoClose" aria-label="Close">
+                    <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body sch-program-info-body">
+                <div id="schProgramInfoBody"></div>
+                <div class="sch-program-info-actions">
+                    <button type="button" class="apply-now-button enabled" id="schProgramInfoContinue">Continue to Application</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if(!$scheduleProgramId)
+    <div id="scholarshipLandingContent" class="sl-container">
         <!-- Header -->
         <div class="sl-header">
             <div class="sl-back-link">
@@ -212,7 +242,9 @@
             </button>
         </div>
     </div>
+    @endif
 
+    @if(!$scheduleProgramId)
     <!-- Mobile Drawer Backdrop -->
     <div id="programsDrawerBackdrop" class="programs-drawer-backdrop"></div>
 
@@ -240,6 +272,7 @@
             </div>
         </div>
     </aside>
+    @endif
 
     <div id="applicationViewModal" class="sl-view-modal" hidden>
         <div class="sl-view-modal-overlay"></div>
@@ -308,9 +341,54 @@
         </div>
     </div>
 
+    <div id="pdfPreviewModal" class="gf-pdf-modal" hidden>
+        <div class="gf-pdf-modal-overlay"></div>
+        <div class="gf-pdf-modal-container">
+            <div class="gf-pdf-modal-header">
+                <h3 id="pdfPreviewTitle">PDF Preview</h3>
+                <button type="button" class="gf-pdf-close-btn" id="pdfPreviewClose" aria-label="Close preview">×</button>
+            </div>
+            <div class="gf-pdf-modal-body" id="pdfPreviewPages"></div>
+        </div>
+    </div>
+
+    <div id="confirmSubmitModal" class="gf-confirm-modal" hidden>
+        <div class="gf-confirm-modal-overlay" data-close-confirm-modal></div>
+        <div class="gf-confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmSubmitTitle">
+            <h2 id="confirmSubmitTitle" class="gf-confirm-modal-title">Confirm Application Submission</h2>
+            <p class="gf-confirm-modal-text">Please review your information carefully. After submission, editing may no longer be allowed.</p>
+            <div class="gf-confirm-modal-actions">
+                <button type="button" class="gf-btn gf-btn-secondary" id="backToReviewBtn">Back to Review</button>
+                <button type="button" class="gf-btn gf-btn-submit" id="confirmSubmitBtn">Submit Application</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="successModal" class="gf-success-modal" hidden>
+        <div class="gf-success-card">
+            <div class="gf-success-icon">🎉</div>
+            <h2 class="gf-success-title">Application Submitted Successfully</h2>
+            <div class="gf-success-details">
+                <div class="gf-success-detail-row">
+                    <span class="gf-success-detail-label">Reference Number:</span>
+                    <strong id="successReferenceNumber">—</strong>
+                </div>
+                <div class="gf-success-detail-row">
+                    <span class="gf-success-detail-label">Status:</span>
+                    <span class="gf-status-badge gf-status-pending">Pending Review</span>
+                </div>
+            </div>
+            <p class="gf-success-message">You will be notified once your application has been processed.</p>
+            <div class="gf-success-actions">
+                <button type="button" class="gf-btn gf-btn-primary" id="goToDashboardBtn">View My Application</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.__scheduleProgramId = @json($scheduleProgramId);
         window.__kkFieldLabels = @json($kkFieldLabels);
+        window.__dashboardUrl = @json(route('dashboard'));
     </script>
 </body>
 </html>

@@ -37,13 +37,14 @@ export default defineConfig({
 
                 // Programs
                 'app/Modules/Programs/assets/css/scholarship_landing.css',
+                'app/Modules/Programs/assets/css/scholarship_application_preview.css',
+                'app/Modules/Programs/assets/css/scholarship_application.css',
+                'app/Modules/Programs/assets/js/scholarship-system-fields.js',
+                'app/Modules/Programs/assets/js/scholarship_application_preview.js',
+                'app/Modules/Programs/assets/js/scholarship_apply_wizard.js',
                 'app/Modules/Programs/assets/js/scholarship_landing.js',
                 'app/Modules/Programs/assets/css/sports_landing.css',
                 'app/Modules/Programs/assets/js/sports_landing.js',
-                'app/Modules/Programs/assets/css/scholarship_application.css',
-                'app/Modules/Programs/assets/css/scholarship_requirements.css',
-                'app/Modules/Programs/assets/js/scholarship_application.js',
-                'app/Modules/Programs/assets/js/scholarship_requirements.js',
                 'app/Modules/Programs/assets/css/sports-registration.css',
                 'app/Modules/Programs/assets/js/sports-registration.js',
                 'app/Modules/Programs/assets/js/programs.js',

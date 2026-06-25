@@ -25,6 +25,7 @@ class ScheduleProgram extends Model
         'end_date',
         'status',
         'announcement',
+        'scholarship_details',
         'kk_profiling_fields',
         'custom_questions',
     ];
@@ -35,6 +36,7 @@ class ScheduleProgram extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'participation_quantity' => 'integer',
+            'scholarship_details' => 'array',
             'kk_profiling_fields' => 'array',
             'custom_questions' => 'array',
         ];
