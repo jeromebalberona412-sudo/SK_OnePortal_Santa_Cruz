@@ -418,7 +418,7 @@ class KKProfilingWizardController extends Controller
             'kk_reason'             => 'required_if:kk_assembly,No|nullable|string',
             'facebook_profile_url'  => [
                 'nullable',
-                Rule::requiredIf(fn () => in_array((string) $this->input('group_chat'), ['Yes', 'No'], true)),
+                Rule::requiredIf(fn () => in_array((string) $request->input('group_chat'), ['Yes', 'No'], true)),
                 'string',
                 'min:3',
                 'max:50',
@@ -426,7 +426,7 @@ class KKProfilingWizardController extends Controller
             ],
             'group_chat'            => [
                 'nullable',
-                Rule::requiredIf(fn () => trim((string) $this->input('facebook_profile_url', '')) !== ''),
+                Rule::requiredIf(fn () => trim((string) $request->input('facebook_profile_url', '')) !== ''),
                 'string',
                 Rule::in(['Yes', 'No']),
             ],
