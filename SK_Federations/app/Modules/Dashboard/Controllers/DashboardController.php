@@ -4,6 +4,7 @@ namespace App\Modules\Dashboard\Controllers;
 
 use App\Modules\Dashboard\Services\DashboardStatsService;
 use App\Modules\Dashboard\Services\KkProfilingChartService;
+use App\Modules\Dashboard\Services\SkFedDashboardActivityService;
 use App\Modules\Shared\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class DashboardController extends Controller
     public function __construct(
         private readonly DashboardStatsService $dashboardStatsService,
         private readonly KkProfilingChartService $kkProfilingChartService,
+        private readonly SkFedDashboardActivityService $dashboardActivityService,
     ) {
     }
 
@@ -34,7 +36,25 @@ class DashboardController extends Controller
                 ->map(fn ($barangay) => ['id' => $barangay->id, 'name' => $barangay->name])
                 ->values()
                 ->all(),
+            'recentActivity' => $this->dashboardActivityService->recentActivity($tenantId),
+            'upcomingEvents' => $this->dashboardActivityService->upcomingCalendarNotes(),
         ]);
+    }
+
+    public function recentActivities(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:5', 'max:50'],
+        ]);
+
+        $tenantId = $request->user()?->tenant_id;
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 20);
+
+        return response()->json(
+            $this->dashboardActivityService->paginatedActivities($tenantId, $page, $perPage)
+        );
     }
 
     public function kkProfilingData(Request $request): JsonResponse

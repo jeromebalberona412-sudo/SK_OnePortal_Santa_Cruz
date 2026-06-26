@@ -7,8 +7,9 @@ let pendingImageDataUrl = null;
 let pendingLinkUrl = null;
 let isUploading = false;
 const commentSections = new Set();
+const expandedComments = new Set();
 
-const FED_AVATAR = 'https://ui-avatars.com/api/?name=SK+Federation&background=213F99&color=fff&size=80';
+const FED_AVATAR = window.currentAvatar || 'https://ui-avatars.com/api/?name=SK+Federation&background=213F99&color=fff&size=80';
 
 /* ── API STATE ── */
 let posts      = [];
@@ -74,6 +75,97 @@ function escapeHtml(v) {
 }
 
 const LIKE_THUMB_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>';
+
+function postAvatarUrl(p) {
+    if (p.author_avatar_url) return p.author_avatar_url;
+    if (p.is_federation_wide) return FED_AVATAR;
+    return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.author_name || 'SK') + '&background=213F99&color=fff&size=80';
+}
+
+function commentAvatarUrl(c) {
+    if (c.avatar_url) return c.avatar_url;
+    return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(c.author_name || 'Member') + '&background=213F99&color=fff&size=80';
+}
+
+function buildReactionAvatarsHtml(summary) {
+    if (!summary || !summary.reactors || !summary.reactors.length) return '';
+    return summary.reactors.slice(0, 3).map(function (r) {
+        return '<img src="' + escapeHtml(r.avatar_url) + '" alt="" class="post-like-avatar-mini">';
+    }).join('');
+}
+
+function buildStatsBar(p) {
+    var likeCount = p.likes || 0;
+    var commentCount = (p.comments || []).length;
+    if (likeCount <= 0 && commentCount <= 0) return '';
+
+    var likesHtml = '';
+    if (likeCount > 0) {
+        likesHtml = '<button type="button" class="post-stats-likes" onclick="event.stopPropagation();openLikesModal(' + p.id + ')">'
+            + '<span class="post-like-avatars">' + buildReactionAvatarsHtml(p.reactions_summary) + '</span>'
+            + '<span>' + likeCount + '</span>'
+            + '</button>';
+    }
+
+    var commentsHtml = '';
+    if (commentCount > 0) {
+        commentsHtml = '<button type="button" class="post-stats-comments" onclick="event.stopPropagation();toggleComments(' + p.id + ')">'
+            + commentCount + ' comment' + (commentCount === 1 ? '' : 's')
+            + '</button>';
+    }
+
+    return '<div class="post-stats-bar">' + likesHtml + commentsHtml + '</div>';
+}
+
+function buildCommentsList(p) {
+    var comments = p.comments || [];
+    var expanded = expandedComments.has(p.id);
+    var html = '';
+
+    if (comments.length > 2 && !expanded) {
+        html += '<button type="button" class="view-more-comments" onclick="expandAllComments(' + p.id + ')">'
+            + 'View all ' + comments.length + ' comments</button>';
+    }
+
+    var visible = expanded ? comments : comments.slice(-2);
+    html += visible.map(function (c) {
+        return '<div class="comment-item">'
+            + '<img src="' + escapeHtml(commentAvatarUrl(c)) + '" alt="' + escapeHtml(c.author_name) + '" class="comment-avatar">'
+            + '<div class="comment-bubble">'
+            + '<p class="comment-author">' + escapeHtml(c.author_name) + '</p>'
+            + '<p class="comment-text">' + escapeHtml(c.body) + '</p>'
+            + '</div>'
+            + '<span class="comment-time">' + escapeHtml(c.time) + '</span>'
+            + '</div>';
+    }).join('');
+
+    return html;
+}
+
+function buildCommentInput(p) {
+    var userAvatar = window.currentAvatar || FED_AVATAR;
+    return '<div class="comment-input-wrapper">'
+        + '<img src="' + escapeHtml(userAvatar) + '" alt="You" class="comment-avatar">'
+        + '<input type="text" class="comment-input" placeholder="Write a comment..." onkeydown="submitComment(event,' + p.id + ',this)">'
+        + '<button type="button" class="send-comment-btn" onclick="submitCommentBtn(' + p.id + ',this)">'
+        + '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>'
+        + '</button></div>';
+}
+
+function refreshCommentsSection(p) {
+    var section = document.getElementById('comments-' + p.id);
+    if (!section) return;
+    var list = section.querySelector('.comments-list');
+    if (list) list.innerHTML = buildCommentsList(p);
+}
+
+function expandAllComments(id) {
+    expandedComments.add(id);
+    var p = posts.find(function (x) { return x.id === id; });
+    if (p) refreshCommentsSection(p);
+}
+
+window.expandAllComments = expandAllComments;
 
 function formatLikeCountLabel(postId, count) {
     var total = count || 0;
@@ -144,10 +236,7 @@ window.closeLikesModal = closeLikesModal;
 
 function buildPost(p) {
     var liked = p.liked || false;
-    var showComments = commentSections.has(p.id);
-    var avatar = p.is_federation_wide
-        ? FED_AVATAR
-        : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.author_name || 'SK') + '&background=213F99&color=fff&size=80';
+    var avatar = postAvatarUrl(p);
 
     var mediaHtml = '';
     if (p.image_url) {
@@ -167,17 +256,6 @@ function buildPost(p) {
             + '</div>';
     }
 
-    var programHtml = '';
-    if (p.programInfo) {
-        programHtml = '<div class="program-info">'
-            + '<div class="info-badge"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>' + p.programInfo.category + '</div>'
-            + '<div class="info-badge"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>Deadline: ' + p.programInfo.deadline + '</div>'
-            + '</div>'
-            + '<button class="view-details-btn" onclick="openProgramModal(\'education\')">View Program Details &amp; Apply '
-            + '<svg viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>'
-            + '</button>';
-    }
-
     var optionsHtml = '';
     if (p.owned) {
         optionsHtml = '<div style="position:relative;">'
@@ -190,11 +268,11 @@ function buildPost(p) {
             + '</div></div>';
     }
 
-    var commentsHtml = buildComments(p);
     var commentCount = (p.comments || []).length;
+    var statsHtml = buildStatsBar(p);
 
     return '<div class="post-header">'
-        + '<img src="' + avatar + '" alt="' + p.author_name + '" class="post-avatar">'
+        + '<img src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(p.author_name) + '" class="post-avatar">'
         + '<div class="post-info">'
         + '<h3 class="post-author">' + p.author_name + (p.barangay_name && !p.is_federation_wide ? ' <small style="font-weight:400;color:#888;">· ' + p.barangay_name + '</small>' : '') + '</h3>'
         + '<p class="post-meta"><span class="post-type ' + p.type + '">' + p.type + '</span><span class="post-time">' + p.time + '</span></p>'
@@ -204,6 +282,7 @@ function buildPost(p) {
         + '<p class="post-text">' + p.body + '</p>'
         + mediaHtml
         + '</div>'
+        + statsHtml
         + '<div class="post-actions">'
         + '<button class="action-btn' + (liked ? ' liked' : '') + '" onclick="toggleLike(' + p.id + ', this)">'
         + LIKE_THUMB_SVG
@@ -212,29 +291,10 @@ function buildPost(p) {
         + '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>'
         + '<span id="comment-count-' + p.id + '">Comment (' + commentCount + ')</span></button>'
         + '</div>'
-        + '<div class="comments-section" id="comments-' + p.id + '" style="' + (showComments ? '' : 'display:none;') + '">'
-        + commentsHtml + '</div>';
-}
-
-function buildComments(p) {
-    var userAvatar = window.currentAvatar || FED_AVATAR;
-    var items = (p.comments || []).map(function(c) {
-        return '<div class="comment-item">'
-            + '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(c.author_name) + '&background=667eea&color=fff" alt="' + c.author_name + '">'
-            + '<div class="comment-content">'
-            + '<p class="comment-author">' + c.author_name + '</p>'
-            + '<p class="comment-text">' + c.body + '</p>'
-            + '<span class="comment-time">' + c.time + '</span>'
-            + '</div></div>';
-    }).join('');
-
-    return items
-        + '<div class="comment-input-wrapper">'
-        + '<img src="' + userAvatar + '" alt="You">'
-        + '<input type="text" class="comment-input" placeholder="Write a comment..." onkeydown="submitComment(event,' + p.id + ',this)">'
-        + '<button class="send-comment-btn" onclick="submitCommentBtn(' + p.id + ',this)">'
-        + '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>'
-        + '</button></div>';
+        + '<div class="comments-section" id="comments-' + p.id + '" style="display:none;">'
+        + '<div class="comments-list" id="comments-list-' + p.id + '">' + buildCommentsList(p) + '</div>'
+        + buildCommentInput(p)
+        + '</div>';
 }
 
 /* ── INTERACTIONS ── */
@@ -251,6 +311,18 @@ function toggleLike(id, btn) {
                 p.liked = data.liked;
                 if (data.reactions_summary) p.reactions_summary = data.reactions_summary;
                 updateLikeCountLabel(id, data.count);
+                var card = document.querySelector('[data-post-id="' + id + '"]');
+                if (card) {
+                    var statsBar = card.querySelector('.post-stats-bar');
+                    var newStats = buildStatsBar(p);
+                    if (statsBar) {
+                        if (newStats) statsBar.outerHTML = newStats;
+                        else statsBar.remove();
+                    } else if (newStats) {
+                        var actions = card.querySelector('.post-actions');
+                        if (actions) actions.insertAdjacentHTML('beforebegin', newStats);
+                    }
+                }
             }
         });
 }
@@ -289,11 +361,27 @@ function addComment(id, input) {
         .then(function(c) {
             var p = posts.find(function(x) { return x.id === id; });
             if (p) {
-                p.comments.push({ author_name: c.author_name, body: c.body, time: c.time });
+                if (!p.comments) p.comments = [];
+                p.comments.push(c);
+                commentSections.add(id);
+                expandedComments.add(id);
                 var section = document.getElementById('comments-' + id);
-                if (section) section.innerHTML = buildComments(p);
+                if (section) {
+                    section.style.display = 'block';
+                    refreshCommentsSection(p);
+                }
                 var countEl = document.getElementById('comment-count-' + id);
                 if (countEl) countEl.textContent = 'Comment (' + p.comments.length + ')';
+                var card = document.querySelector('[data-post-id="' + id + '"]');
+                if (card) {
+                    var statsBar = card.querySelector('.post-stats-bar');
+                    var newStats = buildStatsBar(p);
+                    if (statsBar) statsBar.outerHTML = newStats;
+                    else if (newStats) {
+                        var actions = card.querySelector('.post-actions');
+                        if (actions) actions.insertAdjacentHTML('beforebegin', newStats);
+                    }
+                }
             }
         });
 }
@@ -536,44 +624,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeLikesModal();
-    });
-
-    // Programs drawer (mobile FAB)
-    var fab      = document.getElementById('programsFab');
-    var sidebar  = document.getElementById('programsSidebar');
-    var backdrop = document.getElementById('programsDrawerBackdrop');
-
-    function openProgramsDrawer() {
-        sidebar?.classList.add('drawer-open');
-        backdrop?.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeProgramsDrawer() {
-        sidebar?.classList.remove('drawer-open');
-        backdrop?.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    fab?.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openProgramsDrawer();
-    });
-    backdrop?.addEventListener('click', closeProgramsDrawer);
-
-    // Swipe-to-close on the drawer
-    if (sidebar) {
-        var touchStartX = 0;
-        sidebar.addEventListener('touchstart', function(e) {
-            touchStartX = e.touches[0].clientX;
-        }, { passive: true });
-        sidebar.addEventListener('touchend', function(e) {
-            var dx = e.changedTouches[0].clientX - touchStartX;
-            if (dx > 60) closeProgramsDrawer(); // swipe right to close
-        }, { passive: true });
-    }
-
-    // Close drawer when viewport grows past tablet breakpoint
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 1100) closeProgramsDrawer();
     });
 });

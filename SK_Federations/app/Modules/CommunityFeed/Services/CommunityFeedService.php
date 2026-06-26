@@ -9,11 +9,7 @@ use Illuminate\Support\Facades\Schema;
 
 class CommunityFeedService
 {
-    private const PROFILE_COLORS = [
-        '#4CAF50', '#2196F3', '#9C27B0', '#FF9800', '#009688',
-        '#f44336', '#673AB7', '#0450a8', '#FF5722', '#607D8B',
-        '#3F51B5', '#795548', '#00BCD4', '#8BC34A', '#E91E63',
-    ];
+    private const DEFAULT_PROFILE_COLOR = '#213F99';
 
     public function __construct(
         private readonly BarangayMonitoringService $monitoringService,
@@ -27,7 +23,6 @@ class CommunityFeedService
     public function listBarangayProfiles(?int $tenantId = null): array
     {
         $profiles = [];
-        $index = 0;
 
         foreach ($this->monitoringService->slugToNameMap() as $slug => $name) {
             $barangay = null;
@@ -45,9 +40,8 @@ class CommunityFeedService
                 'id' => $barangay?->id,
                 'logo_url' => $barangay ? $this->logoUrls->resolve($barangay->id) : null,
                 'initials' => $this->initials($name),
-                'color' => self::PROFILE_COLORS[$index % count(self::PROFILE_COLORS)],
+                'color' => self::DEFAULT_PROFILE_COLOR,
             ];
-            $index++;
         }
 
         return $profiles;

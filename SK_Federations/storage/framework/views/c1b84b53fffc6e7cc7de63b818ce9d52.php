@@ -273,20 +273,32 @@
         </div>
 
         
-        <?php echo $__env->make('dashboard::partials.dashboard-audit-table', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+        <?php echo $__env->make('dashboard::partials.dashboard-recent-activity', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+        
+        <div class="dash-audit-row dash-audit-row--compact">
+            <?php echo $__env->make('dashboard::partials.dashboard-audit-table', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+        </div>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('scripts'); ?>
 <?php
     $kkProfilingJsVersion = @filemtime(app_path('Modules/Dashboard/assets/js/kkprofilingchart.js')) ?: time();
     $dashAuditJsVersion = @filemtime(app_path('Modules/Dashboard/assets/js/dashboard-audit.js')) ?: time();
+    $dashActivityJsVersion = @filemtime(app_path('Modules/Dashboard/assets/js/dashboard-activity.js')) ?: time();
 ?>
 <script>
     window.__KK_BARANGAYS__ = <?php echo json_encode($kkBarangayOptions, 15, 512) ?>;
     window.__KK_PROFILING_DATA_URL__ = <?php echo json_encode(route('dashboard.kk-profiling-data'), 15, 512) ?>;
+    window.__DASHBOARD_FEED__ = {
+        recent_activity: <?php echo json_encode($recentActivity ?? [], 15, 512) ?>,
+        upcoming_events: <?php echo json_encode($upcomingEvents ?? [], 15, 512) ?>,
+        activities_url: <?php echo json_encode(route('dashboard.recent-activities'), 15, 512) ?>,
+    };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="<?php echo e(url('/modules/dashboard/js/kkprofilingchart.js')); ?>?v=<?php echo e($kkProfilingJsVersion); ?>"></script>
+<script src="<?php echo e(url('/modules/dashboard/js/dashboard-activity.js')); ?>?v=<?php echo e($dashActivityJsVersion); ?>"></script>
 <script src="<?php echo e(url('/modules/dashboard/js/dashboard-audit.js')); ?>?v=<?php echo e($dashAuditJsVersion); ?>"></script>
 <script>
         const fedBlue = '#213F99', fedRed = '#d0242b';

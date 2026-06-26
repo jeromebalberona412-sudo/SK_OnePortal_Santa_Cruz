@@ -16,8 +16,15 @@
 
     <div class="notif-list" id="notifList" <?php if(! $hasItems): ?> style="display: none;" <?php endif; ?>>
         <?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <div class="notif-item <?php echo e(($notification['unread'] ?? false) ? 'notif-unread' : ''); ?>" data-id="<?php echo e($notification['id']); ?>">
+            <div
+                class="notif-item <?php echo e(($notification['unread'] ?? false) ? 'notif-unread' : ''); ?>"
+                data-id="<?php echo e($notification['id']); ?>"
+                data-action-url="<?php echo e($notification['action_url'] ?? ''); ?>"
+                role="button"
+                tabindex="0"
+            >
                 <div class="notif-content">
+                    <div class="notif-item-category"><?php echo e($notification['category_label'] ?? 'General'); ?></div>
                     <div class="notif-item-title"><?php echo e($notification['title']); ?></div>
                     <div class="notif-item-text"><?php echo e($notification['text']); ?></div>
                     <div class="notif-item-time"><?php echo e($notification['time']); ?></div>

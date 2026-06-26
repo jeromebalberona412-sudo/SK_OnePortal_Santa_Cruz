@@ -234,24 +234,74 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (notifList) {
-        notifList.addEventListener('click', function (e) {
-            var item = e.target.closest('.notif-item');
-            if (!item || !item.classList.contains('notif-unread')) {
-                return;
+    function getNotifCsrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    async function markNotifItemRead(item) {
+        if (!item) return;
+        var id = item.getAttribute('data-id');
+        var actionUrl = item.getAttribute('data-action-url') || '';
+
+        if (item.classList.contains('notif-unread') && id) {
+            try {
+                await fetch('/api/sk-federations/notifications/' + id + '/read', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getNotifCsrfToken(),
+                    },
+                    credentials: 'same-origin',
+                });
+            } catch (err) {
+                // Continue with local UI update.
             }
+
             item.classList.remove('notif-unread');
             var dot = item.querySelector('.notif-unread-dot');
             if (dot) {
                 dot.remove();
             }
             updateNotifBadge();
+        }
+
+        if (actionUrl) {
+            window.location.href = actionUrl;
+        }
+    }
+
+    if (notifList) {
+        notifList.addEventListener('click', function (e) {
+            var item = e.target.closest('.notif-item');
+            if (!item) return;
+            markNotifItemRead(item);
+        });
+
+        notifList.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            var item = e.target.closest('.notif-item');
+            if (!item) return;
+            e.preventDefault();
+            markNotifItemRead(item);
         });
     }
 
     if (markAllBtn) {
-        markAllBtn.addEventListener('click', function (e) {
+        markAllBtn.addEventListener('click', async function (e) {
             e.stopPropagation();
+            try {
+                await fetch('/api/sk-federations/notifications/read-all', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getNotifCsrfToken(),
+                    },
+                    credentials: 'same-origin',
+                });
+            } catch (err) {
+                // Continue with local UI update.
+            }
             if (notifList) {
                 notifList.querySelectorAll('.notif-unread').forEach(function (item) {
                     item.classList.remove('notif-unread');

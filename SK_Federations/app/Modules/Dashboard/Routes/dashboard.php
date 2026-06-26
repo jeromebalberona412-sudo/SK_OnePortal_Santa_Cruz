@@ -31,4 +31,6 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/api/dashboard/kk-profiling', [DashboardController::class, 'kkProfilingData'])
             ->name('dashboard.kk-profiling-data');
+        Route::get('/api/dashboard/recent-activities', [DashboardController::class, 'recentActivities'])
+            ->name('dashboard.recent-activities');
     });

@@ -2,7 +2,9 @@
 
 namespace App\Modules\Notifications\Providers;
 
-use App\Modules\Notifications\Services\SampleNotificationService;
+use App\Modules\Notifications\Controllers\NotificationController;
+use App\Services\SkFederationsNotificationService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -11,7 +13,7 @@ class NotificationsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(SampleNotificationService::class);
+        $this->app->singleton(SkFederationsNotificationService::class);
     }
 
     public function boot(): void
@@ -24,11 +26,12 @@ class NotificationsServiceProvider extends ServiceProvider
         ], 'notifications-assets');
 
         View::composer('layout::header', function ($view): void {
-            $service = app(SampleNotificationService::class);
+            $user = Auth::user();
+            $service = app(SkFederationsNotificationService::class);
 
             $view->with([
-                'notifications' => $service->dropdownSamples(),
-                'unreadNotificationCount' => $service->unreadCount(),
+                'notifications' => $service->recentForUser($user, 5),
+                'unreadNotificationCount' => $service->unreadCountForUser($user),
             ]);
         });
     }

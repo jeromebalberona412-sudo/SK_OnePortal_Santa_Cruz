@@ -4,6 +4,8 @@ namespace App\Modules\CommunityFeed\Controllers;
 
 use App\Modules\CommunityFeed\Services\CloudinaryService;
 use App\Modules\Shared\Controllers\Controller;
+use App\Services\CommunityFeedAvatarService;
+use App\Services\SkFederationsNotificationService;
 use App\Modules\Shared\Models\Announcement;
 use App\Modules\Shared\Models\AnnouncementComment;
 use App\Modules\Shared\Models\AnnouncementReaction;
@@ -16,8 +18,11 @@ use Throwable;
 
 class CommunityFeedPostController extends Controller
 {
-    public function __construct(private readonly CloudinaryService $cloudinary)
-    {
+    public function __construct(
+        private readonly CloudinaryService $cloudinary,
+        private readonly SkFederationsNotificationService $notificationService,
+        private readonly CommunityFeedAvatarService $avatarService,
+    ) {
     }
 
     // GET /api/community-feed?filter=all&page=1
@@ -26,7 +31,7 @@ class CommunityFeedPostController extends Controller
         $user  = Auth::user();
         $query = Announcement::with([
             'barangay',
-            'comments',
+            'comments.user',
             'user',
             'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
         ])
@@ -139,6 +144,7 @@ class CommunityFeedPostController extends Controller
     public function react(int $id): JsonResponse
     {
         $user     = Auth::user();
+        $post     = Announcement::query()->findOrFail($id);
         $existing = AnnouncementReaction::where([
             'announcement_id' => $id,
             'user_id'         => $user->id,
@@ -155,6 +161,15 @@ class CommunityFeedPostController extends Controller
                 'user_type'       => 'sk_fed',
             ]);
             $liked = true;
+
+            if ((int) $post->user_id !== (int) $user->id) {
+                $this->notificationService->notifyCommunityFeedLike(
+                    (int) $post->user_id,
+                    (string) $user->name,
+                    $this->notificationService->postLabel($post->title, $post->body),
+                    $post->id,
+                );
+            }
         }
 
         $reactions = AnnouncementReaction::with('user')
@@ -178,6 +193,7 @@ class CommunityFeedPostController extends Controller
         $request->validate(['body' => 'required|string|max:1000']);
 
         $user    = Auth::user();
+        $post    = Announcement::query()->findOrFail($id);
         $comment = AnnouncementComment::create([
             'announcement_id' => $id,
             'user_id'         => $user->id,
@@ -186,12 +202,17 @@ class CommunityFeedPostController extends Controller
             'body'            => $request->body,
         ]);
 
-        return response()->json([
-            'id'          => $comment->id,
-            'author_name' => $comment->author_name,
-            'body'        => $comment->body,
-            'time'        => $comment->created_at->diffForHumans(),
-        ], 201);
+        if ((int) $post->user_id !== (int) $user->id) {
+            $this->notificationService->notifyCommunityFeedComment(
+                (int) $post->user_id,
+                (string) $user->name,
+                $this->notificationService->postLabel($post->title, $post->body),
+                $post->id,
+                $request->body,
+            );
+        }
+
+        return response()->json($this->formatComment($comment->load('user')), 201);
     }
 
     // POST /api/community-feed/upload-image
@@ -230,6 +251,7 @@ class CommunityFeedPostController extends Controller
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name'      => $post->barangay?->name,
             'author_name'        => $authorName,
+            'author_avatar_url'  => $this->avatarService->resolveForPost($post),
             'owned'              => $post->user_id === $userId && $post->is_federation_wide,
             'likes'              => $post->reactions_count ?? $post->reactions()->count(),
             'liked'              => $liked,
@@ -238,12 +260,22 @@ class CommunityFeedPostController extends Controller
                 $post->relationLoaded('reactions') ? $post->reactions : collect(),
                 (int) ($post->reactions_count ?? 0),
             ),
-            'comments'           => $post->comments->map(fn($c) => [
-                'id'          => $c->id,
-                'author_name' => $c->author_name,
-                'body'        => $c->body,
-                'time'        => $c->created_at->diffForHumans(),
-            ])->values(),
+            'comments'           => $post->comments->map(fn ($c) => $this->formatComment($c))->values(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatComment(AnnouncementComment $comment): array
+    {
+        return [
+            'id'          => $comment->id,
+            'author_name' => $comment->author_name,
+            'body'        => $comment->body,
+            'time'        => $comment->created_at->diffForHumans(),
+            'user_type'   => $comment->user_type,
+            'avatar_url'  => $this->avatarService->resolveForComment($comment),
         ];
     }
 
@@ -272,9 +304,7 @@ class CommunityFeedPostController extends Controller
 
     private function resolveReactorAvatar(AnnouncementReaction $reaction): string
     {
-        $name = $this->resolveReactorName($reaction);
-
-        return 'https://ui-avatars.com/api/?name='.urlencode($name).'&background=213F99&color=fff&size=80';
+        return $this->avatarService->resolveForReaction($reaction);
     }
 
     private function resolveReactorRoleLabel(AnnouncementReaction $reaction): string

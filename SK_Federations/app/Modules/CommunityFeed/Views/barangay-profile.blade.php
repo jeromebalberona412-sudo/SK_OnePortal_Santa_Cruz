@@ -2,9 +2,6 @@
 
 @section('title', 'SK Barangay ' . ($name ?? '') . ' - SK OnePortal')
 
-@push('body-attributes')style="--brgy-color: {{ $color }}"
-@endpush
-
 @push('styles')
     <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}">
 @endpush

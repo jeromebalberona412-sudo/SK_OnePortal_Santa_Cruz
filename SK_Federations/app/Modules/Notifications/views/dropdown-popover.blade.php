@@ -16,8 +16,15 @@
 
     <div class="notif-list" id="notifList" @if(! $hasItems) style="display: none;" @endif>
         @foreach($items as $notification)
-            <div class="notif-item {{ ($notification['unread'] ?? false) ? 'notif-unread' : '' }}" data-id="{{ $notification['id'] }}">
+            <div
+                class="notif-item {{ ($notification['unread'] ?? false) ? 'notif-unread' : '' }}"
+                data-id="{{ $notification['id'] }}"
+                data-action-url="{{ $notification['action_url'] ?? '' }}"
+                role="button"
+                tabindex="0"
+            >
                 <div class="notif-content">
+                    <div class="notif-item-category">{{ $notification['category_label'] ?? 'General' }}</div>
                     <div class="notif-item-title">{{ $notification['title'] }}</div>
                     <div class="notif-item-text">{{ $notification['text'] }}</div>
                     <div class="notif-item-time">{{ $notification['time'] }}</div>

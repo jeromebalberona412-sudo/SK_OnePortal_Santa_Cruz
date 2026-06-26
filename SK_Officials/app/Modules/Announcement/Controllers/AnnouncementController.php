@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Modules\Announcement\Services\AnnouncementArchiveService;
 use App\Modules\Announcement\Services\CloudinaryService;
 use App\Services\BarangayLogoUrlService;
+use App\Services\SkFederationsNotificationDispatcher;
 use App\Services\SkOfficialActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -162,6 +163,7 @@ class AnnouncementController extends Controller
     public function react(int $id): JsonResponse
     {
         $user = Auth::user();
+        $post = Announcement::query()->findOrFail($id);
 
         $existing = AnnouncementReaction::where([
             'announcement_id' => $id,
@@ -179,6 +181,15 @@ class AnnouncementController extends Controller
                 'user_type'       => 'sk_official',
             ]);
             $liked = true;
+
+            if ($post->is_federation_wide && (int) $post->user_id !== (int) $user->id) {
+                $dispatcher = app(SkFederationsNotificationDispatcher::class);
+                $dispatcher->notifyCommunityFeedLike(
+                    (int) $post->user_id,
+                    (string) $user->name,
+                    $dispatcher->postLabel($post->title, $post->body),
+                );
+            }
         }
 
         $count = AnnouncementReaction::where('announcement_id', $id)->count();
@@ -192,6 +203,7 @@ class AnnouncementController extends Controller
         $request->validate(['body' => 'required|string|max:1000']);
 
         $user = Auth::user();
+        $post = Announcement::query()->findOrFail($id);
 
         if (! in_array($user->role, self::SK_COMMENT_ROLES, true)) {
             return response()->json(['message' => 'Only SK Officials may comment on this feed.'], 403);
@@ -204,6 +216,16 @@ class AnnouncementController extends Controller
             'author_name'     => $user->name,
             'body'            => $request->body,
         ]);
+
+        if ($post->is_federation_wide && (int) $post->user_id !== (int) $user->id) {
+            $dispatcher = app(SkFederationsNotificationDispatcher::class);
+            $dispatcher->notifyCommunityFeedComment(
+                (int) $post->user_id,
+                (string) $user->name,
+                $dispatcher->postLabel($post->title, $post->body),
+                $request->body,
+            );
+        }
 
         return response()->json($this->formatComment($comment->load('user')), 201);
     }

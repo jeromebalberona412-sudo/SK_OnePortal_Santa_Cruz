@@ -223,16 +223,10 @@
     color: #65676b;
 }
 
-.post-stats-comments {
-    color: #65676b;
-    font-weight: 500;
-}
-
 .post-stats-likes {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-left: auto;
     padding: 0;
     border: none;
     background: none;
@@ -474,15 +468,116 @@
 .post-options-menu button svg { width: 14px; height: 14px; }
 
 /* Comments */
-.comments-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8ecf0; }
-.comment-item { display: flex; gap: 10px; margin-bottom: 10px; }
-.comment-item img { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
-.comment-content { flex: 1; background: #f5f7fa; padding: 8px 12px; border-radius: 12px; }
-.comment-author { font-weight: 600; font-size: 12px; color: #333; margin-bottom: 2px; }
-.comment-text { font-size: 13px; color: #555; margin-bottom: 2px; }
-.comment-time { font-size: 11px; color: #999; }
-.comment-input-wrapper { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-.comment-input-wrapper img { width: 32px; height: 32px; border-radius: 50%; }
+.post-stats-comments {
+    color: #65676b;
+    font-weight: 500;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    margin-left: auto;
+}
+
+.post-stats-comments:hover { text-decoration: underline; }
+
+.post-like-avatars {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 4px;
+}
+
+.post-like-avatar-mini {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    margin-left: -6px;
+}
+
+.post-like-avatar-mini:first-child { margin-left: 0; }
+
+.comments-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e8ecf0;
+}
+
+.comments-list { margin-bottom: 8px; }
+
+.comment-item {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    grid-template-rows: auto auto;
+    gap: 2px 8px;
+    margin-bottom: 10px;
+    align-items: start;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    grid-row: 1 / span 2;
+}
+
+.comment-bubble {
+    background: #f0f2f5;
+    padding: 8px 12px;
+    border-radius: 16px;
+    min-width: 0;
+}
+
+.comment-author {
+    font-weight: 600;
+    font-size: 12px;
+    color: #050505;
+    margin: 0 0 2px;
+}
+
+.comment-text {
+    font-size: 13px;
+    color: #050505;
+    margin: 0;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.comment-time {
+    grid-column: 2;
+    font-size: 11px;
+    color: #65676b;
+    padding-left: 4px;
+}
+
+.view-more-comments {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: none;
+    color: #65676b;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 0 8px 40px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.view-more-comments:hover { text-decoration: underline; }
+
+.comment-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.comment-input-wrapper .comment-avatar { width: 32px; height: 32px; }
 .comment-input {
     flex: 1; padding: 8px 13px; border: 2px solid #e0e0e0;
     border-radius: 20px; font-size: 13px; font-family: inherit;
@@ -508,7 +603,8 @@
 .load-more-btn:hover { background: var(--fed-grad); color: white; border-color: transparent; }
 
 /* ── PROGRAMS RIGHT SIDEBAR ── */
-.programs-sidebar {
+.programs-sidebar,
+.feed-sidebar {
     min-width: 0;
 }
 
@@ -595,7 +691,7 @@
     font-size: 12px;
     font-weight: 800;
     color: #fff;
-    background: var(--brgy-color, var(--fed-blue));
+    background: var(--fed-blue, #213F99);
 }
 
 .cf-barangay-profile-text { flex: 1; min-width: 0; }
@@ -717,7 +813,8 @@
 .btn-secondary:hover { background: #e0e0e0; }
 
 /* ── PROGRAMS SIDEBAR — sticky on desktop ── */
-.programs-sidebar {
+.programs-sidebar,
+.feed-sidebar {
     position: sticky;
     top: 0;
     max-height: calc(100vh - var(--navbar-height));
@@ -763,7 +860,8 @@
     }
 
     /* Programs sidebar becomes a slide-in drawer from the right */
-    .programs-sidebar {
+    .programs-sidebar,
+.feed-sidebar {
         position: fixed;
         top: var(--navbar-height);
         right: 0;
@@ -863,7 +961,8 @@
     .form-section h3 { font-size: 14px; }
 
     /* Programs drawer narrower on small screens */
-    .programs-sidebar { width: 88vw; max-width: 320px; }
+    .programs-sidebar,
+.feed-sidebar { width: 88vw; max-width: 320px; }
 
     /* FAB position */
     .programs-fab { bottom: 20px; right: 16px; width: 48px; height: 48px; font-size: 18px; }

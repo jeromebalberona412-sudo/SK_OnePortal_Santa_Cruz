@@ -24,8 +24,8 @@ Route::get('/modules/calendar/{type}/{file}', function (string $type, string $fi
 Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trusted.device', 'prevent.back'])
     ->group(function () {
         Route::get('/calendar', [CalendarController::class, 'page'])->name('calendar');
-        Route::get('/api/calendar/events', [CalendarController::class, 'index'])->name('api.calendar.events.index');
-        Route::post('/api/calendar/events', [CalendarController::class, 'store'])->name('api.calendar.events.store');
-        Route::put('/api/calendar/events/{id}', [CalendarController::class, 'update'])->name('api.calendar.events.update');
-        Route::delete('/api/calendar/events/{id}', [CalendarController::class, 'destroy'])->name('api.calendar.events.destroy');
+        Route::get('/api/calendar/notes', [CalendarController::class, 'index'])->name('api.calendar.notes.index');
+        Route::post('/api/calendar/notes', [CalendarController::class, 'store'])->name('api.calendar.notes.store');
+        Route::put('/api/calendar/notes/{id}', [CalendarController::class, 'update'])->name('api.calendar.notes.update');
+        Route::delete('/api/calendar/notes/{id}', [CalendarController::class, 'destroy'])->name('api.calendar.notes.destroy');
     });

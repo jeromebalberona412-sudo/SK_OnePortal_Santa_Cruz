@@ -274,21 +274,33 @@
             </div>
         </div>
 
-        {{-- ── Audit Logs Table ── --}}
-        @include('dashboard::partials.dashboard-audit-table')
+        {{-- ── Recent Activity + Upcoming Events ── --}}
+        @include('dashboard::partials.dashboard-recent-activity')
+
+        {{-- ── Audit Logs Table (compact) ── --}}
+        <div class="dash-audit-row dash-audit-row--compact">
+            @include('dashboard::partials.dashboard-audit-table')
+        </div>
 @endsection
 
 @push('scripts')
 @php
     $kkProfilingJsVersion = @filemtime(app_path('Modules/Dashboard/assets/js/kkprofilingchart.js')) ?: time();
     $dashAuditJsVersion = @filemtime(app_path('Modules/Dashboard/assets/js/dashboard-audit.js')) ?: time();
+    $dashActivityJsVersion = @filemtime(app_path('Modules/Dashboard/assets/js/dashboard-activity.js')) ?: time();
 @endphp
 <script>
     window.__KK_BARANGAYS__ = @json($kkBarangayOptions);
     window.__KK_PROFILING_DATA_URL__ = @json(route('dashboard.kk-profiling-data'));
+    window.__DASHBOARD_FEED__ = {
+        recent_activity: @json($recentActivity ?? []),
+        upcoming_events: @json($upcomingEvents ?? []),
+        activities_url: @json(route('dashboard.recent-activities')),
+    };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="{{ url('/modules/dashboard/js/kkprofilingchart.js') }}?v={{ $kkProfilingJsVersion }}"></script>
+<script src="{{ url('/modules/dashboard/js/dashboard-activity.js') }}?v={{ $dashActivityJsVersion }}"></script>
 <script src="{{ url('/modules/dashboard/js/dashboard-audit.js') }}?v={{ $dashAuditJsVersion }}"></script>
 <script>
         const fedBlue = '#213F99', fedRed = '#d0242b';

@@ -1,16 +1,14 @@
-@extends('layout::app')
+<?php $__env->startSection('title', 'Calendar - SK OnePortal'); ?>
 
-@section('title', 'Calendar - SK OnePortal')
-
-@push('styles')
-    @php
+<?php $__env->startPush('styles'); ?>
+    <?php
         $calendarCssPath = app_path('Modules/Calendar/assets/css/calendar.css');
         $calendarCssVersion = file_exists($calendarCssPath) ? filemtime($calendarCssPath) : time();
-    @endphp
-    <link rel="stylesheet" href="{{ url('/modules/calendar/css/calendar.css') }}?v={{ $calendarCssVersion }}">
-@endpush
+    ?>
+    <link rel="stylesheet" href="<?php echo e(url('/modules/calendar/css/calendar.css')); ?>?v=<?php echo e($calendarCssVersion); ?>">
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="calendar-page-container">
         <section class="calendar-header-section">
             <div class="calendar-header-left">
@@ -34,12 +32,14 @@
             <div class="calendar-grid" id="calendarGrid"></div>
         </section>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
-    @php
+<?php $__env->startPush('scripts'); ?>
+    <?php
         $calendarJsPath = app_path('Modules/Calendar/assets/js/calendar.js');
         $calendarJsVersion = file_exists($calendarJsPath) ? filemtime($calendarJsPath) : time();
-    @endphp
-    <script src="{{ url('/modules/calendar/js/calendar.js') }}?v={{ $calendarJsVersion }}"></script>
-@endpush
+    ?>
+    <script src="<?php echo e(url('/modules/calendar/js/calendar.js')); ?>?v=<?php echo e($calendarJsVersion); ?>"></script>
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layout::app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Administrator\Documents\SK_OnePortal_Santa_Cruz\SK_Federations\app\Modules\Calendar\Providers/../Views/calendar.blade.php ENDPATH**/ ?>

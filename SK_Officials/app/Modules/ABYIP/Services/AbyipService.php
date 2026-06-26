@@ -5,6 +5,7 @@ namespace App\Modules\ABYIP\Services;
 use App\Models\Abyip;
 use App\Models\OfficialProfile;
 use App\Models\User;
+use App\Services\SkFederationsNotificationDispatcher;
 use Carbon\Carbon;
 use DOMDocument;
 use DOMElement;
@@ -166,6 +167,11 @@ class AbyipService
             return $document;
         });
 
+        app(SkFederationsNotificationDispatcher::class)->notifyAbyipSubmission(
+            (string) ($document->barangay_name ?? 'Unknown'),
+            $fiscalYear,
+        );
+
         return $this->formatDocument($document->fresh(['lines.children']));
     }
 
@@ -287,6 +293,11 @@ class AbyipService
 
             return $document;
         });
+
+        app(SkFederationsNotificationDispatcher::class)->notifyAbyipSubmission(
+            (string) ($document->barangay_name ?? 'Unknown'),
+            (int) $document->fiscal_year,
+        );
 
         return $this->formatDocument($document->fresh(['lines.children']));
     }

@@ -19,12 +19,12 @@
             <i class="fas fa-home"></i><span>Dashboard</span>
         </a>
 
-        <a href="{{ route('calendar') }}" class="menu-item {{ request()->routeIs('calendar') ? 'active' : '' }}" data-tooltip="Calendar">
-            <i class="fas fa-calendar-alt"></i><span>Calendar</span>
-        </a>
-
         <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" data-tooltip="Profile">
             <i class="fas fa-user"></i><span>Profile</span>
+        </a>
+
+        <a href="{{ route('calendar') }}" class="menu-item {{ request()->routeIs('calendar') ? 'active' : '' }}" data-tooltip="Calendar">
+            <i class="fas fa-calendar-alt"></i><span>Calendar</span>
         </a>
 
         <a href="{{ route('community-feed') }}" class="menu-item {{ request()->routeIs('community-feed', 'sk-fed-profile', 'skfed.barangay-profile') ? 'active' : '' }}" data-tooltip="SK Community Feed" id="sidebar-community-feed-link">

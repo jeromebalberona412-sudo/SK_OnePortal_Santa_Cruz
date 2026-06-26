@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const dataUrl = shell.dataset.auditDataUrl || '';
     const state = {
         page: 1,
-        perPage: 10,
+        perPage: 5,
         rows: [],
         meta: { total: 0, from: 0, to: 0, last_page: 1, current_page: 1 },
     };

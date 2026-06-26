@@ -1,680 +1,686 @@
-// ===========================
-// CALENDAR STATE & CONFIG
-// ===========================
-
-let currentYear = new Date().getFullYear();
-let currentMonth = new Date().getMonth(); // 0-11
-let eventsData = [];
-let selectedDate = null;
-
-const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-];
-
-const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-// ===========================
-// INITIALIZATION
-// ===========================
-
-function bootCalendar() {
+document.addEventListener('DOMContentLoaded', () => {
     initializeCalendar();
-    attachEventListeners();
-}
+});
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bootCalendar);
-} else {
-    bootCalendar();
-}
-
-function initializeCalendar() {
-    updateMonthLabel();
-    renderCalendar();
-    fetchEvents();
-}
-
-function attachEventListeners() {
-    document.getElementById('calendarPrevBtn')?.addEventListener('click', goToPreviousMonth);
-    document.getElementById('calendarNextBtn')?.addEventListener('click', goToNextMonth);
-    document.getElementById('calendarJumpBtn')?.addEventListener('click', openJumpToDateModal);
-}
-
-// ===========================
-// CALENDAR RENDERING
-// ===========================
-
-function renderCalendar() {
-    const grid = document.getElementById('calendarGrid');
-    if (!grid) return;
-
-    grid.innerHTML = '';
-
-    // Render day headers
-    dayNames.forEach(day => {
-        const header = document.createElement('div');
-        header.className = 'calendar-day-header';
-        header.textContent = day;
-        grid.appendChild(header);
-    });
-
-    // Get first day of month and total days
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    // Get previous month days
-    const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
-
-    // Render previous month trailing days
-    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-        const day = prevMonthLastDay - i;
-        const cell = createDayCell(day, true, currentMonth - 1);
-        grid.appendChild(cell);
-    }
-
-    // Render current month days
-    for (let day = 1; day <= daysInMonth; day++) {
-        const cell = createDayCell(day, false, currentMonth);
-        grid.appendChild(cell);
-    }
-
-    // Render next month leading days
-    const totalCells = grid.children.length - 7; // exclude headers
-    const remainingCells = 42 - totalCells; // 6 rows × 7 days = 42
-    for (let day = 1; day <= remainingCells; day++) {
-        const cell = createDayCell(day, true, currentMonth + 1);
-        grid.appendChild(cell);
-    }
-}
-
-function createDayCell(day, isOtherMonth, month) {
-    const cell = document.createElement('div');
-    cell.className = 'calendar-day-cell';
-
-    if (isOtherMonth) {
-        cell.classList.add('other-month');
-    }
-
-    // Check if today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const cellDate = new Date(currentYear, month, day);
-    cellDate.setHours(0, 0, 0, 0);
-    
-    const isPastDate = cellDate < today;
-    
-    if (
-        cellDate.getDate() === today.getDate() &&
-        cellDate.getMonth() === today.getMonth() &&
-        cellDate.getFullYear() === today.getFullYear()
-    ) {
-        cell.classList.add('today');
-    }
-
-    // Add past date class
-    if (isPastDate && !isOtherMonth) {
-        cell.classList.add('past-date');
-        cell.style.cursor = 'not-allowed';
-        cell.style.opacity = '0.6';
-    }
-
-    // Day number
-    const dayNumber = document.createElement('div');
-    dayNumber.className = 'calendar-day-number';
-    dayNumber.textContent = day;
-    cell.appendChild(dayNumber);
-
-    // Check for events on this date
-    const dateStr = formatDate(new Date(currentYear, month, day));
-    const dayEvents = eventsData.filter(e => e.event_date === dateStr);
-
-    if (dayEvents.length > 0 && !isOtherMonth) {
-        cell.classList.add('has-events');
-
-        const eventCount = document.createElement('div');
-        eventCount.className = 'calendar-event-count';
-        eventCount.innerHTML = `<span class="calendar-event-dot"></span>${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}`;
-        cell.appendChild(eventCount);
-    }
-
-    // Click handler
-    cell.addEventListener('click', () => {
-        if (!isOtherMonth && !isPastDate) {
-            selectedDate = dateStr;
-            openDayModal(dateStr, dayEvents);
-        } else if (isPastDate && !isOtherMonth) {
-            showError('Cannot add events to past dates');
-        }
-    });
-
-    return cell;
-}
-
-function updateMonthLabel() {
-    const label = document.getElementById('calendarMonthLabel');
-    if (label) {
-        label.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-    }
-}
-
-// ===========================
-// NAVIGATION
-// ===========================
-
-function goToPreviousMonth() {
-    currentMonth--;
-    if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-    }
-    updateMonthLabel();
-    renderCalendar();
-    fetchEvents();
-}
-
-function goToNextMonth() {
-    currentMonth++;
-    if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-    }
-    updateMonthLabel();
-    renderCalendar();
-    fetchEvents();
-}
-
-function openJumpToDateModal() {
-    const dateInput = prompt('Enter date (YYYY-MM-DD):');
-    if (dateInput) {
-        const date = new Date(dateInput);
-        if (!isNaN(date.getTime())) {
-            currentYear = date.getFullYear();
-            currentMonth = date.getMonth();
-            updateMonthLabel();
-            renderCalendar();
-            fetchEvents();
-        } else {
-            alert('Invalid date format. Please use YYYY-MM-DD.');
-        }
-    }
-}
-
-// ===========================
-// API CALLS
-// ===========================
-
-async function fetchEvents() {
-    try {
-        const response = await fetch(`/api/calendar/events?year=${currentYear}&month=${currentMonth + 1}`, {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': getCsrfToken(),
-            },
-            credentials: 'same-origin',
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch events');
-        }
-
-        const result = await response.json();
-        eventsData = result.data || [];
-        renderCalendar();
-    } catch (error) {
-        console.error('Error fetching events:', error);
-        showError('Failed to load events');
-    }
-}
-
-async function saveEvent(eventData) {
-    try {
-        const response = await fetch('/api/calendar/events', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify(eventData),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            if (result.errors) {
-                displayValidationErrors(result.errors);
-            } else {
-                throw new Error(result.message || 'Failed to save event');
-            }
-            return null;
-        }
-
-        return result.data;
-    } catch (error) {
-        console.error('Error saving event:', error);
-        showError('Failed to save event');
-        return null;
-    }
-}
-
-async function updateEvent(eventId, eventData) {
-    try {
-        const response = await fetch(`/api/calendar/events/${eventId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify(eventData),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            if (result.errors) {
-                displayValidationErrors(result.errors);
-            } else {
-                throw new Error(result.message || 'Failed to update event');
-            }
-            return null;
-        }
-
-        return result.data;
-    } catch (error) {
-        console.error('Error updating event:', error);
-        showError('Failed to update event');
-        return null;
-    }
-}
-
-async function deleteEvent(eventId) {
-    if (!confirm('Are you sure you want to delete this event?')) {
-        return false;
-    }
-
-    try {
-        const response = await fetch(`/api/calendar/events/${eventId}`, {
-            method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || 'Failed to delete event');
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Error deleting event:', error);
-        showError('Failed to delete event');
-        return false;
-    }
-}
-
-// ===========================
-// MODAL HANDLING
-// ===========================
-
-function openDayModal(dateStr, dayEvents) {
-    const modal = createDayModal(dateStr, dayEvents);
-    document.body.appendChild(modal);
-}
-
-function createDayModal(dateStr, dayEvents) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-
-    const modal = document.createElement('div');
-    modal.className = 'modal-content';
-
-    const date = new Date(dateStr);
-    const formattedDate = date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-
-    modal.innerHTML = `
-        <div class="modal-header">
-            <h2>${formattedDate}</h2>
-            <button class="modal-close-btn" onclick="closeModal(this)">&times;</button>
-        </div>
-        <div class="modal-body">
-            <button class="btn btn-primary" onclick="openEventForm('${dateStr}', null)" style="margin-bottom: 1rem; width: 100%;">
-                Add New Event
-            </button>
-            <div class="event-list">
-                ${dayEvents.length > 0 ? renderEventList(dayEvents) : '<div class="no-events">No events scheduled for this day</div>'}
-            </div>
-        </div>
-    `;
-
-    overlay.appendChild(modal);
-
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            closeModal(overlay);
-        }
-    });
-
-    return overlay;
-}
-
-function renderEventList(events) {
-    return events.map(event => `
-        <div class="event-item" onclick="openEventForm('${event.event_date}', ${event.id})">
-            <div class="event-item-header">
-                <h3 class="event-item-title">${escapeHtml(event.title)}</h3>
-                <span class="event-item-time">${event.start_time} - ${event.end_time}</span>
-            </div>
-            <div class="event-item-badges">
-                <span class="event-badge task-${event.task_type.toLowerCase()}">${event.task_type}</span>
-                <span class="event-badge status-${event.status.toLowerCase()}">${event.status}</span>
-            </div>
-            <p class="event-item-description">${escapeHtml(event.description)}</p>
-            <p class="event-item-audience">To: ${event.target_audience}</p>
-        </div>
-    `).join('');
-}
-
-function openEventForm(dateStr, eventId = null) {
-    closeModal(document.querySelector('.modal-overlay'));
-
-    const event = eventId ? eventsData.find(e => e.id === eventId) : null;
-    const isEdit = !!event;
-
-    const modal = createEventFormModal(dateStr, event, isEdit);
-    document.body.appendChild(modal);
-}
-
-function createEventFormModal(dateStr, event, isEdit) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-
-    const modal = document.createElement('div');
-    modal.className = 'modal-content';
-
-    modal.innerHTML = `
-        <div class="modal-header">
-            <h2>${isEdit ? 'Edit Event' : 'Add New Event'}</h2>
-            <button class="modal-close-btn" onclick="closeModal(this)">&times;</button>
-        </div>
-        <form id="eventForm" onsubmit="handleEventSubmit(event, ${isEdit}, ${event?.id || null})">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="eventTitle">Title *</label>
-                    <input type="text" id="eventTitle" name="title" value="${event?.title || ''}" required maxlength="255" placeholder="Enter event title">
-                    <div class="form-error" id="error-title"></div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="eventTaskType">Task Type *</label>
-                        <select id="eventTaskType" name="task_type" required>
-                            <option value="">Select Task Type</option>
-                            <option value="Event" ${event?.task_type === 'Event' ? 'selected' : ''}>Event</option>
-                            <option value="Meeting" ${event?.task_type === 'Meeting' ? 'selected' : ''}>Meeting</option>
-                            <option value="Training" ${event?.task_type === 'Training' ? 'selected' : ''}>Training</option>
-                            <option value="Reminder" ${event?.task_type === 'Reminder' ? 'selected' : ''}>Reminder</option>
-                            <option value="Workshop" ${event?.task_type === 'Workshop' ? 'selected' : ''}>Workshop</option>
-                            <option value="Seminar" ${event?.task_type === 'Seminar' ? 'selected' : ''}>Seminar</option>
-                            <option value="Conference" ${event?.task_type === 'Conference' ? 'selected' : ''}>Conference</option>
-                            <option value="Activity" ${event?.task_type === 'Activity' ? 'selected' : ''}>Activity</option>
-                        </select>
-                        <div class="form-error" id="error-task_type"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="eventStatus">Status *</label>
-                        <select id="eventStatus" name="status" required>
-                            <option value="">Select Status</option>
-                            <option value="Pending" ${event?.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                            <option value="Complete" ${event?.status === 'Complete' ? 'selected' : ''}>Complete</option>
-                            <option value="Cancel" ${event?.status === 'Cancel' ? 'selected' : ''}>Cancel</option>
-                        </select>
-                        <div class="form-error" id="error-status"></div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="eventStartTime">Start Time * (7:00 AM - 10:00 PM)</label>
-                        <input type="time" id="eventStartTime" name="start_time" value="${event?.start_time || ''}" required min="07:00" max="22:00">
-                        <small style="color:#6b7280;font-size:0.8rem;">Event hours: 7:00 AM - 10:00 PM</small>
-                        <div class="form-error" id="error-start_time"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="eventEndTime">End Time * (7:00 AM - 10:00 PM)</label>
-                        <input type="time" id="eventEndTime" name="end_time" value="${event?.end_time || ''}" required min="07:00" max="22:00">
-                        <small style="color:#6b7280;font-size:0.8rem;">Must be after start time</small>
-                        <div class="form-error" id="error-end_time"></div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="eventAudience">To (Target Audience) *</label>
-                    <select id="eventAudience" name="target_audience" required>
-                        <option value="">Select Target Audience</option>
-                        <option value="All SK Officials" ${event?.target_audience === 'All SK Officials' ? 'selected' : ''}>All SK Officials</option>
-                        <option value="SK Fed" ${event?.target_audience === 'SK Fed' ? 'selected' : ''}>SK Fed</option>
-                    </select>
-                    <div class="form-error" id="error-target_audience"></div>
-                </div>
-
-                <div class="form-group">
-                    <label for="eventDescription">Description *</label>
-                    <textarea id="eventDescription" name="description" required maxlength="1000" placeholder="Enter event description">${event?.description || ''}</textarea>
-                    <div class="form-error" id="error-description"></div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                ${isEdit ? '<button type="button" class="btn btn-danger" onclick="handleEventDelete(' + event.id + ')">Delete</button>' : ''}
-                <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancel</button>
-                <button type="submit" class="btn btn-primary">${isEdit ? 'Update' : 'Save'}</button>
-            </div>
-        </form>
-    `;
-
-    overlay.appendChild(modal);
-
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            closeModal(overlay);
-        }
-    });
-
-    return overlay;
-}
-
-async function handleEventSubmit(e, isEdit, eventId) {
-    e.preventDefault();
-
-    clearValidationErrors();
-
-    const formData = new FormData(e.target);
-    const eventData = {
-        event_date: selectedDate,
-        title: formData.get('title'),
-        description: formData.get('description'),
-        task_type: formData.get('task_type'),
-        status: formData.get('status'),
-        start_time: formData.get('start_time'),
-        end_time: formData.get('end_time'),
-        target_audience: formData.get('target_audience'),
-    };
-
-    // Client-side validations
-    const validationErrors = validateEventData(eventData, isEdit, eventId);
-    if (Object.keys(validationErrors).length > 0) {
-        displayValidationErrors(validationErrors);
-        return;
-    }
-
-    let result;
-    if (isEdit) {
-        result = await updateEvent(eventId, eventData);
-    } else {
-        result = await saveEvent(eventData);
-    }
-
-    if (result) {
-        closeModal(document.querySelector('.modal-overlay'));
-        await fetchEvents();
-        showSuccess(isEdit ? 'Event updated successfully' : 'Event added successfully');
-    }
-}
-
-function validateEventData(eventData, isEdit, eventId) {
-    const errors = {};
-
-    // Validate past date
-    const selectedDateObj = new Date(eventData.event_date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (selectedDateObj < today) {
-        errors.event_date = ['Cannot add events to past dates'];
-    }
-
-    // Validate time range (7AM to 10PM)
-    const startTime = eventData.start_time;
-    const endTime = eventData.end_time;
-
-    if (startTime && endTime) {
-        const [startHour, startMin] = startTime.split(':').map(Number);
-        const [endHour, endMin] = endTime.split(':').map(Number);
-
-        // Check if start time is before 7:00 AM or after 10:00 PM
-        if (startHour < 7 || (startHour === 22 && startMin > 0) || startHour > 22) {
-            errors.start_time = ['Start time must be between 7:00 AM and 10:00 PM'];
-        }
-
-        // Check if end time is before 7:00 AM or after 10:00 PM
-        if (endHour < 7 || (endHour === 22 && endMin > 0) || endHour > 22) {
-            errors.end_time = ['End time must be between 7:00 AM and 10:00 PM'];
-        }
-
-        // Check if end time is after start time
-        if (startHour * 60 + startMin >= endHour * 60 + endMin) {
-            errors.end_time = ['End time must be after start time'];
-        }
-
-        // Check for time conflicts with existing events on the same date
-        const existingEvents = eventsData.filter(e => {
-            if (e.event_date === eventData.event_date) {
-                // If editing, exclude the current event
-                if (isEdit && e.id === eventId) {
-                    return false;
-                }
-                return true;
-            }
-            return false;
-        });
-
-        for (const existingEvent of existingEvents) {
-            const [existingStartHour, existingStartMin] = existingEvent.start_time.split(':').map(Number);
-            const [existingEndHour, existingEndMin] = existingEvent.end_time.split(':').map(Number);
-
-            const newStart = startHour * 60 + startMin;
-            const newEnd = endHour * 60 + endMin;
-            const existingStart = existingStartHour * 60 + existingStartMin;
-            const existingEnd = existingEndHour * 60 + existingEndMin;
-
-            // Check if times overlap
-            if (
-                (newStart >= existingStart && newStart < existingEnd) ||
-                (newEnd > existingStart && newEnd <= existingEnd) ||
-                (newStart <= existingStart && newEnd >= existingEnd)
-            ) {
-                errors.start_time = [`Time conflict with existing event: ${existingEvent.title} (${existingEvent.start_time} - ${existingEvent.end_time})`];
-                break;
-            }
-        }
-    }
-
-    return errors;
-}
-
-async function handleEventDelete(eventId) {
-    const success = await deleteEvent(eventId);
-    if (success) {
-        closeModal(document.querySelector('.modal-overlay'));
-        await fetchEvents();
-        showSuccess('Event deleted successfully');
-    }
-}
-
-function closeModal(element) {
-    const modal = element.closest('.modal-overlay');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-// ===========================
-// UTILITY FUNCTIONS
-// ===========================
-
-function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+const CONTENT_MAX = 500;
 
 function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 }
 
-function getAuthToken() {
-    return localStorage.getItem('auth_token') || '';
+async function calendarApiFetch(url, options = {}) {
+    const res = await fetch(url, {
+        ...options,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken(),
+            ...(options.headers || {}),
+        },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.message || 'Request failed.');
+    return json;
 }
 
-function displayValidationErrors(errors) {
-    clearValidationErrors();
-    Object.keys(errors).forEach(field => {
-        const errorElement = document.getElementById(`error-${field}`);
-        if (errorElement) {
-            errorElement.textContent = errors[field][0];
+function showConfirm(options) {
+    return new Promise((resolve) => {
+        const { title, message, confirmText = 'OK', cancelText = 'Cancel', confirmClass = 'confirm-primary', theme = 'default' } = options;
+        const isAlert = cancelText === '';
+        let overlay = document.getElementById('calendar-confirm-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'calendar-confirm-overlay';
+            overlay.className = 'calendar-confirm-overlay';
+            overlay.innerHTML = `
+                <div class="calendar-confirm-modal">
+                    <div class="calendar-confirm-header"></div>
+                    <div class="calendar-confirm-body"></div>
+                    <div class="calendar-confirm-actions">
+                        <button type="button" class="calendar-confirm-cancel"></button>
+                        <button type="button" class="calendar-confirm-ok"></button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
         }
+        const headerEl = overlay.querySelector('.calendar-confirm-header');
+        const bodyEl = overlay.querySelector('.calendar-confirm-body');
+        const cancelBtn = overlay.querySelector('.calendar-confirm-cancel');
+        const okBtn = overlay.querySelector('.calendar-confirm-ok');
+
+        headerEl.textContent = title;
+        bodyEl.textContent = message;
+        cancelBtn.textContent = cancelText;
+        cancelBtn.style.display = isAlert ? 'none' : '';
+        okBtn.textContent = confirmText;
+        okBtn.className = 'calendar-confirm-ok ' + confirmClass;
+        overlay.className = 'calendar-confirm-overlay theme-' + theme;
+
+        const cleanup = () => {
+            overlay.classList.remove('show');
+            cancelBtn.onclick = null;
+            okBtn.onclick = null;
+            overlay.onclick = null;
+        };
+
+        cancelBtn.onclick = () => { cleanup(); resolve(false); };
+        okBtn.onclick = () => { cleanup(); resolve(true); };
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                cleanup();
+                resolve(isAlert ? true : false);
+            }
+        };
+
+        overlay.classList.add('show');
     });
 }
 
-function clearValidationErrors() {
-    document.querySelectorAll('.form-error').forEach(el => {
-        el.textContent = '';
+function showToast(message, type) {
+    const existing = document.querySelector('.app-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'app-toast app-toast-show app-toast-' + (type || 'success');
+    const icon = type === 'error' ? '✕' : '✓';
+    toast.innerHTML = '<span class="app-toast-icon">' + icon + '</span> ' + message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.remove('app-toast-show');
+        toast.classList.add('app-toast-hide');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+
+const MIN_YEAR = 1991;
+
+function initializeCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const monthLabel = document.getElementById('calendarMonthLabel');
+    const prevBtn = document.getElementById('calendarPrevBtn');
+    const nextBtn = document.getElementById('calendarNextBtn');
+    const jumpBtn = document.getElementById('calendarJumpBtn');
+
+    if (!grid || !monthLabel || !prevBtn || !nextBtn || !jumpBtn) return;
+
+    let current = new Date();
+    current.setDate(1);
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const notes = {};
+    let isLoadingNotes = false;
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const todayKey = `${currentYear}-${today.getMonth()}-${today.getDate()}`;
+
+    function dateKeyToIso(year, monthIndex, day) {
+        const m = String(monthIndex + 1).padStart(2, '0');
+        const d = String(day).padStart(2, '0');
+        return `${year}-${m}-${d}`;
+    }
+
+    function isoToDateKey(iso) {
+        const [y, m, d] = iso.split('-').map(Number);
+        return `${y}-${m - 1}-${d}`;
+    }
+
+    function isToday(year, monthIndex, day) {
+        return year === currentYear && monthIndex === today.getMonth() && day === today.getDate();
+    }
+
+    function isPastDate(year, monthIndex, day) {
+        const cellDate = new Date(year, monthIndex, day);
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        return cellDate < todayStart;
+    }
+
+    function canEditDate(year, monthIndex, day) {
+        if (!canModifyNote(year)) return false;
+        return !isPastDate(year, monthIndex, day);
+    }
+
+    function canModifyNote(year) {
+        return year === currentYear;
+    }
+
+    function canViewNote(year, monthIndex, day) {
+        const key = `${year}-${monthIndex}-${day}`;
+        const note = notes[key];
+        return !!(note && (note.title || note.content));
+    }
+
+    async function loadNotes() {
+        if (isLoadingNotes) return;
+        isLoadingNotes = true;
+        const year = current.getFullYear();
+        const month = current.getMonth() + 1;
+
+        try {
+            const json = await calendarApiFetch(`/api/calendar/notes?year=${year}&month=${month}`);
+            Object.keys(notes).forEach((k) => delete notes[k]);
+            (json.data || []).forEach((note) => {
+                const key = isoToDateKey(note.note_date);
+                notes[key] = {
+                    id: note.id,
+                    title: note.title,
+                    content: note.content,
+                };
+            });
+        } catch (err) {
+            showToast(err.message || 'Failed to load calendar notes.', 'error');
+        } finally {
+            isLoadingNotes = false;
+            render();
+        }
+    }
+
+    prevBtn.addEventListener('click', () => {
+        current.setMonth(current.getMonth() - 1);
+        loadNotes();
     });
-}
+    nextBtn.addEventListener('click', () => {
+        current.setMonth(current.getMonth() + 1);
+        loadNotes();
+    });
+    jumpBtn.addEventListener('click', () => openJumpModal());
 
-function showError(message) {
-    alert('Error: ' + message);
-}
+    function render() {
+        grid.innerHTML = '';
+        const year = current.getFullYear();
+        const monthIndex = current.getMonth();
 
-function showSuccess(message) {
-    alert(message);
+        monthLabel.textContent = `${monthNames[monthIndex]} ${year}`;
+
+        const firstDay = new Date(year, monthIndex, 1);
+        const startWeekday = firstDay.getDay();
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+        const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        weekdayNames.forEach((name) => {
+            const header = document.createElement('div');
+            header.className = 'calendar-day-header';
+            header.textContent = name;
+            grid.appendChild(header);
+        });
+
+        for (let i = 0; i < startWeekday; i++) grid.appendChild(document.createElement('div'));
+
+        const monthName = monthNames[monthIndex];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('div');
+            const dateKey = `${year}-${monthIndex}-${day}`;
+            const note = notes[dateKey];
+            const hasNote = note && (note.title || note.content);
+            const isTodayCell = dateKey === todayKey;
+            const isPast = isPastDate(year, monthIndex, day);
+            const canEdit = canEditDate(year, monthIndex, day);
+            const isPastYear = year < currentYear;
+            const isNextYear = year > currentYear;
+
+            cell.className = 'calendar-day';
+            if (isTodayCell) cell.classList.add('is-today');
+            if (hasNote) cell.classList.add('has-notes');
+            if (isPast || isPastYear || isNextYear) cell.classList.add('is-past');
+            if (isPast && !hasNote) cell.classList.add('is-disabled');
+
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'calendar-day-number';
+            dayNumber.textContent = day;
+            cell.appendChild(dayNumber);
+
+            const preview = document.createElement('div');
+            preview.className = 'calendar-day-notes-preview';
+            preview.textContent = hasNote ? (note.title || note.content || '').slice(0, 40) : '';
+            cell.appendChild(preview);
+
+            const addLabel = document.createElement('div');
+            addLabel.className = 'calendar-day-add';
+            if (hasNote && !canEdit) {
+                addLabel.textContent = 'View note';
+            } else if (!hasNote && isPast) {
+                addLabel.textContent = 'Past date';
+            } else if (!hasNote && !canModifyNote(year)) {
+                addLabel.textContent = isPastYear ? 'Past year' : 'Next year';
+            } else if (hasNote) {
+                addLabel.textContent = 'Edit note';
+            } else {
+                addLabel.textContent = 'Add note';
+            }
+            cell.appendChild(addLabel);
+
+            cell.addEventListener('click', () => openEditor(dateKey, day, monthName, year, monthIndex));
+            grid.appendChild(cell);
+        }
+    }
+
+    function openJumpModal() {
+        let overlay = document.getElementById('calendar-jump-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'calendar-jump-overlay';
+            overlay.className = 'calendar-jump-overlay';
+            overlay.innerHTML = `
+                <div class="calendar-jump-modal">
+                    <h3 class="calendar-jump-title">Jump to date</h3>
+                    <p class="calendar-jump-display"></p>
+                    <div class="calendar-jump-columns">
+                        <div class="calendar-jump-col" data-type="month">
+                            <div class="calendar-jump-col-inner"></div>
+                        </div>
+                        <div class="calendar-jump-col" data-type="day">
+                            <div class="calendar-jump-col-inner"></div>
+                        </div>
+                        <div class="calendar-jump-col" data-type="year">
+                            <div class="calendar-jump-col-inner"></div>
+                        </div>
+                    </div>
+                    <div class="calendar-jump-actions">
+                        <button type="button" class="calendar-jump-cancel">Cancel</button>
+                        <button type="button" class="calendar-jump-ok">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        let selMonth = current.getMonth();
+        let selDay = Math.min(current.getDate(), 28);
+        let selYear = current.getFullYear();
+
+        function clampDay() {
+            const maxDay = new Date(selYear, selMonth + 1, 0).getDate();
+            selDay = Math.min(selDay, maxDay);
+        }
+
+        const displayEl = overlay.querySelector('.calendar-jump-display');
+        const monthCol = overlay.querySelector('.calendar-jump-col[data-type="month"] .calendar-jump-col-inner');
+        const dayCol = overlay.querySelector('.calendar-jump-col[data-type="day"] .calendar-jump-col-inner');
+        const yearCol = overlay.querySelector('.calendar-jump-col[data-type="year"] .calendar-jump-col-inner');
+
+        function updateDisplay() {
+            const d = new Date(selYear, selMonth, selDay);
+            displayEl.textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function renderColumns() {
+            clampDay();
+            monthCol.innerHTML = '';
+            for (let i = 0; i < 12; i++) {
+                const item = document.createElement('div');
+                item.className = 'calendar-jump-item' + (i === selMonth ? ' selected' : '');
+                item.textContent = monthNamesShort[i];
+                item.dataset.value = i;
+                item.addEventListener('click', () => {
+                    selMonth = i;
+                    clampDay();
+                    renderColumns();
+                    updateDisplay();
+                });
+                monthCol.appendChild(item);
+            }
+
+            dayCol.innerHTML = '';
+            const daysInMonth = new Date(selYear, selMonth + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const item = document.createElement('div');
+                item.className = 'calendar-jump-item' + (d === selDay ? ' selected' : '');
+                item.textContent = String(d).padStart(2, '0');
+                item.dataset.value = d;
+                item.addEventListener('click', () => {
+                    selDay = d;
+                    renderColumns();
+                    updateDisplay();
+                });
+                dayCol.appendChild(item);
+            }
+
+            yearCol.innerHTML = '';
+            for (let y = MIN_YEAR; y <= 2100; y++) {
+                const item = document.createElement('div');
+                item.className = 'calendar-jump-item' + (y === selYear ? ' selected' : '');
+                item.textContent = y;
+                item.dataset.value = y;
+                item.addEventListener('click', () => {
+                    selYear = y;
+                    clampDay();
+                    renderColumns();
+                    updateDisplay();
+                });
+                yearCol.appendChild(item);
+            }
+
+            monthCol.parentElement.scrollTop = selMonth * 36;
+            dayCol.parentElement.scrollTop = (selDay - 1) * 36;
+            yearCol.parentElement.scrollTop = (selYear - MIN_YEAR) * 36;
+        }
+
+        function hide() {
+            overlay.classList.remove('show');
+            overlay.querySelector('.calendar-jump-cancel').removeEventListener('click', onCancel);
+            overlay.querySelector('.calendar-jump-ok').removeEventListener('click', onOk);
+            overlay.removeEventListener('click', onBackdrop);
+        }
+
+        function onOk() {
+            current.setFullYear(selYear);
+            current.setMonth(selMonth);
+            current.setDate(1);
+            hide();
+            loadNotes();
+        }
+
+        function onCancel() { hide(); }
+        function onBackdrop(e) { if (e.target === overlay) hide(); }
+
+        renderColumns();
+        updateDisplay();
+
+        overlay.querySelector('.calendar-jump-cancel').addEventListener('click', onCancel);
+        overlay.querySelector('.calendar-jump-ok').addEventListener('click', onOk);
+        overlay.addEventListener('click', onBackdrop);
+
+        overlay.classList.add('show');
+    }
+
+    let backdrop, modal, titleInput, contentArea, charCounter, closeBtn, cancelBtn, saveBtn, editBtn, delBtn, toggleBtn;
+    let dateKey, isEditMode, originalNote, activeYear, activeMonthIndex, activeDay;
+
+    function updateCharCounter() {
+        if (!charCounter || !contentArea) return;
+        const len = contentArea.value.length;
+        charCounter.textContent = `${len} / ${CONTENT_MAX} characters`;
+        charCounter.classList.toggle('is-over', len > CONTENT_MAX);
+    }
+
+    function switchToViewMode() {
+        isEditMode = false;
+        const note = notes[dateKey] || {};
+        titleInput.value = note.title || '';
+        titleInput.readOnly = true;
+        contentArea.value = note.content || '';
+        contentArea.readOnly = true;
+        if (charCounter) charCounter.style.display = 'none';
+        cancelBtn.style.display = 'none';
+        saveBtn.style.display = 'none';
+        editBtn.style.display = canEditDate(activeYear, activeMonthIndex, activeDay) ? '' : 'none';
+        delBtn.style.display = canEditDate(activeYear, activeMonthIndex, activeDay) ? '' : 'none';
+    }
+
+    function switchToEditMode() {
+        isEditMode = true;
+        const note = notes[dateKey] || {};
+        originalNote = { title: note.title || '', content: note.content || '' };
+        titleInput.readOnly = false;
+        contentArea.readOnly = false;
+        if (charCounter) charCounter.style.display = '';
+        updateCharCounter();
+        cancelBtn.style.display = '';
+        saveBtn.style.display = '';
+        editBtn.style.display = 'none';
+        delBtn.style.display = 'none';
+    }
+
+    function openEditor(dateKeyParam, day, monthLabelText, year, monthIndex) {
+        dateKey = dateKeyParam;
+        activeYear = year;
+        activeMonthIndex = monthIndex;
+        activeDay = day;
+
+        const note = notes[dateKey];
+        const hasNote = note && (note.title || note.content);
+        const pastDate = isPastDate(year, monthIndex, day);
+
+        if (!hasNote && pastDate) {
+            showToast('No past dates to add note.', 'error');
+            return;
+        }
+
+        if (!hasNote && !canModifyNote(year)) {
+            if (year < currentYear) {
+                showToast('Cannot add notes to past years.', 'error');
+            } else {
+                showToast('Cannot add notes to next year or beyond.', 'error');
+            }
+            return;
+        }
+
+        let backdropEl = document.querySelector('.calendar-modal-backdrop');
+        if (!backdropEl) {
+            backdropEl = document.createElement('div');
+            backdropEl.className = 'calendar-modal-backdrop';
+            backdropEl.innerHTML = `
+                <div class="calendar-modal">
+                    <div class="calendar-modal-header">
+                        <h2 class="calendar-modal-title"></h2>
+                        <div class="calendar-modal-window-controls">
+                            <button type="button" class="modal-toggle-btn" aria-label="Maximize">□</button>
+                            <button type="button" class="calendar-modal-close" aria-label="Close">&times;</button>
+                        </div>
+                    </div>
+                    <div class="calendar-modal-body">
+                        <label class="calendar-note-label">Title</label>
+                        <input type="text" class="calendar-note-title-input" placeholder="Note title..." maxlength="255" />
+                        <label class="calendar-note-label">Content</label>
+                        <textarea class="calendar-note-content" placeholder="Write your note..." maxlength="${CONTENT_MAX}"></textarea>
+                        <div class="calendar-note-char-counter">0 / ${CONTENT_MAX} characters</div>
+                        <div class="calendar-modal-actions">
+                            <button type="button" class="btn-secondary calendar-modal-cancel" style="display:none">Cancel</button>
+                            <button type="button" class="btn-primary calendar-modal-save" style="display:none">Save</button>
+                            <button type="button" class="modal-action-btn edit" style="display:none">Edit</button>
+                            <button type="button" class="modal-action-btn delete" style="display:none">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(backdropEl);
+        }
+
+        backdrop = backdropEl;
+        modal = backdrop.querySelector('.calendar-modal');
+        modal.querySelector('.calendar-modal-title').textContent = `Notes for ${monthLabelText} ${day}`;
+        titleInput = modal.querySelector('.calendar-note-title-input');
+        contentArea = modal.querySelector('.calendar-note-content');
+        charCounter = modal.querySelector('.calendar-note-char-counter');
+        closeBtn = modal.querySelector('.calendar-modal-close');
+        cancelBtn = modal.querySelector('.calendar-modal-cancel');
+        saveBtn = modal.querySelector('.calendar-modal-save');
+        editBtn = modal.querySelector('.modal-action-btn.edit');
+        delBtn = modal.querySelector('.modal-action-btn.delete');
+        toggleBtn = modal.querySelector('.modal-toggle-btn');
+
+        titleInput.value = note ? (note.title || '') : '';
+        contentArea.value = note ? (note.content || '') : '';
+        originalNote = note ? { title: note.title || '', content: note.content || '' } : { title: '', content: '' };
+
+        if (hasNote) {
+            switchToViewMode();
+        } else {
+            switchToEditMode();
+        }
+
+        backdrop.classList.remove('modal-maximized');
+        modal.classList.remove('modal-maximized');
+        toggleBtn.textContent = '□';
+
+        contentArea.oninput = updateCharCounter;
+
+        function hide() {
+            backdrop.classList.remove('show', 'modal-maximized');
+            modal.classList.remove('modal-maximized');
+            closeBtn.removeEventListener('click', onClose);
+            cancelBtn.removeEventListener('click', onCancel);
+            saveBtn.removeEventListener('click', onSave);
+            editBtn.removeEventListener('click', onEditClick);
+            delBtn.removeEventListener('click', onDelete);
+            toggleBtn.removeEventListener('click', onToggle);
+            backdrop.removeEventListener('click', onBackdrop);
+            contentArea.oninput = null;
+        }
+
+        function onClose() {
+            if (isEditMode) {
+                const t = titleInput.value.trim();
+                const c = contentArea.value.trim();
+                if (t !== originalNote.title || c !== originalNote.content) {
+                    showConfirm({ title: 'Unsaved Changes', message: 'Discard unsaved changes?', confirmText: 'Discard', cancelText: 'Stay', theme: 'edit' }).then((ok) => { if (ok) hide(); });
+                    return;
+                }
+            }
+            hide();
+        }
+
+        function onBackdrop(e) {
+            if (e.target === backdrop) onClose();
+        }
+
+        function onEditClick() {
+            if (!canEditDate(activeYear, activeMonthIndex, activeDay)) {
+                showToast('No past dates to add note.', 'error');
+                return;
+            }
+            switchToEditMode();
+            titleInput.focus();
+        }
+
+        async function onDelete() {
+            if (!canEditDate(activeYear, activeMonthIndex, activeDay)) {
+                showToast('Past date notes cannot be deleted.', 'error');
+                return;
+            }
+
+            const ok = await showConfirm({
+                title: 'Delete Note',
+                message: 'Delete this note?',
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                confirmClass: 'confirm-danger',
+                theme: 'delete',
+            });
+            if (!ok) return;
+
+            const noteId = notes[dateKey]?.id;
+            if (!noteId) return;
+
+            const defaultHtml = delBtn.innerHTML;
+            delBtn.disabled = true;
+            delBtn.innerHTML = '<span class="calendar-action-spinner"></span> Deleting...';
+
+            try {
+                await calendarApiFetch(`/api/calendar/notes/${noteId}`, { method: 'DELETE' });
+                delete notes[dateKey];
+                hide();
+                await loadNotes();
+                showToast('Note deleted.');
+            } catch (err) {
+                showToast(err.message || 'Failed to delete note.', 'error');
+            } finally {
+                delBtn.disabled = false;
+                delBtn.innerHTML = defaultHtml;
+            }
+        }
+
+        async function onSave() {
+            const title = titleInput.value.trim();
+            const content = contentArea.value.trim();
+
+            if (!title) {
+                showToast('Title is required.', 'error');
+                return;
+            }
+            if (!content) {
+                showToast('Content is required.', 'error');
+                return;
+            }
+            if (content.length > CONTENT_MAX) {
+                showToast(`Content must be ${CONTENT_MAX} characters or less.`, 'error');
+                return;
+            }
+
+            if (!canEditDate(activeYear, activeMonthIndex, activeDay)) {
+                showToast('No past dates to add note.', 'error');
+                return;
+            }
+
+            const hadNote = !!notes[dateKey]?.id;
+            if (hadNote) {
+                const ok = await showConfirm({
+                    title: 'Save Changes',
+                    message: 'Are you sure you want to save changes?',
+                    confirmText: 'Save',
+                    cancelText: 'Cancel',
+                    confirmClass: 'confirm-edit',
+                    theme: 'edit',
+                });
+                if (!ok) return;
+            }
+
+            const defaultHtml = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="calendar-action-spinner calendar-action-spinner-dark"></span> Saving...';
+
+            const isoDate = dateKeyToIso(activeYear, activeMonthIndex, activeDay);
+
+            try {
+                let saved;
+                if (hadNote) {
+                    const json = await calendarApiFetch(`/api/calendar/notes/${notes[dateKey].id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ title, content }),
+                    });
+                    saved = json.data;
+                } else {
+                    const json = await calendarApiFetch('/api/calendar/notes', {
+                        method: 'POST',
+                        body: JSON.stringify({ note_date: isoDate, title, content }),
+                    });
+                    saved = json.data;
+                }
+
+                notes[dateKey] = {
+                    id: saved.id,
+                    title: saved.title,
+                    content: saved.content,
+                };
+                originalNote = { title, content };
+                switchToViewMode();
+                render();
+                showToast(hadNote ? 'Note updated.' : 'Note saved.');
+            } catch (err) {
+                showToast(err.message || 'Failed to save note.', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = defaultHtml;
+            }
+        }
+
+        function onCancel() {
+            titleInput.value = originalNote.title;
+            contentArea.value = originalNote.content;
+            updateCharCounter();
+            if (notes[dateKey]) switchToViewMode();
+            else hide();
+        }
+
+        function onToggle() {
+            const isMax = backdrop.classList.toggle('modal-maximized');
+            modal.classList.toggle('modal-maximized', isMax);
+            toggleBtn.textContent = isMax ? '⧉' : '□';
+        }
+
+        closeBtn.addEventListener('click', onClose);
+        cancelBtn.addEventListener('click', onCancel);
+        saveBtn.addEventListener('click', onSave);
+        editBtn.addEventListener('click', onEditClick);
+        delBtn.addEventListener('click', onDelete);
+        toggleBtn.addEventListener('click', onToggle);
+        backdrop.addEventListener('click', onBackdrop);
+
+        backdrop.classList.add('show');
+        updateCharCounter();
+        (titleInput.value ? contentArea : titleInput).focus();
+    }
+
+    loadNotes();
 }
