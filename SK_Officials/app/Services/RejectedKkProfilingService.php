@@ -48,7 +48,7 @@ class RejectedKkProfilingService
             $status = $registration->user_id ? 'active' : 'pending_verification';
         }
 
-        if (! $evaluation || in_array($evaluation, ['active', 'Auto Approved'], true)) {
+        if (! $evaluation || in_array($evaluation, ['active', 'Auto Approved', 'ID Verified'], true)) {
             $evaluation = 'Not Profiled';
         }
 

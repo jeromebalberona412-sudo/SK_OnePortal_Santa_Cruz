@@ -122,7 +122,7 @@ class DashboardService
     {
         $approvedQuery = KabataanRegistration::forBarangay($barangayId)
             ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved']);
+            ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified']);
 
         if ($year !== null) {
             $approvedQuery->whereYear('reviewed_at', $year);
@@ -266,7 +266,7 @@ class DashboardService
 
         $approved = (clone $base)
             ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
             ->whereYear('reviewed_at', $year)
             ->count();
 
@@ -345,7 +345,7 @@ class DashboardService
         return KabataanRegistration::onlyTrashed()
             ->forBarangay($barangayId)
             ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
             ->whereYear('deleted_at', $year)
             ->count();
     }
@@ -357,7 +357,7 @@ class DashboardService
     {
         return KabataanRegistration::forBarangay($barangayId)
             ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
             ->whereYear('reviewed_at', $year)
             ->get(['form_data']);
     }
@@ -398,7 +398,7 @@ class DashboardService
 
         $approvedRows = KabataanRegistration::forBarangay($barangayId)
             ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
             ->whereYear('reviewed_at', $year)
             ->selectRaw('EXTRACT(MONTH FROM reviewed_at)::int AS month_num, COUNT(*) AS total')
             ->groupBy('month_num')
@@ -473,7 +473,7 @@ class DashboardService
         return match ($type) {
             'approved' => $query
                 ->where('status', 'active')
-                ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+                ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
                 ->whereBetween('reviewed_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
                 ->count(),
             'rejected' => $query

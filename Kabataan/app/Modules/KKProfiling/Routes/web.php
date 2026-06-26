@@ -13,10 +13,7 @@ Route::get('/kkprofiling/check-email', [KKProfilingController::class, 'showCheck
 Route::post('/api/kkprofiling/check-email-exists', [KKProfilingController::class, 'checkEmailExists'])->name('kkprofiling.check-email-exists');
 Route::post('/api/kkprofiling/resend-verification', [KKProfilingController::class, 'resendVerification'])->name('kkprofiling.resend-verification');
 
-Route::get('/kkprofiling/{barangay}', [KKProfilingController::class, 'show'])->name('kkprofiling');
-Route::post('/kkprofiling/{barangay}', [KKProfilingController::class, 'submit'])->name('kkprofiling.submit');
-
-// Registration wizard (session + temp files — no DB commit until finalize)
+// Registration wizard — register BEFORE /kkprofiling/{barangay} to avoid "wizard" slug conflicts
 Route::get('/kkprofiling/wizard/set-password/{token}/{hash}', [KKProfilingWizardController::class, 'openSetPasswordFromEmail'])
     ->name('kkprofiling.wizard.set-password');
 
@@ -28,8 +25,9 @@ Route::post('/api/kkprofiling/wizard/set-password/{token}/finalize', [KKProfilin
 
 Route::prefix('/api/kkprofiling/{barangay}/wizard')->group(function () {
     Route::get('/status', [KKProfilingWizardController::class, 'status'])->name('kkprofiling.wizard.status');
-    Route::get('/document/{type}', [KKProfilingWizardController::class, 'documentPreview'])
-        ->where('type', 'school_id|barangay_clearance')
+    Route::get('/document/{type}/{side?}', [KKProfilingWizardController::class, 'documentPreview'])
+        ->where('type', 'school_id|national_id')
+        ->where('side', 'front|back')
         ->name('kkprofiling.wizard.document-preview');
     Route::get('/registration-complete', [KKProfilingWizardController::class, 'checkRegistrationComplete'])->name('kkprofiling.wizard.registration-complete');
     Route::post('/step-1', [KKProfilingWizardController::class, 'saveStep1'])->name('kkprofiling.wizard.step1');
@@ -39,9 +37,20 @@ Route::prefix('/api/kkprofiling/{barangay}/wizard')->group(function () {
     Route::post('/finalize', [KKProfilingWizardController::class, 'finalize'])->name('kkprofiling.wizard.finalize');
 });
 
-// Set Password
-Route::get('/kkprofiling/{barangay}/set-password', [KKProfilingController::class, 'showSetPassword'])->name('kkprofiling.set-password');
-Route::post('/kkprofiling/{barangay}/set-password', [KKProfilingController::class, 'storePassword'])->name('kkprofiling.store-password');
+Route::get('/kkprofiling/{barangay}', [KKProfilingController::class, 'show'])
+    ->where('barangay', '^(?!wizard$).*')
+    ->name('kkprofiling');
+Route::post('/kkprofiling/{barangay}', [KKProfilingController::class, 'submit'])
+    ->where('barangay', '^(?!wizard$).*')
+    ->name('kkprofiling.submit');
+
+// Set Password (legacy session-based flow after kkprofiling.verify)
+Route::get('/kkprofiling/{barangay}/set-password', [KKProfilingController::class, 'showSetPassword'])
+    ->where('barangay', '^(?!wizard$).*')
+    ->name('kkprofiling.set-password');
+Route::post('/kkprofiling/{barangay}/set-password', [KKProfilingController::class, 'storePassword'])
+    ->where('barangay', '^(?!wizard$).*')
+    ->name('kkprofiling.store-password');
 
 Route::middleware(['auth'])->group(function () {
     Route::put('/kkprofiling/update', [KKProfilingController::class, 'updateForUser'])->name('kkprofiling.update');

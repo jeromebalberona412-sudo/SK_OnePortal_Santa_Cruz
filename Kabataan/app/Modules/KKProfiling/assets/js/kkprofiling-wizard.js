@@ -10,7 +10,6 @@
 
     const slug = root.dataset.barangaySlug || '';
     const barangayName = root.dataset.barangayName || '';
-    const initialStep = parseInt(root.dataset.initialStep || '1', 10);
     const verificationSentOnLoad = root.dataset.verificationSent === '1';
 
     const apiBase = `/api/kkprofiling/${slug}/wizard`;
@@ -22,7 +21,7 @@
         },
         2: {
             title: 'Supporting Documents',
-            desc: 'Optionally upload a School ID or Barangay Clearance to support your registration.',
+            desc: 'Optionally upload a School ID or PhilSys / National ID. If your ID address matches your barangay, you may be auto-approved.',
         },
         3: {
             title: 'Check Your Email',
@@ -55,32 +54,47 @@
 
     const docTypeRadios = document.querySelectorAll('input[name="document_type"]');
     const schoolIdUploadPanel = document.getElementById('kkpSchoolIdUpload');
-    const clearanceUploadPanel = document.getElementById('kkpBarangayClearanceUpload');
-    const schoolIdInput = document.getElementById('kkpSchoolId');
-    const clearanceInput = document.getElementById('kkpBarangayClearance');
+    const nationalIdUploadPanel = document.getElementById('kkpNationalIdUpload');
+    const idVerificationNotice = document.getElementById('kkpIdVerificationNotice');
+    const docValidationError = document.getElementById('kkpDocValidationError');
 
-    const previewConfig = {
-        kkpSchoolId: {
-            empty: document.getElementById('kkpSchoolIdEmpty'),
-            preview: document.getElementById('kkpSchoolIdPreview'),
-            img: document.getElementById('kkpSchoolIdPreviewImg'),
-            fileName: document.getElementById('kkpSchoolIdFileName'),
-            dropzone: document.getElementById('kkpSchoolIdDropzone'),
-        },
-        kkpBarangayClearance: {
-            empty: document.getElementById('kkpBarangayClearanceEmpty'),
-            preview: document.getElementById('kkpBarangayClearancePreview'),
-            img: document.getElementById('kkpBarangayClearancePreviewImg'),
-            fileName: document.getElementById('kkpBarangayClearanceFileName'),
-            dropzone: document.getElementById('kkpBarangayClearanceDropzone'),
-        },
+    const DOCUMENT_INPUT_IDS = {
+        school_id: ['kkpSchoolIdFront', 'kkpSchoolIdBack'],
+        national_id: ['kkpNationalIdFront', 'kkpNationalIdBack'],
     };
+
+    function buildPreviewConfig(inputId) {
+        return {
+            empty: document.getElementById(`${inputId}Empty`),
+            preview: document.getElementById(`${inputId}Preview`),
+            img: document.getElementById(`${inputId}PreviewImg`),
+            fileName: document.getElementById(`${inputId}FileName`),
+            dropzone: document.getElementById(`${inputId}Dropzone`),
+        };
+    }
+
+    const previewConfig = {};
+
+    Object.values(DOCUMENT_INPUT_IDS).flat().forEach((inputId) => {
+        previewConfig[inputId] = buildPreviewConfig(inputId);
+    });
+
+    function getDocumentInput(inputId) {
+        return document.getElementById(inputId);
+    }
+
+    function getDocumentInputsForType(documentType) {
+        return (DOCUMENT_INPUT_IDS[documentType] || []).map((inputId) => getDocumentInput(inputId));
+    }
 
     const previewUrls = {};
 
-    let currentStep = Math.min(Math.max(initialStep, 1), 3);
+    let currentStep = 1;
     let verificationSent = verificationSentOnLoad;
     let registrationCompleted = root.dataset.registrationComplete === '1';
+    let registrationAutoApproved = root.dataset.autoApproved === '1';
+    const initialStep = parseInt(root.dataset.initialStep, 10) || 1;
+    let restoredStep = initialStep;
     let registrationCompletionPoll = null;
 
     if (barangayNameEl && barangayName) {
@@ -88,13 +102,39 @@
     }
 
     function hideDocUploadError() {
-        // Document type switches clear files automatically — no inline error UI.
+        if (!docValidationError) {
+            return;
+        }
+
+        docValidationError.hidden = true;
+
+        const messageEl = docValidationError.querySelector('p');
+        if (messageEl) {
+            messageEl.textContent = '';
+        } else {
+            docValidationError.textContent = '';
+        }
     }
 
     function showDocUploadError(message) {
-        if (message) {
-            alert(message);
+        if (!message) {
+            hideDocUploadError();
+            return;
         }
+
+        if (idVerificationNotice) {
+            idVerificationNotice.hidden = true;
+        }
+
+        if (docValidationError) {
+            const messageEl = docValidationError.querySelector('p') || docValidationError;
+            messageEl.textContent = message;
+            docValidationError.hidden = false;
+            docValidationError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return;
+        }
+
+        alert(message);
     }
 
     function isAllowedDocumentFile(file) {
@@ -128,18 +168,39 @@
         return document.querySelector('input[name="document_type"]:checked')?.value || '';
     }
 
-    function getActiveDocumentFile() {
+    function getActiveDocumentFiles() {
         const documentType = getSelectedDocumentType();
 
-        if (documentType === 'school_id') {
-            return schoolIdInput?.files?.[0] || null;
+        if (!documentType) {
+            return { front: null, back: null };
         }
 
-        if (documentType === 'barangay_clearance') {
-            return clearanceInput?.files?.[0] || null;
-        }
+        const inputs = getDocumentInputsForType(documentType);
 
-        return null;
+        return {
+            front: inputs[0]?.files?.[0] || null,
+            back: inputs[1]?.files?.[0] || null,
+        };
+    }
+
+    function hasPartialDocumentUpload() {
+        const files = getActiveDocumentFiles();
+
+        return Boolean(files.front || files.back);
+    }
+
+    function hasCompleteDocumentUpload() {
+        const files = getActiveDocumentFiles();
+
+        return Boolean(files.front && files.back);
+    }
+
+    function clearDocumentInputsForType(documentType) {
+        getDocumentInputsForType(documentType).forEach((input) => clearDocumentInput(input));
+    }
+
+    function clearAllDocumentInputs() {
+        Object.keys(DOCUMENT_INPUT_IDS).forEach((documentType) => clearDocumentInputsForType(documentType));
     }
 
     function clearDocumentInput(input) {
@@ -244,11 +305,7 @@
         hideDocUploadError();
 
         if (previousType && previousType !== selectedType) {
-            if (previousType === 'school_id') {
-                clearDocumentInput(schoolIdInput);
-            } else if (previousType === 'barangay_clearance') {
-                clearDocumentInput(clearanceInput);
-            }
+            clearDocumentInputsForType(previousType);
         }
 
         syncDocumentUploadPanels.lastType = selectedType;
@@ -257,17 +314,16 @@
             schoolIdUploadPanel.hidden = selectedType !== 'school_id';
         }
 
-        if (clearanceUploadPanel) {
-            clearanceUploadPanel.hidden = selectedType !== 'barangay_clearance';
+        if (nationalIdUploadPanel) {
+            nationalIdUploadPanel.hidden = selectedType !== 'national_id';
         }
 
         if (!selectedType) {
-            clearDocumentInput(schoolIdInput);
-            clearDocumentInput(clearanceInput);
+            clearAllDocumentInputs();
         } else if (selectedType === 'school_id') {
-            clearDocumentInput(clearanceInput);
-        } else if (selectedType === 'barangay_clearance') {
-            clearDocumentInput(schoolIdInput);
+            clearDocumentInputsForType('national_id');
+        } else if (selectedType === 'national_id') {
+            clearDocumentInputsForType('school_id');
         }
 
         updateNavButtons(currentStep);
@@ -312,12 +368,11 @@
             radio.addEventListener('change', syncDocumentUploadPanels);
         });
 
-        [schoolIdInput, clearanceInput].forEach((input) => {
+        Object.values(DOCUMENT_INPUT_IDS).flat().forEach((inputId) => {
+            const input = getDocumentInput(inputId);
             input?.addEventListener('change', () => updateFilePreview(input));
+            bindDropzone(previewConfig[inputId]?.dropzone, input);
         });
-
-        bindDropzone(previewConfig.kkpSchoolId.dropzone, schoolIdInput);
-        bindDropzone(previewConfig.kkpBarangayClearance.dropzone, clearanceInput);
 
         document.querySelectorAll('.kkp-wizard-dropzone-remove').forEach((button) => {
             button.addEventListener('click', (event) => {
@@ -376,7 +431,7 @@
         }
     }
 
-    function showRegistrationCompleteState() {
+    function showRegistrationCompleteState(autoApproved = registrationAutoApproved) {
         if (registrationCompleted) {
             return;
         }
@@ -420,6 +475,30 @@
 
         const modal = document.getElementById('kkpRegSuccessModal');
         if (modal) {
+            const titleEl = document.getElementById('kkpRegSuccessTitle');
+            const messageEl = document.getElementById('kkpRegSuccessMessage');
+            const loginBtn = modal.querySelector('.kkp-reg-success-modal-btn');
+
+            if (autoApproved) {
+                if (titleEl) {
+                    titleEl.textContent = 'Registration Verified!';
+                }
+                if (messageEl) {
+                    messageEl.textContent = 'Your ID address matches your registered barangay and purok/sitio. Your account is approved — you can log in now.';
+                }
+            } else {
+                if (titleEl) {
+                    titleEl.textContent = 'Registration Submitted Successfully';
+                }
+                if (messageEl) {
+                    messageEl.textContent = 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.';
+                }
+            }
+
+            if (loginBtn) {
+                loginBtn.textContent = autoApproved ? 'Go to Login' : 'Go to Login';
+            }
+
             modal.hidden = false;
             modal.setAttribute('aria-hidden', 'false');
             document.body.classList.add('kkp-wizard-success-modal-open');
@@ -442,12 +521,16 @@
         try {
             const response = await fetch(
                 `${apiBase}/registration-complete?email=${encodeURIComponent(email)}`,
-                { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }
+                {
+                    credentials: 'same-origin',
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                },
             );
             const data = await response.json();
 
             if (data.completed) {
-                showRegistrationCompleteState();
+                registrationAutoApproved = Boolean(data.auto_approved);
+                showRegistrationCompleteState(registrationAutoApproved);
             }
         } catch (error) {
             // Non-blocking
@@ -608,34 +691,39 @@
             typeRadio.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
-        const inputId = documentType === 'school_id' ? 'kkpSchoolId' : 'kkpBarangayClearance';
-        const config = previewConfig[inputId];
+        const sides = step2.sides || {};
+        const inputIds = DOCUMENT_INPUT_IDS[documentType] || [];
 
-        if (!config) {
-            return;
-        }
+        ['front', 'back'].forEach((side, index) => {
+            const inputId = inputIds[index];
+            const config = previewConfig[inputId];
 
-        const previewUrl = `${apiBase}/document/${documentType}`;
+            if (!config || !sides[side]) {
+                return;
+            }
 
-        if (config.img) {
-            config.img.src = previewUrl;
-        }
+            const previewUrl = `${apiBase}/document/${documentType}/${side}`;
 
-        if (config.fileName && step2.original_name) {
-            config.fileName.textContent = step2.original_name;
-        }
+            if (config.img) {
+                config.img.src = previewUrl;
+            }
 
-        if (config.preview) {
-            config.preview.hidden = false;
-        }
+            if (config.fileName && sides[side].original_name) {
+                config.fileName.textContent = sides[side].original_name;
+            }
 
-        if (config.empty) {
-            config.empty.hidden = true;
-        }
+            if (config.preview) {
+                config.preview.hidden = false;
+            }
 
-        if (config.dropzone) {
-            config.dropzone.hidden = true;
-        }
+            if (config.empty) {
+                config.empty.hidden = true;
+            }
+
+            if (config.dropzone) {
+                config.dropzone.hidden = true;
+            }
+        });
 
         updateNavButtons(currentStep);
     }
@@ -644,6 +732,32 @@
         if (emailVerifyCard) {
             emailVerifyCard.hidden = false;
             emailVerifyCard.style.display = 'block';
+        }
+    }
+
+    function showEmailStatus(message, type = 'error') {
+        const emailErrorEl = document.getElementById('kkpWizardEmailError');
+        if (!emailErrorEl) {
+            return;
+        }
+
+        emailErrorEl.textContent = message || '';
+        emailErrorEl.hidden = !message;
+        emailErrorEl.classList.toggle('is-success', type === 'success');
+    }
+
+    function enableResendButton() {
+        const resendBtn = document.getElementById('resendEmailBtn');
+        const timer = document.getElementById('resendTimer');
+
+        if (resendBtn) {
+            resendBtn.disabled = false;
+            resendBtn.hidden = false;
+        }
+
+        if (timer) {
+            timer.hidden = true;
+            timer.textContent = '';
         }
     }
 
@@ -662,13 +776,19 @@
             if (sent) {
                 verificationSent = true;
                 root.dataset.verificationSent = '1';
+            } else {
+                enableResendButton();
             }
         } else if (verificationSent) {
             if (window.restoreResendTimer) {
                 window.restoreResendTimer();
             } else if (window.startResendTimer) {
                 window.startResendTimer();
+            } else {
+                enableResendButton();
             }
+        } else {
+            enableResendButton();
         }
 
         if (!registrationCompleted) {
@@ -678,7 +798,7 @@
 
     function updateNavButtons(step) {
         const canGoBack = step >= 2;
-        const hasSelectedFile = Boolean(getActiveDocumentFile());
+        const hasSelectedFiles = hasPartialDocumentUpload();
 
         if (navBar) {
             navBar.hidden = false;
@@ -700,7 +820,7 @@
             if (step === 1) {
                 nextLabelEl.textContent = 'Save & Continue';
             } else if (step === 2) {
-                nextLabelEl.textContent = hasSelectedFile ? 'Upload & Continue' : 'Continue';
+                nextLabelEl.textContent = hasSelectedFiles ? 'Upload & Continue' : 'Continue';
             } else {
                 nextLabelEl.textContent = 'Continue';
             }
@@ -770,6 +890,7 @@
     async function postJson(url, body) {
         const response = await fetch(url, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
@@ -793,6 +914,7 @@
     async function postFormData(url, formData) {
         const response = await fetch(url, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 Accept: 'application/json',
                 'X-CSRF-TOKEN': csrfToken(),
@@ -856,29 +978,24 @@
         hideDocUploadError();
 
         const documentType = getSelectedDocumentType();
-        const schoolFile = schoolIdInput?.files?.[0] || null;
-        const clearanceFile = clearanceInput?.files?.[0] || null;
+        const files = getActiveDocumentFiles();
 
-        if (schoolFile && clearanceFile) {
-            showDocUploadError('You can only upload one supporting document at a time.');
+        if (hasPartialDocumentUpload() && !hasCompleteDocumentUpload()) {
+            showDocUploadError('Please upload both front and back images of your ID.');
             return false;
         }
 
-        if (documentType === 'school_id') {
-            const error = validateDocumentFile(schoolFile);
-            if (error) {
-                showDocUploadError(error);
-                return false;
-            }
-        } else if (documentType === 'barangay_clearance') {
-            const error = validateDocumentFile(clearanceFile);
-            if (error) {
-                showDocUploadError(error);
+        if (documentType && hasPartialDocumentUpload()) {
+            const frontError = validateDocumentFile(files.front);
+            const backError = validateDocumentFile(files.back);
+
+            if (frontError || backError) {
+                showDocUploadError(frontError || backError);
                 return false;
             }
         }
 
-        showLoading(schoolFile || clearanceFile ? 'Uploading document...' : 'Continuing...');
+        showLoading(hasCompleteDocumentUpload() ? 'Uploading and verifying ID...' : 'Continuing...');
 
         let saved = false;
 
@@ -889,31 +1006,60 @@
                 formData.append('document_type', documentType);
             }
 
-            if (documentType === 'school_id' && schoolFile) {
-                formData.append('school_id', schoolFile);
+            if (documentType === 'school_id' && hasCompleteDocumentUpload()) {
+                formData.append('school_id_front', files.front);
+                formData.append('school_id_back', files.back);
             }
 
-            if (documentType === 'barangay_clearance' && clearanceFile) {
-                formData.append('barangay_clearance', clearanceFile);
+            if (documentType === 'national_id' && hasCompleteDocumentUpload()) {
+                formData.append('national_id_front', files.front);
+                formData.append('national_id_back', files.back);
             }
 
-            await postFormData(`${apiBase}/step-2`, formData);
-            verificationSent = false;
-            root.dataset.verificationSent = '0';
+            const response = await postFormData(`${apiBase}/step-2`, formData);
+            if (idVerificationNotice) {
+                idVerificationNotice.hidden = !(
+                    response?.id_verification?.name_match
+                    && response?.id_verification?.barangay_match
+                );
+            }
+
+            if (response?.verification_sent) {
+                verificationSent = true;
+                root.dataset.verificationSent = '1';
+
+                if (displayEmail && response.email) {
+                    displayEmail.textContent = response.email;
+                }
+
+                if (window.startResendTimer) {
+                    window.startResendTimer();
+                }
+            }
+
             saved = true;
+
+            if (saved) {
+                const skipAutoSend = Boolean(response?.verification_sent);
+                await setStep(3, { skipAutoSend });
+
+                if (response?.email_error) {
+                    showEmailStatus(response.email_error, 'error');
+                    enableResendButton();
+                }
+            }
         } catch (error) {
             const message = error.errors?.document_type?.[0]
-                || error.errors?.school_id?.[0]
-                || error.errors?.barangay_clearance?.[0]
+                || error.errors?.registration?.[0]
+                || error.errors?.school_id_front?.[0]
+                || error.errors?.school_id_back?.[0]
+                || error.errors?.national_id_front?.[0]
+                || error.errors?.national_id_back?.[0]
                 || error.message;
 
             showDocUploadError(message);
         } finally {
             hideLoading();
-        }
-
-        if (saved) {
-            await setStep(3);
         }
 
         return saved;
@@ -922,19 +1068,14 @@
     async function sendVerificationEmail(isResend) {
         showLoading(isResend ? 'Resending set password link...' : 'Sending set password link...');
 
-        const emailErrorEl = document.getElementById('kkpWizardEmailError');
-
-        if (emailErrorEl) {
-            emailErrorEl.hidden = true;
-            emailErrorEl.textContent = '';
-        }
+        showEmailStatus('');
 
         try {
             const endpoint = isResend ? `${apiBase}/resend-verification` : `${apiBase}/send-verification`;
             const data = await postJson(endpoint, {});
 
             if (data.registration_completed) {
-                showRegistrationCompleteState();
+                showRegistrationCompleteState(Boolean(data.auto_approved));
                 return true;
             }
 
@@ -945,6 +1086,20 @@
             verificationSent = true;
             root.dataset.verificationSent = '1';
 
+            showEmailStatus(
+                data.message || 'Set password link sent. Please check your inbox.',
+                'success',
+            );
+
+            const resendBtn = document.getElementById('resendEmailBtn');
+            if (isResend && resendBtn) {
+                const originalLabel = resendBtn.textContent;
+                resendBtn.textContent = 'Email sent!';
+                setTimeout(() => {
+                    resendBtn.textContent = originalLabel || 'Resend set password link';
+                }, 2500);
+            }
+
             if (window.startResendTimer) {
                 window.startResendTimer();
             }
@@ -952,34 +1107,17 @@
             return true;
         } catch (error) {
             if (error.errors?.draft?.[0] && registrationCompleted) {
-                showRegistrationCompleteState();
+                showRegistrationCompleteState(registrationAutoApproved);
                 return false;
             }
 
-            const emailMsg = error.errors?.email?.[0] || error.message || 'Failed to send set password link.';
+            const emailMsg = error.errors?.email?.[0]
+                || error.errors?.draft?.[0]
+                || error.message
+                || 'Failed to send set password link.';
 
-            if (emailErrorEl) {
-                emailErrorEl.textContent = emailMsg;
-                emailErrorEl.hidden = false;
-            } else {
-                alert(emailMsg);
-            }
-
-            const resendBtn = document.getElementById('resendEmailBtn');
-            const timer = document.getElementById('resendTimer');
-
-            if (resendBtn && !isResend) {
-                resendBtn.disabled = false;
-            }
-
-            if (timer && !isResend) {
-                timer.hidden = true;
-                timer.textContent = '';
-            }
-
-            if (isResend && resendBtn && window.restoreResendTimer) {
-                window.restoreResendTimer();
-            }
+            showEmailStatus(emailMsg, 'error');
+            enableResendButton();
 
             return false;
         } finally {
@@ -1035,6 +1173,7 @@
     async function restoreDraftState() {
         try {
             const response = await fetch(`${apiBase}/status`, {
+                credentials: 'same-origin',
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             });
             const data = await response.json();
@@ -1045,7 +1184,8 @@
                     displayEmail.textContent = data.email;
                 }
 
-                showRegistrationCompleteState();
+                registrationAutoApproved = Boolean(data.auto_approved);
+                showRegistrationCompleteState(registrationAutoApproved);
                 return;
             }
 
@@ -1059,6 +1199,11 @@
 
             if (draft.verification_sent) {
                 verificationSent = true;
+                root.dataset.verificationSent = '1';
+            }
+
+            if (draft.current_step) {
+                restoredStep = parseInt(draft.current_step, 10) || restoredStep;
             }
 
             if (draft.step1) {
@@ -1068,8 +1213,6 @@
             if (draft.step2) {
                 restoreStep2Documents(draft.step2);
             }
-
-            currentStep = Math.max(currentStep, parseInt(draft.current_step, 10) || 1);
         } catch (error) {
             // Non-blocking
         }
@@ -1078,41 +1221,46 @@
     async function initWizard() {
         bindDocumentTypeControls();
 
+        try {
+            sessionStorage.removeItem(`kkp_wizard_step_${slug}`);
+        } catch (error) {
+            // Non-blocking
+        }
+
         if (root.dataset.completedEmail && displayEmail) {
             displayEmail.textContent = root.dataset.completedEmail;
+        } else if (root.dataset.draftEmail && displayEmail) {
+            displayEmail.textContent = root.dataset.draftEmail;
         }
 
         if (registrationCompleted) {
             await setStep(3, { skipAutoSend: true });
-            showRegistrationCompleteState();
+            showRegistrationCompleteState(registrationAutoApproved);
             return;
         }
 
         await restoreDraftState();
 
-        if (verificationSentOnLoad) {
-            verificationSent = true;
-        }
-
         const serverEmailError = root.dataset.emailError;
 
         if (serverEmailError) {
-            currentStep = Math.max(currentStep, 3);
-        }
-
-        if (currentStep === 3) {
-            await setStep(3, { skipAutoSend: Boolean(serverEmailError || verificationSent || registrationCompleted) });
-
-            if (serverEmailError) {
-                const emailErrorEl = document.getElementById('kkpWizardEmailError');
-                if (emailErrorEl) {
-                    emailErrorEl.textContent = serverEmailError;
-                    emailErrorEl.hidden = false;
-                }
+            if (verificationSentOnLoad) {
+                verificationSent = true;
+                root.dataset.verificationSent = '1';
             }
-        } else {
-            await setStep(currentStep);
+
+            await setStep(3, { skipAutoSend: verificationSent });
+
+            showEmailStatus(serverEmailError, 'error');
+            return;
         }
+
+        const targetStep = Math.max(1, Math.min(3, restoredStep || initialStep));
+        const skipAutoSendOnStep3 = verificationSent || verificationSentOnLoad;
+
+        await setStep(targetStep, {
+            skipAutoSend: targetStep === 3 ? skipAutoSendOnStep3 : true,
+        });
     }
 
     initWizard();

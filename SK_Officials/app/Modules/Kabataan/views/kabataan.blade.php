@@ -157,6 +157,7 @@
                                 <th>Sex</th>
                                 <th>Purok / Sitio</th>
                                 <th>Highest Education</th>
+                                <th>ID Documents</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -205,6 +206,12 @@
 
             <!-- View-only: paper form layout -->
             <div class="kabataan-view-details" id="kabataanViewDetails" style="display:none;">
+                <div class="kabataan-view-tabs" id="kabataanViewTabs">
+                    <button type="button" class="kabataan-view-tab is-active" data-kab-view-tab="profile">KK Profiling</button>
+                    <button type="button" class="kabataan-view-tab" data-kab-view-tab="documents" id="kabataanViewTabDocumentsBtn">Supporting Documents</button>
+                </div>
+
+                <div class="kabataan-view-tab-panel" id="kabataanViewTabProfile">
                 <div class="kabataan-form-scroll kk-view-paper">
 
                     <div class="kkp-form-header">
@@ -415,6 +422,18 @@
                         </div>
                     </div>
 
+                </div>
+                </div>
+
+                <div class="kabataan-view-tab-panel" id="kabataanViewTabDocuments" hidden>
+                    <div class="kabataan-documents-panel">
+                        <div class="kk-view-documents-wrap" id="kabViewDocumentsWrap" style="display:none;">
+                            <div class="kk-view-documents-title">Supporting Documents (ID)</div>
+                            <div class="kk-view-id-verification" id="kabViewIdVerification" hidden></div>
+                            <div class="kk-view-documents-grid" id="kabViewDocumentsGrid"></div>
+                        </div>
+                        <p class="kabataan-documents-empty" id="kabViewDocumentsEmpty" hidden>No supporting documents were uploaded for this Kabataan record.</p>
+                    </div>
                 </div>
             </div>
 

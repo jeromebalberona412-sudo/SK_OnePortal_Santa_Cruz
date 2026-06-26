@@ -2,6 +2,103 @@
  * Read-only KK profiling questionnaire view — shared by KK Requests, Rejected, Deleted modules.
  */
 
+export function populateSupportingDocuments(request) {
+    const wrap = document.getElementById('kkViewDocumentsWrap');
+    const grid = document.getElementById('kkViewDocumentsGrid');
+    const verificationEl = document.getElementById('kkViewIdVerification');
+    const emptyEl = document.getElementById('kkViewDocumentsEmpty');
+    const documents = request.supportingDocuments || request.supporting_documents || [];
+    const idVerification = request.idVerification || request.id_verification || null;
+
+    if (!grid) {
+        return;
+    }
+
+    grid.innerHTML = '';
+
+    if (!Array.isArray(documents) || documents.length === 0) {
+        if (wrap) wrap.style.display = 'none';
+        if (emptyEl) emptyEl.hidden = false;
+
+        if (verificationEl) {
+            verificationEl.hidden = true;
+            verificationEl.textContent = '';
+        }
+
+        return;
+    }
+
+    if (wrap) wrap.style.display = 'block';
+    if (emptyEl) emptyEl.hidden = true;
+
+    if (verificationEl) {
+        if (idVerification) {
+            const nameOk = idVerification.name_match !== false;
+            const barangayOk = Boolean(idVerification.barangay_match);
+            const matched = nameOk && barangayOk && !idVerification.duplicate_detected;
+            verificationEl.hidden = false;
+            verificationEl.className = `kk-view-id-verification ${matched ? 'is-match' : 'is-mismatch'}`;
+
+            if (idVerification.duplicate_detected) {
+                verificationEl.textContent = 'ID verification: Duplicate registration detected (same name, date of birth, and barangay).';
+            } else if (matched) {
+                verificationEl.textContent = `ID verification passed: Name and barangay match the registration form. ${idVerification.match_reason || idVerification.message || ''}`.trim();
+            } else if (!nameOk) {
+                verificationEl.textContent = 'ID verification: Name on the uploaded School ID does not match the KK Profiling form.';
+            } else {
+                verificationEl.textContent = `ID verification: ${idVerification.message || idVerification.match_reason || 'Barangay not matched on ID.'}`;
+            }
+        } else {
+            verificationEl.hidden = true;
+            verificationEl.textContent = '';
+        }
+    }
+
+    documents.forEach((docItem) => {
+        const card = document.createElement('div');
+        card.className = 'kk-view-document-card';
+
+        const title = document.createElement('div');
+        title.className = 'kk-view-document-card-title';
+        title.textContent = docItem.label || docItem.type || 'Supporting Document';
+        card.appendChild(title);
+
+        (docItem.sides || []).forEach((side) => {
+            if (!side?.url) {
+                return;
+            }
+
+            const sideWrap = document.createElement('div');
+            sideWrap.className = 'kk-view-document-side';
+
+            const sideLabel = document.createElement('div');
+            sideLabel.className = 'kk-view-document-side-label';
+            sideLabel.textContent = side.label || side.side || 'Image';
+            sideWrap.appendChild(sideLabel);
+
+            const img = document.createElement('img');
+            img.className = 'kk-view-document-preview';
+            img.src = side.url;
+            img.alt = `${title.textContent} ${sideLabel.textContent}`;
+            img.loading = 'lazy';
+            img.addEventListener('click', () => window.open(side.url, '_blank', 'noopener'));
+            sideWrap.appendChild(img);
+
+            const link = document.createElement('a');
+            link.className = 'kk-view-document-link';
+            link.href = side.url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = 'Open full size';
+            sideWrap.appendChild(link);
+
+            card.appendChild(sideWrap);
+        });
+
+        grid.appendChild(card);
+    });
+}
+
 export function populateKkProfilingView(request, options = {}) {
     const {
         showRejection = false,
@@ -173,6 +270,8 @@ export function populateKkProfilingView(request, options = {}) {
             rejectionText.textContent = '';
         }
     }
+
+    populateSupportingDocuments(request);
 }
 
 export function mapRegistrationToKkView(record) {
@@ -210,5 +309,7 @@ export function mapRegistrationToKkView(record) {
         barangayLogoUrl: record.barangay_logo_url,
         rejectionReason: record.rejection_reason,
         registrationStatus: record.status,
+        supportingDocuments: record.supporting_documents || [],
+        idVerification: record.id_verification || null,
     };
 }

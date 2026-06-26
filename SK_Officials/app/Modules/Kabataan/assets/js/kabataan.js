@@ -401,6 +401,24 @@ function initializeKabataanUI() {
         header.indeterminate = visibleIds.some((id) => selectedIds.has(id)) && !header.checked;
     }
 
+    function formatApprovalBadge(status) {
+        if (status === 'ID Verified') {
+            return '<span class="kabataan-approval-badge kabataan-approval-badge--verified">ID Verified</span>';
+        }
+        if (status === 'Auto Approved') {
+            return '<span class="kabataan-approval-badge kabataan-approval-badge--auto">Auto Approved</span>';
+        }
+        return '';
+    }
+
+    function formatDocumentsCell(hasDocuments) {
+        if (hasDocuments) {
+            return '<span class="kabataan-docs-badge kabataan-docs-badge--yes">Uploaded</span>';
+        }
+
+        return '<span class="kabataan-docs-badge kabataan-docs-badge--none">None</span>';
+    }
+
     function render() {
         tbody.innerHTML = '';
 
@@ -413,7 +431,7 @@ function initializeKabataanUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 9;
+            td.colSpan = 10;
             td.textContent = 'No kabataan match current filters.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -440,15 +458,18 @@ function initializeKabataanUI() {
                 <td>${k.respondentNumber || '—'}</td>
                 <td class="kabataan-fullname-cell">
                     <span class="kabataan-fullname">${full}</span>
+                    ${formatApprovalBadge(k.evaluationStatus)}
                 </td>
                 <td class="kabataan-email-cell">${k.email || k.emailAddress || '—'}</td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
                 <td>${k.purokZone || '-'}</td>
                 <td>${k.educationalBackground || k.highestEducation || '-'}</td>
+                <td>${formatDocumentsCell(Boolean(k.hasSupportingDocuments))}</td>
                 <td>
                     <div class="kabataan-actions">
                         <button type="button" class="btn-action-view" data-action="view" data-index="${index}">View</button>
+                        <button type="button" class="btn-action-documents" data-action="documents" data-index="${index}">Documents</button>
                         <button type="button" class="btn-action-delete" data-action="delete" data-index="${index}">Delete</button>
                     </div>
                 </td>
@@ -459,6 +480,110 @@ function initializeKabataanUI() {
         updatePaginationFooter(filtered.length);
         updateBulkToolbar();
         syncSelectAllCheckbox();
+    }
+
+    function switchKabataanViewTab(tabName) {
+        const profilePanel = document.getElementById('kabataanViewTabProfile');
+        const documentsPanel = document.getElementById('kabataanViewTabDocuments');
+        const tabs = document.querySelectorAll('.kabataan-view-tab');
+
+        tabs.forEach((tab) => {
+            tab.classList.toggle('is-active', tab.dataset.kabViewTab === tabName);
+        });
+
+        if (profilePanel) {
+            profilePanel.hidden = tabName !== 'profile';
+        }
+
+        if (documentsPanel) {
+            documentsPanel.hidden = tabName !== 'documents';
+        }
+    }
+
+    function populateKabataanDocuments(record) {
+        const wrap = document.getElementById('kabViewDocumentsWrap');
+        const grid = document.getElementById('kabViewDocumentsGrid');
+        const verificationEl = document.getElementById('kabViewIdVerification');
+        const emptyEl = document.getElementById('kabViewDocumentsEmpty');
+        const documents = record.supportingDocuments || record.supporting_documents || [];
+        const idVerification = record.idVerification || record.id_verification || null;
+
+        if (!grid) {
+            return;
+        }
+
+        grid.innerHTML = '';
+
+        if (!Array.isArray(documents) || documents.length === 0) {
+            if (wrap) wrap.style.display = 'none';
+            if (emptyEl) emptyEl.hidden = false;
+            if (verificationEl) {
+                verificationEl.hidden = true;
+                verificationEl.textContent = '';
+            }
+            return;
+        }
+
+        if (emptyEl) emptyEl.hidden = true;
+        if (wrap) wrap.style.display = 'block';
+
+        if (verificationEl) {
+            if (idVerification) {
+                const matched = Boolean(idVerification.barangay_match);
+                verificationEl.hidden = false;
+                verificationEl.className = `kk-view-id-verification ${matched ? 'is-match' : 'is-mismatch'}`;
+                verificationEl.textContent = matched
+                    ? `ID verification: ${idVerification.match_reason || idVerification.message || 'Barangay matched.'}`
+                    : `ID verification: ${idVerification.message || idVerification.match_reason || 'Barangay not matched on ID.'}`;
+            } else {
+                verificationEl.hidden = true;
+                verificationEl.textContent = '';
+            }
+        }
+
+        documents.forEach((docItem) => {
+            const card = document.createElement('div');
+            card.className = 'kk-view-document-card';
+
+            const title = document.createElement('div');
+            title.className = 'kk-view-document-card-title';
+            title.textContent = docItem.label || docItem.type || 'Supporting Document';
+            card.appendChild(title);
+
+            (docItem.sides || []).forEach((side) => {
+                if (!side?.url) {
+                    return;
+                }
+
+                const sideWrap = document.createElement('div');
+                sideWrap.className = 'kk-view-document-side';
+
+                const sideLabel = document.createElement('div');
+                sideLabel.className = 'kk-view-document-side-label';
+                sideLabel.textContent = side.label || side.side || 'Image';
+                sideWrap.appendChild(sideLabel);
+
+                const img = document.createElement('img');
+                img.className = 'kk-view-document-preview';
+                img.src = side.url;
+                img.alt = `${title.textContent} ${sideLabel.textContent}`;
+                img.loading = 'lazy';
+                img.addEventListener('click', () => window.open(side.url, '_blank', 'noopener'));
+                sideWrap.appendChild(img);
+
+                const link = document.createElement('a');
+                link.className = 'kk-view-document-link';
+                link.href = side.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = 'Open full size';
+                sideWrap.appendChild(link);
+
+                card.appendChild(sideWrap);
+            });
+
+            grid.appendChild(card);
+        });
     }
 
     function populateViewRows(k) {
@@ -545,6 +670,9 @@ function initializeKabataanUI() {
             const stored = fieldMap[field] || '';
             chk.checked = stored.trim().toLowerCase() === chk.value.trim().toLowerCase();
         });
+
+        populateKabataanDocuments(k);
+        switchKabataanViewTab('profile');
     }
 
     function setModalReadonly(readonly) {
@@ -562,9 +690,10 @@ function initializeKabataanUI() {
         if (viewDetails) viewDetails.style.display = 'none';
     }
 
-    function openModal(mode, index) {
+    function openModal(mode, index, options = {}) {
         if (!modal) return;
         editingIndex = index ?? null;
+        const viewTab = options.viewTab || 'profile';
         if (toggleBtn && modalBox) {
             modal.classList.remove('modal-maximized');
             modalBox.classList.remove('modal-maximized');
@@ -578,6 +707,7 @@ function initializeKabataanUI() {
             showAddPanels(false, false, false);
             viewDetails.style.display = 'block';
             populateViewRows(k);
+            switchKabataanViewTab(viewTab);
             setModalReadonly(true);
         } else if (mode === 'edit' && typeof index === 'number') {
             const k = kabataan[index];
@@ -740,12 +870,23 @@ function initializeKabataanUI() {
         });
     }
 
+    document.querySelectorAll('.kabataan-view-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            if (viewDetails && viewDetails.style.display === 'none') {
+                return;
+            }
+
+            switchKabataanViewTab(tab.dataset.kabViewTab || 'profile');
+        });
+    });
+
     tbody.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
         const action = btn.dataset.action;
         const index = parseInt(btn.dataset.index, 10);
         if (action === 'view' && !Number.isNaN(index)) openModal(action, index);
+        if (action === 'documents' && !Number.isNaN(index)) openModal('view', index, { viewTab: 'documents' });
         if (action === 'delete' && !Number.isNaN(index)) openDeleteConfirm(index);
     });
 
@@ -1479,6 +1620,10 @@ function initializeKabataanUI() {
                     willingToJoinGroupChat: r.group_chat,
                     signature: r.signature,
                     date: r.submitted_at,
+                    evaluationStatus: r.evaluation_status || '',
+                    supportingDocuments: r.supporting_documents || [],
+                    idVerification: r.id_verification || null,
+                    hasSupportingDocuments: Boolean(r.has_supporting_documents),
                 });
             });
 

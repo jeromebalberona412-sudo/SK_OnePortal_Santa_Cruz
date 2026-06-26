@@ -129,4 +129,9 @@ class KkSurveyResponse extends Model
     {
         return $this->belongsTo(KabataanRegistration::class, 'kabataan_registration_id');
     }
+
+    public function scopeForBarangay($query, int $barangayId)
+    {
+        return $query->where('barangay_id', $barangayId);
+    }
 }

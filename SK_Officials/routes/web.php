@@ -171,6 +171,9 @@ Route::middleware([
 
     Route::get('/kabataan', [KabataanController::class, 'index'])->name('kabataan');
     Route::get('/kabataan/data', [KabataanController::class, 'data'])->name('kabataan.data');
+    Route::get('/kabataan/{id}/documents/{documentIndex}/{side}', [KabataanController::class, 'document'])
+        ->where('side', 'front|back')
+        ->name('kabataan.document');
     Route::post('/kabataan', [KabataanController::class, 'store'])->name('kabataan.store');
     Route::put('/kabataan/{id}', [KabataanController::class, 'update'])->name('kabataan.update');
     Route::delete('/kabataan/{id}', [KabataanController::class, 'destroy'])->name('kabataan.destroy');

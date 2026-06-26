@@ -72,6 +72,13 @@ class KabataanRegistration extends Model
         ]);
     }
 
+    public function linkUser(int $userId): void
+    {
+        $this->update([
+            'user_id' => $userId,
+        ]);
+    }
+
     public function markActive(int $userId): void
     {
         $this->update([

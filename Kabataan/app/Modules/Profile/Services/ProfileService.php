@@ -98,13 +98,14 @@ class ProfileService
                 $type = (string) ($document['type'] ?? 'document');
 
                 return [
-                    'type'         => $type,
-                    'label'        => match ($type) {
-                        'school_id'          => 'School ID',
-                        'barangay_clearance' => 'Barangay Clearance',
-                        default              => 'Supporting Document',
+                    'type' => $type,
+                    'label' => match ($type) {
+                        'school_id' => 'School ID',
+                        'barangay_clearance' => 'PhilSys / National ID',
+                        'national_id' => 'PhilSys / National ID',
+                        default => 'Supporting Document',
                     },
-                    'url'          => $url,
+                    'url' => $url,
                     'display_name' => (string) ($document['display_name'] ?? $document['original_name'] ?? 'Document'),
                 ];
             })

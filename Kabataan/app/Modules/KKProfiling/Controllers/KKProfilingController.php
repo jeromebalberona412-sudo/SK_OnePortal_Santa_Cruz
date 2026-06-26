@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\KabataanVerifyEmail;
 use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayZoneService;
+use App\Services\IdVerificationService;
 use App\Services\KabataanPhotoService;
 use App\Services\KkRegistrationDraftService;
 use App\Services\KkSurveyResponseService;
@@ -160,31 +161,62 @@ class KKProfilingController extends Controller
         $verificationSent = false;
         $registrationComplete = false;
         $completedEmail = null;
+        $wizardDraftEmail = null;
+        $registrationAutoApproved = false;
 
         $completedSession = $draftService->resolveCompletedRegistration((int) $barangayRecord->id);
 
         if ($completedSession) {
             $registrationComplete = true;
             $completedEmail = $completedSession['email'];
+
+            $registration = KabataanRegistration::query()
+                ->where('barangay_id', $barangayRecord->id)
+                ->where('email', strtolower(trim($completedSession['email'])))
+                ->whereIn('status', ['password_set', 'active'])
+                ->latest('id')
+                ->first();
+
+            $registrationAutoApproved = $registration
+                ? RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status)
+                : (bool) ($completedSession['auto_approved'] ?? false);
+
+            if ($registration && $registrationAutoApproved) {
+                $draftService->markRegistrationComplete(
+                    (string) $completedSession['email'],
+                    (int) $barangayRecord->id,
+                    $registration,
+                );
+            }
         }
 
         if ($wizard && (int) ($wizard['barangay_id'] ?? 0) === (int) $barangayRecord->id) {
-            $wizardInitialStep = max(1, min(3, (int) ($wizard['current_step'] ?? 1)));
             $verificationSent = ! empty($wizard['verification_sent_at']);
             $respondentNumber = $wizard['respondent_number'] ?? $respondentNumber;
+            $wizardDraftEmail = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? '')) ?: null;
 
-            $wizardEmail = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));
+            $wizardEmail = $wizardDraftEmail ?? '';
 
             if (! $registrationComplete && $wizardEmail !== '' && $draftService->isEmailRegistrationComplete($wizardEmail, (int) $barangayRecord->id)) {
-                $draftService->markRegistrationComplete($wizardEmail, (int) $barangayRecord->id);
+                $registration = KabataanRegistration::query()
+                    ->where('barangay_id', $barangayRecord->id)
+                    ->where('email', $wizardEmail)
+                    ->whereIn('status', ['password_set', 'active'])
+                    ->latest('id')
+                    ->first();
+
+                $draftService->markRegistrationComplete($wizardEmail, (int) $barangayRecord->id, $registration);
                 $registrationComplete = true;
                 $completedEmail = $wizardEmail;
+                $registrationAutoApproved = $registration
+                    ? RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status)
+                    : false;
             }
-        } elseif (! $registrationComplete) {
-            session()->forget(['kk_wizard_step', 'kk_wizard_email_verified']);
         }
 
         if ($registrationComplete) {
+            $wizardInitialStep = 3;
+        } elseif ($verificationSent) {
             $wizardInitialStep = 3;
         }
 
@@ -199,6 +231,8 @@ class KKProfilingController extends Controller
             'verificationSent'      => $verificationSent,
             'registrationComplete'  => $registrationComplete,
             'completedEmail'        => $completedEmail,
+            'registrationAutoApproved' => $registrationAutoApproved,
+            'wizardDraftEmail'      => $wizardDraftEmail,
         ]);
     }
 
@@ -819,6 +853,8 @@ class KKProfilingController extends Controller
      */
     public function storePassword(Request $request, string $barangay)
     {
+        set_time_limit((int) config('kkprofiling.finalize_time_limit', 180));
+
         $request->validate([
             'password' => [
                 'required',
@@ -883,13 +919,19 @@ class KKProfilingController extends Controller
             }
 
             $registration->markPasswordSet();
-            $registration->markActive($user->id);
+            $registration->linkUser($user->id);
 
             return $user;
         });
 
         $evaluator = new RegistrationEvaluationService();
-        $autoApproved = $evaluator->evaluate($registration->fresh());
+        $formData = $registration->form_data ?? [];
+        $idVerification = is_array($formData['id_verification'] ?? null) ? $formData['id_verification'] : null;
+
+        $autoApproved = $evaluator->evaluate(
+            $registration->fresh(),
+            is_array($idVerification) ? $idVerification : null,
+        );
 
         try {
             (new KkSurveyResponseService())->syncFromRegistration(
@@ -902,12 +944,15 @@ class KKProfilingController extends Controller
 
         session()->forget('kabataan_registration_id');
 
-        $message = 'Registration completed! Please wait for verification/approval by SK officials before logging in.';
+        $message = $autoApproved
+            ? 'Registration verified! Your ID address matches your barangay. You can log in now.'
+            : 'Registration completed! Please wait for verification/approval by SK Officials before logging in.';
 
         // Check if request is AJAX (from JavaScript fetch)
         if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([
                 'success' => true,
+                'auto_approved' => $autoApproved,
                 'message' => $message,
             ]);
         }

@@ -36,6 +36,21 @@ class SkOfficialsNotificationDispatcher
         );
     }
 
+    public function notifyKkProfilingAutoApproved(int $barangayId, string $fullName): void
+    {
+        if (! Schema::hasTable('sk_officials_notifications')) {
+            return;
+        }
+
+        $this->insertForBarangayOfficials(
+            $barangayId,
+            'kk_profiling',
+            'KK Profiling Auto-Approved',
+            "✅ {$fullName} has been automatically approved because all identity verification checks passed.",
+            '/kabataan',
+        );
+    }
+
     public function notifySurveyResponse(
         int $barangayId,
         string $respondentName,

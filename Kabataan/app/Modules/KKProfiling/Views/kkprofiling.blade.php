@@ -42,16 +42,22 @@
                 </div>
             @endif
 
+            @php
+                $kkpInitialStep = (int) ($wizardInitialStep ?? 1);
+            @endphp
+
             <div
                 id="kkpRegistrationWizard"
                 class="kkp-wizard-root"
                 data-barangay-slug="{{ $slug }}"
                 data-barangay-name="{{ $barangay }}"
                 data-respondent-number="{{ $respondentNumber ?? '' }}"
-                data-initial-step="{{ $wizardInitialStep ?? 1 }}"
+                data-initial-step="{{ $kkpInitialStep }}"
                 data-verification-sent="{{ ($verificationSent ?? false) ? '1' : '0' }}"
                 data-registration-complete="{{ ($registrationComplete ?? false) ? '1' : '0' }}"
+                data-auto-approved="{{ ($registrationAutoApproved ?? false) ? '1' : '0' }}"
                 @if(!empty($completedEmail)) data-completed-email="{{ $completedEmail }}" @endif
+                @if(!empty($wizardDraftEmail)) data-draft-email="{{ $wizardDraftEmail }}" @endif
                 @if($errors->has('email')) data-email-error="{{ $errors->first('email') }}" @endif
             >
                 @include('kkprofiling::partials.wizard.progress-header')
@@ -60,7 +66,7 @@
                     <div class="kkp-responsive-container">
 
                         {{-- STEP 1: KK Profiling Form --}}
-                        <section class="kkp-wizard-panel" id="kkpWizardStep1" data-wizard-step="1">
+                        <section class="kkp-wizard-panel" id="kkpWizardStep1" data-wizard-step="1" @if($kkpInitialStep !== 1) hidden @endif>
                             <form
                                 method="POST"
                                 action="{{ route('kkprofiling.submit', ['barangay' => $slug]) }}"
@@ -83,10 +89,13 @@
                         </section>
 
                         {{-- STEP 2: Supporting Documents (optional) --}}
-                        @include('kkprofiling::partials.wizard.step-documents')
+                        @include('kkprofiling::partials.wizard.step-documents', ['kkpInitialStep' => $kkpInitialStep])
 
                         {{-- STEP 3: Email Verification + Account Setup --}}
-                        @include('kkprofiling::partials.wizard.step-account')
+                        @include('kkprofiling::partials.wizard.step-account', [
+                            'kkpInitialStep' => $kkpInitialStep,
+                            'wizardDraftEmail' => $wizardDraftEmail ?? null,
+                        ])
 
                     </div>
                 </div>
@@ -118,9 +127,15 @@
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
             </div>
-            <h2 class="kkp-reg-success-modal-title" id="kkpRegSuccessTitle">Registration Submitted Successfully</h2>
-            <p class="kkp-reg-success-modal-message">
-                Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.
+            <h2 class="kkp-reg-success-modal-title" id="kkpRegSuccessTitle">
+                {{ ($registrationComplete ?? false) && ($registrationAutoApproved ?? false) ? 'Registration Verified!' : 'Registration Submitted Successfully' }}
+            </h2>
+            <p class="kkp-reg-success-message" id="kkpRegSuccessMessage">
+                @if(($registrationComplete ?? false) && ($registrationAutoApproved ?? false))
+                    Your ID address matches your registered barangay. Your account is approved — you can log in now.
+                @else
+                    Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.
+                @endif
             </p>
             <a href="{{ route('login') }}" class="kkp-reg-success-modal-btn">Go to Login</a>
         </div>

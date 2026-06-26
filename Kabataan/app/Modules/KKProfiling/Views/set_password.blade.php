@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('favicon')
@@ -147,7 +147,7 @@
                 </svg>
             </div>
             <h2 class="kkp-reg-success-modal-title" id="kkpRegSuccessTitle">Registration Submitted Successfully</h2>
-            <p class="kkp-reg-success-modal-message">
+            <p class="kkp-reg-success-message" id="kkpRegSuccessMessage">
                 Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.
             </p>
             <a href="{{ route('login') }}" class="kkp-reg-success-modal-btn">Go to Login</a>

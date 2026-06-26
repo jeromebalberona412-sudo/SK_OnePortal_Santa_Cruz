@@ -49,7 +49,7 @@ class DeletedKabataanController extends Controller
             ->with('barangay')
             ->forBarangay($user->barangay_id)
             ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
             ->orderByDesc('deleted_at');
 
         if ($request->filled('search')) {
@@ -125,7 +125,7 @@ class DeletedKabataanController extends Controller
         $all = KabataanRegistration::onlyTrashed()
             ->forBarangay($user->barangay_id)
             ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
+            ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
             ->get();
 
         $stats = [

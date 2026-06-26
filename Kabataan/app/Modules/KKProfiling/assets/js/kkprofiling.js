@@ -1666,6 +1666,7 @@ function showEmailVerification(email) {
             try {
                 const response = await fetch('/api/kkprofiling/resend-verification', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
@@ -1683,7 +1684,7 @@ function showEmailVerification(email) {
 
                 if (response.ok && data.success) {
                     if (data.registration_completed && window.kkpShowRegistrationComplete) {
-                        window.kkpShowRegistrationComplete();
+                        window.kkpShowRegistrationComplete(Boolean(data.auto_approved));
                         return;
                     }
 
@@ -1721,6 +1722,7 @@ function showEmailVerification(email) {
     const confirmPasswordError = document.getElementById('confirmPasswordError');
     const submitBtn = document.getElementById('setpwSubmitBtn');
     const successModal = document.getElementById('kkpRegSuccessModal');
+    const successMessageEl = document.getElementById('kkpRegSuccessMessage');
     const finalizeUrl = form.dataset.finalizeUrl || '';
     const isWizardToken = Boolean(form.dataset.wizardToken);
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -1789,8 +1791,28 @@ function showEmailVerification(email) {
         setFieldError(confirmInput, confirmPasswordError, '');
     }
 
-    function showSuccessModal() {
+    function showSuccessModal(message, autoApproved = false) {
         if (!successModal) return;
+
+        const titleEl = document.getElementById('kkpRegSuccessTitle');
+        const loginBtn = successModal.querySelector('.kkp-reg-success-modal-btn');
+
+        if (titleEl) {
+            titleEl.textContent = autoApproved
+                ? 'Registration Verified!'
+                : 'Registration Submitted Successfully';
+        }
+
+        if (successMessageEl) {
+            successMessageEl.textContent = message || (autoApproved
+                ? 'Your ID address matches your registered barangay. You can log in now.'
+                : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.');
+        }
+
+        if (loginBtn) {
+            loginBtn.textContent = 'Go to Login';
+        }
+
         successModal.hidden = false;
         successModal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('kkp-wizard-success-modal-open');
@@ -1901,7 +1923,12 @@ function showEmailVerification(email) {
             if (window.hideLoading) window.hideLoading();
 
             if (response.ok) {
-                showSuccessModal();
+                showSuccessModal(
+                    data.auto_approved
+                        ? (data.message || 'Registration verified! Your ID address matches your barangay. You can log in now.')
+                        : (data.message || 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.'),
+                    Boolean(data.auto_approved),
+                );
                 return;
             }
 

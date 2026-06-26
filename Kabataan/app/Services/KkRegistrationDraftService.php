@@ -5,8 +5,11 @@ namespace App\Services;
 use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Models\User;
-use App\Services\CloudinaryService;
+use App\Support\SupportingDocumentTypes;
+use App\Services\DuplicateKabataanRegistrationService;
+use App\Services\KkProfilingValidationMessages;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -21,6 +24,8 @@ class KkRegistrationDraftService
 
     public const COMPLETE_SESSION_KEY = 'kk_wizard_registration_complete';
 
+    public const COMPLETED_TOKEN_CACHE_PREFIX = 'kk_wizard_completed_token:';
+
     public const PENDING_DISK = 'local';
 
     public const PENDING_ROOT = 'kk_wizard_pending';
@@ -33,6 +38,8 @@ class KkRegistrationDraftService
 
     public const DOCUMENTS_DIRECTORY = 'kabataan_documents';
 
+    public const DRAFT_COOKIE_NAME = 'kk_wizard_draft_token';
+
     public function __construct(
         protected CloudinaryService $cloudinary
     ) {}
@@ -41,17 +48,33 @@ class KkRegistrationDraftService
     {
         $wizard = session(self::SESSION_KEY);
 
-        if (! is_array($wizard) || empty($wizard['token'])) {
+        if (is_array($wizard) && ! empty($wizard['token'])) {
+            if ($this->isExpired($wizard)) {
+                $this->clearSessionDraft();
+
+                return null;
+            }
+
+            return $this->normalizeWizardSteps($wizard);
+        }
+
+        $token = request()->cookie(self::DRAFT_COOKIE_NAME);
+
+        if (! is_string($token) || $token === '') {
             return null;
         }
 
-        if ($this->isExpired($wizard)) {
-            $this->clearSessionDraft();
+        $wizard = $this->loadByToken($token);
+
+        if (! $wizard) {
+            $this->forgetDraftCookie();
 
             return null;
         }
 
-        return $this->normalizeWizardSteps($wizard);
+        $this->persist($this->denormalizeWizardForStorage($wizard));
+
+        return $wizard;
     }
 
     public function loadByToken(string $token): ?array
@@ -92,6 +115,8 @@ class KkRegistrationDraftService
             'kk_wizard_email_verified',
             'kk_wizard_draft_id',
         ]);
+
+        $this->forgetDraftCookie();
     }
 
     public function syncWizardSession(array $wizard): void
@@ -108,6 +133,7 @@ class KkRegistrationDraftService
                 $this->deletePendingFiles($wizard['token']);
             }
 
+            $this->clearCompletedRegistration();
             $wizard = $this->blankWizard($barangay->id);
         }
 
@@ -121,9 +147,9 @@ class KkRegistrationDraftService
     }
 
     /**
-     * @param  array<string, UploadedFile|null>  $files
+     * @param  array<string, UploadedFile|null>  $sides  Keys: front, back
      */
-    public function saveStep2(array $wizard, array $files): array
+    public function saveStep2(array $wizard, string $documentType, array $sides): array
     {
         if (empty($wizard['step1_data'])) {
             throw ValidationException::withMessages([
@@ -131,30 +157,37 @@ class KkRegistrationDraftService
             ]);
         }
 
-        $stored = $wizard['step2_data']['documents'] ?? [];
-        $dir = $this->wizardDirectory($wizard['token']) . '/documents';
+        $dir = $this->wizardDirectory($wizard['token']).'/documents';
+        $storedSides = [];
 
-        foreach ($files as $key => $file) {
+        foreach (SupportingDocumentTypes::sides() as $side) {
+            $file = $sides[$side] ?? null;
+
             if (! $file instanceof UploadedFile) {
                 continue;
             }
 
-            $filename = Str::slug($key, '_') . '_' . now()->format('YmdHis') . '_' . Str::lower(Str::random(6))
-                . '.' . $file->getClientOriginalExtension();
+            $filename = Str::slug($documentType.'_'.$side, '_').'_'.now()->format('YmdHis').'_'.Str::lower(Str::random(6))
+                .'.'.$file->getClientOriginalExtension();
 
             $path = $file->storeAs($dir, $filename, self::TEMP_DISK);
 
-            $stored = [
-                $key => [
-                    'path'          => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'mime'          => $file->getMimeType(),
-                    'size'          => $file->getSize(),
-                ],
+            $storedSides[$side] = [
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime' => $file->getMimeType(),
+                'size' => $file->getSize(),
             ];
         }
 
-        $wizard['step2_data'] = ['documents' => $stored];
+        $wizard['step2_data'] = [
+            'documents' => [
+                $documentType => [
+                    'type' => $documentType,
+                    'sides' => $storedSides,
+                ],
+            ],
+        ];
         $wizard['current_step'] = max((int) ($wizard['current_step'] ?? 1), 3);
         $wizard['expires_at'] = now()->addDays(7)->toIso8601String();
 
@@ -175,9 +208,22 @@ class KkRegistrationDraftService
         return $this->persist($wizard);
     }
 
+    /**
+     * @param  array<string, mixed>  $verification
+     */
+    public function storeIdVerification(array $wizard, array $verification): array
+    {
+        $step2 = is_array($wizard['step2_data'] ?? null) ? $wizard['step2_data'] : [];
+        $step2['id_verification'] = $verification;
+        $wizard['step2_data'] = $step2;
+
+        return $this->persist($wizard);
+    }
+
     public function markVerificationSent(array $wizard): array
     {
         $wizard['verification_sent_at'] = now()->toIso8601String();
+        $wizard['current_step'] = max((int) ($wizard['current_step'] ?? 1), 3);
 
         return $this->persist($wizard);
     }
@@ -237,54 +283,93 @@ class KkRegistrationDraftService
 
         $this->assertEmailAvailable($email, $barangay->id);
 
+        if (app(DuplicateKabataanRegistrationService::class)->hasApprovedDuplicate((int) $barangay->id, $step1)) {
+            throw ValidationException::withMessages([
+                'registration' => [KkProfilingValidationMessages::DUPLICATE_IDENTITY],
+            ]);
+        }
+
         return DB::transaction(function () use ($wizard, $barangay, $step1, $email, $password) {
             $formData = $this->buildFormData($step1, $wizard);
             $formData['supporting_documents'] = $this->promoteDocuments($wizard);
 
+            $idVerification = is_array($wizard['step2_data']['id_verification'] ?? null)
+                ? $wizard['step2_data']['id_verification']
+                : null;
+
+            $verificationService = app(IdVerificationService::class);
+
+            if (
+                ! $verificationService->wasAlreadyProcessed($idVerification)
+                && $formData['supporting_documents'] !== []
+            ) {
+                $registrationFields = array_merge($step1, [
+                    '_both_sides_uploaded' => collect($formData['supporting_documents'])
+                        ->contains(fn (array $doc) => isset($doc['sides']['front'], $doc['sides']['back'])),
+                ]);
+
+                $reverified = $verificationService->verifySupportingDocuments(
+                    $formData['supporting_documents'],
+                    (int) $barangay->id,
+                    $registrationFields,
+                );
+
+                if (is_array($reverified)) {
+                    $idVerification = $reverified;
+                }
+            }
+
+            if (is_array($idVerification)) {
+                $formData['id_verification'] = $idVerification;
+            }
+
             $registration = KabataanRegistration::create([
-                'tenant_id'          => $barangay->tenant_id,
-                'barangay_id'        => $barangay->id,
-                'last_name'          => $step1['last_name'],
-                'first_name'         => $step1['first_name'],
-                'middle_name'        => $step1['middle_name'] ?? null,
-                'suffix'             => $this->resolvedSuffix($step1),
-                'email'              => $email,
-                'contact_number'     => $step1['contact_number'] ?? null,
+                'tenant_id' => $barangay->tenant_id,
+                'barangay_id' => $barangay->id,
+                'last_name' => $step1['last_name'],
+                'first_name' => $step1['first_name'],
+                'middle_name' => $step1['middle_name'] ?? null,
+                'suffix' => $this->resolvedSuffix($step1),
+                'email' => $email,
+                'contact_number' => $step1['contact_number'] ?? null,
                 'profile_photo_path' => null,
-                'form_data'          => $formData,
-                'status'             => 'password_set',
-                'email_verified_at'  => $wizard['email_verified_at'] ?? now(),
-                'submitted_at'       => now(),
+                'form_data' => $formData,
+                'status' => 'password_set',
+                'email_verified_at' => $wizard['email_verified_at'] ?? now(),
+                'submitted_at' => now(),
             ]);
 
             try {
-                (new RespondentNumberService())->assignToRegistration($registration->fresh());
+                (new RespondentNumberService)->assignToRegistration($registration->fresh());
             } catch (\Throwable $e) {
                 report($e);
             }
 
             $user = User::create([
-                'name'                      => $registration->full_name,
-                'email'                     => $email,
-                'password'                  => bcrypt($password),
-                'email_verified_at'         => now(),
-                'tenant_id'                 => $registration->tenant_id,
-                'barangay_id'               => $registration->barangay_id,
-                'role'                      => 'kabataan',
-                'status'                    => 'PENDING_APPROVAL',
-                'profile_image_url'         => null,
+                'name' => $registration->full_name,
+                'email' => $email,
+                'password' => bcrypt($password),
+                'email_verified_at' => now(),
+                'tenant_id' => $registration->tenant_id,
+                'barangay_id' => $registration->barangay_id,
+                'role' => 'kabataan',
+                'status' => 'PENDING_APPROVAL',
+                'profile_image_url' => null,
                 'profile_image_uploaded_at' => null,
             ]);
 
             $registration->markPasswordSet();
-            $registration->markActive($user->id);
+            $registration->linkUser($user->id);
 
-            $evaluator = new RegistrationEvaluationService();
-            $autoApproved = $evaluator->evaluate($registration->fresh());
+            $evaluator = new RegistrationEvaluationService;
+            $autoApproved = $evaluator->evaluate(
+                $registration->fresh(),
+                is_array($idVerification) ? $idVerification : null,
+            );
 
             if (! $autoApproved) {
                 try {
-                    (new SkOfficialsNotificationDispatcher())->notifyKkProfilingSubmission(
+                    (new SkOfficialsNotificationDispatcher)->notifyKkProfilingSubmission(
                         (int) $barangay->id,
                         $registration->full_name,
                     );
@@ -294,31 +379,77 @@ class KkRegistrationDraftService
             }
 
             try {
-                (new KkSurveyResponseService())->syncFromRegistration(
-                    $registration->fresh(),
-                    $autoApproved ? 'approved' : 'pending'
-                );
+                if (! $autoApproved) {
+                    (new KkSurveyResponseService)->syncFromRegistration(
+                        $registration->fresh(),
+                        'pending'
+                    );
+                }
             } catch (\Throwable $e) {
                 report($e);
             }
 
+            $registration = $registration->fresh();
+            $this->rememberCompletedWizardToken($wizard['token'], $registration);
             $this->deletePendingFiles($wizard['token']);
             $this->clearSessionDraft();
-            $this->markRegistrationComplete($email, (int) $barangay->id);
+            $this->markRegistrationComplete($email, (int) $barangay->id, $registration);
 
-            return $registration->fresh();
+            return $registration;
         });
     }
 
-    public function markRegistrationComplete(string $email, int $barangayId): void
+    public function markRegistrationComplete(string $email, int $barangayId, ?KabataanRegistration $registration = null): void
     {
+        $email = strtolower(trim($email));
+
+        if (! $registration) {
+            $registration = KabataanRegistration::query()
+                ->where('barangay_id', $barangayId)
+                ->where('email', $email)
+                ->whereIn('status', ['password_set', 'active'])
+                ->latest('id')
+                ->first();
+        }
+
         session([
             self::COMPLETE_SESSION_KEY => [
-                'email'        => strtolower(trim($email)),
-                'barangay_id'  => $barangayId,
+                'email' => $email,
+                'barangay_id' => $barangayId,
                 'completed_at' => now()->toIso8601String(),
+                'auto_approved' => $registration
+                    ? RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status)
+                    : false,
+                'evaluation_status' => $registration?->evaluation_status,
             ],
         ]);
+
+        $this->forgetDraftCookie();
+    }
+
+    public function rememberCompletedWizardToken(string $token, KabataanRegistration $registration): void
+    {
+        Cache::put(
+            self::COMPLETED_TOKEN_CACHE_PREFIX.$token,
+            [
+                'registration_id' => $registration->id,
+                'email' => strtolower(trim($registration->email)),
+                'barangay_id' => (int) $registration->barangay_id,
+                'auto_approved' => RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status),
+                'evaluation_status' => $registration->evaluation_status,
+            ],
+            now()->addHours(24),
+        );
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function resolveCompletedByWizardToken(string $token): ?array
+    {
+        $data = Cache::get(self::COMPLETED_TOKEN_CACHE_PREFIX.$token);
+
+        return is_array($data) ? $data : null;
     }
 
     public function resolveCompletedRegistration(?int $barangayId = null): ?array
@@ -363,15 +494,15 @@ class KkRegistrationDraftService
         }
 
         return [
-            'token'             => $wizard['token'],
-            'current_step'      => $this->mapCurrentStepForClient((int) ($wizard['current_step'] ?? 1)),
-            'email'             => $wizard['email'] ?? null,
-            'email_verified'    => ! empty($wizard['email_verified_at']),
+            'token' => $wizard['token'],
+            'current_step' => $this->mapCurrentStepForClient((int) ($wizard['current_step'] ?? 1)),
+            'email' => $wizard['email'] ?? null,
+            'email_verified' => ! empty($wizard['email_verified_at']),
             'verification_sent' => ! empty($wizard['verification_sent_at']),
-            'has_step1'         => ! empty($wizard['step1_data']),
-            'has_documents'     => ! empty($wizard['step2_data']['documents']),
-            'step1'             => $wizard['step1_data'] ?? null,
-            'step2'             => $this->step2StatusPayload($wizard),
+            'has_step1' => ! empty($wizard['step1_data']),
+            'has_documents' => ! empty($wizard['step2_data']['documents']),
+            'step1' => $wizard['step1_data'] ?? null,
+            'step2' => $this->step2StatusPayload($wizard),
             'respondent_number' => $wizard['respondent_number'] ?? null,
         ];
     }
@@ -386,26 +517,37 @@ class KkRegistrationDraftService
 
         $documentType = array_key_first($documents);
         $meta = is_array($documents[$documentType] ?? null) ? $documents[$documentType] : [];
+        $sides = is_array($meta['sides'] ?? null) ? $meta['sides'] : [];
+
+        $sidePayload = [];
+
+        foreach (SupportingDocumentTypes::sides() as $side) {
+            if (! empty($sides[$side]['path'])) {
+                $sidePayload[$side] = [
+                    'original_name' => $sides[$side]['original_name'] ?? '',
+                ];
+            }
+        }
 
         return [
             'document_type' => $documentType,
-            'original_name' => $meta['original_name'] ?? '',
+            'sides' => $sidePayload,
         ];
     }
 
     private function blankWizard(int $barangayId): array
     {
         return [
-            'token'                 => (string) Str::uuid(),
-            'barangay_id'           => $barangayId,
-            'respondent_number'     => null,
-            'step1_data'           => null,
-            'step2_data'           => null,
-            'email'                => null,
-            'email_verified_at'     => null,
-            'verification_sent_at'  => null,
-            'current_step'          => 1,
-            'expires_at'            => now()->addDays(7)->toIso8601String(),
+            'token' => (string) Str::uuid(),
+            'barangay_id' => $barangayId,
+            'respondent_number' => null,
+            'step1_data' => null,
+            'step2_data' => null,
+            'email' => null,
+            'email_verified_at' => null,
+            'verification_sent_at' => null,
+            'current_step' => 1,
+            'expires_at' => now()->addDays(7)->toIso8601String(),
         ];
     }
 
@@ -418,14 +560,58 @@ class KkRegistrationDraftService
                 $this->pendingFilePath($wizard['token']),
                 json_encode($wizard)
             );
+
+            $this->queueDraftCookie((string) $wizard['token']);
         }
 
         session([
-            'kk_wizard_step'           => max(1, min(3, $this->mapCurrentStepForClient((int) ($wizard['current_step'] ?? 1)))),
+            'kk_wizard_step' => max(1, min(3, $this->mapCurrentStepForClient((int) ($wizard['current_step'] ?? 1)))),
             'kk_wizard_email_verified' => ! empty($wizard['email_verified_at']),
         ]);
 
         return $wizard;
+    }
+
+    /**
+     * Reverse client step mapping before writing storage that tracks raw progress.
+     *
+     * @param  array<string, mixed>  $wizard
+     * @return array<string, mixed>
+     */
+    private function denormalizeWizardForStorage(array $wizard): array
+    {
+        $step = (int) ($wizard['current_step'] ?? 1);
+
+        if ($step === 3 && ! empty($wizard['verification_sent_at'])) {
+            $wizard['current_step'] = 3;
+        }
+
+        return $wizard;
+    }
+
+    private function queueDraftCookie(string $token): void
+    {
+        cookie()->queue(cookie(
+            self::DRAFT_COOKIE_NAME,
+            $token,
+            60 * 24 * 7,
+            '/',
+            null,
+            (bool) config('session.secure'),
+            true,
+            false,
+            'Lax'
+        ));
+    }
+
+    private function forgetDraftCookie(): void
+    {
+        cookie()->queue(cookie()->forget(self::DRAFT_COOKIE_NAME));
+    }
+
+    public function isExpiredWizard(array $wizard): bool
+    {
+        return $this->isExpired($wizard);
     }
 
     private function isExpired(array $wizard): bool
@@ -443,7 +629,7 @@ class KkRegistrationDraftService
 
     private function deletePendingFiles(string $token): void
     {
-        $dir = self::TEMP_ROOT . '/' . $token;
+        $dir = self::TEMP_ROOT.'/'.$token;
 
         if (Storage::disk(self::TEMP_DISK)->exists($dir)) {
             Storage::disk(self::TEMP_DISK)->deleteDirectory($dir);
@@ -458,12 +644,12 @@ class KkRegistrationDraftService
 
     private function pendingFilePath(string $token): string
     {
-        return self::PENDING_ROOT . '/' . $token . '.json';
+        return self::PENDING_ROOT.'/'.$token.'.json';
     }
 
     private function wizardDirectory(string $token): string
     {
-        return self::TEMP_ROOT . '/' . $token;
+        return self::TEMP_ROOT.'/'.$token;
     }
 
     private function normalizeWizardSteps(array $wizard): array
@@ -546,56 +732,96 @@ class KkRegistrationDraftService
         $emailSlug = Str::slug($email, '_') ?: 'user';
 
         foreach ($documents as $key => $meta) {
-            $tempPath = $meta['path'] ?? null;
+            $sides = is_array($meta['sides'] ?? null) ? $meta['sides'] : null;
 
-            if (! $tempPath || ! Storage::disk(self::TEMP_DISK)->exists($tempPath)) {
+            if ($sides !== null && $sides !== []) {
+                $promotedSides = [];
+
+                foreach ($sides as $side => $sideMeta) {
+                    $promotedSide = $this->promoteSingleDocumentFile(
+                        $sideMeta,
+                        $token,
+                        $emailSlug,
+                        $key.'_'.$side,
+                    );
+
+                    if ($promotedSide !== null) {
+                        $promotedSides[$side] = $promotedSide;
+                    }
+                }
+
+                if ($promotedSides !== []) {
+                    $promoted[] = [
+                        'type' => $key,
+                        'sides' => $promotedSides,
+                        'ocr' => $wizard['step2_data']['id_verification'] ?? null,
+                    ];
+                }
+
                 continue;
             }
 
-            $originalName = $meta['original_name'] ?? basename($tempPath);
-            $displayName = pathinfo($originalName, PATHINFO_FILENAME);
-            $publicId = $emailSlug . '_' . Str::slug($key, '_') . '_' . now()->format('YmdHis');
+            $promotedFile = $this->promoteSingleDocumentFile($meta, $token, $emailSlug, (string) $key);
 
-            if ($this->cloudinary->isConfigured()) {
-                $absolutePath = Storage::disk(self::TEMP_DISK)->path($tempPath);
-                $uploaded = $this->cloudinary->uploadSupportingDocument($absolutePath, $publicId, $displayName);
-
-                $promoted[] = [
-                    'type'               => $key,
-                    'path'               => $uploaded['public_id'],
-                    'url'                => $uploaded['url'],
-                    'public_id'          => $uploaded['public_id'],
-                    'cloudinary_version' => $uploaded['version'],
-                    'original_name'      => $originalName,
-                    'display_name'       => $displayName,
-                    'storage'            => 'cloudinary',
-                ];
-
-                continue;
+            if ($promotedFile !== null) {
+                $promoted[] = array_merge(['type' => $key], $promotedFile, [
+                    'ocr' => $wizard['step2_data']['id_verification'] ?? null,
+                ]);
             }
-
-            if (! Storage::disk(self::DOCUMENTS_DISK)->exists(self::DOCUMENTS_DIRECTORY)) {
-                Storage::disk(self::DOCUMENTS_DISK)->makeDirectory(self::DOCUMENTS_DIRECTORY);
-            }
-
-            $basename = basename($tempPath);
-            $dest = self::DOCUMENTS_DIRECTORY . '/' . $token . '_' . $basename;
-
-            Storage::disk(self::DOCUMENTS_DISK)->put(
-                $dest,
-                Storage::disk(self::TEMP_DISK)->get($tempPath)
-            );
-
-            $promoted[] = [
-                'type'          => $key,
-                'path'          => $dest,
-                'url'           => Storage::disk(self::DOCUMENTS_DISK)->url($dest),
-                'original_name' => $originalName,
-                'display_name'  => $displayName,
-                'storage'       => 'local',
-            ];
         }
 
         return $promoted;
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     * @return array<string, mixed>|null
+     */
+    private function promoteSingleDocumentFile(array $meta, string $token, string $emailSlug, string $key): ?array
+    {
+        $tempPath = $meta['path'] ?? null;
+
+        if (! $tempPath || ! Storage::disk(self::TEMP_DISK)->exists($tempPath)) {
+            return null;
+        }
+
+        $originalName = $meta['original_name'] ?? basename($tempPath);
+        $displayName = pathinfo($originalName, PATHINFO_FILENAME);
+        $publicId = $emailSlug.'_'.Str::slug($key, '_').'_'.now()->format('YmdHis');
+
+        if ($this->cloudinary->isConfigured()) {
+            $absolutePath = Storage::disk(self::TEMP_DISK)->path($tempPath);
+            $uploaded = $this->cloudinary->uploadSupportingDocument($absolutePath, $publicId, $displayName);
+
+            return [
+                'path' => $uploaded['public_id'],
+                'url' => $uploaded['url'],
+                'public_id' => $uploaded['public_id'],
+                'cloudinary_version' => $uploaded['version'],
+                'original_name' => $originalName,
+                'display_name' => $displayName,
+                'storage' => 'cloudinary',
+            ];
+        }
+
+        if (! Storage::disk(self::DOCUMENTS_DISK)->exists(self::DOCUMENTS_DIRECTORY)) {
+            Storage::disk(self::DOCUMENTS_DISK)->makeDirectory(self::DOCUMENTS_DIRECTORY);
+        }
+
+        $basename = basename($tempPath);
+        $dest = self::DOCUMENTS_DIRECTORY.'/'.$token.'_'.$basename;
+
+        Storage::disk(self::DOCUMENTS_DISK)->put(
+            $dest,
+            Storage::disk(self::TEMP_DISK)->get($tempPath)
+        );
+
+        return [
+            'path' => $dest,
+            'url' => Storage::disk(self::DOCUMENTS_DISK)->url($dest),
+            'original_name' => $originalName,
+            'display_name' => $displayName,
+            'storage' => 'local',
+        ];
     }
 }

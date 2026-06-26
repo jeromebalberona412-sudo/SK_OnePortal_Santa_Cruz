@@ -1,5 +1,5 @@
 {{-- Step 3: Check email for set password link — resend only --}}
-<section class="kkp-wizard-panel kkp-wizard-step3-legacy" id="kkpWizardStep3" data-wizard-step="3" hidden>
+<section class="kkp-wizard-panel kkp-wizard-step3-legacy" id="kkpWizardStep3" data-wizard-step="3" @if(($kkpInitialStep ?? 1) !== 3) hidden @endif>
 
     <div class="verify-card" id="emailVerifyCard">
         <div class="verify-icon">
@@ -10,7 +10,7 @@
         </div>
         <h1 class="verify-title">Check Your Email</h1>
         <p class="verify-message">We sent a set password link to:</p>
-        <p class="verify-email" id="displayEmail">your-email@example.com</p>
+        <p class="verify-email" id="displayEmail">{{ $wizardDraftEmail ?? 'your-email@example.com' }}</p>
         <p class="verify-instruction">
             Open your inbox and click the <strong>Set Password</strong> link to continue your registration.
         </p>

@@ -3,8 +3,10 @@
 namespace App\Modules\Authentication\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Services\KabataanAuthService;
+use App\Services\RegistrationEvaluationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -51,10 +53,16 @@ class AuthController extends Controller
                 ->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
         }
 
-        if ($user->status === 'PENDING_APPROVAL') {
-            return back()
-                ->withInput($request->only('email'))
-                ->with('login_error', 'Please wait for SK officials to verify your account. You will receive an email once your registration has been approved.');
+        if ($user->status === User::STATUS_PENDING_APPROVAL) {
+            $registration = KabataanRegistration::where('user_id', $user->id)->latest('id')->first();
+
+            if ($registration && RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status)) {
+                $user->update(['status' => User::STATUS_ACTIVE]);
+            } else {
+                return back()
+                    ->withInput($request->only('email'))
+                    ->with('login_error', 'Please wait for SK officials to verify your account. You will receive an email once your registration has been approved.');
+            }
         }
 
         if ($user->status === 'REJECTED') {

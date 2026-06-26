@@ -5,16 +5,22 @@ namespace App\Modules\Kabataan\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Services\BarangayLogoUrlService;
+use App\Services\KkSupportingDocumentService;
+use App\Services\KkProfilingRequestDataService;
 use App\Services\RespondentNumberService;
 use App\Services\SkOfficialActivityService;
+use App\Support\KabataanApprovedStatuses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class KabataanController extends Controller
 {
-    public function __construct(private readonly SkOfficialActivityService $activityService)
-    {
+    public function __construct(
+        private readonly SkOfficialActivityService $activityService,
+        private readonly KkSupportingDocumentService $supportingDocumentService,
+        private readonly KkProfilingRequestDataService $profilingDataService,
+    ) {
     }
 
     public function index()
@@ -46,11 +52,9 @@ class KabataanController extends Controller
         }
 
         $query = KabataanRegistration::with('barangay')
-            ->forBarangay($user->barangay_id)
-            ->where('status', 'active')
-            ->whereIn('evaluation_status', ['active', 'Auto Approved'])
-            ->orderBy('last_name')
-            ->orderBy('first_name');
+            ->forBarangay($user->barangay_id);
+        KabataanApprovedStatuses::applyKabataanListScope($query);
+        $query->orderBy('last_name')->orderBy('first_name');
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -63,12 +67,31 @@ class KabataanController extends Controller
 
         $records = $query->get();
 
+        $approvedSurveys = $this->profilingDataService
+            ->surveysKeyedByRegistrationId(
+                $this->profilingDataService->approvedSurveysForBarangay($user->barangay_id)
+            );
+
         $val = fn($fd, $key) => is_array($fd[$key] ?? null)
             ? ($fd[$key][0] ?? '—')
             : ($fd[$key] ?? '—');
 
-        $data = $records->map(function ($r) use ($val) {
+        $data = $records->map(function ($r) use ($val, $approvedSurveys) {
             $fd = $r->form_data ?? [];
+            $supportingDocuments = $this->supportingDocumentService->formatForApi($r, 'kabataan.document');
+            $idVerification = is_array($fd['id_verification'] ?? null) ? $fd['id_verification'] : null;
+            $rawDocuments = $fd['supporting_documents'] ?? [];
+            $hasDocuments = $supportingDocuments !== []
+                || (is_array($rawDocuments) && $rawDocuments !== []);
+
+            $survey = $approvedSurveys[$r->id] ?? null;
+            if ($survey !== null) {
+                $surveyDocuments = $survey->supporting_documents ?? [];
+                if (is_array($surveyDocuments) && $surveyDocuments !== []) {
+                    $hasDocuments = true;
+                }
+            }
+
             return [
                 'id'             => $r->id,
                 'respondent_no'       => RespondentNumberService::displaySequence(
@@ -105,20 +128,48 @@ class KabataanController extends Controller
                 'submitted_at'   => $r->submitted_at?->format('m/d/Y'),
                 'reviewed_at'    => $r->reviewed_at?->format('m/d/Y'),
                 'evaluation_status' => $r->evaluation_status,
+                'supporting_documents' => $supportingDocuments,
+                'id_verification' => $idVerification,
+                'has_supporting_documents' => $hasDocuments,
             ];
         });
 
         $all = KabataanRegistration::forBarangay($user->barangay_id)->get();
+        $listedCountQuery = KabataanRegistration::forBarangay($user->barangay_id);
+        KabataanApprovedStatuses::applyKabataanListScope($listedCountQuery);
+
         $stats = [
-            'active'   => $all->where('status', 'active')
-                ->whereIn('evaluation_status', ['active', 'Auto Approved'])->count(),
-            'pending'  => $all->whereIn('evaluation_status', ['Not Profiled', 'Wrong Credentials'])
+            'active'   => $listedCountQuery->count(),
+            'pending'  => $all->whereIn('evaluation_status', KabataanApprovedStatuses::pendingEvaluationStatuses())
                 ->whereNotIn('status', ['rejected'])->count(),
-            'rejected' => $all->where('status', 'rejected')->count(),
+            'rejected' => $all->where('status', 'rejected')->count()
+                + $all->whereIn('evaluation_status', KabataanApprovedStatuses::rejectedEvaluationStatuses())->count(),
             'total'    => $all->count(),
         ];
 
         return response()->json(['data' => $data, 'stats' => $stats]);
+    }
+
+    public function document(Request $request, int $id, int $documentIndex, string $side)
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->barangay_id) {
+            abort(401);
+        }
+
+        if (! in_array($side, ['front', 'back'], true)) {
+            abort(404);
+        }
+
+        $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
+
+        return $this->supportingDocumentService->streamForOfficial(
+            $registration,
+            $documentIndex,
+            $side,
+            $request->boolean('download'),
+        );
     }
 
     public function store(Request $request)

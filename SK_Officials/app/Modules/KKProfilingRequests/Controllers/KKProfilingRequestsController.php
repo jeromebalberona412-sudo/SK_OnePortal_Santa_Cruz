@@ -5,12 +5,15 @@ namespace App\Modules\KKProfilingRequests\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Services\BarangayLogoUrlService;
+use App\Services\KkSupportingDocumentService;
+use App\Services\KkProfilingRequestDataService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RejectedKkProfilingService;
 use App\Services\RespondentNumberService;
 use App\Modules\KKProfilingRequests\Notifications\KabataanApprovedNotification;
 use App\Modules\KKProfilingRequests\Notifications\KabataanRejectedNotification;
 use App\Services\SkOfficialActivityService;
+use App\Support\KabataanApprovedStatuses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +21,11 @@ use Illuminate\Support\Facades\Notification;
 
 class KKProfilingRequestsController extends Controller
 {
-    public function __construct(private readonly SkOfficialActivityService $activityService)
-    {
+    public function __construct(
+        private readonly SkOfficialActivityService $activityService,
+        private readonly KkSupportingDocumentService $supportingDocumentService,
+        private readonly KkProfilingRequestDataService $profilingDataService,
+    ) {
     }
 
     public function index()
@@ -49,11 +55,9 @@ class KKProfilingRequestsController extends Controller
         }
 
         $query = KabataanRegistration::with('barangay')
-            ->forBarangay($user->barangay_id)
-            ->whereNotIn('status', ['rejected', 'archived'])
-            ->whereNotIn('evaluation_status', ['Auto Approved', 'active'])
-            ->orderBy('last_name')
-            ->orderBy('first_name');
+            ->forBarangay($user->barangay_id);
+        KabataanApprovedStatuses::applyPendingProfilingScope($query);
+        $query->orderBy('last_name')->orderBy('first_name');
 
         // Status filter — filter by evaluation_status
         if ($request->filled('status') && $request->status !== 'All') {
@@ -83,7 +87,11 @@ class KKProfilingRequestsController extends Controller
 
         $registrations = $query->get();
 
-        $data = $registrations->map(function ($r) {
+        $pendingSurveys = $this->profilingDataService->pendingSurveysForBarangay($user->barangay_id);
+        $surveysByRegistrationId = $this->profilingDataService->surveysKeyedByRegistrationId($pendingSurveys);
+        $registrationIds = $registrations->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        $data = $registrations->map(function ($r) use ($surveysByRegistrationId) {
             $formData = $r->form_data ?? [];
 
             // Helper: extract value whether stored as string or array
@@ -91,7 +99,11 @@ class KKProfilingRequestsController extends Controller
                 ? ($formData[$key][0] ?? '—')
                 : ($formData[$key] ?? '—');
 
-            return [
+            $idVerification = is_array($formData['id_verification'] ?? null)
+                ? $formData['id_verification']
+                : null;
+
+            $payload = [
                 'id'              => $r->id,
                 'respondent_number'   => $r->respondent_number,
                 'respondent_sequence' => $r->respondent_sequence,
@@ -134,16 +146,55 @@ class KKProfilingRequestsController extends Controller
                 'submitted_at'    => $r->submitted_at?->format('m/d/Y'),
                 'review_notes'    => $r->review_notes,
                 'barangay_logo_url' => app(BarangayLogoUrlService::class)->resolve($r->barangay_id),
+                'supporting_documents' => $this->supportingDocumentService->formatForApi($r),
+                'id_verification' => $idVerification ? [
+                    'name_match' => (bool) ($idVerification['name_match'] ?? false),
+                    'barangay_match' => (bool) ($idVerification['barangay_match'] ?? false),
+                    'duplicate_detected' => (bool) ($idVerification['duplicate_detected'] ?? false),
+                    'message' => $idVerification['message'] ?? null,
+                    'match_reason' => $idVerification['match_reason'] ?? null,
+                    'matched_barangay' => $idVerification['matched_barangay'] ?? null,
+                ] : null,
             ];
-        });
+
+            return $this->profilingDataService->mergeSurveyIntoRegistrationPayload(
+                $payload,
+                $surveysByRegistrationId[$r->id] ?? null,
+            );
+        })->values();
+
+        foreach ($pendingSurveys as $survey) {
+            $registrationId = (int) ($survey->kabataan_registration_id ?? 0);
+
+            if ($registrationId > 0 && in_array($registrationId, $registrationIds, true)) {
+                continue;
+            }
+
+            $surveyPayload = $this->profilingDataService->registrationPayloadFromSurvey($survey);
+
+            if ($surveyPayload === null) {
+                continue;
+            }
+
+            $surveyPayload['supporting_documents'] = is_array($survey->supporting_documents)
+                ? $survey->supporting_documents
+                : [];
+            $surveyPayload['id_verification'] = null;
+
+            $data->push($surveyPayload);
+        }
 
         $all = KabataanRegistration::forBarangay($user->barangay_id)->get();
 
         $stats = [
-            'active'               => $all->where('evaluation_status', 'Auto Approved')->count() + $all->where('status', 'active')->count(),
-            'pending_verification' => $all->whereIn('evaluation_status', ['Not Profiled', 'Wrong Credentials'])->count(),
+            'active'               => $all->filter(
+                fn (KabataanRegistration $r) => KabataanApprovedStatuses::isListedInKabataan($r)
+            )->count(),
+            'pending_verification' => $all->filter(
+                fn (KabataanRegistration $r) => KabataanApprovedStatuses::isPendingInKkProfiling($r)
+            )->count(),
             'rejected'             => $all->where('evaluation_status', 'Duplicate')->count() + $all->where('status', 'rejected')->count(),
-            'total'                => $all->count(),
+            'total'                => $data->count(),
         ];
 
         return response()->json(['data' => $data, 'stats' => $stats]);
@@ -305,6 +356,28 @@ class KKProfilingRequestsController extends Controller
         );
 
         return response()->json(['success' => true, 'message' => 'Registration rejected.']);
+    }
+
+    public function document(Request $request, int $id, int $documentIndex, string $side)
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->barangay_id) {
+            abort(401);
+        }
+
+        if (! in_array($side, ['front', 'back'], true)) {
+            abort(404);
+        }
+
+        $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
+
+        return $this->supportingDocumentService->streamForOfficial(
+            $registration,
+            $documentIndex,
+            $side,
+            $request->boolean('download'),
+        );
     }
 
     private function emptyStats(): array

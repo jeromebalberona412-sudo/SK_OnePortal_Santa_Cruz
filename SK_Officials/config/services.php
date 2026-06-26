@@ -53,4 +53,6 @@ return [
         'folder'     => env('CLOUDINARY_FOLDER', 'sk_oneportal/sk_officials_posts'),
     ],
 
+    'kabataan_app_url' => env('KABATAAN_APP_URL', 'http://localhost:8002'),
+
 ];

@@ -8,4 +8,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/kkprofiling-requests/data', [KKProfilingRequestsController::class, 'data'])->name('kkprofiling-requests.data');
     Route::post('/kkprofiling-requests/{id}/approve', [KKProfilingRequestsController::class, 'approve'])->name('kkprofiling-requests.approve');
     Route::post('/kkprofiling-requests/{id}/reject', [KKProfilingRequestsController::class, 'reject'])->name('kkprofiling-requests.reject');
+    Route::get('/kkprofiling-requests/{id}/documents/{documentIndex}/{side}', [KKProfilingRequestsController::class, 'document'])
+        ->whereIn('side', ['front', 'back'])
+        ->name('kkprofiling-requests.document');
 });

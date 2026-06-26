@@ -1,5 +1,13 @@
-{{-- Read-only KK Survey Questionnaire — matches Kabataan kkp-* layout --}}
-<div class="kk-view-paper">
+{{-- Read-only KK Survey Questionnaire — matches Kabataan kkp-* layout with tabs --}}
+<div class="kk-profiling-view-root">
+    <div class="kk-profiling-view-tabs" id="kkViewTabs" role="tablist" aria-label="KK profiling details">
+        <button type="button" class="kk-profiling-view-tab is-active" data-kk-view-tab="profile" role="tab" aria-selected="true">KK Profiling</button>
+        <button type="button" class="kk-profiling-view-tab" data-kk-view-tab="documents" role="tab" aria-selected="false">Supporting Documents</button>
+    </div>
+
+    <div class="kk-profiling-view-tab-panel" id="kkViewTabProfile" role="tabpanel">
+        <div class="kk-view-paper kk-profiling-form-scroll">
+    <div class="kk-view-evaluation-banner" id="kkViewEvaluationBanner" hidden role="status"></div>
 
     <div class="kkp-form-header">
         <div class="kkp-form-title-col">
@@ -273,4 +281,17 @@
         <p class="kk-view-rejection-text" id="kkViewRejectionText"></p>
     </div>
 
+        </div>
+    </div>
+
+    <div class="kk-profiling-view-tab-panel" id="kkViewTabDocuments" role="tabpanel" hidden>
+        <div class="kk-view-paper kk-view-documents-panel">
+            <div class="kk-view-documents-title">Supporting Documents (ID)</div>
+            <div class="kk-view-id-verification" id="kkViewIdVerification" hidden></div>
+            <div class="kk-view-documents-wrap" id="kkViewDocumentsWrap" style="display:none;">
+                <div class="kk-view-documents-grid" id="kkViewDocumentsGrid"></div>
+            </div>
+            <p class="kk-view-documents-empty" id="kkViewDocumentsEmpty" hidden>No supporting documents were uploaded for this submission.</p>
+        </div>
+    </div>
 </div>

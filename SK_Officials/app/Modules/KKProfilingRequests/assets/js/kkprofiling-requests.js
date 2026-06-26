@@ -1,3 +1,5 @@
+import { populateKkProfilingView, mapRegistrationToKkView } from './kk-profiling-view-populate.js';
+
 function broadcastKkProfileEvent() {
     try {
         sessionStorage.setItem('kk-profile-event', JSON.stringify({ at: Date.now() }));
@@ -244,31 +246,92 @@ function initializeKKProfilingRequestsUI() {
     function closeModal(modalElement) { if (modalElement) modalElement.style.display = 'none'; }
     function closeAllModals() { [viewModal, approveModal, rejectModal].forEach((m) => { if (m) m.style.display = 'none'; }); }
 
+    function switchKkViewTab(tabName) {
+        const profilePanel = document.getElementById('kkViewTabProfile');
+        const documentsPanel = document.getElementById('kkViewTabDocuments');
+        const tabs = document.querySelectorAll('.kk-profiling-view-tab');
+
+        tabs.forEach((tab) => {
+            const isActive = tab.dataset.kkViewTab === tabName;
+            tab.classList.toggle('is-active', isActive);
+            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        if (profilePanel) {
+            profilePanel.hidden = tabName !== 'profile';
+        }
+
+        if (documentsPanel) {
+            documentsPanel.hidden = tabName !== 'documents';
+        }
+    }
+
+    function findRequestById(id) {
+        const idStr = String(id);
+        return requests.find((r) => String(r.id) === idStr) || null;
+    }
+
     function populateViewModal(request, skipErrorPanel = false) {
-        const { respondentNumber, date, firstName, middleName, lastName, suffix, age, birthday, sex, civilStatus,
-            region, province, city, barangay, purokZone, emailAddress, contactNumber,
-            youthClassification, youthAgeGroup, workStatus, educationalBackground,
-            registeredSKVoter, registeredNationalVoter, votingHistory, kkTimes, kkReason, attendedKKAssembly,
-            facebookAccount, willingToJoinGroupChat, signature, status, registrationStatus, rejectionReason } = request;
+        const viewData = mapRegistrationToKkView({
+            respondent_number: request.respondentNumber,
+            respondent_display: request.respondentNumber,
+            submitted_at: request.date,
+            first_name: request.firstName,
+            middle_name: request.middleName,
+            last_name: request.lastName,
+            suffix: request.suffix,
+            age: request.age,
+            birthday: request.birthday,
+            sex: request.sex,
+            civil_status: request.civilStatus,
+            region: request.region,
+            province: request.province,
+            city: request.city,
+            barangay: request.barangay,
+            purok_zone: request.purokZone,
+            email: request.emailAddress,
+            contact_number: request.contactNumber,
+            youth_classification: request.youthClassification,
+            youth_age_group: request.youthAgeGroup,
+            work_status: request.workStatus,
+            education: request.educationalBackground,
+            sk_voter: request.registeredSKVoter,
+            national_voter: request.registeredNationalVoter,
+            sk_voted: request.votingHistory,
+            kk_assembly: request.attendedKKAssembly,
+            kk_times: request.kkTimes,
+            kk_reason: request.kkReason,
+            facebook: request.facebookAccount,
+            group_chat: request.willingToJoinGroupChat,
+            signature: request.signature,
+            barangay_logo_url: request.barangayLogoUrl,
+            supporting_documents: request.supportingDocuments,
+            id_verification: request.idVerification,
+            status: request.registrationStatus,
+            rejection_reason: request.rejectionReason,
+        });
+
+        populateKkProfilingView(viewData, {
+            showRejection: request.registrationStatus === 'rejected' || request.status === 'rejected',
+            rejectionReason: request.rejectionReason || '',
+        });
+
+        showEvaluationStatusBanner(request);
+        switchKkViewTab('profile');
+
+        const { firstName, middleName, lastName, suffix, age, birthday, barangay, purokZone, emailAddress, contactNumber, status } = request;
 
         // Build a map of field → error info for quick lookup
         const errors = request.censusErrors || [];
         const errorMap = {};
         errors.forEach((e, idx) => { errorMap[e.field] = { ...e, idx }; });
-        const isEditable = (status === 'Wrong Credential') && errors.length > 0;
+        const isEditable = (status === 'Wrong Credential' || status === 'Wrong Credentials') && errors.length > 0;
         const isDuplicate = (status === 'Duplicate') && errors.length > 0;
 
         // Track which fields have been corrected (persists across re-renders via closure on request object)
         if (!request._fixedFields) request._fixedFields = new Set();
         const fixedFields = request._fixedFields;
 
-        // Helper: set a plain text value
-        const setVal = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val ?? '';
-        };
-
-        // Helper: render a field — either plain text, editable inline (Wrong Credential), or duplicate badge
         const setField = (id, fieldKey, val) => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -343,57 +406,26 @@ function initializeKKProfilingRequestsUI() {
                     el.className = el.className.replace(/\s*kk-field-error\s*/g, '').replace(/\s*kk-field-corrected\s*/g, '');
                     el.textContent = val ?? '';
                 }
+            } else if (!(isEditable || isDuplicate)) {
+                return;
             } else {
-                // ── Plain text display ──
-                el.innerHTML = '';
-                el.className = el.className.replace(/\s*kk-field-error\s*/g, '').replace(/\s*kk-field-corrected\s*/g, '');
                 el.textContent = val ?? '';
             }
         };
 
-        const setCheck = (id, checked) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            if (el.type === 'checkbox') {
-                el.checked = !!checked;
-                return;
-            }
-            const text = el.textContent.replace(/^[☐☑]\s*/, '');
-            el.textContent = (checked ? '☑ ' : '☐ ') + text;
-            el.style.fontWeight = checked ? '700' : '400';
-            el.style.color = checked ? '#1a1a1a' : '#6b7280';
-        };
+        if (isEditable || isDuplicate) {
+            setField('kkViewLastName', 'lastName', lastName || '—');
+            setField('kkViewFirstName', 'firstName', firstName || '—');
+            setField('kkViewMiddleName', 'middleName', middleName || '—');
+            setField('kkViewSuffix', 'suffix', suffix || 'None');
+            setField('kkViewBarangay', 'barangay', barangay || '—');
+            setField('kkViewPurokZone', 'purokZone', purokZone || '—');
+            setField('kkViewAge', 'age', age || '—');
+            setField('kkViewBirthday', 'birthday', birthday || '—');
+            setField('kkViewEmailAddress', 'emailAddress', emailAddress || '—');
+            setField('kkViewContactNumber', 'contactNumber', contactNumber || '—');
+        }
 
-        const matchesValue = (stored, candidates) => {
-            const normalized = (stored || '').trim().toLowerCase();
-            return candidates.some((candidate) => normalized === candidate.trim().toLowerCase());
-        };
-
-        const formatBirthdayDisplay = (value) => {
-            if (!value || value === '—') return '—';
-            const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-            if (iso) return `${iso[2]}/${iso[3]}/${iso[1]}`;
-            return value;
-        };
-
-        setVal('kkViewRespondentNumber', respondentNumber); setVal('kkViewDate', date);
-        setField('kkViewLastName',      'lastName',      lastName      || '—');
-        setField('kkViewFirstName',     'firstName',     firstName     || '—');
-        setField('kkViewMiddleName',    'middleName',    middleName    || '—');
-        setField('kkViewSuffix',        'suffix',        suffix        || 'None');
-        setVal('kkViewRegion',   region   || '—');
-        setVal('kkViewProvince', province || '—');
-        setVal('kkViewCity',     city     || '—');
-        setField('kkViewBarangay',      'barangay',      barangay      || '—');
-        setField('kkViewPurokZone',     'purokZone',     purokZone     || '—');
-        setCheck('kkViewSex_Male', sex === 'Male');
-        setCheck('kkViewSex_Female', sex === 'Female');
-        setField('kkViewAge',           'age',           age           || '—');
-        setField('kkViewBirthday',      'birthday',      formatBirthdayDisplay(birthday) || '—');
-        setField('kkViewEmailAddress',  'emailAddress',  emailAddress  || '—');
-        setField('kkViewContactNumber', 'contactNumber', contactNumber || '—');
-
-        // ── Inline mismatch highlights for Wrong Credentials ──
         const mismatches = request.evaluationNotes?.mismatches || [];
         const mismatchMap = {};
         mismatches.forEach(m => { mismatchMap[m.field] = m; });
@@ -408,7 +440,7 @@ function initializeKKProfilingRequestsUI() {
         // Remove old mismatch badges
         document.querySelectorAll('.kk-eval-mismatch-badge').forEach(el => el.remove());
 
-        if (status === 'Wrong Credentials' && mismatches.length > 0) {
+        if ((status === 'Wrong Credentials' || status === 'Wrong Credential') && mismatches.length > 0) {
             Object.entries(fieldToElId).forEach(([field, elId]) => {
                 if (!mismatchMap[field]) return;
                 const el = document.getElementById(elId);
@@ -432,7 +464,7 @@ function initializeKKProfilingRequestsUI() {
             // We'll show an inline error note below the civil status block
             let csErrEl = document.getElementById('kkViewCS_ErrorNote');
             if (!csErrEl) {
-                const csOptions = document.querySelector('.kk-qs-demo-options.kk-qs-options-2col');
+                const csOptions = document.querySelector('.kkp-demo-options-2col');
                 if (csOptions) {
                     csErrEl = document.createElement('div');
                     csErrEl.id = 'kkViewCS_ErrorNote';
@@ -453,107 +485,57 @@ function initializeKKProfilingRequestsUI() {
             if (csErrEl) csErrEl.style.display = 'none';
         }
 
-        const csMap = { kkViewCS_Single:'Single', kkViewCS_Married:'Married', kkViewCS_Widowed:'Widowed', kkViewCS_Divorced:'Divorced', kkViewCS_Separated:'Separated', kkViewCS_Annulled:'Annulled', kkViewCS_Unknown:'Unknown', kkViewCS_Livein:'Live-in' };
-        Object.entries(csMap).forEach(([id, val]) => setCheck(id, civilStatus === val));
-        const yagMap = { kkViewYAG_Child:'Child Youth (15-17 yrs old)', kkViewYAG_Core:'Core Youth (18-24 yrs old)', kkViewYAG_Young:'Young Adult (15-30 yrs old)' };
-        Object.entries(yagMap).forEach(([id, val]) => setCheck(id, youthAgeGroup === val));
-        const ebMap = {
-            kkViewEB_ElemLevel: ['Elementary Level'],
-            kkViewEB_ElemGrad: ['Elementary Grad'],
-            kkViewEB_HSLevel: ['High School Level', 'High school level'],
-            kkViewEB_HSGrad: ['High School Grad', 'High school Grad'],
-            kkViewEB_VocGrad: ['Vocational Grad'],
-            kkViewEB_ColLevel: ['College Level'],
-            kkViewEB_ColGrad: ['College Grad'],
-            kkViewEB_MasLevel: ['Masters Level'],
-            kkViewEB_MasGrad: ['Masters Grad'],
-            kkViewEB_DocLevel: ['Doctorate Level'],
-            kkViewEB_DocGrad: ['Doctorate Graduate'],
-        };
-        Object.entries(ebMap).forEach(([id, vals]) => setCheck(id, matchesValue(educationalBackground, vals)));
-        const ycMap = {
-            kkViewYC_ISY: ['In School Youth', 'In school Youth'],
-            kkViewYC_OSY: ['Out of School Youth'],
-            kkViewYC_Working: ['Working Youth'],
-            kkViewYC_PWD: ['Person w/ Disability'],
-            kkViewYC_CICL: ['Children in Conflict w/ Law', 'Children In Conflict w/ Law'],
-            kkViewYC_IP: ['Indigenous People'],
-        };
-        Object.entries(ycMap).forEach(([id, vals]) => setCheck(id, matchesValue(youthClassification, vals)));
-        const wsMap = { kkViewWS_Employed:'Employed', kkViewWS_Unemployed:'Unemployed', kkViewWS_SelfEmployed:'Self-Employed', kkViewWS_Looking:'Currently looking for a Job', kkViewWS_NotInterested:'Not Interested Looking for a Job' };
-        Object.entries(wsMap).forEach(([id, val]) => setCheck(id, workStatus === val));
-
-        setCheck('kkViewSKV_Yes', registeredSKVoter === 'Yes'); setCheck('kkViewSKV_No', registeredSKVoter === 'No');
-        setCheck('kkViewNV_Yes', registeredNationalVoter === 'Yes'); setCheck('kkViewNV_No', registeredNationalVoter === 'No');
-        setCheck('kkViewVH_Yes', votingHistory === 'Yes'); setCheck('kkViewVH_No', votingHistory === 'No');
-        setCheck('kkViewKK_Yes', attendedKKAssembly === 'Yes'); setCheck('kkViewKK_No', attendedKKAssembly === 'No');
-        setCheck('kkViewKKTimes_12', kkTimes === '1-2 Times');
-        setCheck('kkViewKKTimes_34', kkTimes === '3-4 Times');
-        setCheck('kkViewKKTimes_5', kkTimes === '5 and above');
-        const normalizedReason = (kkReason || '').trim();
-        setCheck('kkViewVR_NoKK',
-            normalizedReason === 'There was no KK Assembly Meeting'
-            || normalizedReason === 'There was no KK Assembly');
-        setCheck('kkViewVR_NotInt',
-            normalizedReason === 'Not interested to Attend'
-            || normalizedReason === 'Not Interested to Attend');
-        setVal('kkViewFacebookAccount', facebookAccount || '—');
-        setCheck('kkViewGC_Yes', willingToJoinGroupChat === 'Yes'); setCheck('kkViewGC_No', willingToJoinGroupChat === 'No');
-
-        const logoEl = document.getElementById('kkViewBarangayLogo');
-        if (logoEl && request.barangayLogoUrl) {
-            logoEl.src = request.barangayLogoUrl;
-            logoEl.alt = `${barangay || 'Barangay'} SK Logo`;
-        }
-
-        const sigNameEl = document.getElementById('kkViewSignatureName');
-        const sigPreview = document.getElementById('kkViewSignaturePreview');
-        const sigOverlay = document.getElementById('kkViewSignatureOverlay');
-        const nameParts = [firstName, middleName ? middleName.charAt(0) + '.' : null, lastName, suffix && suffix !== 'None' ? suffix : null].filter(Boolean);
-        const printedName = nameParts.join(' ') || '—';
-        if (sigNameEl) sigNameEl.textContent = printedName;
-        if (sigPreview && sigOverlay) {
-            if (signature && signature.startsWith('data:image')) {
-                sigPreview.src = signature;
-                sigOverlay.style.display = 'flex';
-            } else {
-                sigPreview.removeAttribute('src');
-                sigOverlay.style.display = 'none';
-            }
-        }
-
-        const rejectionWrap = document.getElementById('kkViewRejectionWrap');
-        const rejectionText = document.getElementById('kkViewRejectionText');
-        if (rejectionWrap && rejectionText) {
-            const isRejected = registrationStatus === 'rejected' || status === 'rejected';
-
-            if (isRejected && rejectionReason) {
-                rejectionWrap.style.display = 'block';
-                rejectionText.style.whiteSpace = 'pre-line';
-                rejectionText.textContent = rejectionReason;
-            } else {
-                rejectionWrap.style.display = 'none';
-                rejectionText.textContent = '';
-            }
-        }
-
-        // Show/hide inline save button
         if (!skipErrorPanel) updateInlineSaveBtn(request);
 
-        // Hide the old bottom error panel — errors are now inline on the form
         const errorsWrap = document.getElementById('kkViewCensusErrorsWrap');
         if (errorsWrap) errorsWrap.style.display = 'none';
 
-        // Remove any leftover bottom duplicate panel (errors are now inline)
         const oldDupPanel = document.getElementById('kkViewDuplicatePanel');
         if (oldDupPanel) oldDupPanel.remove();
+    }
+
+    function showEvaluationStatusBanner(request) {
+        const banner = document.getElementById('kkViewEvaluationBanner');
+        if (!banner) {
+            return;
+        }
+
+        const status = request.status || request.evaluation_status || '';
+        const notes = request.evaluationNotes?.message || '';
+
+        if (!status || status === 'New Applicant' || status === 'New Kabataan') {
+            banner.hidden = true;
+            banner.textContent = '';
+            banner.className = 'kk-view-evaluation-banner';
+            return;
+        }
+
+        banner.hidden = false;
+        banner.className = 'kk-view-evaluation-banner';
+
+        if (status === 'Duplicate') {
+            banner.classList.add('is-duplicate');
+            banner.textContent = notes || 'Duplicate registration detected for this applicant.';
+        } else if (status === 'Wrong Credentials' || status === 'Wrong Credential') {
+            banner.classList.add('is-warning');
+            banner.textContent = notes || 'Some fields do not match census records.';
+        } else if (status === 'Not Profiled') {
+            banner.classList.add('is-pending');
+            banner.textContent = notes || 'Pending review — not yet matched to KK profiling history.';
+        } else if (status === 'ID Verified' || status === 'Auto Approved') {
+            banner.classList.add('is-success');
+            banner.textContent = notes || 'Identity verification passed (name and barangay matched on uploaded ID).';
+        } else {
+            banner.classList.add('is-pending');
+            banner.textContent = notes || status;
+        }
     }
 
     // Renders or updates the inline "Save Corrections" button inside the form
     function updateInlineSaveBtn(request) {
         const errors = request.censusErrors || [];
         const fixedFields = request._fixedFields || new Set();
-        const isEditable = (request.status === 'Wrong Credential') && errors.length > 0;
+        const isEditable = (request.status === 'Wrong Credential' || request.status === 'Wrong Credentials') && errors.length > 0;
 
         let saveRow = document.getElementById('kkInlineSaveRow');
 
@@ -654,15 +636,21 @@ function initializeKKProfilingRequestsUI() {
     // Wire toggle buttons after modals exist in DOM
     wireModalToggle(viewModal);
 
+    document.querySelectorAll('.kk-profiling-view-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            switchKkViewTab(tab.dataset.kkViewTab || 'profile');
+        });
+    });
+
     tbody.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
         const action = btn.getAttribute('data-action');
-        const id = parseInt(btn.getAttribute('data-id') || '', 10);
-        if (!action || Number.isNaN(id)) return;
-        const request = requests.find((r) => r.id === id);
+        const rawId = btn.getAttribute('data-id');
+        if (!action || rawId === null || rawId === '') return;
+        const request = findRequestById(rawId);
         if (!request) return;
-        activeRequestId = id;
+        activeRequestId = request.id;
         if (action === 'view') {
             resetModalMaximize(viewModal);
             // Reset correction state for a fresh open
@@ -730,7 +718,7 @@ function initializeKKProfilingRequestsUI() {
             const target = e.target;
             if (target === modal || target.hasAttribute('data-modal-close')) {
                 closeModal(modal);
-                if (modal === viewModal) closeModalResetMax(viewModal, viewModalBox, viewToggle);
+                if (modal === viewModal) resetModalMaximize(viewModal);
             }
         });
     });
@@ -877,7 +865,7 @@ function initializeKKProfilingRequestsUI() {
             (response.data || []).forEach((r, i) => {
                 requests.push({
                     id: r.id,
-                    respondentNumber: r.respondent_display
+                    respondentNumber: r.respondent_number || r.respondent_display
                         || formatRespondentDisplay(r.respondent_sequence, r.respondent_number),
                     respondentSequence: r.respondent_sequence,
                     date: r.submitted_at || '—',
@@ -915,6 +903,8 @@ function initializeKKProfilingRequestsUI() {
                     province: r.province || 'Laguna',
                     city: r.city || 'Santa Cruz',
                     barangayLogoUrl: r.barangay_logo_url || null,
+                    supportingDocuments: r.supporting_documents || [],
+                    idVerification: r.id_verification || null,
                 });
             });
 

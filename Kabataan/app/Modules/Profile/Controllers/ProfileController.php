@@ -398,15 +398,15 @@ class ProfileController extends Controller
         }
 
         $request->validate([
-            'document_type' => ['required', 'in:school_id,barangay_clearance'],
+            'document_type' => ['required', 'in:school_id,national_id'],
             'school_id' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
-            'barangay_clearance' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'national_id' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
         ]);
 
         $documentType = (string) $request->input('document_type');
         $file = $documentType === 'school_id'
             ? $request->file('school_id')
-            : $request->file('barangay_clearance');
+            : $request->file('national_id');
 
         if (! $file) {
             return response()->json([

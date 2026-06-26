@@ -58,7 +58,7 @@ class ProfileSupportingDocumentsService
             ]);
         }
 
-        if (! in_array($documentType, ['school_id', 'barangay_clearance'], true)) {
+        if (! in_array($documentType, ['school_id', 'national_id', 'barangay_clearance'], true)) {
             throw ValidationException::withMessages([
                 'document_type' => ['Invalid document type selected.'],
             ]);
@@ -88,7 +88,7 @@ class ProfileSupportingDocumentsService
             'storage' => $uploaded['storage'],
         ];
 
-        DB::transaction(function () use ($registration, $document, $existingEntry) {
+        DB::transaction(function () use ($registration, $document) {
             $formData = $registration->form_data ?? [];
             $formData['supporting_documents'] = [$document];
 
@@ -101,7 +101,7 @@ class ProfileSupportingDocumentsService
             if ($surveyResponse) {
                 $surveyResponse->update(['supporting_documents' => [$document]]);
             } else {
-                (new KkSurveyResponseService())->syncFromRegistration($registration->fresh(), 'pending');
+                (new KkSurveyResponseService)->syncFromRegistration($registration->fresh(), 'pending');
             }
         });
 
