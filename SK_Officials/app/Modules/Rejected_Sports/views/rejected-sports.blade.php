@@ -10,6 +10,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
         'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
         'app/Modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css'
     ])
@@ -31,9 +32,6 @@
                 <h1 class="page-title">Rejected Sports Applications</h1>
                 <p class="page-subtitle">Sports applications that were revoked or rejected. Restore to return them to the active requests queue.</p>
             </div>
-            <div class="page-header-right">
-                <input type="text" id="rejectedSportsSearch" class="filter-input" placeholder="Search by name or sport…">
-            </div>
         </section>
 
         <div class="module-stats-grid" id="rspStatsRow"></div>
@@ -41,6 +39,23 @@
         <div class="restore-success-banner" id="rspRestoreBanner" style="display:none;">
             <span class="restore-banner-icon">✓</span>
             <span class="restore-banner-text" id="rspRestoreBannerText"></span>
+        </div>
+
+        <div class="schol-filters-row saf-sports-filters" style="margin-bottom:14px;">
+            <select id="rspSportFilter" class="schol-filter-input" style="min-width:150px;">
+                <option value="all">All Sports</option>
+                <option value="basketball">Basketball</option>
+                <option value="volleyball">Volleyball</option>
+                <option value="other">Other</option>
+            </select>
+            <div class="schol-search-wrap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="rspTeamSearch" class="schol-search-input" placeholder="Filter by team name...">
+            </div>
+            <div class="schol-search-wrap" style="flex:1;min-width:200px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="rejectedSportsSearch" class="schol-search-input" placeholder="Search by name or program...">
+            </div>
         </div>
 
         <div class="filter-tabs-row filter-tabs-row--with-archive">
@@ -64,7 +79,8 @@
                             <tr>
                                 <th>Full Name<div class="column-hint">LN, FN, MN</div></th>
                                 <th>Sport</th>
-                                <th>Division</th>
+                                <th>Team</th>
+                                <th>Program</th>
                                 <th>Rejection Reason</th>
                                 <th>Rejected Date</th>
                                 <th>Rejected Time</th>

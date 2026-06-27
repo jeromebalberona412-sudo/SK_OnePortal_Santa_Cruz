@@ -35,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const tbody = document.getElementById('sportsTableBody');
     const searchInput = document.getElementById('scholSearch');
+    const teamNameSearch = document.getElementById('teamNameSearch');
+    const dateFilter = document.getElementById('scholFilter');
+    const sportTypeFilter = document.getElementById('sportTypeFilter');
     const statTotal = document.getElementById('statTotal');
     const statPending = document.getElementById('statPending');
     const statApproved = document.getElementById('statApproved');
@@ -47,19 +50,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnApprove = document.getElementById('btnApprove');
     const btnReject = document.getElementById('btnReject');
     const rejectReasonModal = document.getElementById('rejectReasonModal');
-    const rejectReasonClose = document.getElementById('rejectReasonClose');
     const rejectReasonCancel = document.getElementById('rejectReasonCancel');
     const rejectReasonConfirm = document.getElementById('rejectReasonConfirm');
     const rejectOtherCheckbox = document.getElementById('rejectReasonOtherCheckbox');
     const rejectOtherField = document.getElementById('rejectReasonOtherField');
     const rejectOtherReason = document.getElementById('rejectReasonOtherText');
+    const rejectConfirmText = document.getElementById('rejectReasonConfirmText');
+    const rejectConfirmError = document.getElementById('rejectReasonConfirmError');
+    const approveConfirmModal = document.getElementById('approveConfirmModal');
+    const approveConfirmClose = document.getElementById('approveConfirmClose');
+    const approveConfirmCancel = document.getElementById('approveConfirmCancel');
+    const approveConfirmBtn = document.getElementById('approveConfirmBtn');
     const sportsToast = document.getElementById('sportsToast');
     const sportsToastMsg = document.getElementById('sportsToastMsg');
 
     let applications = [];
     let summary = { total: 0, pending: 0, approved: 0, rejected: 0 };
     let currentApplicationId = null;
+    let pendingApproveId = null;
     let isReviewing = false;
+    const applicationDetailsCache = new Map();
 
     function broadcastSportsEvent(type, applicationId) {
         const payload = {
@@ -98,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setTimeout(() => {
             applications = applications.filter((app) => Number(app.id) !== Number(id));
+            applicationDetailsCache.delete(Number(id));
             renderTable();
         }, row ? 180 : 0);
     }
@@ -121,12 +132,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showToast(message, type = 'success') {
-        if (!sportsToast || !sportsToastMsg) return;
-        sportsToastMsg.textContent = message;
+        if (!sportsToast) return;
+        if (sportsToastMsg) sportsToastMsg.textContent = message;
+        sportsToast.className = 'schol-toast schol-toast-show' + (type === 'error' ? ' schol-toast-error' : '');
         sportsToast.style.display = 'flex';
-        sportsToast.style.background = type === 'error' ? '#ef4444' : '#22c55e';
         clearTimeout(showToast._timer);
-        showToast._timer = setTimeout(() => { sportsToast.style.display = 'none'; }, 2800);
+        showToast._timer = setTimeout(() => {
+            sportsToast.classList.remove('schol-toast-show');
+            setTimeout(() => { sportsToast.style.display = 'none'; }, 300);
+        }, 3000);
     }
 
     async function apiFetch(url, options = {}) {
@@ -196,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderFormAnswers(customAnswers, customQuestions = []) {
         const answersById = {};
         (customAnswers || []).forEach((item) => {
+            if (!item || typeof item !== 'object') return;
             const id = String(item.question_id ?? item.id ?? '');
             if (id) answersById[id] = item;
         });
@@ -211,9 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             })
             : (customAnswers || []).map((item, index) => ({
-                question: item.question_label || item.label || `Question ${index + 1}`,
-                question_type: item.question_type || '',
-                answer: item.answer ?? '—',
+                question: item?.question_label || item?.label || `Question ${index + 1}`,
+                question_type: item?.question_type || '',
+                answer: item?.answer ?? '—',
             }));
 
         if (!items.length) {
@@ -266,13 +281,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
     }
 
-    function formatRequirementsCell(app) {
-        const labels = app.document_labels || [];
-        if (labels.length) {
-            return labels.map((label) => escapeHtml(label)).join(', ');
-        }
-        const count = app.documents_count ?? 0;
-        return count > 0 ? `${count} file(s)` : '0 file(s)';
+    function sportBadgeClass(sportKey) {
+        const key = String(sportKey || '').toLowerCase();
+        return key === 'other' ? 'saf-sport-badge is-other' : 'saf-sport-badge';
     }
 
     function statusClass(status) {
@@ -284,14 +295,101 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function parseSubmittedDate(app) {
+        if (!app?.created_at) return null;
+        const date = new Date(app.created_at);
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function matchesDateFilter(app) {
+        const filter = dateFilter?.value || 'all';
+        if (filter === 'all') return true;
+
+        const submitted = parseSubmittedDate(app);
+        if (!submitted) return true;
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        if (filter === 'recent') {
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return submitted >= weekAgo;
+        }
+
+        if (filter === 'monthly') {
+            return submitted.getFullYear() === now.getFullYear() && submitted.getMonth() === now.getMonth();
+        }
+
+        if (filter === 'yearly') {
+            return submitted.getFullYear() === now.getFullYear();
+        }
+
+        return true;
+    }
+
     function filteredApplications() {
         const query = (searchInput?.value || '').trim().toLowerCase();
-        if (!query) return applications;
-        return applications.filter((app) =>
-            app.full_name?.toLowerCase().includes(query)
-            || app.program_name?.toLowerCase().includes(query)
-            || app.contact_number?.includes(query)
-        );
+        const teamQuery = (teamNameSearch?.value || '').trim().toLowerCase();
+        const sportFilter = (sportTypeFilter?.value || 'all').toLowerCase();
+
+        return applications.filter((app) => {
+            if (!matchesDateFilter(app)) return false;
+
+            const appSportKey = String(app.sport_key || 'other').toLowerCase();
+            if (sportFilter !== 'all' && appSportKey !== sportFilter) return false;
+
+            const teamName = String(app.team_name || '').toLowerCase();
+            if (teamQuery && !teamName.includes(teamQuery)) return false;
+
+            if (!query) return true;
+
+            return app.full_name?.toLowerCase().includes(query)
+                || app.program_name?.toLowerCase().includes(query)
+                || app.sport_label?.toLowerCase().includes(query)
+                || teamName.includes(query)
+                || app.contact_number?.includes(query);
+        });
+    }
+
+    function canReviewApp(app) {
+        return app?.can_review !== false;
+    }
+
+    function reviewBlockedMessage(app) {
+        const endLabel = app?.schedule_end_date
+            ? new Date(app.schedule_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+            : 'the application period ends';
+        return `Applications can only be approved or rejected after the application period ends on ${endLabel}.`;
+    }
+
+    function renderActionMenuCell(app) {
+        const isPending = app.status === 'pending';
+        const canReview = canReviewApp(app);
+        const approveReject = isPending && canReview ? `
+            <button type="button" class="row-actions-item row-actions-item-approve" data-action="approve" data-id="${app.id}" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Approve</span>
+            </button>
+            <button type="button" class="row-actions-item row-actions-item-danger" data-action="reject" data-id="${app.id}" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <span>Reject</span>
+            </button>
+        ` : '';
+
+        return `
+            <td class="col-actions">
+                <div class="row-actions-menu">
+                    <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+                    <div class="row-actions-dropdown" role="menu">
+                        <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-id="${app.id}" role="menuitem">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <span>View</span>
+                        </button>
+                        ${approveReject}
+                    </div>
+                </div>
+            </td>`;
     }
 
     function renderTable() {
@@ -299,36 +397,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const rows = filteredApplications();
 
         if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="saf-table-empty">No sports applications yet.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="saf-table-empty">No sports applications found.</td></tr>';
             return;
         }
 
         tbody.innerHTML = rows.map((app) => `
             <tr data-app-id="${app.id}">
                 <td>${escapeHtml(app.full_name)}</td>
+                <td><span class="${sportBadgeClass(app.sport_key)}">${escapeHtml(app.sport_label || '—')}</span></td>
+                <td><span class="saf-team-name">${escapeHtml(app.team_name || '—')}</span></td>
                 <td>${escapeHtml(app.program_name || '—')}</td>
                 <td>${escapeHtml(app.age ?? '—')}</td>
-                <td>${formatRequirementsCell(app)}</td>
                 <td>${escapeHtml(app.date_submitted)}</td>
                 <td><span class="schol-pill ${statusClass(app.status)}">${escapeHtml(app.status_label)}</span></td>
-                <td class="col-actions">
-                    <div class="prog-tbl-actions">
-                        <button type="button" class="prog-btn prog-btn-view" data-view="${app.id}">View</button>
-                    </div>
-                </td>
+                ${renderActionMenuCell(app)}
             </tr>
         `).join('');
-
-        tbody.querySelectorAll('[data-view]').forEach((btn) => {
-            btn.addEventListener('click', () => openViewModal(btn.getAttribute('data-view')));
-        });
     }
 
-    function renderStats(summary) {
-        if (statTotal) statTotal.textContent = String(summary.total ?? 0);
-        if (statPending) statPending.textContent = String(summary.pending ?? 0);
-        if (statApproved) statApproved.textContent = String(summary.approved ?? 0);
-        if (statRejected) statRejected.textContent = String(summary.rejected ?? 0);
+    function renderStats(stats) {
+        if (statTotal) statTotal.textContent = String(stats.total ?? 0);
+        if (statPending) statPending.textContent = String(stats.pending ?? 0);
+        if (statApproved) statApproved.textContent = String(stats.approved ?? 0);
+        if (statRejected) statRejected.textContent = String(stats.rejected ?? 0);
     }
 
     async function loadApplications(showOverlay = false) {
@@ -337,11 +428,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await apiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}&status=pending`);
             applications = Array.isArray(data.data) ? data.data : [];
             summary = data.summary || summary;
+            applicationDetailsCache.clear();
             renderStats(summary);
             renderTable();
         } finally {
             if (showOverlay && typeof window.hideLoading === 'function') window.hideLoading();
         }
+    }
+
+    async function fetchApplicationDetails(id) {
+        const numericId = Number(id);
+        if (applicationDetailsCache.has(numericId)) {
+            return applicationDetailsCache.get(numericId);
+        }
+
+        const data = await apiFetch(`/api/program-applications/${numericId}?letter=${PROGRAM_LETTER}`);
+        const app = data?.data ?? null;
+        if (!app) {
+            throw new Error('Application details not found.');
+        }
+
+        applicationDetailsCache.set(numericId, app);
+        return app;
     }
 
     function setReviewButtonsLoading(loading) {
@@ -353,12 +461,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (btnReject) btnReject.disabled = loading;
         if (rejectReasonConfirm) {
-            rejectReasonConfirm.disabled = loading;
             if (loading) {
                 rejectReasonConfirm.dataset.defaultHtml = rejectReasonConfirm.innerHTML;
                 rejectReasonConfirm.innerHTML = '<span class="schol-save-spinner"></span> Rejecting...';
+                rejectReasonConfirm.disabled = true;
+                rejectReasonConfirm.classList.remove('is-enabled');
+                rejectReasonConfirm.classList.add('is-disabled');
             } else {
-                rejectReasonConfirm.innerHTML = rejectReasonConfirm.dataset.defaultHtml || 'Confirm Rejection';
+                rejectReasonConfirm.innerHTML = rejectReasonConfirm.dataset.defaultHtml || 'Reject';
+                syncRejectConfirmButton();
             }
         }
     }
@@ -367,6 +478,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!viewModalBody || !app) return;
 
         const program = app.schedule_program || {};
+        const sportsDetails = program.sports_details || {};
+        const sportLabel = app.sport_label || sportsDetails.sport_label || 'Sports';
         const docsHtml = renderUploadedDocumentsSection(app.required_documents);
         const kkProfileHtml = renderKkProfileSection(app);
         const answersHtml = renderFormAnswers(app.custom_answers, program.custom_questions || []);
@@ -377,11 +490,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 16px;">Application Summary</h4>
                 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
                     <div><strong>Applicant</strong><br>${escapeHtml(app.full_name)}</div>
+                    <div><strong>Sport</strong><br>${escapeHtml(sportLabel)}</div>
+                    <div><strong>Team</strong><br>${escapeHtml(app.team_name || '—')}</div>
                     <div><strong>Program</strong><br>${escapeHtml(app.program_name || '—')}</div>
                     <div><strong>Age</strong><br>${escapeHtml(app.age ?? '—')}</div>
                     <div><strong>Status</strong><br>${escapeHtml(app.status_label)}</div>
                     <div><strong>Contact</strong><br>${escapeHtml(app.contact_number || '—')}</div>
                     <div><strong>Email</strong><br>${escapeHtml(app.email || '—')}</div>
+                    <div><strong>Submitted</strong><br>${escapeHtml(app.date_submitted || '—')} ${escapeHtml(app.submitted_time || '')}</div>
                 </div>
             </div>
             <h4 style="margin:0 0 12px;">Sports Application Responses</h4>
@@ -391,12 +507,27 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const isPending = app.status === 'pending';
-        if (btnApprove) btnApprove.style.display = isPending ? 'inline-flex' : 'none';
-        if (btnReject) btnReject.style.display = isPending ? 'inline-flex' : 'none';
+        const canReview = canReviewApp(app);
+        if (btnApprove) {
+            btnApprove.style.display = isPending && canReview ? 'inline-flex' : 'none';
+            btnApprove.disabled = !canReview;
+        }
+        if (btnReject) {
+            btnReject.style.display = isPending && canReview ? 'inline-flex' : 'none';
+            btnReject.disabled = !canReview;
+        }
+
+        if (isPending && !canReview) {
+            viewModalBody.insertAdjacentHTML('afterbegin', `
+                <div style="margin-bottom:16px;padding:12px 16px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;color:#9a3412;font-size:13px;line-height:1.5;">
+                    ${escapeHtml(reviewBlockedMessage(app))}
+                </div>`);
+        }
     }
 
     async function openViewModal(id) {
-        currentApplicationId = id;
+        const numericId = Number(id);
+        currentApplicationId = numericId;
         if (!viewModal || !viewModalBody) return;
 
         viewModalBody.innerHTML = '<p style="padding:24px;color:#6b7280;">Loading application details...</p>';
@@ -405,10 +536,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnReject) btnReject.style.display = 'none';
 
         try {
-            const data = await apiFetch(`/api/program-applications/${id}?letter=${PROGRAM_LETTER}`);
-            renderViewModalContent(data.data);
+            const app = await fetchApplicationDetails(numericId);
+            renderViewModalContent(app);
         } catch (error) {
-            closeViewModal();
+            viewModalBody.innerHTML = `<p style="padding:24px;color:#b91c1c;">${escapeHtml(error.message || 'Failed to load application details.')}</p>`;
             showToast(error.message || 'Failed to load application.', 'error');
         }
     }
@@ -424,21 +555,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openRejectModal(id) {
-        currentApplicationId = id;
+        currentApplicationId = Number(id);
         if (rejectOtherReason) rejectOtherReason.value = '';
+        if (rejectConfirmText) rejectConfirmText.value = '';
+        if (rejectConfirmError) {
+            rejectConfirmError.style.display = 'none';
+            rejectConfirmError.textContent = '';
+        }
         if (rejectOtherField) rejectOtherField.style.display = 'none';
         document.querySelectorAll('.reject-reason-checkbox, #rejectReasonOtherCheckbox').forEach((input) => { input.checked = false; });
-        if (rejectReasonModal) rejectReasonModal.style.display = 'flex';
+        resetRejectConfirmButton();
+        if (rejectReasonModal) {
+            rejectReasonModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function resetRejectConfirmButton() {
+        if (!rejectReasonConfirm) return;
+        rejectReasonConfirm.disabled = true;
+        rejectReasonConfirm.classList.remove('is-enabled');
+        rejectReasonConfirm.classList.add('is-disabled');
+    }
+
+    function syncRejectConfirmButton() {
+        if (!rejectReasonConfirm) return;
+        const value = rejectConfirmText?.value?.trim() || '';
+        const matched = value === 'Confirm';
+        rejectReasonConfirm.disabled = !matched;
+        rejectReasonConfirm.classList.toggle('is-enabled', matched);
+        rejectReasonConfirm.classList.toggle('is-disabled', !matched);
+    }
+
+    function openApproveConfirmModal(id) {
+        pendingApproveId = Number(id);
+        if (approveConfirmModal) {
+            approveConfirmModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeApproveConfirmModal() {
+        pendingApproveId = null;
+        if (approveConfirmModal) approveConfirmModal.style.display = 'none';
+        if (!rejectReasonModal || rejectReasonModal.style.display === 'none') {
+            document.body.style.overflow = '';
+        }
+    }
+
+    function collectRejectionReasons() {
+        const reasons = [];
+        document.querySelectorAll('.reject-reason-checkbox:checked').forEach((el) => {
+            if (el.value) reasons.push(el.value);
+        });
+        const otherText = rejectOtherReason?.value?.trim() || '';
+        if (rejectOtherCheckbox?.checked) {
+            if (!otherText) return { error: 'Please specify the other rejection reason.' };
+            reasons.push(otherText);
+        }
+        if (!reasons.length) {
+            return { error: 'Please select a rejection reason.' };
+        }
+        if ((rejectConfirmText?.value?.trim() || '') !== 'Confirm') {
+            return { error: 'Please type Confirm to reject this application.' };
+        }
+        return { reasons, rejectionReason: otherText || reasons[0] };
     }
 
     function closeRejectModal() {
         if (rejectReasonModal) rejectReasonModal.style.display = 'none';
+        if (!approveConfirmModal || approveConfirmModal.style.display === 'none') {
+            document.body.style.overflow = '';
+        }
     }
 
     async function updateStatus(id, status, rejectionReasons = null, rejectionReason = null) {
         if (isReviewing) return;
         isReviewing = true;
         setReviewButtonsLoading(true);
+
+        const loadingMessage = status === 'approved'
+            ? 'Approving'
+            : (status === 'rejected' ? 'Rejecting' : null);
+        if (loadingMessage && typeof window.showLoading === 'function') {
+            window.showLoading(loadingMessage);
+        }
 
         try {
             await apiFetch(`/api/program-applications/${id}/status?letter=${PROGRAM_LETTER}`, {
@@ -450,19 +651,76 @@ document.addEventListener('DOMContentLoaded', () => {
                     letter: PROGRAM_LETTER,
                 }),
             });
-            showToast(status === 'approved' ? 'Application approved and moved to Approved Participants.' : 'Application rejected and moved to Rejected Sports.');
+            const successMessage = status === 'approved'
+                ? 'Application approved successfully!'
+                : 'Application rejected successfully!';
+            showToast(successMessage);
             closeViewModal();
             closeRejectModal();
+            closeApproveConfirmModal();
             bumpSummaryAfterReview(status);
             removeApplicationFromTable(id);
             broadcastSportsEvent(status === 'approved' ? 'approved' : 'rejected', id);
         } finally {
             isReviewing = false;
             setReviewButtonsLoading(false);
+            if (typeof window.hideLoading === 'function') {
+                window.hideLoading();
+            }
         }
     }
 
-    if (searchInput) searchInput.addEventListener('input', renderTable);
+    function bindTableActions() {
+        if (!tbody || tbody.dataset.sportsActionsBound === '1') return;
+        tbody.dataset.sportsActionsBound = '1';
+
+        if (typeof window.bindRowActionsTable === 'function') {
+            window.bindRowActionsTable(tbody);
+        }
+
+        tbody.addEventListener('click', async (event) => {
+            const actionBtn = event.target.closest('.row-actions-item[data-action]');
+            if (!actionBtn) return;
+
+            const action = actionBtn.getAttribute('data-action');
+            const id = Number(actionBtn.getAttribute('data-id'));
+            if (!id) return;
+
+            if (typeof window.closeAllRowActionMenus === 'function') {
+                window.closeAllRowActionMenus();
+            }
+
+            if (action === 'view') {
+                openViewModal(id);
+                return;
+            }
+
+            if (action === 'approve') {
+                const record = applications.find((item) => Number(item.id) === id);
+                if (record && !canReviewApp(record)) {
+                    showToast(reviewBlockedMessage(record), 'error');
+                    return;
+                }
+                openApproveConfirmModal(id);
+                return;
+            }
+
+            if (action === 'reject') {
+                const record = applications.find((item) => Number(item.id) === id);
+                if (record && !canReviewApp(record)) {
+                    showToast(reviewBlockedMessage(record), 'error');
+                    return;
+                }
+                openRejectModal(id);
+            }
+        });
+    }
+
+    [searchInput, teamNameSearch, dateFilter, sportTypeFilter].forEach((el) => {
+        el?.addEventListener('input', renderTable);
+        el?.addEventListener('change', renderTable);
+    });
+
     if (viewClose) viewClose.addEventListener('click', closeViewModal);
     if (viewModal) viewModal.addEventListener('click', (e) => { if (e.target === viewModal) closeViewModal(); });
 
@@ -483,14 +741,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (btnApprove) {
-        btnApprove.addEventListener('click', async () => {
-            if (!currentApplicationId || isReviewing) return;
-            try {
-                await updateStatus(currentApplicationId, 'approved');
-            } catch (error) {
-                showToast(error.message || 'Failed to approve application.', 'error');
+    if (rejectConfirmText) {
+        rejectConfirmText.addEventListener('input', () => {
+            if (rejectConfirmError) {
+                rejectConfirmError.style.display = 'none';
+                rejectConfirmError.textContent = '';
             }
+            syncRejectConfirmButton();
+        });
+    }
+
+    if (btnApprove) {
+        btnApprove.addEventListener('click', () => {
+            if (!currentApplicationId || isReviewing) return;
+            const record = applicationDetailsCache.get(currentApplicationId)
+                || applications.find((item) => Number(item.id) === Number(currentApplicationId));
+            if (record && !canReviewApp(record)) {
+                showToast(reviewBlockedMessage(record), 'error');
+                return;
+            }
+            openApproveConfirmModal(currentApplicationId);
         });
     }
 
@@ -501,20 +771,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (rejectReasonClose) rejectReasonClose.addEventListener('click', closeRejectModal);
     if (rejectReasonCancel) rejectReasonCancel.addEventListener('click', closeRejectModal);
+    if (rejectReasonModal) {
+        rejectReasonModal.addEventListener('click', (event) => {
+            if (event.target === rejectReasonModal) closeRejectModal();
+        });
+    }
+    if (approveConfirmClose) approveConfirmClose.addEventListener('click', closeApproveConfirmModal);
+    if (approveConfirmCancel) approveConfirmCancel.addEventListener('click', closeApproveConfirmModal);
+    if (approveConfirmModal) {
+        approveConfirmModal.addEventListener('click', (event) => {
+            if (event.target === approveConfirmModal) closeApproveConfirmModal();
+        });
+    }
+    if (approveConfirmBtn) {
+        approveConfirmBtn.addEventListener('click', async () => {
+            if (!pendingApproveId || isReviewing) return;
+            try {
+                await updateStatus(pendingApproveId, 'approved');
+                closeApproveConfirmModal();
+            } catch (error) {
+                showToast(error.message || 'Failed to approve application.', 'error');
+            }
+        });
+    }
     if (rejectReasonConfirm) {
+        resetRejectConfirmButton();
         rejectReasonConfirm.addEventListener('click', async () => {
-            const reasons = Array.from(document.querySelectorAll('.reject-reason-checkbox:checked, #rejectReasonOtherCheckbox:checked'))
-                .map((el) => el.value);
-            const other = rejectOtherReason?.value?.trim();
-            if (other) reasons.push(other);
-            if (!reasons.length) {
-                showToast('Please select or enter a rejection reason.', 'error');
+            const collected = collectRejectionReasons();
+            if (collected.error) {
+                if (rejectConfirmError) {
+                    rejectConfirmError.textContent = collected.error;
+                    rejectConfirmError.style.display = 'block';
+                } else {
+                    showToast(collected.error, 'error');
+                }
                 return;
             }
             try {
-                await updateStatus(currentApplicationId, 'rejected', reasons, other || reasons[0]);
+                await updateStatus(
+                    currentApplicationId,
+                    'rejected',
+                    collected.reasons,
+                    collected.rejectionReason,
+                );
             } catch (error) {
                 showToast(error.message || 'Failed to reject application.', 'error');
             }
@@ -525,13 +825,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (payload.type === 'restored') loadApplications(false).catch(() => {});
     });
 
+    bindTableActions();
+
     (async () => {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="saf-table-empty">Loading applications…</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="saf-table-empty">Loading applications…</td></tr>';
         try {
             await loadApplications(false);
         } catch (error) {
             showToast(error.message || 'Failed to load applications.', 'error');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="saf-table-empty">Unable to load applications.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="saf-table-empty">Unable to load applications.</td></tr>';
         }
     })();
 });

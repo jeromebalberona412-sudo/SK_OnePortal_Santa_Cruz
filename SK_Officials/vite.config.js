@@ -105,6 +105,7 @@ export default defineConfig({
                 'app/Modules/Program_Management/assets/js/sports/sports_application_form.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_requests.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_list.js',
+                'app/Modules/Program_Management/assets/js/sports/sports-age-classifications.js',
                 'app/Modules/Program_Management/assets/js/sports/sports-schedule.js',
                 'app/Modules/Sports_Programs/assets/css/archived-sports-programs.css',
                 'app/Modules/Sports_Programs/assets/js/archived-sports-programs.js',

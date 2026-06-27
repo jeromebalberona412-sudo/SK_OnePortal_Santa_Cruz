@@ -1257,6 +1257,31 @@ body.youth-profile {
     transform: translateX(4px);
 }
 
+.program-item--clickable {
+    cursor: pointer;
+}
+
+.program-item--clickable:focus-visible {
+    outline: 2px solid #0450a8;
+    outline-offset: 2px;
+}
+
+.program-item-chevron {
+    flex-shrink: 0;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+}
+
+.program-item-chevron svg {
+    width: 20px;
+    height: 20px;
+}
+
+.program-item--clickable:hover .program-item-chevron {
+    color: #0450a8;
+}
+
 .program-icon-wrapper {
     flex-shrink: 0;
 }

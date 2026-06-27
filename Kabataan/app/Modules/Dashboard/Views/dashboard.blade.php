@@ -16,6 +16,7 @@
         'app/Modules/Layout/assets/css/kabataan-bootstrap.css',
         'app/Modules/Layout/assets/css/kabataan-responsive.css',
         'app/Modules/Layout/assets/css/kabataan-header.css',
+        'app/Modules/Layout/assets/css/programs-drawer.css',
         'app/Modules/Layout/assets/css/kabataan-logout.css',
         'app/Modules/Layout/assets/js/kabataan-header.js',
         'app/Modules/Layout/assets/js/kabataan-logout.js',
@@ -522,43 +523,7 @@
     };
 
     window.closeSportsModal = function() {
-        document.getElementById('sportsModal').classList.remove('active');
-        const checkbox = document.getElementById('agreeTermsSports');
-        const content = document.getElementById('termsContentSports');
-        const toggle = document.getElementById('termsToggleSports');
-        const chevron = toggle?.querySelector('.chevron-icon');
-        if (checkbox) { checkbox.checked = false; toggleApplyButtonSports(); }
-        if (content) { content.classList.remove('expanded'); if (chevron) chevron.style.transform = 'rotate(0deg)'; }
-    };
-
-    window.toggleTermsSports = function() {
-        const content = document.getElementById('termsContentSports');
-        const toggle = document.getElementById('termsToggleSports');
-        const chevron = toggle.querySelector('.chevron-icon');
-        if (content.classList.contains('expanded')) {
-            content.classList.remove('expanded');
-            chevron.style.transform = 'rotate(0deg)';
-        } else {
-            content.classList.add('expanded');
-            chevron.style.transform = 'rotate(180deg)';
-        }
-    };
-
-    window.toggleApplyButtonSports = function() {
-        const checkbox = document.getElementById('agreeTermsSports');
-        const applyBtn = document.getElementById('applyNowBtnSports');
-        const note = applyBtn?.nextElementSibling;
-        if (checkbox && applyBtn) {
-            if (checkbox.checked) {
-                applyBtn.disabled = false;
-                applyBtn.classList.add('enabled');
-                if (note) note.style.display = 'none';
-            } else {
-                applyBtn.disabled = true;
-                applyBtn.classList.remove('enabled');
-                if (note) note.style.display = 'block';
-            }
-        }
+        document.getElementById('sportsModal')?.classList.remove('active');
     };
 
     document.getElementById('sportsModal')?.querySelector('.modal-overlay')?.addEventListener('click', closeSportsModal);

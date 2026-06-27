@@ -13,28 +13,16 @@
         </div>
         <span class="eval-stat-label">Total Evaluations</span>
     </div>
-    <div class="eval-stat-card eval-stat-orange">
-        <div class="eval-stat-top">
-            <span class="eval-stat-value" id="evalStatDraft">0</span>
-            <div class="eval-stat-icon eval-icon-orange">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
-            </div>
-        </div>
-        <span class="eval-stat-label">Draft</span>
-    </div>
     <div class="eval-stat-card eval-stat-green">
         <div class="eval-stat-top">
-            <span class="eval-stat-value" id="evalStatActive">0</span>
+            <span class="eval-stat-value" id="evalStatOpen">0</span>
             <div class="eval-stat-icon eval-icon-green">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>
             </div>
         </div>
-        <span class="eval-stat-label">Active</span>
+        <span class="eval-stat-label">Open</span>
     </div>
     <div class="eval-stat-card eval-stat-purple">
         <div class="eval-stat-top">
@@ -72,8 +60,7 @@
     <div class="eval-filter-group">
         <select id="evalFilterStatus" class="eval-filter-select" aria-label="Filter by status">
             <option value="">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
+            <option value="open">Open</option>
             <option value="closed">Closed</option>
         </select>
         <input type="text" id="evalSearchInput" class="eval-search-input" placeholder="Search evaluations..." aria-label="Search evaluations">
@@ -89,7 +76,7 @@
                     <th>Title</th>
                     <th>Program</th>
                     <th>Date Created</th>
-                    <th>Due Date</th>
+                    <th>Program Period</th>
                     <th>Status</th>
                     <th>Questions</th>
                     <th class="col-actions">Actions</th>
@@ -112,30 +99,28 @@
         <div class="sl-modal-body eval-create-modal-body">
             <form id="createEvalForm">
                 <input type="hidden" id="evalId">
+                <input type="hidden" id="evalAbyipProgramId">
 
                 <div class="eval-form-grid">
                     <div class="eval-form-field eval-form-full">
-                        <label for="evalTitle">Evaluation Title <span class="eval-required">*</span></label>
-                        <input type="text" id="evalTitle" class="eval-input" placeholder="e.g. Midterm Program Evaluation" required>
+                        <label>Evaluation Title</label>
+                        <div id="evalTitleDisplay" class="eval-input eval-readonly-field">Detecting program…</div>
                     </div>
 
                     <div class="eval-form-field">
-                        <label for="evalProgram">Linked Program</label>
-                        <select id="evalProgram" class="eval-input">
-                            <option value="">— General / No specific program —</option>
-                        </select>
+                        <label for="evalStartDate">Program Start Date</label>
+                        <input type="date" id="evalStartDate" class="eval-input eval-readonly-field" readonly tabindex="-1">
                     </div>
 
                     <div class="eval-form-field">
-                        <label for="evalDueDate">Due Date</label>
-                        <input type="date" id="evalDueDate" class="eval-input">
+                        <label for="evalEndDate">Program End Date</label>
+                        <input type="date" id="evalEndDate" class="eval-input eval-readonly-field" readonly tabindex="-1">
                     </div>
 
                     <div class="eval-form-field">
                         <label for="evalStatus">Status</label>
                         <select id="evalStatus" class="eval-input">
-                            <option value="draft">Draft</option>
-                            <option value="active">Active</option>
+                            <option value="open">Open</option>
                             <option value="closed">Closed</option>
                         </select>
                     </div>

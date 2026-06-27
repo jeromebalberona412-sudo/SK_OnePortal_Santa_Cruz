@@ -13,6 +13,8 @@ let rspPendingRestoreId = null;
 let rspActiveFilter = 'all';
 let rspArchiveTerm = '2025-2027';
 let rspSearchQuery = '';
+let rspTeamQuery = '';
+let rspSportFilter = 'all';
 let rspIsLoading = false;
 
 function csrfToken() {
@@ -57,6 +59,7 @@ function listenSportsEvents(handler) {
 
 function initRejectedSports() {
     bindSearch();
+    bindSportTeamFilters();
     bindFilterTabs();
     bindRestoreModal();
     bindViewModal();
@@ -121,6 +124,18 @@ function normalizeRecord(r) {
 
 function applyClientFilters() {
     let list = rspAllRecords.slice();
+
+    const sportFilter = String(rspSportFilter || 'all').toLowerCase();
+    const teamQuery = rspTeamQuery.trim().toLowerCase();
+
+    if (sportFilter !== 'all') {
+        list = list.filter((r) => String(r.sport_key || 'other').toLowerCase() === sportFilter);
+    }
+
+    if (teamQuery) {
+        list = list.filter((r) => String(r.team_name || '').toLowerCase().includes(teamQuery));
+    }
+
     if (window.SkArchive) {
         list = SkArchive.filterByArchiveTerm(list, rspArchiveTerm, ['_rejectedTs', 'rejected_at']);
     }
@@ -135,7 +150,7 @@ function applyClientFilters() {
 function setTableLoading(loading) {
     const tbody = document.getElementById('rejectedSportsTableBody');
     if (!tbody || !loading) return;
-    tbody.innerHTML = '<tr class="empty-state-row"><td colspan="7">Loading rejected records…</td></tr>';
+    tbody.innerHTML = '<tr class="empty-state-row"><td colspan="8">Loading rejected records…</td></tr>';
 }
 
 function renderStats(stats) {
@@ -207,7 +222,7 @@ function renderTable() {
     const page = rspFiltered.slice(start, end);
 
     if (rspFiltered.length === 0) {
-        tbody.innerHTML = '<tr class="empty-state-row"><td colspan="7">No rejected sports applications found.</td></tr>';
+        tbody.innerHTML = '<tr class="empty-state-row"><td colspan="8">No rejected sports applications found.</td></tr>';
         if (info) info.textContent = 'No records found';
         renderPagination(0);
         return;
@@ -222,8 +237,9 @@ function renderTable() {
         return `
         <tr>
             <td style="font-weight:600;color:#111827;">${escapeHtml(rspFormatName(r))}</td>
+            <td>${escapeHtml(r.sport_label || '—')}</td>
+            <td>${escapeHtml(r.team_name || '—')}</td>
             <td>${escapeHtml(r.program_name || '—')}</td>
-            <td>${escapeHtml(r.grade_level || r.purok || '—')}</td>
             <td><span class="rejection-reason-cell" title="${escapeHtml(reason)}">${escapeHtml(reason)}</span></td>
             <td><span class="deleted-at-badge">${escapeHtml(r.rejected_date || '—')}</span></td>
             <td><span class="deleted-time-badge">${escapeHtml(r.rejected_time || '—')}</span></td>
@@ -281,6 +297,33 @@ function bindSearch() {
             loadData();
         }, 300);
     });
+}
+
+function bindSportTeamFilters() {
+    const sportFilter = document.getElementById('rspSportFilter');
+    const teamSearch = document.getElementById('rspTeamSearch');
+
+    if (sportFilter) {
+        sportFilter.addEventListener('change', () => {
+            rspSportFilter = sportFilter.value || 'all';
+            rspCurrentPage = 1;
+            applyClientFilters();
+            renderTable();
+        });
+    }
+
+    if (teamSearch) {
+        let timer;
+        teamSearch.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                rspTeamQuery = this.value.trim();
+                rspCurrentPage = 1;
+                applyClientFilters();
+                renderTable();
+            }, 200);
+        });
+    }
 }
 
 function formatRejectionReason(r) {
@@ -430,7 +473,9 @@ function renderRejectedViewContent(record, app) {
         </div>
         <div style="margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px;">
             <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Full Name</div><div style="font-weight:600;color:#111827;">${escapeHtml(rspFormatName(record))}</div></div>
-            <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Program</div><div style="font-weight:600;color:#111827;">${escapeHtml(record.program_name || '—')}</div></div>
+            <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Sport</div><div style="font-weight:600;color:#111827;">${escapeHtml(record.sport_label || app?.sport_label || '—')}</div></div>
+            <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Team</div><div style="font-weight:600;color:#111827;">${escapeHtml(record.team_name || app?.team_name || '—')}</div></div>
+            <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Program</div><div style="font-weight:600;color:#111827;">${escapeHtml(record.program_name || app?.program_name || '—')}</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Age / Sex</div><div style="font-weight:600;color:#111827;">${escapeHtml([record.age, record.sex].filter(Boolean).join(' · ') || '—')}</div></div>
             <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Date Applied</div><div style="font-weight:600;color:#111827;">${escapeHtml(record.date_submitted || '—')}</div></div>
         </div>

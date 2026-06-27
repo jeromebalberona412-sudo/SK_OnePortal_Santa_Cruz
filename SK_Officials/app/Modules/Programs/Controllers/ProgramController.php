@@ -38,12 +38,34 @@ class ProgramController extends Controller
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
         ]);
 
+        $user = $request->user();
+
+        if ($user->barangay_id === null) {
+            return response()->json([
+                'message' => 'Your account is not linked to a barangay.',
+            ], 422);
+        }
+
+        if (! $this->catalogService->programBelongsToBarangay((int) $user->barangay_id, $programId)) {
+            return response()->json([
+                'message' => 'Program not found for your barangay.',
+            ], 422);
+        }
+
+        $duration = $this->catalogService->upsertProgramDuration(
+            (int) $user->barangay_id,
+            $programId,
+            $validated['start_date'],
+            $validated['end_date'],
+        );
+
         return response()->json([
             'message' => 'Program duration updated.',
             'data' => [
                 'id' => $programId,
-                'startDate' => $validated['start_date'],
-                'endDate' => $validated['end_date'],
+                'startDate' => $duration['startDate'],
+                'endDate' => $duration['endDate'],
+                'status' => $duration['status'],
             ],
         ]);
     }

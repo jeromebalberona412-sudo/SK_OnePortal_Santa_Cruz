@@ -139,13 +139,6 @@ window.goToScholarshipApplication = function () {
 };
 
 window.goToSportsApplication = function () {
-    const checkbox = document.getElementById('agreeTermsSports');
-    if (!checkbox?.checked) return;
     if (typeof closeSportsModal === 'function') closeSportsModal();
-    if (typeof showLoading === 'function') showLoading('Redirecting to Sports Registration…');
-    setTimeout(() => {
-        window.location.href = typeof window.sportsApplyUrl !== 'undefined'
-            ? window.sportsApplyUrl
-            : '/sports/apply';
-    }, 650);
+    if (typeof openSportsModal === 'function') openSportsModal();
 };

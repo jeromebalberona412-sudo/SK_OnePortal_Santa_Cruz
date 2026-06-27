@@ -21,13 +21,20 @@ it('renders scholarship evaluation page with scholarship program letter', functi
         ->toContain('btnCreateEvaluation');
 });
 
-it('shares evaluation content partial across program types', function () {
+it('shares evaluation content partial with auto program title and open closed status', function () {
     $html = view('Program_Management::partials.program-evaluation-content')->render();
 
     expect($html)
-        ->toContain('evalStatDraft')
-        ->toContain('evalStatActive')
+        ->toContain('evalStatOpen')
         ->toContain('evalStatClosed')
+        ->toContain('evalTitleDisplay')
+        ->toContain('evalStartDate')
+        ->toContain('evalEndDate')
         ->toContain('createEvalModal')
-        ->toContain('Evaluation Questions');
+        ->toContain('Evaluation Questions')
+        ->toContain('value="open"')
+        ->toContain('value="closed"')
+        ->not->toContain('evalProgram')
+        ->not->toContain('evalStatDraft')
+        ->not->toContain('evalStatActive');
 });

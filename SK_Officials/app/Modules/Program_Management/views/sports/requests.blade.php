@@ -8,6 +8,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholar_application_from.css',
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css'
@@ -74,16 +75,26 @@
     </div>
 
     <!-- Filters -->
-    <div class="schol-filters-row">
+    <div class="schol-filters-row saf-sports-filters">
         <select id="scholFilter" class="schol-filter-input" style="min-width:150px;">
             <option value="all">All Applications</option>
             <option value="recent">Recent (Last 7 Days)</option>
             <option value="monthly">This Month</option>
             <option value="yearly">This Year</option>
         </select>
+        <select id="sportTypeFilter" class="schol-filter-input" style="min-width:150px;">
+            <option value="all">All Sports</option>
+            <option value="basketball">Basketball</option>
+            <option value="volleyball">Volleyball</option>
+            <option value="other">Other</option>
+        </select>
         <div class="schol-search-wrap">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="scholSearch" class="schol-search-input" placeholder="Search by name or school...">
+            <input type="text" id="teamNameSearch" class="schol-search-input" placeholder="Filter by team name...">
+        </div>
+        <div class="schol-search-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="scholSearch" class="schol-search-input" placeholder="Search by name or program...">
         </div>
     </div>
 
@@ -94,9 +105,10 @@
                 <thead>
                     <tr>
                         <th>NAME<div style="font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);text-transform:none;letter-spacing:0.02em;margin-top:2px;">Last, First, Middle</div></th>
+                        <th>SPORT</th>
+                        <th>TEAM</th>
                         <th>PROGRAM</th>
                         <th>AGE</th>
-                        <th>DOCUMENTS</th>
                         <th>DATE SUBMITTED</th>
                         <th>STATUS</th>
                         <th class="col-actions">ACTIONS</th>
@@ -139,66 +151,74 @@
 
 <!-- ── Rejection Reason Modal ── -->
 <div class="schol-modal-overlay" id="rejectReasonModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-md">
-        <div class="schol-modal-header schol-modal-header-danger">
-            <h3>Rejection Reason</h3>
-            <button type="button" class="schol-modal-close" id="rejectReasonClose">&times;</button>
+    <div class="schol-modal-box sk-type-confirm-modal sports-reject-modal-box">
+        <div class="sk-type-confirm-header">
+            <h3>Reject Application</h3>
         </div>
-        <div class="schol-modal-body">
-            <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:16px;">Please select the reason(s) for rejecting this application:</p>
-            
-            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Incomplete Requirements" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Incomplete Requirements</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Invalid Documents" style="cursor:pointer;width:16px;height:16px;">
+        <div class="sk-type-confirm-body sports-reject-modal-body">
+            <p class="sk-type-confirm-message">Please select a reason for rejecting this application:</p>
+
+            <div class="sports-reject-reasons">
+                <label class="sports-reject-reason-item">
+                    <input type="checkbox" class="reject-reason-checkbox" value="Invalid Documents">
                     <span>Invalid Documents</span>
                 </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Does Not Meet Eligibility Criteria" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Does Not Meet Eligibility Criteria</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Duplicate Application" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Duplicate Application</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" class="reject-reason-checkbox" value="Late Submission" style="cursor:pointer;width:16px;height:16px;">
-                    <span>Late Submission</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
-                    <input type="checkbox" id="rejectReasonOtherCheckbox" value="Other" style="cursor:pointer;width:16px;height:16px;">
+                <label class="sports-reject-reason-item">
+                    <input type="checkbox" id="rejectReasonOtherCheckbox" value="Other">
                     <span>Other</span>
                 </label>
             </div>
 
-            <div id="rejectReasonOtherField" style="display:none;">
-                <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;display:block;">Please specify:</label>
-                <textarea id="rejectReasonOtherText" class="schol-input" rows="3" placeholder="Enter other reason..." style="width:100%;resize:vertical;"></textarea>
+            <div id="rejectReasonOtherField" class="sports-reject-other-field" style="display:none;">
+                <label class="sk-type-confirm-label" for="rejectReasonOtherText">Please specify:</label>
+                <textarea id="rejectReasonOtherText" class="schol-input" rows="3" placeholder="Enter other reason..." style="width:100%;resize:none;"></textarea>
+            </div>
+
+            <div class="sk-type-confirm-section">
+                <label class="sk-type-confirm-label" for="rejectReasonConfirmText">Confirmation Required</label>
+                <input type="text" id="rejectReasonConfirmText" class="sk-type-confirm-input" placeholder="Type Confirm to confirm" autocomplete="off" spellcheck="false">
+                <p class="sk-type-confirm-hint sk-type-confirm-hint-error" id="rejectReasonConfirmError" style="display:none;"></p>
             </div>
         </div>
-        <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-outline" id="rejectReasonCancel">Cancel</button>
-            <button type="button" class="schol-btn schol-btn-danger" id="rejectReasonConfirm">Confirm Rejection</button>
+        <div class="sk-type-confirm-footer">
+            <button type="button" class="sk-btn-cancel-confirm" id="rejectReasonCancel">Cancel</button>
+            <button type="button" class="sk-btn-action-confirm is-disabled" id="rejectReasonConfirm" disabled>Reject</button>
         </div>
     </div>
 </div>
 
-<!-- Toast (matches IDs used by sports_requests.js) -->
-<div class="schol-toast" id="scholToast" style="display:none;position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;color:#fff;z-index:9999;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,.2);">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-    <span id="scholToastMsg"></span>
+<!-- ── Approve Confirmation Modal ── -->
+<div class="schol-modal-overlay" id="approveConfirmModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-sm">
+        <div class="schol-modal-header">
+            <h3>Approve Application</h3>
+            <button type="button" class="schol-modal-close" id="approveConfirmClose">&times;</button>
+        </div>
+        <div class="schol-modal-body" style="overflow:visible;">
+            <p style="font-size:14px;color:#374151;line-height:1.6;margin:0;">
+                Are you sure you want to approve this application?
+            </p>
+        </div>
+        <div class="schol-modal-footer">
+            <button type="button" class="schol-btn schol-btn-outline" id="approveConfirmCancel">Cancel</button>
+            <button type="button" class="schol-btn schol-btn-approve" id="approveConfirmBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Approve
+            </button>
+        </div>
+    </div>
 </div>
-<!-- Sports toast for JS-initiated toasts -->
-<div class="schol-toast" id="sportsToast" style="display:none;position:fixed;bottom:60px;right:20px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;color:#fff;z-index:9999;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,.2);">
+
+<!-- Toast — top-center (matches scholarship / calendar style) -->
+<div class="schol-toast" id="sportsToast" style="display:none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     <span id="sportsToastMsg"></span>
 </div>
 
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/table-row-actions-menu.js',
     'app/Modules/Program_Management/assets/js/sports/sports_requests.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

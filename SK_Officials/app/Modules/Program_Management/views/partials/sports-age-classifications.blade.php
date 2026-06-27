@@ -6,7 +6,7 @@
             <button type="button" class="schol-btn schol-btn-outline schol-btn-sm" id="sportsOpenAllBtn">Open All</button>
         </div>
     </div>
-    <p class="sports-age-card__hint">Set age brackets for each division. Toggle which divisions accept applications. Kabataan age from KK Profiling will determine eligibility.</p>
+    <p class="sports-age-card__hint">Set age brackets for each division (ages 15–30 only). Basketball and Volleyball load sport-specific defaults; Other lets you add your own. Toggle which divisions accept applications.</p>
 
     <div class="sports-age-team-settings">
         <div class="schol-field">

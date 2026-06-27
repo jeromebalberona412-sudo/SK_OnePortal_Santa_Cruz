@@ -3,14 +3,22 @@
 namespace App\Modules\Programs\Services;
 
 use App\Models\Abyip;
+use App\Models\AbyipProgramDuration;
 use App\Models\Committee;
 use App\Models\User;
 use App\Modules\Committees\Services\CommitteeService;
+use Carbon\Carbon;
 
 class AbyipProgramCatalogService
 {
     /** @var list<string> */
     private const YOUTH_PROGRAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+
+    public const STATUS_PLANNED = 'planned';
+
+    public const STATUS_ONGOING = 'ongoing';
+
+    public const STATUS_COMPLETED = 'completed';
 
     /**
      * @var array<string, array{committee_key: string, href: string, type: string}>
@@ -195,15 +203,15 @@ class AbyipProgramCatalogService
         }
 
         $heads = $this->committeeHeadsByProgramName($user);
-        [$defaultStart, $defaultEnd] = $this->defaultDurationForYear((int) $abyip->fiscal_year);
+        $fiscalYear = (int) $abyip->fiscal_year;
 
         $programs = $this->youthProgramsQuery($abyip->id)
             ->get()
             ->map(fn (Abyip $program) => $this->formatProgramForList(
                 $program,
                 $heads,
-                $defaultStart,
-                $defaultEnd,
+                $user->barangay_id,
+                $fiscalYear,
             ))
             ->values()
             ->all();
@@ -285,26 +293,163 @@ class AbyipProgramCatalogService
     }
 
     /**
+     * @return array{start_date: string, end_date: string, startDate: string, endDate: string}
+     */
+    public function resolveProgramDuration(?int $barangayId, int $abyipProgramId, int $fiscalYear): array
+    {
+        [$defaultStart, $defaultEnd] = $this->defaultDurationForYear($fiscalYear);
+
+        if ($barangayId === null) {
+            return [
+                'start_date' => $defaultStart,
+                'end_date' => $defaultEnd,
+                'startDate' => $defaultStart,
+                'endDate' => $defaultEnd,
+            ];
+        }
+
+        $stored = AbyipProgramDuration::query()
+            ->where('barangay_id', $barangayId)
+            ->where('abyip_program_id', $abyipProgramId)
+            ->first();
+
+        if ($stored === null) {
+            return [
+                'start_date' => $defaultStart,
+                'end_date' => $defaultEnd,
+                'startDate' => $defaultStart,
+                'endDate' => $defaultEnd,
+            ];
+        }
+
+        $start = $stored->start_date->toDateString();
+        $end = $stored->end_date->toDateString();
+
+        return [
+            'start_date' => $start,
+            'end_date' => $end,
+            'startDate' => $start,
+            'endDate' => $end,
+        ];
+    }
+
+    /**
+     * @return array{start_date: string, end_date: string, startDate: string, endDate: string, status: string}
+     */
+    public function upsertProgramDuration(
+        int $barangayId,
+        int $abyipProgramId,
+        string $startDate,
+        string $endDate,
+    ): array {
+        AbyipProgramDuration::query()->updateOrCreate(
+            [
+                'barangay_id' => $barangayId,
+                'abyip_program_id' => $abyipProgramId,
+            ],
+            [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
+        );
+
+        $status = $this->resolveProgramStatus($startDate, $endDate);
+
+        return [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'status' => $status,
+        ];
+    }
+
+    public function resolveProgramStatus(string $startDate, string $endDate, ?Carbon $reference = null): string
+    {
+        $today = ($reference ?? now())->copy()->startOfDay();
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end = Carbon::parse($endDate)->startOfDay();
+
+        if ($today->lt($start)) {
+            return self::STATUS_PLANNED;
+        }
+
+        if ($today->gt($end)) {
+            return self::STATUS_COMPLETED;
+        }
+
+        return self::STATUS_ONGOING;
+    }
+
+    /**
+     * @return array{id: int, program_name: string, letter: string, start_date: string, end_date: string}|null
+     */
+    public function findYouthProgramByLetter(?int $barangayId, string $letter): ?array
+    {
+        $document = $this->getLatestAbyip($barangayId);
+
+        if ($document === null) {
+            return null;
+        }
+
+        $program = $this->youthProgramsQuery($document->id)
+            ->where('code', strtoupper(trim($letter)))
+            ->first();
+
+        if ($program === null) {
+            return null;
+        }
+
+        $duration = $this->resolveProgramDuration(
+            $barangayId,
+            (int) $program->id,
+            (int) $document->fiscal_year,
+        );
+
+        return [
+            'id' => (int) $program->id,
+            'program_name' => trim((string) $program->program_name),
+            'letter' => strtoupper(trim((string) ($program->program_letter ?? $program->code ?? $letter))),
+            'start_date' => $duration['start_date'],
+            'end_date' => $duration['end_date'],
+        ];
+    }
+
+    public function programBelongsToBarangay(?int $barangayId, int $programId): bool
+    {
+        $document = $this->getLatestAbyip($barangayId);
+
+        if ($document === null) {
+            return false;
+        }
+
+        return $this->youthProgramsQuery($document->id)
+            ->whereKey($programId)
+            ->exists();
+    }
+
+    /**
      * @param  array<string, string>  $heads
      * @return array<string, mixed>
      */
     private function formatProgramForList(
         Abyip $program,
         array $heads,
-        string $defaultStart,
-        string $defaultEnd,
+        ?int $barangayId,
+        int $fiscalYear,
     ): array {
         $nameKey = mb_strtolower(trim((string) $program->program_name), 'UTF-8');
         $head = $heads[$nameKey] ?? null;
+        $duration = $this->resolveProgramDuration($barangayId, (int) $program->id, $fiscalYear);
 
         return [
             'id' => $program->id,
             'title' => $program->program_name,
             'description' => $this->buildProgramDescription($program),
             'committee' => $program->program_name,
-            'startDate' => $defaultStart,
-            'endDate' => $defaultEnd,
-            'status' => 'planned',
+            'startDate' => $duration['startDate'],
+            'endDate' => $duration['endDate'],
+            'status' => $this->resolveProgramStatus($duration['startDate'], $duration['endDate']),
             'letter' => $program->program_letter,
             'sk_head' => $head,
             'sk_head_display' => $head ?? '',

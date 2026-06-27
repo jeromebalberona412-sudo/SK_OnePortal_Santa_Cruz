@@ -269,46 +269,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('Dashboard initialized successfully!');
 
-    // ── Programs Drawer (mobile/tablet) ───────────────────────────────────────
-    const drawerBtn      = document.getElementById('programsDrawerBtn');
-    const drawerSidebar  = document.getElementById('programsDrawerSidebar');
-    const backdrop       = document.getElementById('programsDrawerBackdrop');
-
-    function openDrawer() {
-        drawerSidebar?.classList.add('drawer-open');
-        backdrop?.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeDrawer() {
-        drawerSidebar?.classList.remove('drawer-open');
-        backdrop?.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    drawerBtn?.addEventListener('click', () => {
-        drawerSidebar?.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
-    });
-
-    backdrop?.addEventListener('click', closeDrawer);
-
-    // Close drawer when a program category is clicked (opens a modal)
-    document.querySelectorAll('#programsDrawerSidebar .program-category').forEach(cat => {
-        cat.addEventListener('click', () => {
-            closeDrawer();
-        });
-    });
-
-    // Close drawer when a barangay profile is clicked
-    document.querySelectorAll('#programsDrawerSidebar .brgy-profile-item').forEach(item => {
-        item.addEventListener('click', () => {
-            if (typeof showLoading === 'function') {
-                showLoading('Loading');
-            }
-            closeDrawer();
-        });
-    });
-
     document.querySelectorAll('.barangay-sidebar-right .brgy-profile-item').forEach((item) => {
         item.addEventListener('click', () => {
             if (typeof showLoading === 'function') {
@@ -316,6 +276,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    document.querySelectorAll('#programsDrawerSidebar .brgy-profile-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            if (typeof window.kabataanCloseProgramsDrawer === 'function') {
+                window.kabataanCloseProgramsDrawer();
+            }
+            if (typeof showLoading === 'function') {
+                showLoading('Loading');
+            }
+        });
+    });
+
+    const openParam = new URLSearchParams(window.location.search).get('open');
+    if (openParam === 'sports' && typeof window.openSportsModal === 'function') {
+        window.openSportsModal();
+    }
 });
 
 

@@ -20,6 +20,7 @@ export default defineConfig({
 
                 // Layout (shared header & footer)
                 'app/Modules/Layout/assets/css/kabataan-header.css',
+                'app/Modules/Layout/assets/css/programs-drawer.css',
                 'app/Modules/Layout/assets/css/kabataan-bootstrap.css',
                 'app/Modules/Layout/assets/css/kabataan-responsive.css',
                 'app/Modules/Layout/assets/css/kabataan-logout.css',
@@ -49,8 +50,11 @@ export default defineConfig({
                 'app/Modules/Programs/assets/js/scholarship_landing.js',
                 'app/Modules/Programs/assets/css/sports_landing.css',
                 'app/Modules/Programs/assets/js/sports_landing.js',
+                'app/Modules/Programs/assets/css/sports-applications-history.css',
+                'app/Modules/Programs/assets/js/sports-applications-history.js',
+                'app/Modules/Programs/assets/css/scholarship_application.css',
                 'app/Modules/Programs/assets/css/sports-registration.css',
-                'app/Modules/Programs/assets/js/sports-registration.js',
+                'app/Modules/Programs/assets/js/sports_apply_wizard.js',
                 'app/Modules/Programs/assets/js/programs.js',
                 'app/Modules/Programs/assets/css/scholarship-quick-guidelines.css',
         'app/Modules/Programs/assets/js/scholarship-quick-guidelines.js',

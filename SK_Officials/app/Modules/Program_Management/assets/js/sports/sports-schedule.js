@@ -4,6 +4,10 @@ let programMeta = null;
 let abyipGate = window.sportsAbyipGate || null;
 let editingProgramId = null;
 let pendingDeleteProgramId = null;
+let availableTerms = [];
+let scheduleFilterTermId = '';
+let scheduleFilterYear = '';
+let scheduleSearchQuery = '';
 
 const SPORTS_EXCLUDED_KK_FIELDS = [
     'education',
@@ -41,12 +45,21 @@ const KK_FIELD_LABELS = {
     youth_age_group: 'Youth Age Group',
 };
 
-const DEFAULT_AGE_CLASSIFICATIONS = [
-    { id: 'cls_mosquito_division', name: 'Mosquito Division', min_age: 15, max_age: 17, is_open: true },
-    { id: 'cls_midget_division', name: 'Midget Division', min_age: 18, max_age: 21, is_open: true },
-    { id: 'cls_junior_division', name: 'Junior Division', min_age: 22, max_age: 25, is_open: true },
-    { id: 'cls_senior_division', name: 'Senior Division', min_age: 26, max_age: 30, is_open: true },
-];
+function resolveDefaultAgeClassifications(sportKey) {
+    if (window.SportsAgeClassifications?.getDefaultAgeClassificationsForSport) {
+        return window.SportsAgeClassifications.getDefaultAgeClassificationsForSport(sportKey);
+    }
+
+    return [];
+}
+
+function getActiveSportKey() {
+    if (window.SportsAgeClassifications?.getSelectedSportKey) {
+        return window.SportsAgeClassifications.getSelectedSportKey();
+    }
+
+    return document.getElementById('sportsDisciplineKey')?.value?.trim() || '';
+}
 
 const DEFAULT_TEAM_NAME_QUESTION = {
     id: 'sys_team_name',
@@ -58,8 +71,48 @@ const DEFAULT_TEAM_NAME_QUESTION = {
     field_key: 'team_name',
 };
 
+const SPORT_OPTIONS = {
+    basketball: 'Basketball',
+    volleyball: 'Volleyball',
+    other: 'Other',
+};
+
+const SPORT_KEYS = Object.keys(SPORT_OPTIONS);
+
+const SPORTS_AGE_MIN = 15;
+const SPORTS_AGE_MAX = 30;
+
 function generateClassificationId(name) {
     return `cls_${String(name || 'division').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}_${Date.now()}`;
+}
+
+function clampSportsAge(rawValue) {
+    if (rawValue === '' || rawValue === null || rawValue === undefined) {
+        return null;
+    }
+
+    const num = parseInt(String(rawValue), 10);
+    if (Number.isNaN(num)) {
+        return null;
+    }
+
+    return Math.min(SPORTS_AGE_MAX, Math.max(SPORTS_AGE_MIN, num));
+}
+
+function formatClassificationAgeValue(value) {
+    if (value === '' || value === null || value === undefined) {
+        return '';
+    }
+
+    return String(value);
+}
+
+function getAgeClassificationsEmptyMessage() {
+    if (getActiveSportKey() === 'other') {
+        return `No age classifications yet. Click "+ Add Classification" to create your own brackets (ages ${SPORTS_AGE_MIN}–${SPORTS_AGE_MAX}).`;
+    }
+
+    return 'No age classifications yet. Click "Use Default Age Brackets" or add one.';
 }
 
 function renderAgeClassificationsTable(classifications = []) {
@@ -67,19 +120,73 @@ function renderAgeClassificationsTable(classifications = []) {
     if (!tbody) return;
 
     if (!classifications.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="saf-table-empty">No age classifications yet. Click "Use Default Age Brackets" or add one.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="saf-table-empty">${getAgeClassificationsEmptyMessage()}</td></tr>`;
         return;
     }
 
     tbody.innerHTML = classifications.map((item) => `
         <tr data-classification-id="${escapeHtml(item.id)}">
             <td><input type="text" class="sports-cls-name" value="${escapeHtml(item.name)}" placeholder="Classification name"></td>
-            <td><input type="number" class="sports-cls-min" value="${escapeHtml(String(item.min_age))}" min="15" max="30"></td>
-            <td><input type="number" class="sports-cls-max" value="${escapeHtml(String(item.max_age))}" min="15" max="30"></td>
+            <td><input type="number" class="sports-cls-min" value="${escapeHtml(formatClassificationAgeValue(item.min_age))}" min="${SPORTS_AGE_MIN}" max="${SPORTS_AGE_MAX}" placeholder="${SPORTS_AGE_MIN}"></td>
+            <td><input type="number" class="sports-cls-max" value="${escapeHtml(formatClassificationAgeValue(item.max_age))}" min="${SPORTS_AGE_MIN}" max="${SPORTS_AGE_MAX}" placeholder="${SPORTS_AGE_MAX}"></td>
             <td><input type="checkbox" class="sports-cls-open" ${item.is_open ? 'checked' : ''}></td>
             <td><button type="button" class="sports-age-remove-btn" data-remove-classification="${escapeHtml(item.id)}">Remove</button></td>
         </tr>
     `).join('');
+}
+
+function normalizeRowAgeInputs(row) {
+    const minInput = row.querySelector('.sports-cls-min');
+    const maxInput = row.querySelector('.sports-cls-max');
+    if (!minInput || !maxInput) return;
+
+    if (minInput.value !== '') {
+        const clampedMin = clampSportsAge(minInput.value);
+        if (clampedMin !== null) {
+            minInput.value = String(clampedMin);
+        }
+    }
+
+    if (maxInput.value !== '') {
+        const clampedMax = clampSportsAge(maxInput.value);
+        if (clampedMax !== null) {
+            maxInput.value = String(clampedMax);
+        }
+    }
+
+    if (minInput.value !== '' && maxInput.value !== '') {
+        const minAge = parseInt(minInput.value, 10);
+        const maxAge = parseInt(maxInput.value, 10);
+        if (!Number.isNaN(minAge) && !Number.isNaN(maxAge) && minAge > maxAge) {
+            maxInput.value = String(minAge);
+        }
+    }
+}
+
+function validateAgeClassifications(classifications) {
+    if (!classifications.length) {
+        return 'Please add at least one age classification.';
+    }
+
+    for (const item of classifications) {
+        if (item.min_age === null || item.max_age === null) {
+            return `Please set minimum and maximum age (15–30) for "${item.name}".`;
+        }
+
+        if (item.min_age < SPORTS_AGE_MIN || item.min_age > SPORTS_AGE_MAX) {
+            return `"${item.name}": minimum age must be between ${SPORTS_AGE_MIN} and ${SPORTS_AGE_MAX}.`;
+        }
+
+        if (item.max_age < SPORTS_AGE_MIN || item.max_age > SPORTS_AGE_MAX) {
+            return `"${item.name}": maximum age must be between ${SPORTS_AGE_MIN} and ${SPORTS_AGE_MAX}.`;
+        }
+
+        if (item.min_age > item.max_age) {
+            return `"${item.name}": minimum age cannot exceed maximum age.`;
+        }
+    }
+
+    return null;
 }
 
 function getAgeClassificationsFromForm() {
@@ -88,8 +195,8 @@ function getAgeClassificationsFromForm() {
 
     rows.forEach((row) => {
         const name = row.querySelector('.sports-cls-name')?.value?.trim() || '';
-        const minAge = parseInt(row.querySelector('.sports-cls-min')?.value || '0', 10);
-        const maxAge = parseInt(row.querySelector('.sports-cls-max')?.value || '0', 10);
+        const minRaw = row.querySelector('.sports-cls-min')?.value ?? '';
+        const maxRaw = row.querySelector('.sports-cls-max')?.value ?? '';
         const isOpen = row.querySelector('.sports-cls-open')?.checked ?? true;
 
         if (!name) return;
@@ -97,8 +204,8 @@ function getAgeClassificationsFromForm() {
         classifications.push({
             id: row.getAttribute('data-classification-id') || generateClassificationId(name),
             name,
-            min_age: Number.isNaN(minAge) ? 15 : minAge,
-            max_age: Number.isNaN(maxAge) ? 30 : maxAge,
+            min_age: clampSportsAge(minRaw),
+            max_age: clampSportsAge(maxRaw),
             is_open: isOpen,
         });
     });
@@ -108,9 +215,10 @@ function getAgeClassificationsFromForm() {
 
 function setAgeClassificationsForm(details) {
     const maxTeamEl = document.getElementById('sportsMaxTeamMembers');
+    const sportKey = details?.sport_key || getActiveSportKey();
     const classifications = details?.age_classifications?.length
         ? details.age_classifications
-        : DEFAULT_AGE_CLASSIFICATIONS.map((item) => ({ ...item }));
+        : resolveDefaultAgeClassifications(sportKey);
 
     if (maxTeamEl) {
         maxTeamEl.value = String(details?.max_team_members ?? 12);
@@ -120,9 +228,11 @@ function setAgeClassificationsForm(details) {
 }
 
 function resetAgeClassificationsForm() {
+    const sportKey = getActiveSportKey();
     setAgeClassificationsForm({
+        sport_key: sportKey,
         max_team_members: 12,
-        age_classifications: DEFAULT_AGE_CLASSIFICATIONS.map((item) => ({ ...item })),
+        age_classifications: resolveDefaultAgeClassifications(sportKey),
     });
 }
 
@@ -142,7 +252,15 @@ function ensureDefaultTeamNameQuestion(questions) {
 }
 
 function loadDefaultAgeBrackets() {
-    renderAgeClassificationsTable(DEFAULT_AGE_CLASSIFICATIONS.map((item) => ({ ...item })));
+    const sportKey = getActiveSportKey();
+
+    if (sportKey === 'other') {
+        renderAgeClassificationsTable([]);
+        showToast('Other sports have no default brackets. Add your own classifications below.', 'error');
+        return;
+    }
+
+    renderAgeClassificationsTable(resolveDefaultAgeClassifications(sportKey));
 }
 
 function openAllClassifications() {
@@ -159,13 +277,242 @@ function getSportsDetailsPayload() {
 
     const classifications = getAgeClassificationsFromForm();
     const openAll = classifications.length > 0 && classifications.every((item) => item.is_open);
+    const sportKey = document.getElementById('sportsDisciplineKey')?.value?.trim() || '';
+    const otherSportName = document.getElementById('sportsOtherName')?.value?.trim() || '';
 
     return {
+        sport_key: sportKey,
+        sport_label: sportKey === 'other' ? otherSportName : (SPORT_OPTIONS[sportKey] || ''),
+        other_sport_name: sportKey === 'other' ? otherSportName : null,
         open_all: openAll,
         max_team_members: maxTeamMembers,
         min_team_members: 1,
         age_classifications: classifications,
     };
+}
+
+function getProgramSportLabel(program) {
+    return program?.sport_label
+        || program?.sports_details?.sport_label
+        || SPORT_OPTIONS[program?.sports_details?.sport_key]
+        || program?.program_type
+        || 'Sports Program';
+}
+
+function getProgramYear(program) {
+    if (!program?.start_date) return new Date().getFullYear();
+    return new Date(program.start_date).getFullYear();
+}
+
+function getTermById(termId) {
+    return availableTerms.find((term) => term.id === termId) || null;
+}
+
+function yearsForTerm(term) {
+    if (!term) return [];
+    const years = [];
+    for (let year = term.end_year; year >= term.start_year; year -= 1) {
+        years.push(year);
+    }
+    return years.length ? years : [new Date().getFullYear()];
+}
+
+function programMatchesTerm(program, termId) {
+    if (!termId) return true;
+    const term = getTermById(termId);
+    if (!term) return true;
+    const year = getProgramYear(program);
+    return year >= term.start_year && year <= term.end_year;
+}
+
+function programMatchesYear(program, yearValue) {
+    if (!yearValue) return true;
+    return getProgramYear(program) === Number(yearValue);
+}
+
+function programMatchesSearch(program, query) {
+    const needle = String(query || '').trim().toLowerCase();
+    if (!needle) return true;
+
+    const status = resolveProgramStatus(program);
+    const haystack = [
+        getProgramSportLabel(program),
+        program.participation_quantity,
+        program.start_date,
+        program.end_date,
+        formatStatusLabel(status),
+        program.program_type,
+    ].map((value) => String(value ?? '').toLowerCase()).join(' ');
+
+    return haystack.includes(needle);
+}
+
+function getFilteredSchedulePrograms() {
+    return schedulePrograms.filter((program) => (
+        programMatchesTerm(program, scheduleFilterTermId)
+        && programMatchesYear(program, scheduleFilterYear)
+        && programMatchesSearch(program, scheduleSearchQuery)
+    ));
+}
+
+function populateScheduleTermFilter() {
+    const select = document.getElementById('sportsScheduleTermFilter');
+    if (!select) return;
+
+    const previous = select.value || scheduleFilterTermId;
+    select.innerHTML = '<option value="">All Terms</option>' + availableTerms.map((term) => (
+        `<option value="${escapeHtml(term.id)}">${escapeHtml(term.label)}</option>`
+    )).join('');
+
+    const activeTerm = availableTerms.find((term) => term.is_active);
+    const fallback = previous || '';
+    scheduleFilterTermId = availableTerms.some((term) => term.id === previous) ? previous : fallback;
+    select.value = scheduleFilterTermId;
+}
+
+function populateScheduleYearFilter() {
+    const select = document.getElementById('sportsScheduleYearFilter');
+    if (!select) return;
+
+    const previous = select.value || scheduleFilterYear;
+    const term = scheduleFilterTermId ? getTermById(scheduleFilterTermId) : null;
+    const years = term
+        ? yearsForTerm(term)
+        : [...new Set(availableTerms.flatMap((item) => yearsForTerm(item)))].sort((a, b) => b - a);
+
+    select.innerHTML = '<option value="">All Years</option>' + years.map((year) => (
+        `<option value="${year}">${year}</option>`
+    )).join('');
+
+    scheduleFilterYear = years.includes(Number(previous)) ? previous : '';
+    select.value = scheduleFilterYear;
+}
+
+async function loadScheduleFilterMeta() {
+    const response = await apiFetch('/api/dashboard/stats?summary=1');
+    const data = response?.data || {};
+    availableTerms = Array.isArray(data.available_terms) ? data.available_terms : [];
+    populateScheduleTermFilter();
+    populateScheduleYearFilter();
+}
+
+function bindScheduleFilters() {
+    const termFilter = document.getElementById('sportsScheduleTermFilter');
+    const yearFilter = document.getElementById('sportsScheduleYearFilter');
+    const searchInput = document.getElementById('sportsScheduleSearch');
+
+    termFilter?.addEventListener('change', () => {
+        scheduleFilterTermId = termFilter.value || '';
+        populateScheduleYearFilter();
+        renderFormsTable();
+        updateCreateButtonState();
+    });
+
+    yearFilter?.addEventListener('change', () => {
+        scheduleFilterYear = yearFilter.value || '';
+        renderFormsTable();
+        updateCreateButtonState();
+    });
+
+    searchInput?.addEventListener('input', () => {
+        scheduleSearchQuery = searchInput.value || '';
+        renderFormsTable();
+    });
+}
+
+function getUsedSportKeysForYear(year) {
+    return schedulePrograms
+        .filter((program) => getProgramYear(program) === year)
+        .map((program) => String(program.sports_details?.sport_key || program.sport_key || '').toLowerCase())
+        .filter(Boolean);
+}
+
+function allSportsCreatedForYear(year = new Date().getFullYear()) {
+    const used = new Set(getUsedSportKeysForYear(year));
+    return SPORT_KEYS.every((key) => used.has(key));
+}
+
+function resolveCreateButtonYear() {
+    if (scheduleFilterYear) {
+        return Number(scheduleFilterYear);
+    }
+    if (scheduleFilterTermId) {
+        const term = getTermById(scheduleFilterTermId);
+        if (term) {
+            const currentYear = new Date().getFullYear();
+            if (currentYear >= term.start_year && currentYear <= term.end_year) {
+                return currentYear;
+            }
+            return term.end_year;
+        }
+    }
+    return new Date().getFullYear();
+}
+
+function updateCreateButtonState() {
+    const btn = document.getElementById('safOpenFormBtn');
+    if (!btn) return;
+
+    const blocked = allSportsCreatedForYear(resolveCreateButtonYear());
+    btn.disabled = blocked;
+    btn.title = blocked
+        ? 'Basketball, Volleyball, and Other programs already exist for this year.'
+        : '';
+    btn.style.opacity = blocked ? '0.55' : '';
+    btn.style.cursor = blocked ? 'not-allowed' : '';
+}
+
+function populateSportSelect({ locked = false, selectedKey = '', otherName = '' } = {}) {
+    const select = document.getElementById('sportsDisciplineKey');
+    const otherWrap = document.getElementById('sportsOtherNameWrap');
+    const otherInput = document.getElementById('sportsOtherName');
+    if (!select) return;
+
+    const year = new Date().getFullYear();
+    const usedKeys = new Set(getUsedSportKeysForYear(year));
+
+    select.innerHTML = '<option value="">Select sport...</option>' + SPORT_KEYS.map((key) => {
+        const taken = !locked && usedKeys.has(key);
+        const disabled = taken ? ' disabled' : '';
+        const suffix = taken ? ' (already created)' : '';
+        return `<option value="${key}"${disabled}>${SPORT_OPTIONS[key]}${suffix}</option>`;
+    }).join('');
+
+    select.value = selectedKey || '';
+    select.disabled = locked;
+
+    if (otherInput) {
+        otherInput.value = otherName || '';
+        otherInput.disabled = locked;
+    }
+
+    if (otherWrap) {
+        otherWrap.style.display = (selectedKey === 'other' || select.value === 'other') ? 'block' : 'none';
+    }
+}
+
+function renderActionMenuCell(programId) {
+    return `
+        <td class="col-actions">
+            <div class="row-actions-menu">
+                <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+                <div class="row-actions-dropdown" role="menu">
+                    <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-program-id="${programId}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>View</span>
+                    </button>
+                    <button type="button" class="row-actions-item row-actions-item-edit" data-action="edit" data-program-id="${programId}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span>Edit</span>
+                    </button>
+                    <button type="button" class="row-actions-item row-actions-item-danger" data-action="archive" data-program-id="${programId}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        <span>Archive</span>
+                    </button>
+                </div>
+            </div>
+        </td>
+    `;
 }
 
 function renderAgeClassificationsPreview(details) {
@@ -279,6 +626,10 @@ async function loadProgramMeta() {
         abyipGate = response.abyip_gate;
     }
 
+    if (programMeta?.sports_age_classifications) {
+        window.SPORTS_AGE_CLASSIFICATIONS = programMeta.sports_age_classifications;
+    }
+
     const typeEl = document.getElementById('programType');
 
     if (typeEl) {
@@ -290,6 +641,7 @@ async function loadPrograms() {
     const response = await apiFetch(`/api/schedule-programs?letter=${PROGRAM_LETTER}`);
     schedulePrograms = Array.isArray(response.data) ? response.data : [];
     renderFormsTable();
+    updateCreateButtonState();
 }
 
 function collectKkProfilingFields() {
@@ -319,6 +671,7 @@ function resetModalForm() {
     }
 
     resetAgeClassificationsForm();
+    populateSportSelect();
 
     if (programMeta) {
         const typeEl = document.getElementById('programType');
@@ -336,14 +689,8 @@ function openModal(forEditId) {
     if (!modal) return;
 
     if (!forEditId) {
-        const currentYear = new Date().getFullYear();
-        const hasProgramThisYear = schedulePrograms.some((program) => {
-            if (!program.start_date) return false;
-            return new Date(program.start_date).getFullYear() === currentYear;
-        });
-
-        if (hasProgramThisYear) {
-            showToast('A sports program already exists for this year. Edit the existing program instead.', 'error');
+        if (allSportsCreatedForYear()) {
+            showToast('Basketball, Volleyball, and Other programs already exist for this year.', 'error');
             return;
         }
 
@@ -389,15 +736,20 @@ function renderFormsTable() {
     const countEl = document.getElementById('programCount');
     if (!tableBody) return;
 
-    const forms = [...schedulePrograms].sort((a, b) => {
-        const nameA = (a.program_name || '').toLowerCase();
-        const nameB = (b.program_name || '').toLowerCase();
+    const filtered = getFilteredSchedulePrograms();
+    const forms = [...filtered].sort((a, b) => {
+        const nameA = getProgramSportLabel(a).toLowerCase();
+        const nameB = getProgramSportLabel(b).toLowerCase();
         return nameA.localeCompare(nameB);
     });
 
     if (countEl) countEl.textContent = String(forms.length);
 
     if (!forms.length) {
+        if (schedulePrograms.length && (scheduleFilterTermId || scheduleFilterYear || scheduleSearchQuery)) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="saf-table-empty">No sports programs match the selected filters.</td></tr>';
+            return;
+        }
         if (window.SkAbyipNotice?.isPending(abyipGate)) {
             tableBody.innerHTML = '<tr>' + window.SkAbyipNotice.renderEmptyRow(6, abyipGate) + '</tr>';
         } else {
@@ -412,31 +764,19 @@ function renderFormsTable() {
 
         return `
             <tr>
-                <td>${escapeHtml(program.program_type)}</td>
+                <td>${escapeHtml(getProgramSportLabel(program))}</td>
                 <td>${escapeHtml(program.participation_quantity ?? 'N/A')}</td>
                 <td>${escapeHtml(program.start_date)}</td>
                 <td>${escapeHtml(program.end_date)}</td>
                 <td><span class="schol-pill ${statusClass}">${formatStatusLabel(status)}</span></td>
-                <td class="col-actions">
-                    <div class="prog-tbl-actions">
-                        <button type="button" class="prog-btn prog-btn-view" data-form-view="${program.id}">View</button>
-                        <button type="button" class="prog-btn prog-btn-edit" data-form-edit="${program.id}">Edit</button>
-                        <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${program.id}">Archive</button>
-                    </div>
-                </td>
+                ${renderActionMenuCell(program.id)}
             </tr>
         `;
     }).join('');
 
-    tableBody.querySelectorAll('[data-form-view]').forEach((btn) => {
-        btn.addEventListener('click', () => openFormPreview(btn.getAttribute('data-form-view')));
-    });
-    tableBody.querySelectorAll('[data-form-edit]').forEach((btn) => {
-        btn.addEventListener('click', () => editProgram(btn.getAttribute('data-form-edit')));
-    });
-    tableBody.querySelectorAll('[data-form-delete]').forEach((btn) => {
-        btn.addEventListener('click', () => openDeleteProgramModal(btn.getAttribute('data-form-delete')));
-    });
+    if (typeof window.bindRowActionsTable === 'function') {
+        window.bindRowActionsTable(tableBody);
+    }
 }
 
 function editProgram(programId) {
@@ -474,6 +814,16 @@ function editProgram(programId) {
 
     setAgeClassificationsForm(program.sports_details || null);
 
+    const sportKey = program.sports_details?.sport_key || program.sport_key || '';
+    const otherName = sportKey === 'other'
+        ? (program.sports_details?.sport_label || program.sport_label || '')
+        : '';
+    populateSportSelect({
+        locked: true,
+        selectedKey: sportKey,
+        otherName,
+    });
+
     if (modalTitle) {
         modalTitle.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -505,6 +855,10 @@ function openFormPreview(programId) {
                 <h4 class="schol-schedule-title">Program Information</h4>
                 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
                     <div style="grid-column:1/-1;">
+                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Sport</label>
+                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(getProgramSportLabel(program))}</div>
+                    </div>
+                    <div>
                         <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program</label>
                         <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;">${escapeHtml(program.program_name)}</div>
                     </div>
@@ -595,7 +949,7 @@ function openDeleteProgramModal(programId) {
     const deleteModal = document.getElementById('deleteProgramModal');
     const nameEl = document.getElementById('deleteProgramName');
     if (nameEl) {
-        nameEl.textContent = program ? `"${program.program_name}"` : '';
+        nameEl.textContent = program ? `"${getProgramSportLabel(program)}"` : '';
     }
     if (deleteModal) deleteModal.style.display = 'flex';
 }
@@ -659,13 +1013,24 @@ async function handleSave() {
         customQuestions = ensureDefaultTeamNameQuestion(window.SpfbFormBuilder.getQuestions());
     }
 
-    const ageClassifications = getAgeClassificationsFromForm();
-    if (!ageClassifications.length) {
-        showToast('Please add at least one age classification.', 'error');
+    const sportsDetails = getSportsDetailsPayload();
+
+    if (!sportsDetails.sport_key) {
+        showToast('Please select a sport (Basketball, Volleyball, or Other).', 'error');
         return;
     }
 
-    const sportsDetails = getSportsDetailsPayload();
+    if (sportsDetails.sport_key === 'other' && !sportsDetails.sport_label) {
+        showToast('Please enter the sport name for Other.', 'error');
+        return;
+    }
+
+    const ageClassifications = sportsDetails.age_classifications;
+    const ageValidationError = validateAgeClassifications(ageClassifications);
+    if (ageValidationError) {
+        showToast(ageValidationError, 'error');
+        return;
+    }
 
     const kkProfilingFields = collectKkProfilingFields();
 
@@ -723,6 +1088,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
     if (saveBtn) saveBtn.addEventListener('click', handleSave);
 
+    tableBody.addEventListener('click', (event) => {
+        const actionItem = event.target.closest('.row-actions-item');
+        if (!actionItem) return;
+
+        const programId = actionItem.getAttribute('data-program-id');
+        const action = actionItem.getAttribute('data-action');
+        if (!programId || !action) return;
+
+        if (action === 'view') openFormPreview(programId);
+        if (action === 'edit') editProgram(programId);
+        if (action === 'archive') openDeleteProgramModal(programId);
+    });
+
+    const sportsDisciplineKey = document.getElementById('sportsDisciplineKey');
+    if (sportsDisciplineKey) {
+        sportsDisciplineKey.addEventListener('change', () => {
+            const otherWrap = document.getElementById('sportsOtherNameWrap');
+            if (otherWrap) {
+                otherWrap.style.display = sportsDisciplineKey.value === 'other' ? 'block' : 'none';
+            }
+            if (sportsDisciplineKey.value && !editingProgramId) {
+                loadDefaultAgeBrackets();
+            }
+        });
+    }
+
     if (modal) {
         modal.addEventListener('click', (event) => {
             if (event.target === modal) closeModal();
@@ -759,8 +1150,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             current.push({
                 id: generateClassificationId('new_division'),
                 name: '',
-                min_age: 15,
-                max_age: 17,
+                min_age: '',
+                max_age: '',
                 is_open: true,
             });
             renderAgeClassificationsTable(current);
@@ -768,6 +1159,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (ageClassificationsBody) {
+        ageClassificationsBody.addEventListener('input', (event) => {
+            const input = event.target;
+            if (!input.classList.contains('sports-cls-min') && !input.classList.contains('sports-cls-max')) {
+                return;
+            }
+
+            const row = input.closest('tr[data-classification-id]');
+            if (row) {
+                normalizeRowAgeInputs(row);
+            }
+        });
+
+        ageClassificationsBody.addEventListener('blur', (event) => {
+            const input = event.target;
+            if (!input.classList.contains('sports-cls-min') && !input.classList.contains('sports-cls-max')) {
+                return;
+            }
+
+            const row = input.closest('tr[data-classification-id]');
+            if (row) {
+                normalizeRowAgeInputs(row);
+            }
+        }, true);
+
         ageClassificationsBody.addEventListener('click', (event) => {
             const removeBtn = event.target.closest('[data-remove-classification]');
             if (!removeBtn) return;
@@ -805,6 +1220,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         if (typeof window.showLoading === 'function') window.showLoading();
+        bindScheduleFilters();
+        await loadScheduleFilterMeta();
         await loadProgramMeta();
         await loadPrograms();
     } catch (error) {

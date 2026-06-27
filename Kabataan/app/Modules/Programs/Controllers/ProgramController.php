@@ -123,7 +123,7 @@ class ProgramController extends Controller
             'answers.*.question_type' => ['nullable', 'string'],
             'answers.*.question_label' => ['nullable', 'string'],
             'answers.*.answer' => ['nullable'],
-            'system_field_answers' => ['required', 'array'],
+            'system_field_answers' => ['nullable', 'array'],
         ]);
 
         $user = Auth::user();
@@ -131,7 +131,7 @@ class ProgramController extends Controller
             $user,
             (int) $validated['schedule_program_id'],
             $validated['answers'],
-            $validated['system_field_answers'],
+            $validated['system_field_answers'] ?? [],
         );
 
         return response()->json([
@@ -170,21 +170,23 @@ class ProgramController extends Controller
         return redirect()->route('scholarship.apply', ['schedule' => $scheduleId]);
     }
 
-    public function sportsLanding(Request $request): View
+    public function sportsLanding(Request $request): View|RedirectResponse
     {
         $user = Auth::user();
         $scheduleId = (int) $request->query('schedule', 0);
+
+        if ($scheduleId > 0) {
+            return redirect()->route('sports.apply.form', ['schedule' => $scheduleId]);
+        }
 
         $registration = KabataanRegistration::with('barangay')
             ->where('user_id', $user->id)
             ->latest()
             ->first();
 
-        $barangayName = $registration?->barangay?->name ?? 'Your Barangay';
-
         return view('programs::sports_landing', [
-            'scheduleProgramId' => $scheduleId > 0 ? $scheduleId : null,
-            'barangayName' => $barangayName,
+            'scheduleProgramId' => null,
+            'barangayName' => $registration?->barangay?->name ?? 'Your Barangay',
             'kkFieldLabels' => $this->programService->kkFieldLabels(),
         ]);
     }
@@ -206,7 +208,8 @@ class ProgramController extends Controller
         return view('programs::sports-registration', [
             'scheduleProgramId' => $scheduleId,
             'program' => $program,
-            'backRoute' => route('sports.apply', ['schedule' => $scheduleId]),
+            'kkFieldLabels' => $this->programService->kkFieldLabels(),
+            'backRoute' => route('sports.apply'),
         ]);
     }
 

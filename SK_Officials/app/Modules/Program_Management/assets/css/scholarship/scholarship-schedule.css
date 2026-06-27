@@ -11,6 +11,39 @@
     gap: 16px;
     margin-bottom: 24px;
     flex-wrap: wrap;
+    padding: 20px 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.saf-schedule-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.saf-schedule-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex: 1;
+    min-width: 280px;
+    margin-bottom: 0 !important;
+}
+
+.saf-schedule-filters .schol-filter-input {
+    min-width: 160px;
+    flex: 0 1 180px;
+}
+
+.saf-schedule-search {
+    flex: 1 1 220px;
+    min-width: 200px;
 }
 
 .saf-schedule-meta {
@@ -52,6 +85,14 @@
     overflow-x: auto;
 }
 
+.saf-page-wrap .saf-table-wrap {
+    overflow: visible;
+}
+
+.saf-forms-table-card:has(.row-actions-menu) {
+    overflow: visible;
+}
+
 .saf-forms-table {
     width: 100%;
     border-collapse: collapse;
@@ -60,6 +101,14 @@
 
 .saf-forms-table thead {
     background: #2c2c3e;
+}
+
+.saf-schedule-table-card .saf-forms-table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.saf-schedule-table-card .saf-forms-table thead th:last-child {
+    border-top-right-radius: 12px;
 }
 
 .saf-forms-table th {

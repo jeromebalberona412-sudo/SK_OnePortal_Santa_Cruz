@@ -68,6 +68,27 @@ class ProgramApplicationReviewService
     ): array {
         $application = $this->findModel($user, $applicationId, $letter);
 
+        $isRestoreToPending = $status === ProgramApplication::STATUS_PENDING
+            && $application->status === ProgramApplication::STATUS_APPROVED;
+
+        if ($isRestoreToPending) {
+            if (strtoupper($letter) !== ScheduleProgramService::LETTER_SPORTS) {
+                throw ValidationException::withMessages([
+                    'status' => ['Only sports applications can be restored to pending.'],
+                ]);
+            }
+
+            $application->update([
+                'status' => ProgramApplication::STATUS_PENDING,
+                'reviewed_by' => null,
+                'reviewed_at' => null,
+                'rejection_reason' => null,
+                'rejection_reasons' => null,
+            ]);
+
+            return $this->formatApplication($application->fresh(['scheduleProgram', 'kabataan']), true);
+        }
+
         if (! in_array($status, [ProgramApplication::STATUS_APPROVED, ProgramApplication::STATUS_REJECTED], true)) {
             throw ValidationException::withMessages([
                 'status' => ['Status must be approved or rejected.'],
@@ -117,6 +138,11 @@ class ProgramApplicationReviewService
         } else {
             $payload['rejection_reason'] = null;
             $payload['rejection_reasons'] = null;
+
+            if (strtoupper($letter) === ScheduleProgramService::LETTER_SPORTS
+                && ($application->payment_status === null || trim((string) $application->payment_status) === '')) {
+                $payload['payment_status'] = 'Unpaid';
+            }
         }
 
         $application->update($payload);
@@ -160,7 +186,7 @@ class ProgramApplicationReviewService
     /**
      * @return array<string, mixed>
      */
-    public function updatePaymentStatus(User $user, int $applicationId, string $letter, string $paymentStatus): array
+    public function updatePaymentStatus(User $user, int $applicationId, string $letter, string $paymentStatus, bool $applyToTeam = false): array
     {
         $application = $this->findModel($user, $applicationId, $letter);
 
@@ -178,9 +204,34 @@ class ProgramApplicationReviewService
             ]),
         };
 
-        $application->update(['payment_status' => $normalized]);
+        $idsToUpdate = collect([$application->id]);
 
-        return $this->formatApplication($application->fresh(['scheduleProgram', 'kabataan']));
+        if ($applyToTeam) {
+            $teamName = $this->extractTeamName($application);
+            if ($teamName !== null && trim($teamName) !== '') {
+                $idsToUpdate = ProgramApplication::query()
+                    ->with(['scheduleProgram'])
+                    ->where('status', ProgramApplication::STATUS_APPROVED)
+                    ->whereHas('scheduleProgram', function ($query) use ($user, $letter) {
+                        $query->where('barangay_id', $user->barangay_id)
+                            ->where('program_letter', strtoupper(trim($letter)));
+                    })
+                    ->get()
+                    ->filter(fn (ProgramApplication $app) => $this->extractTeamName($app) === $teamName)
+                    ->pluck('id')
+                    ->values();
+            }
+        }
+
+        ProgramApplication::query()
+            ->whereIn('id', $idsToUpdate->all())
+            ->update(['payment_status' => $normalized]);
+
+        return [
+            'data' => $this->formatApplication($application->fresh(['scheduleProgram', 'kabataan'])),
+            'updated_count' => $idsToUpdate->count(),
+            'updated_ids' => $idsToUpdate->all(),
+        ];
     }
 
     /**
@@ -230,10 +281,17 @@ class ProgramApplicationReviewService
             $application->suffix,
         ])));
 
+        $sportsMeta = $this->resolveSportsMeta($application);
+        $teamName = $this->extractTeamName($application);
+
         $formatted = [
             'id' => $application->id,
             'program_id' => $application->program_id,
-            'program_name' => $application->scheduleProgram?->program_type ?? $application->scheduleProgram?->program_name,
+            'program_name' => $application->scheduleProgram?->program_name
+                ?? $application->scheduleProgram?->program_type,
+            'sport_key' => $sportsMeta['sport_key'],
+            'sport_label' => $sportsMeta['sport_label'],
+            'team_name' => $teamName,
             'full_name' => $fullName !== '' ? $fullName : 'Applicant',
             'last_name' => $application->last_name,
             'first_name' => $application->first_name,
@@ -263,7 +321,9 @@ class ProgramApplicationReviewService
             'can_review' => $this->canReviewApplication($application),
             'documents_count' => count($normalizedDocs = $this->normalizeRequiredDocuments($application->required_documents ?? [])),
             'document_labels' => collect($normalizedDocs)
-                ->map(fn (array $doc) => (string) ($doc['question_label'] ?? $doc['label'] ?? $doc['original_name'] ?? 'Uploaded PDF'))
+                ->map(fn (array $doc) => $this->stringifyValue(
+                    $doc['question_label'] ?? $doc['label'] ?? $doc['original_name'] ?? 'Uploaded PDF'
+                ))
                 ->filter()
                 ->values()
                 ->all(),
@@ -283,17 +343,23 @@ class ProgramApplicationReviewService
             );
 
             $documentsByQuestionId = collect($formatted['required_documents'])->keyBy('question_id');
-            $formatted['custom_answers'] = collect($application->custom_answers ?? [])
-                ->map(function (array $answer) use ($documentsByQuestionId) {
-                    $questionId = (string) ($answer['question_id'] ?? '');
-                    if (($answer['question_type'] ?? '') === 'file' && $documentsByQuestionId->has($questionId)) {
-                        $answer['answer'] = $documentsByQuestionId->get($questionId);
-                    }
+            $formatted['custom_answers'] = $this->enrichCustomAnswers(
+                $application,
+                collect($application->custom_answers ?? [])
+                    ->filter(fn ($answer) => is_array($answer))
+                    ->map(function (array $answer) use ($documentsByQuestionId) {
+                        $questionId = (string) ($answer['question_id'] ?? '');
+                        if (($answer['question_type'] ?? '') === 'file' && $documentsByQuestionId->has($questionId)) {
+                            $answer['answer'] = $documentsByQuestionId->get($questionId);
+                        } elseif (($answer['question_type'] ?? '') !== 'file' && array_key_exists('answer', $answer)) {
+                            $answer['answer'] = $this->stringifyValue($answer['answer']);
+                        }
 
-                    return $answer;
-                })
-                ->values()
-                ->all();
+                        return $answer;
+                    })
+                    ->values()
+                    ->all()
+            );
             $kkFields = $application->scheduleProgram?->kk_profiling_fields ?? [];
             if ($kkFields === [] && ($application->scheduleProgram?->program_letter ?? '') === 'I') {
                 $kkFields = ScheduleProgramService::DEFAULT_SPORTS_KK_FIELDS;
@@ -301,17 +367,146 @@ class ProgramApplicationReviewService
             $formatted['kk_profile_data'] = $this->buildKkProfileData($application, $kkFields);
             $formatted['schedule_program'] = $application->scheduleProgram ? [
                 'id' => $application->scheduleProgram->id,
+                'program_name' => $application->scheduleProgram->program_name,
                 'program_type' => $application->scheduleProgram->program_type,
                 'custom_questions' => $application->scheduleProgram->custom_questions ?? [],
                 'kk_profiling_fields' => $kkFields,
+                'sports_details' => $application->scheduleProgram->sports_details ?? [],
             ] : null;
         }
 
         return $formatted;
     }
 
+    /**
+     * @return array{sport_key: string, sport_label: string}
+     */
+    protected function resolveSportsMeta(ProgramApplication $application): array
+    {
+        $details = is_array($application->scheduleProgram?->sports_details)
+            ? $application->scheduleProgram->sports_details
+            : [];
+        $key = strtolower(trim((string) ($details['sport_key'] ?? 'other')));
+        if (! in_array($key, ['basketball', 'volleyball', 'other'], true)) {
+            $key = 'other';
+        }
+
+        $label = trim((string) ($details['sport_label'] ?? ''));
+        if ($label === '') {
+            $label = match ($key) {
+                'basketball' => 'Basketball',
+                'volleyball' => 'Volleyball',
+                default => 'Other',
+            };
+        }
+
+        return [
+            'sport_key' => $key,
+            'sport_label' => $label,
+        ];
+    }
+
+    protected function extractTeamName(ProgramApplication $application): ?string
+    {
+        foreach ($application->custom_answers ?? [] as $answer) {
+            if (! is_array($answer)) {
+                continue;
+            }
+
+            $label = strtolower(trim((string) ($answer['question_label'] ?? '')));
+            if (! str_contains($label, 'team')) {
+                continue;
+            }
+
+            $text = $this->stringifyValue($answer['answer'] ?? '');
+            if ($text !== '') {
+                return $text;
+            }
+        }
+
+        foreach ($application->custom_answers ?? [] as $answer) {
+            if (! is_array($answer)) {
+                continue;
+            }
+
+            if (($answer['question_type'] ?? '') === 'file') {
+                continue;
+            }
+
+            $text = $this->stringifyValue($answer['answer'] ?? '');
+            if ($text !== '') {
+                return $text;
+            }
+        }
+
+        return null;
+    }
+
+    protected function stringifyValue(mixed $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+
+        if (is_array($value)) {
+            return collect($value)
+                ->map(fn ($item) => $this->stringifyValue($item))
+                ->filter(fn ($item) => $item !== '')
+                ->implode(', ');
+        }
+
+        return trim((string) $value);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $customAnswers
+     * @return list<array<string, mixed>>
+     */
+    protected function enrichCustomAnswers(ProgramApplication $application, array $customAnswers): array
+    {
+        return collect($customAnswers)
+            ->map(function (array $answer) use ($application) {
+                if (($answer['question_type'] ?? '') !== 'file') {
+                    return $answer;
+                }
+
+                $fileAnswer = $answer['answer'] ?? null;
+                if (! is_array($fileAnswer) || empty($fileAnswer['path']) || ! empty($fileAnswer['preview_url'])) {
+                    return $answer;
+                }
+
+                $questionId = (string) ($answer['question_id'] ?? '');
+                $enriched = $this->documentService->enrichDocumentsForApplication($application, [[
+                    'question_id' => $questionId,
+                    'path' => $fileAnswer['path'],
+                    'original_name' => $fileAnswer['original_name'] ?? 'Uploaded PDF',
+                    'size' => $fileAnswer['size'] ?? 0,
+                    'question_label' => $answer['question_label'] ?? '',
+                ]]);
+
+                if (($enriched[0] ?? null) !== null) {
+                    $answer['answer'] = $enriched[0];
+                }
+
+                return $answer;
+            })
+            ->values()
+            ->all();
+    }
+
     protected function canReviewApplication(ProgramApplication $application): bool
     {
+        $letter = strtoupper((string) ($application->scheduleProgram?->program_letter ?? ''));
+
+        // Sports officials can approve/reject pending applications anytime.
+        if ($letter === ScheduleProgramService::LETTER_SPORTS) {
+            return true;
+        }
+
         $schedule = $application->scheduleProgram;
 
         if ($schedule === null || $schedule->end_date === null) {
@@ -349,30 +544,30 @@ class ProgramApplicationReviewService
             ?? ($profileExtras['birthday'] ?? '');
 
         $mapped = [
-            'last_name' => (string) ($application->last_name ?? $profileExtras['last_name'] ?? ''),
-            'first_name' => (string) ($application->first_name ?? $profileExtras['first_name'] ?? ''),
-            'middle_name' => (string) ($application->middle_name ?? $profileExtras['middle_name'] ?? ''),
-            'suffix' => (string) ($application->suffix ?? $profileExtras['suffix'] ?? ''),
-            'birthday' => $birthday,
-            'age' => (string) ($application->age ?? $profileExtras['age'] ?? ''),
-            'sex' => (string) ($application->sex ?? $profileExtras['sex'] ?? ''),
-            'civil_status' => (string) ($application->civil_status ?? $profileExtras['civil_status'] ?? ''),
-            'contact_number' => (string) ($application->contact_number ?? $profileExtras['contact_number'] ?? ''),
-            'email' => (string) ($application->email ?? $profileExtras['email'] ?? ''),
-            'region' => (string) ($profileExtras['region'] ?? ''),
-            'province' => (string) ($profileExtras['province'] ?? ''),
-            'city' => (string) ($profileExtras['city'] ?? ''),
-            'barangay' => (string) ($application->barangay ?? $profileExtras['barangay'] ?? ''),
-            'purok_zone' => (string) ($application->purok ?? $profileExtras['purok_zone'] ?? ''),
-            'youth_classification' => (string) ($profileExtras['youth_classification'] ?? ''),
-            'youth_age_group' => (string) ($profileExtras['youth_age_group'] ?? ''),
+            'last_name' => $this->stringifyValue($application->last_name ?? $profileExtras['last_name'] ?? ''),
+            'first_name' => $this->stringifyValue($application->first_name ?? $profileExtras['first_name'] ?? ''),
+            'middle_name' => $this->stringifyValue($application->middle_name ?? $profileExtras['middle_name'] ?? ''),
+            'suffix' => $this->stringifyValue($application->suffix ?? $profileExtras['suffix'] ?? ''),
+            'birthday' => $this->stringifyValue($birthday),
+            'age' => $this->stringifyValue($application->age ?? $profileExtras['age'] ?? ''),
+            'sex' => $this->stringifyValue($application->sex ?? $profileExtras['sex'] ?? ''),
+            'civil_status' => $this->stringifyValue($application->civil_status ?? $profileExtras['civil_status'] ?? ''),
+            'contact_number' => $this->stringifyValue($application->contact_number ?? $profileExtras['contact_number'] ?? ''),
+            'email' => $this->stringifyValue($application->email ?? $profileExtras['email'] ?? ''),
+            'region' => $this->stringifyValue($profileExtras['region'] ?? ''),
+            'province' => $this->stringifyValue($profileExtras['province'] ?? ''),
+            'city' => $this->stringifyValue($profileExtras['city'] ?? ''),
+            'barangay' => $this->stringifyValue($application->barangay ?? $profileExtras['barangay'] ?? ''),
+            'purok_zone' => $this->stringifyValue($application->purok ?? $profileExtras['purok_zone'] ?? ''),
+            'youth_classification' => $this->stringifyValue($profileExtras['youth_classification'] ?? ''),
+            'youth_age_group' => $this->stringifyValue($profileExtras['youth_age_group'] ?? ''),
             'home_address' => trim(implode(', ', array_filter([
-                (string) ($application->purok ?? $profileExtras['purok_zone'] ?? ''),
-                (string) ($application->barangay ?? $profileExtras['barangay'] ?? ''),
+                $this->stringifyValue($application->purok ?? $profileExtras['purok_zone'] ?? ''),
+                $this->stringifyValue($application->barangay ?? $profileExtras['barangay'] ?? ''),
             ]))),
-            'current_school' => (string) ($application->school_name ?? ''),
-            'year_level' => (string) ($application->grade_level ?? ''),
-            'course_strand' => (string) ($application->course ?? ''),
+            'current_school' => $this->stringifyValue($application->school_name ?? ''),
+            'year_level' => $this->stringifyValue($application->grade_level ?? ''),
+            'course_strand' => $this->stringifyValue($application->course ?? ''),
         ];
 
         $mapped['full_name'] = trim(implode(' ', array_filter([
@@ -383,13 +578,13 @@ class ProgramApplicationReviewService
         ], fn ($part) => trim($part) !== '')));
 
         if ($fields === []) {
-            return array_filter($mapped, fn ($value) => trim((string) $value) !== '');
+            return array_filter($mapped, fn ($value) => $this->stringifyValue($value) !== '');
         }
 
         $result = [];
         foreach ($fields as $field) {
             $key = (string) $field;
-            $value = trim((string) ($mapped[$key] ?? ''));
+            $value = $this->stringifyValue($mapped[$key] ?? '');
             if ($value !== '') {
                 $result[$key] = $value;
             }
@@ -441,7 +636,7 @@ class ProgramApplicationReviewService
                 'purok_zone' => $survey->purok_zone,
                 'youth_classification' => $survey->youth_classification,
                 'youth_age_group' => $survey->youth_age_group,
-            ], fn ($value) => $value !== null && trim((string) $value) !== ''));
+            ], fn ($value) => $this->stringifyValue($value) !== ''));
         }
 
         if (empty($formData['region']) && $registration->barangay) {
@@ -452,7 +647,7 @@ class ProgramApplicationReviewService
         }
 
         return collect($formData)
-            ->mapWithKeys(fn ($value, $key) => [(string) $key => trim((string) $value)])
+            ->mapWithKeys(fn ($value, $key) => [(string) $key => $this->stringifyValue($value)])
             ->filter(fn ($value) => $value !== '')
             ->all();
     }

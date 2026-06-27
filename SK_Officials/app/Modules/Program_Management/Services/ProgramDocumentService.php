@@ -4,7 +4,7 @@ namespace App\Modules\Program_Management\Services;
 
 use App\Models\ProgramApplication;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProgramDocumentService
 {
@@ -49,7 +49,7 @@ class ProgramDocumentService
         return $enriched;
     }
 
-    public function streamForOfficial(ProgramApplication $application, string $questionId, bool $download = false): StreamedResponse
+    public function streamForOfficial(ProgramApplication $application, string $questionId, bool $download = false): BinaryFileResponse
     {
         $documents = $application->required_documents ?? [];
         $meta = is_array($documents[$questionId] ?? null) ? $documents[$questionId] : null;

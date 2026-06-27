@@ -11,9 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class ProgramEvaluationController extends Controller
 {
-    public function __construct(private readonly ProgramEvaluationService $service)
-    {
-    }
+    public function __construct(private readonly ProgramEvaluationService $service) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -23,6 +21,17 @@ class ProgramEvaluationController extends Controller
             'data' => $this->service->listForBarangay($request->user(), $letter)->values()->all(),
             'stats' => $this->service->summarizeForBarangay($request->user(), $letter),
         ]);
+    }
+
+    public function meta(Request $request): JsonResponse
+    {
+        try {
+            return response()->json([
+                'data' => $this->service->resolveProgramContext($request->user(), $this->resolveLetter($request)),
+            ]);
+        } catch (ValidationException $exception) {
+            return $this->validationErrorResponse($exception);
+        }
     }
 
     public function show(Request $request, int $id): JsonResponse

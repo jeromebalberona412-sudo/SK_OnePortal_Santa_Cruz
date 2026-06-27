@@ -355,6 +355,19 @@
     box-shadow: 0 0 0 3px rgba(33, 63, 153, 0.1);
 }
 
+.eval-readonly-field,
+.eval-input.eval-readonly-field[readonly] {
+    background: #f8fafc;
+    color: #374151;
+    cursor: default;
+}
+
+.eval-readonly-field:focus,
+.eval-input.eval-readonly-field[readonly]:focus {
+    border-color: #d1d5db;
+    box-shadow: none;
+}
+
 .eval-textarea {
     resize: vertical;
     min-height: 100px;

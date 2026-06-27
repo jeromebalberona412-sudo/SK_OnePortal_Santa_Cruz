@@ -5,6 +5,7 @@ async function apiFetch(url, options = {}) {
     const headers = {
         'X-CSRF-TOKEN': csrfToken(),
         'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
         ...extraHeaders,
     };
 
@@ -32,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeProgramsUI();
 });
 
-// ── Toast ──────────────────────────────────────────────────────────────────
 function showProgramToast(message, type) {
     const existing = document.querySelector('.prog-toast');
     if (existing) existing.remove();
@@ -45,6 +45,33 @@ function showProgramToast(message, type) {
         toast.classList.add('prog-toast-hide');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+function resolveProgramStatus(startDate, endDate) {
+    if (!startDate || !endDate) {
+        return 'planned';
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T00:00:00`);
+
+    if (today < start) {
+        return 'planned';
+    }
+
+    if (today > end) {
+        return 'completed';
+    }
+
+    return 'ongoing';
+}
+
+function formatStatusLabel(status) {
+    if (!status) return 'Planned';
+    return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 function initializeProgramsUI() {
@@ -67,6 +94,7 @@ function initializeProgramsUI() {
     const editDurationIndex  = document.getElementById('editDurationIndex');
     const editStartDate      = document.getElementById('editStartDate');
     const editEndDate        = document.getElementById('editEndDate');
+    const editDurationStatusPill = document.getElementById('editDurationStatusPill');
 
     // Modal maximize/minimize (restore) controls
     function resetModalMaximize(backdropEl) {
@@ -107,6 +135,14 @@ function initializeProgramsUI() {
         const s = new Date(start).toLocaleDateString(undefined, opts);
         const e = new Date(end).toLocaleDateString(undefined, opts);
         return `${s} – ${e}`;
+    }
+
+    function updateEditDurationStatusPreview(start, end) {
+        if (!editDurationStatusPill) return;
+
+        const status = resolveProgramStatus(start, end);
+        editDurationStatusPill.className = `status-pill ${status}`;
+        editDurationStatusPill.textContent = formatStatusLabel(status);
     }
 
     function render() {
@@ -154,7 +190,7 @@ function initializeProgramsUI() {
                     <td class="program-duration">${formatDuration(p.startDate, p.endDate)}</td>
                     <td>
                         <span class="status-pill ${p.status}">
-                            ${p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                            ${formatStatusLabel(p.status)}
                         </span>
                     </td>
                     <td>
@@ -249,16 +285,17 @@ function initializeProgramsUI() {
                 if (viewProgramTitle) viewProgramTitle.value = program.title;
                 if (viewProgramDuration) viewProgramDuration.value = formatDuration(program.startDate, program.endDate);
                 if (viewProgramStatus) {
-                    viewProgramStatus.value = program.status.charAt(0).toUpperCase() + program.status.slice(1);
+                    viewProgramStatus.value = formatStatusLabel(program.status);
                 }
                 resetModalMaximize(viewModal);
                 if (viewModal) viewModal.style.display = 'flex';
 
             } else if (action === 'edit') {
-                // Open Edit Duration modal
                 if (editDurationIndex) editDurationIndex.value = index;
                 if (editStartDate) editStartDate.value = program.startDate;
                 if (editEndDate) editEndDate.value = program.endDate;
+                updateEditDurationStatusPreview(program.startDate, program.endDate);
+                clearDurationErrors();
                 if (editDurationModal) editDurationModal.style.display = 'flex';
             }
         });
@@ -288,6 +325,54 @@ function initializeProgramsUI() {
         });
     }
 
+    function clearDurationErrors() {
+        const startDateError = document.getElementById('editStartDateError');
+        const endDateError = document.getElementById('editEndDateError');
+        if (startDateError) {
+            startDateError.textContent = '';
+            startDateError.style.display = 'none';
+        }
+        if (endDateError) {
+            endDateError.textContent = '';
+            endDateError.style.display = 'none';
+        }
+    }
+
+    function validateDurationDates(start, end) {
+        const startDateError = document.getElementById('editStartDateError');
+        const endDateError = document.getElementById('editEndDateError');
+        clearDurationErrors();
+
+        if (!start || !end) {
+            showProgramToast('Both start and end dates are required.', 'error');
+            return false;
+        }
+
+        if (end < start) {
+            if (endDateError) {
+                endDateError.textContent = 'End date must be on or after start date.';
+                endDateError.style.display = 'block';
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    if (editStartDate) {
+        editStartDate.addEventListener('input', () => {
+            validateDurationDates(editStartDate.value, editEndDate?.value || '');
+            updateEditDurationStatusPreview(editStartDate.value, editEndDate?.value || '');
+        });
+    }
+
+    if (editEndDate) {
+        editEndDate.addEventListener('input', () => {
+            validateDurationDates(editStartDate?.value || '', editEndDate.value);
+            updateEditDurationStatusPreview(editStartDate?.value || '', editEndDate.value);
+        });
+    }
+
     if (editDurationSave) {
         editDurationSave.addEventListener('click', async () => {
             const idx   = parseInt(editDurationIndex.value, 10);
@@ -295,13 +380,7 @@ function initializeProgramsUI() {
             const end   = editEndDate.value;
             const program = programs[idx];
 
-            if (!start || !end) {
-                showProgramToast('Both start and end dates are required.', 'error');
-                return;
-            }
-
-            if (end < start) {
-                showProgramToast('End date must be after start date.', 'error');
+            if (!validateDurationDates(start, end)) {
                 return;
             }
 
@@ -310,8 +389,10 @@ function initializeProgramsUI() {
                 return;
             }
 
+            editDurationSave.disabled = true;
+
             try {
-                await apiFetch(`/api/programs/${program.id}/duration`, {
+                const response = await apiFetch(`/api/programs/${program.id}/duration`, {
                     method: 'PUT',
                     body: {
                         start_date: start,
@@ -319,13 +400,18 @@ function initializeProgramsUI() {
                     },
                 });
 
+                const status = response.data?.status || resolveProgramStatus(start, end);
                 programs[idx].startDate = start;
                 programs[idx].endDate = end;
+                programs[idx].status = status;
                 closeEditDurationModal();
+                clearDurationErrors();
                 render();
-                showProgramToast('Edited successfully!');
+                showProgramToast(`Duration updated. Status: ${formatStatusLabel(status)}.`);
             } catch (error) {
                 showProgramToast(error.message || 'Failed to update duration.', 'error');
+            } finally {
+                editDurationSave.disabled = false;
             }
         });
     }

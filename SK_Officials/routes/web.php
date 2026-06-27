@@ -260,6 +260,7 @@ Route::middleware([
     });
 
     Route::prefix('api/program-evaluations')->group(function () {
+        Route::get('/meta', [ProgramEvaluationController::class, 'meta'])->name('api.program-evaluations.meta');
         Route::get('/', [ProgramEvaluationController::class, 'index'])->name('api.program-evaluations.index');
         Route::get('/{id}', [ProgramEvaluationController::class, 'show'])->whereNumber('id')->name('api.program-evaluations.show');
         Route::post('/', [ProgramEvaluationController::class, 'store'])->name('api.program-evaluations.store');

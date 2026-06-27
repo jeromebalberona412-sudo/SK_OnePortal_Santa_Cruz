@@ -3,8 +3,8 @@
 use App\Modules\Program_Management\Services\ScheduleProgramService;
 use Illuminate\Validation\ValidationException;
 
-it('sanitizes default sports age classifications', function () {
-    $defaults = ScheduleProgramService::defaultSportsAgeClassificationsPayload();
+it('sanitizes default basketball sports age classifications', function () {
+    $defaults = ScheduleProgramService::defaultSportsAgeClassificationsPayload('basketball');
 
     expect($defaults)->toHaveCount(4)
         ->and($defaults[0]['name'])->toBe('Mosquito Division')
@@ -12,10 +12,30 @@ it('sanitizes default sports age classifications', function () {
         ->and($defaults[0]['max_age'])->toBe(17);
 });
 
+it('sanitizes default volleyball sports age classifications', function () {
+    $defaults = ScheduleProgramService::defaultSportsAgeClassificationsPayload('volleyball');
+
+    expect($defaults)->toHaveCount(5)
+        ->and($defaults[0]['name'])->toBe('Youth Division')
+        ->and($defaults[1]['name'])->toBe('Cadet Division')
+        ->and($defaults[2]['name'])->toBe('Intermediate Division')
+        ->and($defaults[3]['name'])->toBe('Open Division')
+        ->and($defaults[4]['name'])->toBe('Senior KK Division')
+        ->and($defaults[4]['min_age'])->toBe(27)
+        ->and($defaults[4]['max_age'])->toBe(30);
+});
+
+it('returns no defaults for other sport key', function () {
+    $defaults = ScheduleProgramService::defaultSportsAgeClassificationsPayload('other');
+
+    expect($defaults)->toBe([]);
+});
+
 it('sanitizes sports details with editable age brackets', function () {
     $service = app(ScheduleProgramService::class);
 
     $result = $service->sanitizeSportsDetails([
+        'sport_key' => 'volleyball',
         'open_all' => true,
         'max_team_members' => 12,
         'age_classifications' => [
@@ -74,3 +94,40 @@ it('does not duplicate team name question when already present', function () {
 
     expect($questions)->toHaveCount(1);
 });
+
+it('requires sport key and label in sports details', function () {
+    $service = app(ScheduleProgramService::class);
+
+    $result = $service->sanitizeSportsDetails([
+        'sport_key' => 'basketball',
+        'max_team_members' => 12,
+        'age_classifications' => [
+            [
+                'name' => 'Mosquito Division',
+                'min_age' => 15,
+                'max_age' => 17,
+                'is_open' => true,
+            ],
+        ],
+    ]);
+
+    expect($result)->not->toBeNull()
+        ->and($result['sport_key'])->toBe('basketball')
+        ->and($result['sport_label'])->toBe('Basketball');
+});
+
+it('requires custom sport name when sport key is other', function () {
+    $service = app(ScheduleProgramService::class);
+
+    $service->sanitizeSportsDetails([
+        'sport_key' => 'other',
+        'age_classifications' => [
+            [
+                'name' => 'Open Division',
+                'min_age' => 15,
+                'max_age' => 30,
+                'is_open' => true,
+            ],
+        ],
+    ]);
+})->throws(ValidationException::class);

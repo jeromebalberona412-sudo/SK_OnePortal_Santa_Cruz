@@ -352,14 +352,16 @@ class KabataanProgramService
         );
         $profileData = $this->buildApplicationProfileData($user, $registration);
         $kkEducation = trim((string) ($this->resolveKkProfile($user, ['education'])['education'] ?? ''));
-        $validatedSystemFields = $this->scholarshipSystemFields->validate($systemFieldAnswers, $kkEducation);
 
         if ($isSports) {
+            $validatedSystemFields = [];
             $matchedClassification = $eligibility['matched_classification'] ?? null;
             if (is_array($matchedClassification)) {
                 $validatedSystemFields['sports_classification'] = $matchedClassification['name'] ?? null;
                 $validatedSystemFields['sports_classification_id'] = $matchedClassification['id'] ?? null;
             }
+        } else {
+            $validatedSystemFields = $this->scholarshipSystemFields->validate($systemFieldAnswers, $kkEducation);
         }
 
         $profileData = $this->mergeSystemFieldsIntoProfile($profileData, $validatedSystemFields);
@@ -569,6 +571,8 @@ class KabataanProgramService
 
         $availableSlots = $this->calculateAvailableSlots($program);
 
+        $sportsDetails = is_array($program->sports_details) ? $program->sports_details : [];
+
         $payload = [
             'id' => $program->id,
             'program_type' => $program->program_type,
@@ -586,6 +590,8 @@ class KabataanProgramService
             'announcement' => $program->announcement,
             'scholarship_details' => $program->scholarship_details,
             'sports_details' => $program->sports_details,
+            'sport_key' => $sportsDetails['sport_key'] ?? null,
+            'sport_label' => $this->resolveSportLabel($sportsDetails),
             'kk_profiling_fields' => $program->kk_profiling_fields ?? [],
             'custom_questions' => $program->custom_questions ?? [],
             'has_applied' => $application !== null,
@@ -607,6 +613,41 @@ class KabataanProgramService
     }
 
     /**
+     * @param  list<array<string, mixed>>  $answers
+     * @return list<array{label: string, value: string}>
+     */
+    private function formatAnswersPreview(array $answers): array
+    {
+        return collect($answers)
+            ->map(function (array $answer) {
+                $label = trim((string) ($answer['question_label'] ?? 'Answer'));
+                $value = $answer['answer'] ?? '';
+
+                if (is_array($value)) {
+                    if (isset($value['original_name'])) {
+                        $value = (string) $value['original_name'];
+                    } else {
+                        $value = implode(', ', array_map('strval', $value));
+                    }
+                }
+
+                $value = trim((string) $value);
+                if ($value === '') {
+                    $value = '—';
+                } elseif (mb_strlen($value) > 120) {
+                    $value = mb_substr($value, 0, 117).'...';
+                }
+
+                return [
+                    'label' => $label !== '' ? $label : 'Answer',
+                    'value' => $value,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     private function formatUserApplication(?ProgramApplication $application, bool $withAnswers = false, ?User $user = null): ?array
@@ -622,6 +663,8 @@ class KabataanProgramService
 
         $scheduleProgram = $application->scheduleProgram;
 
+        $sportsDetails = is_array($scheduleProgram?->sports_details) ? $scheduleProgram->sports_details : [];
+
         $payload = [
             'id' => $application->id,
             'schedule_program_id' => $application->program_id,
@@ -629,13 +672,20 @@ class KabataanProgramService
             'program_name' => $scheduleProgram?->program_name ?? 'Program',
             'program_type' => $scheduleProgram?->program_type,
             'committee' => $scheduleProgram?->committee,
+            'sport_key' => $sportsDetails['sport_key'] ?? null,
+            'sport_label' => $this->resolveSportLabel($sportsDetails),
             'program_period' => $this->formatProgramPeriod($scheduleProgram),
             'status' => $application->status,
             'status_display' => ucfirst((string) $application->status),
             'submitted_at' => $displayDate?->format('M j, Y'),
             'submitted_at_iso' => $displayDate?->toIso8601String(),
+            'application_year' => $displayDate?->format('Y')
+                ?? $scheduleProgram?->start_date?->format('Y')
+                ?? now()->format('Y'),
             'cancel_reason' => $application->cancel_reason,
             'can_cancel' => $application->status === ProgramApplication::STATUS_PENDING,
+            'team_name' => $this->extractTeamNameFromApplication($application),
+            'answers_preview' => $this->formatAnswersPreview($application->custom_answers ?? []),
         ];
 
         if ($withAnswers) {
@@ -937,9 +987,13 @@ class KabataanProgramService
                 continue;
             }
 
+            $fieldKey = (string) ($answer['field_key'] ?? '');
             $label = mb_strtolower(trim((string) ($answer['question_label'] ?? '')));
-            if ($label === 'team name') {
-                return trim((string) ($answer['answer'] ?? ''));
+            if ($fieldKey === 'team_name' || $label === 'team name') {
+                $value = trim((string) ($answer['answer'] ?? ''));
+                if ($value !== '') {
+                    return $value;
+                }
             }
         }
 
@@ -1327,6 +1381,38 @@ class KabataanProgramService
         $used = $this->countActiveApplications($program->id);
 
         return max(0, $program->participation_quantity - $used);
+    }
+
+    /**
+     * @param  array<string, mixed>  $sportsDetails
+     */
+    private function resolveSportLabel(array $sportsDetails): ?string
+    {
+        $sportKey = strtolower(trim((string) ($sportsDetails['sport_key'] ?? '')));
+        $label = trim((string) ($sportsDetails['sport_label'] ?? ''));
+        $otherName = trim((string) ($sportsDetails['other_sport_name'] ?? ''));
+
+        if ($sportKey === 'other') {
+            if ($otherName !== '') {
+                return $otherName;
+            }
+
+            if ($label !== '' && strtolower($label) !== 'other') {
+                return $label;
+            }
+
+            return $label !== '' ? $label : null;
+        }
+
+        if ($label !== '' && strtolower($label) !== 'other') {
+            return $label;
+        }
+
+        return match ($sportKey) {
+            'basketball' => 'Basketball',
+            'volleyball' => 'Volleyball',
+            default => $label !== '' ? $label : null,
+        };
     }
 
     private function formatProgramPeriod(?ScheduleProgram $program): string

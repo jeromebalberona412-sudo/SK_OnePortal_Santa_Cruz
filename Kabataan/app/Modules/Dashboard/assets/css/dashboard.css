@@ -1850,3 +1850,111 @@ body.youth-dashboard {
 .sch-program-info-grid {
     margin-top: 4px;
 }
+
+/* Sports modal — dynamic tabs and program cards */
+.sports-modal-body {
+    padding: 24px 32px 32px;
+    overflow-y: auto;
+    max-height: calc(90vh - 80px);
+    min-height: 320px;
+}
+
+.sports-modal-loading {
+    text-align: center;
+    color: #64748b;
+    padding: 32px 16px;
+}
+
+#sportsModal .sports-type-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+#sportsModal .sports-type-tab {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#sportsModal .sports-type-tab.is-active {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.sports-program-card {
+    margin-bottom: 0;
+}
+
+.sports-program-card__body {
+    padding: 20px 24px 24px;
+}
+
+.sports-card-meta {
+    margin: 0 0 8px;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.sports-card-announcement {
+    margin: 12px 0;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-radius: 10px;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.sports-card-eligibility {
+    margin: 8px 0 0;
+    color: #b45309;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.sports-card-section {
+    margin-top: 18px;
+}
+
+.sports-card-section-title {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.sports-card-muted {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.sports-card-questions {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.sports-card-questions li {
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.sports-card-questions li:last-child {
+    border-bottom: none;
+}
+
+.sports-program-card__action {
+    margin-top: 20px;
+    padding-top: 4px;
+}

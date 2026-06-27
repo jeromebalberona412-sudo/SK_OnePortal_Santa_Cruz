@@ -91,14 +91,6 @@ class ScheduleProgramService
         'youth_classification', 'youth_age_group',
     ];
 
-    /** @var list<array{name: string, min_age: int, max_age: int}> */
-    public const DEFAULT_SPORTS_AGE_CLASSIFICATIONS = [
-        ['name' => 'Mosquito Division', 'min_age' => 15, 'max_age' => 17],
-        ['name' => 'Midget Division', 'min_age' => 18, 'max_age' => 21],
-        ['name' => 'Junior Division', 'min_age' => 22, 'max_age' => 25],
-        ['name' => 'Senior Division', 'min_age' => 26, 'max_age' => 30],
-    ];
-
     /** @var array<string, mixed> */
     public const DEFAULT_TEAM_NAME_QUESTION = [
         'id' => 'sys_team_name',
@@ -111,6 +103,25 @@ class ScheduleProgramService
     ];
 
     public const SPORTS_MAX_TEAM_MEMBERS = 12;
+
+    public const SPORT_KEY_BASKETBALL = 'basketball';
+
+    public const SPORT_KEY_VOLLEYBALL = 'volleyball';
+
+    public const SPORT_KEY_OTHER = 'other';
+
+    /** @var array<string, string> */
+    public const DEFAULT_SPORT_LABELS = [
+        self::SPORT_KEY_BASKETBALL => 'Basketball',
+        self::SPORT_KEY_VOLLEYBALL => 'Volleyball',
+    ];
+
+    /** @var list<string> */
+    public const SPORTS_DISCIPLINE_KEYS = [
+        self::SPORT_KEY_BASKETBALL,
+        self::SPORT_KEY_VOLLEYBALL,
+        self::SPORT_KEY_OTHER,
+    ];
 
     public function __construct(private readonly AbyipProgramCatalogService $catalogService) {}
 
@@ -172,12 +183,18 @@ class ScheduleProgramService
             }
         }
 
-        return [
+        $meta = [
             'program_type' => $programType,
             'committee' => $committee,
             'program_name' => $programType,
             'program_letter' => $letter,
         ];
+
+        if ($letter === self::LETTER_SPORTS) {
+            $meta['sports_age_classifications'] = self::sportsAgeClassificationsConfig();
+        }
+
+        return $meta;
     }
 
     /**
@@ -241,15 +258,23 @@ class ScheduleProgramService
                 $existsQuery->whereRaw('LOWER(committee) LIKE ?', ['%education%']);
             }
 
-            if ($letter === self::LETTER_SPORTS && ! empty($validated['start_date'])) {
+            if ($letter === self::LETTER_SPORTS) {
+                $sportKey = (string) ($validated['sports_details']['sport_key'] ?? '');
                 $year = (int) date('Y', strtotime((string) $validated['start_date']));
-                $existsQuery->whereYear('start_date', $year);
-            }
 
-            if ($existsQuery->exists()) {
-                $message = $letter === self::LETTER_SPORTS
-                    ? 'A sports program already exists for this year. Edit the existing program instead of creating a new one.'
-                    : 'A program already exists for this barangay. Edit the existing program instead of creating a new one.';
+                if ($sportKey !== '' && $this->sportsProgramExistsForYear(
+                    (int) $user->barangay_id,
+                    $meta['program_letter'],
+                    $sportKey,
+                    $year,
+                )) {
+                    $label = (string) ($validated['sports_details']['sport_label'] ?? $sportKey);
+                    throw ValidationException::withMessages([
+                        'program' => ["A {$label} program already exists for {$year}. Edit the existing program instead."],
+                    ]);
+                }
+            } elseif ($existsQuery->exists()) {
+                $message = 'A program already exists for this barangay. Edit the existing program instead of creating a new one.';
 
                 throw ValidationException::withMessages([
                     'program' => [$message],
@@ -813,28 +838,107 @@ class ScheduleProgramService
             $minTeamMembers = $maxTeamMembers;
         }
 
+        $sportKey = $this->sanitizeSportKey($raw['sport_key'] ?? null);
+        $sportLabel = $this->sanitizeSportLabel(
+            $sportKey,
+            $raw['sport_label'] ?? $raw['other_sport_name'] ?? null,
+        );
+
         return [
             'open_all' => (bool) ($raw['open_all'] ?? false),
             'max_team_members' => $maxTeamMembers,
             'min_team_members' => $minTeamMembers,
+            'sport_key' => $sportKey,
+            'sport_label' => $sportLabel,
             'age_classifications' => $classifications,
         ];
+    }
+
+    public function sanitizeSportKey(mixed $value): string
+    {
+        $sportKey = strtolower(trim((string) $value));
+
+        if (! in_array($sportKey, self::SPORTS_DISCIPLINE_KEYS, true)) {
+            throw ValidationException::withMessages([
+                'sports_details' => ['Please select Basketball, Volleyball, or Other.'],
+            ]);
+        }
+
+        return $sportKey;
+    }
+
+    public function sanitizeSportLabel(string $sportKey, mixed $customLabel = null): string
+    {
+        if ($sportKey === self::SPORT_KEY_OTHER) {
+            $label = trim((string) $customLabel);
+            if ($label === '') {
+                throw ValidationException::withMessages([
+                    'sports_details' => ['Please enter the sport name for Other.'],
+                ]);
+            }
+
+            return $label;
+        }
+
+        return self::DEFAULT_SPORT_LABELS[$sportKey] ?? ucfirst($sportKey);
+    }
+
+    public function sportsProgramExistsForYear(
+        int $barangayId,
+        string $programLetter,
+        string $sportKey,
+        int $year,
+        ?int $ignoreProgramId = null,
+    ): bool {
+        return ScheduleProgram::query()
+            ->where('barangay_id', $barangayId)
+            ->active()
+            ->where('program_letter', strtoupper(trim($programLetter)))
+            ->whereYear('start_date', $year)
+            ->when($ignoreProgramId !== null, fn ($query) => $query->where('id', '!=', $ignoreProgramId))
+            ->get()
+            ->contains(function (ScheduleProgram $program) use ($sportKey) {
+                $details = is_array($program->sports_details) ? $program->sports_details : [];
+
+                return strtolower(trim((string) ($details['sport_key'] ?? ''))) === strtolower(trim($sportKey));
+            });
+    }
+
+    /**
+     * @return array<string, list<array{id: string, name: string, min_age: int, max_age: int}>>
+     */
+    public static function sportsAgeClassificationsConfig(): array
+    {
+        static $config = null;
+
+        if ($config === null) {
+            $config = require app_path('Modules/Program_Management/config/sports-age-classifications.php');
+        }
+
+        return $config;
     }
 
     /**
      * @return list<array{id: string, name: string, min_age: int, max_age: int, is_open: bool}>
      */
-    public static function defaultSportsAgeClassificationsPayload(): array
+    public static function defaultSportsAgeClassificationsPayload(?string $sportKey = null): array
     {
+        $config = self::sportsAgeClassificationsConfig();
+        $key = strtolower(trim((string) ($sportKey ?? self::SPORT_KEY_BASKETBALL)));
+
+        if (! isset($config[$key])) {
+            $key = self::SPORT_KEY_BASKETBALL;
+        }
+
         return array_map(function (array $entry) {
             return [
-                'id' => 'cls_'.strtolower(str_replace(' ', '_', $entry['name'])),
+                'id' => (string) ($entry['id'] ?? 'cls_'.strtolower(str_replace(' ', '_', $entry['name']))),
                 'name' => $entry['name'],
                 'min_age' => $entry['min_age'],
                 'max_age' => $entry['max_age'],
                 'is_open' => true,
             ];
-        }, self::DEFAULT_SPORTS_AGE_CLASSIFICATIONS);
+        }, $config[$key]);
     }
 
     protected function nullableString(mixed $value): ?string
@@ -858,11 +962,19 @@ class ScheduleProgramService
 
     protected function formatProgram(ScheduleProgram $program): array
     {
+        $sportsDetails = is_array($program->sports_details) ? $program->sports_details : [];
+        $sportLabel = trim((string) ($sportsDetails['sport_label'] ?? ''));
+        if ($sportLabel === '' && isset($sportsDetails['sport_key'])) {
+            $sportLabel = $this->sanitizeSportLabel((string) $sportsDetails['sport_key'], null);
+        }
+
         return [
             'id' => $program->id,
             'program_letter' => $program->program_letter,
             'program_name' => $program->program_name,
             'program_type' => $program->program_type,
+            'sport_key' => $sportsDetails['sport_key'] ?? null,
+            'sport_label' => $sportLabel !== '' ? $sportLabel : $program->program_type,
             'committee' => $program->committee,
             'participation_quantity' => $program->participation_quantity,
             'participationQty' => $program->participation_quantity,

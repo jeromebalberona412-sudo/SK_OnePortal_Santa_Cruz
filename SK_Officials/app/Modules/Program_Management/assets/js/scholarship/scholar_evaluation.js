@@ -25,7 +25,7 @@ function resolveProgramKey() {
 const PROGRAM_LETTER = resolveProgramLetter();
 const PROGRAM_KEY = resolveProgramKey();
 let evaluations = [];
-let schedulePrograms = [];
+let programContext = { program: null, can_create: false };
 let editingEvaluationId = null;
 
 function getCsrfToken() {
@@ -77,19 +77,28 @@ function formatDate(dateStr) {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+function formatProgramPeriod(item) {
+    const start = item.start_date_display || formatDate(item.start_date);
+    const end = item.end_date_display || formatDate(item.end_date);
+    if (start === '—' && end === '—') return '—';
+    return `${start} – ${end}`;
+}
+
 function getStatusBadge(status) {
-    const normalized = String(status || 'draft').toLowerCase();
+    const normalized = String(status || 'open').toLowerCase();
     const classMap = {
+        open: 'eval-status-progress',
+        closed: 'eval-status-completed',
         draft: 'eval-status-pending',
         active: 'eval-status-progress',
-        closed: 'eval-status-completed',
     };
     const labelMap = {
-        draft: 'Draft',
-        active: 'Active',
+        open: 'Open',
         closed: 'Closed',
+        draft: 'Open',
+        active: 'Open',
     };
-    const className = classMap[normalized] || 'eval-status-pending';
+    const className = classMap[normalized] || 'eval-status-progress';
     const label = labelMap[normalized] || status;
     return `<span class="eval-status-badge ${className}">${label}</span>`;
 }
@@ -102,12 +111,64 @@ function escapeHtml(value) {
         .replace(/"/g, '&quot;');
 }
 
+function getCurrentEvaluationYear() {
+    return programContext.calendar_year || new Date().getFullYear();
+}
+
+function hasEvaluationForCurrentYear() {
+    const year = getCurrentEvaluationYear();
+    return evaluations.some((item) => {
+        const itemYear = item.evaluation_year
+            || (item.start_date ? new Date(item.start_date).getFullYear() : null);
+        return itemYear === year;
+    }) || Boolean(programContext.has_evaluation_for_year);
+}
+
+function updateCreateButtonState() {
+    const btn = document.getElementById('btnCreateEvaluation');
+    if (!btn) return;
+
+    const blocked = !programContext.can_create || hasEvaluationForCurrentYear();
+    btn.disabled = blocked;
+    btn.title = blocked
+        ? (programContext.create_blocked_reason
+            || `An evaluation for ${getCurrentEvaluationYear()} already exists or the program period has not ended.`)
+        : '';
+    btn.style.opacity = blocked ? '0.55' : '';
+    btn.style.cursor = blocked ? 'not-allowed' : '';
+}
+
+function renderProgramFields(program = null) {
+    const titleEl = document.getElementById('evalTitleDisplay');
+    const programIdEl = document.getElementById('evalAbyipProgramId');
+    const startEl = document.getElementById('evalStartDate');
+    const endEl = document.getElementById('evalEndDate');
+
+    const resolved = program || programContext.program;
+
+    if (!resolved) {
+        if (titleEl) titleEl.textContent = 'No ABYIP program detected. Upload ABYIP first.';
+        if (programIdEl) programIdEl.value = '';
+        if (startEl) startEl.value = '';
+        if (endEl) endEl.value = '';
+        return;
+    }
+
+    if (titleEl) titleEl.textContent = resolved.program_name || 'Program';
+    if (programIdEl) programIdEl.value = String(resolved.id || '');
+    if (startEl) startEl.value = resolved.start_date || '';
+    if (endEl) endEl.value = resolved.end_date || '';
+}
+
 function getFilteredEvaluations() {
     const status = document.getElementById('evalFilterStatus')?.value || '';
     const query = (document.getElementById('evalSearchInput')?.value || '').trim().toLowerCase();
 
     return evaluations.filter((item) => {
-        const matchStatus = !status || String(item.status).toLowerCase() === status;
+        const normalizedStatus = ['draft', 'active'].includes(String(item.status).toLowerCase())
+            ? 'open'
+            : String(item.status).toLowerCase();
+        const matchStatus = !status || normalizedStatus === status;
         const haystack = [
             item.evaluation_code,
             item.title,
@@ -140,7 +201,7 @@ function renderEvaluations(list = getFilteredEvaluations()) {
             <td>${escapeHtml(item.title)}</td>
             <td>${escapeHtml(item.program_name)}</td>
             <td>${escapeHtml(item.date_created_display || formatDate(item.date_created))}</td>
-            <td>${escapeHtml(item.due_date_display || formatDate(item.due_date))}</td>
+            <td>${escapeHtml(formatProgramPeriod(item))}</td>
             <td>${getStatusBadge(item.status)}</td>
             <td>${item.questions_count ?? 0}</td>
             <td class="col-actions">
@@ -165,29 +226,15 @@ function updateStatCards(stats = {}) {
     };
 
     set('evalStatTotal', stats.total ?? 0);
-    set('evalStatDraft', stats.draft ?? 0);
-    set('evalStatActive', stats.active ?? 0);
+    set('evalStatOpen', stats.open ?? 0);
     set('evalStatClosed', stats.closed ?? 0);
 }
 
-async function loadSchedulePrograms() {
-    const payload = await evalApiFetch(`/api/schedule-programs?letter=${PROGRAM_LETTER}`);
-    schedulePrograms = payload.data || [];
-    populateProgramSelect();
-}
-
-function populateProgramSelect(selectedId = '') {
-    const select = document.getElementById('evalProgram');
-    if (!select) return;
-
-    const options = ['<option value="">— General / No specific program —</option>']
-        .concat(schedulePrograms.map((program) => {
-            const label = program.program_name || program.program_type || `Program #${program.id}`;
-            const selected = String(program.id) === String(selectedId) ? ' selected' : '';
-            return `<option value="${program.id}"${selected}>${escapeHtml(label)}</option>`;
-        }));
-
-    select.innerHTML = options.join('');
+async function loadProgramContext() {
+    const payload = await evalApiFetch(`/api/program-evaluations/meta?letter=${PROGRAM_LETTER}`);
+    programContext = payload.data || { program: null, can_create: false };
+    renderProgramFields();
+    updateCreateButtonState();
 }
 
 async function loadEvaluations() {
@@ -195,6 +242,7 @@ async function loadEvaluations() {
     evaluations = payload.data || [];
     updateStatCards(payload.stats || {});
     renderEvaluations();
+    updateCreateButtonState();
 }
 
 function resetCreateEvalModalSize() {
@@ -218,12 +266,22 @@ function resetCreateForm() {
     document.getElementById('evalId').value = '';
     document.getElementById('createEvalModalTitle').textContent = 'Create Evaluation';
     document.getElementById('btnSaveEval').textContent = 'Save Evaluation';
-    document.getElementById('evalStatus').value = 'draft';
+    document.getElementById('evalStatus').value = 'open';
+    renderProgramFields();
     window.GFormBuilder?.reset();
     resetCreateEvalModalSize();
 }
 
 function openCreateModal() {
+    if (!programContext.can_create || hasEvaluationForCurrentYear()) {
+        showEvalToast(
+            programContext.create_blocked_reason
+                || `Cannot create evaluation for ${getCurrentEvaluationYear()}.`,
+            'error',
+        );
+        return;
+    }
+
     resetCreateForm();
     document.getElementById('createEvalModal').style.display = 'flex';
 }
@@ -245,11 +303,16 @@ async function openEditModal(id) {
 
     editingEvaluationId = id;
     document.getElementById('evalId').value = String(id);
-    document.getElementById('evalTitle').value = item.title || '';
     document.getElementById('evalInstructions').value = item.instructions || '';
-    document.getElementById('evalDueDate').value = item.due_date || '';
-    document.getElementById('evalStatus').value = item.status || 'draft';
-    populateProgramSelect(item.schedule_program_id || '');
+    document.getElementById('evalStatus').value = ['closed'].includes(String(item.status).toLowerCase()) ? 'closed' : 'open';
+
+    renderProgramFields({
+        id: item.abyip_program_id,
+        program_name: item.title || item.program_name,
+        start_date: item.start_date,
+        end_date: item.end_date,
+    });
+
     window.GFormBuilder?.setQuestions(item.custom_questions || []);
     document.getElementById('createEvalModalTitle').textContent = 'Edit Evaluation';
     document.getElementById('btnSaveEval').textContent = 'Update Evaluation';
@@ -275,7 +338,7 @@ async function viewEvaluation(id) {
             <div><label>Program</label><p>${escapeHtml(item.program_name)}</p></div>
             <div><label>Status</label><p>${getStatusBadge(item.status)}</p></div>
             <div><label>Date Created</label><p>${escapeHtml(item.date_created_display || formatDate(item.date_created))}</p></div>
-            <div><label>Due Date</label><p>${escapeHtml(item.due_date_display || formatDate(item.due_date))}</p></div>
+            <div><label>Program Period</label><p>${escapeHtml(formatProgramPeriod(item))}</p></div>
             <div class="eval-view-full"><label>Instructions</label><p>${escapeHtml(item.instructions || 'No instructions provided.')}</p></div>
             <div class="eval-view-full"><label>Questions</label>${questions}</div>
         </div>
@@ -291,6 +354,7 @@ async function deleteEvaluation(id) {
         await evalApiFetch(`/api/program-evaluations/${id}?letter=${PROGRAM_LETTER}`, { method: 'DELETE' });
         showEvalToast('Evaluation deleted successfully.');
         await loadEvaluations();
+        await loadProgramContext();
     } catch (error) {
         showEvalToast(error.message, 'error');
     }
@@ -299,18 +363,15 @@ async function deleteEvaluation(id) {
 async function handleCreateEvaluation(event) {
     event.preventDefault();
 
-    const title = document.getElementById('evalTitle')?.value.trim();
-    if (!title) {
-        showEvalToast('Evaluation title is required.', 'error');
+    const programId = document.getElementById('evalAbyipProgramId')?.value || '';
+    if (!programId && !editingEvaluationId) {
+        showEvalToast('No ABYIP program detected for this committee. Upload ABYIP first.', 'error');
         return;
     }
 
     const body = {
-        title,
         instructions: document.getElementById('evalInstructions')?.value.trim() || null,
-        due_date: document.getElementById('evalDueDate')?.value || null,
-        status: document.getElementById('evalStatus')?.value || 'draft',
-        schedule_program_id: document.getElementById('evalProgram')?.value || null,
+        status: document.getElementById('evalStatus')?.value || 'open',
         custom_questions: window.GFormBuilder?.getQuestions() || [],
         program_letter: PROGRAM_LETTER,
         letter: PROGRAM_LETTER,
@@ -333,6 +394,7 @@ async function handleCreateEvaluation(event) {
 
         closeCreateModal();
         await loadEvaluations();
+        await loadProgramContext();
     } catch (error) {
         showEvalToast(error.message, 'error');
     }
@@ -345,13 +407,14 @@ function exportEvaluations() {
         return;
     }
 
-    const header = ['Evaluation ID', 'Title', 'Program', 'Date Created', 'Due Date', 'Status', 'Questions'];
+    const header = ['Evaluation ID', 'Title', 'Program', 'Date Created', 'Program Start', 'Program End', 'Status', 'Questions'];
     const csvRows = [header.join(',')].concat(rows.map((item) => [
         item.evaluation_code,
         `"${String(item.title || '').replace(/"/g, '""')}"`,
         `"${String(item.program_name || '').replace(/"/g, '""')}"`,
         item.date_created || '',
-        item.due_date || '',
+        item.start_date || '',
+        item.end_date || '',
         item.status || '',
         item.questions_count ?? 0,
     ].join(',')));
@@ -420,7 +483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         if (typeof window.showLoading === 'function') window.showLoading();
-        await Promise.all([loadSchedulePrograms(), loadEvaluations()]);
+        await Promise.all([loadProgramContext(), loadEvaluations()]);
     } catch (error) {
         showEvalToast(error.message || 'Failed to load evaluations.', 'error');
         renderEvaluations([]);

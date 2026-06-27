@@ -8,6 +8,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
         'app/Modules/GForm_Builder/assets/css/gform-builder.css',
@@ -33,16 +34,28 @@
         'programType' => 'sports',
     ])
 
-    <div class="saf-schedule-meta">
+    <div class="saf-schedule-toolbar">
+        <div class="schol-filters-row saf-schedule-filters">
+            <select id="sportsScheduleTermFilter" class="schol-filter-input" aria-label="Filter by SK term">
+                <option value="">All Terms</option>
+            </select>
+            <select id="sportsScheduleYearFilter" class="schol-filter-input" aria-label="Filter by year">
+                <option value="">All Years</option>
+            </select>
+            <div class="schol-search-wrap saf-schedule-search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="search" id="sportsScheduleSearch" class="schol-search-input" placeholder="Search sport, status, or dates...">
+            </div>
+        </div>
         <span class="saf-schedule-count">Total: <strong id="programCount">0</strong> programs</span>
     </div>
 
-    <div class="saf-forms-table-card">
+    <div class="saf-forms-table-card saf-schedule-table-card">
         <div class="saf-table-wrap">
             <table class="saf-forms-table">
                 <thead>
                     <tr>
-                        <th>Program Type</th>
+                        <th>Sport</th>
                         <th>Participants</th>
                         <th>Start Date</th>
                         <th>End Date</th>
@@ -74,6 +87,19 @@
             <div class="schol-schedule-card" style="margin-bottom:20px;">
                 <h4 class="schol-schedule-title">Program Information</h4>
                 <div class="schol-schedule-grid">
+                    <div class="schol-field">
+                        <label for="sportsDisciplineKey">Sport <span class="schol-req">*</span></label>
+                        <select id="sportsDisciplineKey" class="schol-input">
+                            <option value="">Select sport...</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="volleyball">Volleyball</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="schol-field" id="sportsOtherNameWrap" style="display:none;">
+                        <label for="sportsOtherName">Other Sport Name <span class="schol-req">*</span></label>
+                        <input type="text" id="sportsOtherName" class="schol-input" placeholder="e.g. Badminton, Chess, etc.">
+                    </div>
                     <div class="schol-field schol-field-program-type">
                         <label for="programType">Program Type</label>
                         <input type="text" id="programType" class="schol-input schol-input-program-type" readonly placeholder="Loading from ABYIP...">
@@ -159,17 +185,20 @@
 
 <div class="sports-toast" id="safToast" style="display:none;"></div>
 
+<script>
+    window.sportsAbyipGate = @json($abyipGate ?? null);
+    window.SPORTS_AGE_CLASSIFICATIONS = @json(require app_path('Modules/Program_Management/config/sports-age-classifications.php'));
+</script>
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/table-row-actions-menu.js',
     'app/Modules/GForm_Builder/assets/js/gform-builder.js',
+    'app/Modules/Program_Management/assets/js/sports/sports-age-classifications.js',
     'app/Modules/Program_Management/assets/js/sports/sports-schedule.js',
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 <script src="{{ url('/shared/js/abyip-pending-notice.js') }}"></script>
-<script>
-    window.sportsAbyipGate = @json($abyipGate ?? null);
-</script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     if (window.GFormBuilder) {

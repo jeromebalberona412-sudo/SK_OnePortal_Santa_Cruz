@@ -31,4 +31,45 @@
         });
     }
 
+    const drawerBtn = document.getElementById('programsDrawerBtn');
+    const drawerSidebar = document.getElementById('programsDrawerSidebar');
+    const drawerBackdrop = document.getElementById('programsDrawerBackdrop');
+
+    function closeProgramsDrawer() {
+        drawerSidebar?.classList.remove('drawer-open');
+        drawerBackdrop?.classList.remove('drawer-open', 'active');
+        drawerBackdrop?.setAttribute('aria-hidden', 'true');
+        drawerBtn?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+
+    function openProgramsDrawer() {
+        drawerSidebar?.classList.add('drawer-open');
+        drawerBackdrop?.classList.add('drawer-open', 'active');
+        drawerBackdrop?.setAttribute('aria-hidden', 'false');
+        drawerBtn?.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+
+    window.kabataanCloseProgramsDrawer = closeProgramsDrawer;
+    window.kabataanOpenProgramsDrawer = openProgramsDrawer;
+
+    if (drawerBtn && drawerSidebar) {
+        drawerBtn.addEventListener('click', function () {
+            if (drawerSidebar.classList.contains('drawer-open')) {
+                closeProgramsDrawer();
+            } else {
+                openProgramsDrawer();
+            }
+        });
+    }
+
+    drawerBackdrop?.addEventListener('click', closeProgramsDrawer);
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && drawerSidebar?.classList.contains('drawer-open')) {
+            closeProgramsDrawer();
+        }
+    });
+
 })();

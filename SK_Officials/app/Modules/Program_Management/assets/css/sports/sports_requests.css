@@ -1,3 +1,40 @@
+.saf-sports-filters {
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.schol-table-card,
+.schol-table-wrap {
+    overflow: visible;
+}
+
+.saf-sport-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.saf-sport-badge.is-other {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.saf-team-name {
+    font-weight: 600;
+    color: #111827;
+}
+
+.saf-table-empty {
+    text-align: center;
+    padding: 24px;
+    color: #6b7280;
+}
+
 /* ── Sports Requests Module CSS ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1129,4 +1166,187 @@ input[type="date"].sports-input {
     min-width: 96px;
     width: 96px;
     white-space: nowrap;
+}
+
+/* ── Type-to-confirm modal (matches SK Federations delete modal) ── */
+.sk-type-confirm-modal {
+    max-width: 420px;
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.sk-type-confirm-header {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    padding: 14px 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.sk-type-confirm-header h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.sk-type-confirm-body {
+    padding: 20px 18px 12px;
+    background: #ffffff;
+    overflow: visible;
+    flex: 0 1 auto;
+}
+
+.sk-type-confirm-message {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.5;
+}
+
+.sk-type-confirm-desc {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.sk-type-confirm-section {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.sk-type-confirm-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.sk-type-confirm-input {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #1e293b;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sk-type-confirm-input:focus {
+    outline: none;
+    border-color: #1A365D;
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.12);
+}
+
+.sk-type-confirm-hint {
+    margin: 8px 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.sk-type-confirm-hint-error {
+    color: #b45309;
+}
+
+.sk-type-confirm-footer {
+    display: flex;
+    gap: 8px;
+    padding: 0 18px 18px;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.sk-btn-cancel-confirm {
+    flex: 1;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 0;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sk-btn-cancel-confirm:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.sk-btn-action-confirm {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 0;
+    cursor: not-allowed;
+    font-family: inherit;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.sk-btn-action-confirm.is-disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.sk-btn-action-confirm.is-enabled {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    opacity: 1;
+    cursor: pointer;
+}
+
+.sk-btn-action-confirm.is-enabled:hover {
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+}
+
+.sports-reject-reasons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.sports-reject-reason-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+}
+
+.sports-reject-reason-item input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.sports-reject-other-field {
+    margin-bottom: 4px;
+}
+
+/* ── Reject modal: single scroll area ── */
+.sk-type-confirm-modal.schol-modal-box {
+    max-height: none;
+    max-width: 420px;
+}
+
+.sports-reject-modal-body {
+    overflow: visible;
+    flex: 0 1 auto;
 }

@@ -7,9 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProgramEvaluation extends Model
 {
-    public const STATUS_DRAFT = 'draft';
-
-    public const STATUS_ACTIVE = 'active';
+    public const STATUS_OPEN = 'open';
 
     public const STATUS_CLOSED = 'closed';
 
@@ -19,10 +17,13 @@ class ProgramEvaluation extends Model
         'created_by',
         'program_letter',
         'schedule_program_id',
+        'abyip_program_id',
         'title',
         'instructions',
         'custom_questions',
         'status',
+        'start_date',
+        'end_date',
         'due_date',
     ];
 
@@ -30,6 +31,8 @@ class ProgramEvaluation extends Model
     {
         return [
             'custom_questions' => 'array',
+            'start_date' => 'date',
+            'end_date' => 'date',
             'due_date' => 'date',
         ];
     }
@@ -47,5 +50,10 @@ class ProgramEvaluation extends Model
     public function scheduleProgram(): BelongsTo
     {
         return $this->belongsTo(ScheduleProgram::class);
+    }
+
+    public function abyipProgram(): BelongsTo
+    {
+        return $this->belongsTo(Abyip::class, 'abyip_program_id');
     }
 }

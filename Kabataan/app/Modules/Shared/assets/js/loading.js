@@ -158,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const href = anchor.getAttribute('href');
         if (!href || href.startsWith('#') || href.startsWith('javascript') || href.startsWith('mailto')) return;
         if (anchor.dataset.noLoading !== undefined) return;
+        if (anchor.target === '_blank') return;
 
         const currentPath = window.location.pathname;
         if (
@@ -190,10 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    window.addEventListener('pageshow', (e) => {
-        if (e.persisted) {
-            hideLoading();
-        }
+    window.addEventListener('pageshow', () => {
+        hideLoading();
     });
 
     window.addEventListener('load', hideLoading);

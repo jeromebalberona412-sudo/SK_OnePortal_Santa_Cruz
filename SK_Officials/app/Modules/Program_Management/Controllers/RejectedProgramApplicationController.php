@@ -80,8 +80,13 @@ abstract class RejectedProgramApplicationController extends Controller
                     ->where(function ($inner) use ($search) {
                         $inner->where('last_name', 'ilike', "%{$search}%")
                             ->orWhere('first_name', 'ilike', "%{$search}%")
+                            ->orWhere('middle_name', 'ilike', "%{$search}%")
                             ->orWhere('email', 'ilike', "%{$search}%")
-                            ->orWhere('school_name', 'ilike', "%{$search}%");
+                            ->orWhere('school_name', 'ilike', "%{$search}%")
+                            ->orWhereHas('scheduleProgram', function ($schedule) use ($search) {
+                                $schedule->where('program_name', 'ilike', "%{$search}%")
+                                    ->orWhere('program_type', 'ilike', "%{$search}%");
+                            });
                     });
             });
         }

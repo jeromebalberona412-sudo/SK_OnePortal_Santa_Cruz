@@ -27,3 +27,138 @@
     background: #e0f2f1;
     color: #00695c;
 }
+
+.sports-type-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0 0 20px;
+}
+
+.sports-type-tab {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sports-type-tab.is-active {
+    background: linear-gradient(135deg, #0d47a1 0%, #00897b 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+.sports-programs-container {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .sports-program-card__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sports-program-card__actions .sl-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .sports-program-card__meta p {
+        font-size: 13px;
+    }
+}
+
+.sports-programs-empty,
+.sports-programs-loading {
+    padding: 24px;
+    text-align: center;
+    color: #64748b;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+}
+
+.sports-program-card {
+    margin-bottom: 0;
+}
+
+.sports-program-card__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.sports-program-sport-badge {
+    display: inline-block;
+    background: #e0f2f1;
+    color: #00695c;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+}
+
+.sports-program-card__title {
+    margin: 0;
+    font-size: 18px;
+}
+
+.sports-program-card__meta p {
+    margin: 0 0 6px;
+    color: #475569;
+    font-size: 14px;
+}
+
+.sports-program-announcement {
+    margin: 12px 0;
+    color: #334155;
+    font-size: 14px;
+}
+
+.sports-program-questions h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.sports-question-preview {
+    margin: 0;
+    padding-left: 18px;
+    color: #475569;
+    font-size: 13px;
+}
+
+.sports-no-questions {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.sports-program-card__actions {
+    margin-top: 16px;
+}
+
+.sports-apply-btn.is-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.sl-subtitle {
+    color: #64748b;
+    margin-top: 8px;
+}
+
+.program-sport-label {
+    margin: 6px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+}

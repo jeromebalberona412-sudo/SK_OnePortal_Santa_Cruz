@@ -333,6 +333,9 @@
             container.innerHTML = html;
             container.querySelectorAll('.program-category').forEach((item) => {
                 item.addEventListener('click', () => {
+                    if (typeof window.kabataanCloseProgramsDrawer === 'function') {
+                        window.kabataanCloseProgramsDrawer();
+                    }
                     const letter = item.getAttribute('data-letter');
                     const program = programs.find((p) => p.letter === letter);
                     if (program) openProgramModal(program);
@@ -347,11 +350,43 @@
         );
     }
 
+    function navigateToProgram(program) {
+        if (typeof window.kabataanCloseProgramsDrawer === 'function') {
+            window.kabataanCloseProgramsDrawer();
+        }
+
+        const type = program.type || program.category_key || '';
+        if (type === 'education') {
+            window.location.href = '/scholarship/apply';
+            return;
+        }
+
+        if (type === 'sports') {
+            if (window.location.pathname.includes('/sports/apply')) {
+                document.getElementById('sportsTypeTabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            window.location.href = '/sports/apply';
+            return;
+        }
+
+        const survey = program.survey || {};
+        if (survey.can_respond || survey.has_responded) {
+            goToProgramSurvey(program.id);
+            return;
+        }
+
+        window.location.href = '/dashboard';
+    }
+
     function openProgramModal(program) {
         const modalKey = program.modal_key || program.category_key;
         const modalId = MODAL_IDS[modalKey] || 'othersModal';
         const modal = document.getElementById(modalId);
-        if (!modal) return;
+        if (!modal) {
+            navigateToProgram(program);
+            return;
+        }
 
         if (program.type === 'education') {
             renderEducationModalBody(program);
@@ -400,9 +435,141 @@
         bindScheduleCardActions(container);
     }
 
+    function resolveSportKey(schedule) {
+        const key = schedule?.sport_key || schedule?.sports_details?.sport_key || '';
+        const normalized = String(key).toLowerCase();
+        if (normalized === 'basketball' || normalized === 'volleyball') return normalized;
+        if (normalized === 'other') return 'other';
+        return '';
+    }
+
+    function resolveSportLabel(schedule) {
+        const custom = schedule?.sport_label || schedule?.sports_details?.sport_label;
+        if (custom && String(custom).trim()) return String(custom).trim();
+        const key = resolveSportKey(schedule);
+        if (key === 'basketball') return 'Basketball';
+        if (key === 'volleyball') return 'Volleyball';
+        return schedule?.program_name || 'Sports Program';
+    }
+
+    function buildSportsModalTabs(schedules) {
+        const tabs = [];
+
+        if (schedules.some((schedule) => resolveSportKey(schedule) === 'basketball')) {
+            tabs.push({ id: 'basketball', label: 'Basketball', filter: (schedule) => resolveSportKey(schedule) === 'basketball' });
+        }
+
+        if (schedules.some((schedule) => resolveSportKey(schedule) === 'volleyball')) {
+            tabs.push({ id: 'volleyball', label: 'Volleyball', filter: (schedule) => resolveSportKey(schedule) === 'volleyball' });
+        }
+
+        schedules
+            .filter((schedule) => resolveSportKey(schedule) === 'other')
+            .forEach((schedule) => {
+                tabs.push({
+                    id: `other-${schedule.id}`,
+                    label: resolveSportLabel(schedule),
+                    filter: (item) => Number(item.id) === Number(schedule.id),
+                });
+            });
+
+        return tabs;
+    }
+
+    function renderSportsQuestionsList(schedule) {
+        const questions = Array.isArray(schedule?.custom_questions) ? schedule.custom_questions : [];
+        if (!questions.length) {
+            return '<p class="sports-card-muted">No application questions configured yet.</p>';
+        }
+
+        const items = questions.map((question, index) => {
+            const typeLabel = question.type === 'file' ? 'PDF upload' : (question.type === 'text' ? 'Short answer' : escapeHtml(question.type || 'Question'));
+            return `<li><strong>${index + 1}. ${escapeHtml(question.label || 'Question')}</strong>${question.required ? ' <span class="sch-program-required">*</span>' : ''} <span class="sch-program-q-type">${typeLabel}</span></li>`;
+        }).join('');
+
+        return `<ul class="sch-program-req-list sports-card-questions">${items}</ul>`;
+    }
+
+    function renderSportsAgeClassifications(schedule) {
+        const details = schedule?.sports_details || {};
+        const classifications = Array.isArray(details.age_classifications) ? details.age_classifications : [];
+        if (!classifications.length) return '';
+
+        const items = classifications.map((item) => {
+            const isOpen = details.open_all || item.is_open;
+            return `<li><strong>${escapeHtml(item.name)}</strong> — Ages ${escapeHtml(String(item.min_age))}–${escapeHtml(String(item.max_age))} (${isOpen ? 'Open' : 'Closed'})</li>`;
+        }).join('');
+
+        return `
+            <div class="sports-card-section">
+                <h4 class="sports-card-section-title">Age Classifications</h4>
+                <ul class="sch-program-req-list">${items}</ul>
+            </div>`;
+    }
+
+    function renderSportsScheduleCard(abyipProgram, schedule) {
+        const sportLabel = resolveSportLabel(schedule);
+        const statusLabel = schedule.status === 'open' ? 'Open' : 'Closed';
+        const applied = schedule.has_applied;
+        const canApply = schedule.can_apply !== false;
+        const openAndEligible = !applied && schedule.status === 'open' && canApply;
+        const periodStart = schedule.start_date_display || formatIsoDateDisplay(schedule.start_date) || '—';
+        const periodEnd = schedule.end_date_display || formatIsoDateDisplay(schedule.end_date) || '—';
+        const slots = schedule.available_slots ?? schedule.participation_quantity ?? '—';
+        const matched = schedule.matched_classification;
+
+        let actionButton = '';
+        if (applied) {
+            actionButton = `
+                <button type="button" class="apply-now-button enabled apply-view-btn" data-view-schedule-application="${schedule.id}" data-program-letter="${schedule.program_letter || ''}">
+                    View My Application
+                </button>`;
+        } else {
+            actionButton = `
+                <button type="button" class="apply-now-button ${openAndEligible ? 'enabled' : ''}" data-apply-schedule="${schedule.id}" data-program-letter="${schedule.program_letter || ''}" title="${!canApply ? escapeHtml(schedule.eligibility_message || 'Not eligible for this program') : ''}" ${schedule.status !== 'open' || !canApply ? 'disabled' : ''}>
+                    ${!canApply ? 'Not Eligible' : (schedule.status !== 'open' ? 'Closed' : 'Apply Now')}
+                </button>`;
+        }
+
+        let eligibilityHtml = '';
+        if (matched) {
+            eligibilityHtml = `<p class="sports-card-meta"><strong>Your Division:</strong> ${escapeHtml(matched.name)} (Ages ${escapeHtml(String(matched.min_age))}–${escapeHtml(String(matched.max_age))})</p>`;
+        } else if (schedule.eligibility_message) {
+            eligibilityHtml = `<p class="sports-card-eligibility">${escapeHtml(schedule.eligibility_message)}</p>`;
+        }
+
+        return `
+            <div class="modern-program-card sports-program-card" data-schedule-id="${schedule.id}">
+                <div class="program-card-header sports-program-card__header" style="background:${SPORTS_HEADER_GRADIENT};">
+                    <div class="program-title-row">
+                        <div>
+                            <span class="program-category-tag">${escapeHtml(abyipProgram.short_label || 'Sports Development')}</span>
+                            <h3 class="program-card-title">${escapeHtml(sportLabel)}</h3>
+                        </div>
+                        <span class="program-status-badge status-active"><span class="status-dot"></span>${escapeHtml(applied ? `Applied — ${(schedule.application_status || 'pending')}` : statusLabel)}</span>
+                    </div>
+                </div>
+                <div class="sports-program-card__body">
+                    <p class="sports-card-meta"><strong>Period:</strong> ${escapeHtml(periodStart)} – ${escapeHtml(periodEnd)}</p>
+                    <p class="sports-card-meta"><strong>Committee:</strong> ${escapeHtml(schedule.committee || '—')}</p>
+                    <p class="sports-card-meta"><strong>Slots:</strong> ${escapeHtml(String(slots))}</p>
+                    ${eligibilityHtml}
+                    ${schedule.announcement ? `<p class="sports-card-announcement">${escapeHtml(schedule.announcement)}</p>` : ''}
+                    ${renderSportsAgeClassifications(schedule)}
+                    <div class="sports-card-section">
+                        <h4 class="sports-card-section-title">Application Questions</h4>
+                        ${renderSportsQuestionsList(schedule)}
+                    </div>
+                    <div class="program-action sports-program-card__action">
+                        ${actionButton}
+                    </div>
+                </div>
+            </div>`;
+    }
+
     function renderSportsModalBody(program) {
         const modal = document.getElementById('sportsModal');
-        const body = modal?.querySelector('.modal-body');
+        const body = modal?.querySelector('.sports-modal-body') || modal?.querySelector('.modal-body');
         if (!body) return;
 
         const schedules = schedulesForAbyipProgram(program);
@@ -411,10 +578,53 @@
             return;
         }
 
-        body.innerHTML = schedules
-            .map((schedule) => renderScheduleCard(program, schedule, SPORTS_HEADER_GRADIENT, true))
-            .join('');
-        bindScheduleCardActions(body);
+        const tabs = buildSportsModalTabs(schedules);
+        if (!tabs.length) {
+            body.innerHTML = renderProgramsEmptyState('No sports programs available from SK Officials yet.');
+            return;
+        }
+
+        let activeTabId = tabs[0].id;
+
+        body.innerHTML = `
+            <div class="sports-type-tabs sports-modal-tabs" id="sportsModalTypeTabs" role="tablist">
+                ${tabs.map((tab, index) => `
+                    <button type="button" class="sports-type-tab ${index === 0 ? 'is-active' : ''}" data-sport-tab="${escapeHtml(tab.id)}" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}">${escapeHtml(tab.label)}</button>
+                `).join('')}
+            </div>
+            <div id="sportsModalProgramsContainer"></div>`;
+
+        const container = body.querySelector('#sportsModalProgramsContainer');
+        const tabsEl = body.querySelector('#sportsModalTypeTabs');
+
+        function renderTab() {
+            const tab = tabs.find((item) => item.id === activeTabId) || tabs[0];
+            const filtered = schedules.filter(tab.filter);
+
+            if (!filtered.length) {
+                container.innerHTML = renderProgramsEmptyState('No program available for this sport yet.');
+                return;
+            }
+
+            container.innerHTML = filtered
+                .map((schedule) => renderSportsScheduleCard(program, schedule))
+                .join('');
+            bindScheduleCardActions(container);
+        }
+
+        tabsEl?.querySelectorAll('[data-sport-tab]').forEach((button) => {
+            button.addEventListener('click', () => {
+                activeTabId = button.getAttribute('data-sport-tab') || tabs[0].id;
+                tabsEl.querySelectorAll('[data-sport-tab]').forEach((tabBtn) => {
+                    const isActive = tabBtn.getAttribute('data-sport-tab') === activeTabId;
+                    tabBtn.classList.toggle('is-active', isActive);
+                    tabBtn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+                renderTab();
+            });
+        });
+
+        renderTab();
     }
 
     function renderAbyipModalBody(modal, program) {
@@ -763,14 +973,58 @@
         if (typeof showLoading === 'function') showLoading('Redirecting to application…');
 
         const letter = String(programLetter || '').toUpperCase();
-        const basePath = letter === 'I' ? '/sports/apply' : '/scholarship/apply';
+        const basePath = letter === 'I' ? '/sports/apply/form' : '/scholarship/apply';
         const url = `${basePath}?schedule=${encodeURIComponent(scheduleId)}`;
         setTimeout(() => {
             window.location.href = url;
         }, 650);
     }
 
+    function registerProgramModalHelpers() {
+        const modalMap = {
+            openEducationModal: 'educationModal',
+            openAntiDrugsModal: 'antiDrugsModal',
+            openAgricultureModal: 'agricultureModal',
+            openDisasterModal: 'disasterModal',
+            openSportsModal: 'sportsModal',
+            openGenderModal: 'genderModal',
+            openHealthModal: 'healthModal',
+            openOthersModal: 'othersModal',
+        };
+
+        Object.entries(modalMap).forEach(([openFn, modalId]) => {
+            const closeFn = openFn.replace('open', 'close');
+            if (!window[openFn]) {
+                window[openFn] = function () {
+                    document.getElementById(modalId)?.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                };
+            }
+            if (!window[closeFn]) {
+                window[closeFn] = function () {
+                    const modal = document.getElementById(modalId);
+                    modal?.classList.remove('active');
+                    modal?.classList.remove('is-maximized');
+                    modal?.querySelector('.modal-container')?.classList.remove('is-maximized');
+                    if (!document.querySelector('.program-modal.active, .sl-view-modal:not([hidden])')) {
+                        document.body.style.overflow = '';
+                    }
+                };
+            }
+            const overlay = document.getElementById(modalId)?.querySelector('.modal-overlay');
+            if (overlay && overlay.dataset.programModalBound !== '1') {
+                overlay.dataset.programModalBound = '1';
+                overlay.addEventListener('click', () => {
+                    if (typeof window[closeFn] === 'function') {
+                        window[closeFn]();
+                    }
+                });
+            }
+        });
+    }
+
     async function init() {
+        registerProgramModalHelpers();
         initProgramModalChrome();
 
         try {
@@ -786,6 +1040,11 @@
         const educationProgram = (programsData?.abyip_programs || []).find((program) => program.type === 'education');
         if (educationProgram) {
             renderEducationModalBody(educationProgram);
+        }
+
+        const sportsProgram = (programsData?.abyip_programs || []).find((program) => program.type === 'sports');
+        if (sportsProgram) {
+            renderSportsModalBody(sportsProgram);
         }
 
         if (window.programsModule) {

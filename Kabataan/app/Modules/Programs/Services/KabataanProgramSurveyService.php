@@ -476,6 +476,7 @@ class KabataanProgramSurveyService
         return [
             'id' => $response->id,
             'survey_id' => $response->survey_id,
+            'abyip_program_id' => $survey?->abyip_program_id,
             'program_name' => trim((string) ($survey?->abyipProgram?->program_name ?? 'Program Survey')),
             'submitted_at' => $response->submitted_at?->format('M j, Y g:i A'),
             'submitted_at_iso' => $response->submitted_at?->toIso8601String(),

@@ -11,13 +11,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite([
         'app/Modules/Layout/assets/css/kabataan-header.css',
+        'app/Modules/Layout/assets/css/programs-drawer.css',
         'app/Modules/Layout/assets/js/kabataan-header.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
         'app/Modules/Dashboard/assets/js/notif.js',
+        'app/Modules/Dashboard/assets/css/dashboard.css',
         'app/Modules/Programs/assets/css/scholarship_landing.css',
         'app/Modules/Programs/assets/css/sports_landing.css',
+        'app/Modules/Programs/assets/css/sports-applications-history.css',
+        'app/Modules/Programs/assets/js/kabataan-programs.js',
+        'app/Modules/Programs/assets/js/sports-applications-history.js',
         'app/Modules/Programs/assets/js/sports_landing.js',
         'app/Modules/Shared/assets/css/loading.css',
         'app/Modules/Shared/assets/js/loading.js',
@@ -27,248 +32,53 @@
     @include('dashboard::loading')
     @include('layout::kabataan-header', ['showSearch' => false, 'pageBadge' => null])
 
-    <div class="sl-container">
-        <div class="sl-header">
-            <div class="sl-back-link">
-                <a href="{{ route('dashboard') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                    <span>Back to Dashboard</span>
-                </a>
-            </div>
+    <div id="sportsLandingContent" class="sl-container">
+        <div class="sl-header sl-header--compact">
             <h1 class="sl-title">Sports Application</h1>
+            <p class="sl-subtitle">Select a sport type to view open programs from your barangay SK Officials.</p>
         </div>
 
-        <div class="sl-card sl-card-program">
+        <div class="sports-type-tabs" id="sportsTypeTabs" role="tablist" aria-label="Sport types">
+            <button type="button" class="sports-type-tab is-active" data-sport-tab="basketball" role="tab" aria-selected="true">Basketball</button>
+            <button type="button" class="sports-type-tab" data-sport-tab="volleyball" role="tab" aria-selected="false">Volleyball</button>
+            <button type="button" class="sports-type-tab" data-sport-tab="other" role="tab" aria-selected="false">Other</button>
+        </div>
+
+        <div id="sportsProgramsContainer" class="sports-programs-container">
+            <p class="sports-programs-loading">Loading sports programs…</p>
+        </div>
+
+        <div class="sports-history-toolbar" id="sportsHistoryToolbar" hidden>
+            <div class="sports-history-toolbar__field">
+                <label class="sports-history-toolbar__label" for="sportsHistoryYearFilter">Year</label>
+                <select id="sportsHistoryYearFilter" class="sports-history-toolbar__select" aria-label="Filter by year">
+                    <option value="">All Years</option>
+                </select>
+            </div>
+            <div class="sports-history-toolbar__field sports-history-toolbar__field--search">
+                <label class="sports-history-toolbar__label" for="sportsHistorySearch">Search</label>
+                <input type="search" id="sportsHistorySearch" class="sports-history-toolbar__search" placeholder="Sport, program, team, status…" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="sl-card sl-card-history sports-applications-history-section">
             <div class="sl-card-header">
-                <h2 class="sl-card-title">Program Information</h2>
-                <span class="sl-status-badge sl-status-open" id="slProgramStatusBadge">Open</span>
+                <h2 class="sl-card-title">My Sports Applications</h2>
+                <p class="sl-card-subtitle">All sports you have previously applied for, grouped by year and sport type.</p>
             </div>
             <div class="sl-card-body">
-                <h3 class="sl-program-name" id="slProgramName">Loading program…</h3>
-                <p class="sl-program-description" id="slProgramDescription">Please wait while program details are loaded.</p>
-
-                <div class="sl-info-grid">
-                    <div class="sl-info-item">
-                        <span class="sl-info-label">Application Period:</span>
-                        <span class="sl-info-value" id="slApplicationPeriod">—</span>
-                    </div>
-                    <div class="sl-info-item">
-                        <span class="sl-info-label">Available Slots:</span>
-                        <span class="sl-info-value" id="slAvailableSlots">—</span>
-                    </div>
-                    <div class="sl-info-item">
-                        <span class="sl-info-label">Committee:</span>
-                        <span class="sl-info-value" id="slCommittee">—</span>
-                    </div>
-                </div>
-
-                <div class="sl-section">
-                    <h4 class="sl-section-title">Announcement</h4>
-                    <p class="sl-program-description" id="slAnnouncement">—</p>
+                <div id="sportsApplicationsHistory" class="sports-applications-history">
+                    <p class="sports-history-loading">Loading your sports applications…</p>
                 </div>
             </div>
-        </div>
-
-        <div class="sl-card sl-card-status">
-            <div class="sl-card-header">
-                <h2 class="sl-card-title">Application Status</h2>
-            </div>
-            <div class="sl-card-body">
-                <div class="sl-status-content" id="applicationStatusContent">
-                    <div class="sl-status-item sl-status-not-applied">
-                        <div class="sl-status-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        </div>
-                        <div class="sl-status-text">
-                            <h3 class="sl-status-heading">Not Yet Applied</h3>
-                            <p class="sl-status-desc">You have not submitted a sports registration for this program yet.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="sl-card sl-card-history">
-            <div class="sl-card-header">
-                <h2 class="sl-card-title">Previous Applications</h2>
-            </div>
-            <div class="sl-card-body">
-                <div class="sl-table-wrapper">
-                    <table class="sl-table">
-                        <thead>
-                            <tr>
-                                <th>Program Name</th>
-                                <th>Application Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="previousApplicationsTable">
-                            <tr class="sl-empty-row">
-                                <td colspan="4">No previous applications found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="sl-card sl-card-requirements">
-            <div class="sl-card-header">
-                <h2 class="sl-card-title">Required Documents</h2>
-            </div>
-            <div class="sl-card-body">
-                <ul class="sl-requirements-list">
-                    <li>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        <span>Valid Government ID</span>
-                    </li>
-                    <li>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        <span>Medical Clearance / Health Certificate</span>
-                    </li>
-                    <li>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        <span>Parent/Guardian Consent (if applicable)</span>
-                    </li>
-                    <li>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        <span>Recent 2x2 Photo</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="sl-card sl-card-kk-profile">
-            <div class="sl-card-header">
-                <h2 class="sl-card-title">KK Profiling Data Included</h2>
-                <span class="sl-badge sl-badge-autofill">Auto-Filled</span>
-            </div>
-            <div class="sl-card-body">
-                <p class="sl-kk-notice">The following information will be automatically retrieved from your KK Profile:</p>
-                <div class="sl-kk-fields">
-                    <div class="sl-kk-field">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Full Name</span>
-                    </div>
-                    <div class="sl-kk-field">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Birthday</span>
-                    </div>
-                    <div class="sl-kk-field">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Age</span>
-                    </div>
-                    <div class="sl-kk-field">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Sex</span>
-                    </div>
-                    <div class="sl-kk-field">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Contact Number</span>
-                    </div>
-                    <div class="sl-kk-field">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Home Address</span>
-                    </div>
-                    <div class="sl-kk-field">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Barangay</span>
-                    </div>
-                    <div class="sl-kk-field">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Emergency Contact</span>
-                    </div>
-                </div>
-                <p class="sl-kk-note">You do not need to enter the information above again because it will be automatically filled from your KK Profile.</p>
-            </div>
-        </div>
-
-        <div class="sl-actions">
-            <button class="sl-btn sl-btn-primary" id="startApplicationBtn">
-                <span>Start Sports Registration</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
         </div>
     </div>
 
-    <div id="programsDrawerBackdrop" class="programs-drawer-backdrop"></div>
+    @include('programs::partials.sports-applications-history-modals')
 
-    <aside class="programs-sidebar" id="programsDrawerSidebar">
-        <div class="sidebar-card">
-            <h2 class="sidebar-title">Programs in Your Barangay</h2>
-            <p class="sidebar-subtitle">Available programs in Barangay Santa Cruz</p>
+    @include('programs::partials.kabataan-program-modals')
 
-            <div class="program-categories">
-                <a href="{{ route('scholarship.apply') }}" class="program-category">
-                    <div class="category-icon">📚</div>
-                    <div class="category-info">
-                        <h3>Scholarship Programs</h3>
-                        <p>Apply for educational assistance</p>
-                    </div>
-                </a>
-                <a href="{{ route('sports.apply') }}" class="program-category">
-                    <div class="category-icon">⚽</div>
-                    <div class="category-info">
-                        <h3>Sports Programs</h3>
-                        <p>Join sports activities and competitions</p>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </aside>
-    <div id="applicationViewModal" class="sl-view-modal" hidden>
-        <div class="sl-view-modal-overlay"></div>
-        <div class="sl-view-modal-container" id="applicationViewContainer">
-            <div class="sl-view-modal-header">
-                <div class="sl-view-modal-header-main">
-                    <h2 id="applicationViewTitle">Application Details</h2>
-                    <p id="applicationViewMeta" class="sl-view-modal-meta"></p>
-                </div>
-                <div class="sl-view-modal-header-actions">
-                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationViewMaximize" title="Maximize" aria-label="Maximize">□</button>
-                    <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationViewClose" aria-label="Close">×</button>
-                </div>
-            </div>
-            <div class="sl-view-modal-body">
-                <section class="sl-view-section">
-                    <h3 class="sl-view-section-title">Personal Information</h3>
-                    <div id="applicationViewPersonalInfo" class="sl-view-personal-grid"></div>
-                </section>
-                <section class="sl-view-section">
-                    <h3 class="sl-view-section-title">Application Answers</h3>
-                    <div id="applicationViewAnswers" class="sl-view-answers"></div>
-                </section>
-                <div id="applicationViewCancelledInfo" class="sl-view-cancelled-info" hidden>
-                    <h3>Cancellation Reason</h3>
-                    <p id="applicationViewCancelledReason"></p>
-                </div>
-            </div>
-            <button type="button" class="sl-view-cancel-fab" id="applicationCancelFab" hidden>Cancel Application</button>
-        </div>
-    </div>
-
-    <div id="applicationCancelModal" class="sl-cancel-modal" hidden>
-        <div class="sl-cancel-modal-overlay"></div>
-        <div class="sl-cancel-modal-box" id="applicationCancelModalBox">
-            <div class="sl-cancel-modal-header">
-                <h3>Cancel Application</h3>
-                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-maximize-btn" id="applicationCancelMaximize" title="Maximize">□</button>
-                <button type="button" class="sl-view-modal-icon-btn sl-view-modal-close" id="applicationCancelClose" aria-label="Close">×</button>
-            </div>
-            <div class="sl-cancel-modal-body">
-                <p class="sl-view-cancel-note">Provide a reason if you want to cancel and submit again later.</p>
-                <label class="sl-view-cancel-label" for="applicationCancelReason">Cancel Reason</label>
-                <textarea id="applicationCancelReason" class="sl-view-cancel-input" rows="4" maxlength="500" placeholder="Type your reason for cancelling this application..."></textarea>
-                <p id="applicationCancelCharCount" class="sl-view-cancel-char-count">0 / 500 characters</p>
-                <p id="applicationCancelError" class="sl-view-cancel-error" hidden></p>
-            </div>
-            <div class="sl-cancel-modal-footer">
-                <button type="button" class="sl-btn-action sl-btn-secondary" id="applicationCancelDismissBtn">Keep Application</button>
-                <button type="button" class="sl-btn-action sl-btn-cancel" id="applicationCancelBtn">Confirm Cancel</button>
-            </div>
-        </div>
-    </div>
+    @include('layout::programs-drawer', ['barangayName' => $barangayName ?? 'Your Barangay'])
 
     <script>
         window.__scheduleProgramId = @json($scheduleProgramId);

@@ -154,6 +154,28 @@
     color: #ffffff;
 }
 
+/* Edit — yellow */
+.row-actions-item-edit {
+    background: #eab308;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.35);
+}
+
+.row-actions-item-edit svg {
+    color: #ffffff;
+}
+
+.row-actions-item-edit:hover {
+    background: #ca8a04;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(234, 179, 8, 0.45);
+}
+
+.row-actions-item-edit:hover svg {
+    color: #ffffff;
+}
+
 /* Reject / Delete — red (legacy kk-btn-reject) */
 .row-actions-item-danger {
     background: #dc2626;

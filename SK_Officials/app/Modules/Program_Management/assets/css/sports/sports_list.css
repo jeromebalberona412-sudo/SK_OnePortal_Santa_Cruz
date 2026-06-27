@@ -56,6 +56,22 @@ body {
     margin: 0;
 }
 
+.saf-page-wrap .saf-page-header-row {
+    padding: 20px 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    margin-bottom: 20px;
+}
+
+.saf-page-wrap .schol-page-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+    max-width: 720px;
+}
+
 /* ── Buttons ── */
 .spl-header-actions {
     display: flex;
@@ -225,11 +241,16 @@ body {
     background: #fff;
     border-radius: 14px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid #e5e7eb;
 }
 
-.spl-table-wrapper { overflow-x: auto; }
+.spl-approved-table-card .spl-table-wrapper,
+.saf-page-wrap .spl-approved-table-card .spl-table-wrapper {
+    overflow: visible;
+}
+
+.spl-table-wrapper { overflow-x: auto; overflow-y: visible; }
 
 .spl-table {
     width: 100%;
@@ -239,6 +260,12 @@ body {
 }
 
 .spl-table thead tr { background: #2c2c3e; }
+.spl-approved-table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+.spl-approved-table thead th:last-child {
+    border-top-right-radius: 12px;
+}
 .spl-table thead th {
     padding: 12px 14px;
     text-align: center;
@@ -252,6 +279,12 @@ body {
 }
 .spl-table thead th:last-child { border-right: none; }
 .spl-table thead th.col-actions { width: 90px; }
+
+.spl-approved-table .col-actions,
+.spl-approved-table .td-actions {
+    overflow: visible;
+    position: relative;
+}
 
 .spl-col-hint {
     font-size: 9px;
@@ -371,6 +404,74 @@ body {
     flex-shrink: 0;
 }
 .spl-modal-header h3 { font-size: 15px; font-weight: 700; margin: 0; color: #fff; }
+
+.spl-modal-header-payments {
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+}
+
+.spl-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 24px;
+    border-top: 1px solid #f1f5f9;
+    background: #fff;
+    border-radius: 0 0 14px 14px;
+    flex-shrink: 0;
+}
+
+.spl-btn-cancel {
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: 1.5px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.spl-btn-payments-save {
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.35);
+}
+
+.spl-btn-payments-save:hover {
+    background: linear-gradient(135deg, #ca8a04, #a16207);
+}
+
+.spl-btn-revoke-confirm {
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.spl-btn-revoke-confirm:disabled {
+    opacity: 0.38;
+    background: #fecaca;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.spl-btn-revoke-confirm:not(:disabled):hover {
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+}
 
 .spl-modal-close {
     background: transparent;

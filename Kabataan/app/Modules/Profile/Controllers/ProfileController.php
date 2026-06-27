@@ -57,9 +57,6 @@ class ProfileController extends Controller
             'approvedPrograms' => $participation['summary']['approved'],
             'evaluationPrograms' => $participation['summary']['pending'],
             'completedPrograms' => $participation['summary']['completed'],
-            'calendarEvents' => $participation['calendar_events'],
-            'abyipPrograms' => $participation['abyip_programs'],
-            'participationDetails' => $participation['participation_details'],
             'supportingDocuments' => $display['supportingDocuments'] ?? [],
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
