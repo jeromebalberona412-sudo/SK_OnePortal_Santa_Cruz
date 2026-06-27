@@ -25,6 +25,8 @@
         'sk_voted' => 'Voted Last Election',
     ];
     $programLabel = $programLabel ?? 'program';
+    $excludedFields = $excludedFields ?? [];
+    $checkboxFields = array_diff_key($kkFields, array_flip($excludedFields));
 @endphp
 
 <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:20px;margin-bottom:20px;">
@@ -37,7 +39,7 @@
     </p>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
-        @foreach ($kkFields as $value => $label)
+        @foreach ($checkboxFields as $value => $label)
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;transition:all 0.2s;">
                 <input type="checkbox" class="kk-profiling-field" value="{{ $value }}" style="cursor:pointer;width:18px;height:18px;accent-color:#fbbf24;">
                 <span>{{ $label }}</span>

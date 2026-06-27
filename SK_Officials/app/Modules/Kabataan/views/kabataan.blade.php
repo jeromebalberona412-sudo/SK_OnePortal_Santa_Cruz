@@ -206,11 +206,6 @@
 
             <!-- View-only: paper form layout -->
             <div class="kabataan-view-details" id="kabataanViewDetails" style="display:none;">
-                <div class="kabataan-view-tabs" id="kabataanViewTabs">
-                    <button type="button" class="kabataan-view-tab is-active" data-kab-view-tab="profile">KK Profiling</button>
-                    <button type="button" class="kabataan-view-tab" data-kab-view-tab="documents" id="kabataanViewTabDocumentsBtn">Supporting Documents</button>
-                </div>
-
                 <div class="kabataan-view-tab-panel" id="kabataanViewTabProfile">
                 <div class="kabataan-form-scroll kk-view-paper">
 

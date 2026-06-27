@@ -10,6 +10,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Kabataan/assets/css/kabataan.css',
         'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
@@ -168,10 +169,7 @@
 <div class="modal-backdrop kk-modal-backdrop" id="kkViewModal" style="display:none;">
     <div class="modal-box kk-modal-box kk-modal-animate kk-modal-no-border kk-view-modal-wide">
         <div class="modal-header">
-            <div>
-                <h2 class="modal-title">KK Survey Questionnaire</h2>
-                <span class="kk-modal-subtitle">KK Profiling Submission Details</span>
-            </div>
+            <h2 class="modal-title">Kabataan Details</h2>
             <div class="modal-window-controls">
                 <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
@@ -179,7 +177,7 @@
         </div>
         <div class="modal-body kk-view-modal-body kk-qs-body">
             <div class="kk-qs-scroll-wrapper">
-                @include('KKProfilingRequests::partials.kk-profiling-view-questionnaire', [
+                @include('KKProfilingRequests::partials.kk-survey-view-form', [
                     'barangayLogoUrl' => $barangayLogoUrl ?? null,
                     'barangayName' => $barangayName ?? null,
                 ])

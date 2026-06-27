@@ -31,6 +31,7 @@ class ScheduleProgram extends Model
         'restored_by',
         'announcement',
         'scholarship_details',
+        'sports_details',
         'kk_profiling_fields',
         'custom_questions',
     ];
@@ -45,6 +46,7 @@ class ScheduleProgram extends Model
             'archived_at' => 'datetime',
             'restored_at' => 'datetime',
             'scholarship_details' => 'array',
+            'sports_details' => 'array',
             'kk_profiling_fields' => 'array',
             'custom_questions' => 'array',
         ];

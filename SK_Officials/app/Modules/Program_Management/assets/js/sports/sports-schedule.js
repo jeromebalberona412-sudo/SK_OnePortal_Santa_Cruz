@@ -5,6 +5,15 @@ let abyipGate = window.sportsAbyipGate || null;
 let editingProgramId = null;
 let pendingDeleteProgramId = null;
 
+const SPORTS_EXCLUDED_KK_FIELDS = [
+    'education',
+    'current_school',
+    'course_strand',
+    'work_status',
+    'sk_voter',
+    'sk_voted',
+];
+
 const KK_FIELD_LABELS = {
     last_name: 'Last Name',
     first_name: 'First Name',
@@ -23,13 +32,158 @@ const KK_FIELD_LABELS = {
     purok_zone: 'Purok/Zone',
     youth_classification: 'Youth Classification',
     youth_age_group: 'Youth Age Group',
-    education: 'Educational Attainment',
-    current_school: 'Current School',
-    course_strand: 'Course / Strand',
-    work_status: 'Work Status',
-    sk_voter: 'Registered SK Voter',
-    sk_voted: 'Voted Last Election',
 };
+
+const DEFAULT_AGE_CLASSIFICATIONS = [
+    { id: 'cls_mosquito_division', name: 'Mosquito Division', min_age: 15, max_age: 17, is_open: true },
+    { id: 'cls_midget_division', name: 'Midget Division', min_age: 18, max_age: 21, is_open: true },
+    { id: 'cls_junior_division', name: 'Junior Division', min_age: 22, max_age: 25, is_open: true },
+    { id: 'cls_senior_division', name: 'Senior Division', min_age: 26, max_age: 30, is_open: true },
+];
+
+const DEFAULT_TEAM_NAME_QUESTION = {
+    id: 'sys_team_name',
+    label: 'Team Name',
+    type: 'text',
+    options: [],
+    required: true,
+    system_default: true,
+    field_key: 'team_name',
+};
+
+function generateClassificationId(name) {
+    return `cls_${String(name || 'division').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}_${Date.now()}`;
+}
+
+function renderAgeClassificationsTable(classifications = []) {
+    const tbody = document.getElementById('sportsAgeClassificationsBody');
+    if (!tbody) return;
+
+    if (!classifications.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="saf-table-empty">No age classifications yet. Click "Use Default Age Brackets" or add one.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = classifications.map((item) => `
+        <tr data-classification-id="${escapeHtml(item.id)}">
+            <td><input type="text" class="sports-cls-name" value="${escapeHtml(item.name)}" placeholder="Classification name"></td>
+            <td><input type="number" class="sports-cls-min" value="${escapeHtml(String(item.min_age))}" min="15" max="30"></td>
+            <td><input type="number" class="sports-cls-max" value="${escapeHtml(String(item.max_age))}" min="15" max="30"></td>
+            <td><input type="checkbox" class="sports-cls-open" ${item.is_open ? 'checked' : ''}></td>
+            <td><button type="button" class="sports-age-remove-btn" data-remove-classification="${escapeHtml(item.id)}">Remove</button></td>
+        </tr>
+    `).join('');
+}
+
+function getAgeClassificationsFromForm() {
+    const rows = document.querySelectorAll('#sportsAgeClassificationsBody tr[data-classification-id]');
+    const classifications = [];
+
+    rows.forEach((row) => {
+        const name = row.querySelector('.sports-cls-name')?.value?.trim() || '';
+        const minAge = parseInt(row.querySelector('.sports-cls-min')?.value || '0', 10);
+        const maxAge = parseInt(row.querySelector('.sports-cls-max')?.value || '0', 10);
+        const isOpen = row.querySelector('.sports-cls-open')?.checked ?? true;
+
+        if (!name) return;
+
+        classifications.push({
+            id: row.getAttribute('data-classification-id') || generateClassificationId(name),
+            name,
+            min_age: Number.isNaN(minAge) ? 15 : minAge,
+            max_age: Number.isNaN(maxAge) ? 30 : maxAge,
+            is_open: isOpen,
+        });
+    });
+
+    return classifications;
+}
+
+function setAgeClassificationsForm(details) {
+    const maxTeamEl = document.getElementById('sportsMaxTeamMembers');
+    const classifications = details?.age_classifications?.length
+        ? details.age_classifications
+        : DEFAULT_AGE_CLASSIFICATIONS.map((item) => ({ ...item }));
+
+    if (maxTeamEl) {
+        maxTeamEl.value = String(details?.max_team_members ?? 12);
+    }
+
+    renderAgeClassificationsTable(classifications);
+}
+
+function resetAgeClassificationsForm() {
+    setAgeClassificationsForm({
+        max_team_members: 12,
+        age_classifications: DEFAULT_AGE_CLASSIFICATIONS.map((item) => ({ ...item })),
+    });
+}
+
+function ensureDefaultTeamNameQuestion(questions) {
+    const list = Array.isArray(questions) ? [...questions] : [];
+    const hasTeamName = list.some((question) => {
+        const fieldKey = String(question?.field_key || '');
+        const label = String(question?.label || '').trim().toLowerCase();
+        return fieldKey === 'team_name' || label === 'team name';
+    });
+
+    if (!hasTeamName) {
+        list.unshift({ ...DEFAULT_TEAM_NAME_QUESTION });
+    }
+
+    return list;
+}
+
+function loadDefaultAgeBrackets() {
+    renderAgeClassificationsTable(DEFAULT_AGE_CLASSIFICATIONS.map((item) => ({ ...item })));
+}
+
+function openAllClassifications() {
+    document.querySelectorAll('#sportsAgeClassificationsBody .sports-cls-open').forEach((checkbox) => {
+        checkbox.checked = true;
+    });
+}
+
+function getSportsDetailsPayload() {
+    const maxTeamRaw = document.getElementById('sportsMaxTeamMembers')?.value?.trim() || '12';
+    let maxTeamMembers = parseInt(maxTeamRaw, 10);
+    if (Number.isNaN(maxTeamMembers) || maxTeamMembers < 1) maxTeamMembers = 1;
+    if (maxTeamMembers > 12) maxTeamMembers = 12;
+
+    const classifications = getAgeClassificationsFromForm();
+    const openAll = classifications.length > 0 && classifications.every((item) => item.is_open);
+
+    return {
+        open_all: openAll,
+        max_team_members: maxTeamMembers,
+        min_team_members: 1,
+        age_classifications: classifications,
+    };
+}
+
+function renderAgeClassificationsPreview(details) {
+    const classifications = details?.age_classifications || [];
+    if (!classifications.length) {
+        return '<div style="font-size:14px;color:#6b7280;">No age classifications configured.</div>';
+    }
+
+    return `
+        <div style="display:grid;gap:10px;">
+            ${classifications.map((item) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
+                    <div>
+                        <div style="font-weight:600;color:#111827;">${escapeHtml(item.name)}</div>
+                        <div style="font-size:13px;color:#6b7280;">Ages ${escapeHtml(String(item.min_age))}–${escapeHtml(String(item.max_age))}</div>
+                    </div>
+                    <span style="font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;background:${item.is_open ? '#dcfce7' : '#fee2e2'};color:${item.is_open ? '#166534' : '#991b1b'};">
+                        ${item.is_open ? 'Open' : 'Closed'}
+                    </span>
+                </div>
+            `).join('')}
+        </div>
+        <div style="margin-top:12px;font-size:13px;color:#6b7280;">Max team members: ${escapeHtml(String(details?.max_team_members ?? 12))}</div>
+    `;
+}
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -131,6 +285,15 @@ async function loadPrograms() {
     renderFormsTable();
 }
 
+function collectKkProfilingFields() {
+    const selected = [];
+    document.querySelectorAll('.kk-profiling-field:checked').forEach((checkbox) => {
+        selected.push(checkbox.value);
+    });
+
+    return selected;
+}
+
 function resetModalForm() {
     editingProgramId = null;
 
@@ -154,7 +317,10 @@ function resetModalForm() {
 
     if (window.SpfbFormBuilder) {
         window.SpfbFormBuilder.reset();
+        window.SpfbFormBuilder.setQuestions(ensureDefaultTeamNameQuestion([]));
     }
+
+    resetAgeClassificationsForm();
 
     if (programMeta) {
         const typeEl = document.getElementById('programType');
@@ -310,8 +476,10 @@ function editProgram(programId) {
     });
 
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
-        window.SpfbFormBuilder.setQuestions(program.custom_questions || []);
+        window.SpfbFormBuilder.setQuestions(ensureDefaultTeamNameQuestion(program.custom_questions || []));
     }
+
+    setAgeClassificationsForm(program.sports_details || null);
 
     if (modalTitle) {
         modalTitle.innerHTML = `
@@ -333,8 +501,9 @@ function openFormPreview(programId) {
         closed: { bg: '#fee2e2', text: '#991b1b', label: 'Closed' },
     };
     const statusStyle = statusColors[status] || statusColors.open;
-    const kkFields = program.kk_profiling_fields || [];
+    const kkFields = (program.kk_profiling_fields || []).filter((field) => !SPORTS_EXCLUDED_KK_FIELDS.includes(field));
     const customQuestions = program.custom_questions || [];
+    const sportsDetails = program.sports_details || null;
 
     viewProgramBody.innerHTML = `
         <div style="padding:24px;background:#f0f1f5;">
@@ -376,6 +545,11 @@ function openFormPreview(programId) {
                         <span style="display:inline-flex;align-items:center;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;background:${statusStyle.bg};color:${statusStyle.text};">${statusStyle.label}</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="schol-schedule-card" style="margin-bottom:20px;">
+                <h4 class="schol-schedule-title">Age Classifications</h4>
+                ${renderAgeClassificationsPreview(sportsDetails)}
             </div>
 
             <div class="schol-schedule-card">
@@ -488,13 +662,18 @@ async function handleSave() {
 
     let customQuestions = [];
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
-        customQuestions = window.SpfbFormBuilder.getQuestions();
+        customQuestions = ensureDefaultTeamNameQuestion(window.SpfbFormBuilder.getQuestions());
     }
 
-    const kkProfilingFields = [];
-    document.querySelectorAll('.kk-profiling-field:checked').forEach((checkbox) => {
-        kkProfilingFields.push(checkbox.value);
-    });
+    const ageClassifications = getAgeClassificationsFromForm();
+    if (!ageClassifications.length) {
+        showToast('Please add at least one age classification.', 'error');
+        return;
+    }
+
+    const sportsDetails = getSportsDetailsPayload();
+
+    const kkProfilingFields = collectKkProfilingFields();
 
     const payload = {
         start_date: startDate,
@@ -504,6 +683,7 @@ async function handleSave() {
         announcement,
         kk_profiling_fields: kkProfilingFields,
         custom_questions: customQuestions,
+        sports_details: sportsDetails,
     };
 
     setSaveButtonLoading(true);
@@ -580,6 +760,43 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
                 checkbox.checked = false;
             });
+        });
+    }
+
+    const useDefaultAgeBtn = document.getElementById('sportsUseDefaultAgeBtn');
+    const openAllBtn = document.getElementById('sportsOpenAllBtn');
+    const addClassificationBtn = document.getElementById('sportsAddClassificationBtn');
+    const ageClassificationsBody = document.getElementById('sportsAgeClassificationsBody');
+
+    if (useDefaultAgeBtn) {
+        useDefaultAgeBtn.addEventListener('click', loadDefaultAgeBrackets);
+    }
+
+    if (openAllBtn) {
+        openAllBtn.addEventListener('click', openAllClassifications);
+    }
+
+    if (addClassificationBtn) {
+        addClassificationBtn.addEventListener('click', () => {
+            const current = getAgeClassificationsFromForm();
+            current.push({
+                id: generateClassificationId('new_division'),
+                name: '',
+                min_age: 15,
+                max_age: 17,
+                is_open: true,
+            });
+            renderAgeClassificationsTable(current);
+        });
+    }
+
+    if (ageClassificationsBody) {
+        ageClassificationsBody.addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('[data-remove-classification]');
+            if (!removeBtn) return;
+            const id = removeBtn.getAttribute('data-remove-classification');
+            const current = getAgeClassificationsFromForm().filter((item) => item.id !== id);
+            renderAgeClassificationsTable(current);
         });
     }
 

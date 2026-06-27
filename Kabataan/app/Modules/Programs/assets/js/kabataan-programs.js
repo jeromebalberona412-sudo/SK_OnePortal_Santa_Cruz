@@ -133,6 +133,59 @@
         return html;
     }
 
+    function renderSportsDetailsSections(schedule) {
+        if (String(schedule?.program_letter || '').toUpperCase() !== 'I') {
+            return '';
+        }
+
+        const details = schedule?.sports_details || {};
+        const classifications = Array.isArray(details.age_classifications) ? details.age_classifications : [];
+        const matched = schedule?.matched_classification;
+        const kkAge = schedule?.kk_age;
+        const maxTeam = details.max_team_members ?? 12;
+
+        let html = '';
+
+        if (kkAge != null) {
+            html += `
+                <div class="program-description-section">
+                    <h4 class="section-heading">Your Age (from KK Profiling)</h4>
+                    <p class="description-text">${escapeHtml(String(kkAge))} years old</p>
+                </div>`;
+        }
+
+        if (matched) {
+            html += `
+                <div class="program-description-section">
+                    <h4 class="section-heading">Your Eligible Division</h4>
+                    <p class="description-text"><strong>${escapeHtml(matched.name)}</strong> (Ages ${escapeHtml(String(matched.min_age))}–${escapeHtml(String(matched.max_age))})</p>
+                </div>`;
+        } else if (schedule?.eligibility_message) {
+            html += `
+                <div class="program-description-section">
+                    <h4 class="section-heading">Division Eligibility</h4>
+                    <p class="description-text sch-program-slots-full">${escapeHtml(schedule.eligibility_message)}</p>
+                </div>`;
+        }
+
+        if (classifications.length) {
+            const items = classifications.map((item) => {
+                const isOpen = details.open_all || item.is_open;
+                const status = isOpen ? 'Open' : 'Closed';
+                return `<li><strong>${escapeHtml(item.name)}</strong> — Ages ${escapeHtml(String(item.min_age))}–${escapeHtml(String(item.max_age))} <span class="sch-program-q-type">${status}</span></li>`;
+            }).join('');
+
+            html += `
+                <div class="program-description-section">
+                    <h4 class="section-heading">Age Classifications</h4>
+                    <ul class="sch-program-req-list">${items}</ul>
+                    <p class="description-text">Maximum ${escapeHtml(String(maxTeam))} members per team.</p>
+                </div>`;
+        }
+
+        return html;
+    }
+
     function renderScheduleInfoSections(schedule) {
         const max = schedule.participation_quantity;
         const remaining = schedule.available_slots;
@@ -180,6 +233,7 @@
                     </div>
                 </div>
             </div>
+            ${renderSportsDetailsSections(schedule)}
             ${renderScholarshipDetailsSections(schedule)}
             ${renderCustomQuestionsSection(schedule)}`;
     }
@@ -188,17 +242,22 @@
         const questions = Array.isArray(schedule?.custom_questions) ? schedule.custom_questions : [];
         if (!questions.length) return '';
 
-        const items = questions.map((question, index) => `
+        const isSports = String(schedule?.program_letter || '').toUpperCase() === 'I';
+        const heading = isSports ? 'Application Questions' : 'Uploading of Requirements';
+
+        const items = questions.map((question, index) => {
+            const typeLabel = question.type === 'file' ? 'PDF upload' : (question.type === 'text' ? 'Short answer' : escapeHtml(question.type || 'Question'));
+            return `
             <li>
                 <strong>${index + 1}. ${escapeHtml(question.label || 'Requirement')}</strong>
                 ${question.required ? ' <span class="sch-program-required">*</span>' : ''}
-                <span class="sch-program-q-type">PDF upload</span>
-            </li>
-        `).join('');
+                <span class="sch-program-q-type">${typeLabel}</span>
+            </li>`;
+        }).join('');
 
         return `
             <div class="program-description-section">
-                <h4 class="section-heading">Uploading of Requirements</h4>
+                <h4 class="section-heading">${heading}</h4>
                 <ul class="sch-program-req-list sch-program-upload-list">${items}</ul>
             </div>`;
     }

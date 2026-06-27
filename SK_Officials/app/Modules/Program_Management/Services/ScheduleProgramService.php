@@ -83,9 +83,28 @@ class ScheduleProgramService
         'course_strand', 'work_status', 'sk_voter', 'sk_voted',
     ];
 
-    public function __construct(private readonly AbyipProgramCatalogService $catalogService)
-    {
-    }
+    /** @var list<array{name: string, min_age: int, max_age: int}> */
+    public const DEFAULT_SPORTS_AGE_CLASSIFICATIONS = [
+        ['name' => 'Mosquito Division', 'min_age' => 15, 'max_age' => 17],
+        ['name' => 'Midget Division', 'min_age' => 18, 'max_age' => 21],
+        ['name' => 'Junior Division', 'min_age' => 22, 'max_age' => 25],
+        ['name' => 'Senior Division', 'min_age' => 26, 'max_age' => 30],
+    ];
+
+    /** @var array<string, mixed> */
+    public const DEFAULT_TEAM_NAME_QUESTION = [
+        'id' => 'sys_team_name',
+        'label' => 'Team Name',
+        'type' => 'text',
+        'options' => [],
+        'required' => true,
+        'system_default' => true,
+        'field_key' => 'team_name',
+    ];
+
+    public const SPORTS_MAX_TEAM_MEMBERS = 12;
+
+    public function __construct(private readonly AbyipProgramCatalogService $catalogService) {}
 
     /**
      * @return array{program_type: string, committee: string, program_name: string, program_letter: string}
@@ -198,7 +217,7 @@ class ScheduleProgramService
      */
     public function store(User $user, array $data, string $letter = self::LETTER_EDUCATION): array
     {
-        $validated = $this->validatePayload($data);
+        $validated = $this->validatePayload($data, $letter);
         $meta = $this->resolveProgramMeta($user, $letter);
 
         if ($user->barangay_id !== null) {
@@ -244,6 +263,7 @@ class ScheduleProgramService
             'status' => $validated['status'],
             'announcement' => $validated['announcement'],
             'scholarship_details' => $validated['scholarship_details'],
+            'sports_details' => $validated['sports_details'],
             'kk_profiling_fields' => $validated['kk_profiling_fields'],
             'custom_questions' => $validated['custom_questions'],
         ]);
@@ -258,7 +278,7 @@ class ScheduleProgramService
     public function update(User $user, int $programId, array $data, ?string $letter = null): array
     {
         $program = $this->findModel($user, $programId);
-        $validated = $this->validatePayload($data);
+        $validated = $this->validatePayload($data, $letter ?? (string) ($program->program_letter ?? self::LETTER_EDUCATION));
         $meta = $this->resolveProgramMeta($user, $letter ?? (string) ($program->program_letter ?? self::LETTER_EDUCATION));
 
         $program->update([
@@ -272,6 +292,7 @@ class ScheduleProgramService
             'status' => $validated['status'],
             'announcement' => $validated['announcement'],
             'scholarship_details' => $validated['scholarship_details'],
+            'sports_details' => $validated['sports_details'],
             'kk_profiling_fields' => $validated['kk_profiling_fields'],
             'custom_questions' => $validated['custom_questions'],
         ]);
@@ -310,11 +331,13 @@ class ScheduleProgramService
      *     status: string,
      *     announcement: ?string,
      *     kk_profiling_fields: list<string>,
-     *     custom_questions: list<array<string, mixed>>
+     *     custom_questions: list<array<string, mixed>>,
+     *     sports_details: ?array<string, mixed>
      * }
      */
-    protected function validatePayload(array $data): array
+    protected function validatePayload(array $data, ?string $letter = null): array
     {
+        $letter = strtoupper(trim((string) ($letter ?? $data['program_letter'] ?? '')));
         $startDate = (string) ($data['start_date'] ?? '');
         $endDate = (string) ($data['end_date'] ?? '');
         $status = (string) ($data['status'] ?? ScheduleProgram::STATUS_OPEN);
@@ -356,7 +379,14 @@ class ScheduleProgramService
 
         $customQuestions = $this->sanitizeCustomQuestions((array) ($data['custom_questions'] ?? []));
 
+        if ($letter === self::LETTER_SPORTS) {
+            $customQuestions = $this->ensureDefaultTeamNameQuestion($customQuestions);
+        }
+
         $scholarshipDetails = $this->sanitizeScholarshipDetails($data['scholarship_details'] ?? null);
+        $sportsDetails = $letter === self::LETTER_SPORTS
+            ? $this->sanitizeSportsDetails($data['sports_details'] ?? null)
+            : null;
 
         if (isset($data['scholarship_details']) && is_array($data['scholarship_details'])) {
             if (empty($scholarshipDetails['school_year']) || empty($scholarshipDetails['semester'])) {
@@ -373,6 +403,12 @@ class ScheduleProgramService
             }
         }
 
+        if ($letter === self::LETTER_SPORTS && $sportsDetails === null) {
+            throw ValidationException::withMessages([
+                'sports_details' => ['At least one age classification is required for sports programs.'],
+            ]);
+        }
+
         return [
             'participation_quantity' => $participationQuantity,
             'start_date' => $startDate,
@@ -380,6 +416,7 @@ class ScheduleProgramService
             'status' => $status,
             'announcement' => $this->nullableString($data['announcement'] ?? null),
             'scholarship_details' => $scholarshipDetails,
+            'sports_details' => $sportsDetails,
             'kk_profiling_fields' => $kkFields,
             'custom_questions' => $customQuestions,
         ];
@@ -686,6 +723,108 @@ class ScheduleProgramService
         return $sanitized;
     }
 
+    /**
+     * @param  list<array<string, mixed>>  $questions
+     * @return list<array<string, mixed>>
+     */
+    public function ensureDefaultTeamNameQuestion(array $questions): array
+    {
+        $hasTeamName = collect($questions)->contains(function (array $question) {
+            $fieldKey = (string) ($question['field_key'] ?? '');
+            $label = strtolower(trim((string) ($question['label'] ?? '')));
+
+            return $fieldKey === 'team_name' || $label === 'team name';
+        });
+
+        if ($hasTeamName) {
+            return $questions;
+        }
+
+        return array_merge([self::DEFAULT_TEAM_NAME_QUESTION], $questions);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function sanitizeSportsDetails(mixed $raw): ?array
+    {
+        if (! is_array($raw)) {
+            return null;
+        }
+
+        $classifications = [];
+        foreach ((array) ($raw['age_classifications'] ?? []) as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+
+            $name = trim((string) ($entry['name'] ?? ''));
+            $minAge = (int) ($entry['min_age'] ?? 0);
+            $maxAge = (int) ($entry['max_age'] ?? 0);
+
+            if ($name === '') {
+                continue;
+            }
+
+            if ($minAge < 15 || $maxAge > 30 || $minAge > $maxAge) {
+                throw ValidationException::withMessages([
+                    'sports_details' => ["Invalid age range for \"{$name}\". Ages must be between 15 and 30."],
+                ]);
+            }
+
+            $classifications[] = [
+                'id' => (string) ($entry['id'] ?? ('cls_'.uniqid())),
+                'name' => $name,
+                'min_age' => $minAge,
+                'max_age' => $maxAge,
+                'is_open' => (bool) ($entry['is_open'] ?? true),
+            ];
+        }
+
+        if ($classifications === []) {
+            return null;
+        }
+
+        $maxTeamMembers = (int) ($raw['max_team_members'] ?? self::SPORTS_MAX_TEAM_MEMBERS);
+        if ($maxTeamMembers < 1) {
+            $maxTeamMembers = 1;
+        }
+        if ($maxTeamMembers > self::SPORTS_MAX_TEAM_MEMBERS) {
+            $maxTeamMembers = self::SPORTS_MAX_TEAM_MEMBERS;
+        }
+
+        $minTeamMembers = (int) ($raw['min_team_members'] ?? 1);
+        if ($minTeamMembers < 1) {
+            $minTeamMembers = 1;
+        }
+        if ($minTeamMembers > $maxTeamMembers) {
+            $minTeamMembers = $maxTeamMembers;
+        }
+
+        return [
+            'open_all' => (bool) ($raw['open_all'] ?? false),
+            'max_team_members' => $maxTeamMembers,
+            'min_team_members' => $minTeamMembers,
+            'age_classifications' => $classifications,
+        ];
+    }
+
+    /**
+     * @return list<array{id: string, name: string, min_age: int, max_age: int, is_open: bool}>
+     */
+    public static function defaultSportsAgeClassificationsPayload(): array
+    {
+        return array_map(function (array $entry) {
+            return [
+                'id' => 'cls_'.strtolower(str_replace(' ', '_', $entry['name'])),
+                'name' => $entry['name'],
+                'min_age' => $entry['min_age'],
+                'max_age' => $entry['max_age'],
+                'is_open' => true,
+            ];
+        }, self::DEFAULT_SPORTS_AGE_CLASSIFICATIONS);
+    }
+
     protected function nullableString(mixed $value): ?string
     {
         if ($value === null) {
@@ -722,6 +861,7 @@ class ScheduleProgramService
             'status' => $program->status,
             'announcement' => $program->announcement,
             'scholarship_details' => $program->scholarship_details,
+            'sports_details' => $program->sports_details,
             'kk_profiling_fields' => $program->kk_profiling_fields ?? [],
             'kkProfilingFields' => $program->kk_profiling_fields ?? [],
             'custom_questions' => $program->custom_questions ?? [],

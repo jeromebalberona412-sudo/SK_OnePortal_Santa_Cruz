@@ -321,8 +321,16 @@ class KabataanProgramService
             ]);
         }
 
-        $questions = collect($program->custom_questions ?? [])->filter(fn ($q) => ($q['type'] ?? '') === 'file');
-        $this->validateAnswers($questions->values()->all(), $answers);
+        $questions = collect($program->custom_questions ?? []);
+        $isSports = strtoupper((string) $program->program_letter) === 'I';
+        $questionsToValidate = $isSports
+            ? $questions->values()->all()
+            : $questions->filter(fn ($q) => ($q['type'] ?? '') === 'file')->values()->all();
+        $this->validateAnswers($questionsToValidate, $answers);
+
+        if ($isSports) {
+            $this->validateSportsTeamCapacity($program, $answers);
+        }
 
         $registration = KabataanRegistration::query()
             ->with('barangay')
@@ -338,10 +346,22 @@ class KabataanProgramService
             ]);
         }
 
-        $customAnswers = $this->buildCustomAnswersPayload($answers, $questions);
+        $customAnswers = $this->buildCustomAnswersPayload(
+            $answers,
+            $isSports ? $questions : $questions->filter(fn ($q) => ($q['type'] ?? '') === 'file')
+        );
         $profileData = $this->buildApplicationProfileData($user, $registration);
         $kkEducation = trim((string) ($this->resolveKkProfile($user, ['education'])['education'] ?? ''));
         $validatedSystemFields = $this->scholarshipSystemFields->validate($systemFieldAnswers, $kkEducation);
+
+        if ($isSports) {
+            $matchedClassification = $eligibility['matched_classification'] ?? null;
+            if (is_array($matchedClassification)) {
+                $validatedSystemFields['sports_classification'] = $matchedClassification['name'] ?? null;
+                $validatedSystemFields['sports_classification_id'] = $matchedClassification['id'] ?? null;
+            }
+        }
+
         $profileData = $this->mergeSystemFieldsIntoProfile($profileData, $validatedSystemFields);
         $existingRecord = $this->findUserApplicationRecord($user->id, $scheduleProgramId);
         $isResubmit = $existingRecord !== null
@@ -565,6 +585,7 @@ class KabataanProgramService
             'status' => $program->status,
             'announcement' => $program->announcement,
             'scholarship_details' => $program->scholarship_details,
+            'sports_details' => $program->sports_details,
             'kk_profiling_fields' => $program->kk_profiling_fields ?? [],
             'custom_questions' => $program->custom_questions ?? [],
             'has_applied' => $application !== null,
@@ -575,6 +596,12 @@ class KabataanProgramService
         $eligibility = $this->evaluateEligibility($user, $program);
         $payload['can_apply'] = $eligibility['eligible'];
         $payload['eligibility_message'] = $eligibility['message'];
+
+        if (strtoupper((string) $program->program_letter) === 'I') {
+            $payload['eligible_classifications'] = $eligibility['eligible_classifications'] ?? [];
+            $payload['matched_classification'] = $eligibility['matched_classification'] ?? null;
+            $payload['kk_age'] = $this->resolveUserAge($user);
+        }
 
         return $payload;
     }
@@ -695,7 +722,13 @@ class KabataanProgramService
      */
     private function evaluateEligibility(User $user, ScheduleProgram $program): array
     {
-        if (strtoupper((string) $program->program_letter) !== 'A') {
+        $letter = strtoupper((string) $program->program_letter);
+
+        if ($letter === 'I') {
+            return $this->evaluateSportsEligibility($user, $program);
+        }
+
+        if ($letter !== 'A') {
             return ['eligible' => true, 'message' => ''];
         }
 
@@ -751,6 +784,166 @@ class KabataanProgramService
         }
 
         return ['eligible' => true, 'message' => ''];
+    }
+
+    /**
+     * @return array{eligible: bool, message: string, eligible_classifications?: list<array<string, mixed>>, matched_classification?: ?array<string, mixed>}
+     */
+    private function evaluateSportsEligibility(User $user, ScheduleProgram $program): array
+    {
+        $age = $this->resolveUserAge($user);
+
+        if ($age === null) {
+            return [
+                'eligible' => false,
+                'message' => 'Your age could not be verified from KK Profiling. Please complete your profile.',
+            ];
+        }
+
+        if ($age < 15 || $age > 30) {
+            return [
+                'eligible' => false,
+                'message' => 'Sports programs are open to Kabataan members aged 15–30 only.',
+            ];
+        }
+
+        $sportsDetails = is_array($program->sports_details) ? $program->sports_details : [];
+        $eligibleClassifications = $this->findEligibleSportsClassifications($age, $sportsDetails);
+
+        if ($eligibleClassifications === []) {
+            return [
+                'eligible' => false,
+                'message' => 'Your age does not match any open division for this sports program.',
+                'eligible_classifications' => [],
+            ];
+        }
+
+        return [
+            'eligible' => true,
+            'message' => '',
+            'eligible_classifications' => $eligibleClassifications,
+            'matched_classification' => $eligibleClassifications[0] ?? null,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $sportsDetails
+     * @return list<array<string, mixed>>
+     */
+    private function findEligibleSportsClassifications(int $age, array $sportsDetails): array
+    {
+        $classifications = (array) ($sportsDetails['age_classifications'] ?? []);
+        $openAll = (bool) ($sportsDetails['open_all'] ?? false);
+
+        return array_values(array_filter($classifications, function (array $classification) use ($age, $openAll) {
+            $isOpen = $openAll || (bool) ($classification['is_open'] ?? false);
+            if (! $isOpen) {
+                return false;
+            }
+
+            $minAge = (int) ($classification['min_age'] ?? 0);
+            $maxAge = (int) ($classification['max_age'] ?? 0);
+
+            return $age >= $minAge && $age <= $maxAge;
+        }));
+    }
+
+    private function resolveUserAge(User $user): ?int
+    {
+        $profile = $this->resolveKkProfile($user, ['age', 'birthday']);
+        $ageValue = $profile['age'] ?? null;
+
+        if ($ageValue !== null && $ageValue !== '' && is_numeric($ageValue)) {
+            return (int) $ageValue;
+        }
+
+        $birthday = trim((string) ($profile['birthday'] ?? ''));
+        if ($birthday === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($birthday)->age;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $answers
+     */
+    private function validateSportsTeamCapacity(ScheduleProgram $program, array $answers): void
+    {
+        $sportsDetails = is_array($program->sports_details) ? $program->sports_details : [];
+        $maxMembers = (int) ($sportsDetails['max_team_members'] ?? 12);
+        if ($maxMembers < 1) {
+            $maxMembers = 1;
+        }
+        if ($maxMembers > 12) {
+            $maxMembers = 12;
+        }
+
+        $teamName = $this->extractTeamNameFromAnswers($answers, (array) ($program->custom_questions ?? []));
+        if ($teamName === null || trim($teamName) === '') {
+            return;
+        }
+
+        $normalizedTeamName = mb_strtolower(trim($teamName));
+        $existingCount = ProgramApplication::query()
+            ->where('program_id', $program->id)
+            ->whereIn('status', [ProgramApplication::STATUS_PENDING, ProgramApplication::STATUS_APPROVED])
+            ->get()
+            ->filter(function (ProgramApplication $application) use ($normalizedTeamName) {
+                $existingTeam = $this->extractTeamNameFromApplication($application);
+
+                return $existingTeam !== null && mb_strtolower(trim($existingTeam)) === $normalizedTeamName;
+            })
+            ->count();
+
+        if ($existingCount >= $maxMembers) {
+            throw ValidationException::withMessages([
+                'answers' => ["Team \"{$teamName}\" already has the maximum of {$maxMembers} members."],
+            ]);
+        }
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $answers
+     * @param  list<array<string, mixed>>  $questions
+     */
+    private function extractTeamNameFromAnswers(array $answers, array $questions): ?string
+    {
+        $teamQuestion = collect($questions)->first(function (array $question) {
+            $fieldKey = (string) ($question['field_key'] ?? '');
+            $label = mb_strtolower(trim((string) ($question['label'] ?? '')));
+
+            return $fieldKey === 'team_name' || $label === 'team name';
+        });
+
+        if ($teamQuestion === null) {
+            return null;
+        }
+
+        $questionId = (string) ($teamQuestion['id'] ?? '');
+        $answer = collect($answers)->firstWhere('question_id', $questionId);
+
+        return trim((string) ($answer['answer'] ?? ''));
+    }
+
+    private function extractTeamNameFromApplication(ProgramApplication $application): ?string
+    {
+        foreach ((array) ($application->custom_answers ?? []) as $answer) {
+            if (! is_array($answer)) {
+                continue;
+            }
+
+            $label = mb_strtolower(trim((string) ($answer['question_label'] ?? '')));
+            if ($label === 'team name') {
+                return trim((string) ($answer['answer'] ?? ''));
+            }
+        }
+
+        return null;
     }
 
     private function normalizeScholarshipEducation(string $value): string

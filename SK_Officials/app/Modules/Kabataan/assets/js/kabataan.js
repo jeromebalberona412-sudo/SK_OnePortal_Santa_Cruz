@@ -470,7 +470,7 @@ function initializeKabataanUI() {
                     <div class="kabataan-actions">
                         <button type="button" class="btn-action-view" data-action="view" data-index="${index}">View</button>
                         <button type="button" class="btn-action-documents" data-action="documents" data-index="${index}">Documents</button>
-                        <button type="button" class="btn-action-delete" data-action="delete" data-index="${index}">Delete</button>
+                        <button type="button" class="btn-action-edit" data-action="edit" data-index="${index}">Edit</button>
                     </div>
                 </td>
             `;
@@ -485,11 +485,6 @@ function initializeKabataanUI() {
     function switchKabataanViewTab(tabName) {
         const profilePanel = document.getElementById('kabataanViewTabProfile');
         const documentsPanel = document.getElementById('kabataanViewTabDocuments');
-        const tabs = document.querySelectorAll('.kabataan-view-tab');
-
-        tabs.forEach((tab) => {
-            tab.classList.toggle('is-active', tab.dataset.kabViewTab === tabName);
-        });
 
         if (profilePanel) {
             profilePanel.hidden = tabName !== 'profile';
@@ -672,7 +667,6 @@ function initializeKabataanUI() {
         });
 
         populateKabataanDocuments(k);
-        switchKabataanViewTab('profile');
     }
 
     function setModalReadonly(readonly) {
@@ -690,10 +684,9 @@ function initializeKabataanUI() {
         if (viewDetails) viewDetails.style.display = 'none';
     }
 
-    function openModal(mode, index, options = {}) {
+    function openModal(mode, index) {
         if (!modal) return;
         editingIndex = index ?? null;
-        const viewTab = options.viewTab || 'profile';
         if (toggleBtn && modalBox) {
             modal.classList.remove('modal-maximized');
             modalBox.classList.remove('modal-maximized');
@@ -706,8 +699,17 @@ function initializeKabataanUI() {
             modalTitle.textContent = 'Kabataan Details';
             showAddPanels(false, false, false);
             viewDetails.style.display = 'block';
+            switchKabataanViewTab('profile');
             populateViewRows(k);
-            switchKabataanViewTab(viewTab);
+            setModalReadonly(true);
+        } else if (mode === 'documents' && typeof index === 'number') {
+            const k = kabataan[index];
+            if (!k) return;
+            modalTitle.textContent = 'Supporting Documents';
+            showAddPanels(false, false, false);
+            viewDetails.style.display = 'block';
+            switchKabataanViewTab('documents');
+            populateKabataanDocuments(k);
             setModalReadonly(true);
         } else if (mode === 'edit' && typeof index === 'number') {
             const k = kabataan[index];
@@ -870,23 +872,14 @@ function initializeKabataanUI() {
         });
     }
 
-    document.querySelectorAll('.kabataan-view-tab').forEach((tab) => {
-        tab.addEventListener('click', () => {
-            if (viewDetails && viewDetails.style.display === 'none') {
-                return;
-            }
-
-            switchKabataanViewTab(tab.dataset.kabViewTab || 'profile');
-        });
-    });
-
     tbody.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
         const action = btn.dataset.action;
         const index = parseInt(btn.dataset.index, 10);
         if (action === 'view' && !Number.isNaN(index)) openModal(action, index);
-        if (action === 'documents' && !Number.isNaN(index)) openModal('view', index, { viewTab: 'documents' });
+        if (action === 'documents' && !Number.isNaN(index)) openModal('documents', index);
+        if (action === 'edit' && !Number.isNaN(index)) openModal('edit', index);
         if (action === 'delete' && !Number.isNaN(index)) openDeleteConfirm(index);
     });
 

@@ -1,5 +1,3 @@
-import { populateKkProfilingView, mapRegistrationToKkView } from './kk-profiling-view-populate.js';
-
 function broadcastKkProfileEvent() {
     try {
         sessionStorage.setItem('kk-profile-event', JSON.stringify({ at: Date.now() }));
@@ -234,7 +232,7 @@ function initializeKKProfilingRequestsUI() {
                 <td>${r.barangay}</td>
                 <td>${purokZone}</td>
                 <td>${voterStatus}</td>
-                <td><div class="kk-actions"><button type="button" class="kk-btn-view" data-action="view" data-id="${r.id}">View</button></div></td>
+                ${renderActionMenuCell(r.id)}
             `;
             tbody.appendChild(tr);
         });
@@ -242,28 +240,99 @@ function initializeKKProfilingRequestsUI() {
         updatePaginationFooter(filtered.length);
     }
 
+    function populateSurveyViewForm(request) {
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val ?? '';
+        };
+
+        setVal('vRespondentNumber', request.respondentNumber);
+        setVal('vDate', request.date);
+        setVal('vLastName', request.lastName);
+        setVal('vFirstName', request.firstName);
+        setVal('vMiddleName', request.middleName);
+        setVal('vSuffix', formatDisplaySuffix(request.suffix));
+        setVal('vRegion', request.region);
+        setVal('vProvince', request.province);
+        setVal('vCity', request.city);
+        setVal('vBarangay', request.barangay);
+        setVal('vPurokZone', request.purokZone);
+        setVal('vAge', request.age);
+        setVal('vDob', request.birthday);
+        setVal('vEmail', request.emailAddress);
+        setVal('vContact', request.contactNumber);
+        setVal('vFacebook', request.facebookAccount);
+
+        const logoEl = document.getElementById('kkRequestBarangayLogo');
+        if (logoEl && request.barangayLogoUrl) {
+            logoEl.src = request.barangayLogoUrl;
+            logoEl.alt = `${request.barangay || 'Barangay'} SK Logo`;
+        }
+
+        const vSignatureImg = document.getElementById('vSignature');
+        const vSignatureOverlay = document.getElementById('vSignatureOverlay');
+        const vSignatureText = document.getElementById('vSignatureText');
+        const nameParts = [request.firstName, request.middleName, request.lastName, formatDisplaySuffix(request.suffix)].filter(Boolean);
+        const fullName = nameParts.join(' ');
+
+        if (request.signature && String(request.signature).startsWith('data:image')) {
+            if (vSignatureImg && vSignatureOverlay) {
+                vSignatureImg.src = request.signature;
+                vSignatureOverlay.style.display = 'flex';
+            }
+            if (vSignatureText) {
+                vSignatureText.textContent = fullName;
+                vSignatureText.style.display = 'block';
+            }
+        } else {
+            if (vSignatureOverlay) vSignatureOverlay.style.display = 'none';
+            if (vSignatureText) {
+                vSignatureText.textContent = fullName;
+                vSignatureText.style.display = 'block';
+            }
+        }
+
+        const viewChks = document.querySelectorAll('#kkViewModal .kkf-view-chk');
+        viewChks.forEach((chk) => {
+            const field = chk.dataset.viewField;
+            const fieldMap = {
+                vSex: request.sex,
+                vCivilStatus: request.civilStatus,
+                vYouthAgeGroup: request.youthAgeGroup,
+                vEducation: request.educationalBackground,
+                vYouthClassification: request.youthClassification,
+                vWorkStatus: request.workStatus,
+                vSKVoter: request.registeredSKVoter,
+                vVotingHistory: request.votingHistory,
+                vVotingFrequency: request.kkTimes || request.votingFrequency,
+                vNatVoter: request.registeredNationalVoter,
+                vKKAssembly: request.attendedKKAssembly,
+                vVotingReason: request.kkReason || request.votingReason,
+                vGroupChat: request.willingToJoinGroupChat,
+            };
+            const stored = fieldMap[field] || '';
+            chk.checked = stored.trim().toLowerCase() === chk.value.trim().toLowerCase();
+        });
+    }
+
+    function renderActionMenuCell(requestId) {
+        return `
+            <td>
+                <div class="kk-actions">
+                    <button type="button" class="kk-btn-view" data-action="view" data-id="${requestId}">View</button>
+                    <button type="button" class="kk-btn-approve" data-action="approve" data-id="${requestId}">Approve</button>
+                    <button type="button" class="kk-btn-reject" data-action="reject" data-id="${requestId}">Reject</button>
+                </div>
+            </td>
+        `;
+    }
+
     function openModal(modalElement) { if (modalElement) modalElement.style.display = 'flex'; }
     function closeModal(modalElement) { if (modalElement) modalElement.style.display = 'none'; }
-    function closeAllModals() { [viewModal, approveModal, rejectModal].forEach((m) => { if (m) m.style.display = 'none'; }); }
-
-    function switchKkViewTab(tabName) {
-        const profilePanel = document.getElementById('kkViewTabProfile');
-        const documentsPanel = document.getElementById('kkViewTabDocuments');
-        const tabs = document.querySelectorAll('.kk-profiling-view-tab');
-
-        tabs.forEach((tab) => {
-            const isActive = tab.dataset.kkViewTab === tabName;
-            tab.classList.toggle('is-active', isActive);
-            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    function closeAllModals() {
+        [viewModal, approveModal, rejectModal].forEach((m) => {
+            if (m) m.style.display = 'none';
         });
-
-        if (profilePanel) {
-            profilePanel.hidden = tabName !== 'profile';
-        }
-
-        if (documentsPanel) {
-            documentsPanel.hidden = tabName !== 'documents';
-        }
     }
 
     function findRequestById(id) {
@@ -272,52 +341,9 @@ function initializeKKProfilingRequestsUI() {
     }
 
     function populateViewModal(request, skipErrorPanel = false) {
-        const viewData = mapRegistrationToKkView({
-            respondent_number: request.respondentNumber,
-            respondent_display: request.respondentNumber,
-            submitted_at: request.date,
-            first_name: request.firstName,
-            middle_name: request.middleName,
-            last_name: request.lastName,
-            suffix: request.suffix,
-            age: request.age,
-            birthday: request.birthday,
-            sex: request.sex,
-            civil_status: request.civilStatus,
-            region: request.region,
-            province: request.province,
-            city: request.city,
-            barangay: request.barangay,
-            purok_zone: request.purokZone,
-            email: request.emailAddress,
-            contact_number: request.contactNumber,
-            youth_classification: request.youthClassification,
-            youth_age_group: request.youthAgeGroup,
-            work_status: request.workStatus,
-            education: request.educationalBackground,
-            sk_voter: request.registeredSKVoter,
-            national_voter: request.registeredNationalVoter,
-            sk_voted: request.votingHistory,
-            kk_assembly: request.attendedKKAssembly,
-            kk_times: request.kkTimes,
-            kk_reason: request.kkReason,
-            facebook: request.facebookAccount,
-            group_chat: request.willingToJoinGroupChat,
-            signature: request.signature,
-            barangay_logo_url: request.barangayLogoUrl,
-            supporting_documents: request.supportingDocuments,
-            id_verification: request.idVerification,
-            status: request.registrationStatus,
-            rejection_reason: request.rejectionReason,
-        });
-
-        populateKkProfilingView(viewData, {
-            showRejection: request.registrationStatus === 'rejected' || request.status === 'rejected',
-            rejectionReason: request.rejectionReason || '',
-        });
+        populateSurveyViewForm(request);
 
         showEvaluationStatusBanner(request);
-        switchKkViewTab('profile');
 
         const { firstName, middleName, lastName, suffix, age, birthday, barangay, purokZone, emailAddress, contactNumber, status } = request;
 
@@ -414,16 +440,16 @@ function initializeKKProfilingRequestsUI() {
         };
 
         if (isEditable || isDuplicate) {
-            setField('kkViewLastName', 'lastName', lastName || '—');
-            setField('kkViewFirstName', 'firstName', firstName || '—');
-            setField('kkViewMiddleName', 'middleName', middleName || '—');
-            setField('kkViewSuffix', 'suffix', suffix || 'None');
-            setField('kkViewBarangay', 'barangay', barangay || '—');
-            setField('kkViewPurokZone', 'purokZone', purokZone || '—');
-            setField('kkViewAge', 'age', age || '—');
-            setField('kkViewBirthday', 'birthday', birthday || '—');
-            setField('kkViewEmailAddress', 'emailAddress', emailAddress || '—');
-            setField('kkViewContactNumber', 'contactNumber', contactNumber || '—');
+            setField('vLastName', 'lastName', lastName || '—');
+            setField('vFirstName', 'firstName', firstName || '—');
+            setField('vMiddleName', 'middleName', middleName || '—');
+            setField('vSuffix', 'suffix', suffix || 'None');
+            setField('vBarangay', 'barangay', barangay || '—');
+            setField('vPurokZone', 'purokZone', purokZone || '—');
+            setField('vAge', 'age', age || '—');
+            setField('vDob', 'birthday', birthday || '—');
+            setField('vEmail', 'emailAddress', emailAddress || '—');
+            setField('vContact', 'contactNumber', contactNumber || '—');
         }
 
         const mismatches = request.evaluationNotes?.mismatches || [];
@@ -431,10 +457,10 @@ function initializeKKProfilingRequestsUI() {
         mismatches.forEach(m => { mismatchMap[m.field] = m; });
 
         const fieldToElId = {
-            age:      'kkViewAge',
-            birthday: 'kkViewBirthday',
-            sex:      'kkViewSex_Male',
-            name:     'kkViewLastName',
+            age: 'vAge',
+            birthday: 'vDob',
+            sex: 'vSex',
+            name: 'vLastName',
         };
 
         // Remove old mismatch badges
@@ -464,7 +490,7 @@ function initializeKKProfilingRequestsUI() {
             // We'll show an inline error note below the civil status block
             let csErrEl = document.getElementById('kkViewCS_ErrorNote');
             if (!csErrEl) {
-                const csOptions = document.querySelector('.kkp-demo-options-2col');
+                const csOptions = document.querySelector('#kkViewModal .kkf-demo-options-2col');
                 if (csOptions) {
                     csErrEl = document.createElement('div');
                     csErrEl.id = 'kkViewCS_ErrorNote';
@@ -636,12 +662,6 @@ function initializeKKProfilingRequestsUI() {
     // Wire toggle buttons after modals exist in DOM
     wireModalToggle(viewModal);
 
-    document.querySelectorAll('.kk-profiling-view-tab').forEach((tab) => {
-        tab.addEventListener('click', () => {
-            switchKkViewTab(tab.dataset.kkViewTab || 'profile');
-        });
-    });
-
     tbody.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
@@ -653,9 +673,7 @@ function initializeKKProfilingRequestsUI() {
         activeRequestId = request.id;
         if (action === 'view') {
             resetModalMaximize(viewModal);
-            // Reset correction state for a fresh open
             request._fixedFields = new Set();
-            // Remove any leftover inline save row from a previous open
             const oldSaveRow = document.getElementById('kkInlineSaveRow');
             if (oldSaveRow) oldSaveRow.remove();
             populateViewModal(request);
