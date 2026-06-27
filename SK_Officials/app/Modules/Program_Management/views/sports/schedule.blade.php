@@ -117,6 +117,7 @@
                 @include('Program_Management::partials.kk-profiling-fields', [
                     'programLabel' => 'sports program',
                     'excludedFields' => ['education', 'current_school', 'course_strand', 'work_status', 'sk_voter', 'sk_voted'],
+                    'displayOnly' => true,
                 ])
                 @include('GForm_Builder::partials.custom-questions-builder', ['hint' => 'Add custom questions for sports applicants.'])
             </div>

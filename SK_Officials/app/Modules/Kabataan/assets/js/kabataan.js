@@ -109,6 +109,10 @@ function initializeKabataanUI() {
 
     if (!tbody) return;
 
+    if (typeof window.bindRowActionsTable === 'function') {
+        window.bindRowActionsTable(tbody);
+    }
+
     function getField(id) { return document.getElementById(id); }
 
     function getFormData() {
@@ -373,12 +377,12 @@ function initializeKabataanUI() {
     }
 
     function updateBulkToolbar() {
-        const toolbar = document.getElementById('kabataanBulkToolbar');
+        const deleteBtn = document.getElementById('kabataanBulkDeleteBtn');
         const label = document.getElementById('kabataanBulkDeleteLabel');
         const count = selectedIds.size;
 
-        if (toolbar) {
-            toolbar.hidden = count === 0;
+        if (deleteBtn) {
+            deleteBtn.hidden = count === 0;
         }
 
         if (label) {
@@ -466,11 +470,19 @@ function initializeKabataanUI() {
                 <td>${k.purokZone || '-'}</td>
                 <td>${k.educationalBackground || k.highestEducation || '-'}</td>
                 <td>${formatDocumentsCell(Boolean(k.hasSupportingDocuments))}</td>
-                <td>
-                    <div class="kabataan-actions">
-                        <button type="button" class="btn-action-view" data-action="view" data-index="${index}">View</button>
-                        <button type="button" class="btn-action-documents" data-action="documents" data-index="${index}">Documents</button>
-                        <button type="button" class="btn-action-edit" data-action="edit" data-index="${index}">Edit</button>
+                <td class="col-actions">
+                    <div class="row-actions-menu">
+                        <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+                        <div class="row-actions-dropdown" role="menu">
+                            <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-index="${index}" role="menuitem">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <span>View Details</span>
+                            </button>
+                            <button type="button" class="row-actions-item row-actions-item-documents" data-action="documents" data-index="${index}" role="menuitem">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                <span>Documents</span>
+                            </button>
+                        </div>
                     </div>
                 </td>
             `;
@@ -879,7 +891,6 @@ function initializeKabataanUI() {
         const index = parseInt(btn.dataset.index, 10);
         if (action === 'view' && !Number.isNaN(index)) openModal(action, index);
         if (action === 'documents' && !Number.isNaN(index)) openModal('documents', index);
-        if (action === 'edit' && !Number.isNaN(index)) openModal('edit', index);
         if (action === 'delete' && !Number.isNaN(index)) openDeleteConfirm(index);
     });
 
@@ -1584,7 +1595,7 @@ function initializeKabataanUI() {
                 kabataan.push({
                     id: r.id,
                     respondentNumber: r.respondent_no && r.respondent_no !== '—'
-                        ? String(parseInt(r.respondent_no, 10) || r.respondent_no)
+                        ? r.respondent_no
                         : '—',
                     lastName: r.last_name,
                     firstName: r.first_name,

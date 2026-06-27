@@ -1,8 +1,29 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SCHOLARSHIP EVALUATION — DB-backed with GForm builder
+   PROGRAM EVALUATION — DB-backed with GForm builder (scholarship, sports, etc.)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const PROGRAM_LETTER = 'A';
+const PROGRAM_LETTER_BY_KEY = {
+    scholarship: 'A',
+    sports: 'I',
+};
+
+function resolveProgramLetter() {
+    const body = document.body;
+    const explicitLetter = body?.dataset?.programLetter?.trim().toUpperCase();
+    if (explicitLetter) {
+        return explicitLetter;
+    }
+
+    const programKey = body?.dataset?.programKey?.trim().toLowerCase() || 'scholarship';
+    return PROGRAM_LETTER_BY_KEY[programKey] || 'A';
+}
+
+function resolveProgramKey() {
+    return document.body?.dataset?.programKey?.trim().toLowerCase() || 'scholarship';
+}
+
+const PROGRAM_LETTER = resolveProgramLetter();
+const PROGRAM_KEY = resolveProgramKey();
 let evaluations = [];
 let schedulePrograms = [];
 let editingEvaluationId = null;
@@ -339,7 +360,7 @@ function exportEvaluations() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'scholarship-evaluations.csv';
+    link.download = `${PROGRAM_KEY}-evaluations.csv`;
     link.click();
     URL.revokeObjectURL(url);
 }

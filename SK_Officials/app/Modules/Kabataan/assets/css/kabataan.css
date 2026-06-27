@@ -299,11 +299,17 @@ body {
     min-height: 32px;
 }
 
-.kabataan-table th:last-child,
-.kabataan-table td:last-child {
+.kabataan-table th:last-child:not(.col-actions),
+.kabataan-table td:last-child:not(.col-actions) {
     border-right: none;
     width: 180px;
     min-width: 180px;
+    text-align: center;
+}
+
+.kabataan-table th.col-actions,
+.kabataan-table td.col-actions {
+    border-right: none;
     text-align: center;
 }
 

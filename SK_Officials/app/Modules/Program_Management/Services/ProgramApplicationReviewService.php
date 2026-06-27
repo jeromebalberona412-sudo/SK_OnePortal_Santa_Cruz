@@ -2,10 +2,11 @@
 
 namespace App\Modules\Program_Management\Services;
 
+use App\Models\KabataanRegistration;
+use App\Models\KkSurveyResponse;
 use App\Models\ProgramApplication;
 use App\Models\User;
 use App\Services\RejectedProgramApplicationService;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class ProgramApplicationReviewService
@@ -13,8 +14,8 @@ class ProgramApplicationReviewService
     public function __construct(
         private readonly RejectedProgramApplicationService $rejectedService,
         private readonly ProgramDocumentService $documentService,
-    ) {
-    }
+    ) {}
+
     /**
      * @return list<array<string, mixed>>
      */
@@ -294,6 +295,9 @@ class ProgramApplicationReviewService
                 ->values()
                 ->all();
             $kkFields = $application->scheduleProgram?->kk_profiling_fields ?? [];
+            if ($kkFields === [] && ($application->scheduleProgram?->program_letter ?? '') === 'I') {
+                $kkFields = ScheduleProgramService::DEFAULT_SPORTS_KK_FIELDS;
+            }
             $formatted['kk_profile_data'] = $this->buildKkProfileData($application, $kkFields);
             $formatted['schedule_program'] = $application->scheduleProgram ? [
                 'id' => $application->scheduleProgram->id,
@@ -339,22 +343,32 @@ class ProgramApplicationReviewService
 
     protected function buildKkProfileData(ProgramApplication $application, array $fields): array
     {
+        $profileExtras = $this->resolveKkProfileExtras($application);
+
+        $birthday = $application->birthdate?->format('m/d/Y')
+            ?? ($profileExtras['birthday'] ?? '');
+
         $mapped = [
-            'last_name' => (string) ($application->last_name ?? ''),
-            'first_name' => (string) ($application->first_name ?? ''),
-            'middle_name' => (string) ($application->middle_name ?? ''),
-            'suffix' => (string) ($application->suffix ?? ''),
-            'birthday' => $application->birthdate?->format('Y-m-d') ?? '',
-            'age' => (string) ($application->age ?? ''),
-            'sex' => (string) ($application->sex ?? ''),
-            'civil_status' => (string) ($application->civil_status ?? ''),
-            'contact_number' => (string) ($application->contact_number ?? ''),
-            'email' => (string) ($application->email ?? ''),
-            'barangay' => (string) ($application->barangay ?? ''),
-            'purok_zone' => (string) ($application->purok ?? ''),
+            'last_name' => (string) ($application->last_name ?? $profileExtras['last_name'] ?? ''),
+            'first_name' => (string) ($application->first_name ?? $profileExtras['first_name'] ?? ''),
+            'middle_name' => (string) ($application->middle_name ?? $profileExtras['middle_name'] ?? ''),
+            'suffix' => (string) ($application->suffix ?? $profileExtras['suffix'] ?? ''),
+            'birthday' => $birthday,
+            'age' => (string) ($application->age ?? $profileExtras['age'] ?? ''),
+            'sex' => (string) ($application->sex ?? $profileExtras['sex'] ?? ''),
+            'civil_status' => (string) ($application->civil_status ?? $profileExtras['civil_status'] ?? ''),
+            'contact_number' => (string) ($application->contact_number ?? $profileExtras['contact_number'] ?? ''),
+            'email' => (string) ($application->email ?? $profileExtras['email'] ?? ''),
+            'region' => (string) ($profileExtras['region'] ?? ''),
+            'province' => (string) ($profileExtras['province'] ?? ''),
+            'city' => (string) ($profileExtras['city'] ?? ''),
+            'barangay' => (string) ($application->barangay ?? $profileExtras['barangay'] ?? ''),
+            'purok_zone' => (string) ($application->purok ?? $profileExtras['purok_zone'] ?? ''),
+            'youth_classification' => (string) ($profileExtras['youth_classification'] ?? ''),
+            'youth_age_group' => (string) ($profileExtras['youth_age_group'] ?? ''),
             'home_address' => trim(implode(', ', array_filter([
-                (string) ($application->purok ?? ''),
-                (string) ($application->barangay ?? ''),
+                (string) ($application->purok ?? $profileExtras['purok_zone'] ?? ''),
+                (string) ($application->barangay ?? $profileExtras['barangay'] ?? ''),
             ]))),
             'current_school' => (string) ($application->school_name ?? ''),
             'year_level' => (string) ($application->grade_level ?? ''),
@@ -382,5 +396,64 @@ class ProgramApplicationReviewService
         }
 
         return $result;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function resolveKkProfileExtras(ProgramApplication $application): array
+    {
+        if (! $application->kabataan_id) {
+            return [];
+        }
+
+        $registration = KabataanRegistration::query()
+            ->with('barangay')
+            ->where('user_id', $application->kabataan_id)
+            ->first();
+
+        if ($registration === null) {
+            return [];
+        }
+
+        $formData = $registration->form_data ?? [];
+
+        $survey = KkSurveyResponse::query()
+            ->where('kabataan_registration_id', $registration->id)
+            ->first();
+
+        if ($survey !== null) {
+            $formData = array_merge($formData, array_filter([
+                'last_name' => $survey->last_name,
+                'first_name' => $survey->first_name,
+                'middle_name' => $survey->middle_name,
+                'suffix' => $survey->suffix,
+                'birthday' => $survey->birthdate?->format('m/d/Y'),
+                'age' => $survey->age !== null ? (string) $survey->age : null,
+                'sex' => $survey->sex_assigned_at_birth,
+                'civil_status' => $survey->civil_status,
+                'contact_number' => $survey->contact_number,
+                'email' => $survey->email,
+                'region' => $survey->region,
+                'province' => $survey->province,
+                'city' => $survey->municipality,
+                'barangay' => $survey->barangay,
+                'purok_zone' => $survey->purok_zone,
+                'youth_classification' => $survey->youth_classification,
+                'youth_age_group' => $survey->youth_age_group,
+            ], fn ($value) => $value !== null && trim((string) $value) !== ''));
+        }
+
+        if (empty($formData['region']) && $registration->barangay) {
+            $formData['region'] = $registration->barangay->region ?? '';
+            $formData['province'] = $registration->barangay->province ?? '';
+            $formData['city'] = $registration->barangay->municipality ?? '';
+            $formData['barangay'] = $registration->barangay->name ?? '';
+        }
+
+        return collect($formData)
+            ->mapWithKeys(fn ($value, $key) => [(string) $key => trim((string) $value)])
+            ->filter(fn ($value) => $value !== '')
+            ->all();
     }
 }

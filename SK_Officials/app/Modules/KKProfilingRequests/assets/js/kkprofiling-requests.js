@@ -6,16 +6,40 @@ function broadcastKkProfileEvent() {
 }
 
 function formatRespondentDisplay(seq, fullNumber) {
+    if (fullNumber && fullNumber !== '—') {
+        const raw = String(fullNumber).trim();
+        if (raw.includes('-')) {
+            const last = raw.split('-').pop();
+            return last || '—';
+        }
+        return raw;
+    }
     if (seq !== null && seq !== undefined && seq !== '') {
         const n = parseInt(seq, 10);
-        return Number.isNaN(n) ? '—' : String(n).padStart(2, '0');
-    }
-    if (fullNumber && fullNumber !== '—') {
-        const last = String(fullNumber).split('-').pop();
-        const n = parseInt(last, 10);
-        return Number.isNaN(n) ? '—' : String(n).padStart(2, '0');
+        return Number.isNaN(n) ? '—' : String(n).padStart(4, '0');
     }
     return '—';
+}
+
+const HIDDEN_REGISTRATION_STATUSES = new Set([
+    'password_set',
+    'email_verified',
+    'pending_verification',
+    'active',
+    'rejected',
+]);
+
+function resolveEvaluationStatus(evaluationStatus, registrationStatus) {
+    if (evaluationStatus) {
+        return evaluationStatus;
+    }
+
+    const normalized = String(registrationStatus || '').trim().toLowerCase();
+    if (!normalized || HIDDEN_REGISTRATION_STATUSES.has(normalized)) {
+        return '';
+    }
+
+    return registrationStatus;
 }
 
 // Module-level toast — accessible by all functions in this file
@@ -45,6 +69,10 @@ function initializeKKProfilingRequestsUI() {
     const compareModal = null; // removed — Compare button is now a direct link
 
     if (!tbody) return;
+
+    if (typeof window.bindRowActionsTable === 'function') {
+        window.bindRowActionsTable(tbody);
+    }
 
     // Sample data loaded from JSON (storage/app/sample-data/kkprofiling-requests.json)
     const requests = [];
@@ -317,11 +345,23 @@ function initializeKKProfilingRequestsUI() {
 
     function renderActionMenuCell(requestId) {
         return `
-            <td>
-                <div class="kk-actions">
-                    <button type="button" class="kk-btn-view" data-action="view" data-id="${requestId}">View</button>
-                    <button type="button" class="kk-btn-approve" data-action="approve" data-id="${requestId}">Approve</button>
-                    <button type="button" class="kk-btn-reject" data-action="reject" data-id="${requestId}">Reject</button>
+            <td class="col-actions">
+                <div class="row-actions-menu">
+                    <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+                    <div class="row-actions-dropdown" role="menu">
+                        <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-id="${requestId}" role="menuitem">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <span>View Details</span>
+                        </button>
+                        <button type="button" class="row-actions-item row-actions-item-approve" data-action="approve" data-id="${requestId}" role="menuitem">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Approve</span>
+                        </button>
+                        <button type="button" class="row-actions-item row-actions-item-danger" data-action="reject" data-id="${requestId}" role="menuitem">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Reject</span>
+                        </button>
+                    </div>
                 </div>
             </td>
         `;
@@ -529,7 +569,13 @@ function initializeKKProfilingRequestsUI() {
         const status = request.status || request.evaluation_status || '';
         const notes = request.evaluationNotes?.message || '';
 
-        if (!status || status === 'New Applicant' || status === 'New Kabataan') {
+        const normalizedStatus = String(status || '').trim().toLowerCase();
+        if (
+            !status
+            || status === 'New Applicant'
+            || status === 'New Kabataan'
+            || HIDDEN_REGISTRATION_STATUSES.has(normalizedStatus)
+        ) {
             banner.hidden = true;
             banner.textContent = '';
             banner.className = 'kk-view-evaluation-banner';
@@ -692,22 +738,6 @@ function initializeKKProfilingRequestsUI() {
             openModal(rejectModal);
         }
     });
-
-    const viewApproveBtn = document.getElementById('kkViewApproveBtn');
-    const viewRejectBtn = document.getElementById('kkViewRejectBtn');
-
-    if (viewApproveBtn) {
-        viewApproveBtn.addEventListener('click', () => {
-            if (activeRequestId) {
-                closeModal(viewModal);
-                openModal(approveModal);
-            }
-        });
-    }
-
-    if (viewRejectBtn) {
-        viewRejectBtn.addEventListener('click', () => { if (activeRequestId) openModal(rejectModal); });
-    }
 
     const otherCheckbox = document.getElementById('kkRejectOtherCheckbox');
     const otherWrap = document.getElementById('kkRejectOtherWrap');
@@ -883,8 +913,7 @@ function initializeKKProfilingRequestsUI() {
             (response.data || []).forEach((r, i) => {
                 requests.push({
                     id: r.id,
-                    respondentNumber: r.respondent_number || r.respondent_display
-                        || formatRespondentDisplay(r.respondent_sequence, r.respondent_number),
+                    respondentNumber: formatRespondentDisplay(r.respondent_sequence, r.respondent_number),
                     respondentSequence: r.respondent_sequence,
                     date: r.submitted_at || '—',
                     lastName: r.last_name,
@@ -913,7 +942,7 @@ function initializeKKProfilingRequestsUI() {
                     facebookAccount: r.facebook,
                     willingToJoinGroupChat: r.group_chat,
                     signature: r.signature,
-                    status: r.evaluation_status || r.status,
+                    status: resolveEvaluationStatus(r.evaluation_status, r.status),
                     registrationStatus: r.status,
                     evaluationNotes: r.evaluation_notes,
                     rejectionReason: r.review_notes,

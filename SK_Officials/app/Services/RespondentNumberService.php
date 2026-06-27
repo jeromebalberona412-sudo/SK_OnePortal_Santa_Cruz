@@ -20,7 +20,7 @@ class RespondentNumberService
         $tenantId = $registration->tenant_id;
         $barangayId = $registration->barangay_id;
 
-        if (!$tenantId || !$barangayId) {
+        if (! $tenantId || ! $barangayId) {
             throw new \RuntimeException('Cannot assign respondent number without tenant and barangay.');
         }
 
@@ -30,7 +30,7 @@ class RespondentNumberService
         );
 
         $respondentNumber = $row->respondent_number ?? null;
-        if (!$respondentNumber) {
+        if (! $respondentNumber) {
             throw new \RuntimeException('Failed to generate respondent number.');
         }
 
@@ -40,31 +40,29 @@ class RespondentNumberService
         $formData['respondent_number'] = $respondentNumber;
 
         $registration->update([
-            'respondent_number'   => $respondentNumber,
+            'respondent_number' => $respondentNumber,
             'respondent_sequence' => $sequence,
-            'form_data'           => $formData,
+            'form_data' => $formData,
         ]);
 
         return $respondentNumber;
     }
 
-    /** Display-only: sequence number without barangay/year prefix (01, 02, ...). */
+    /** Display-only: trailing sequence without barangay/year prefix (0001, 0002, ...). */
     public static function displaySequence(?int $sequence, ?string $fullNumber = null): string
     {
-        if ($sequence) {
-            return self::formatQueueNumber($sequence);
-        }
-
         if ($fullNumber) {
             $last = strrpos($fullNumber, '-') !== false
                 ? substr($fullNumber, strrpos($fullNumber, '-') + 1)
                 : $fullNumber;
 
-            if ($last === '') {
-                return '—';
+            if ($last !== '') {
+                return $last;
             }
+        }
 
-            return self::formatQueueNumber((int) $last);
+        if ($sequence) {
+            return self::formatQueueNumber($sequence);
         }
 
         return '—';
@@ -82,6 +80,6 @@ class RespondentNumberService
             return '—';
         }
 
-        return str_pad((string) $position, 2, '0', STR_PAD_LEFT);
+        return str_pad((string) $position, 4, '0', STR_PAD_LEFT);
     }
 }

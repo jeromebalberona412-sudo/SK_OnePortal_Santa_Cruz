@@ -10,6 +10,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/layout/css/table-row-actions-menu.css',
         'app/Modules/Kabataan/assets/css/kabataan.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
@@ -128,17 +129,17 @@
             </div>
         </section>
 
-        <section class="page-content-section">
-            <div class="kabataan-table-toolbar" id="kabataanBulkToolbar" hidden>
-                <button type="button" class="btn-float-delete" id="kabataanBulkDeleteBtn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                    <span id="kabataanBulkDeleteLabel">Delete selected</span>
-                </button>
-            </div>
+        <div class="table-external-actions">
+            <button type="button" class="btn-float-delete" id="kabataanBulkDeleteBtn" hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span id="kabataanBulkDeleteLabel">Delete 0 rows</span>
+            </button>
+        </div>
 
+        <section class="page-content-section">
             <div class="table-card">
                 <div class="table-wrapper">
                     <table class="kabataan-table">
@@ -158,7 +159,7 @@
                                 <th>Purok / Sitio</th>
                                 <th>Highest Education</th>
                                 <th>ID Documents</th>
-                                <th>Actions</th>
+                                <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="kabataanTableBody">
@@ -1085,6 +1086,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/table-row-actions-menu.js',
     'app/Modules/Kabataan/assets/js/kabataan.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

@@ -10,6 +10,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/layout/css/table-row-actions-menu.css',
         'app/Modules/Kabataan/assets/css/kabataan.css',
         'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
@@ -183,10 +184,6 @@
                 ])
             </div>
         </div>
-        <div class="modal-footer kk-view-modal-footer">
-            <button type="button" class="btn btn-reject" id="kkViewRejectBtn">Reject</button>
-            <button type="button" class="btn btn-approve" id="kkViewApproveBtn">Approve</button>
-        </div>
     </div>
 </div>
 
@@ -201,7 +198,7 @@
             <p>Are you sure you want to approve this KK Profiling submission?</p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-approve-confirm primary-btn" id="kkApproveConfirmBtn">Confirm Approve</button>
+            <button type="button" class="btn btn-approve-confirm" id="kkApproveConfirmBtn">Confirm Approve</button>
         </div>
     </div>
 </div>
@@ -241,7 +238,7 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-reject-confirm primary-btn" id="kkRejectConfirmBtn">Confirm Reject</button>
+            <button type="button" class="btn btn-reject-confirm" id="kkRejectConfirmBtn">Confirm Reject</button>
         </div>
     </div>
 </div>
@@ -251,6 +248,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/table-row-actions-menu.js',
     'app/Modules/KKProfilingRequests/assets/js/kkprofiling-requests.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

@@ -329,7 +329,6 @@ Route::middleware([
         return view('Program_Management::sports.requests');
     })->name('sports-requests');
 
-    // ── Sports evaluation route (pure front-end, no DB) ──
     Route::get('/sports-evaluation', function () {
         return view('Program_Management::sports.evaluation');
     })->name('sports.evaluation');

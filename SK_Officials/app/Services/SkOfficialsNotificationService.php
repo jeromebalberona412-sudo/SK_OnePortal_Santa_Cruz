@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\SkOfficialsNotification;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 class SkOfficialsNotificationService
@@ -145,18 +146,25 @@ class SkOfficialsNotificationService
         string $applicantName,
         string $programName,
         string $actionUrl = '/scholarship-applications',
+        ?string $programLetter = null,
     ): void {
+        $letter = strtoupper(trim((string) $programLetter));
+        $title = $letter === 'I' ? 'New Sports Application' : 'New Program Application';
+        $body = $letter === 'I'
+            ? "{$applicantName} submitted a sports program application for {$programName}."
+            : "{$applicantName} submitted an application for {$programName}.";
+
         $this->notifyBarangayOfficials(
             $barangayId,
             self::CATEGORY_PROGRAM,
-            'New Program Application',
-            "{$applicantName} submitted an application for {$programName}.",
+            $title,
+            $body,
             url($actionUrl),
         );
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<SkOfficialsNotification>
+     * @return Builder<SkOfficialsNotification>
      */
     private function forUserQuery(User $user)
     {

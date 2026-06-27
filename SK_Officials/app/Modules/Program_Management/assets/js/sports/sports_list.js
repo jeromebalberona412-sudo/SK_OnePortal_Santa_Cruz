@@ -106,7 +106,49 @@ async function initSportsList() {
 
     // ── Pagination State ──────────────────────────────────────────────────────
     let currentPage = 1;
-    let perPage = parseInt(document.getElementById('slPerPage')?.value || '25', 10);
+    let recordsPerPage = parseInt(document.getElementById('slRowsPerPageSelect')?.value || '10', 10);
+
+    function getTotalPages(totalRecords) {
+        return Math.max(1, Math.ceil(totalRecords / recordsPerPage) || 1);
+    }
+
+    function updatePaginationFooter(totalRecords) {
+        const totalPages = getTotalPages(totalRecords);
+        const pageInput = document.getElementById('slPageInput');
+        const totalPagesEl = document.getElementById('slTotalPages');
+        const prevBtn = document.getElementById('slPrevBtn');
+        const nextBtn = document.getElementById('slNextBtn');
+        const info = document.getElementById('slPaginationInfo');
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        if (pageInput) {
+            pageInput.value = String(currentPage);
+            pageInput.min = '1';
+            pageInput.max = String(totalPages);
+        }
+
+        if (totalPagesEl) {
+            totalPagesEl.textContent = String(totalPages);
+        }
+
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+        if (info) {
+            info.textContent = `${totalRecords} record${totalRecords === 1 ? '' : 's'}`;
+        }
+    }
+
+    function goToPage(page, list) {
+        const totalPages = getTotalPages(list.length);
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            renderTable(list);
+        }
+    }
 
     // ── Render ──────────────────────────────────────────────────────────────
     renderTable(filtered);
@@ -117,12 +159,27 @@ async function initSportsList() {
     if (filterSport) filterSport.addEventListener('change', applyFilters);
     if (filterPayment) filterPayment.addEventListener('change', applyFilters);
 
-    const perPageSel = document.getElementById('slPerPage');
-    if (perPageSel) {
-        perPageSel.addEventListener('change', () => {
-            perPage = parseInt(perPageSel.value, 10);
+    const rowsPerPageSelect = document.getElementById('slRowsPerPageSelect');
+    if (rowsPerPageSelect) {
+        rowsPerPageSelect.addEventListener('change', () => {
+            recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
             currentPage = 1;
             renderTable(filtered);
+        });
+    }
+
+    const prevBtn = document.getElementById('slPrevBtn');
+    const nextBtn = document.getElementById('slNextBtn');
+    const pageInput = document.getElementById('slPageInput');
+
+    if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1, filtered));
+    if (nextBtn) nextBtn.addEventListener('click', () => goToPage(currentPage + 1, filtered));
+    if (pageInput) {
+        pageInput.addEventListener('change', () => {
+            const page = parseInt(pageInput.value, 10);
+            if (!Number.isNaN(page)) {
+                goToPage(page, filtered);
+            }
         });
     }
 
@@ -305,51 +362,14 @@ async function initSportsList() {
         });
     }
 
-    // ── Pagination Controls ──────────────────────────────────────────────────
-    const firstBtn = document.getElementById('slFirstPage');
-    const prevBtn  = document.getElementById('slPrevPage');
-    const nextBtn  = document.getElementById('slNextPage');
-    const lastBtn  = document.getElementById('slLastPage');
-
-    if (firstBtn) firstBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage = 1; renderTable(filtered); } });
-    if (prevBtn)  prevBtn.addEventListener('click',  () => { if (currentPage > 1) { currentPage--; renderTable(filtered); } });
-    if (nextBtn)  nextBtn.addEventListener('click',  () => { const tp = Math.ceil(filtered.length/perPage); if (currentPage < tp) { currentPage++; renderTable(filtered); } });
-    if (lastBtn)  lastBtn.addEventListener('click',  () => { const tp = Math.ceil(filtered.length/perPage); if (currentPage < tp) { currentPage = tp; renderTable(filtered); } });
-
     // ── Render Table ─────────────────────────────────────────────────────────
     function renderTable(list) {
         if (!tbody) return;
 
-        // Pagination
-        const totalPages = Math.max(1, Math.ceil(list.length / perPage));
-        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * recordsPerPage;
+        const page = list.slice(start, start + recordsPerPage);
 
-        const start = (currentPage - 1) * perPage;
-        const page  = list.slice(start, start + perPage);
-
-        // Update pagination info
-        const showStart = document.getElementById('slShowingStart');
-        const showEnd   = document.getElementById('slShowingEnd');
-        const totalRec  = document.getElementById('slTotalRecords');
-        if (showStart) showStart.textContent = list.length ? start + 1 : 0;
-        if (showEnd)   showEnd.textContent   = Math.min(start + perPage, list.length);
-        if (totalRec)  totalRec.textContent  = list.length;
-
-        // Page numbers
-        const pageNums = document.getElementById('slPageNumbers');
-        if (pageNums) {
-            let html = '';
-            for (let p = 1; p <= Math.min(totalPages, 5); p++) {
-                html += `<button type="button" class="sl-page-btn${p === currentPage ? ' active' : ''}" data-page="${p}">${p}</button>`;
-            }
-            pageNums.innerHTML = html;
-            pageNums.querySelectorAll('[data-page]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    currentPage = parseInt(btn.getAttribute('data-page'), 10);
-                    renderTable(list);
-                });
-            });
-        }
+        updatePaginationFooter(list.length);
 
         if (page.length === 0) {
             tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px 20px;color:#6b7280;font-size:14px;">No approved sports participants found.</td></tr>`;

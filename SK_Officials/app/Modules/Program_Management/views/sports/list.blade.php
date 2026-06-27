@@ -14,6 +14,7 @@
         'app/Modules/Program_Management/assets/css/sports/sports_list.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body data-program-key="sports">
 @include('loading')
@@ -21,7 +22,7 @@
 @include('layout::sidebar')
 
 <main class="main-content">
-<div class="schol-page-container saf-page-wrap">
+<div class="schol-page-container saf-page-wrap has-table-page-footer">
 
     @include('Program_Management::partials.program-page-top', [
         'activeTab'          => 'list',
@@ -149,35 +150,27 @@
                 </tbody>
             </table>
         </div>
+    </div>
 
-        <!-- ── Pagination ── -->
-        <div class="sl-pagination-wrapper">
-            <div class="sl-pagination-info">
-                Showing <span id="slShowingStart">0</span>–<span id="slShowingEnd">0</span> of <span id="slTotalRecords">0</span> participants
-            </div>
-            <div class="sl-pagination-controls">
-                <button type="button" class="sl-page-btn" id="slFirstPage" title="First">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
-                </button>
-                <button type="button" class="sl-page-btn" id="slPrevPage" title="Previous">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <div class="sl-page-numbers" id="slPageNumbers"></div>
-                <button type="button" class="sl-page-btn" id="slNextPage" title="Next">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-                <button type="button" class="sl-page-btn" id="slLastPage" title="Last">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-                </button>
-            </div>
-            <div class="sl-per-page">
-                <label for="slPerPage">Per page:</label>
-                <select id="slPerPage" class="sl-per-page-select">
-                    <option value="10">10</option>
-                    <option value="25" selected>25</option>
-                    <option value="50">50</option>
-                </select>
-            </div>
+    <div class="sl-page-footer table-page-footer pagination-footer" aria-label="Table pagination">
+        <div class="pagination-footer-nav">
+            <button type="button" class="pagination-arrow" id="slPrevBtn" disabled aria-label="Previous page">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <span class="pagination-page-label">Page</span>
+            <input type="number" class="pagination-page-input" id="slPageInput" value="1" min="1" aria-label="Current page">
+            <span class="pagination-page-of">of <span id="slTotalPages">1</span></span>
+            <button type="button" class="pagination-arrow" id="slNextBtn" disabled aria-label="Next page">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+        <div class="pagination-footer-right">
+            <select id="slRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
+                <option value="10">10 rows</option>
+                <option value="50">50 rows</option>
+                <option value="100">100 rows</option>
+            </select>
+            <span class="pagination-record-count" id="slPaginationInfo">0 records</span>
         </div>
     </div>
 

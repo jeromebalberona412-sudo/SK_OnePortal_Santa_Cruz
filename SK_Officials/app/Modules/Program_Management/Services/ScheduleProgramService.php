@@ -83,6 +83,14 @@ class ScheduleProgramService
         'course_strand', 'work_status', 'sk_voter', 'sk_voted',
     ];
 
+    /** @var list<string> */
+    public const DEFAULT_SPORTS_KK_FIELDS = [
+        'last_name', 'first_name', 'middle_name', 'suffix',
+        'birthday', 'age', 'sex', 'civil_status', 'contact_number', 'email',
+        'region', 'province', 'city', 'barangay', 'purok_zone',
+        'youth_classification', 'youth_age_group',
+    ];
+
     /** @var list<array{name: string, min_age: int, max_age: int}> */
     public const DEFAULT_SPORTS_AGE_CLASSIFICATIONS = [
         ['name' => 'Mosquito Division', 'min_age' => 15, 'max_age' => 17],
@@ -376,6 +384,10 @@ class ScheduleProgramService
             (array) ($data['kk_profiling_fields'] ?? []),
             fn ($field) => in_array((string) $field, self::ALLOWED_KK_FIELDS, true)
         ));
+
+        if ($letter === self::LETTER_SPORTS && $kkFields === []) {
+            $kkFields = self::DEFAULT_SPORTS_KK_FIELDS;
+        }
 
         $customQuestions = $this->sanitizeCustomQuestions((array) ($data['custom_questions'] ?? []));
 

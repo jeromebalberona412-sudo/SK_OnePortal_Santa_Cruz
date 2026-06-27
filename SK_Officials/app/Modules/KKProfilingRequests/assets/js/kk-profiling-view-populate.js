@@ -276,7 +276,18 @@ export function populateKkProfilingView(request, options = {}) {
 
 export function mapRegistrationToKkView(record) {
     return {
-        respondentNumber: record.respondent_display || record.respondent_number || '—',
+        respondentNumber: (() => {
+            if (record.respondent_number && String(record.respondent_number).includes('-')) {
+                return String(record.respondent_number).split('-').pop() || '—';
+            }
+            if (record.respondent_sequence) {
+                return String(record.respondent_sequence).padStart(4, '0');
+            }
+            if (record.respondent_display && !String(record.respondent_display).includes('-')) {
+                return record.respondent_display;
+            }
+            return record.respondent_number || '—';
+        })(),
         date: record.submitted_at || '—',
         firstName: record.first_name,
         middleName: record.middle_name,

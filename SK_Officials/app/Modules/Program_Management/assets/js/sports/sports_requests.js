@@ -6,6 +6,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const ICON_MAX = '\u25A1';
     const ICON_RESTORE = '\u29C9';
 
+    const DEFAULT_SPORTS_KK_FIELDS = [
+        'last_name', 'first_name', 'middle_name', 'suffix',
+        'birthday', 'age', 'sex', 'civil_status', 'contact_number', 'email',
+        'region', 'province', 'city', 'barangay', 'purok_zone',
+        'youth_classification', 'youth_age_group',
+    ];
+
+    const KK_FIELD_LABELS = {
+        last_name: 'Last Name',
+        first_name: 'First Name',
+        middle_name: 'Middle Name',
+        suffix: 'Suffix',
+        birthday: 'Birthday',
+        age: 'Age',
+        sex: 'Sex',
+        civil_status: 'Civil Status',
+        contact_number: 'Contact Number',
+        email: 'Email Address',
+        region: 'Region',
+        province: 'Province',
+        city: 'City/Municipality',
+        barangay: 'Barangay',
+        purok_zone: 'Purok/Zone',
+        youth_classification: 'Youth Classification',
+        youth_age_group: 'Youth Age Group',
+    };
+
     const tbody = document.getElementById('sportsTableBody');
     const searchInput = document.getElementById('scholSearch');
     const statTotal = document.getElementById('statTotal');
@@ -166,18 +193,34 @@ document.addEventListener('DOMContentLoaded', () => {
         return docs.map((doc) => renderDocumentCard(doc)).join('');
     }
 
-    function renderFormAnswers(customAnswers) {
-        const answers = (customAnswers || []).map((item, index) => ({
-            question: item.question_label || item.label || `Question ${index + 1}`,
-            question_type: item.question_type || '',
-            answer: item.answer ?? '—',
-        }));
+    function renderFormAnswers(customAnswers, customQuestions = []) {
+        const answersById = {};
+        (customAnswers || []).forEach((item) => {
+            const id = String(item.question_id ?? item.id ?? '');
+            if (id) answersById[id] = item;
+        });
 
-        if (!answers.length) {
-            return '<p style="color:#94a3b8;">No custom answers submitted.</p>';
+        const items = (customQuestions || []).length
+            ? customQuestions.map((question, index) => {
+                const id = String(question.id ?? '');
+                const stored = answersById[id];
+                return {
+                    question: question.label || stored?.question_label || `Question ${index + 1}`,
+                    question_type: question.type || stored?.question_type || '',
+                    answer: stored?.answer ?? '—',
+                };
+            })
+            : (customAnswers || []).map((item, index) => ({
+                question: item.question_label || item.label || `Question ${index + 1}`,
+                question_type: item.question_type || '',
+                answer: item.answer ?? '—',
+            }));
+
+        if (!items.length) {
+            return '<p style="color:#94a3b8;">No application questions answered.</p>';
         }
 
-        return answers.map((item, idx) => {
+        return items.map((item, idx) => {
             const isFile = item.question_type === 'file' || isDocumentAnswer(item.answer);
             const answerHtml = isFile
                 ? renderDocumentCard(item.answer)
@@ -188,6 +231,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${answerHtml}
                 </div>`;
         }).join('');
+    }
+
+    function renderKkProfileSection(app) {
+        const kkData = app.kk_profile_data || {};
+        const program = app.schedule_program || {};
+        const kkFields = (program.kk_profiling_fields?.length ? program.kk_profiling_fields : DEFAULT_SPORTS_KK_FIELDS)
+            .filter((field) => field !== 'full_name');
+
+        const fieldHtml = kkFields.map((field) => {
+            const value = kkData[field];
+            if (!value) return '';
+            const label = KK_FIELD_LABELS[field] || field.replace(/_/g, ' ');
+            return `
+                <div>
+                    <label style="font-size:13px;font-weight:600;color:#0369a1;margin-bottom:6px;display:block;">${escapeHtml(label)}</label>
+                    <div style="font-size:15px;color:#111827;padding:10px 14px;background:#fff;border-radius:6px;border:1px solid #bae6fd;">${escapeHtml(value)}</div>
+                </div>`;
+        }).filter(Boolean).join('');
+
+        if (!fieldHtml) {
+            return '';
+        }
+
+        return `
+            <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:24px;margin-bottom:20px;">
+                <h4 style="font-size:16px;font-weight:700;color:#0369a1;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
+                    KK Profile Information
+                    <span style="margin-left:auto;font-size:12px;font-weight:600;color:#64748b;background:#fff;padding:4px 12px;border-radius:20px;border:1px solid #0ea5e9;">Auto-filled from KK Profile</span>
+                </h4>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                    ${fieldHtml}
+                </div>
+            </div>`;
     }
 
     function formatRequirementsCell(app) {
@@ -290,22 +366,28 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderViewModalContent(app) {
         if (!viewModalBody || !app) return;
 
+        const program = app.schedule_program || {};
         const docsHtml = renderUploadedDocumentsSection(app.required_documents);
-        const answersHtml = renderFormAnswers(app.custom_answers);
+        const kkProfileHtml = renderKkProfileSection(app);
+        const answersHtml = renderFormAnswers(app.custom_answers, program.custom_questions || []);
 
         viewModalBody.innerHTML = `
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
-                <div><strong>Name</strong><br>${escapeHtml(app.full_name)}</div>
-                <div><strong>Program</strong><br>${escapeHtml(app.program_name || '—')}</div>
-                <div><strong>Age</strong><br>${escapeHtml(app.age ?? '—')}</div>
-                <div><strong>Contact</strong><br>${escapeHtml(app.contact_number || '—')}</div>
-                <div><strong>Email</strong><br>${escapeHtml(app.email || '—')}</div>
-                <div><strong>Status</strong><br>${escapeHtml(app.status_label)}</div>
+            ${kkProfileHtml}
+            <div style="background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px;">
+                <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 16px;">Application Summary</h4>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+                    <div><strong>Applicant</strong><br>${escapeHtml(app.full_name)}</div>
+                    <div><strong>Program</strong><br>${escapeHtml(app.program_name || '—')}</div>
+                    <div><strong>Age</strong><br>${escapeHtml(app.age ?? '—')}</div>
+                    <div><strong>Status</strong><br>${escapeHtml(app.status_label)}</div>
+                    <div><strong>Contact</strong><br>${escapeHtml(app.contact_number || '—')}</div>
+                    <div><strong>Email</strong><br>${escapeHtml(app.email || '—')}</div>
+                </div>
             </div>
+            <h4 style="margin:0 0 12px;">Sports Application Responses</h4>
+            <div style="margin-bottom:20px;">${answersHtml}</div>
             <h4 style="margin:0 0 12px;">Uploaded Documents</h4>
             <div style="margin-bottom:20px;">${docsHtml}</div>
-            <h4 style="margin:0 0 12px;">Application Answers</h4>
-            ${answersHtml}
         `;
 
         const isPending = app.status === 'pending';

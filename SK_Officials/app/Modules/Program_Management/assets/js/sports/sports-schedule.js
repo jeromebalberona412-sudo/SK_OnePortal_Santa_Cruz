@@ -14,6 +14,13 @@ const SPORTS_EXCLUDED_KK_FIELDS = [
     'sk_voted',
 ];
 
+const DEFAULT_SPORTS_KK_FIELDS = [
+    'last_name', 'first_name', 'middle_name', 'suffix',
+    'birthday', 'age', 'sex', 'civil_status', 'contact_number', 'email',
+    'region', 'province', 'city', 'barangay', 'purok_zone',
+    'youth_classification', 'youth_age_group',
+];
+
 const KK_FIELD_LABELS = {
     last_name: 'Last Name',
     first_name: 'First Name',
@@ -286,12 +293,7 @@ async function loadPrograms() {
 }
 
 function collectKkProfilingFields() {
-    const selected = [];
-    document.querySelectorAll('.kk-profiling-field:checked').forEach((checkbox) => {
-        selected.push(checkbox.value);
-    });
-
-    return selected;
+    return [...DEFAULT_SPORTS_KK_FIELDS];
 }
 
 function resetModalForm() {
@@ -310,10 +312,6 @@ function resetModalForm() {
     if (status) status.value = 'open';
     if (announcement) announcement.value = '';
     if (announcementCount) announcementCount.textContent = '0';
-
-    document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-        checkbox.checked = false;
-    });
 
     if (window.SpfbFormBuilder) {
         window.SpfbFormBuilder.reset();
@@ -470,11 +468,6 @@ function editProgram(programId) {
         if (announcementCountEl) announcementCountEl.textContent = String(announcementEl.value.length);
     }
 
-    const kkFields = program.kk_profiling_fields || [];
-    document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-        checkbox.checked = kkFields.includes(checkbox.value);
-    });
-
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.setQuestions === 'function') {
         window.SpfbFormBuilder.setQuestions(ensureDefaultTeamNameQuestion(program.custom_questions || []));
     }
@@ -501,7 +494,8 @@ function openFormPreview(programId) {
         closed: { bg: '#fee2e2', text: '#991b1b', label: 'Closed' },
     };
     const statusStyle = statusColors[status] || statusColors.open;
-    const kkFields = (program.kk_profiling_fields || []).filter((field) => !SPORTS_EXCLUDED_KK_FIELDS.includes(field));
+    const kkFields = (program.kk_profiling_fields?.length ? program.kk_profiling_fields : DEFAULT_SPORTS_KK_FIELDS)
+        .filter((field) => !SPORTS_EXCLUDED_KK_FIELDS.includes(field));
     const customQuestions = program.custom_questions || [];
     const sportsDetails = program.sports_details || null;
 
@@ -743,23 +737,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isMax = modalBox.classList.contains('schol-modal-maximized');
             maximizeBtn.textContent = isMax ? '⧉' : '□';
             maximizeBtn.title = isMax ? 'Restore Down' : 'Maximize';
-        });
-    }
-
-    const selectAllKKBtn = document.getElementById('selectAllKKFields');
-    const clearAllKKBtn = document.getElementById('clearAllKKFields');
-    if (selectAllKKBtn) {
-        selectAllKKBtn.addEventListener('click', () => {
-            document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-                checkbox.checked = true;
-            });
-        });
-    }
-    if (clearAllKKBtn) {
-        clearAllKKBtn.addEventListener('click', () => {
-            document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-                checkbox.checked = false;
-            });
         });
     }
 

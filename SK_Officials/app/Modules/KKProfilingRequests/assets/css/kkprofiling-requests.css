@@ -515,9 +515,17 @@ body {
 }
 
 .kk-table .col-actions {
-    width: auto;
-    min-width: 200px;
+    width: 76px !important;
+    min-width: 76px !important;
+    max-width: 76px !important;
     text-align: center;
+}
+
+.kkprofiling-page .row-actions-trigger {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+    border-radius: 5px;
 }
 
 .btn {
@@ -678,6 +686,46 @@ body {
     background: #dc2626 !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+}
+
+.btn-reject-confirm {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35) !important;
+    min-width: 80px !important;
+}
+
+.btn-reject-confirm:hover {
+    background: #b91c1c !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45) !important;
+}
+
+.btn-approve-confirm {
+    background: #16a34a !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35) !important;
+    min-width: 80px !important;
+}
+
+.btn-approve-confirm:hover {
+    background: #15803d !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.45) !important;
 }
 
 .empty-state-row td {
@@ -2644,8 +2692,9 @@ body {
     }
 
     .kk-table .col-actions {
-        width: auto;
-        min-width: 0;
+        width: 76px !important;
+        min-width: 76px !important;
+        max-width: 76px !important;
     }
 }
 
@@ -3317,7 +3366,10 @@ body {
     font-size: 12px;
     font-weight: 600;
     color: #374151;
-    min-width: 110px;
+    min-width: 64px;
+    width: 64px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
 /* ── Table footer pagination — see /shared/css/table-page-footer.css ── */

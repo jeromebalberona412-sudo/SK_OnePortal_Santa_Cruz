@@ -86,12 +86,16 @@ class SkOfficialsNotificationDispatcher
 
         $letter = strtoupper(trim((string) $programLetter));
         $actionUrl = $letter === 'I' ? '/sports-requests' : '/scholarship-applications';
+        $title = $letter === 'I' ? 'New Sports Application' : 'New Program Application';
+        $body = $letter === 'I'
+            ? "{$applicantName} submitted a sports program application for {$programName}."
+            : "{$applicantName} submitted an application for {$programName}.";
 
         $this->insertForBarangayOfficials(
             $barangayId,
             'program',
-            'New Program Application',
-            "{$applicantName} submitted an application for {$programName}.",
+            $title,
+            $body,
             $actionUrl,
         );
     }

@@ -65,8 +65,10 @@ class KkProfilingRequestDataService
 
         return array_merge($payload, array_filter([
             'respondent_number' => $survey->respondent_number ?? $payload['respondent_number'] ?? null,
-            'respondent_display' => $survey->respondent_number
-                ?? ($payload['respondent_display'] ?? null),
+            'respondent_display' => RespondentNumberService::displaySequence(
+                isset($payload['respondent_sequence']) ? (int) $payload['respondent_sequence'] : null,
+                $survey->respondent_number ?? ($payload['respondent_number'] ?? null),
+            ),
             'last_name' => $survey->last_name ?: ($payload['last_name'] ?? null),
             'first_name' => $survey->first_name ?: ($payload['first_name'] ?? null),
             'middle_name' => $survey->middle_name ?: ($payload['middle_name'] ?? null),
