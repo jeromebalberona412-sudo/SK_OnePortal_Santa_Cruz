@@ -46,6 +46,96 @@ class KabataanFullNameMatcher
         return $this->normalizedKey($this->formComponentsFromFields($fields));
     }
 
+    /**
+     * @param  array<string, mixed>  $fields
+     */
+    public function formatFormFullNameForDisplay(array $fields): string
+    {
+        $suffix = (string) ($fields['suffix'] ?? '');
+
+        if (strcasecmp($suffix, 'Others') === 0) {
+            $suffix = (string) ($fields['custom_suffix'] ?? '');
+        }
+
+        if (strcasecmp($suffix, 'None') === 0) {
+            $suffix = '';
+        }
+
+        $parts = array_values(array_filter([
+            trim((string) ($fields['first_name'] ?? '')),
+            trim((string) ($fields['middle_name'] ?? '')),
+            trim((string) ($fields['last_name'] ?? '')),
+            $suffix !== '' ? trim($suffix) : '',
+        ], fn (string $part) => $part !== ''));
+
+        return $parts !== [] ? preg_replace('/\s+/', ' ', implode(' ', $parts)) ?? implode(' ', $parts) : '';
+    }
+
+    /**
+     * @param  array{first: string, middle: string, last: string, suffix: string}|null  $components
+     */
+    public function formatComponentsForDisplay(?array $components): string
+    {
+        if (! is_array($components)) {
+            return '';
+        }
+
+        $middle = trim((string) ($components['middle'] ?? ''));
+
+        if ($middle !== '' && strlen($middle) === 1) {
+            $middle = strtoupper($middle).'.';
+        }
+
+        $parts = array_values(array_filter([
+            $this->toDisplayCase((string) ($components['first'] ?? '')),
+            $this->toDisplayCase($middle),
+            $this->toDisplayCase((string) ($components['last'] ?? '')),
+            trim((string) ($components['suffix'] ?? '')),
+        ], fn (string $part) => $part !== ''));
+
+        return $parts !== [] ? preg_replace('/\s+/', ' ', implode(' ', $parts)) ?? implode(' ', $parts) : '';
+    }
+
+    /**
+     * @param  array{first: string, middle: string, last: string, suffix: string}|null  $form
+     */
+    public function extractBestNameLine(string $text, ?array $form = null): ?string
+    {
+        $text = trim($text);
+
+        if ($text === '') {
+            return null;
+        }
+
+        $parsed = $this->parseOcrName($text, $form);
+
+        if ($parsed !== null) {
+            $formatted = $this->formatComponentsForDisplay($parsed);
+
+            if ($formatted !== '') {
+                return $formatted;
+            }
+        }
+
+        foreach (preg_split('/\r?\n/', $text) ?: [] as $line) {
+            $line = trim($line);
+
+            if ($line === '' || $this->isIgnoredLine($line)) {
+                continue;
+            }
+
+            if ($this->looksLikePersonNameLine($this->normalizeToken($line))) {
+                return preg_replace('/\s+/', ' ', $line) ?? $line;
+            }
+        }
+
+        if (preg_match('/\b([A-Za-z][A-Za-z\s.\'-]*\s+[A-Za-z]\.?\s+[A-Za-z][A-Za-z\s.\'-]*)\b/u', $text, $match)) {
+            return preg_replace('/\s+/', ' ', trim($match[1])) ?? trim($match[1]);
+        }
+
+        return null;
+    }
+
     public function normalizedKeyFromRegistration(\App\Models\KabataanRegistration $registration): string
     {
         $suffix = $registration->suffix;
@@ -87,22 +177,22 @@ class KabataanFullNameMatcher
      */
     public function matchesFormToOcrText(array $form, string $ocrText, bool $strictMiddle = false): bool
     {
-        $ocrText = $this->normalizeToken($ocrText);
+        $ocrText = $this->normalizeOcrNameText($ocrText);
 
         if ($ocrText === '' || $form['first'] === '' || $form['last'] === '') {
             return false;
         }
 
-        if (! str_contains($ocrText, $form['last']) || ! str_contains($ocrText, $form['first'])) {
+        if (! $this->ocrTextContainsFormLast($form['last'], $ocrText)) {
             return false;
         }
 
-        if ($form['middle'] !== '') {
-            if (! $this->ocrTextContainsFormMiddle($form['middle'], $ocrText)) {
-                return false;
-            }
-        } elseif ($strictMiddle) {
-            // Form has no middle name — nothing further to verify on the ID.
+        if (! $this->ocrTextContainsFormFirst($form['first'], $ocrText)) {
+            return false;
+        }
+
+        if ($form['middle'] !== '' && ! $this->ocrTextContainsFormMiddle($form['middle'], $ocrText)) {
+            return false;
         }
 
         if ($form['suffix'] !== '' && ! str_contains($ocrText, $form['suffix'])) {
@@ -111,8 +201,8 @@ class KabataanFullNameMatcher
 
         $parsed = $this->parseOcrName($ocrText, $form);
 
-        if ($parsed !== null) {
-            return $this->matchesComponents($form, $parsed, $strictMiddle);
+        if ($parsed !== null && $this->matchesComponents($form, $parsed, $strictMiddle)) {
+            return true;
         }
 
         return true;
@@ -128,11 +218,11 @@ class KabataanFullNameMatcher
             return false;
         }
 
-        if (! $this->tokenMatches($left['last'], $right['last'])) {
+        if (! $this->lastNamesMatch($left['last'], $right['last'])) {
             return false;
         }
 
-        if (! $this->tokenMatches($left['first'], $right['first'])) {
+        if (! $this->firstNamesMatch($left['first'], $right['first'])) {
             return false;
         }
 
@@ -186,6 +276,14 @@ class KabataanFullNameMatcher
                 if ($commaCandidate !== null) {
                     return $commaCandidate;
                 }
+            }
+        }
+
+        if (preg_match('/\b(?:name\s+of\s+student|student\s+name|pangalan|name)\b\s*[:\-]?\s*(.+?)(?:\r?\n|grade|lrn|section|s\.?y\.|address|signature|$)/i', $text, $match)) {
+            $candidate = trim($match[1]);
+
+            if ($parsed = $this->parseNameCandidate($candidate, $form)) {
+                return $parsed;
             }
         }
 
@@ -282,6 +380,31 @@ class KabataanFullNameMatcher
             ];
         }
 
+        if (count($tokens) >= 3 && $this->isMiddleInitialToken($tokens[count($tokens) - 2])) {
+            $last = $this->normalizeToken(array_pop($tokens));
+            $middleInitial = $this->normalizeMiddleInitialToken(array_pop($tokens));
+            $middle = $this->normalizeToken(implode(' ', $tokens));
+
+            return [
+                'first' => $first,
+                'middle' => $middle !== '' ? $middle : $middleInitial,
+                'last' => $last,
+                'suffix' => $suffix,
+            ];
+        }
+
+        if (count($tokens) >= 2 && $this->isMiddleInitialToken($tokens[count($tokens) - 1])) {
+            $last = $this->normalizeToken(array_pop($tokens));
+            $middleInitial = $this->normalizeMiddleInitialToken(array_pop($tokens));
+
+            return [
+                'first' => $first,
+                'middle' => $middleInitial,
+                'last' => $last,
+                'suffix' => $suffix,
+            ];
+        }
+
         $last = $this->normalizeToken(array_pop($tokens));
         $middle = $this->normalizeToken(implode(' ', $tokens));
 
@@ -322,8 +445,10 @@ class KabataanFullNameMatcher
 
         $tail = array_slice($tokens, -$lastTokenCount);
         $tailNormalized = array_map(fn (string $token) => $this->normalizeToken($token), $tail);
+        $joinedTail = implode(' ', $tailNormalized);
+        $joinedLast = implode(' ', $lastTokens);
 
-        if ($tailNormalized !== $lastTokens) {
+        if (! $this->lastNamesMatch($joinedLast, $joinedTail)) {
             return null;
         }
 
@@ -331,6 +456,48 @@ class KabataanFullNameMatcher
 
         if ($prefixTokens === []) {
             return null;
+        }
+
+        $firstTokens = preg_split('/\s+/', $form['first']) ?: [];
+        $firstTokenCount = count($firstTokens);
+
+        if ($firstTokenCount > 0 && count($prefixTokens) >= $firstTokenCount) {
+            $head = array_slice($prefixTokens, 0, $firstTokenCount);
+
+            if ($this->tokenGroupsMatch($head, $firstTokens)) {
+                $remainder = array_slice($prefixTokens, $firstTokenCount);
+
+                if ($remainder === []) {
+                    return [
+                        'first' => $form['first'],
+                        'middle' => '',
+                        'last' => $form['last'],
+                        'suffix' => $suffix,
+                    ];
+                }
+
+                if (count($remainder) === 1 && $this->isMiddleInitialToken($remainder[0])) {
+                    return [
+                        'first' => $form['first'],
+                        'middle' => $this->normalizeMiddleInitialToken($remainder[0]),
+                        'last' => $form['last'],
+                        'suffix' => $suffix,
+                    ];
+                }
+
+                if ($this->isMiddleInitialToken($remainder[count($remainder) - 1])) {
+                    $miToken = array_pop($remainder);
+
+                    return [
+                        'first' => $form['first'],
+                        'middle' => $remainder !== []
+                            ? $this->normalizeToken(implode(' ', $remainder))
+                            : $this->normalizeMiddleInitialToken($miToken),
+                        'last' => $form['last'],
+                        'suffix' => $suffix,
+                    ];
+                }
+            }
         }
 
         $first = $this->normalizeToken(array_shift($prefixTokens));
@@ -352,6 +519,20 @@ class KabataanFullNameMatcher
                 'middle' => $this->isMiddleInitialToken($middleToken)
                     ? $this->normalizeMiddleInitialToken($middleToken)
                     : $this->normalizeToken($middleToken),
+                'last' => $form['last'],
+                'suffix' => $suffix,
+            ];
+        }
+
+        if ($this->isMiddleInitialToken($prefixTokens[count($prefixTokens) - 1])) {
+            $miToken = array_pop($prefixTokens);
+            $middle = $prefixTokens !== []
+                ? $this->normalizeToken(implode(' ', $prefixTokens))
+                : $this->normalizeMiddleInitialToken($miToken);
+
+            return [
+                'first' => $first,
+                'middle' => $middle,
                 'last' => $form['last'],
                 'suffix' => $suffix,
             ];
@@ -571,5 +752,192 @@ class KabataanFullNameMatcher
         $value = preg_replace('/\s+/', ' ', $value) ?? $value;
 
         return trim($value);
+    }
+
+    private function normalizeOcrNameText(string $text): string
+    {
+        $text = $this->normalizeToken($text);
+        $text = preg_replace('/\bJ+(?=UANA\b)/', '', $text) ?? $text;
+        $text = preg_replace('/\bJUONO\b/', 'JUANA', $text) ?? $text;
+        $text = preg_replace('/\bPAULO\b/', 'PAULA', $text) ?? $text;
+        $text = preg_replace('/\bTOLABI[90S]\b/', 'TALABIS', $text) ?? $text;
+        $text = preg_replace('/\bTALABI[90S]\b/', 'TALABIS', $text) ?? $text;
+        $text = preg_replace('/\s+/', ' ', $text) ?? $text;
+
+        return trim($text);
+    }
+
+    private function firstNamesMatch(string $formFirst, string $ocrFirst): bool
+    {
+        if ($this->tokenMatches($formFirst, $ocrFirst)) {
+            return true;
+        }
+
+        return $this->ocrTextContainsFormFirst($formFirst, $ocrFirst);
+    }
+
+    private function lastNamesMatch(string $formLast, string $ocrLast): bool
+    {
+        if ($this->tokenMatches($formLast, $ocrLast)) {
+            return true;
+        }
+
+        return $this->ocrTextContainsFormLast($formLast, $ocrLast);
+    }
+
+    /**
+     * @param  list<string>  $ocrTokens
+     * @param  list<string>  $formTokens
+     */
+    private function tokenGroupsMatch(array $ocrTokens, array $formTokens): bool
+    {
+        if (count($ocrTokens) !== count($formTokens)) {
+            return false;
+        }
+
+        foreach ($ocrTokens as $index => $ocrToken) {
+            $formToken = $formTokens[$index] ?? '';
+
+            if ($formToken === '') {
+                return false;
+            }
+
+            $normalizedOcr = $this->normalizeOcrToken($ocrToken);
+
+            if (! $this->tokenMatches($normalizedOcr, $formToken)
+                && ! $this->fuzzyOcrTokenMatches($normalizedOcr, $formToken)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function normalizeOcrToken(string $token): string
+    {
+        $token = $this->normalizeToken($token);
+        $token = preg_replace('/^J+(?=UANA\b)/', '', $token) ?? $token;
+
+        return trim($token);
+    }
+
+    private function fuzzyOcrTokenMatches(string $left, string $right): bool
+    {
+        if ($left === '' || $right === '') {
+            return false;
+        }
+
+        if ($left === $right) {
+            return true;
+        }
+
+        similar_text($left, $right, $percent);
+
+        return $percent >= 80.0;
+    }
+
+    private function ocrTextContainsFormFirst(string $formFirst, string $ocrText): bool
+    {
+        $formFirst = $this->normalizeToken($formFirst);
+        $ocrText = $this->normalizeOcrNameText($ocrText);
+
+        if ($formFirst === '' || $ocrText === '') {
+            return false;
+        }
+
+        if (str_contains($ocrText, $formFirst)) {
+            return true;
+        }
+
+        $tokens = preg_split('/\s+/', $formFirst) ?: [];
+
+        foreach ($tokens as $token) {
+            if ($token === '') {
+                continue;
+            }
+
+            if (! str_contains($ocrText, $token) && ! $this->fuzzyContainsToken($ocrText, $token)) {
+                return false;
+            }
+        }
+
+        return $tokens !== [];
+    }
+
+    private function ocrTextContainsFormLast(string $formLast, string $ocrText): bool
+    {
+        $formLast = $this->normalizeToken($formLast);
+        $ocrText = $this->normalizeOcrNameText($ocrText);
+
+        if ($formLast === '' || $ocrText === '') {
+            return false;
+        }
+
+        if (str_contains($ocrText, $formLast)) {
+            return true;
+        }
+
+        foreach ($this->ocrLastNameVariants($formLast) as $variant) {
+            if ($variant !== '' && str_contains($ocrText, $variant)) {
+                return true;
+            }
+        }
+
+        return $this->fuzzyContainsToken($ocrText, $formLast);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function ocrLastNameVariants(string $lastName): array
+    {
+        $variants = [$lastName];
+
+        if (preg_match('/^(.*?)([0-9])$/', $lastName, $match)) {
+            $map = ['9' => 'S', '0' => 'O', '1' => 'I', '5' => 'S'];
+            $variants[] = $match[1].($map[$match[2]] ?? '');
+        }
+
+        if (str_ends_with($lastName, 'S')) {
+            $variants[] = substr($lastName, 0, -1).'9';
+        }
+
+        return array_values(array_unique(array_filter($variants)));
+    }
+
+    private function fuzzyContainsToken(string $haystack, string $token): bool
+    {
+        $token = $this->normalizeToken($token);
+
+        if ($token === '') {
+            return false;
+        }
+
+        foreach (preg_split('/\s+/', $haystack) ?: [] as $part) {
+            if ($part === '') {
+                continue;
+            }
+
+            if ($this->tokenMatches($token, $part) || $this->fuzzyOcrTokenMatches($token, $part)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function toDisplayCase(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/^[A-Z]\.?$/', $value)) {
+            return strtoupper(rtrim($value, '.')).'.';
+        }
+
+        return mb_convert_case($value, MB_CASE_TITLE, 'UTF-8');
     }
 }

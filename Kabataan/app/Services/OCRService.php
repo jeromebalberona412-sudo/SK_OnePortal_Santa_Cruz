@@ -13,6 +13,8 @@ class OCRService
      */
     public function extractText(string $imagePath): array
     {
+        $imagePath = $this->normalizeImagePath($imagePath);
+
         if (! is_file($imagePath)) {
             return [
                 'success' => false,
@@ -20,21 +22,123 @@ class OCRService
             ];
         }
 
-        $pythonResult = $this->extractWithPython($imagePath);
+        $windowsResult = PHP_OS_FAMILY === 'Windows'
+            ? $this->normalizePayload($this->extractWithWindows($imagePath))
+            : ['success' => false, 'lines' => [], 'full_text' => ''];
+
+        if ($this->hasUsableText($windowsResult) && ! $this->shouldTryPythonFallback($windowsResult)) {
+            return $windowsResult;
+        }
+
+        $pythonResult = $this->normalizePayload($this->extractWithPython($imagePath));
+
+        if ($this->hasUsableText($windowsResult) && $this->hasUsableText($pythonResult)) {
+            return $this->mergeOcrResults($pythonResult, $windowsResult);
+        }
 
         if ($this->hasUsableText($pythonResult)) {
             return $pythonResult;
         }
 
-        $windowsResult = $this->extractWithWindows($imagePath);
-
         if ($this->hasUsableText($windowsResult)) {
             return $windowsResult;
         }
 
-        return $windowsResult['message'] ?? null
-            ? $windowsResult
-            : ($pythonResult['message'] ?? null ? $pythonResult : $windowsResult);
+        return $this->normalizePayload(
+            ($pythonResult['message'] ?? null)
+                ? $pythonResult
+                : (($windowsResult['message'] ?? null) ? $windowsResult : $pythonResult)
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function shouldTryPythonFallback(array $payload): bool
+    {
+        if (! $this->hasUsableText($payload)) {
+            return true;
+        }
+
+        $text = strtolower((string) ($payload['full_text'] ?? ''));
+
+        if ($this->textHasNameCandidate($text)) {
+            return false;
+        }
+
+        return ! $this->textHasAddressCandidate($text);
+    }
+
+    private function textHasNameCandidate(string $text): bool
+    {
+        return (bool) preg_match(
+            '/\b[A-Za-z]{2,}(?:\s+[A-Za-z]{2,}){1,4}\b/',
+            $text,
+        );
+    }
+
+    private function textHasAddressCandidate(string $text): bool
+    {
+        return (bool) preg_match(
+            '/\b(sitio|purok|zone|brgy|barangay|address|sta\.?|santa\s*cruz|laguna|lag\.?)\b/i',
+            $text,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $primary
+     * @param  array<string, mixed>  $secondary
+     * @return array<string, mixed>
+     */
+    private function mergeOcrResults(array $primary, array $secondary): array
+    {
+        $lines = [];
+        $seen = [];
+
+        foreach ([$primary, $secondary] as $payload) {
+            foreach ($payload['lines'] ?? [] as $line) {
+                if (! is_array($line)) {
+                    continue;
+                }
+
+                $text = trim((string) ($line['text'] ?? ''));
+
+                if ($text === '') {
+                    continue;
+                }
+
+                $key = strtoupper(preg_replace('/\s+/', ' ', $text) ?? $text);
+
+                if (isset($seen[$key])) {
+                    continue;
+                }
+
+                $seen[$key] = true;
+                $lines[] = [
+                    'text' => $text,
+                    'confidence' => (float) ($line['confidence'] ?? 0.75),
+                ];
+            }
+        }
+
+        $confidences = array_map(
+            fn (array $line) => (float) ($line['confidence'] ?? 0.75),
+            $lines,
+        );
+
+        $fullText = trim(implode(' ', array_map(
+            fn (array $line) => trim((string) ($line['text'] ?? '')),
+            $lines,
+        )));
+
+        return $this->normalizePayload([
+            'average_confidence' => $confidences !== []
+                ? round(array_sum($confidences) / count($confidences), 3)
+                : 0.0,
+            'lines' => $lines,
+            'full_text' => $fullText,
+            'engine' => trim(((string) ($primary['engine'] ?? 'python')).'+'.((string) ($secondary['engine'] ?? 'windows')), '+'),
+        ]);
     }
 
     /**
@@ -47,6 +151,26 @@ class OCRService
         }
 
         return trim((string) ($payload['full_text'] ?? '')) !== '';
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function normalizePayload(array $payload): array
+    {
+        if ($this->hasUsableText($payload)) {
+            $payload['success'] = true;
+        }
+
+        return $payload;
+    }
+
+    private function normalizeImagePath(string $imagePath): string
+    {
+        $resolved = realpath($imagePath);
+
+        return $resolved !== false ? $resolved : $imagePath;
     }
 
     /**
@@ -90,7 +214,7 @@ class OCRService
     private function extractWithWindows(string $imagePath): array
     {
         $script = (string) config('ocr.windows_script');
-        $timeout = (int) config('ocr.timeout', 120);
+        $timeout = min((int) config('ocr.timeout', 120), 60);
 
         if (! is_file($script)) {
             return [
@@ -121,13 +245,7 @@ class OCRService
             ];
         }
 
-        $payload = $this->decodeJsonOutput(trim($result->output()), trim($result->errorOutput()));
-
-        if (! ($payload['success'] ?? false) && $this->hasUsableText($payload)) {
-            $payload['success'] = true;
-        }
-
-        return $payload;
+        return $this->decodeJsonOutput(trim($result->output()), trim($result->errorOutput()));
     }
 
     /**
@@ -142,15 +260,33 @@ class OCRService
             ];
         }
 
-        try {
-            $payload = json_decode($output, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $exception) {
-            Log::warning('Invalid OCR JSON output', ['output' => $output]);
+        $payload = $this->tryDecodeJson($output);
+
+        if ($payload === null && preg_match('/\{.*\}/s', $output, $match)) {
+            $payload = $this->tryDecodeJson($match[0]);
+        }
+
+        if ($payload === null) {
+            Log::warning('Invalid OCR JSON output', ['output' => substr($output, 0, 500)]);
 
             return [
                 'success' => false,
                 'message' => 'Invalid OCR response.',
             ];
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function tryDecodeJson(string $output): ?array
+    {
+        try {
+            $payload = json_decode($output, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return null;
         }
 
         if (! is_array($payload)) {

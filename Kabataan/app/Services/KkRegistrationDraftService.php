@@ -188,7 +188,7 @@ class KkRegistrationDraftService
                 ],
             ],
         ];
-        $wizard['current_step'] = max((int) ($wizard['current_step'] ?? 1), 3);
+        $wizard['current_step'] = max((int) ($wizard['current_step'] ?? 1), 2);
         $wizard['expires_at'] = now()->addDays(7)->toIso8601String();
 
         return $this->persist($wizard);
@@ -202,7 +202,23 @@ class KkRegistrationDraftService
             ]);
         }
 
-        $wizard['current_step'] = max((int) ($wizard['current_step'] ?? 1), 3);
+        $wizard['current_step'] = max((int) ($wizard['current_step'] ?? 1), 2);
+        $wizard['expires_at'] = now()->addDays(7)->toIso8601String();
+
+        return $this->persist($wizard);
+    }
+
+    public function setWizardStep(array $wizard, int $step): array
+    {
+        $wizard['current_step'] = max(1, min(3, $step));
+        $wizard['expires_at'] = now()->addDays(7)->toIso8601String();
+
+        return $this->persist($wizard);
+    }
+
+    public function advanceToStep3(array $wizard): array
+    {
+        $wizard['current_step'] = 3;
         $wizard['expires_at'] = now()->addDays(7)->toIso8601String();
 
         return $this->persist($wizard);
@@ -663,6 +679,17 @@ class KkRegistrationDraftService
         }
 
         unset($wizard['step3_data']);
+
+        if ((int) ($wizard['current_step'] ?? 1) >= 3 && empty($wizard['verification_sent_at'])) {
+            $wizard['current_step'] = 2;
+        }
+
+        $step2Verification = $wizard['step2_data']['id_verification'] ?? null;
+        if (is_array($step2Verification)
+            && ! ($step2Verification['success'] ?? false)
+            && empty($wizard['verification_sent_at'])) {
+            $wizard['current_step'] = min((int) ($wizard['current_step'] ?? 1), 2);
+        }
 
         $wizard['current_step'] = $this->mapStoredStepToClient((int) ($wizard['current_step'] ?? 1));
 

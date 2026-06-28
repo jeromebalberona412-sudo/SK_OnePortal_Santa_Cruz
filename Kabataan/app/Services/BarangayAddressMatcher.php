@@ -74,6 +74,48 @@ class BarangayAddressMatcher
                     'reason' => $purokMatch['reason'],
                 ];
             }
+
+            $fuzzyPurokMatch = $this->matchesPurokZoneFuzzy($haystack, $purokZone);
+            if ($fuzzyPurokMatch['matched']) {
+                return [
+                    'matched' => true,
+                    'matched_name' => $barangay->name,
+                    'score' => $fuzzyPurokMatch['score'],
+                    'reason' => $fuzzyPurokMatch['reason'],
+                ];
+            }
+        }
+
+        $fuzzyBarangayMatch = $this->matchesBarangayFuzzy($haystack, $barangay->name);
+        if ($fuzzyBarangayMatch['matched']) {
+            return [
+                'matched' => true,
+                'matched_name' => $barangay->name,
+                'score' => $fuzzyBarangayMatch['score'],
+                'reason' => $fuzzyBarangayMatch['reason'],
+            ];
+        }
+
+        $lastName = trim((string) ($registrationFields['last_name'] ?? ''));
+        if ($lastName !== ''
+            && ($registrationFields['_document_type'] ?? '') === 'school_id'
+            && $this->containsRegistrantLastName($haystack, $lastName)
+            && $this->containsSantaCruzLaguna($haystack)) {
+            $purokOk = $purokZone !== ''
+                && ($this->matchesPurokZone($haystack, $purokZone)['matched']
+                    || $this->matchesPurokZoneFuzzy($haystack, $purokZone)['matched']);
+
+            $barangayOk = $this->matchesBarangayFuzzy($haystack, $barangay->name)['matched']
+                || ($targetName !== '' && str_contains($haystack, $targetName));
+
+            if ($purokOk || $barangayOk) {
+                return [
+                    'matched' => true,
+                    'matched_name' => $barangay->name,
+                    'score' => $purokOk ? 90.0 : 88.0,
+                    'reason' => 'School ID back shows registrant surname with matching purok/sitio or barangay in Santa Cruz, Laguna.',
+                ];
+            }
         }
 
         if ($this->containsSantaCruzLaguna($haystack) && $targetName !== '') {
@@ -251,8 +293,101 @@ class BarangayAddressMatcher
 
     private function containsSantaCruzLaguna(string $haystack): bool
     {
-        return str_contains($haystack, 'SANTA CRUZ')
-            && (str_contains($haystack, 'LAGUNA') || preg_match('/\bLAG\b/', $haystack) === 1);
+        $hasMunicipal = str_contains($haystack, 'SANTA CRUZ')
+            || preg_match('/\b(STA|SANTA)\b/', $haystack) === 1;
+        $hasProvince = str_contains($haystack, 'LAGUNA')
+            || preg_match('/\b(LAG|LAPUNA)\b/', $haystack) === 1;
+
+        return $hasMunicipal && $hasProvince;
+    }
+
+    /**
+     * @return array{matched: bool, score: float, reason: string}
+     */
+    private function matchesBarangayFuzzy(string $haystack, string $barangayName): array
+    {
+        $target = $this->normalize($barangayName);
+
+        if ($target === '') {
+            return ['matched' => false, 'score' => 0.0, 'reason' => 'Barangay name missing.'];
+        }
+
+        foreach (preg_split('/\s+/', $haystack) ?: [] as $token) {
+            if (strlen($token) < 4) {
+                continue;
+            }
+
+            similar_text($target, $token, $percent);
+
+            if ($percent >= 72.0) {
+                return [
+                    'matched' => true,
+                    'score' => round($percent, 2),
+                    'reason' => 'Detected barangay name on uploaded ID (fuzzy OCR match).',
+                ];
+            }
+        }
+
+        return ['matched' => false, 'score' => 0.0, 'reason' => 'Barangay not found in OCR text.'];
+    }
+
+    /**
+     * @return array{matched: bool, score: float, reason: string}
+     */
+    private function matchesPurokZoneFuzzy(string $haystack, string $purokZone): array
+    {
+        if (preg_match('/\b(SITIO|PUROK|ZONE)\s*(\d+)\b/i', $purokZone, $zoneMatch)) {
+            $type = strtoupper($zoneMatch[1]);
+            $number = $zoneMatch[2];
+            $hasNumber = preg_match('/\b'.preg_quote($number, '/').'\b/', $haystack) === 1
+                || str_contains($haystack, $number);
+            $hasSitioHint = preg_match('/\b(SITIO|PUROK|ZONE|STHOL|STH|ST)\b/i', $haystack) === 1;
+
+            if ($hasNumber && $hasSitioHint) {
+                return [
+                    'matched' => true,
+                    'score' => 86.0,
+                    'reason' => 'Detected '.$type.' '.$number.' on uploaded ID (fuzzy OCR match).',
+                ];
+            }
+
+            if ($hasSitioHint && $type === 'SITIO') {
+                return [
+                    'matched' => true,
+                    'score' => 82.0,
+                    'reason' => 'Detected sitio on uploaded ID (fuzzy OCR match).',
+                ];
+            }
+        }
+
+        return ['matched' => false, 'score' => 0.0, 'reason' => 'Purok/sitio not found in OCR text.'];
+    }
+
+    private function containsRegistrantLastName(string $haystack, string $lastName): bool
+    {
+        $lastName = $this->normalize($lastName);
+
+        if ($lastName === '') {
+            return false;
+        }
+
+        if (str_contains($haystack, $lastName)) {
+            return true;
+        }
+
+        foreach (preg_split('/\s+/', $haystack) ?: [] as $token) {
+            if (strlen($token) < 4) {
+                continue;
+            }
+
+            similar_text($lastName, $token, $percent);
+
+            if ($percent >= 80.0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function normalize(string $value): string

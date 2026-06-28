@@ -582,13 +582,14 @@
 /* ── PERSONAL INFO ROW ── */
 .kkp-personal-row {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: minmax(100px, auto) minmax(0, 1fr) minmax(210px, 250px);
     gap: 8px;
     border: 1px solid #ccc;
     padding: 5px 8px;
     margin: 4px 0;
     align-items: start;
     min-width: 0;
+    overflow: hidden;
 }
 
 .kkp-personal-left,
@@ -597,6 +598,7 @@
     flex-direction: column;
     gap: 5px;
     justify-content: center;
+    min-width: 0;
 }
 
 .kkp-personal-center {
@@ -840,6 +842,21 @@
     white-space: nowrap;
 }
 
+.kkp-chk-lbl--readonly {
+    cursor: default;
+    opacity: 0.85;
+}
+
+.kkp-youth-age-group-readonly .kkp-sq-chk:disabled {
+    cursor: default;
+}
+
+.kkp-auto-field-note {
+    font-size: 10px;
+    font-weight: 400;
+    color: #666;
+}
+
 .kkp-chk-indent {
     margin-left: 14px;
     padding-left: 0;
@@ -1059,6 +1076,28 @@
     color: #94a3b8;
     opacity: 1;
     text-align: center;
+}
+
+.kkp-inline-pair--email {
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+}
+
+.kkp-inline-pair--email .kkp-inline-label {
+    flex-shrink: 0;
+}
+
+.kkp-inline-pair--email .kkp-uline-med,
+.kkp-inline-pair--email .kkp-email-input {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 auto;
+    text-align: left;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .kkp-email-input {

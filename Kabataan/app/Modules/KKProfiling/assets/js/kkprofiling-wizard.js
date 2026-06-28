@@ -648,6 +648,10 @@
             }
         }
 
+        if (step1.age && typeof window.kkpSyncYouthAgeGroupFromAge === 'function') {
+            window.kkpSyncYouthAgeGroupFromAge(step1.age);
+        }
+
         if (step1.signature) {
             const sigInput = document.getElementById('kkpSignatureData');
             if (sigInput) {
@@ -1144,6 +1148,13 @@
         }
 
         const targetStep = currentStep - 1;
+
+        try {
+            await postJson(`${apiBase}/set-step`, { step: targetStep });
+        } catch (error) {
+            // Non-blocking — still show the previous step locally
+        }
+
         await setStep(targetStep, { skipAutoSend: true });
 
         if (targetStep === 2) {
@@ -1256,10 +1267,10 @@
         }
 
         const targetStep = Math.max(1, Math.min(3, restoredStep || initialStep));
-        const skipAutoSendOnStep3 = verificationSent || verificationSentOnLoad;
+        const skipAutoSendOnStep3 = targetStep === 3 && (verificationSent || verificationSentOnLoad);
 
         await setStep(targetStep, {
-            skipAutoSend: targetStep === 3 ? skipAutoSendOnStep3 : true,
+            skipAutoSend: targetStep !== 3 || skipAutoSendOnStep3,
         });
     }
 

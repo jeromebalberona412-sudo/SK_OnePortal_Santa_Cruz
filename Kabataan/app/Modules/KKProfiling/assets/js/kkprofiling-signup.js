@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeFilter = 'all';
 
     const statusConfig = {
-        Ongoing:     { cls: 'kk-signup-badge-ongoing',     label: 'Ongoing',     open: true  },
-        Upcoming:    { cls: 'kk-signup-badge-upcoming',    label: 'Upcoming',    open: false },
-        Rescheduled: { cls: 'kk-signup-badge-rescheduled', label: 'Rescheduled', open: false },
-        Completed:   { cls: 'kk-signup-badge-completed',   label: 'Completed',   open: false },
-        Cancelled:   { cls: 'kk-signup-badge-cancelled',   label: 'Cancelled',   open: false },
+        Ongoing:     { open: true  },
+        Upcoming:    { open: false },
+        Rescheduled: { open: false },
+        Completed:   { open: false },
+        Cancelled:   { open: false },
     };
 
     function fmtDate(str) {
@@ -62,16 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!cfg) return;
 
         const meta = btn.querySelector('.kk-signup-barangay-meta');
-        const isOpen = Boolean(sched.is_open) && cfg.open;
+        const isOpen = Boolean(sched.is_open);
 
         btn.dataset.status = sched.status;
         btn.classList.add('has-schedule');
 
         if (meta) {
-            meta.innerHTML = `
-                <span class="kk-signup-badge ${cfg.cls}">${cfg.label}</span>
-                ${buildPeriodMarkup(sched)}
-            `;
+            meta.innerHTML = buildPeriodMarkup(sched);
         }
 
         if (isOpen) {

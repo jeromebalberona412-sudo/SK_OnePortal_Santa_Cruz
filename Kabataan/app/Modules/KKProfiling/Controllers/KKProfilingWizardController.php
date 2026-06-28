@@ -54,6 +54,8 @@ class KKProfilingWizardController extends Controller
 
     public function saveStep2(Request $request, string $barangay)
     {
+        @set_time_limit(180);
+
         $barangayRecord = $this->resolveBarangay($barangay);
         $wizard = $this->requireWizard();
 
@@ -136,6 +138,8 @@ class KKProfilingWizardController extends Controller
             $wizard = $this->draftService->skipStep2($wizard);
             $verification = null;
         }
+
+        $wizard = $this->draftService->advanceToStep3($wizard);
 
         $email = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));
         $verificationSent = false;
@@ -477,6 +481,44 @@ class KKProfilingWizardController extends Controller
         ]);
     }
 
+    public function setStep(Request $request, string $barangay)
+    {
+        $barangayRecord = $this->resolveBarangay($barangay);
+        $wizard = $this->requireWizard();
+
+        if ((int) ($wizard['barangay_id'] ?? 0) !== (int) $barangayRecord->id) {
+            throw ValidationException::withMessages([
+                'draft' => ['Your registration session does not match this barangay.'],
+            ]);
+        }
+
+        $validated = $request->validate([
+            'step' => ['required', 'integer', 'min:1', 'max:3'],
+        ]);
+
+        $targetStep = (int) $validated['step'];
+
+        if ($targetStep === 3 && empty($wizard['step1_data'])) {
+            throw ValidationException::withMessages([
+                'step' => ['Please complete Step 1 before continuing.'],
+            ]);
+        }
+
+        if ($targetStep === 3 && empty($wizard['verification_sent_at'])) {
+            throw ValidationException::withMessages([
+                'step' => ['Please complete Step 2 before opening email verification.'],
+            ]);
+        }
+
+        $wizard = $this->draftService->setWizardStep($wizard, $targetStep);
+
+        return response()->json([
+            'success' => true,
+            'step' => $targetStep,
+            'draft' => $this->draftService->wizardStatusPayload($wizard),
+        ]);
+    }
+
     public function documentPreview(string $barangay, string $type, ?string $side = 'front')
     {
         $barangayRecord = $this->resolveBarangay($barangay);
@@ -572,25 +614,25 @@ class KKProfilingWizardController extends Controller
 
         if ($verification === null) {
             throw ValidationException::withMessages([
-                'document_type' => [KkProfilingValidationMessages::OCR_READ_FAILED],
+                'document_type' => [KkProfilingValidationMessages::uploadProcessingFailed()],
             ]);
         }
 
         if ($verification['duplicate_detected'] ?? false) {
             throw ValidationException::withMessages([
-                'document_type' => [KkProfilingValidationMessages::DUPLICATE_IDENTITY],
+                'document_type' => [$verification['message'] ?? KkProfilingValidationMessages::DUPLICATE_IDENTITY],
             ]);
         }
 
         if (! ($verification['name_match'] ?? false)) {
             throw ValidationException::withMessages([
-                'document_type' => [KkProfilingValidationMessages::INVALID_FULL_NAME],
+                'document_type' => [$verification['message'] ?? KkProfilingValidationMessages::nameMismatch('', '')],
             ]);
         }
 
         if (! ($verification['barangay_match'] ?? false)) {
             throw ValidationException::withMessages([
-                'document_type' => [KkProfilingValidationMessages::INVALID_BARANGAY],
+                'document_type' => [$verification['message'] ?? KkProfilingValidationMessages::addressMismatch('', '')],
             ]);
         }
     }
@@ -655,7 +697,7 @@ class KKProfilingWizardController extends Controller
             'first_name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
             'middle_name' => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
             'suffix' => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
-            'custom_suffix' => ['nullable', 'required_if:suffix,Others', 'string', 'max:30', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
+            'custom_suffix' => ['nullable', 'required_if:suffix,Others', 'string', 'max:5', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
             'purok_zone' => $this->barangayZoneService->purokZoneRules($barangayId),
             'sex' => 'required|in:Male,Female',
             'age' => 'required|integer|min:15|max:30',
@@ -703,9 +745,15 @@ class KKProfilingWizardController extends Controller
                 ]);
             }
 
-            if ($validRoman && (strlen($compact) < 1 || strlen($compact) > 4)) {
+            if ($validRoman && (strlen($compact) < 1 || strlen($compact) > 5)) {
                 throw ValidationException::withMessages([
-                    'custom_suffix' => ['Suffix must not exceed 4 characters.'],
+                    'custom_suffix' => ['Suffix must not exceed 5 characters.'],
+                ]);
+            }
+
+            if (! $validRoman && strlen(str_replace(' ', '', $customSuffix)) > 5) {
+                throw ValidationException::withMessages([
+                    'custom_suffix' => ['Suffix must not exceed 5 characters.'],
                 ]);
             }
         }

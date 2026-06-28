@@ -29,7 +29,7 @@ class KkProfilingIdentityValidator
         if ($frontImagePath === null || $backImagePath === null) {
             return $this->failureResult(
                 errorCode: 'ocr_failed',
-                message: KkProfilingValidationMessages::OCR_READ_FAILED,
+                message: KkProfilingValidationMessages::ocrFrontReadFailed(),
             );
         }
 
@@ -38,12 +38,37 @@ class KkProfilingIdentityValidator
 
         $frontText = $this->ocrText($frontOcr);
         $backText = $this->ocrText($backOcr);
+
+        if ($documentType === 'school_id') {
+            if ($frontText === '') {
+                return $this->failureResult(
+                    errorCode: 'ocr_failed',
+                    message: KkProfilingValidationMessages::ocrFrontReadFailed(),
+                    ocr: [
+                        'front' => $frontOcr,
+                        'back' => $backOcr,
+                    ],
+                );
+            }
+
+            if ($backText === '') {
+                return $this->failureResult(
+                    errorCode: 'ocr_failed',
+                    message: KkProfilingValidationMessages::ocrBackReadFailed(),
+                    ocr: [
+                        'front' => $frontOcr,
+                        'back' => $backOcr,
+                    ],
+                );
+            }
+        }
+
         $combinedText = trim($frontText.' '.$backText);
 
         if ($combinedText === '') {
             return $this->failureResult(
                 errorCode: 'ocr_failed',
-                message: KkProfilingValidationMessages::OCR_READ_FAILED,
+                message: KkProfilingValidationMessages::ocrFrontReadFailed(),
                 ocr: [
                     'front' => $frontOcr,
                     'back' => $backOcr,
@@ -52,8 +77,11 @@ class KkProfilingIdentityValidator
         }
 
         $formName = $this->nameMatcher->formComponentsFromFields($registrationFields);
+        $formFullName = $this->nameMatcher->formatFormFullNameForDisplay($registrationFields);
         $nameText = $frontText !== '' ? $frontText : $combinedText;
         $ocrName = $this->nameMatcher->parseOcrName($nameText, $formName);
+        $detectedFullName = $this->nameMatcher->extractBestNameLine($nameText, $formName)
+            ?? $this->nameMatcher->formatComponentsForDisplay($ocrName);
         $nameMatch = $this->nameMatcher->matchesFormToOcrText($formName, $nameText, strictMiddle: true);
 
         if ($ocrName !== null) {
@@ -63,7 +91,7 @@ class KkProfilingIdentityValidator
         if (! $nameMatch) {
             return $this->failureResult(
                 errorCode: 'invalid_full_name',
-                message: KkProfilingValidationMessages::INVALID_FULL_NAME,
+                message: KkProfilingValidationMessages::nameMismatch($formFullName, $detectedFullName),
                 nameMatch: false,
                 ocr: [
                     'front' => $frontOcr,
@@ -72,17 +100,26 @@ class KkProfilingIdentityValidator
                 ],
                 formName: $formName,
                 detectedName: $ocrName,
+                formFullName: $formFullName,
+                detectedFullName: $detectedFullName,
             );
         }
 
-        $addressText = trim($backText !== '' ? $backText : $combinedText);
-        $lines = is_array($backOcr['lines'] ?? null) ? $backOcr['lines'] : ($frontOcr['lines'] ?? []);
+        $addressText = $documentType === 'school_id'
+            ? trim($backText.' '.$frontText)
+            : trim($backText !== '' ? $backText : $combinedText);
+        $lines = array_merge(
+            is_array($backOcr['lines'] ?? null) ? $backOcr['lines'] : [],
+            is_array($frontOcr['lines'] ?? null) ? $frontOcr['lines'] : [],
+        );
         $parsed = $this->addressParser->parse(is_array($lines) ? $lines : [], $addressText);
 
         $registrationFields['_both_sides_uploaded'] = true;
         $registrationFields['_document_type'] = $documentType;
 
         $barangay = Barangay::query()->find($barangayId);
+        $formAddress = KkProfilingValidationMessages::formAddressLabel($registrationFields, $barangay?->name);
+        $detectedAddress = $this->extractIdAddressSnippet($backText, $parsed, is_array($backOcr['lines'] ?? null) ? $backOcr['lines'] : []);
         $barangayMatch = $this->barangayMatcher->matchesRegistrationAddress(
             $parsed,
             $barangay,
@@ -93,7 +130,7 @@ class KkProfilingIdentityValidator
         if (! $barangayMatch['matched']) {
             return $this->failureResult(
                 errorCode: 'invalid_barangay',
-                message: KkProfilingValidationMessages::INVALID_BARANGAY,
+                message: KkProfilingValidationMessages::addressMismatch($formAddress, $detectedAddress),
                 nameMatch: true,
                 barangayMatch: false,
                 ocr: [
@@ -105,6 +142,8 @@ class KkProfilingIdentityValidator
                 detectedName: $ocrName,
                 parsedAddress: $parsed,
                 matchReason: $barangayMatch['reason'],
+                formAddress: $formAddress,
+                detectedAddress: $detectedAddress,
             );
         }
 
@@ -181,6 +220,10 @@ class KkProfilingIdentityValidator
         ?array $detectedName = null,
         ?array $parsedAddress = null,
         ?string $matchReason = null,
+        ?string $formFullName = null,
+        ?string $detectedFullName = null,
+        ?string $formAddress = null,
+        ?string $detectedAddress = null,
     ): array {
         return [
             'success' => false,
@@ -193,9 +236,81 @@ class KkProfilingIdentityValidator
             'detected_name' => $detectedName,
             'parsed_address' => $parsedAddress,
             'match_reason' => $matchReason,
+            'form_full_name' => $formFullName,
+            'detected_full_name' => $detectedFullName,
+            'form_address' => $formAddress,
+            'detected_address' => $detectedAddress,
             'ocr' => $ocr,
             'processed_at' => now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * @param  list<array{text: string, confidence?: float}>  $backLines
+     * @param  array<string, mixed>  $parsed
+     */
+    private function extractIdAddressSnippet(string $backText, array $parsed, array $backLines): string
+    {
+        if (trim((string) ($parsed['address'] ?? '')) !== '') {
+            return trim((string) $parsed['address']);
+        }
+
+        if (preg_match('/address\s*[:\-]?\s*(.+?)(?:cell\s*no|contact|tel|phone|important|signature|parent|guardian|$)/i', $backText, $match)) {
+            $snippet = trim($match[1]);
+
+            if ($snippet !== '') {
+                return preg_replace('/\s+/', ' ', $snippet) ?? $snippet;
+            }
+        }
+
+        $addressParts = [];
+        $capture = false;
+
+        foreach ($backLines as $line) {
+            $text = trim((string) ($line['text'] ?? ''));
+
+            if ($text === '') {
+                continue;
+            }
+
+            if (preg_match('/^address\s*[:\-]?$/i', $text)) {
+                $capture = true;
+
+                continue;
+            }
+
+            if ($capture) {
+                if (preg_match('/^(cell\s*no|contact|important|parent|guardian)/i', $text)) {
+                    break;
+                }
+
+                $addressParts[] = $text;
+            }
+        }
+
+        if ($addressParts !== []) {
+            return preg_replace('/\s+/', ' ', implode(' ', $addressParts)) ?? implode(' ', $addressParts);
+        }
+
+        foreach ($backLines as $line) {
+            $text = trim((string) ($line['text'] ?? ''));
+
+            if ($text === '') {
+                continue;
+            }
+
+            if (preg_match('/\b(?:sitio|purok|brgy|barangay|sta\.?|santa\s*cruz|laguna|lag\.?)\b/i', $text)) {
+                return $text;
+            }
+        }
+
+        $compact = preg_replace('/\s+/', ' ', trim($backText)) ?? trim($backText);
+
+        if (strlen($compact) > 140) {
+            return substr($compact, 0, 140).'...';
+        }
+
+        return $compact;
     }
 
     /**

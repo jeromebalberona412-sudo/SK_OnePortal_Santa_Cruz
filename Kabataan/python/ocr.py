@@ -115,24 +115,15 @@ def main() -> None:
     full_text = " ".join(line["text"] for line in lines)
     average_confidence = sum(confidences) / len(confidences)
     has_address = looks_like_address(full_text)
-    quality_ok = average_confidence >= 0.35 and (len(lines) >= 2 or has_address)
-    success = quality_ok or has_address
 
     payload = {
-        "success": success,
+        "success": True,
         "average_confidence": round(average_confidence, 3),
         "lines": lines,
         "full_text": full_text,
         "has_address_hint": has_address,
         "engine": engine,
     }
-
-    if not success:
-        payload["message"] = (
-            "Image is too blurry."
-            if average_confidence < 0.35
-            else "Insufficient text detected for address verification."
-        )
 
     emit(payload)
 

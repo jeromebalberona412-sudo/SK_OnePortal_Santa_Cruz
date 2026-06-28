@@ -216,8 +216,8 @@ class KKProfilingController extends Controller
 
         if ($registrationComplete) {
             $wizardInitialStep = 3;
-        } elseif ($verificationSent) {
-            $wizardInitialStep = 3;
+        } elseif ($wizard && ! empty($wizard['step1_data'])) {
+            $wizardInitialStep = max(1, min(3, (int) ($wizard['current_step'] ?? 1)));
         }
 
         return view('kkprofiling::kkprofiling', [
@@ -280,7 +280,7 @@ class KKProfilingController extends Controller
             'first_name'            => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
             'middle_name'           => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
             'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
-            'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:30', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
+            'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:5', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
             'purok_zone'            => $this->barangayZoneService->purokZoneRules((int) $registration->barangay_id),
             'sex'                   => 'required|in:Male,Female',
             'age'                   => 'required|integer|min:15|max:30',
@@ -324,6 +324,12 @@ class KKProfilingController extends Controller
             if (!$validRoman && !$validText) {
                 return back()->withInput()->withErrors([
                     'custom_suffix' => 'Only text and valid Roman numeral suffixes are allowed.',
+                ]);
+            }
+
+            if (strlen(str_replace(' ', '', $customSuffix)) > 5) {
+                return back()->withInput()->withErrors([
+                    'custom_suffix' => 'Suffix must not exceed 5 characters.',
                 ]);
             }
         }
@@ -407,7 +413,7 @@ class KKProfilingController extends Controller
             'first_name'            => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
             'middle_name'           => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
             'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
-            'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:30', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
+            'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:5', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
             'purok_zone'            => $this->barangayZoneService->purokZoneRules((int) $barangayRecord->id),
             'sex'                   => 'required|in:Male,Female',
             'age'                   => 'required|integer|min:15|max:30',
@@ -454,9 +460,15 @@ class KKProfilingController extends Controller
                 ]);
             }
 
-            if ($validRoman && (strlen($compact) < 1 || strlen($compact) > 4)) {
+            if ($validRoman && (strlen($compact) < 1 || strlen($compact) > 5)) {
                 return $this->submitErrorResponse($request, [
-                    'custom_suffix' => 'Suffix must not exceed 4 characters.',
+                    'custom_suffix' => 'Suffix must not exceed 5 characters.',
+                ]);
+            }
+
+            if (! $validRoman && strlen(str_replace(' ', '', $customSuffix)) > 5) {
+                return $this->submitErrorResponse($request, [
+                    'custom_suffix' => 'Suffix must not exceed 5 characters.',
                 ]);
             }
         }

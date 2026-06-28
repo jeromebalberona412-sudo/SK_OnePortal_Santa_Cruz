@@ -7,7 +7,7 @@ const VALID_ROMAN_SUFFIXES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 
 
 function isValidSuffixText(value) {
     if (!value) return false;
-    if (value.length > 4) return false;
+    if (value.length > 5) return false;
     return VALID_ROMAN_SUFFIXES.includes(value.toUpperCase()) || /^[A-Za-z.]+$/.test(value);
 }
 
@@ -179,6 +179,23 @@ function kkpValidateMiddleName(value, touched) {
     return null;
 }
 
+function kkpFitEmailInputFont(el) {
+    if (!el) return;
+    kkpFitInputTextToWidth(el, {
+        baseSize: 11,
+        minSize: 8.5,
+        uppercase: false,
+        pad: 4,
+        tiers: [
+            [28, 9],
+            [22, 9.5],
+            [16, 10],
+            [12, 10.5],
+        ],
+    });
+    el.style.textAlign = 'left';
+}
+
 function kkpValidateEmail(value, touched) {
     const v = (value || '').trim().toLowerCase();
     if (!v) {
@@ -341,6 +358,67 @@ function kkpValidateContact(value, touched) {
     if (navLoginBtn) navLoginBtn.addEventListener('click', () => window.location.href = '/youth/login');
     if (navDrawerLoginBtn) navDrawerLoginBtn.addEventListener('click', () => window.location.href = '/youth/login');
 
+    // ── Youth Age Group auto-select from age ──
+    function youthAgeGroupValueForAge(age) {
+        const value = parseInt(age, 10);
+
+        if (Number.isNaN(value)) {
+            return '';
+        }
+
+        if (value >= 15 && value <= 17) {
+            return 'Child Youth (15-17 yrs old)';
+        }
+
+        if (value >= 18 && value <= 24) {
+            return 'Core Youth (18-24 yrs old)';
+        }
+
+        if (value >= 25 && value <= 30) {
+            return 'Young Adult (15-30 yrs old)';
+        }
+
+        return '';
+    }
+
+    function syncYouthAgeGroupFromAge(age) {
+        const groupValue = youthAgeGroupValueForAge(age);
+
+        if (!groupValue) {
+            return;
+        }
+
+        const checkboxes = document.querySelectorAll('input[name="youth_age_groupChk"]');
+        let matched = false;
+
+        checkboxes.forEach((checkbox) => {
+            const isMatch = checkbox.value === groupValue;
+            checkbox.checked = isMatch;
+
+            if (isMatch) {
+                matched = true;
+            }
+        });
+
+        const hidden = document.getElementById('kkpYouthAgeGroup');
+
+        if (hidden && matched) {
+            hidden.value = groupValue;
+            clearDemoBlockError('kkpYouthAgeGroup');
+        }
+    }
+
+    function initYouthAgeGroupReadonly() {
+        document.querySelectorAll('input[name="youth_age_groupChk"]').forEach((checkbox) => {
+            checkbox.disabled = true;
+            checkbox.tabIndex = -1;
+        });
+    }
+
+    initYouthAgeGroupReadonly();
+
+    window.kkpSyncYouthAgeGroupFromAge = syncYouthAgeGroupFromAge;
+
     // ── Age + birthday sync (15–30 only) ──
     const form = document.getElementById('kkProfilingForm') || document.getElementById('kkProfilingUpdateForm');
     const birthdayInput = form && form.querySelector('input[name="birthday"]');
@@ -389,6 +467,7 @@ function kkpValidateContact(value, touched) {
 
             if (age !== null && age >= 15 && age <= 30) {
                 ageInput.value = String(age);
+                syncYouthAgeGroupFromAge(age);
                 setFullBirthdayRange();
                 clearFieldError(ageInput);
                 clearFieldError(this);
@@ -420,6 +499,7 @@ function kkpValidateContact(value, touched) {
             }
 
             clearFieldError(this);
+            syncYouthAgeGroupFromAge(value);
             setFullBirthdayRange();
             birthdayInput.value = defaultBirthdayForAge(value);
             clearFieldError(birthdayInput);
@@ -616,7 +696,7 @@ function kkpValidateContact(value, touched) {
         customSuffixInput.addEventListener('input', function () {
             let value = (this.value || '').replace(/[^A-Za-z.\s]/g, '');
             value = value.replace(/\s{2,}/g, ' ').trimStart();
-            this.value = value;
+            this.value = value.slice(0, 5);
         });
         customSuffixInput.addEventListener('blur', function () {
             this.value = (this.value || '').trim();
@@ -676,6 +756,10 @@ function kkpValidateContact(value, touched) {
         const sigNameInput = document.getElementById('kkpSignatureName');
         if (sigNameInput) {
             kkpFitSignatureNameFont(sigNameInput);
+        }
+        const emailEl = document.getElementById('kkpEmail');
+        if (emailEl) {
+            kkpFitEmailInputFont(emailEl);
         }
     });
 
@@ -825,6 +909,7 @@ function kkpValidateContact(value, touched) {
 
         emailInput.addEventListener('input', () => {
             normalizeEmailValue();
+            kkpFitEmailInputFont(emailInput);
             if ((emailInput.value || '').length > 0) {
                 emailTouched = true;
             }
@@ -835,9 +920,12 @@ function kkpValidateContact(value, touched) {
         emailInput.addEventListener('blur', () => {
             normalizeEmailValue();
             emailInput.value = (emailInput.value || '').trim().toLowerCase();
+            kkpFitEmailInputFont(emailInput);
             emailTouched = true;
             runEmailValidation(true);
         });
+
+        kkpFitEmailInputFont(emailInput);
     }
 
     // ── Single-check helper (like SK Officials kkfSingleCheck) ──
@@ -1104,15 +1192,12 @@ window.validateKkProfilingForm = async function (options = {}) {
         if (!raw) {
             errors.push('Custom suffix is required.');
             fieldError(customSuffix, 'Please specify your suffix.');
+        } else if (raw.length > 5) {
+            errors.push('Suffix must not exceed 5 characters.');
+            fieldError(customSuffix, 'Suffix must not exceed 5 characters.');
         } else if (!/^[A-Za-z.\s]+$/.test(raw) || !/[A-Za-z]/.test(raw)) {
             errors.push('Only text and valid Roman numeral suffixes are allowed.');
             fieldError(customSuffix, 'Only text and valid Roman numeral suffixes are allowed.');
-        } else if ((raw.replace(/\s/g, '').length > 4) && !/^[A-Za-z\s.]{1,30}$/.test(raw)) {
-            errors.push('Suffix is invalid.');
-            fieldError(customSuffix, 'Only text and valid Roman numeral suffixes are allowed.');
-        } else if (/^[IVX]+$/i.test(raw.replace(/\s/g, '')) && raw.replace(/\s/g, '').length > 4) {
-            errors.push('Suffix must not exceed 4 characters.');
-            fieldError(customSuffix, 'Suffix must not exceed 4 characters.');
         }
     } else if (suffix.value !== 'None' && !isValidSuffixText(suffix.value)) {
         errors.push('Only text and valid Roman numeral suffixes are allowed.');

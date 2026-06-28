@@ -134,7 +134,7 @@
 
                             <div class="kkp-custom-suffix-wrap" id="kkpCustomSuffixWrap">
 
-                                <input type="text" name="custom_suffix" id="kkpCustomSuffix" class="kkp-uline" placeholder="Please specify suffix" maxlength="30" autocomplete="off">
+                                <input type="text" name="custom_suffix" id="kkpCustomSuffix" class="kkp-uline" placeholder="Please specify suffix" maxlength="5" autocomplete="off">
 
                                 <label class="kkp-col-label">Please specify suffix <span class="kkp-required">*</span></label>
 
@@ -270,7 +270,7 @@
 
                         <div class="kkp-personal-right">
 
-                            <div class="kkp-inline-pair">
+                            <div class="kkp-inline-pair kkp-inline-pair--email">
 
                                 <label class="kkp-inline-label">E-mail address: <span class="kkp-required">*</span></label>
 
@@ -346,15 +346,15 @@
 
                             <div class="kkp-demo-block">
 
-                                <div class="kkp-demo-block-label">Youth Age Group <span class="kkp-required">*</span></div>
+                                <div class="kkp-demo-block-label">Youth Age Group <span class="kkp-required">*</span> <span class="kkp-auto-field-note">(auto from Age)</span></div>
 
-                                <div class="kkp-demo-block-options">
+                                <div class="kkp-demo-block-options kkp-youth-age-group-readonly">
 
-                                    <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="youth_age_groupChk" value="Child Youth (15-17 yrs old)" onchange="kkpSingleCheck(this,'kkpYouthAgeGroup')"> Child Youth (15-17 yrs old)</label>
+                                    <label class="kkp-chk-lbl kkp-chk-lbl--readonly"><input type="checkbox" class="kkp-sq-chk" name="youth_age_groupChk" value="Child Youth (15-17 yrs old)" disabled tabindex="-1"> Child Youth (15-17 yrs old)</label>
 
-                                    <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="youth_age_groupChk" value="Core Youth (18-24 yrs old)" onchange="kkpSingleCheck(this,'kkpYouthAgeGroup')"> Core Youth (18-24 yrs old)</label>
+                                    <label class="kkp-chk-lbl kkp-chk-lbl--readonly"><input type="checkbox" class="kkp-sq-chk" name="youth_age_groupChk" value="Core Youth (18-24 yrs old)" disabled tabindex="-1"> Core Youth (18-24 yrs old)</label>
 
-                                    <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="youth_age_groupChk" value="Young Adult (15-30 yrs old)" onchange="kkpSingleCheck(this,'kkpYouthAgeGroup')"> Young Adult (15-30 yrs old)</label>
+                                    <label class="kkp-chk-lbl kkp-chk-lbl--readonly"><input type="checkbox" class="kkp-sq-chk" name="youth_age_groupChk" value="Young Adult (15-30 yrs old)" disabled tabindex="-1"> Young Adult (25-30 yrs old)</label>
 
                                     <input type="hidden" id="kkpYouthAgeGroup" name="youth_age_group">
 

@@ -48,21 +48,8 @@
                     </span>
                 </div>
 
-                <div class="kk-signup-legend" aria-label="Schedule status legend">
-                    <span class="kk-signup-legend-item"><span class="kk-signup-legend-dot" style="background:#2e7d32;"></span> Ongoing — open now</span>
-                    <span class="kk-signup-legend-item"><span class="kk-signup-legend-dot" style="background:#1565c0;"></span> Upcoming</span>
-                    <span class="kk-signup-legend-item"><span class="kk-signup-legend-dot" style="background:#e65100;"></span> Rescheduled</span>
-                    <span class="kk-signup-legend-item"><span class="kk-signup-legend-dot" style="background:#6a1b9a;"></span> Completed</span>
-                    <span class="kk-signup-legend-item"><span class="kk-signup-legend-dot" style="background:#b71c1c;"></span> Cancelled</span>
-                </div>
-
                 <div class="kk-signup-filters" role="group" aria-label="Filter barangays by schedule status">
                     <button type="button" class="kk-signup-filter is-active" data-filter="all">All</button>
-                    <button type="button" class="kk-signup-filter" data-filter="Ongoing">Ongoing</button>
-                    <button type="button" class="kk-signup-filter" data-filter="Upcoming">Upcoming</button>
-                    <button type="button" class="kk-signup-filter" data-filter="Rescheduled">Rescheduled</button>
-                    <button type="button" class="kk-signup-filter" data-filter="Completed">Completed</button>
-                    <button type="button" class="kk-signup-filter" data-filter="Cancelled">Cancelled</button>
                     <button type="button" class="kk-signup-filter" data-filter="none">No schedule</button>
                 </div>
 

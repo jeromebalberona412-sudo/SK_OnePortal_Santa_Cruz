@@ -77,7 +77,11 @@ class PhilippineIdAddressParser
      */
     private function extractAddressBlock(array $lines, string $joined): ?string
     {
-        if (preg_match('/address\s*[:\-]?\s*(.+?)(?:cell\s*no|contact|tel|phone|important|$)/i', $joined, $match)) {
+        if (preg_match('/address\s*[:\-]?\s*(.+?)(?:cell\s*no|contact|tel|phone|important|signature|parent|guardian|$)/i', $joined, $match)) {
+            return $this->cleanAddress($match[1]);
+        }
+
+        if (preg_match('/(?:parent|guardian)\s*(?:address|\'s\s*address)?\s*[:\-]?\s*(.+?)(?:cell\s*no|contact|tel|phone|important|signature|$)/i', $joined, $match)) {
             return $this->cleanAddress($match[1]);
         }
 
@@ -122,6 +126,11 @@ class PhilippineIdAddressParser
 
             if (preg_match('/\b(?:sitio|purok|brgy|barangay)\b/i', $text)
                 && preg_match('/\b(?:santa\s*cruz|sta\.?\s*cruz|laguna|lag\.?)\b/i', $text)) {
+                return $this->cleanAddress($text);
+            }
+
+            if (preg_match('/\b(?:brgy\.?|barangay)\s+[A-Za-z0-9.\-\s]+/i', $text)
+                && preg_match('/\b(?:santa\s*cruz|sta\.?\s*cruz|laguna|lag\.?)\b/i', $joined)) {
                 return $this->cleanAddress($text);
             }
         }
