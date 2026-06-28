@@ -11,9 +11,9 @@
                 </svg>
             </div>
             <div>
-                <h2 class="kkp-wizard-panel-title">Supporting Documents <span class="kkp-wizard-optional">Optional</span></h2>
+                <h2 class="kkp-wizard-panel-title">Supporting Documents</h2>
                 <p class="kkp-wizard-panel-desc">
-                    Upload your PhilSys / National ID or School ID (front and back) to speed up verification.
+                    Upload your School ID or PhilSys / National ID (front and back). We will compare your name, birthdate, and barangay from Step 1 against your ID.
                 </p>
             </div>
         </div>
@@ -24,12 +24,12 @@
             </svg>
             <p>
                 Choose <strong>one</strong> ID type and upload <strong>both front and back</strong> images (JPG or PNG, max 10MB each).
-                If your ID address matches your registered barangay, your KK Profiling is <strong>automatically approved</strong> after you set your password — you can log in right away without waiting for SK Officials.
+                Your KK Profiling Form (name, birthdate, barangay) must match what appears on your ID. If everything matches, you proceed to email verification and may be <strong>automatically approved</strong> after setting your password.
             </p>
         </div>
 
         <div class="kkp-wizard-info-callout kkp-wizard-info-callout--success" id="kkpIdVerificationNotice" hidden role="status">
-            <p><strong>Barangay matched!</strong> The address on your uploaded ID matches your registered barangay. You will be auto-approved after completing registration.</p>
+            <p><strong>School ID verified!</strong> Your name, birthdate, and barangay match your uploaded ID. Continue to email verification.</p>
         </div>
 
         <div class="kkp-wizard-info-callout kkp-wizard-info-callout--error" id="kkpDocValidationError" hidden role="alert">

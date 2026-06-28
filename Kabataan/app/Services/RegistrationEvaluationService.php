@@ -138,6 +138,16 @@ class RegistrationEvaluationService
             return false;
         }
 
+        if (($idVerification['source'] ?? '') === 'school_id_pipeline_v1') {
+            if (($idVerification['decision'] ?? '') !== 'AUTO_APPROVE') {
+                return false;
+            }
+
+            if (($idVerification['auto_approve_eligible'] ?? false) !== true) {
+                return false;
+            }
+        }
+
         if ($this->rejectDuplicateIfNeeded($registration)) {
             return false;
         }

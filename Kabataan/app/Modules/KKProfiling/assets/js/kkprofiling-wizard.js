@@ -21,7 +21,7 @@
         },
         2: {
             title: 'Supporting Documents',
-            desc: 'Optionally upload a School ID or PhilSys / National ID. If your ID address matches your barangay, you may be auto-approved.',
+            desc: 'Upload your School ID or PhilSys / National ID. Your name, birthdate, and barangay must match Step 1.',
         },
         3: {
             title: 'Check Your Email',
@@ -129,6 +129,7 @@
         if (docValidationError) {
             const messageEl = docValidationError.querySelector('p') || docValidationError;
             messageEl.textContent = message;
+            messageEl.style.whiteSpace = 'pre-wrap';
             docValidationError.hidden = false;
             docValidationError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             return;
@@ -984,48 +985,54 @@
         const documentType = getSelectedDocumentType();
         const files = getActiveDocumentFiles();
 
-        if (hasPartialDocumentUpload() && !hasCompleteDocumentUpload()) {
-            showDocUploadError('Please upload both front and back images of your ID.');
+        if (!documentType) {
+            showDocUploadError('Please select School ID or PhilSys / National ID.');
             return false;
         }
 
-        if (documentType && hasPartialDocumentUpload()) {
-            const frontError = validateDocumentFile(files.front);
-            const backError = validateDocumentFile(files.back);
-
-            if (frontError || backError) {
-                showDocUploadError(frontError || backError);
-                return false;
-            }
+        if (!hasCompleteDocumentUpload()) {
+            showDocUploadError('Please upload both front and back images of your selected ID.');
+            return false;
         }
 
-        showLoading(hasCompleteDocumentUpload() ? 'Uploading and verifying ID...' : 'Continuing...');
+        const frontError = validateDocumentFile(files.front);
+        const backError = validateDocumentFile(files.back);
+
+        if (frontError || backError) {
+            showDocUploadError(frontError || backError);
+            return false;
+        }
+
+        showLoading('Uploading and verifying your ID...');
 
         let saved = false;
 
         try {
             const formData = new FormData();
+            formData.append('document_type', documentType);
 
-            if (documentType) {
-                formData.append('document_type', documentType);
-            }
-
-            if (documentType === 'school_id' && hasCompleteDocumentUpload()) {
+            if (documentType === 'school_id') {
                 formData.append('school_id_front', files.front);
                 formData.append('school_id_back', files.back);
             }
 
-            if (documentType === 'national_id' && hasCompleteDocumentUpload()) {
+            if (documentType === 'national_id') {
                 formData.append('national_id_front', files.front);
                 formData.append('national_id_back', files.back);
             }
 
             const response = await postFormData(`${apiBase}/step-2`, formData);
-            if (idVerificationNotice) {
-                idVerificationNotice.hidden = !(
+            const idVerified = Boolean(
+                response?.id_verified
+                || (
                     response?.id_verification?.name_match
+                    && response?.id_verification?.birthdate_match
                     && response?.id_verification?.barangay_match
-                );
+                ),
+            );
+
+            if (idVerificationNotice) {
+                idVerificationNotice.hidden = !idVerified;
             }
 
             if (response?.verification_sent) {

@@ -2,10 +2,20 @@
 
 return [
     'python' => env('OCR_PYTHON_PATH', PHP_OS_FAMILY === 'Windows'
-        ? base_path('python/.venv/Scripts/python.exe')
-        : base_path('python/.venv/bin/python')),
+        ? (is_file(base_path('python/.venv312/Scripts/python.exe'))
+            ? base_path('python/.venv312/Scripts/python.exe')
+            : base_path('python/.venv/Scripts/python.exe'))
+        : (is_file(base_path('python/.venv312/bin/python'))
+            ? base_path('python/.venv312/bin/python')
+            : base_path('python/.venv/bin/python'))),
 
     'script' => base_path('python/ocr.py'),
+
+    'pipeline_script' => base_path('python/validate_school_id.py'),
+
+    'pipeline_enabled' => (bool) env('OCR_PIPELINE_ENABLED', true),
+
+    'pipeline_timeout' => (int) env('OCR_PIPELINE_TIMEOUT', 600),
 
     'timeout' => (int) env('OCR_TIMEOUT', 120),
 

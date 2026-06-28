@@ -107,6 +107,10 @@ class IdVerificationService
             return true;
         }
 
+        if (($verification['source'] ?? '') === 'school_id_pipeline_v1') {
+            return true;
+        }
+
         return array_key_exists('name_match', $verification)
             && array_key_exists('barangay_match', $verification);
     }

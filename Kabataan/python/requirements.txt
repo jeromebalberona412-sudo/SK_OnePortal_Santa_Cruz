@@ -1,9 +1,10 @@
 # PaddleOCR requires Python 3.8–3.12 (not 3.13+).
-# Install Python 3.12 from https://www.python.org/downloads/windows/
-# Then recreate the venv:
-#   py -3.12 -m venv .venv
-#   .\.venv\Scripts\pip install -r requirements.txt
-
 paddlepaddle==2.6.2
 paddleocr==2.9.1
 easyocr>=1.7.2
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+rapidfuzz>=3.9.0
+# Optional face validation (install separately if needed):
+# insightface>=0.7.3
+# onnxruntime>=1.17.0

@@ -11,6 +11,7 @@ use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayZoneService;
 use App\Services\DuplicateKabataanRegistrationService;
 use App\Services\IdVerificationService;
+use App\Services\KabataanFullNameMatcher;
 use App\Services\KkProfilingValidationMessages;
 use App\Services\KkRegistrationDraftService;
 use App\Services\RegistrationEvaluationService;
@@ -54,16 +55,22 @@ class KKProfilingWizardController extends Controller
 
     public function saveStep2(Request $request, string $barangay)
     {
-        @set_time_limit(180);
+        @set_time_limit((int) config('ocr.pipeline_timeout', 600));
 
         $barangayRecord = $this->resolveBarangay($barangay);
         $wizard = $this->requireWizard();
+
+        if (empty($wizard['step1_data'])) {
+            throw ValidationException::withMessages([
+                'document_type' => ['Please complete Step 1 (KK Profiling Form) before uploading your School ID.'],
+            ]);
+        }
 
         $allowedTypes = implode(',', SupportingDocumentTypes::allowed());
         $fileRule = ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'];
 
         $request->validate([
-            'document_type' => ['nullable', 'in:'.$allowedTypes],
+            'document_type' => ['required', 'in:'.$allowedTypes],
             'school_id_front' => $fileRule,
             'school_id_back' => $fileRule,
             'national_id_front' => $fileRule,
@@ -124,19 +131,37 @@ class KKProfilingWizardController extends Controller
             ]);
         }
 
+        if (! $hasUpload) {
+            throw ValidationException::withMessages([
+                'document_type' => ['Please upload both front and back images of your selected ID to continue.'],
+            ]);
+        }
+
+        $verification = null;
+
         if ($hasUpload) {
             $wizard = $this->draftService->saveStep2($wizard, (string) $documentType, $sides);
 
-            $verification = $this->idVerificationService->verifyTempDocument($wizard, (string) $documentType);
+            $registrationFields = is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [];
+            $registrationFields['registration_barangay'] = $barangayRecord->name;
+
+            $verification = $this->idVerificationService->verifyTempDocument(
+                $wizard,
+                (string) $documentType,
+                $registrationFields,
+            );
 
             if (is_array($verification)) {
                 $wizard = $this->draftService->storeIdVerification($wizard, $verification);
             }
 
+            $verification = $this->enrichVerificationWithWizardContext(
+                $verification,
+                $wizard,
+                $barangayRecord,
+            );
+
             $this->assertUploadedIdVerificationPassed($verification, $wizard, (string) $documentType);
-        } else {
-            $wizard = $this->draftService->skipStep2($wizard);
-            $verification = null;
         }
 
         $wizard = $this->draftService->advanceToStep3($wizard);
@@ -165,10 +190,16 @@ class KKProfilingWizardController extends Controller
             'token' => $wizard['token'],
             'step' => 3,
             'email' => $email,
-            'message' => $hasUpload ? 'Documents saved.' : 'Continuing without documents.',
+            'message' => 'School ID verified. Continue to email verification.',
             'id_verification' => $verification,
+            'id_verified' => (bool) (
+                ($verification['name_match'] ?? false)
+                && ($verification['birthdate_match'] ?? false)
+                && ($verification['barangay_match'] ?? false)
+            ),
             'auto_approve_hint' => (bool) (
                 ($verification['name_match'] ?? false)
+                && ($verification['birthdate_match'] ?? false)
                 && ($verification['barangay_match'] ?? false)
             ),
             'verification_sent' => $verificationSent,
@@ -605,6 +636,39 @@ class KKProfilingWizardController extends Controller
 
     /**
      * @param  array<string, mixed>|null  $verification
+     * @return array<string, mixed>|null
+     */
+    private function enrichVerificationWithWizardContext(
+        ?array $verification,
+        array $wizard,
+        Barangay $barangayRecord,
+    ): ?array {
+        if ($verification === null) {
+            return null;
+        }
+
+        $step1 = is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [];
+        $matcher = app(KabataanFullNameMatcher::class);
+
+        if (empty($verification['form_full_name']) && $step1 !== []) {
+            $verification['form_full_name'] = $matcher->formatFormFullNameForDisplay($step1);
+        }
+
+        if (empty($verification['form_birthday']) && ! empty($step1['birthday'])) {
+            $verification['form_birthday'] = (string) $step1['birthday'];
+        }
+
+        if (empty($verification['form_barangay'])) {
+            $verification['form_barangay'] = $barangayRecord->name;
+        }
+
+        $verification['registration_barangay'] = $barangayRecord->name;
+
+        return $verification;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $verification
      */
     private function assertUploadedIdVerificationPassed(?array $verification, array $wizard, string $documentType): void
     {
@@ -624,17 +688,34 @@ class KKProfilingWizardController extends Controller
             ]);
         }
 
-        if (! ($verification['name_match'] ?? false)) {
+        $nameMatch = (bool) ($verification['name_match'] ?? false);
+        $birthdateMatch = (bool) ($verification['birthdate_match'] ?? false);
+        $barangayMatch = (bool) ($verification['barangay_match'] ?? false);
+        $autoApproved = ($verification['decision'] ?? '') === 'AUTO_APPROVE';
+
+        if ($nameMatch && $birthdateMatch && $barangayMatch) {
+            return;
+        }
+
+        if ($documentType === SupportingDocumentTypes::SCHOOL_ID) {
+            if (KkProfilingValidationMessages::verificationOcrUnreadable($verification)) {
+                throw ValidationException::withMessages([
+                    'document_type' => [KkProfilingValidationMessages::uploadProcessingFailed()],
+                ]);
+            }
+
             throw ValidationException::withMessages([
-                'document_type' => [$verification['message'] ?? KkProfilingValidationMessages::nameMismatch('', '')],
+                'document_type' => [KkProfilingValidationMessages::schoolIdValidationBlocked($verification)],
             ]);
         }
 
-        if (! ($verification['barangay_match'] ?? false)) {
-            throw ValidationException::withMessages([
-                'document_type' => [$verification['message'] ?? KkProfilingValidationMessages::addressMismatch('', '')],
-            ]);
-        }
+        $messages = KkProfilingValidationMessages::collectSchoolIdMismatches($verification);
+
+        throw ValidationException::withMessages([
+            'document_type' => [$messages !== []
+                ? implode("\n\n", $messages)
+                : ($verification['message'] ?? KkProfilingValidationMessages::uploadProcessingFailed())],
+        ]);
     }
 
     private function finalizeRegistrationResponse(KabataanRegistration $registration): \Illuminate\Http\JsonResponse
